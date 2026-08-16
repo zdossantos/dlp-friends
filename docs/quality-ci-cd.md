@@ -36,6 +36,10 @@ La promotion et Release Please utilisent le secret GitHub Actions
 nécessaire pour que leurs PR déclenchent la CI ; il ne sert à aucun déploiement ni
 publication de package.
 
+La première version stable est amorcée en `v1.0.0` avec le pied de commit
+`Release-As: 1.0.0`. Les versions suivantes sont calculées automatiquement à
+partir des Conventional Commits publiés sur `main`.
+
 ## Dépendances — Dependabot
 
 Dependabot surveille et met à jour automatiquement :
