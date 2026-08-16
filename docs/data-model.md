@@ -6,7 +6,7 @@
 | --- | --- |
 | `users` | Identité, authentification, date de naissance et statut de compte |
 | `social_accounts` | Lien unique entre un utilisateur et Google ou Apple |
-| `profiles` | Données publiques : prénom, pseudo, bio, fréquence de visite, image et visibilité |
+| `profiles` | Données publiques : nom d'affichage, bio, fréquence de visite, image et visibilité |
 | `passion_categories` | Regroupements administrables de passions |
 | `passions` | Entrées administrables du catalogue, activables/désactivables |
 | `passion_profile` | Association multiple entre profil et passion |
@@ -21,6 +21,9 @@
 ## États et contraintes de stockage
 
 - `users.status` vaut `active` ou `pending_deletion`. Un compte en suppression n'est jamais découvrable ni connectable.
+- `users` contient l'identité de connexion et la date de naissance, mais aucun `username` ni `first_name`.
+- `profiles.display_name` est obligatoire une fois l'onboarding terminé et n'est volontairement pas unique.
+- `profiles.onboarding_completed_at` indique qu'un membre a terminé le profil minimal requis.
 - `profiles.visibility` vaut `visible` ou `hidden`. Seul un profil `visible` appartenant à un compte `active` est découvrable.
 - `profiles.image_type` vaut `upload`, `avatar` ou `null`. Une image téléversée est référencée par une clé de stockage, jamais par un chemin local public.
 - `swipes.decision` vaut `like` ou `pass`; son unicité est `(actor_user_id, target_user_id)`.
@@ -31,7 +34,7 @@
 ## Règles essentielles
 
 - Un profil appartient à un seul utilisateur.
-- Le pseudo est unique ; le prénom n'a pas besoin de l'être.
+- Le nom d'affichage public n'est pas unique : plusieurs membres peuvent choisir le même libellé.
 - Un profil masqué ne peut pas être proposé à de nouveaux membres.
 - Un utilisateur ne peut pas swiper son propre profil.
 - Une paire de profils n'a qu'un swipe par sens, un match et une conversation au maximum.
@@ -55,4 +58,5 @@ Les résultats sont triés par score décroissant. Le bonus de fréquence ne peu
 - Un profil passé ou liké n'est plus reproposé au même membre.
 - La messagerie accepte uniquement du texte brut, limité à 2 000 caractères. Les pièces jointes, GIF, réactions, édition et suppression de message sont hors V1.
 - Un membre ne peut lire ou envoyer un message que dans une conversation liée à son match et non affectée par un blocage.
-- Le rôle `admin` peut gérer les catégories, passions et avatars; il ne donne pas de droit de lecture des messages privés dans le MVP.
+- Chaque compte reçoit le rôle `user`; `admin` est un rôle additionnel attribué explicitement.
+- Le rôle `admin` donne accès au dashboard et pourra gérer les catégories, passions et avatars; il ne donne pas de droit de lecture des messages privés dans le MVP.

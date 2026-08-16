@@ -1,19 +1,16 @@
 <?php
 
-use App\Http\Controllers\Settings\ProfileController;
+use App\Http\Controllers\Settings\AccountController;
 use App\Http\Controllers\Settings\SecurityController;
 use Illuminate\Auth\Middleware\RequirePassword;
 use Illuminate\Support\Facades\Route;
 
-Route::middleware(['auth'])->group(function () {
-    Route::redirect('settings', '/settings/profile');
+Route::middleware(['auth', 'verified', 'social', 'profile.complete'])->group(function () {
+    Route::redirect('settings', '/settings/account');
 
-    Route::get('settings/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::patch('settings/profile', [ProfileController::class, 'update'])->name('profile.update');
-});
-
-Route::middleware(['auth', 'verified'])->group(function () {
-    Route::delete('settings/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    Route::get('settings/account', [AccountController::class, 'edit'])->name('account.edit');
+    Route::patch('settings/account', [AccountController::class, 'update'])->name('account.update');
+    Route::delete('settings/account', [AccountController::class, 'destroy'])->name('account.destroy');
 
     Route::get('settings/security', [SecurityController::class, 'edit'])
         ->middleware(RequirePassword::class)

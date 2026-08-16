@@ -11,11 +11,13 @@ L'interface doit évoquer une magie contemporaine et chaleureuse, sans reprendre
 
 ## Parcours principaux
 
-1. Inscription, confirmation de majorité et vérification du compte.
-2. Création du profil : informations de base, image facultative, fréquence de visite et passions.
-3. Découverte : carte, affinités explicables, like ou refus.
-4. Match réciproque : confirmation claire puis accès à la conversation.
-5. Réglages : modification, masquage, blocage et suppression du compte.
+1. Inscription avec e-mail, date de naissance et mot de passe, sans nom public demandé à ce stade.
+2. Vérification obligatoire de l'adresse e-mail.
+3. Création du profil sur une page dédiée : nom d'affichage non unique, bio, fréquence de visite et visibilité. Le prénom n'est pas demandé.
+4. Arrivée sur la page de profil personnel. Un administrateur peut ensuite ouvrir son dashboard réservé.
+5. Découverte : carte, affinités explicables, like ou refus.
+6. Match réciproque : confirmation claire puis accès à la conversation.
+7. Réglages : séparation entre profil public, e-mail de compte, sécurité et apparence.
 
 ## Composants
 

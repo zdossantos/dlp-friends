@@ -2,7 +2,9 @@
 
 namespace Tests\Unit\Models;
 
+use App\Enums\RoleName;
 use App\Enums\UserStatus;
+use App\Models\Role;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
@@ -41,5 +43,15 @@ class UserTest extends TestCase
 
         $this->assertGreaterThanOrEqual(18, $user->age);
         $this->assertSame(UserStatus::Active, $user->status);
+    }
+
+    public function test_user_can_check_an_assigned_role(): void
+    {
+        $user = User::factory()->create();
+        $admin = Role::query()->where('name', RoleName::Admin)->firstOrFail();
+        $user->roles()->attach($admin);
+
+        $this->assertTrue($user->fresh('roles')->hasRole(RoleName::Admin));
+        $this->assertTrue($user->hasRole(RoleName::User));
     }
 }

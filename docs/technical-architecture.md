@@ -69,6 +69,15 @@ Seul `web` reçoit le domaine public de l'application. MySQL, Redis, MinIO, work
 
 Laravel est la source de vérité : authentification, autorisations, règles de match, conversations et suppression de données sont côté serveur. Vue/Inertia affiche les pages et appelle les routes Laravel ; ne pas créer d'API séparée sans besoin démontré. Chaque action sensible utilise une Policy Laravel explicite.
 
+## Comptes, profils et rôles
+
+- `users` porte uniquement les données de compte privées; `profiles` porte le nom d'affichage et les informations publiques.
+- La vérification d'e-mail précède l'onboarding. Le middleware `profile.complete` protège ensuite l'espace membre et redirige les profils incomplets vers leur création.
+- Les rôles normalisés `user` et `admin` sont stockés dans `roles` et `user_roles`. Toute inscription reçoit `user`.
+- Le middleware `role:admin` protège le dashboard côté serveur; masquer son lien dans Vue n'est qu'un complément d'interface.
+- `php artisan user:assign-role {email} {role}` utilise l'action idempotente `AssignRole` pour l'administration locale.
+- Le dashboard admin ne reçoit que des agrégats et une projection limitée des inscriptions récentes, sans date de naissance, secret ni mot de passe.
+
 ## Simplicité et abstraction
 
 Toute implémentation suit `engineering-principles.md`. La séparation en modèles, Policies, Form Requests, Actions, jobs et composants Vue sert à clarifier un besoin actuel, jamais à anticiper une architecture future. Une couche supplémentaire doit démontrer qu'elle réduit la complexité globale avant d'être introduite.
