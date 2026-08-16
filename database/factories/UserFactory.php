@@ -21,6 +21,15 @@ class UserFactory extends Factory
      */
     protected static ?string $password;
 
+    public function configure(): static
+    {
+        return $this->afterCreating(function (User $user): void {
+            $role = Role::query()->where('name', RoleName::User)->firstOrFail();
+
+            $user->roles()->syncWithoutDetaching($role);
+        });
+    }
+
     /**
      * Define the model's default state.
      *

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\LandingController;
 use App\Http\Controllers\MemberProfileController;
 use Illuminate\Support\Facades\Route;
@@ -22,7 +23,9 @@ Route::middleware(['auth', 'verified', 'social'])->group(function () {
         Route::patch('profile', [MemberProfileController::class, 'update'])
             ->name('member-profile.update');
 
-        Route::inertia('dashboard', 'Dashboard')->name('dashboard');
+        Route::get('dashboard', DashboardController::class)
+            ->middleware('role:admin')
+            ->name('dashboard');
     });
 });
 

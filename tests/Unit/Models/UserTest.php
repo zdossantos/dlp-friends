@@ -52,6 +52,6 @@ class UserTest extends TestCase
         $user->roles()->attach($admin);
 
         $this->assertTrue($user->fresh('roles')->hasRole(RoleName::Admin));
-        $this->assertFalse($user->hasRole(RoleName::User));
+        $this->assertTrue($user->hasRole(RoleName::User));
     }
 }
