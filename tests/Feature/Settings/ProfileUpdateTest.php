@@ -28,7 +28,7 @@ class ProfileUpdateTest extends TestCase
         $response = $this
             ->actingAs($user)
             ->patch(route('profile.update'), [
-                'name' => 'Test User',
+                'username' => '  Magic   Friend  ',
                 'email' => 'test@example.com',
             ]);
 
@@ -38,7 +38,7 @@ class ProfileUpdateTest extends TestCase
 
         $user->refresh();
 
-        $this->assertSame('Test User', $user->name);
+        $this->assertSame('Magic Friend', $user->username);
         $this->assertSame('test@example.com', $user->email);
         $this->assertNull($user->email_verified_at);
     }
@@ -50,7 +50,7 @@ class ProfileUpdateTest extends TestCase
         $response = $this
             ->actingAs($user)
             ->patch(route('profile.update'), [
-                'name' => 'Test User',
+                'username' => 'Magic Friend',
                 'email' => $user->email,
             ]);
 
@@ -59,6 +59,24 @@ class ProfileUpdateTest extends TestCase
             ->assertRedirect(route('profile.edit'));
 
         $this->assertNotNull($user->refresh()->email_verified_at);
+    }
+
+    public function test_username_must_be_unique_when_profile_is_updated(): void
+    {
+        $user = User::factory()->create();
+        $otherUser = User::factory()->create(['username' => 'Magic Friend']);
+
+        $response = $this
+            ->actingAs($user)
+            ->from(route('profile.edit'))
+            ->patch(route('profile.update'), [
+                'username' => $otherUser->username,
+                'email' => $user->email,
+            ]);
+
+        $response->assertRedirect(route('profile.edit'));
+        $response->assertSessionHasErrors('username');
+        $this->assertNotSame('Magic Friend', $user->refresh()->username);
     }
 
     public function test_user_can_delete_their_account()
