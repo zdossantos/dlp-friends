@@ -23,11 +23,12 @@ class MemberProfileController extends Controller
 
     public function store(MemberProfileRequest $request): RedirectResponse
     {
+        $completedAt = $request->user()->profile?->onboarding_completed_at;
         $profile = $request->user()->profile()->updateOrCreate(
             [],
             [
                 ...$request->validated(),
-                'onboarding_completed_at' => $request->user()->profile?->onboarding_completed_at ?? now(),
+                'onboarding_completed_at' => $completedAt ?? now(),
             ],
         );
 

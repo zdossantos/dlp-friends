@@ -16,6 +16,8 @@ class ProfileRoleMigrationTest extends TestCase
 
     public function test_migration_preserves_legacy_usernames_and_assigns_the_default_role(): void
     {
+        $removalMigration = require database_path('migrations/2026_08_16_020000_drop_username_from_users.php');
+        $removalMigration->down();
         $migration = require database_path('migrations/2026_08_16_010000_create_profiles_and_roles.php');
         $migration->down();
 
@@ -61,5 +63,7 @@ class ProfileRoleMigrationTest extends TestCase
         $this->assertDatabaseCount('user_roles', 2);
         $this->assertDatabaseHas('roles', ['name' => RoleName::Admin->value]);
         $this->assertDatabaseHas('roles', ['name' => RoleName::User->value]);
+
+        $removalMigration->up();
     }
 }

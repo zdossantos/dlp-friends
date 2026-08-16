@@ -7,6 +7,7 @@ use App\Enums\UserStatus;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Schema;
 use Laravel\Fortify\Features;
 use Tests\TestCase;
 
@@ -50,7 +51,7 @@ class RegistrationTest extends TestCase
         $user = User::query()->where('email', 'test@example.com')->firstOrFail();
 
         $this->assertAuthenticatedAs($user);
-        $this->assertNull($user->username);
+        $this->assertFalse(Schema::hasColumn('users', 'username'));
         $this->assertTrue($user->load('roles')->hasRole(RoleName::User));
         $this->assertNull($user->profile);
         $this->assertSame(UserStatus::Active, $user->status);

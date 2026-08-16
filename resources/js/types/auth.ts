@@ -1,13 +1,23 @@
 export type User = {
     id: number;
-    username: string;
     email: string;
-    avatar?: string;
     email_verified_at: string | null;
+    profile: Profile | null;
+    roles: Array<{ name: RoleName }>;
     two_factor_enabled?: boolean;
-    created_at: string;
-    updated_at: string;
     [key: string]: unknown;
+};
+
+export type RoleName = 'user' | 'admin';
+export type VisitFrequency = 'rarely' | 'sometimes' | 'often' | 'very_often';
+export type ProfileVisibility = 'visible' | 'hidden';
+
+export type Profile = {
+    display_name: string;
+    bio: string | null;
+    visit_frequency: VisitFrequency | null;
+    visibility: ProfileVisibility;
+    onboarding_completed_at: string | null;
 };
 
 export type Auth = {
