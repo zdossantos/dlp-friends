@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\EnsureProfileIsComplete;
 use App\Http\Middleware\EnsureUserCanAccessSocialFeatures;
 use App\Http\Middleware\HandleAppearance;
 use App\Http\Middleware\HandleInertiaRequests;
@@ -18,6 +19,7 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
+            'profile.complete' => EnsureProfileIsComplete::class,
             'social' => EnsureUserCanAccessSocialFeatures::class,
         ]);
 
