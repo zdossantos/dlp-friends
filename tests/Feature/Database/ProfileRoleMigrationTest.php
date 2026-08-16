@@ -72,6 +72,8 @@ class ProfileRoleMigrationTest extends TestCase
         $removalMigration = require database_path('migrations/2026_08_16_020000_drop_username_from_users.php');
         $removalMigration->down();
         $migration = require database_path('migrations/2026_08_16_010000_create_profiles_and_roles.php');
+        $migration->down();
+        $migration->up();
 
         $now = now();
         $userIds = collect(['first', 'second', 'third'])->map(fn (string $label): int => DB::table('users')->insertGetId([
