@@ -3,6 +3,9 @@ includes:
     - vendor/nesbot/carbon/extension.neon
 
 parameters:
+    parallel:
+        maximumNumberOfProcesses: 1
+
     paths:
         - app/
         - bootstrap/app.php
