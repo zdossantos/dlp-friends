@@ -84,6 +84,11 @@ Elle utilise un merge commit : le squash masquerait les Conventional Commits de
 `develop` à Release Please, tandis qu'un rebase répété réécrirait l'historique de
 la branche d'intégration.
 
+Dans l'interface GitHub, sélectionner explicitement **Create a merge commit**
+pour la PR `develop → main`. Ne pas utiliser **Squash and merge** : cette méthode
+ferait diverger les historiques et provoquerait une proposition inverse
+`main → develop` ainsi que des conflits lors de la promotion suivante.
+
 ## Production
 
 Coolify surveille uniquement `main` et déploie automatiquement chaque nouveau commit.
