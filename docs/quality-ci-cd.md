@@ -36,6 +36,10 @@ La promotion et Release Please utilisent le secret GitHub Actions
 nécessaire pour que leurs PR déclenchent la CI ; il ne sert à aucun déploiement ni
 publication de package.
 
+La première version stable est amorcée en `v1.0.0` avec le pied de commit
+`Release-As: 1.0.0`. Les versions suivantes sont calculées automatiquement à
+partir des Conventional Commits publiés sur `main`.
+
 ## Dépendances — Dependabot
 
 Dependabot surveille et met à jour automatiquement :
@@ -79,6 +83,11 @@ La fusion vers `main` reste manuelle après revue et validation de la CI.
 Elle utilise un merge commit : le squash masquerait les Conventional Commits de
 `develop` à Release Please, tandis qu'un rebase répété réécrirait l'historique de
 la branche d'intégration.
+
+Dans l'interface GitHub, sélectionner explicitement **Create a merge commit**
+pour la PR `develop → main`. Ne pas utiliser **Squash and merge** : cette méthode
+ferait diverger les historiques et provoquerait une proposition inverse
+`main → develop` ainsi que des conflits lors de la promotion suivante.
 
 ## Production
 
