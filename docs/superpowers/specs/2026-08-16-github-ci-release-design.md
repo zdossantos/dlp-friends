@@ -56,7 +56,9 @@ Aucun workflow provenant d'une pull request non fiable n'accède à un secret de
 
 La branche par défaut est `develop`. GitHub supprime automatiquement les branches après fusion et autorise GitHub Actions à créer les pull requests nécessaires aux deux automatisations.
 
-Les règles de `develop` et `main` imposent une pull request, la réussite des checks CI, la résolution des conversations, un historique linéaire, et interdisent les force-pushs ainsi que la suppression des branches.
+Les règles de `develop` et `main` imposent une pull request, la réussite des checks CI, la résolution des conversations, et interdisent les force-pushs ainsi que la suppression des branches. `develop` conserve un historique linéaire pour les branches de fonctionnalité.
+
+`main` autorise les merge commits pour les promotions `develop` vers `main`. Ce choix préserve l'ascendance de la branche d'intégration et rend ses commits Conventional Commits visibles par Release Please. Un squash masquerait ces commits derrière le seul titre de la pull request, tandis qu'un rebase répété d'une branche longue réécrirait son historique et compliquerait les promotions suivantes.
 
 Le dépôt n'a actuellement qu'un seul contributeur. Par exception explicite à la recommandation générale de `docs/quality-ci-cd.md`, `main` ne requiert aucune approbation tant qu'aucun second reviewer n'est disponible. Exiger une approbation rendrait toute publication impossible puisque l'auteur d'une pull request ne peut pas approuver sa propre modification. Tous les autres contrôles de `main` restent obligatoires.
 
