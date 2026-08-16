@@ -25,6 +25,14 @@ defineProps<{
     }>;
 }>();
 
+const formatDate = (value: string | null): string =>
+    value
+        ? new Intl.DateTimeFormat('fr-FR', {
+              dateStyle: 'medium',
+              timeStyle: 'short',
+          }).format(new Date(value))
+        : 'Date inconnue';
+
 defineOptions({
     layout: {
         breadcrumbs: [
@@ -76,7 +84,7 @@ defineOptions({
                     }}</CardTitle>
                 </CardHeader>
             </Card>
-            <Card>
+            <Card class="border-accent bg-accent/25">
                 <CardHeader class="pb-2">
                     <CardDescription>Profils complétés</CardDescription>
                     <CardTitle class="text-3xl">{{
@@ -103,10 +111,7 @@ defineOptions({
                         <div>
                             <p class="font-medium">{{ registration.email }}</p>
                             <p class="text-sm text-muted-foreground">
-                                {{
-                                    registration.registered_at ??
-                                    'Date inconnue'
-                                }}
+                                {{ formatDate(registration.registered_at) }}
                             </p>
                         </div>
                         <div class="flex flex-wrap gap-2">

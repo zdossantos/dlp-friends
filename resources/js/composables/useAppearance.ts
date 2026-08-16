@@ -70,6 +70,8 @@ const handleSystemThemeChange = () => {
     updateTheme(currentAppearance || 'system');
 };
 
+let registeredMediaQuery: MediaQueryList | null = null;
+
 export function initializeTheme(): void {
     if (typeof window === 'undefined') {
         return;
@@ -79,8 +81,16 @@ export function initializeTheme(): void {
     const savedAppearance = getStoredAppearance();
     updateTheme(savedAppearance || 'system');
 
-    // Set up system theme change listener...
-    mediaQuery()?.addEventListener('change', handleSystemThemeChange);
+    const currentMediaQuery = mediaQuery();
+
+    if (currentMediaQuery && currentMediaQuery !== registeredMediaQuery) {
+        registeredMediaQuery?.removeEventListener(
+            'change',
+            handleSystemThemeChange,
+        );
+        currentMediaQuery.addEventListener('change', handleSystemThemeChange);
+        registeredMediaQuery = currentMediaQuery;
+    }
 }
 
 const appearance = ref<Appearance>('system');

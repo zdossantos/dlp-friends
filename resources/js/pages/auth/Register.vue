@@ -23,7 +23,7 @@ defineOptions({
 </script>
 
 <template>
-    <Head title="Register" />
+    <Head title="Créer un compte" />
 
     <Form
         v-bind="store.form()"
