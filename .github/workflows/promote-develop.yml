@@ -18,7 +18,7 @@ jobs:
     name: Open promotion pull request
     runs-on: ubuntu-latest
     env:
-      GH_TOKEN: ${{ github.token }}
+      GH_TOKEN: ${{ secrets.RELEASE_PLEASE_TOKEN }}
       GH_REPO: ${{ github.repository }}
     steps:
       - name: Create pull request when absent

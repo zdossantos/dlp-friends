@@ -31,9 +31,10 @@ Release Please ne publie aucun package npm : l'application est un site web.
 
 Le versioning est effectué à partir de `main` après publication des changements.
 
-Release Please utilise le secret GitHub Actions `RELEASE_PLEASE_TOKEN`, contenant
-un jeton fin limité à ce dépôt. Ce jeton est nécessaire pour que ses PR de release
-déclenchent la CI ; il ne sert à aucun déploiement ni publication de package.
+La promotion et Release Please utilisent le secret GitHub Actions
+`RELEASE_PLEASE_TOKEN`, contenant un jeton fin limité à ce dépôt. Ce jeton est
+nécessaire pour que leurs PR déclenchent la CI ; il ne sert à aucun déploiement ni
+publication de package.
 
 ## Dépendances — Dependabot
 
