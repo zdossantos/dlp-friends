@@ -1,0 +1,68 @@
+# syntax=docker/dockerfile:1.7
+
+FROM php:8.4-cli-alpine3.22 AS build
+
+WORKDIR /app
+
+RUN apk add --no-cache \
+        curl \
+        git \
+        icu-dev \
+        libzip-dev \
+        linux-headers \
+        nodejs \
+        npm \
+        oniguruma-dev \
+        $PHPIZE_DEPS \
+    && docker-php-ext-install -j"$(nproc)" bcmath exif intl pcntl pdo_mysql sockets zip \
+    && pecl install redis \
+    && docker-php-ext-enable redis
+
+COPY --from=composer:2.8 /usr/bin/composer /usr/local/bin/composer
+COPY . .
+
+RUN composer install \
+        --no-dev \
+        --no-interaction \
+        --no-progress \
+        --prefer-dist \
+        --classmap-authoritative \
+    && npm ci \
+    && npm run build \
+    && rm -rf node_modules
+
+FROM php:8.4-fpm-alpine3.22 AS runtime
+
+WORKDIR /var/www/html
+
+RUN apk add --no-cache \
+        curl \
+        icu-libs \
+        libzip \
+        nginx \
+        $PHPIZE_DEPS \
+        icu-dev \
+        libzip-dev \
+        linux-headers \
+        oniguruma-dev \
+    && docker-php-ext-install -j"$(nproc)" bcmath exif intl opcache pcntl pdo_mysql sockets zip \
+    && pecl install redis \
+    && docker-php-ext-enable redis \
+    && apk del $PHPIZE_DEPS icu-dev libzip-dev linux-headers oniguruma-dev \
+    && rm -rf /tmp/pear /var/cache/apk/* /var/lib/nginx/html
+
+COPY docker/nginx/default.conf /etc/nginx/http.d/default.conf
+COPY docker/php/entrypoint.sh /usr/local/bin/dlp-entrypoint
+COPY --from=build --chown=www-data:www-data /app /var/www/html
+
+RUN chmod +x /usr/local/bin/dlp-entrypoint \
+    && chown -R www-data:www-data storage bootstrap/cache \
+    && mkdir -p /run/nginx
+
+EXPOSE 80 8080
+
+ENTRYPOINT ["/usr/local/bin/dlp-entrypoint"]
+CMD ["web"]
+
+HEALTHCHECK --interval=10s --timeout=5s --start-period=20s --retries=5 \
+    CMD curl --fail --silent http://127.0.0.1/up >/dev/null || exit 1
