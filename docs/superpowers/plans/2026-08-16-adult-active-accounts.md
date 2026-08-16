@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Require adult registrations and restrict social routes to verified, adult users with active accounts.
+**Goal:** Register members with a unique normalized username, require adult registrations, and restrict social routes to verified, adult users with active accounts.
 
 **Architecture:** Store birth date and a typed account status on `users`, calculate age from the application clock, and compose Laravel's existing `auth` and `verified` middleware with one reusable `social` eligibility middleware. Keep Fortify authentication and account-management routes unchanged.
 
@@ -15,6 +15,8 @@
 - `status` supports exactly `active` and `pending_deletion`; new users default to `active`.
 - Fortify login throttling, password reset, two-factor authentication, passkeys, and sessions remain unchanged.
 - Account-management routes keep their existing middleware.
+- `username` replaces the starter kit's stored `name`; no legal first or last name is collected.
+- Usernames contain 3 to 30 Unicode letters, numbers, spaces, underscores, or hyphens after whitespace normalization.
 
 ---
 
@@ -175,7 +177,60 @@ Run: `npm run lint:check && npm run format:check && npm run types:check`
 
 Expected: PASS with no errors.
 
-### Task 5: Full verification and issue completion evidence
+### Task 5: Replace full names with unique usernames
+
+**Files:**
+- Modify: `database/migrations/0001_01_01_000000_create_users_table.php`
+- Modify: `app/Concerns/ProfileValidationRules.php`
+- Modify: `app/Actions/Fortify/CreateNewUser.php`
+- Modify: `app/Models/User.php`
+- Modify: `database/factories/UserFactory.php`
+- Modify: `database/seeders/DatabaseSeeder.php`
+- Modify: `resources/js/pages/auth/Register.vue`
+- Modify: `resources/js/pages/settings/Profile.vue`
+- Modify: `resources/js/types/auth.ts`
+- Modify: authenticated user display components that consume `user.name`
+- Modify: `tests/Feature/Auth/RegistrationTest.php`
+- Modify: `tests/Feature/Settings/ProfileUpdateTest.php`
+
+**Interfaces:**
+- Produces: persisted `User::$username`, required registration and settings input `username`, and shared frontend property `auth.user.username`.
+- Removes: persisted and shared authenticated-user property `name`.
+
+- [ ] **Step 1: Write failing username registration and settings tests**
+
+Assert that registration stores `username => 'Magic Friend'` after receiving surrounding and repeated spaces, rejects missing, duplicate, shorter-than-3, longer-than-30, and punctuation outside Unicode letters/numbers/spaces/underscores/hyphens. Assert profile settings update the username with the same normalization and uniqueness guarantees. Change the underage test to assert the exact message `Vous devez être majeur pour vous inscrire.` and that it contains no cutoff date.
+
+- [ ] **Step 2: Run the focused tests and verify RED**
+
+Run: `php artisan test tests/Feature/Auth/RegistrationTest.php tests/Feature/Settings/ProfileUpdateTest.php`
+
+Expected: FAIL because the application still accepts and stores `name`, does not normalize usernames, and uses Laravel's generated age message.
+
+- [ ] **Step 3: Implement normalized username validation and storage**
+
+Replace the baseline `name` column with `username` and a unique index. Normalize request input before validation using trim plus whitespace collapse. Validate with:
+
+```php
+'username' => [
+    'required',
+    'string',
+    'min:3',
+    'max:30',
+    'regex:/^[\pL\pN _-]+$/u',
+    Rule::unique(User::class)->ignore($userId),
+],
+```
+
+Provide the birth-date `before_or_equal` message `Vous devez être majeur pour vous inscrire.`. Update model metadata, factories, seed data, registration, profile settings, frontend types, and identity components to consume `username`.
+
+- [ ] **Step 4: Run focused backend and frontend checks and verify GREEN**
+
+Run: `php artisan test tests/Feature/Auth/RegistrationTest.php tests/Feature/Settings/ProfileUpdateTest.php && npm run lint:check && npm run format:check && npm run types:check`
+
+Expected: PASS.
+
+### Task 6: Full verification and issue completion evidence
 
 **Files:**
 - Modify only files needed to correct verification failures caused by this issue.
