@@ -94,4 +94,17 @@ grep -qx 'pr checks 36 --required ' "$test_root/calls"
 grep -qx 'pr merge 36 --merge --match-head-commit abc123 ' "$test_root/calls"
 grep -q 'Merged PR #36 at `abc123` with a merge commit' "$test_root/summary"
 
+workflow="$script_dir/../workflows/promote-to-production.yml"
+promotion_workflow="$script_dir/../workflows/promote-develop.yml"
+grep -q '^name: Promote to production$' "$workflow"
+grep -q '^  workflow_dispatch:$' "$workflow"
+grep -q 'RELEASE_PLEASE_TOKEN' "$workflow"
+grep -q 'run: .github/scripts/merge-promotion-pr.sh' "$workflow"
+grep -q 'Promote to production' "$promotion_workflow"
+grep -q 'gh pr edit' "$promotion_workflow"
+if grep -q 'Create a merge commit' "$promotion_workflow"; then
+    echo "Promotion PR still recommends the unsafe standard merge button" >&2
+    exit 1
+fi
+
 echo "Guarded promotion merge tests passed."
