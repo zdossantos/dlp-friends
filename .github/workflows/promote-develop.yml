@@ -46,12 +46,11 @@ jobs:
       GH_TOKEN: ${{ secrets.RELEASE_PLEASE_TOKEN }}
       GH_REPO: ${{ github.repository }}
     steps:
-      - name: Checkout main with complete history
+      - name: Checkout workflow source with complete history
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
           persist-credentials: true
-          ref: main
           token: ${{ secrets.RELEASE_PLEASE_TOKEN }}
       - name: Fetch protected branch tips
         shell: bash
