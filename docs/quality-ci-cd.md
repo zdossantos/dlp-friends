@@ -3,7 +3,8 @@
 ## Stratégie de branches
 
 - `develop` : branche d'intégration. Toute modification arrive par PR.
-- `main` : branche de production. Aucun push direct ; elle reçoit uniquement les PR de publication depuis `develop`.
+- `main` : branche de production. Aucun push direct ; elle reçoit les PR de
+  promotion qui intègrent `develop` et les PR de version de Release Please.
 - Les branches `develop` et `main` sont protégées et les checks CI requis doivent passer avant fusion.
 
 ## Conventional Commits
@@ -69,25 +70,26 @@ puissent réutiliser les extensions PHP natives déjà compilées.
 
 Aucun merge n'est autorisé si les checks requis échouent.
 
-## PR automatique develop → main
+## PR automatique de promotion vers main
 
 À chaque push sur `develop` :
 
 - réchauffer le cache Docker partagé ;
-- vérifier si une PR `develop → main` existe ;
-- la créer automatiquement si elle n'existe pas ;
-- si elle existe, la laisser se mettre à jour avec les nouveaux commits ;
+- reconstruire `automation/promote-develop` depuis le dernier `main` ;
+- fusionner `develop` dans cette branche technique avec un merge commit ;
+- publier uniquement la branche technique avec `--force-with-lease` ;
+- créer une PR `automation/promote-develop → main` si elle n'existe pas ;
 - ne jamais fusionner automatiquement cette PR.
 
-La fusion vers `main` reste manuelle après revue et validation de la CI.
-Elle utilise un merge commit : le squash masquerait les Conventional Commits de
-`develop` à Release Please, tandis qu'un rebase répété réécrirait l'historique de
-la branche d'intégration.
+Le workflow se déclenche aussi après un push sur `main` et manuellement. Il ferme
+une promotion devenue vide lorsque `main` contient déjà tout `develop`. Il ne
+force-push jamais `develop` ou `main` et ne diminue aucune protection.
 
 Dans l'interface GitHub, sélectionner explicitement **Create a merge commit**
-pour la PR `develop → main`. Ne pas utiliser **Squash and merge** : cette méthode
-ferait diverger les historiques et provoquerait une proposition inverse
-`main → develop` ainsi que des conflits lors de la promotion suivante.
+pour la PR `automation/promote-develop → main`. Ne pas utiliser **Update
+branch**, **Squash and merge** ou rebase : la branche technique contient déjà le
+dernier `main`, et Release Please doit voir les Conventional Commits de
+`develop` devenus ancêtres de `main`.
 
 ## Production
 
@@ -101,7 +103,10 @@ Ne jamais déployer `develop` ou une branche de fonctionnalité en production.
 
 - Interdire les pushes directs sur `develop` et `main`.
 - Conserver un historique linéaire sur `develop` pour les PR de fonctionnalité.
-- Autoriser les merge commits sur `main` pour les promotions depuis `develop`.
+- Conserver l'exigence de branche à jour sur `main` : la branche technique part
+  toujours du dernier `main`.
+- Autoriser les merge commits sur `main` pour les promotions qui intègrent
+  `develop`.
 - Les futurs identifiants SMTP de production sont des secrets Coolify ; la CI ne doit jamais envoyer d'e-mail réel.
 - Exiger les checks CI requis avant merge.
 - Tant que le dépôt n'a qu'un seul contributeur, ne demander aucune approbation
@@ -122,6 +127,8 @@ PR → develop
 CI + tests
     ↓
 develop
+    ↓
+automation/promote-develop (dernier main + develop)
     ↓
 PR automatique → main
     ↓

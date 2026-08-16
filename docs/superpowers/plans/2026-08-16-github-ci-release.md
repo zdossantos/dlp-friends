@@ -1,5 +1,7 @@
 # GitHub CI and Release Automation Implementation Plan
 
+> **Superseded promotion steps:** The direct `develop → main` instructions in this historical plan are replaced by `docs/superpowers/plans/2026-08-16-clean-develop-main-promotion.md`. Do not execute the old `--head develop` commands.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (- [ ]) syntax for tracking.
 
 **Goal:** Deliver repeatable Laravel/Vue quality gates, automated develop-to-main promotion, Release Please versioning, Dependabot updates, and enforceable GitHub repository protections.

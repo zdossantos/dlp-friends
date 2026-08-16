@@ -13,4 +13,5 @@ Décrire le changement et sa raison.
 ## Livraison
 
 - [ ] Aucun déploiement Coolify n’est déclenché depuis GitHub Actions.
-- [ ] Une promotion `develop` vers `main` sera fusionnée avec un merge commit.
+- [ ] Une promotion `automation/promote-develop` vers `main` sera fusionnée avec
+      **Create a merge commit**.
