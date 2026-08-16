@@ -48,7 +48,10 @@ Seul `web` reçoit le domaine public de l'application. MySQL, Redis, MinIO, work
 
 - Coolify est connecté au dépôt et déploie automatiquement la configuration Docker Compose versionnée dès qu'un nouveau commit arrive sur `main`. Ce fichier Compose est la source de vérité de la stack de production.
 - Des environnements séparés existent au minimum pour `develop` et `main`; `main` est la production.
-- Le déploiement de production intervient automatiquement après fusion volontaire de la PR `develop` vers `main`; aucun workflow GitHub ne déclenche Coolify.
+- Le déploiement de production intervient automatiquement après fusion
+  volontaire de la PR `automation/promote-develop → main`, construite depuis le
+  dernier `main` et intégrant `develop`; aucun workflow GitHub ne déclenche
+  Coolify.
 - Définir une route de santé non authentifiée, par exemple `/up`, qui ne divulgue aucun secret.
 - Définir des `healthcheck` Docker pour chaque service long-vivant et des limites CPU/mémoire par service.
 - Les variables critiques sont déclarées comme requises dans Compose et définies dans Coolify, jamais commitées.
@@ -68,6 +71,15 @@ Seul `web` reçoit le domaine public de l'application. MySQL, Redis, MinIO, work
 ## Frontière applicative
 
 Laravel est la source de vérité : authentification, autorisations, règles de match, conversations et suppression de données sont côté serveur. Vue/Inertia affiche les pages et appelle les routes Laravel ; ne pas créer d'API séparée sans besoin démontré. Chaque action sensible utilise une Policy Laravel explicite.
+
+## Comptes, profils et rôles
+
+- `users` porte uniquement les données de compte privées; `profiles` porte le nom d'affichage et les informations publiques.
+- La vérification d'e-mail précède l'onboarding. Le middleware `profile.complete` protège ensuite l'espace membre et redirige les profils incomplets vers leur création.
+- Les rôles normalisés `user` et `admin` sont stockés dans `roles` et `user_roles`. Toute inscription reçoit `user`.
+- Le middleware `role:admin` protège le dashboard côté serveur; masquer son lien dans Vue n'est qu'un complément d'interface.
+- `php artisan user:assign-role {email} {role}` utilise l'action idempotente `AssignRole` pour l'administration locale.
+- Le dashboard admin ne reçoit que des agrégats et une projection limitée des inscriptions récentes, sans date de naissance, secret ni mot de passe.
 
 ## Simplicité et abstraction
 

@@ -1,5 +1,8 @@
 <?php
 
+use App\Http\Middleware\EnsureProfileIsComplete;
+use App\Http\Middleware\EnsureUserCanAccessSocialFeatures;
+use App\Http\Middleware\EnsureUserHasRole;
 use App\Http\Middleware\HandleAppearance;
 use App\Http\Middleware\HandleInertiaRequests;
 use Illuminate\Foundation\Application;
@@ -16,6 +19,12 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        $middleware->alias([
+            'profile.complete' => EnsureProfileIsComplete::class,
+            'role' => EnsureUserHasRole::class,
+            'social' => EnsureUserCanAccessSocialFeatures::class,
+        ]);
+
         $middleware->encryptCookies(except: ['appearance', 'sidebar_state']);
 
         $middleware->web(append: [

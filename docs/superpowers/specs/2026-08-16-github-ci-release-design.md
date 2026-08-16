@@ -10,7 +10,11 @@ Coolify reste hors de GitHub Actions. Il surveille uniquement `main` et déploie
 
 `develop` est la branche d'intégration et la branche par défaut. Les branches de fonctionnalité arrivent sur `develop` par pull request.
 
-Chaque push sur `develop` déclenche un workflow de promotion. Celui-ci recherche une pull request ouverte dont la branche source est `develop` et la cible `main`. Il en crée une uniquement lorsqu'elle n'existe pas. Il ne fusionne jamais cette pull request ; les nouveaux commits de `develop` l'actualisent naturellement.
+Chaque push sur `develop` déclenche un workflow de promotion. Celui-ci
+reconstruit `automation/promote-develop` depuis le dernier `main`, y fusionne
+`develop`, puis maintient une unique pull request de cette branche technique
+vers `main`. Un push sur `main` ou un déclenchement manuel réaligne également une
+promotion ouverte. Le workflow ne fusionne jamais cette pull request.
 
 `main` est la branche de production. Après la fusion manuelle de la pull request de promotion, Release Please analyse les Conventional Commits de `main`. Il maintient une pull request de release, met à jour `CHANGELOG.md`, puis crée le tag SemVer et la GitHub Release quand cette pull request est fusionnée. Le type de release est `simple` : aucun package npm ou Composer n'est publié.
 
@@ -48,7 +52,13 @@ Un modèle de pull request rappelle les contrôles utiles et l'usage de Conventi
 
 ## Permissions et sécurité
 
-Les workflows ont `contents: read` par défaut. Le workflow de promotion reçoit uniquement `pull-requests: write` en plus de la lecture du contenu. Release Please reçoit les permissions d'écriture strictement requises pour sa pull request, ses tags et ses releases. Les actions tierces sont référencées par commit immuable lorsque cela est compatible avec Dependabot.
+Les workflows ont `contents: read` par défaut. Le workflow de promotion reçoit
+`contents: write` pour publier uniquement `automation/promote-develop` et
+`pull-requests: write` pour maintenir sa pull request. Il utilise un
+force-with-lease lié au SHA distant observé et ne pousse jamais `develop` ou
+`main`. Release Please reçoit les permissions d'écriture strictement requises
+pour sa pull request, ses tags et ses releases. Les actions tierces sont
+référencées par commit immuable lorsque cela est compatible avec Dependabot.
 
 Aucun workflow provenant d'une pull request non fiable n'accède à un secret de production. Les tests utilisent uniquement des valeurs éphémères et un service MySQL isolé. La CI ne contacte aucun transport SMTP réel.
 
@@ -58,7 +68,12 @@ La branche par défaut est `develop`. GitHub supprime automatiquement les branch
 
 Les règles de `develop` et `main` imposent une pull request, la réussite des checks CI, la résolution des conversations, et interdisent les force-pushs ainsi que la suppression des branches. `develop` conserve un historique linéaire pour les branches de fonctionnalité.
 
-`main` autorise les merge commits pour les promotions `develop` vers `main`. Ce choix préserve l'ascendance de la branche d'intégration et rend ses commits Conventional Commits visibles par Release Please. Un squash masquerait ces commits derrière le seul titre de la pull request, tandis qu'un rebase répété d'une branche longue réécrirait son historique et compliquerait les promotions suivantes.
+`main` autorise les merge commits pour les promotions qui intègrent `develop`.
+La branche technique part toujours du dernier `main`, ce qui permet de conserver
+l'exigence de branche à jour malgré les commits propres à `main`. Le merge commit
+préserve l'ascendance de la branche d'intégration et rend ses Conventional
+Commits visibles par Release Please. Un squash les masquerait derrière le seul
+titre de la pull request.
 
 Le dépôt n'a actuellement qu'un seul contributeur. Par exception explicite à la recommandation générale de `docs/quality-ci-cd.md`, `main` ne requiert aucune approbation tant qu'aucun second reviewer n'est disponible. Exiger une approbation rendrait toute publication impossible puisque l'auteur d'une pull request ne peut pas approuver sa propre modification. Tous les autres contrôles de `main` restent obligatoires.
 
@@ -68,7 +83,12 @@ Les protections distantes sont appliquées après que les workflows et leurs nom
 
 Un échec dans un job bloque uniquement le merge concerné et reste attribuable à une responsabilité claire. Un ancien run annulé n'empêche pas le run le plus récent de devenir la source de vérité.
 
-Le workflow de promotion est idempotent : une erreur de recherche ou de création rend le run rouge, mais ne crée jamais plusieurs pull requests volontairement. Release Please conserve sa propre pull request et reprend au prochain push sur `main` après une erreur temporaire.
+Le workflow de promotion est idempotent : une erreur de construction, de push,
+de recherche ou de création rend le run rouge, mais ne modifie aucune branche
+protégée et ne crée jamais plusieurs pull requests volontairement. Un conflit
+entre `main` et `develop` échoue avant tout push. Release Please conserve sa
+propre pull request et reprend au prochain push sur `main` après une erreur
+temporaire.
 
 Si les permissions GitHub ou l'authentification empêchent l'application d'un réglage distant, les fichiers versionnés restent valides et le réglage non appliqué est signalé précisément ; aucune protection existante n'est supprimée pour contourner le problème.
 
@@ -82,7 +102,9 @@ L'étape est acceptée lorsque :
 4. le build Vite réussit ;
 5. le build Docker réussit ;
 6. Dependabot couvre Composer, npm et GitHub Actions vers `develop` ;
-7. la promotion crée au plus une pull request `develop` vers `main` et ne la fusionne pas ;
+7. la promotion crée au plus une pull request
+   `automation/promote-develop` vers `main`, toujours basée sur le dernier
+   `main`, et ne la fusionne pas ;
 8. Release Please est configuré pour une application sans publication de package ;
 9. les permissions de chaque workflow respectent le moindre privilège ;
 10. les protections et réglages GitHub distants correspondent à ce document, à l'exception d'une limitation explicitement signalée par GitHub ou l'authentification disponible.

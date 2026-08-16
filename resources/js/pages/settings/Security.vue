@@ -23,7 +23,7 @@ defineOptions({
     layout: {
         breadcrumbs: [
             {
-                title: 'Security settings',
+                title: 'Sécurité',
                 href: edit(),
             },
         ],
@@ -32,15 +32,15 @@ defineOptions({
 </script>
 
 <template>
-    <Head title="Security settings" />
+    <Head title="Sécurité" />
 
-    <h1 class="sr-only">Security settings</h1>
+    <h1 class="sr-only">Sécurité</h1>
 
     <div class="space-y-6">
         <Heading
             variant="small"
-            title="Update password"
-            description="Ensure your account is using a long, random password to stay secure"
+            title="Modifier le mot de passe"
+            description="Utilisez un mot de passe long et unique pour protéger votre compte."
         />
 
         <Form
@@ -58,38 +58,40 @@ defineOptions({
             v-slot="{ errors, processing }"
         >
             <div class="grid gap-2">
-                <Label for="current_password">Current password</Label>
+                <Label for="current_password">Mot de passe actuel</Label>
                 <PasswordInput
                     id="current_password"
                     name="current_password"
                     class="mt-1 block w-full"
                     autocomplete="current-password"
-                    placeholder="Current password"
+                    placeholder="Mot de passe actuel"
                 />
                 <InputError :message="errors.current_password" />
             </div>
 
             <div class="grid gap-2">
-                <Label for="password">New password</Label>
+                <Label for="password">Nouveau mot de passe</Label>
                 <PasswordInput
                     id="password"
                     name="password"
                     class="mt-1 block w-full"
                     autocomplete="new-password"
-                    placeholder="New password"
+                    placeholder="Nouveau mot de passe"
                     :passwordrules="props.passwordRules"
                 />
                 <InputError :message="errors.password" />
             </div>
 
             <div class="grid gap-2">
-                <Label for="password_confirmation">Confirm password</Label>
+                <Label for="password_confirmation">
+                    Confirmer le mot de passe
+                </Label>
                 <PasswordInput
                     id="password_confirmation"
                     name="password_confirmation"
                     class="mt-1 block w-full"
                     autocomplete="new-password"
-                    placeholder="Confirm password"
+                    placeholder="Confirmer le mot de passe"
                     :passwordrules="props.passwordRules"
                 />
                 <InputError :message="errors.password_confirmation" />
@@ -100,7 +102,7 @@ defineOptions({
                     :disabled="processing"
                     data-test="update-password-button"
                 >
-                    Save
+                    Enregistrer
                 </Button>
             </div>
         </Form>

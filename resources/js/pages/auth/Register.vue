@@ -16,14 +16,14 @@ defineProps<{
 
 defineOptions({
     layout: {
-        title: 'Create an account',
-        description: 'Enter your details below to create your account',
+        title: 'Créer un compte',
+        description: 'Renseignez vos informations de compte',
     },
 });
 </script>
 
 <template>
-    <Head title="Register" />
+    <Head title="Créer un compte" />
 
     <Form
         v-bind="store.form()"
@@ -33,57 +33,57 @@ defineOptions({
     >
         <div class="grid gap-6">
             <div class="grid gap-2">
-                <Label for="name">Name</Label>
-                <Input
-                    id="name"
-                    type="text"
-                    required
-                    autofocus
-                    :tabindex="1"
-                    autocomplete="name"
-                    name="name"
-                    placeholder="Full name"
-                />
-                <InputError :message="errors.name" />
-            </div>
-
-            <div class="grid gap-2">
-                <Label for="email">Email address</Label>
+                <Label for="email">Adresse e-mail</Label>
                 <Input
                     id="email"
                     type="email"
                     required
-                    :tabindex="2"
+                    :tabindex="1"
                     autocomplete="email"
                     name="email"
-                    placeholder="email@example.com"
+                    placeholder="vous@exemple.fr"
                 />
                 <InputError :message="errors.email" />
             </div>
 
             <div class="grid gap-2">
-                <Label for="password">Password</Label>
+                <Label for="birth_date">Date de naissance</Label>
+                <Input
+                    id="birth_date"
+                    type="date"
+                    required
+                    :tabindex="2"
+                    autocomplete="bday"
+                    name="birth_date"
+                />
+                <InputError :message="errors.birth_date" />
+            </div>
+
+            <div class="grid gap-2">
+                <Label for="password">Mot de passe</Label>
                 <PasswordInput
                     id="password"
                     required
                     :tabindex="3"
                     autocomplete="new-password"
                     name="password"
-                    placeholder="Password"
+                    placeholder="Mot de passe"
                     :passwordrules="passwordRules"
                 />
                 <InputError :message="errors.password" />
             </div>
 
             <div class="grid gap-2">
-                <Label for="password_confirmation">Confirm password</Label>
+                <Label for="password_confirmation"
+                    >Confirmer le mot de passe</Label
+                >
                 <PasswordInput
                     id="password_confirmation"
                     required
                     :tabindex="4"
                     autocomplete="new-password"
                     name="password_confirmation"
-                    placeholder="Confirm password"
+                    placeholder="Confirmer le mot de passe"
                     :passwordrules="passwordRules"
                 />
                 <InputError :message="errors.password_confirmation" />
@@ -97,17 +97,17 @@ defineOptions({
                 data-test="register-user-button"
             >
                 <Spinner v-if="processing" />
-                Create account
+                Créer mon compte
             </Button>
         </div>
 
         <div class="text-center text-sm text-muted-foreground">
-            Already have an account?
+            Vous avez déjà un compte ?
             <TextLink
                 :href="login()"
                 class="underline underline-offset-4"
                 :tabindex="6"
-                >Log in</TextLink
+                >Se connecter</TextLink
             >
         </div>
     </Form>
