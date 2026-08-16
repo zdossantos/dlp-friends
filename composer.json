@@ -66,10 +66,17 @@
             "npm run lint:check",
             "npm run format:check",
             "npm run types:check",
+            "npm run test",
             "@test"
         ],
+        "analyse": [
+            "phpstan analyse --memory-limit=512M"
+        ],
         "types:check": [
-            "phpstan analyse"
+            "@analyse"
+        ],
+        "test:unit": [
+            "@php artisan test --testsuite=Unit"
         ],
         "test": [
             "@php artisan config:clear --ansi",
