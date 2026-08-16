@@ -21,4 +21,3 @@ case "${1:-web}" in
         exec "$@"
         ;;
 esac
-

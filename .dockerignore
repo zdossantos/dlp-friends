@@ -16,4 +16,3 @@ bootstrap/cache/*.php
 docker/postal/config
 npm-debug.log*
 yarn-error.log*
-
