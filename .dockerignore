@@ -13,6 +13,5 @@ storage/framework/sessions/*
 storage/framework/testing/*
 storage/framework/views/*
 bootstrap/cache/*.php
-docker/postal/config
 npm-debug.log*
 yarn-error.log*

@@ -31,18 +31,17 @@ Le Compose comprend :
 - `mysql` pour les données applicatives ;
 - `redis` pour cache, verrous et queues ;
 - `minio` pour le stockage S3-compatible privé ;
-- `mailpit` comme transport SMTP et interface de lecture en développement ;
-- `postal` et `postal-mariadb` dans le même fichier, mais uniquement sous le profil Compose `production`.
+- `mailpit` comme transport SMTP et interface de lecture en développement.
 
-MySQL, Redis et les services applicatifs internes ne publient pas de port hôte inutile. En développement, seuls l'application, l'interface Mailpit, l'API MinIO si nécessaire et Reverb sont accessibles depuis l'hôte. Postal conserve ses ports SMTP et d'administration nécessaires lorsqu'il est explicitement activé.
+MySQL, Redis et les services applicatifs internes ne publient pas de port hôte inutile. En développement, seuls l'application, l'interface Mailpit, l'API MinIO si nécessaire et Reverb sont accessibles depuis l'hôte.
 
-MySQL, MinIO et Postal MariaDB utilisent des volumes persistants. Tous les services longs disposent d'un healthcheck et d'une politique de redémarrage appropriée. Les secrets ne figurent ni dans l'image ni dans Git ; `.env.example` décrit les variables sans valeur sensible.
+MySQL et MinIO utilisent des volumes persistants. Tous les services longs disposent d'un healthcheck et d'une politique de redémarrage appropriée. Les secrets ne figurent ni dans l'image ni dans Git ; `.env.example` décrit les variables sans valeur sensible.
 
 ## Démarrage et données
 
 Le conteneur applicatif attend les dépendances nécessaires, prépare les caches Laravel compatibles avec l'environnement et démarre son processus dédié. Il n'exécute aucune migration automatiquement. Les migrations restent une action explicite avec `php artisan migrate` en développement et `php artisan migrate --force` lors du déploiement.
 
-Le développement utilise MySQL, Redis, MinIO et Mailpit. Laravel envoie les courriels à Mailpit par SMTP. Le profil `production` remplace la configuration SMTP applicative par les identifiants Postal fournis hors Git, sans modifier le code métier.
+Le développement utilise MySQL, Redis, MinIO et Mailpit. Laravel envoie les courriels à Mailpit par SMTP. Le transport SMTP de production est volontairement différé.
 
 ## Santé et comportement en échec
 
@@ -64,7 +63,7 @@ L'initialisation est acceptée lorsque les contrôles suivants réussissent :
 8. santé confirmée de MySQL, Redis, MinIO et Mailpit ;
 9. arrêt propre de la pile sans supprimer les volumes.
 
-Le README est mis à jour avec les prérequis, commandes de démarrage, ports locaux, commandes Artisan dans Docker, activation explicite du profil Postal et limites connues de cette première étape.
+Le README est mis à jour avec les prérequis, commandes de démarrage, ports locaux, commandes Artisan dans Docker et limites connues de cette première étape.
 
 ## Hors périmètre
 

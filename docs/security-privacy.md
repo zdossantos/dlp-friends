@@ -1,0 +1,43 @@
+# Sécurité, confidentialité et données personnelles
+
+## Majorité et accès
+
+- La date de naissance est obligatoire à l'inscription.
+- Refuser la création de compte si la personne a moins de 18 ans à cette date.
+- La vérification d'e-mail est requise avant l'accès aux fonctionnalités sociales.
+- Limiter les tentatives de connexion et protéger les formulaires contre les abus usuels.
+
+## Images
+
+- Accepter uniquement les formats et tailles explicitement autorisés.
+- Vérifier le contenu technique des fichiers côté serveur, limiter les dimensions et créer des variantes optimisées.
+- Retirer les métadonnées EXIF avant stockage ou diffusion.
+- Stocker les images dans le bucket MinIO privé, jamais dans le répertoire public de l'application, et les servir avec une URL contrôlée ou temporaire.
+- Les avatars du catalogue ne peuvent être publiés que si leurs droits d'usage sont établis.
+
+## Données et contrôle utilisateur
+
+- Réglages : édition des données visibles et des passions.
+- Masquage : suspend les nouvelles suggestions sans supprimer le compte.
+- Suppression : après confirmation explicite, le compte devient immédiatement inaccessible et invisible. Un job asynchrone supprime les images, tokens sociaux, profil, swipes, matches, conversations et messages dans un délai maximal de 30 jours; les sessions sont révoquées immédiatement.
+- Documenter, avant mise en production, les durées de conservation et la politique de confidentialité applicable.
+- Prévoir l'export des données de profil, passions, matches et messages dans les réglages. Cet export fait partie du contrôle utilisateur attendu au MVP.
+- Les sauvegardes ne sont pas modifiées rétroactivement lors d'une suppression ; leur durée de rétention doit être documentée et limitée.
+
+## Autorisation et protection applicative
+
+- Toute route sociale exige un utilisateur authentifié, e-mail vérifié, majeur et dont le statut est `active`.
+- Les contrôleurs délèguent le contrôle d'accès aux Policies Laravel; ne jamais faire confiance à un identifiant de profil transmis par le navigateur.
+- Les contenus texte sont validés, échappés à l'affichage et protégés contre l'injection HTML.
+- Les cookies de session sont sécurisés en HTTPS et les protections CSRF natives de Laravel restent actives.
+- Les canaux Reverb de conversation sont privés et leur autorisation vérifie l'appartenance au match ainsi que l'absence de blocage.
+
+## Blocage
+
+- Le blocage doit être disponible depuis un profil et une conversation.
+- Il a effet immédiat sur suggestions, match et messagerie pour les deux membres; la conversation est archivée et aucun nouveau message n'est accepté.
+- Ne pas informer l'autre membre de manière explicite qu'il a été bloqué.
+
+## Différé
+
+Le signalement de profils/messages, la console de modération et les processus d'équipe sont prévus en V2. Leur absence du MVP ne dispense pas de sécuriser les accès, les fichiers et la suppression de compte.

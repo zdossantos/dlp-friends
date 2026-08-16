@@ -4,9 +4,9 @@
 
 **Goal:** Initialize DLP Friends from Laravel's official Vue/TypeScript starter kit and provide a bootable Docker Compose stack for development and Coolify production.
 
-**Architecture:** Laravel, Inertia and Vue live at the repository root. A custom multi-stage image, explicitly without Laravel Sail, runs the web, queue, scheduler and Reverb processes; Compose adds private MySQL, Redis, MinIO and local Mailpit services, plus an opt-in Postal production profile. Postal follows its official v3 process topology by separating web, SMTP and worker processes while retaining `postal` as the primary service name.
+**Architecture:** Laravel, Inertia and Vue live at the repository root. A custom multi-stage image, explicitly without Laravel Sail, runs the web, queue, scheduler and Reverb processes; Compose adds private MySQL, Redis, MinIO and local Mailpit services. Production mail infrastructure is deferred.
 
-**Tech Stack:** Current stable Laravel, PHP 8.4, Inertia, Vue 3, TypeScript, Tailwind CSS, shadcn-vue, Pest, Nginx, PHP-FPM, MySQL 8.4, Redis 7.4, MinIO, Mailpit, Laravel Reverb, Postal 3.3.7, Docker Compose.
+**Tech Stack:** Current stable Laravel, PHP 8.4, Inertia, Vue 3, TypeScript, Tailwind CSS, shadcn-vue, Pest, Nginx, PHP-FPM, MySQL 8.4, Redis 7.4, MinIO, Mailpit, Laravel Reverb, Docker Compose.
 
 ## Global Constraints
 
@@ -14,8 +14,8 @@
 - Do not install or use Laravel Sail.
 - Preserve the existing `README.md`, `docs/` tree and Git history while copying the generated application to the repository root.
 - Lock Composer and npm dependencies in `composer.lock` and `package-lock.json`.
-- Use one `compose.yaml`; Postal is opt-in through the `production` profile and Mailpit is the development mail sink.
-- Do not commit application secrets, Postal credentials, generated signing keys or production `.env` files.
+- Use one `compose.yaml`; Mailpit is the development mail sink and production SMTP is out of scope.
+- Do not commit application secrets or production `.env` files.
 - Do not run migrations automatically from a container entrypoint.
 - Keep MySQL, Redis and internal application processes private to the Compose network.
 - Pin every third-party container image to an explicit stable version.
@@ -190,7 +190,7 @@ VITE_REVERB_PORT="${REVERB_PORT}"
 VITE_REVERB_SCHEME="${REVERB_SCHEME}"
 ```
 
-Keep `APP_KEY`, database passwords, MinIO keys, Reverb credentials and Postal secrets as empty or clearly non-production example values.
+Keep `APP_KEY`, database passwords, MinIO keys and Reverb credentials as empty or clearly non-production example values.
 
 - [ ] **Step 6: Verify health and frontend compilation**
 
@@ -388,80 +388,7 @@ git add compose.yaml .env.example
 git commit -m "chore: add local Docker services"
 ```
 
-### Task 5: Add the opt-in Postal production profile
-
-**Files:**
-- Create: `docker/postal/postal.example.yml`
-- Create: `docker/postal/README.md`
-- Modify: `compose.yaml`
-- Modify: `.gitignore`
-- Modify: `.env.example`
-- Modify: `docs/technical-architecture.md`
-- Modify: `docs/operations.md`
-
-**Interfaces:**
-- Consumes: Postal 3.3.7 configuration mounted at `/config` and a dedicated MariaDB database.
-- Produces: profile-scoped `postal`, `postal-smtp`, `postal-worker`, `postal-tools` and `postal-mariadb` services.
-
-- [ ] **Step 1: Add safe Postal templates and ignore generated secrets**
-
-Create `docker/postal/postal.example.yml` with placeholders for the web hostname, SMTP hostname, MariaDB credentials, DNS domains and Rails secret. Add these generated production files to `.gitignore`:
-
-```gitignore
-/docker/postal/config/postal.yml
-/docker/postal/config/signing.key
-/docker/postal/config/Caddyfile
-```
-
-- [ ] **Step 2: Model the official Postal v3 processes**
-
-Under Compose profile `production`, use `ghcr.io/postalserver/postal:3.3.7` for:
-
-- `postal`: `postal web-server`;
-- `postal-smtp`: `postal smtp-server`, publishing only configured SMTP ports;
-- `postal-worker`: `postal worker`;
-- `postal-tools`: command `postal`, additionally under profile `tools` for initialization and upgrades.
-
-Mount `docker/postal/config:/config:ro` for long-running services. Add `postal-mariadb` using an explicit MariaDB 11.4 image, a healthcheck, no public database port and named volume `postal-mariadb-data`.
-
-- [ ] **Step 3: Document one-time secure initialization**
-
-In `docker/postal/README.md`, document that operators must generate the Rails secret and signing key outside Git, create the database, run Postal initialization through the tools service, create the first user, configure DNS/PTR/SPF/DKIM/DMARC, and request IONOS port 25 before enabling production mail.
-
-- [ ] **Step 4: Update architecture and operations docs**
-
-Change the simplified single-Postal description to the actual v3 process topology. State that all Postal processes remain opt-in, use a dedicated MariaDB, and are not part of routine local development.
-
-- [ ] **Step 5: Render both Compose profiles**
-
-Run:
-
-```bash
-docker compose config --quiet
-docker compose --profile production --profile tools config --quiet
-```
-
-Expected: both render successfully; Postal secrets stay external and no production database port is published.
-
-- [ ] **Step 6: Pull and inspect Postal images without bootstrapping production secrets**
-
-Run:
-
-```bash
-docker compose --profile production pull postal postal-smtp postal-worker postal-mariadb
-docker compose --profile production config --images
-```
-
-Expected: pinned Postal 3.3.7 and MariaDB images resolve. Do not start Postal with placeholder credentials.
-
-- [ ] **Step 7: Commit the Postal profile**
-
-```bash
-git add compose.yaml .gitignore .env.example docker/postal docs/technical-architecture.md docs/operations.md
-git commit -m "chore: add Postal production profile"
-```
-
-### Task 6: Document and complete the bootstrap
+### Task 5: Document and complete the bootstrap
 
 **Files:**
 - Modify: `README.md`
@@ -469,7 +396,7 @@ git commit -m "chore: add Postal production profile"
 - Test: `tests/Feature/HealthCheckTest.php`
 
 **Interfaces:**
-- Consumes: all deliverables from Tasks 1–5.
+- Consumes: all deliverables from Tasks 1–4.
 - Produces: a newcomer-ready local setup and recorded completion evidence for implementation-plan Task 1.
 
 - [ ] **Step 1: Document prerequisites and local setup**
@@ -478,11 +405,11 @@ Add README sections for PHP/Composer/Node when running checks on the host, Docke
 
 - [ ] **Step 2: Document operational boundaries**
 
-State explicitly: no Laravel Sail; Mailpit is local-only; Postal requires the `production` profile and real secrets; migrations are never automatic; MySQL/Redis are private; persistent data is removed only with an explicit `docker compose down --volumes` command.
+State explicitly: no Laravel Sail; Mailpit is local-only; production SMTP is deferred; migrations are never automatic; MySQL/Redis are private; persistent data is removed only with an explicit `docker compose down --volumes` command.
 
 - [ ] **Step 3: Record the implementation-plan outcome**
 
-Mark Task 1 checkboxes complete only for checks actually observed. If the Postal production profile cannot be started without real credentials, record image/config validation as the reproducible acceptance check and leave credential-dependent production bootstrap documented as an operator step.
+Mark Task 1 checkboxes complete only for checks actually observed and record production SMTP as deferred.
 
 - [ ] **Step 4: Run final verification**
 
@@ -511,7 +438,7 @@ Run:
 ```bash
 composer show laravel/sail
 rg -n "laravel/sail|vendor/bin/sail" composer.json composer.lock package.json README.md docs Dockerfile compose.yaml
-git grep -nE "APP_KEY=base64:|POSTAL.*PASSWORD=.+|MINIO_ROOT_PASSWORD=.+"
+git grep -nE "APP_KEY=base64:|MINIO_ROOT_PASSWORD=.+"
 ```
 
 Expected: `composer show` exits non-zero; searches find no Sail usage or committed real secrets.
@@ -525,8 +452,8 @@ git commit -m "docs: document Laravel Docker bootstrap"
 
 ## Self-review
 
-- Every accepted design section maps to Tasks 1–6.
+- Every accepted design section maps to Tasks 1–5.
 - The plan preserves existing documentation, forbids Sail, locks dependencies, separates all long-running processes, avoids automatic migrations and defines health evidence.
-- Postal's current official three-process topology is represented explicitly rather than hidden inside one fragile container.
+- Production SMTP infrastructure remains deferred and outside this bootstrap.
 - Production credentials and DNS changes remain operator-controlled and outside Git.
 - No application feature beyond implementation-plan Task 1 is introduced.
