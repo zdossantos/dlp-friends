@@ -1,0 +1,36 @@
+name: Promote develop
+
+on:
+  push:
+    branches:
+      - develop
+
+concurrency:
+  group: promote-develop
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  promotion-pr:
+    name: Open promotion pull request
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - name: Create pull request when absent
+        shell: bash
+        run: |
+          set -euo pipefail
+          open_count="$(gh pr list --state open --base main --head develop --json number --jq 'length')"
+
+          if [[ "$open_count" -eq 0 ]]; then
+            gh pr create \
+              --base main \
+              --head develop \
+              --title "chore: promote develop to main" \
+              --body $'## Publication\n\nFusionner avec un **merge commit** après validation de la CI. Ne pas utiliser squash ou rebase : Release Please doit lire les Conventional Commits de develop.\n\nAucun déploiement Coolify n’est déclenché par ce workflow.'
+          fi
