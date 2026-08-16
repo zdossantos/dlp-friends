@@ -16,19 +16,40 @@ trait ProfileValidationRules
     protected function profileRules(?int $userId = null): array
     {
         return [
-            'name' => $this->nameRules(),
+            'username' => $this->usernameRules($userId),
             'email' => $this->emailRules($userId),
         ];
     }
 
     /**
-     * Get the validation rules used to validate user names.
+     * Normalize a username before validation and persistence.
+     */
+    protected function normalizeUsername(mixed $username): mixed
+    {
+        if (! is_string($username)) {
+            return $username;
+        }
+
+        return preg_replace('/\s+/u', ' ', trim($username));
+    }
+
+    /**
+     * Get the validation rules used to validate usernames.
      *
      * @return array<int, ValidationRule|array<mixed>|string>
      */
-    protected function nameRules(): array
+    protected function usernameRules(?int $userId = null): array
     {
-        return ['required', 'string', 'max:255'];
+        return [
+            'required',
+            'string',
+            'min:3',
+            'max:30',
+            'regex:/^[\pL\pN _-]+$/u',
+            $userId === null
+                ? Rule::unique(User::class)
+                : Rule::unique(User::class)->ignore($userId),
+        ];
     }
 
     /**

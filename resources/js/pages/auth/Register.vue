@@ -33,18 +33,18 @@ defineOptions({
     >
         <div class="grid gap-6">
             <div class="grid gap-2">
-                <Label for="name">Name</Label>
+                <Label for="username">Pseudo</Label>
                 <Input
-                    id="name"
+                    id="username"
                     type="text"
                     required
                     autofocus
                     :tabindex="1"
-                    autocomplete="name"
-                    name="name"
-                    placeholder="Full name"
+                    autocomplete="username"
+                    name="username"
+                    placeholder="Votre pseudo"
                 />
-                <InputError :message="errors.name" />
+                <InputError :message="errors.username" />
             </div>
 
             <div class="grid gap-2">
