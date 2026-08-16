@@ -59,6 +59,9 @@ Checks obligatoires :
 4. `Vite build` : compilation des assets frontend.
 5. `Docker build` : construction de l'image applicative sans publication.
 
+Le cache BuildKit de l'image runtime est conservé par GitHub Actions afin de ne
+pas recompiler les extensions PHP natives à chaque pull request.
+
 Aucun merge n'est autorisé si les checks requis échouent.
 
 ## PR automatique develop → main

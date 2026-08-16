@@ -162,5 +162,14 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
       - name: Build runtime image
-        run: docker build --target runtime --tag dlp-friends:ci .
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
+        with:
+          context: .
+          target: runtime
+          push: false
+          tags: dlp-friends:ci
+          cache-from: type=gha,scope=runtime-image
+          cache-to: type=gha,mode=max,scope=runtime-image
