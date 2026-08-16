@@ -31,6 +31,11 @@ Release Please ne publie aucun package npm : l'application est un site web.
 
 Le versioning est effectué à partir de `main` après publication des changements.
 
+La promotion et Release Please utilisent le secret GitHub Actions
+`RELEASE_PLEASE_TOKEN`, contenant un jeton fin limité à ce dépôt. Ce jeton est
+nécessaire pour que leurs PR déclenchent la CI ; il ne sert à aucun déploiement ni
+publication de package.
+
 ## Dépendances — Dependabot
 
 Dependabot surveille et met à jour automatiquement :
@@ -41,18 +46,21 @@ Dependabot surveille et met à jour automatiquement :
 
 Les mises à jour sont proposées sous forme de PR vers `develop` et doivent passer la CI avant fusion.
 
-## CI — PR vers develop
+## CI — PR vers develop et main
 
-Déclencheurs : ouverture, synchronisation ou réouverture d'une PR vers `develop`.
+Déclencheurs : ouverture, synchronisation, réouverture ou passage en revue d'une
+PR vers `develop` ou `main`.
 
 Checks obligatoires :
 
-1. Checkout et installation PHP/Node.
-2. Installation verrouillée des dépendances Composer/npm.
-3. Laravel Pint, PHPStan/Larastan, lint et formatage.
-4. Tests Pest backend avec MySQL.
-5. Tests frontend, type-check TypeScript et build Vite.
-6. Build Docker.
+1. `PHP quality` : Laravel Pint et PHPStan/Larastan.
+2. `Backend tests` : tests Pest avec MySQL.
+3. `Frontend quality` : ESLint, Prettier, TypeScript et Vitest.
+4. `Vite build` : compilation des assets frontend.
+5. `Docker build` : construction de l'image applicative sans publication.
+
+Le cache BuildKit de l'image runtime est conservé par GitHub Actions afin de ne
+pas recompiler les extensions PHP natives à chaque pull request.
 
 Aucun merge n'est autorisé si les checks requis échouent.
 
@@ -66,6 +74,9 @@ Aucun merge n'est autorisé si les checks requis échouent.
 - ne jamais fusionner automatiquement cette PR.
 
 La fusion vers `main` reste manuelle après revue et validation de la CI.
+Elle utilise un merge commit : le squash masquerait les Conventional Commits de
+`develop` à Release Please, tandis qu'un rebase répété réécrirait l'historique de
+la branche d'intégration.
 
 ## Production
 
@@ -78,9 +89,13 @@ Ne jamais déployer `develop` ou une branche de fonctionnalité en production.
 ## Protection GitHub
 
 - Interdire les pushes directs sur `develop` et `main`.
+- Conserver un historique linéaire sur `develop` pour les PR de fonctionnalité.
+- Autoriser les merge commits sur `main` pour les promotions depuis `develop`.
 - Les futurs identifiants SMTP de production sont des secrets Coolify ; la CI ne doit jamais envoyer d'e-mail réel.
 - Exiger les checks CI requis avant merge.
-- Exiger au minimum une approbation sur `main`.
+- Tant que le dépôt n'a qu'un seul contributeur, ne demander aucune approbation
+  sur `main` afin de ne pas bloquer les publications. Passer à une approbation
+  obligatoire dès qu'un second reviewer est disponible.
 - Annuler les validations obsolètes après nouveau push.
 - Utiliser le principe du moindre privilège pour les permissions GitHub Actions.
 - Autoriser uniquement les workflows nécessaires à créer/modifier les PR et releases.
@@ -111,3 +126,4 @@ Dependabot
     └── GitHub Actions
           ↓
        PR → develop
+```

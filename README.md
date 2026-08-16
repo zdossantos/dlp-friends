@@ -29,13 +29,13 @@ Les migrations restent une action explicite : aucun conteneur ne modifie le sch�
 
 Services exposés localement :
 
-| Service | URL ou port |
-| --- | --- |
-| Application Laravel | `http://localhost:8000` |
-| Santé Laravel | `http://localhost:8000/up` |
-| Laravel Reverb | `ws://localhost:8080` |
-| Mailpit | `http://localhost:8025` (SMTP `1025`) |
-| MinIO | `http://localhost:9000` (console `9001`) |
+| Service             | URL ou port                              |
+| ------------------- | ---------------------------------------- |
+| Application Laravel | `http://localhost:8000`                  |
+| Santé Laravel       | `http://localhost:8000/up`               |
+| Laravel Reverb      | `ws://localhost:8080`                    |
+| Mailpit             | `http://localhost:8025` (SMTP `1025`)    |
+| MinIO               | `http://localhost:9000` (console `9001`) |
 
 MySQL et Redis ne publient aucun port sur l'hôte. Les commandes courantes sont :
 
@@ -49,10 +49,20 @@ docker compose down
 Pour les contrôles applicatifs exécutés sur l'hôte :
 
 ```sh
+composer lint:check
+composer analyse
 php artisan test
+npm run lint:check
+npm run format:check
 npm run types:check
+npm run test
 npm run build
+docker build --target runtime --tag dlp-friends:ci .
 ```
+
+Ces commandes correspondent aux contrôles exécutés dans GitHub Actions. La
+stratégie de branches, les checks requis et le versioning Release Please sont
+documentés dans [`docs/quality-ci-cd.md`](docs/quality-ci-cd.md).
 
 L'infrastructure SMTP de production est volontairement différée. Mailpit est l'unique transport SMTP local.
 
@@ -69,15 +79,15 @@ L'infrastructure SMTP de production est volontairement différée. Mailpit est l
 
 ## Index
 
-| Fichier | Contenu |
-| --- | --- |
-| `docs/product-vision.md` | Positionnement et principes produit |
-| `docs/mvp-v1.md` | Fonctionnalités livrées en version 1 |
-| `docs/roadmap.md` | Évolutions explicitement postérieures au MVP |
-| `docs/ux-design.md` | Direction artistique et règles d'interface |
-| `docs/data-model.md` | Modèle métier et matching |
-| `docs/technical-architecture.md` | Stack, services Docker et déploiement |
-| `docs/quality-ci-cd.md` | Tests, qualité, branches et automatisations GitHub |
-| `docs/security-privacy.md` | Sécurité, majorité, blocage et cycle de vie des données |
-| `docs/operations.md` | Sauvegardes, santé, journaux et exploitation |
-| `docs/engineering-principles.md` | Règles de simplicité, clean code et abstraction |
+| Fichier                          | Contenu                                                 |
+| -------------------------------- | ------------------------------------------------------- |
+| `docs/product-vision.md`         | Positionnement et principes produit                     |
+| `docs/mvp-v1.md`                 | Fonctionnalités livrées en version 1                    |
+| `docs/roadmap.md`                | Évolutions explicitement postérieures au MVP            |
+| `docs/ux-design.md`              | Direction artistique et règles d'interface              |
+| `docs/data-model.md`             | Modèle métier et matching                               |
+| `docs/technical-architecture.md` | Stack, services Docker et déploiement                   |
+| `docs/quality-ci-cd.md`          | Tests, qualité, branches et automatisations GitHub      |
+| `docs/security-privacy.md`       | Sécurité, majorité, blocage et cycle de vie des données |
+| `docs/operations.md`             | Sauvegardes, santé, journaux et exploitation            |
+| `docs/engineering-principles.md` | Règles de simplicité, clean code et abstraction         |
