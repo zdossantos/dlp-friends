@@ -1,0 +1,30 @@
+name: Promote to production
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: promote-to-production
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  pull-requests: write
+  checks: read
+  statuses: read
+
+jobs:
+  merge-promotion:
+    name: Merge validated promotion
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.RELEASE_PLEASE_TOKEN }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - name: Checkout trusted workflow source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Merge the validated promotion
+        shell: bash
+        run: .github/scripts/merge-promotion-pr.sh
