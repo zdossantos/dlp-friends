@@ -22,7 +22,21 @@ cp .env.example .env
 php artisan key:generate
 npm ci
 docker compose up --build -d
-docker compose exec web php artisan migrate --force
+docker compose exec web php artisan migrate --seed --force
+```
+
+Le seeder crée un compte local vérifié avec un profil complété :
+
+- e-mail : `test@example.com`
+- mot de passe : `password`
+- rôles : `user` et `admin`
+
+Après une inscription classique, l'utilisateur vérifie d'abord son adresse
+e-mail, puis renseigne son nom d'affichage et son profil. Le dashboard
+`/dashboard` est réservé au rôle `admin`. Pour promouvoir un compte existant :
+
+```sh
+docker compose exec web php artisan user:assign-role membre@example.com admin
 ```
 
 Les migrations restent une action explicite : aucun conteneur ne modifie le schéma au démarrage. Laravel Sail n'est ni installé ni utilisé ; `compose.yaml`, le `Dockerfile` et les points d'entrée du dépôt constituent l'environnement Docker.
@@ -43,6 +57,7 @@ MySQL et Redis ne publient aucun port sur l'hôte. Les commandes courantes sont 
 docker compose ps
 docker compose logs -f web worker reverb
 docker compose exec web php artisan migrate --force
+docker compose exec web php artisan db:seed --force
 docker compose down
 ```
 
