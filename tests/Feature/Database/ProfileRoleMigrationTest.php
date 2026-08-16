@@ -66,4 +66,41 @@ class ProfileRoleMigrationTest extends TestCase
 
         $removalMigration->up();
     }
+
+    public function test_profile_migration_rollback_avoids_generated_username_collisions(): void
+    {
+        $removalMigration = require database_path('migrations/2026_08_16_020000_drop_username_from_users.php');
+        $removalMigration->down();
+        $migration = require database_path('migrations/2026_08_16_010000_create_profiles_and_roles.php');
+
+        $now = now();
+        $userIds = collect(['first', 'second', 'third'])->map(fn (string $label): int => DB::table('users')->insertGetId([
+            'username' => null,
+            'email' => "{$label}@example.com",
+            'email_verified_at' => $now,
+            'birth_date' => '2000-01-01',
+            'status' => UserStatus::Active->value,
+            'password' => Hash::make('password'),
+            'created_at' => $now,
+            'updated_at' => $now,
+        ]));
+
+        foreach ($userIds as $index => $userId) {
+            DB::table('profiles')->insert([
+                'user_id' => $userId,
+                'display_name' => $index === 1 ? "Same Name-{$userIds[2]}" : 'Same Name',
+                'visibility' => 'visible',
+                'created_at' => $now,
+                'updated_at' => $now,
+            ]);
+        }
+
+        $migration->down();
+
+        $usernames = DB::table('users')->orderBy('id')->pluck('username');
+        $this->assertCount(3, $usernames->unique());
+
+        $migration->up();
+        $removalMigration->up();
+    }
 }

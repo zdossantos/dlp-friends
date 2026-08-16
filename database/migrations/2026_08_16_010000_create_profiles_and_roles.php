@@ -81,10 +81,12 @@ return new class extends Migration
                 $displayName = DB::table('profiles')->where('user_id', $user->id)->value('display_name');
                 $base = mb_substr(trim((string) ($displayName ?: "member-{$user->id}")), 0, 30);
                 $candidate = $base;
+                $attempt = 1;
 
-                if (isset($used[$candidate])) {
-                    $suffix = "-{$user->id}";
+                while (isset($used[$candidate])) {
+                    $suffix = "-{$user->id}".($attempt > 1 ? "-{$attempt}" : '');
                     $candidate = mb_substr($base, 0, 30 - mb_strlen($suffix)).$suffix;
+                    $attempt++;
                 }
 
                 $used[$candidate] = true;

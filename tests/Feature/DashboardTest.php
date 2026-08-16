@@ -51,6 +51,31 @@ class DashboardTest extends TestCase
                 ->where('stats.activeAccounts', 3)
                 ->where('stats.verifiedAccounts', 4)
                 ->where('stats.completedProfiles', 2)
+                ->where('auth.user', function ($user): bool {
+                    $user = collect($user)->all();
+                    $user['profile'] = collect($user['profile'])->all();
+                    $user['roles'] = collect($user['roles'])
+                        ->map(fn ($role): array => collect($role)->all())
+                        ->all();
+                    $this->assertEqualsCanonicalizing([
+                        'id',
+                        'email',
+                        'email_verified_at',
+                        'profile',
+                        'roles',
+                        'two_factor_enabled',
+                    ], array_keys($user));
+                    $this->assertEqualsCanonicalizing([
+                        'display_name',
+                        'bio',
+                        'visit_frequency',
+                        'visibility',
+                        'onboarding_completed_at',
+                    ], array_keys($user['profile']));
+                    $this->assertSame([['name' => 'user'], ['name' => 'admin']], $user['roles']);
+
+                    return true;
+                })
                 ->has('recentRegistrations', 4)
                 ->missing('recentRegistrations.0.birth_date')
                 ->missing('recentRegistrations.0.password'));

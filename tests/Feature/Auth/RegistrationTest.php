@@ -58,6 +58,21 @@ class RegistrationTest extends TestCase
         $response->assertRedirect('/app');
     }
 
+    public function test_registration_ignores_an_intended_admin_url(): void
+    {
+        Carbon::setTestNow('2026-08-16');
+
+        $response = $this->withSession(['url.intended' => '/dashboard'])
+            ->post(route('register.store'), [
+                'email' => 'new@example.com',
+                'birth_date' => '2000-01-01',
+                'password' => 'password',
+                'password_confirmation' => 'password',
+            ]);
+
+        $response->assertRedirect('/app');
+    }
+
     public function test_birth_date_is_required(): void
     {
         $response = $this->from(route('register'))->post(route('register.store'), [

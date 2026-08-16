@@ -50,6 +50,22 @@ class EmailVerificationTest extends TestCase
         $response->assertRedirect('/app?verified=1');
     }
 
+    public function test_email_verification_ignores_an_intended_admin_url(): void
+    {
+        $user = User::factory()->unverified()->create();
+        $verificationUrl = URL::temporarySignedRoute(
+            'verification.verify',
+            now()->addMinutes(60),
+            ['id' => $user->id, 'hash' => sha1($user->email)],
+        );
+
+        $response = $this->actingAs($user)
+            ->withSession(['url.intended' => '/dashboard'])
+            ->get($verificationUrl);
+
+        $response->assertRedirect('/app?verified=1');
+    }
+
     public function test_email_is_not_verified_with_invalid_hash()
     {
         $user = User::factory()->unverified()->create();

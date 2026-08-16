@@ -30,10 +30,18 @@ class UsernameRemovalMigrationTest extends TestCase
             'status' => UserStatus::Active,
             'password' => 'password',
         ]);
+        $third = User::query()->create([
+            'email' => 'third@example.com',
+            'birth_date' => '2000-01-01',
+            'status' => UserStatus::Active,
+            'password' => 'password',
+        ]);
 
-        foreach ([$first, $second] as $user) {
+        foreach ([$first, $second, $third] as $user) {
             $user->profile()->create([
-                'display_name' => 'Same Name',
+                'display_name' => $user->is($second)
+                    ? "Same Name-{$third->id}"
+                    : 'Same Name',
                 'bio' => null,
                 'visit_frequency' => VisitFrequency::Sometimes,
                 'visibility' => ProfileVisibility::Visible,
@@ -45,14 +53,15 @@ class UsernameRemovalMigrationTest extends TestCase
         $migration->down();
 
         $usernames = User::query()->orderBy('id')->pluck('username');
-        $this->assertCount(2, $usernames);
+        $this->assertCount(3, $usernames);
         $this->assertNotNull($usernames[0]);
         $this->assertNotNull($usernames[1]);
         $this->assertNotSame($usernames[0], $usernames[1]);
+        $this->assertCount(3, $usernames->unique());
 
         $migration->up();
 
         $this->assertFalse(Schema::hasColumn('users', 'username'));
-        $this->assertDatabaseCount('profiles', 2);
+        $this->assertDatabaseCount('profiles', 3);
     }
 }
