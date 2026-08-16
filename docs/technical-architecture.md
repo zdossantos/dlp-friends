@@ -48,7 +48,10 @@ Seul `web` reçoit le domaine public de l'application. MySQL, Redis, MinIO, work
 
 - Coolify est connecté au dépôt et déploie automatiquement la configuration Docker Compose versionnée dès qu'un nouveau commit arrive sur `main`. Ce fichier Compose est la source de vérité de la stack de production.
 - Des environnements séparés existent au minimum pour `develop` et `main`; `main` est la production.
-- Le déploiement de production intervient automatiquement après fusion volontaire de la PR `develop` vers `main`; aucun workflow GitHub ne déclenche Coolify.
+- Le déploiement de production intervient automatiquement après fusion
+  volontaire de la PR `automation/promote-develop → main`, construite depuis le
+  dernier `main` et intégrant `develop`; aucun workflow GitHub ne déclenche
+  Coolify.
 - Définir une route de santé non authentifiée, par exemple `/up`, qui ne divulgue aucun secret.
 - Définir des `healthcheck` Docker pour chaque service long-vivant et des limites CPU/mémoire par service.
 - Les variables critiques sont déclarées comme requises dans Compose et définies dans Coolify, jamais commitées.

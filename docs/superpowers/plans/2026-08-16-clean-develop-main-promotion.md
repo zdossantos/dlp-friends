@@ -380,10 +380,12 @@ Add this notice immediately after the title in `docs/superpowers/plans/2026-08-1
 
 - [ ] **Step 4: Verify documentation consistency**
 
-Run:
+Run (the three legacy files excluded from Prettier are covered by
+`git diff --check` to avoid unrelated whole-file reformatting):
 
 ```bash
-npx prettier --check .github/pull_request_template.md docs/quality-ci-cd.md docs/technical-architecture.md docs/implementation-plan.md docs/superpowers/specs/2026-08-16-github-ci-release-design.md docs/superpowers/plans/2026-08-16-github-ci-release.md
+npx prettier --check .github/pull_request_template.md docs/quality-ci-cd.md docs/superpowers/specs/2026-08-16-github-ci-release-design.md
+git diff --check
 rg -n 'automation/promote-develop' .github/pull_request_template.md docs/quality-ci-cd.md docs/technical-architecture.md docs/implementation-plan.md docs/superpowers/specs/2026-08-16-github-ci-release-design.md
 ```
 
@@ -423,7 +425,7 @@ Expected: all commands exit zero and the regression test reports success.
 - [ ] **Step 2: Run formatting and repository checks**
 
 ```bash
-npx prettier --check .github/workflows/promote-develop.yml .github/pull_request_template.md docs/quality-ci-cd.md docs/technical-architecture.md docs/implementation-plan.md docs/superpowers/specs/2026-08-16-github-ci-release-design.md docs/superpowers/plans/2026-08-16-github-ci-release.md
+npx prettier --check .github/workflows/promote-develop.yml .github/pull_request_template.md docs/quality-ci-cd.md docs/superpowers/specs/2026-08-16-github-ci-release-design.md
 git diff --check origin/develop...HEAD
 ```
 

@@ -52,12 +52,16 @@
 - Modify: `composer.json`, `package.json`, `README.md`
 - Test: `tests/Feature/HealthCheckTest.php`
 
-**Produces:** repeatable PHP/Vue checks, required PR validation and automated `develop` to `main` release PR creation.
+**Produces:** repeatable PHP/Vue checks, required PR validation and a promotion
+branch built from the latest `main` that integrates `develop`.
 
 - [ ] Add scripts named `test`, `test:unit`, `lint`, `format:check`, `types:check`, `analyse` and `build` that fail on errors.
 - [ ] Configure Pest, Laravel Pint, Larastan/PHPStan, ESLint, Vue type checking and Vitest.
 - [ ] Make `pr-develop.yml` run dependency installation, format check, static analysis, Pest against a MySQL service, Vitest, type check, Vite build and Docker build when a PR targets `develop`.
-- [ ] Make `release-pr.yml` run on pushes to `develop`, detect an existing `develop` → `main` PR with `gh pr list`, and create one with `gh pr create` only when absent.
+- [ ] Make the promotion workflow run on pushes to `develop` and `main`, rebuild
+  `automation/promote-develop` from the latest `main`, merge `develop`, publish
+  only that technical branch with an exact force-with-lease, and maintain at
+  most one `automation/promote-develop` → `main` PR.
 - [ ] Configure Coolify separately to watch `main` and deploy it automatically; do not add a Coolify webhook or deployment workflow to GitHub Actions.
 - [ ] Run every local script once; expect each command to exit 0.
 - [ ] Commit: `ci: add quality gates and delivery workflows`.
