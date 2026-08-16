@@ -1,12 +1,40 @@
 version: 2
 updates:
-  - package-ecosystem: "github-actions"
-    directory: "/"
+  - package-ecosystem: 'composer'
+    directory: '/'
+    target-branch: 'develop'
     schedule:
-      interval: "weekly"
+      interval: 'weekly'
     cooldown:
       default-days: 5
+    open-pull-requests-limit: 10
+    groups:
+      composer-dependencies:
+        patterns:
+          - '*'
+
+  - package-ecosystem: 'npm'
+    directory: '/'
+    target-branch: 'develop'
+    schedule:
+      interval: 'weekly'
+    cooldown:
+      default-days: 5
+    open-pull-requests-limit: 10
+    groups:
+      npm-dependencies:
+        patterns:
+          - '*'
+
+  - package-ecosystem: 'github-actions'
+    directory: '/'
+    target-branch: 'develop'
+    schedule:
+      interval: 'weekly'
+    cooldown:
+      default-days: 5
+    open-pull-requests-limit: 10
     groups:
       github-actions:
         patterns:
-          - "*"
+          - '*'
