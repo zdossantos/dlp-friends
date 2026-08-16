@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\Role;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -39,7 +40,31 @@ class HandleInertiaRequests extends Middleware
             ...parent::share($request),
             'name' => config('app.name'),
             'auth' => [
-                'user' => $request->user(),
+                'user' => function () use ($request): ?array {
+                    $user = $request->user()?->loadMissing(['profile', 'roles']);
+
+                    if ($user === null) {
+                        return null;
+                    }
+
+                    return [
+                        'id' => $user->id,
+                        'email' => $user->email,
+                        'email_verified_at' => $user->email_verified_at?->toIso8601String(),
+                        'profile' => $user->profile === null ? null : [
+                            'display_name' => $user->profile->display_name,
+                            'bio' => $user->profile->bio,
+                            'visit_frequency' => $user->profile->visit_frequency?->value,
+                            'visibility' => $user->profile->visibility->value,
+                            'onboarding_completed_at' => $user->profile->onboarding_completed_at?->toIso8601String(),
+                        ],
+                        'roles' => $user->roles
+                            ->map(fn (Role $role): array => ['name' => $role->name->value])
+                            ->values()
+                            ->all(),
+                        'two_factor_enabled' => $user->hasEnabledTwoFactorAuthentication(),
+                    ];
+                },
             ],
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
         ];

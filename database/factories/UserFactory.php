@@ -2,6 +2,10 @@
 
 namespace Database\Factories;
 
+use App\Enums\RoleName;
+use App\Enums\UserStatus;
+use App\Models\Profile;
+use App\Models\Role;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
@@ -17,6 +21,15 @@ class UserFactory extends Factory
      */
     protected static ?string $password;
 
+    public function configure(): static
+    {
+        return $this->afterCreating(function (User $user): void {
+            $role = Role::query()->where('name', RoleName::User)->firstOrFail();
+
+            $user->roles()->syncWithoutDetaching($role);
+        });
+    }
+
     /**
      * Define the model's default state.
      *
@@ -25,9 +38,10 @@ class UserFactory extends Factory
     public function definition(): array
     {
         return [
-            'name' => fake()->name(),
             'email' => fake()->unique()->safeEmail(),
             'email_verified_at' => now(),
+            'birth_date' => today()->subYears(25),
+            'status' => UserStatus::Active,
             'password' => static::$password ??= Hash::make('password'),
             'remember_token' => Str::random(10),
             'two_factor_secret' => null,
@@ -44,6 +58,22 @@ class UserFactory extends Factory
         return $this->state(fn (array $attributes) => [
             'email_verified_at' => null,
         ]);
+    }
+
+    public function withProfile(): static
+    {
+        return $this->afterCreating(function (User $user): void {
+            Profile::factory()->complete()->for($user)->create();
+        });
+    }
+
+    public function admin(): static
+    {
+        return $this->afterCreating(function (User $user): void {
+            $role = Role::query()->where('name', RoleName::Admin)->firstOrFail();
+
+            $user->roles()->syncWithoutDetaching($role);
+        });
     }
 
     /**
