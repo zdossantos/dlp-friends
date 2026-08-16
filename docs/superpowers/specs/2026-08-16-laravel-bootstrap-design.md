@@ -10,6 +10,8 @@ Les README et documents existants restent la source de vérité et ne sont pas r
 
 Le projet est généré à partir du starter kit Vue officiel de Laravel avec TypeScript. Le starter fournit Laravel, l'authentification, Inertia, Vue 3, Ziggy, Tailwind CSS et Vite. Inertia ne sera pas installé manuellement.
 
+Laravel Sail ne sera pas utilisé. Le projet maintient sa propre image applicative et son propre fichier Compose afin de respecter exactement la topologie documentée.
+
 Le scaffolding utilise les dernières versions stables et mutuellement compatibles disponibles au moment de l'installation. Les versions réellement installées sont verrouillées dans `composer.lock` et `package-lock.json` puis documentées dans le README.
 
 Le code applicatif est placé à la racine du dépôt sans écraser `README.md` ni `docs/`.
