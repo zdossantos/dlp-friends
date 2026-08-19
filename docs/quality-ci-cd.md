@@ -132,7 +132,7 @@ automation/promote-develop (dernier main + develop)
     ↓
 PR automatique → main
     ↓
-Revue + CI + merge manuel
+Revue + CI + action Promote to production
     ↓
 main
     ├── Release Please → SemVer + CHANGELOG + tag + GitHub Release
