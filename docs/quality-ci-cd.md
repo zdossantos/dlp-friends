@@ -85,16 +85,11 @@ Le workflow se déclenche aussi après un push sur `main` et manuellement. Il fe
 une promotion devenue vide lorsque `main` contient déjà tout `develop`. Il ne
 force-push jamais `develop` ou `main` et ne diminue aucune protection.
 
-Pour publier la promotion, vérifier la PR et attendre les cinq checks, puis
-lancer **Actions → Promote to production → Run workflow**. Cette action vérifie
-à nouveau la PR et son SHA, puis impose un merge commit. Ne jamais utiliser le
-bouton de fusion standard, **Update branch**, squash ou rebase sur une PR de
-promotion.
-
-Après une fusion correcte, `develop` devient un ancêtre de `main`, aucune PR de
-promotion vide n'est recréée et Release Please peut analyser les commits
-`feat:`/`fix:`. Pour récupérer l'incident des PR #34/#35, publier la PR #36 avec
-cette action après le retour au vert de tous ses checks.
+Dans l'interface GitHub, sélectionner explicitement **Create a merge commit**
+pour la PR `automation/promote-develop → main`. Ne pas utiliser **Update
+branch**, **Squash and merge** ou rebase : la branche technique contient déjà le
+dernier `main`, et Release Please doit voir les Conventional Commits de
+`develop` devenus ancêtres de `main`.
 
 ## Production
 

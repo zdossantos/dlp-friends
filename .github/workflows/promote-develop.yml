@@ -80,6 +80,25 @@ jobs:
           else
             git push origin "HEAD:$promotion_ref"
           fi
+      - name: Create promotion pull request when absent
+        if: steps.prepare.outputs.promotion_required == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          open_count="$(gh pr list \
+            --state open \
+            --base main \
+            --head automation/promote-develop \
+            --json number \
+            --jq 'length')"
+
+          if [[ -n "$remote_sha" ]]; then
+            git push \
+              --force-with-lease="$promotion_ref:$remote_sha" \
+              origin "HEAD:$promotion_ref"
+          else
+            git push origin "HEAD:$promotion_ref"
+          fi
       - name: Create or refresh promotion pull request
         if: steps.prepare.outputs.promotion_required == 'true'
         shell: bash
@@ -98,9 +117,7 @@ jobs:
               --base main \
               --head automation/promote-develop \
               --title "chore: promote develop to main" \
-              --body "$body"
-          else
-            gh pr edit "$pr_number" --body "$body"
+              --body $'## Publication\n\nCette branche est reconstruite automatiquement depuis le dernier `main`, puis fusionne `develop`. Les cinq checks doivent réussir.\n\nFusionner avec **Create a merge commit**. Ne pas utiliser **Update branch**, squash ou rebase.\n\nCoolify déploiera le commit arrivé sur `main`; Release Please ouvrira ensuite la PR de version.'
           fi
       - name: Close obsolete promotion pull request
         if: steps.prepare.outputs.promotion_required == 'false'
