@@ -19,6 +19,12 @@
 - Every business rule below requires a Pest test; every Vue interactive component requires a focused Vitest test.
 - Apply `docs/engineering-principles.md`: favour framework conventions and direct code; add an abstraction only when it removes a current, demonstrated complexity.
 
+## Fondations livrées en amont
+
+- [x] Issue #13 : séparation compte/profil, suppression de `username`, nom d'affichage non unique, onboarding après vérification et page de profil personnelle.
+- [x] Fondation de l'issue #14 : rôles normalisés `user`/`admin`, commande d'attribution, middleware serveur et dashboard d'agrégats réservé aux administrateurs. Le catalogue administrable reste dans la tâche 4.
+- [x] Tranche bornée de l'issue #27 : palette sémantique violet/rose/or, thèmes clair/sombre/système, identité DLP Friends et harmonisation des parcours existants. Les futurs écrans métier adopteront ces mêmes tokens.
+
 ---
 
 ### Task 1: Bootstrap the application and local services
@@ -46,12 +52,16 @@
 - Modify: `composer.json`, `package.json`, `README.md`
 - Test: `tests/Feature/HealthCheckTest.php`
 
-**Produces:** repeatable PHP/Vue checks, required PR validation and automated `develop` to `main` release PR creation.
+**Produces:** repeatable PHP/Vue checks, required PR validation and a promotion
+branch built from the latest `main` that integrates `develop`.
 
 - [ ] Add scripts named `test`, `test:unit`, `lint`, `format:check`, `types:check`, `analyse` and `build` that fail on errors.
 - [ ] Configure Pest, Laravel Pint, Larastan/PHPStan, ESLint, Vue type checking and Vitest.
 - [ ] Make `pr-develop.yml` run dependency installation, format check, static analysis, Pest against a MySQL service, Vitest, type check, Vite build and Docker build when a PR targets `develop`.
-- [ ] Make `release-pr.yml` run on pushes to `develop`, detect an existing `develop` → `main` PR with `gh pr list`, and create one with `gh pr create` only when absent.
+- [ ] Make the promotion workflow run on pushes to `develop` and `main`, rebuild
+  `automation/promote-develop` from the latest `main`, merge `develop`, publish
+  only that technical branch with an exact force-with-lease, and maintain at
+  most one `automation/promote-develop` → `main` PR.
 - [ ] Configure Coolify separately to watch `main` and deploy it automatically; do not add a Coolify webhook or deployment workflow to GitHub Actions.
 - [ ] Run every local script once; expect each command to exit 0.
 - [ ] Commit: `ci: add quality gates and delivery workflows`.
@@ -76,16 +86,16 @@
 ### Task 4: Build profiles, image processing and administration catalogue
 
 **Files:**
-- Create: migrations for `profiles`, `passion_categories`, `passions`, `passion_profile`, `avatars`, `roles`, `user_roles`
-- Create: `app/Models/Profile.php`, `app/Models/Passion.php`, `app/Models/PassionCategory.php`, `app/Models/Avatar.php`
+- Create: migrations for `passion_categories`, `passions`, `passion_profile`, `avatars`
+- Create: `app/Models/Passion.php`, `app/Models/PassionCategory.php`, `app/Models/Avatar.php`
 - Create: `app/Jobs/ProcessProfileImage.php`, `app/Http/Controllers/ProfileController.php`, `app/Http/Controllers/Admin/*Controller.php`
 - Create: `resources/js/Pages/Profile/Edit.vue`, `resources/js/Pages/Admin/Passions/Index.vue`
 - Test: `tests/Feature/ProfileTest.php`, `tests/Feature/Admin/PassionCatalogueTest.php`, `tests/Unit/ProcessProfileImageTest.php`
 
 **Produces:** editable public profiles, safe optional images and database-managed passions/avatars.
 
-- [ ] Write failing tests for unique pseudo, hidden/visible profile state, multiple passions, non-admin access denial and an admin creating a category and passion.
-- [ ] Implement the models and migrations with foreign keys, unique constraints and an `admin` role seed.
+- [ ] Write failing tests for hidden/visible profile state, multiple passions, non-admin access denial and an admin creating a category and passion. Preserve the existing non-unique display-name rule.
+- [ ] Implement the catalogue models and migrations with foreign keys and unique catalogue constraints, reusing the existing profile and role foundations.
 - [ ] Write a failing queued-image test: a valid image dispatches `ProcessProfileImage`; an executable or oversized image is rejected.
 - [ ] Implement upload validation, EXIF stripping, resized image variants and private MinIO keys in `ProcessProfileImage`.
 - [ ] Implement profile editing and protected admin catalogue CRUD; forbid all admin message access.

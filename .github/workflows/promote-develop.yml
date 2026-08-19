@@ -4,18 +4,21 @@ on:
   push:
     branches:
       - develop
+      - main
+  workflow_dispatch:
 
 concurrency:
   group: promote-develop
   cancel-in-progress: false
 
 permissions:
-  contents: read
+  contents: write
   pull-requests: write
 
 jobs:
   docker-cache:
     name: Warm shared Docker cache
+    if: github.event_name == 'workflow_dispatch' || github.ref_name == 'develop'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -35,23 +38,83 @@ jobs:
           cache-to: type=gha,mode=max,scope=runtime-image
 
   promotion-pr:
-    name: Open promotion pull request
+    name: Synchronize promotion pull request
     needs: docker-cache
+    if: always() && (needs.docker-cache.result == 'success' || needs.docker-cache.result == 'skipped')
     runs-on: ubuntu-latest
     env:
       GH_TOKEN: ${{ secrets.RELEASE_PLEASE_TOKEN }}
       GH_REPO: ${{ github.repository }}
     steps:
-      - name: Create pull request when absent
+      - name: Checkout workflow source with complete history
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+          token: ${{ secrets.RELEASE_PLEASE_TOKEN }}
+      - name: Fetch protected branch tips
         shell: bash
         run: |
           set -euo pipefail
-          open_count="$(gh pr list --state open --base main --head develop --json number --jq 'length')"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git fetch --no-tags origin \
+            +refs/heads/main:refs/remotes/origin/main \
+            +refs/heads/develop:refs/remotes/origin/develop
+      - name: Prepare promotion branch
+        id: prepare
+        shell: bash
+        run: .github/scripts/prepare-promotion-branch.sh
+      - name: Publish promotion branch with an exact lease
+        if: steps.prepare.outputs.promotion_required == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          promotion_ref="refs/heads/automation/promote-develop"
+          remote_sha="$(git ls-remote --heads origin "$promotion_ref" | cut -f1)"
 
-          if [[ "$open_count" -eq 0 ]]; then
+          if [[ -n "$remote_sha" ]]; then
+            git push \
+              --force-with-lease="$promotion_ref:$remote_sha" \
+              origin "HEAD:$promotion_ref"
+          else
+            git push origin "HEAD:$promotion_ref"
+          fi
+      - name: Create or refresh promotion pull request
+        if: steps.prepare.outputs.promotion_required == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          pr_number="$(gh pr list \
+            --state open \
+            --base main \
+            --head automation/promote-develop \
+            --json number \
+            --jq '.[0].number // empty')"
+          body=$'## Publication\n\nCette branche est reconstruite automatiquement depuis le dernier `main`, puis fusionne `develop`.\n\nVérifier les changements et attendre la réussite des cinq checks, puis lancer **Actions → Promote to production → Run workflow**. Cette action contrôle à nouveau la PR et son SHA avant d’imposer un merge commit.\n\nNe pas utiliser le bouton de fusion standard, **Update branch**, squash ou rebase.\n\nCoolify déploiera le commit arrivé sur `main`; Release Please ouvrira ensuite la PR de version.'
+
+          if [[ -z "$pr_number" ]]; then
             gh pr create \
               --base main \
-              --head develop \
+              --head automation/promote-develop \
               --title "chore: promote develop to main" \
-              --body $'## Publication\n\nFusionner avec un **merge commit** après validation de la CI. Ne pas utiliser squash ou rebase : Release Please doit lire les Conventional Commits de develop.\n\nAucun déploiement Coolify n’est déclenché par ce workflow.'
+              --body "$body"
+          else
+            gh pr edit "$pr_number" --body "$body"
+          fi
+      - name: Close obsolete promotion pull request
+        if: steps.prepare.outputs.promotion_required == 'false'
+        shell: bash
+        run: |
+          set -euo pipefail
+          pr_number="$(gh pr list \
+            --state open \
+            --base main \
+            --head automation/promote-develop \
+            --json number \
+            --jq '.[0].number // empty')"
+
+          if [[ -n "$pr_number" ]]; then
+            gh pr close "$pr_number" \
+              --comment "Fermeture automatique : main contient déjà tous les commits de develop."
           fi
