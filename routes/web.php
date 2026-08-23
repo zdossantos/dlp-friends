@@ -1,8 +1,10 @@
 <?php
 
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\DiscoveryController;
 use App\Http\Controllers\LandingController;
 use App\Http\Controllers\MemberProfileController;
+use App\Http\Controllers\SwipeController;
 use Illuminate\Support\Facades\Route;
 
 Route::inertia('/', 'Welcome')->name('home');
@@ -22,6 +24,11 @@ Route::middleware(['auth', 'verified', 'social'])->group(function () {
             ->name('member-profile.edit');
         Route::patch('profile', [MemberProfileController::class, 'update'])
             ->name('member-profile.update');
+
+        Route::get('discover', DiscoveryController::class)
+            ->name('discovery.index');
+        Route::post('discover/{target}/swipe', SwipeController::class)
+            ->name('discovery.swipe');
 
         Route::get('dashboard', DashboardController::class)
             ->middleware('role:admin')

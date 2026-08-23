@@ -18,6 +18,6 @@ class LandingController extends Controller
 
         return $user->hasRole(RoleName::Admin)
             ? to_route('dashboard')
-            : to_route('member-profile.show');
+            : to_route('discovery.index');
     }
 }
