@@ -4,6 +4,7 @@ import AppSidebar from './AppSidebar.vue';
 
 const roleState = vi.hoisted(() => ({
     roles: [{ name: 'user' as const }] as Array<{ name: 'user' | 'admin' }>,
+    profileCompleted: true,
 }));
 
 vi.mock('@inertiajs/vue3', () => ({
@@ -15,13 +16,15 @@ vi.mock('@inertiajs/vue3', () => ({
                     id: 1,
                     email: 'test@example.com',
                     email_verified_at: '2026-08-16T10:00:00Z',
-                    profile: {
-                        display_name: 'Magic Friend',
-                        bio: null,
-                        visit_frequency: 'often',
-                        visibility: 'visible',
-                        onboarding_completed_at: '2026-08-16T10:00:00Z',
-                    },
+                    profile: roleState.profileCompleted
+                        ? {
+                              display_name: 'Magic Friend',
+                              bio: null,
+                              visit_frequency: 'often',
+                              visibility: 'visible',
+                              onboarding_completed_at: '2026-08-16T10:00:00Z',
+                          }
+                        : null,
                     roles: roleState.roles,
                 },
             },
@@ -36,6 +39,10 @@ vi.mock('@/routes', () => ({
 
 vi.mock('@/routes/member-profile', () => ({
     show: () => ({ url: '/profile' }),
+}));
+
+vi.mock('@/routes/discovery', () => ({
+    index: () => ({ url: '/discover' }),
 }));
 
 describe('AppSidebar', () => {
@@ -55,7 +62,7 @@ describe('AppSidebar', () => {
                     NavMain: {
                         props: ['items'],
                         template:
-                            '<nav><span v-for="item in items" :key="item.title">{{ item.title }}</span></nav>',
+                            '<nav><a v-for="item in items" :key="item.title" :href="item.href.url ?? item.href">{{ item.title }}</a></nav>',
                     },
                 },
             },
@@ -63,11 +70,14 @@ describe('AppSidebar', () => {
 
     beforeEach(() => {
         roleState.roles = [{ name: 'user' }];
+        roleState.profileCompleted = true;
     });
 
     it('shows profile without dashboard to a normal member', () => {
         const wrapper = mountSidebar();
 
+        const discover = wrapper.get('a[href="/discover"]');
+        expect(discover.text()).toBe('Découvrir');
         expect(wrapper.text()).toContain('Mon profil');
         expect(wrapper.text()).not.toContain('Administration');
     });
@@ -76,7 +86,16 @@ describe('AppSidebar', () => {
         roleState.roles = [{ name: 'user' }, { name: 'admin' }];
         const wrapper = mountSidebar();
 
+        expect(wrapper.get('a[href="/discover"]').text()).toBe('Découvrir');
         expect(wrapper.text()).toContain('Mon profil');
         expect(wrapper.text()).toContain('Administration');
+    });
+
+    it('hides discovery until the member profile is complete', () => {
+        roleState.profileCompleted = false;
+        const wrapper = mountSidebar();
+
+        expect(wrapper.find('a[href="/discover"]').exists()).toBe(false);
+        expect(wrapper.text()).toContain('Mon profil');
     });
 });

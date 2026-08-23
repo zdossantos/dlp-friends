@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -36,6 +37,12 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
  * @property Carbon|null $updated_at
  * @property-read Profile|null $profile
  * @property-read Collection<int, Role> $roles
+ * @property-read Collection<int, Swipe> $sentSwipes
+ * @property-read Collection<int, Swipe> $receivedSwipes
+ * @property-read Collection<int, MemberMatch> $lowMatches
+ * @property-read Collection<int, MemberMatch> $highMatches
+ * @property-read Collection<int, Block> $blocksCreated
+ * @property-read Collection<int, Block> $blocksReceived
  */
 #[Fillable(['email', 'birth_date', 'password'])]
 #[Hidden(['password', 'two_factor_secret', 'two_factor_recovery_codes', 'remember_token'])]
@@ -54,6 +61,42 @@ class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
     public function roles(): BelongsToMany
     {
         return $this->belongsToMany(Role::class, 'user_roles');
+    }
+
+    /** @return HasMany<Swipe, $this> */
+    public function sentSwipes(): HasMany
+    {
+        return $this->hasMany(Swipe::class, 'actor_user_id');
+    }
+
+    /** @return HasMany<Swipe, $this> */
+    public function receivedSwipes(): HasMany
+    {
+        return $this->hasMany(Swipe::class, 'target_user_id');
+    }
+
+    /** @return HasMany<MemberMatch, $this> */
+    public function lowMatches(): HasMany
+    {
+        return $this->hasMany(MemberMatch::class, 'user_low_id');
+    }
+
+    /** @return HasMany<MemberMatch, $this> */
+    public function highMatches(): HasMany
+    {
+        return $this->hasMany(MemberMatch::class, 'user_high_id');
+    }
+
+    /** @return HasMany<Block, $this> */
+    public function blocksCreated(): HasMany
+    {
+        return $this->hasMany(Block::class, 'blocker_user_id');
+    }
+
+    /** @return HasMany<Block, $this> */
+    public function blocksReceived(): HasMany
+    {
+        return $this->hasMany(Block::class, 'blocked_user_id');
     }
 
     public function hasRole(string|RoleName $role): bool

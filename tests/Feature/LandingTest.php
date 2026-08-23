@@ -39,13 +39,13 @@ class LandingTest extends TestCase
             ->assertRedirect(route('member-profile.create'));
     }
 
-    public function test_complete_member_lands_on_their_profile(): void
+    public function test_complete_member_lands_on_discovery(): void
     {
         $user = User::factory()->withProfile()->create();
 
         $this->actingAs($user)
             ->get('/app')
-            ->assertRedirect(route('member-profile.show'));
+            ->assertRedirect(route('discovery.index'));
     }
 
     public function test_complete_admin_lands_on_the_dashboard(): void
