@@ -1,6 +1,7 @@
 # Shell membre mobile-first de type application
 
-**Date :** 23 août 2026  
+**Date :** 23 août 2026
+
 **Issue :** #60
 
 ## Objectif
