@@ -2,7 +2,7 @@
 
 ## Préparer le projet
 
-Installer PHP 8.4, Composer 2, Node.js 22 avec npm et Docker Desktop. Le
+Installer PHP 8.4, Composer 2, Bun 1.3.14 et Docker Desktop. Le
 [`README.md`](README.md) décrit le démarrage local et les commandes de contrôle.
 
 ## Créer une branche de travail
@@ -27,11 +27,11 @@ composer lint:check
 composer analyse
 php artisan test
 php artisan wayfinder:generate --with-form
-npm run lint:check
-npm run format:check
-npm run types:check
-npm test
-npm run build
+bun run lint:check
+bun run format:check
+bun run types:check
+bun run test
+bun run build
 docker build --target runtime --tag dlp-friends:ci .
 ```
 

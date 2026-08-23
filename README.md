@@ -14,13 +14,13 @@ Avant toute modification, lire dans cet ordre :
 
 ## Démarrage local
 
-Prérequis : PHP 8.4, Composer 2, Node.js avec npm et Docker Desktop avec Docker Compose.
+Prérequis : PHP 8.4, Composer 2, Bun 1.3.14 et Docker Desktop avec Docker Compose.
 
 ```sh
 composer install
 cp .env.example .env
 php artisan key:generate
-npm ci
+bun install --frozen-lockfile
 docker compose up --build -d
 docker compose exec web php artisan migrate --seed --force
 ```
@@ -67,11 +67,11 @@ Pour les contrôles applicatifs exécutés sur l'hôte :
 composer lint:check
 composer analyse
 php artisan test
-npm run lint:check
-npm run format:check
-npm run types:check
-npm run test
-npm run build
+bun run lint:check
+bun run format:check
+bun run types:check
+bun run test
+bun run build
 docker build --target runtime --tag dlp-friends:ci .
 ```
 

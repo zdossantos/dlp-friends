@@ -50,14 +50,14 @@ Les six checks indépendants sont :
 5. `Vite build` compile les assets de production ;
 6. `Docker build` construit l'image runtime sans la publier.
 
-Les dépendances sont installées depuis `composer.lock` et `package-lock.json`.
-GitHub Actions résout dynamiquement le répertoire de cache Composer, et met
-aussi en cache npm et les couches Docker BuildKit. Aucun merge n'est possible
-tant qu'un check requis échoue.
+Les dépendances sont installées depuis `composer.lock` et `bun.lock` avec Bun
+1.3.14. GitHub Actions résout dynamiquement le répertoire de cache Composer,
+et met aussi en cache les téléchargements Bun et les couches Docker BuildKit.
+Aucun merge n'est possible tant qu'un check requis échoue.
 
 ## Dependabot
 
-Dependabot surveille chaque semaine Composer, npm et GitHub Actions. Chaque
+Dependabot surveille chaque semaine Composer, Bun et GitHub Actions. Chaque
 écosystème conserve son propre groupe de mises à jour, son cooldown de cinq
 jours et sa limite de pull requests. Toutes les pull requests Dependabot ciblent
 `main` et passent les six checks comme les autres contributions.
@@ -118,7 +118,7 @@ merge volontaire de la Release PR
       ↓
 CHANGELOG + tag vX.Y.Z + GitHub Release
 
-Dependabot (Composer, npm, Actions)
+Dependabot (Composer, Bun, Actions)
       ↓
   PR vers main → même CI
 ```

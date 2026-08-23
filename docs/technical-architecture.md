@@ -6,7 +6,7 @@ Créer le projet à partir du **starter kit Vue officiel de Laravel**. Ne pas in
 
 ## Versions et stack
 
-- Dernière version stable de Laravel et de PHP compatible au moment du scaffolding. Les versions exactes sont verrouillées dans `composer.lock` et `package-lock.json`; aucune dépendance de production n'utilise une version flottante.
+- Dernière version stable de Laravel et de PHP compatible au moment du scaffolding. Les versions exactes sont verrouillées dans `composer.lock` et `bun.lock`; Bun 1.3.14 est épinglé dans tous les environnements et aucune dépendance de production n'utilise une version flottante.
 - Inertia avec ziggy avec Vue 3 Composition API et TypeScript.
 - Tailwind CSS, shadcn-vue comme bibliothèque de composants principale, Reka UI comme complément accessible.
 - MySQL comme base relationnelle.
@@ -37,7 +37,7 @@ Seul `web` reçoit le domaine public de l'application. MySQL, Redis, MinIO, work
 
 ## Images et exécution
 
-- Dockerfile multi-stage : compilation des assets Vite dans une étape Node, exécution PHP dans une étape séparée et minimale.
+- Dockerfile multi-stage : compilation des assets Vite avec Bun 1.3.14 dans une étape dédiée, exécution PHP dans une étape séparée et minimale.
 - Le conteneur web démarre avec la configuration Laravel mise en cache ; il ne lance pas de migration au démarrage.
 - Les migrations sont exécutées une seule fois lors du déploiement avec `php artisan migrate --force`. Elles doivent être rétrocompatibles avec la version applicative précédente; les migrations destructrices sont réalisées en plusieurs déploiements.
 - Le worker exécute `php artisan queue:work` avec limites de mémoire, tentatives et délai explicites ; `queue:restart` suit chaque déploiement.
