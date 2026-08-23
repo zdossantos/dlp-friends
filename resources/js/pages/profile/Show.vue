@@ -1,12 +1,20 @@
 <script setup lang="ts">
-import { Head, Link } from '@inertiajs/vue3';
-import { Pencil } from '@lucide/vue';
+import { Head, Link, usePage } from '@inertiajs/vue3';
+import { LayoutDashboard, Pencil, Settings } from '@lucide/vue';
+import { computed } from 'vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { edit, show } from '@/routes/member-profile';
+import { dashboard } from '@/routes';
+import { edit as editAccount } from '@/routes/account';
+import { edit as editProfile, show } from '@/routes/member-profile';
 import type { Profile, VisitFrequency } from '@/types';
 
 const props = defineProps<{ profile: Profile; age: number }>();
+const page = usePage();
+
+const isAdmin = computed(() =>
+    page.props.auth.user.roles.some((role) => role.name === 'admin'),
+);
 
 const frequencyLabels: Record<VisitFrequency, string> = {
     rarely: 'Rarement',
@@ -26,6 +34,27 @@ defineOptions({
         <section
             class="space-y-6 rounded-2xl border bg-card p-6 shadow-sm sm:p-8"
         >
+            <div class="flex justify-end gap-2" aria-label="Actions du profil">
+                <Button as-child variant="outline" size="icon" class="size-12">
+                    <Link :href="editAccount()" aria-label="Réglages">
+                        <Settings class="size-5" aria-hidden="true" />
+                    </Link>
+                </Button>
+                <Button
+                    v-if="isAdmin"
+                    as-child
+                    variant="outline"
+                    size="icon"
+                    class="size-12"
+                >
+                    <Link :href="dashboard()" aria-label="Administration">
+                        <LayoutDashboard
+                            class="size-5"
+                            aria-hidden="true"
+                        />
+                    </Link>
+                </Button>
+            </div>
             <div
                 class="flex flex-col justify-between gap-4 sm:flex-row sm:items-start"
             >
@@ -47,8 +76,9 @@ defineOptions({
                     </p>
                 </div>
                 <Button as-child variant="outline">
-                    <Link :href="edit()"
-                        ><Pencil class="size-4" /> Modifier mon profil</Link
+                    <Link :href="editProfile()"
+                        ><Pencil class="size-4" aria-hidden="true" /> Modifier
+                        mon profil</Link
                     >
                 </Button>
             </div>
