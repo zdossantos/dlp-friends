@@ -24,4 +24,4 @@ Le produit évite de chercher des contacts dans des communautés généralistes 
 - Un nouveau membre peut créer un profil complet, sélectionner ses passions et voir des suggestions pertinentes.
 - Deux likes réciproques créent un match et une conversation sans intervention manuelle.
 - Un membre peut bloquer un autre membre et reprendre immédiatement le contrôle de son expérience.
-- Le projet peut être déployé de manière reproductible sur Coolify et toutes les PR vers `develop` sont contrôlées automatiquement.
+- Le projet peut être déployé de manière reproductible sur Coolify et toutes les PR vers `main` sont contrôlées automatiquement.

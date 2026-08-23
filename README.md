@@ -75,9 +75,21 @@ npm run build
 docker build --target runtime --tag dlp-friends:ci .
 ```
 
-Ces commandes correspondent aux contrôles exécutés dans GitHub Actions. La
-stratégie de branches, les checks requis et le versioning Release Please sont
-documentés dans [`docs/quality-ci-cd.md`](docs/quality-ci-cd.md).
+Ces commandes correspondent aux contrôles exécutés dans GitHub Actions.
+
+## Contribution et releases
+
+Toute modification part d'une branche dédiée et ouvre une pull request
+directement vers `main`. Les six checks obligatoires doivent réussir avant un
+**Squash & Merge**, et le titre de la pull request suit Conventional Commits.
+
+Le merge d'une fonctionnalité ou d'un correctif ne publie pas immédiatement une
+version. Release Please maintient une Release PR ; son merge volontaire crée le
+changelog, le tag SemVer et la GitHub Release, sans publier de package.
+
+Le processus complet est décrit dans [`CONTRIBUTING.md`](CONTRIBUTING.md). Les
+checks, protections et automatisations sont détaillés dans
+[`docs/quality-ci-cd.md`](docs/quality-ci-cd.md).
 
 L'infrastructure SMTP de production est volontairement différée. Mailpit est l'unique transport SMTP local.
 
@@ -106,3 +118,4 @@ L'infrastructure SMTP de production est volontairement différée. Mailpit est l
 | `docs/security-privacy.md`       | Sécurité, majorité, blocage et cycle de vie des données |
 | `docs/operations.md`             | Sauvegardes, santé, journaux et exploitation            |
 | `docs/engineering-principles.md` | Règles de simplicité, clean code et abstraction         |
+| `CONTRIBUTING.md`                | Branches, pull requests et publication des versions     |
