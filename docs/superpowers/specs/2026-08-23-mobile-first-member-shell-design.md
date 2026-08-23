@@ -112,6 +112,13 @@ existant déclenche respectivement `pass` ou `like`. Les mouvements courts,
 verticaux, diagonaux ou annulés ne prennent aucune décision, et la carte reste
 verrouillée pendant la soumission.
 
+Pendant le geste, la carte suit directement le pointeur et s'incline dans la
+direction du déplacement. Un geste trop court revient au centre avec une
+transition souple. Une décision validée accélère la carte hors de l'écran avant
+d'émettre l'action, afin que le résultat du geste soit immédiatement visible,
+sans ajouter d'icône ni de libellé romantique. La préférence système de
+réduction des animations est respectée.
+
 L'absence de boutons visibles ne retire pas l'accessibilité : la carte reste
 focusable, son nom accessible explique les commandes, les flèches gauche et
 droite déclenchent les mêmes décisions, et deux contrôles sémantiques

@@ -41,6 +41,7 @@ Expected: dependencies install successfully; generated Wayfinder modules exist; 
 ### Task 1: Central Page-Layout Resolution
 
 **Files:**
+
 - Create: `resources/js/layouts/resolvePageLayout.ts`
 - Create: `resources/js/layouts/resolvePageLayout.spec.ts`
 - Create: `resources/js/layouts/AdminLayout.vue`
@@ -49,6 +50,7 @@ Expected: dependencies install successfully; generated Wayfinder modules exist; 
 - Preserve temporarily: `resources/js/layouts/AppLayout.vue`
 
 **Interfaces:**
+
 - Consumes: Inertia component names such as `Welcome`, `auth/Login`, `settings/Account`, `Dashboard`, `Discovery/Index`, and `profile/Show`.
 - Produces: `resolvePageLayout(name: string): Component | Component[] | null`; dedicated `AdminLayout` and `MemberLayout` Vue components consumed by the resolver and later tasks.
 
@@ -106,7 +108,9 @@ import AuthLayout from '@/layouts/AuthLayout.vue';
 import MemberLayout from '@/layouts/MemberLayout.vue';
 import SettingsLayout from '@/layouts/settings/Layout.vue';
 
-export function resolvePageLayout(name: string): Component | Component[] | null {
+export function resolvePageLayout(
+    name: string,
+): Component | Component[] | null {
     if (name === 'Welcome') return null;
     if (name.startsWith('auth/')) return AuthLayout;
     if (name === 'Dashboard') return AdminLayout;
@@ -176,12 +180,14 @@ git commit -m "refactor: separate member and admin layouts"
 ### Task 2: Safe-Area Member Shell and Icon-Only Dock
 
 **Files:**
+
 - Create: `resources/js/components/MemberBottomNavigation.vue`
 - Create: `resources/js/components/MemberBottomNavigation.spec.ts`
 - Create: `resources/js/layouts/MemberLayout.spec.ts`
 - Modify: `resources/js/layouts/MemberLayout.vue`
 
 **Interfaces:**
+
 - Consumes: `usePage().props.auth.user.profile?.onboarding_completed_at`, `useCurrentUrl()`, `discovery.index()`, and `member-profile.show()`.
 - Produces: `MemberBottomNavigation`, which renders `nav[data-test="member-bottom-navigation"]` only for a complete profile; `MemberLayout`, which reserves dock and safe-area space without a header.
 
@@ -218,7 +224,9 @@ vi.mock('@inertiajs/vue3', () => ({
 }));
 
 vi.mock('@/routes/discovery', () => ({ index: () => ({ url: '/discover' }) }));
-vi.mock('@/routes/member-profile', () => ({ show: () => ({ url: '/profile' }) }));
+vi.mock('@/routes/member-profile', () => ({
+    show: () => ({ url: '/profile' }),
+}));
 
 describe('MemberBottomNavigation', () => {
     beforeEach(() => {
@@ -237,15 +245,21 @@ describe('MemberBottomNavigation', () => {
         ]);
         expect(wrapper.text()).not.toContain('Découvrir');
         expect(wrapper.text()).not.toContain('Profil');
-        expect(wrapper.find('a[href="/discover"]').attributes('aria-current')).toBe('page');
+        expect(
+            wrapper.find('a[href="/discover"]').attributes('aria-current'),
+        ).toBe('page');
     });
 
     it('moves the active state with the current route', () => {
         state.url = '/profile/edit';
         const wrapper = mount(MemberBottomNavigation);
 
-        expect(wrapper.find('a[href="/profile"]').attributes('aria-current')).toBe('page');
-        expect(wrapper.find('a[href="/discover"]').attributes('aria-current')).toBeUndefined();
+        expect(
+            wrapper.find('a[href="/profile"]').attributes('aria-current'),
+        ).toBe('page');
+        expect(
+            wrapper.find('a[href="/discover"]').attributes('aria-current'),
+        ).toBeUndefined();
     });
 
     it('hides navigation before onboarding completes', () => {
@@ -270,9 +284,9 @@ describe('MemberLayout', () => {
         });
 
         expect(wrapper.find('header').exists()).toBe(false);
-        expect(wrapper.find('[data-test="member-shell-content"]').classes()).toContain(
-            'pb-[calc(6rem+env(safe-area-inset-bottom))]',
-        );
+        expect(
+            wrapper.find('[data-test="member-shell-content"]').classes(),
+        ).toContain('pb-[calc(6rem+env(safe-area-inset-bottom))]');
     });
 });
 ```
@@ -312,7 +326,10 @@ Render each item as:
 Wrap the links in a fixed safe-area dock:
 
 ```vue
-<div v-if="isProfileComplete" class="fixed inset-x-0 bottom-0 z-40 flex justify-center px-4 [padding-bottom:max(0.75rem,env(safe-area-inset-bottom))]">
+<div
+    v-if="isProfileComplete"
+    class="fixed inset-x-0 bottom-0 z-40 flex justify-center px-4 [padding-bottom:max(0.75rem,env(safe-area-inset-bottom))]"
+>
     <nav data-test="member-bottom-navigation" aria-label="Navigation principale" class="flex min-h-16 w-full max-w-sm items-center justify-around rounded-3xl border bg-card/95 px-4 shadow-xl backdrop-blur">
         <!-- route links -->
     </nav>
@@ -330,9 +347,17 @@ import { Toaster } from '@/components/ui/sonner';
 </script>
 
 <template>
-    <div class="relative flex min-h-svh w-full flex-col overflow-x-hidden bg-background text-foreground">
-        <div aria-hidden="true" class="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_top_left,var(--color-secondary),transparent_42%),radial-gradient(circle_at_bottom_right,var(--color-accent),transparent_38%)] opacity-35" />
-        <div data-test="member-shell-content" class="relative flex min-h-svh w-full flex-1 flex-col pb-[calc(6rem+env(safe-area-inset-bottom))]">
+    <div
+        class="relative flex min-h-svh w-full flex-col overflow-x-hidden bg-background text-foreground"
+    >
+        <div
+            aria-hidden="true"
+            class="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_top_left,var(--color-secondary),transparent_42%),radial-gradient(circle_at_bottom_right,var(--color-accent),transparent_38%)] opacity-35"
+        />
+        <div
+            data-test="member-shell-content"
+            class="relative flex min-h-svh w-full flex-1 flex-col pb-[calc(6rem+env(safe-area-inset-bottom))]"
+        >
             <slot />
         </div>
         <MemberBottomNavigation />
@@ -361,6 +386,7 @@ git commit -m "feat: add mobile member navigation dock"
 ### Task 3: Profile Actions and Admin-Only Sidebar
 
 **Files:**
+
 - Modify: `resources/js/pages/profile/Show.vue`
 - Modify: `resources/js/pages/profile/Show.spec.ts`
 - Modify: `resources/js/components/AppSidebar.vue`
@@ -369,6 +395,7 @@ git commit -m "feat: add mobile member navigation dock"
 - Modify: `resources/js/layouts/settings/Layout.vue`
 
 **Interfaces:**
+
 - Consumes: shared roles from `usePage()`, `account.edit()`, `dashboard()`, and `member-profile.edit()/show()` routes.
 - Produces: Profile-local icon actions labelled `Réglages` and conditional `Administration`; an admin sidebar that always contains `Administration` and `Retour au profil` and is rendered only by `AdminLayout`.
 
@@ -381,7 +408,9 @@ it('shows settings without administration to a normal member', () => {
     roleState.roles = [{ name: 'user' }];
     const wrapper = mountProfile();
 
-    expect(wrapper.get('a[aria-label="Réglages"]').attributes('href')).toBe('/settings/account');
+    expect(wrapper.get('a[aria-label="Réglages"]').attributes('href')).toBe(
+        '/settings/account',
+    );
     expect(wrapper.find('a[aria-label="Administration"]').exists()).toBe(false);
 });
 
@@ -389,7 +418,9 @@ it('adds administration to profile actions for an admin', () => {
     roleState.roles = [{ name: 'user' }, { name: 'admin' }];
     const wrapper = mountProfile();
 
-    expect(wrapper.get('a[aria-label="Administration"]').attributes('href')).toBe('/dashboard');
+    expect(
+        wrapper.get('a[aria-label="Administration"]').attributes('href'),
+    ).toBe('/dashboard');
 });
 ```
 
@@ -471,14 +502,16 @@ git commit -m "feat: separate profile actions from admin navigation"
 ### Task 4: Gesture-Only Discovery Card and Mobile Page Composition
 
 **Files:**
+
 - Modify: `resources/js/components/discovery/SwipeCard.vue`
 - Modify: `resources/js/components/discovery/SwipeCard.spec.ts`
 - Modify: `resources/js/pages/Discovery/Index.vue`
 - Modify: `resources/js/pages/Discovery/Index.spec.ts`
 
 **Interfaces:**
+
 - Consumes: the existing `DiscoveryProfile`, `SwipeDecision`, `locked` prop, and `like`/`pass` emits; existing `router.post` error/retry flow.
-- Produces: a dominant swipe card with no visible decision buttons, pointer swipe left/right, focused ArrowLeft/ArrowRight controls, and `.sr-only` semantic buttons for assistive technology.
+- Produces: a dominant swipe card with no visible decision buttons, pointer swipe left/right with direct tracking, rotation, snap-back and off-screen exit animation, focused ArrowLeft/ArrowRight controls, and `.sr-only` semantic buttons for assistive technology.
 
 - [ ] **Step 1: Rewrite the visible-action test before production changes**
 
@@ -489,7 +522,9 @@ it('renders no visible decision controls and keeps reader-accessible actions', (
     const wrapper = mountCard();
 
     expect(wrapper.text()).toContain('Mina Parade');
-    expect(wrapper.find('[data-test="visible-swipe-actions"]').exists()).toBe(false);
+    expect(wrapper.find('[data-test="visible-swipe-actions"]').exists()).toBe(
+        false,
+    );
 
     const pass = wrapper.get('button[aria-label="Passer ce profil"]');
     const like = wrapper.get('button[aria-label="Aimer ce profil"]');
@@ -500,14 +535,18 @@ it('renders no visible decision controls and keeps reader-accessible actions', (
 it('disables reader actions while the card is locked', async () => {
     const wrapper = mountCard(true);
 
-    expect(wrapper.get('button[aria-label="Passer ce profil"]').attributes()).toHaveProperty('disabled');
-    expect(wrapper.get('button[aria-label="Aimer ce profil"]').attributes()).toHaveProperty('disabled');
+    expect(
+        wrapper.get('button[aria-label="Passer ce profil"]').attributes(),
+    ).toHaveProperty('disabled');
+    expect(
+        wrapper.get('button[aria-label="Aimer ce profil"]').attributes(),
+    ).toHaveProperty('disabled');
     await wrapper.get('[tabindex="0"]').trigger('keydown.right');
     expect(wrapper.emitted('like')).toBeUndefined();
 });
 ```
 
-Keep the pointer threshold, diagonal/cancel, pointer identity, and keyboard-arrow tests. Replace the focused-child shortcut test with activation of each `.sr-only` button and an assertion that `pass` and `like` each emit once.
+Keep the pointer threshold, diagonal/cancel, pointer identity, and keyboard-arrow tests. Add coverage for the live translation and rotation, the centred snap-back below the threshold, and the deferred decision after the off-screen exit. Replace the focused-child shortcut test with activation of each `.sr-only` button and an assertion that `pass` and `like` each emit once.
 
 - [ ] **Step 2: Add a page-level mobile composition assertion**
 
@@ -516,7 +555,9 @@ In `Discovery/Index.spec.ts`, extend the suggested-profile state test:
 ```ts
 const main = cardWrapper.get('main');
 expect(main.classes()).toContain('max-w-md');
-expect(cardWrapper.find('[data-test="desktop-discovery-intro"]').exists()).toBe(false);
+expect(cardWrapper.find('[data-test="desktop-discovery-intro"]').exists()).toBe(
+    false,
+);
 ```
 
 This test must fail against the current `max-w-5xl` desktop dashboard composition.
@@ -541,10 +582,22 @@ In `SwipeCard.vue`:
 <p id="swipe-instructions" class="sr-only">
     Balayez vers la gauche pour passer ce profil ou vers la droite pour l’aimer. Au clavier, utilisez les flèches gauche et droite.
 </p>
-<button class="sr-only" type="button" :disabled="locked" aria-label="Passer ce profil" @click="decide('pass')">
+<button
+    class="sr-only"
+    type="button"
+    :disabled="locked"
+    aria-label="Passer ce profil"
+    @click="decide('pass')"
+>
     Passer ce profil
 </button>
-<button class="sr-only" type="button" :disabled="locked" aria-label="Aimer ce profil" @click="decide('like')">
+<button
+    class="sr-only"
+    type="button"
+    :disabled="locked"
+    aria-label="Aimer ce profil"
+    @click="decide('like')"
+>
     Aimer ce profil
 </button>
 ```
@@ -581,6 +634,7 @@ git commit -m "feat: adopt gesture-first mobile discovery"
 ### Task 5: Public Landing and Responsive Member Pages
 
 **Files:**
+
 - Create: `resources/js/pages/Welcome.spec.ts`
 - Modify: `resources/js/pages/Welcome.vue`
 - Modify: `resources/js/pages/profile/Create.vue`
@@ -591,6 +645,7 @@ git commit -m "feat: adopt gesture-first mobile discovery"
 - Modify: `resources/css/app.css`
 
 **Interfaces:**
+
 - Consumes: shared `$page.props.auth.user`, `home()`, `login()`, `register()`, `app()`, existing `AppearanceTabs`, `AppLogoIcon`, profile forms, settings forms, and theme tokens.
 - Produces: a French DLP Friends public landing page; small-screen-first spacing and safe-area support across auth, onboarding, profile, and settings.
 
@@ -633,15 +688,21 @@ describe('Welcome', () => {
         expect(wrapper.text()).toContain('Des rencontres strictement amicales');
         expect(wrapper.text()).toContain('réservé aux adultes');
         expect(wrapper.text()).toContain('indépendant et non affilié');
-        expect(wrapper.get('a[href="/register"]').text()).toContain('Créer mon compte');
-        expect(wrapper.get('a[href="/login"]').text()).toContain('Se connecter');
+        expect(wrapper.get('a[href="/register"]').text()).toContain(
+            'Créer mon compte',
+        );
+        expect(wrapper.get('a[href="/login"]').text()).toContain(
+            'Se connecter',
+        );
         expect(wrapper.text()).not.toContain("Let's get started");
     });
 
     it('offers the member space instead of guest calls to action when signed in', () => {
         const wrapper = mountWelcome({ id: 1 });
 
-        expect(wrapper.get('a[href="/app"]').text()).toContain('Ouvrir mon espace');
+        expect(wrapper.get('a[href="/app"]').text()).toContain(
+            'Ouvrir mon espace',
+        );
         expect(wrapper.find('a[href="/register"]').exists()).toBe(false);
     });
 });
@@ -698,10 +759,12 @@ git commit -m "feat: refresh public and member mobile surfaces"
 ### Task 6: Full Verification and Visual QA
 
 **Files:**
+
 - Modify only if a command exposes a regression: the smallest file already listed in Tasks 1–5 that owns that regression.
 - Record no generated Wayfinder changes unless `git status` proves they are tracked and intentionally changed.
 
 **Interfaces:**
+
 - Consumes: completed layouts, member dock, profile/admin navigation, discovery card, and public page.
 - Produces: recent automated and visual evidence that issue #60 meets its acceptance criteria.
 

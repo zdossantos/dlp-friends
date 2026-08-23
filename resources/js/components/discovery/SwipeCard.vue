@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { computed, onBeforeUnmount, ref } from 'vue';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -12,6 +12,7 @@ import {
 import type { DiscoveryProfile, SwipeDecision, VisitFrequency } from '@/types';
 
 const SWIPE_THRESHOLD_PX = 72;
+const SWIPE_EXIT_DURATION_MS = 280;
 
 const props = defineProps<{
     profile: DiscoveryProfile;
@@ -32,6 +33,23 @@ const pointerStart = ref<{
     x: number;
     y: number;
 } | null>(null);
+const dragOffset = ref({ x: 0, y: 0 });
+const isDragging = ref(false);
+const exitDirection = ref<-1 | 0 | 1>(0);
+let exitTimer: number | undefined;
+
+const cardStyle = computed(() => {
+    const rotation = Math.max(-14, Math.min(14, dragOffset.value.x / 20));
+    const transform = exitDirection.value
+        ? `translate3d(${exitDirection.value * 120}vw, ${dragOffset.value.y}px, 0) rotate(${exitDirection.value * 18}deg)`
+        : `translate3d(${dragOffset.value.x}px, ${dragOffset.value.y}px, 0) rotate(${rotation}deg)`;
+
+    return {
+        opacity: exitDirection.value ? '0' : '1',
+        transform,
+        transitionDuration: isDragging.value ? '0ms' : '280ms',
+    };
+});
 
 const initials = computed(() => {
     return props.profile.displayName
@@ -57,7 +75,7 @@ const formattedScore = computed(() => {
 });
 
 function decide(decision: SwipeDecision) {
-    if (props.locked) {
+    if (props.locked || exitDirection.value !== 0) {
         return;
     }
 
@@ -70,7 +88,34 @@ function decide(decision: SwipeDecision) {
     emit('pass');
 }
 
+function animateDecision(decision: SwipeDecision) {
+    if (props.locked || exitDirection.value !== 0) {
+        return;
+    }
+
+    isDragging.value = false;
+    exitDirection.value = decision === 'like' ? 1 : -1;
+
+    const prefersReducedMotion =
+        window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ??
+        false;
+    exitTimer = window.setTimeout(
+        () => {
+            if (decision === 'like') {
+                emit('like');
+            } else {
+                emit('pass');
+            }
+        },
+        prefersReducedMotion ? 0 : SWIPE_EXIT_DURATION_MS,
+    );
+}
+
 function rememberPointerStart(event: PointerEvent) {
+    if (props.locked || exitDirection.value !== 0) {
+        return;
+    }
+
     const target = event.currentTarget as HTMLElement | null;
 
     pointerStart.value = {
@@ -78,7 +123,26 @@ function rememberPointerStart(event: PointerEvent) {
         x: event.clientX,
         y: event.clientY,
     };
+    dragOffset.value = { x: 0, y: 0 };
+    isDragging.value = true;
     target?.setPointerCapture?.(event.pointerId);
+}
+
+function handlePointerMove(event: PointerEvent) {
+    const start = pointerStart.value;
+
+    if (start === null || start.pointerId !== event.pointerId) {
+        return;
+    }
+
+    const deltaX = event.clientX - start.x;
+    const deltaY = event.clientY - start.y;
+
+    dragOffset.value = { x: deltaX, y: deltaY * 0.15 };
+
+    if (Math.abs(deltaX) > Math.abs(deltaY)) {
+        event.preventDefault();
+    }
 }
 
 function forgetPointerStart(event?: PointerEvent) {
@@ -89,6 +153,12 @@ function forgetPointerStart(event?: PointerEvent) {
     }
 
     pointerStart.value = null;
+    isDragging.value = false;
+}
+
+function resetCard(event?: PointerEvent) {
+    forgetPointerStart(event);
+    dragOffset.value = { x: 0, y: 0 };
 }
 
 function handlePointerEnd(event: PointerEvent) {
@@ -104,30 +174,42 @@ function handlePointerEnd(event: PointerEvent) {
     forgetPointerStart(event);
 
     if (Math.abs(deltaX) <= Math.abs(deltaY)) {
+        dragOffset.value = { x: 0, y: 0 };
+
         return;
     }
 
     if (deltaX <= -SWIPE_THRESHOLD_PX) {
-        decide('pass');
+        animateDecision('pass');
+
+        return;
     }
 
     if (deltaX >= SWIPE_THRESHOLD_PX) {
-        decide('like');
+        animateDecision('like');
+
+        return;
     }
+
+    dragOffset.value = { x: 0, y: 0 };
 }
+
+onBeforeUnmount(() => window.clearTimeout(exitTimer));
 </script>
 
 <template>
     <Card
-        class="w-full max-w-md touch-pan-y gap-0 overflow-hidden rounded-[1.75rem] p-0 outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
+        class="w-full max-w-md touch-pan-y gap-0 overflow-hidden rounded-[1.75rem] p-0 transition-[transform,opacity] ease-[cubic-bezier(0.22,1,0.36,1)] will-change-transform outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 motion-reduce:duration-0"
+        :style="cardStyle"
         tabindex="0"
         :aria-label="`Profil de découverte de ${profile.displayName}`"
         aria-describedby="swipe-instructions"
         @keydown.left.self.prevent.stop="decide('pass')"
         @keydown.right.self.prevent.stop="decide('like')"
         @pointerdown="rememberPointerStart"
+        @pointermove="handlePointerMove"
         @pointerup="handlePointerEnd"
-        @pointercancel="forgetPointerStart"
+        @pointercancel="resetCard"
         @lostpointercapture="forgetPointerStart"
     >
         <CardHeader
