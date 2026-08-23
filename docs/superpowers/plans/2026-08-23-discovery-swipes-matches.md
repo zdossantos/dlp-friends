@@ -589,19 +589,25 @@ Run: `bun run lint:check && bun run format:check && bun run types:check && bun r
 
 Expected: PASS and a successful Vite production build.
 
-- [ ] **Step 3: Inspect route and migration integration**
+- [ ] **Step 3: Build the production container image**
 
-Run: `php artisan route:list --name=discovery && php artisan migrate:fresh --seed --env=testing`
+Run: `docker build --target runtime --tag dlp-friends:ci .`
+
+Expected: PASS with a complete `runtime` image.
+
+- [ ] **Step 4: Inspect route and migration integration**
+
+Run: `php artisan route:list --name=discovery && APP_ENV=testing APP_KEY=base64:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA= DB_CONNECTION=sqlite DB_DATABASE=':memory:' php artisan migrate:fresh --seed --force`
 
 Expected: exactly one GET discovery route and one POST swipe route; all migrations and seeders succeed.
 
-- [ ] **Step 4: Review the final diff for scope and secrets**
+- [ ] **Step 5: Review the final diff for scope and secrets**
 
-Run: `git diff --check && git status --short && git diff --stat HEAD~6..HEAD`
+Run: `git diff --check && git status --short && git diff --stat origin/main...HEAD`
 
 Expected: no whitespace errors, no environment or credential files, and only the files described in this plan plus deterministic generated Wayfinder files.
 
-- [ ] **Step 5: Confirm the verified worktree state**
+- [ ] **Step 6: Confirm the verified worktree state**
 
 Run: `git status --short`
 
