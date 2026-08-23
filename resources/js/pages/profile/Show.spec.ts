@@ -68,6 +68,7 @@ describe('member profile page', () => {
         expect(wrapper.text()).toContain('Souvent');
         expect(wrapper.text()).toContain('Visible');
         expect(wrapper.text()).toContain('Modifier mon profil');
+        expect(wrapper.get('main').classes()).toContain('max-w-md');
     });
 
     it('shows settings without administration to a normal member', () => {

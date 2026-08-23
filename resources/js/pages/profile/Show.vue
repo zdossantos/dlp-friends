@@ -30,9 +30,11 @@ defineOptions({
 
 <template>
     <Head :title="profile.display_name" />
-    <main class="mx-auto w-full max-w-3xl p-4 sm:p-6">
+    <main
+        class="mx-auto w-full max-w-md px-4 pt-[max(1.25rem,env(safe-area-inset-top))] sm:px-6 sm:pt-8"
+    >
         <section
-            class="space-y-6 rounded-2xl border bg-card p-6 shadow-sm sm:p-8"
+            class="space-y-6 rounded-3xl border border-border/70 bg-card/95 p-6 shadow-xl shadow-primary/5 backdrop-blur sm:p-8"
         >
             <div class="flex justify-end gap-2" aria-label="Actions du profil">
                 <Button as-child variant="outline" size="icon" class="size-12">
