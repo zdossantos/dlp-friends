@@ -46,9 +46,9 @@ describe('AppSidebar', () => {
                     AppLogo: true,
                     NavUser: true,
                     NavMain: {
-                        props: ['items'],
+                        props: ['items', 'label'],
                         template:
-                            '<nav><a v-for="item in items" :key="item.title" :href="item.href.url ?? item.href">{{ item.title }}</a></nav>',
+                            '<nav><span data-test="nav-label">{{ label }}</span><a v-for="item in items" :key="item.title" :href="item.href.url ?? item.href">{{ item.title }}</a></nav>',
                     },
                 },
             },
@@ -64,6 +64,10 @@ describe('AppSidebar', () => {
         expect(wrapper.get('a[href="/profile"]').text()).toBe(
             'Retour au profil',
         );
+        expect(wrapper.get('[data-test="nav-label"]').text()).toBe(
+            'Administration',
+        );
+        expect(wrapper.text()).not.toContain('Espace membre');
         expect(wrapper.find('a[href="/discover"]').exists()).toBe(false);
     });
 });

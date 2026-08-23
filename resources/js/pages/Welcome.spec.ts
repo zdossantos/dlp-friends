@@ -52,4 +52,11 @@ describe('Welcome', () => {
         );
         expect(wrapper.find('a[href="/register"]').exists()).toBe(false);
     });
+
+    it('stacks the brand and theme control on narrow screens', () => {
+        const wrapper = mountWelcome(null);
+
+        expect(wrapper.get('header').classes()).toContain('flex-col');
+        expect(wrapper.get('header').classes()).toContain('sm:flex-row');
+    });
 });

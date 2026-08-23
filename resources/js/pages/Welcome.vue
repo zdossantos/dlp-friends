@@ -41,7 +41,9 @@ const benefits = [
         <div
             class="relative mx-auto flex min-h-svh w-full max-w-6xl flex-col px-4 pt-[max(1rem,env(safe-area-inset-top))] pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:px-6 lg:px-8"
         >
-            <header class="flex items-center justify-between gap-4 py-2">
+            <header
+                class="flex flex-col items-stretch gap-3 py-2 sm:flex-row sm:items-center sm:justify-between"
+            >
                 <div class="flex items-center gap-3">
                     <span
                         class="grid size-11 place-items-center rounded-2xl bg-primary text-primary-foreground shadow-lg shadow-primary/20"
@@ -55,7 +57,7 @@ const benefits = [
                         DLP Friends
                     </span>
                 </div>
-                <AppearanceTabs />
+                <AppearanceTabs class="self-end sm:self-auto" />
             </header>
 
             <main

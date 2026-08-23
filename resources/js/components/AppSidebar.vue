@@ -46,7 +46,7 @@ const mainNavItems: NavItem[] = [
         </SidebarHeader>
 
         <SidebarContent>
-            <NavMain :items="mainNavItems" />
+            <NavMain :items="mainNavItems" label="Administration" />
         </SidebarContent>
 
         <SidebarFooter>
