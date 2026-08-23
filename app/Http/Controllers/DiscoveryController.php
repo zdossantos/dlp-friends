@@ -16,8 +16,13 @@ class DiscoveryController extends Controller
         $user = $request->user();
 
         return Inertia::render('Discovery/Index', [
-            'suggestion' => Inertia::defer(
-                fn (): ?array => $service->for($user)->first()?->toArray(),
+            'suggestions' => Inertia::defer(
+                fn (): array => $service
+                    ->for($user)
+                    ->take(5)
+                    ->map(fn ($profile): array => $profile->toArray())
+                    ->values()
+                    ->all(),
             ),
             'match' => fn (): mixed => $request->session()->pull('discovery.match'),
         ]);

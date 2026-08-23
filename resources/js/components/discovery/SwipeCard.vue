@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, ref } from 'vue';
+import { computed, onBeforeUnmount, ref, watch } from 'vue';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -14,10 +14,14 @@ import type { DiscoveryProfile, SwipeDecision, VisitFrequency } from '@/types';
 const SWIPE_THRESHOLD_PX = 72;
 const SWIPE_EXIT_DURATION_MS = 280;
 
-const props = defineProps<{
-    profile: DiscoveryProfile;
-    locked: boolean;
-}>();
+const props = withDefaults(
+    defineProps<{
+        profile: DiscoveryProfile;
+        locked: boolean;
+        preview?: boolean;
+    }>(),
+    { preview: false },
+);
 
 const emit = defineEmits<{ like: []; pass: [] }>();
 
@@ -67,15 +71,8 @@ const visitFrequencyLabel = computed(() => {
         : 'Fréquence non renseignée';
 });
 
-const formattedScore = computed(() => {
-    return new Intl.NumberFormat('fr-FR', {
-        maximumFractionDigits: 2,
-        minimumFractionDigits: props.profile.score % 1 === 0 ? 0 : 2,
-    }).format(props.profile.score);
-});
-
 function decide(decision: SwipeDecision) {
-    if (props.locked || exitDirection.value !== 0) {
+    if (props.locked || props.preview || exitDirection.value !== 0) {
         return;
     }
 
@@ -89,7 +86,7 @@ function decide(decision: SwipeDecision) {
 }
 
 function animateDecision(decision: SwipeDecision) {
-    if (props.locked || exitDirection.value !== 0) {
+    if (props.locked || props.preview || exitDirection.value !== 0) {
         return;
     }
 
@@ -112,7 +109,7 @@ function animateDecision(decision: SwipeDecision) {
 }
 
 function rememberPointerStart(event: PointerEvent) {
-    if (props.locked || exitDirection.value !== 0) {
+    if (props.locked || props.preview || exitDirection.value !== 0) {
         return;
     }
 
@@ -195,13 +192,23 @@ function handlePointerEnd(event: PointerEvent) {
 }
 
 onBeforeUnmount(() => window.clearTimeout(exitTimer));
+
+watch(
+    () => props.locked,
+    (locked, wasLocked) => {
+        if (!locked && wasLocked && exitDirection.value !== 0) {
+            exitDirection.value = 0;
+            dragOffset.value = { x: 0, y: 0 };
+        }
+    },
+);
 </script>
 
 <template>
     <Card
         class="w-full max-w-md touch-pan-y gap-0 overflow-hidden rounded-[1.75rem] p-0 transition-[transform,opacity] ease-[cubic-bezier(0.22,1,0.36,1)] will-change-transform outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 motion-reduce:duration-0"
         :style="cardStyle"
-        tabindex="0"
+        :tabindex="preview ? -1 : 0"
         :aria-label="`Profil de découverte de ${profile.displayName}`"
         aria-describedby="swipe-instructions"
         @keydown.left.self.prevent.stop="decide('pass')"
@@ -244,14 +251,13 @@ onBeforeUnmount(() => window.clearTimeout(exitTimer));
 
             <div class="grid gap-3 rounded-lg border bg-muted/30 p-4 text-sm">
                 <p class="font-medium">
-                    Score {{ formattedScore }} ·
                     {{ profile.commonPassionCount }} passions communes
                 </p>
                 <p class="text-muted-foreground">
                     Fréquence de visite : {{ visitFrequencyLabel }}
                 </p>
                 <p v-if="profile.frequencyBonus" class="text-muted-foreground">
-                    Bonus de fréquence inclus dans ce score.
+                    Même fréquence de visite
                 </p>
             </div>
 
@@ -272,7 +278,7 @@ onBeforeUnmount(() => window.clearTimeout(exitTimer));
             <button
                 class="sr-only"
                 type="button"
-                :disabled="locked"
+                :disabled="locked || preview"
                 aria-label="Passer ce profil"
                 @click="decide('pass')"
             >
@@ -281,7 +287,7 @@ onBeforeUnmount(() => window.clearTimeout(exitTimer));
             <button
                 class="sr-only"
                 type="button"
-                :disabled="locked"
+                :disabled="locked || preview"
                 aria-label="Aimer ce profil"
                 @click="decide('like')"
             >

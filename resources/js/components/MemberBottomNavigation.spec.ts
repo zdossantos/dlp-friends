@@ -40,8 +40,8 @@ vi.mock('@/routes/member-profile', () => ({
 
 vi.mock('@/composables/useCurrentUrl', () => ({
     useCurrentUrl: () => ({
-        isCurrentOrParentUrl: (href: { url: string }) =>
-            state.url.startsWith(href.url),
+        isCurrentOrParentUrl: (href: { url: string } | string) =>
+            state.url.startsWith(typeof href === 'string' ? href : href.url),
     }),
 }));
 
@@ -65,10 +65,24 @@ describe('MemberBottomNavigation', () => {
         expect(
             wrapper.find('a[href="/discover"]').attributes('aria-current'),
         ).toBe('page');
+        expect(wrapper.get('nav').classes()).toContain('w-fit');
+        expect(wrapper.get('nav').classes()).not.toContain('w-full');
     });
 
     it('moves the active state with the current route', () => {
         state.url = '/profile/edit';
+        const wrapper = mount(MemberBottomNavigation);
+
+        expect(
+            wrapper.find('a[href="/profile"]').attributes('aria-current'),
+        ).toBe('page');
+        expect(
+            wrapper.find('a[href="/discover"]').attributes('aria-current'),
+        ).toBeUndefined();
+    });
+
+    it('keeps the profile destination active throughout settings', () => {
+        state.url = '/settings/account';
         const wrapper = mount(MemberBottomNavigation);
 
         expect(

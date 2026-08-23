@@ -28,11 +28,12 @@ class DiscoveryPageTest extends TestCase
         $this->get('/discover')->assertRedirect(route('login'));
     }
 
-    public function test_complete_members_see_the_first_public_suggestion(): void
+    public function test_complete_members_preload_up_to_five_public_suggestions(): void
     {
         $passion = Passion::factory()->create(['name' => 'Attractions']);
         $actor = User::factory()->withProfile()->create();
         $target = User::factory()->withProfile()->create();
+        User::factory()->withProfile()->count(5)->create();
         $actor->profile?->passions()->attach($passion);
         $target->profile?->passions()->attach($passion);
 
@@ -42,14 +43,15 @@ class DiscoveryPageTest extends TestCase
             ->assertInertia(fn (Assert $page) => $page
                 ->component('Discovery/Index')
                 ->where('match', null)
-                ->missing('suggestion')
+                ->missing('suggestions')
                 ->loadDeferredProps(fn (Assert $deferred) => $deferred
-                    ->where('suggestion.displayName', $target->profile?->display_name)
-                    ->where('suggestion.commonPassions', ['Attractions'])
-                    ->missing('suggestion.email')));
+                    ->has('suggestions', 5)
+                    ->where('suggestions.0.displayName', $target->profile?->display_name)
+                    ->where('suggestions.0.commonPassions', ['Attractions'])
+                    ->missing('suggestions.0.email')));
     }
 
-    public function test_complete_members_see_a_null_suggestion_when_no_profile_is_available(): void
+    public function test_complete_members_see_an_empty_suggestion_stack_when_no_profile_is_available(): void
     {
         $actor = User::factory()->withProfile()->create();
 
@@ -59,9 +61,9 @@ class DiscoveryPageTest extends TestCase
             ->assertInertia(fn (Assert $page) => $page
                 ->component('Discovery/Index')
                 ->where('match', null)
-                ->missing('suggestion')
+                ->missing('suggestions')
                 ->loadDeferredProps(fn (Assert $deferred) => $deferred
-                    ->where('suggestion', null)));
+                    ->where('suggestions', [])));
     }
 
     public function test_swipe_decision_rejects_unknown_values(): void
@@ -111,9 +113,9 @@ class DiscoveryPageTest extends TestCase
             ->assertInertia(fn (Assert $page) => $page
                 ->component('Discovery/Index')
                 ->where('match', null)
-                ->missing('suggestion')
+                ->missing('suggestions')
                 ->loadDeferredProps(fn (Assert $deferred) => $deferred
-                    ->where('suggestion', null)));
+                    ->where('suggestions', [])));
     }
 
     public function test_reciprocal_like_flashes_the_match_contract_once(): void

@@ -15,8 +15,21 @@ const isProfileComplete = computed(() =>
 
 const items = [
     { label: 'Découvrir', href: discovery(), icon: Sparkles },
-    { label: 'Profil', href: showProfile(), icon: UserRound },
+    {
+        label: 'Profil',
+        href: showProfile(),
+        icon: UserRound,
+        activeParents: ['/settings'],
+    },
 ];
+
+function isActive(item: (typeof items)[number]): boolean {
+    return (
+        isCurrentOrParentUrl(item.href) ||
+        item.activeParents?.some((parent) => isCurrentOrParentUrl(parent)) ===
+            true
+    );
+}
 </script>
 
 <template>
@@ -27,21 +40,17 @@ const items = [
         <nav
             data-test="member-bottom-navigation"
             aria-label="Navigation principale"
-            class="flex min-h-16 w-full max-w-sm items-center justify-around rounded-3xl border border-border/80 bg-card/95 px-4 shadow-xl shadow-primary/10 backdrop-blur"
+            class="flex min-h-16 w-fit items-center gap-2 rounded-3xl border border-border/80 bg-card/95 px-2 shadow-xl shadow-primary/10 backdrop-blur"
         >
             <Link
                 v-for="item in items"
                 :key="item.label"
                 :href="item.href"
                 :aria-label="item.label"
-                :aria-current="
-                    isCurrentOrParentUrl(item.href) ? 'page' : undefined
-                "
+                :aria-current="isActive(item) ? 'page' : undefined"
                 class="grid size-12 place-items-center rounded-2xl text-muted-foreground transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
                 :class="
-                    isCurrentOrParentUrl(item.href)
-                        ? 'bg-secondary text-primary'
-                        : undefined
+                    isActive(item) ? 'bg-secondary text-primary' : undefined
                 "
             >
                 <component :is="item.icon" class="size-6" aria-hidden="true" />

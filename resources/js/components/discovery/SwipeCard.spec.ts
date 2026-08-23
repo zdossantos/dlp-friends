@@ -68,9 +68,11 @@ describe('SwipeCard', () => {
         expect(wrapper.text()).toContain(
             'Toujours partante pour une journee attractions et spectacles.',
         );
-        expect(wrapper.text()).toContain('Score 3,25');
+        expect(wrapper.text()).not.toContain('Score');
+        expect(wrapper.text()).not.toContain('3,25');
+        expect(wrapper.text()).toContain('3 passions communes');
         expect(wrapper.text()).toContain('Souvent');
-        expect(wrapper.text()).toContain('Bonus de fréquence');
+        expect(wrapper.text()).toContain('Même fréquence de visite');
         expect(wrapper.text()).toContain('Attractions');
         expect(wrapper.text()).toContain('Parades');
         expect(wrapper.text()).toContain('Pins');

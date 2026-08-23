@@ -61,7 +61,8 @@ maximale qui conserve une lecture de type application sur grand écran. Le fond
 utilise les tokens existants et de légers accents violet, rose et doré qui
 fonctionnent en thèmes clair et sombre.
 
-Le dock est fixé en bas de la fenêtre et centré sur les écrans larges. Son
+Le dock est fixé en bas de la fenêtre, dimensionné par ses icônes plutôt que sur
+toute la largeur disponible, et centré sur les écrans larges. Son
 espacement inférieur inclut `env(safe-area-inset-bottom)`. Le contenu principal
 réserve la hauteur du dock plus cette zone sûre afin qu'aucune action, erreur ou
 fin de formulaire ne soit masquée.
@@ -94,7 +95,8 @@ Chaque action possède une icône, un libellé accessible et une cible tactile
 adaptée. Les sous-pages Compte, Sécurité et Apparence restent regroupées dans le
 layout secondaire des réglages. Leur navigation est horizontale ou compacte
 sur petit écran, puis peut s'élargir sur desktop sans devenir une sidebar
-d'application globale.
+d'application globale. Sur toutes ces routes, le dock reste affiché et son
+entrée Profil conserve l'état actif.
 
 La création et la modification du profil réutilisent les formulaires existants.
 Leur largeur, leurs espacements et leurs actions sont ajustés afin de rester
@@ -106,6 +108,12 @@ visuel membre, mais sans dock avant la complétion du profil.
 La page Découvrir reprend la hiérarchie de la maquette validée : titre local,
 carte de profil dominante, affinités explicables et contenu lisible au pouce.
 Elle n'ajoute aucun header de shell.
+
+Le serveur précharge une pile ordonnée d'au plus cinq profils. Les cartes sont
+rendues les unes derrière les autres ; seule la première est interactive et les
+suivantes sont retirées de l'ordre de tabulation et de l'arbre d'accessibilité.
+La carte suivante est ainsi déjà visible pendant la sortie de la carte active,
+sans attendre la réponse du swipe.
 
 La carte n'affiche ni croix, ni cœur, ni boutons visibles « Passer » ou
 « J'aime ». Une translation horizontale gauche ou droite au-delà du seuil
@@ -119,6 +127,11 @@ transition souple. Une décision validée accélère la carte hors de l'écran a
 d'émettre l'action, afin que le résultat du geste soit immédiatement visible,
 sans ajouter d'icône ni de libellé romantique. La préférence système de
 réduction des animations est respectée.
+
+Le classement continue d'utiliser le score côté serveur, mais sa valeur et le
+mot « Score » ne sont plus affichés. L'explication visible se limite aux
+passions communes, à la fréquence de visite et à l'éventuelle fréquence
+identique.
 
 L'absence de boutons visibles ne retire pas l'accessibilité : la carte reste
 focusable, son nom accessible explique les commandes, les flèches gauche et
