@@ -53,7 +53,7 @@ Le service charge les relations nécessaires en nombre borné de requêtes et ne
 
 ## Enregistrement d’un swipe et création d’un match
 
-`CreateSwipe::handle(User $actor, User $target, SwipeDecision $decision): ?Match` porte la règle métier. Un enum partagé limite les décisions à `like` et `pass`.
+`CreateSwipe::handle(User $actor, User $target, SwipeDecision $decision): ?MemberMatch` porte la règle métier. Le nom `MemberMatch` évite le mot-clé PHP réservé `match`. Un enum partagé limite les décisions à `like` et `pass`.
 
 Avant l’écriture, l’action refuse l’utilisateur lui-même, une cible inactive, incomplète ou masquée, une paire bloquée, ainsi qu’une décision déjà enregistrée. Le contrôleur transforme ces refus en erreur de validation compréhensible sans exposer d’information privée.
 
