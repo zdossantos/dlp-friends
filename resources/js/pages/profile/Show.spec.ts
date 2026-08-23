@@ -75,12 +75,12 @@ describe('member profile page', () => {
         roleState.roles = [{ name: 'user' }];
         const wrapper = mountProfile();
 
-        expect(
-            wrapper.get('a[aria-label="Réglages"]').attributes('href'),
-        ).toBe('/settings/account');
-        expect(
-            wrapper.find('a[aria-label="Administration"]').exists(),
-        ).toBe(false);
+        expect(wrapper.get('a[aria-label="Réglages"]').attributes('href')).toBe(
+            '/settings/account',
+        );
+        expect(wrapper.find('a[aria-label="Administration"]').exists()).toBe(
+            false,
+        );
     });
 
     it('adds administration to profile actions for an admin', () => {

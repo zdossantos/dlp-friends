@@ -134,7 +134,9 @@ function handlePointerEnd(event: PointerEvent) {
             class="gap-4 bg-[radial-gradient(circle_at_top_left,var(--color-secondary),transparent_50%),radial-gradient(circle_at_bottom_right,var(--color-accent),transparent_48%)] px-6 py-8"
         >
             <div class="flex flex-col items-center gap-4 text-center">
-                <Avatar class="size-24 rounded-3xl border-4 border-card shadow-lg">
+                <Avatar
+                    class="size-24 rounded-3xl border-4 border-card shadow-lg"
+                >
                     <AvatarFallback
                         class="rounded-3xl bg-card/70 text-2xl font-semibold text-primary"
                     >

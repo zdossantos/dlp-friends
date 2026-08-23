@@ -24,7 +24,9 @@ defineProps<{
     <main
         class="mx-auto flex min-h-svh w-full max-w-xl px-4 pt-[max(1.25rem,env(safe-area-inset-top))] pb-8 sm:px-6 sm:pt-8"
     >
-        <Card class="h-fit w-full rounded-3xl border-border/70 shadow-xl shadow-primary/5">
+        <Card
+            class="h-fit w-full rounded-3xl border-border/70 shadow-xl shadow-primary/5"
+        >
             <CardHeader>
                 <CardTitle>Créons votre profil</CardTitle>
                 <CardDescription>

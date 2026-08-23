@@ -9,8 +9,8 @@ import { show as showProfile } from '@/routes/member-profile';
 const page = usePage();
 const { isCurrentOrParentUrl } = useCurrentUrl();
 
-const isProfileComplete = computed(
-    () => Boolean(page.props.auth.user.profile?.onboarding_completed_at),
+const isProfileComplete = computed(() =>
+    Boolean(page.props.auth.user.profile?.onboarding_completed_at),
 );
 
 const items = [
@@ -44,11 +44,7 @@ const items = [
                         : undefined
                 "
             >
-                <component
-                    :is="item.icon"
-                    class="size-6"
-                    aria-hidden="true"
-                />
+                <component :is="item.icon" class="size-6" aria-hidden="true" />
             </Link>
         </nav>
     </div>

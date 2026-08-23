@@ -50,10 +50,7 @@ defineOptions({
                     class="size-12"
                 >
                     <Link :href="dashboard()" aria-label="Administration">
-                        <LayoutDashboard
-                            class="size-5"
-                            aria-hidden="true"
-                        />
+                        <LayoutDashboard class="size-5" aria-hidden="true" />
                     </Link>
                 </Button>
             </div>
