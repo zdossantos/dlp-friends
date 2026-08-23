@@ -13,5 +13,3 @@ storage/framework/sessions/*
 storage/framework/testing/*
 storage/framework/views/*
 bootstrap/cache/*.php
-npm-debug.log*
-yarn-error.log*

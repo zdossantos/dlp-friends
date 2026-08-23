@@ -31,3 +31,20 @@ it('uses the pinned Bun toolchain in automation and Docker', function () {
         ->and($dependabot)->toContain("package-ecosystem: 'bun'")
         ->and($dependabot)->not->toContain("package-ecosystem: 'npm'");
 });
+
+it('documents Bun without npm or Yarn residue in active project files', function () {
+    $activeDocumentation = collect([
+        'README.md',
+        'CONTRIBUTING.md',
+        'docs/technical-architecture.md',
+        'docs/quality-ci-cd.md',
+        'docs/implementation-plan.md',
+    ])->map(fn (string $path): string => file_get_contents(base_path($path)))->join("\n");
+    $ignoreFiles = file_get_contents(base_path('.gitignore')).file_get_contents(base_path('.dockerignore'));
+
+    expect($activeDocumentation)->toContain('Bun 1.3.14')
+        ->and($activeDocumentation)->not->toMatch('/\bnpm (ci|install|run|test)\b/')
+        ->and($activeDocumentation)->not->toContain('package-lock.json')
+        ->and($ignoreFiles)->not->toContain('npm-debug.log')
+        ->and($ignoreFiles)->not->toContain('yarn-error.log');
+});

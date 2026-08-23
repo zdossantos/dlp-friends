@@ -61,7 +61,7 @@
 - [x] Add scripts named `test`, `test:unit`, `lint`, `format:check`, `types:check`, `analyse` and `build` that fail on errors.
 - [x] Configure Pest, Laravel Pint, Larastan/PHPStan, ESLint, Vue type checking and Vitest.
 - [x] Run six parallel checks for every non-draft pull request into `main`: Conventional PR title, PHP quality, backend tests, frontend quality, Vite build and Docker build.
-- [x] Configure Dependabot for Composer, npm and GitHub Actions with pull requests into `main`.
+- [x] Configure Dependabot for Composer, Bun and GitHub Actions with pull requests into `main`.
 - [x] Configure Release Please on `main` to maintain `CHANGELOG.md`, SemVer tags and GitHub Releases without publishing packages.
 - [x] Version squash-only repository settings and a protected, linear `main`; disallow direct pushes, force-pushes and deletion.
 - [x] Configure Coolify separately to watch `main` and deploy it automatically; do not add a Coolify webhook or deployment workflow to GitHub Actions.
@@ -100,7 +100,7 @@
 - [ ] Write a failing queued-image test: a valid image dispatches `ProcessProfileImage`; an executable or oversized image is rejected.
 - [ ] Implement upload validation, EXIF stripping, resized image variants and private MinIO keys in `ProcessProfileImage`.
 - [ ] Implement profile editing and protected admin catalogue CRUD; forbid all admin message access.
-- [ ] Run the three named test files and `npm run types:check`; expect PASS.
+- [ ] Run the three named test files and `bun run types:check`; expect PASS.
 - [ ] Commit: `feat: add profiles passions avatars and admin catalogue`.
 
 ### Task 5: Implement discovery, swipes and reciprocal matches
