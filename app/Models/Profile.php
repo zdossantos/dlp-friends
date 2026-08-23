@@ -6,9 +6,11 @@ use App\Enums\ProfileVisibility;
 use App\Enums\VisitFrequency;
 use Database\Factories\ProfileFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Support\Carbon;
 
 /**
@@ -22,6 +24,7 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property-read User $user
+ * @property-read Collection<int, Passion> $passions
  */
 #[Fillable(['display_name', 'bio', 'visit_frequency', 'visibility', 'onboarding_completed_at'])]
 class Profile extends Model
@@ -35,6 +38,12 @@ class Profile extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    /** @return BelongsToMany<Passion, $this> */
+    public function passions(): BelongsToMany
+    {
+        return $this->belongsToMany(Passion::class);
     }
 
     public function isComplete(): bool
