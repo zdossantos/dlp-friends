@@ -147,6 +147,50 @@ class DiscoveryServiceTest extends TestCase
         ]);
     }
 
+    public function test_inactive_passions_do_not_contribute_to_the_score_or_explanation(): void
+    {
+        [$activePassion] = $this->passions('Attractions');
+        $inactivePassion = Passion::factory()->create([
+            'name' => 'Archived passion',
+            'is_active' => false,
+        ]);
+        $actor = $this->member(
+            'Actor',
+            VisitFrequency::Rarely,
+            [$activePassion, $inactivePassion],
+        );
+        $target = $this->member(
+            'Target',
+            VisitFrequency::Often,
+            [$activePassion, $inactivePassion],
+        );
+
+        $result = (new DiscoveryService($this->ascendingTieBreaker()))
+            ->for($actor)
+            ->first();
+
+        expect($result?->profileId)->toBe($target->profile->id)
+            ->and($result?->commonPassionCount)->toBe(1)
+            ->and($result?->commonPassions)->toBe(['Attractions'])
+            ->and($result?->score)->toBe(1.0);
+    }
+
+    public function test_a_member_on_their_exact_eighteenth_birthday_is_eligible(): void
+    {
+        [$passion] = $this->passions('Attractions');
+        $actor = $this->member('Actor', VisitFrequency::Often, [$passion]);
+        $target = $this->member(
+            'Exactly eighteen',
+            VisitFrequency::Rarely,
+            [$passion],
+            userAttributes: ['birth_date' => today()->subYears(18)],
+        );
+
+        $results = (new DiscoveryService($this->ascendingTieBreaker()))->for($actor);
+
+        expect($results->pluck('profileId')->all())->toBe([$target->profile->id]);
+    }
+
     public function test_it_uses_a_constant_query_budget_for_candidate_transformation(): void
     {
         [$attractions] = $this->passions('Attractions');

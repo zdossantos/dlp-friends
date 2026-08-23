@@ -41,10 +41,12 @@ class DiscoveryPageTest extends TestCase
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->component('Discovery/Index')
-                ->where('suggestion.displayName', $target->profile?->display_name)
-                ->where('suggestion.commonPassions', ['Attractions'])
                 ->where('match', null)
-                ->missing('suggestion.email'));
+                ->missing('suggestion')
+                ->loadDeferredProps(fn (Assert $deferred) => $deferred
+                    ->where('suggestion.displayName', $target->profile?->display_name)
+                    ->where('suggestion.commonPassions', ['Attractions'])
+                    ->missing('suggestion.email')));
     }
 
     public function test_complete_members_see_a_null_suggestion_when_no_profile_is_available(): void
@@ -56,8 +58,10 @@ class DiscoveryPageTest extends TestCase
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->component('Discovery/Index')
-                ->where('suggestion', null)
-                ->where('match', null));
+                ->where('match', null)
+                ->missing('suggestion')
+                ->loadDeferredProps(fn (Assert $deferred) => $deferred
+                    ->where('suggestion', null)));
     }
 
     public function test_swipe_decision_rejects_unknown_values(): void
@@ -67,6 +71,27 @@ class DiscoveryPageTest extends TestCase
         $this->actingAs($actor)
             ->post(route('discovery.swipe', $target), ['decision' => 'super-like'])
             ->assertSessionHasErrors('decision');
+
+        $this->assertDatabaseCount('swipes', 0);
+        $this->assertDatabaseCount('matches', 0);
+    }
+
+    public function test_missing_and_ineligible_targets_share_the_same_generic_validation_error(): void
+    {
+        $actor = User::factory()->withProfile()->create();
+        $hiddenTarget = User::factory()->withProfile()->create();
+        $hiddenTarget->profile?->update(['visibility' => 'hidden']);
+        $missingTargetId = User::query()->max('id') + 1000;
+
+        foreach ([$hiddenTarget->id, $missingTargetId, 'not-a-user'] as $targetId) {
+            $this->actingAs($actor)
+                ->post(route('discovery.swipe', $targetId), [
+                    'decision' => SwipeDecision::Like->value,
+                ])
+                ->assertSessionHasErrors([
+                    'target' => 'Ce profil n’est pas disponible.',
+                ]);
+        }
 
         $this->assertDatabaseCount('swipes', 0);
         $this->assertDatabaseCount('matches', 0);
@@ -85,8 +110,10 @@ class DiscoveryPageTest extends TestCase
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->component('Discovery/Index')
-                ->where('suggestion', null)
-                ->where('match', null));
+                ->where('match', null)
+                ->missing('suggestion')
+                ->loadDeferredProps(fn (Assert $deferred) => $deferred
+                    ->where('suggestion', null)));
     }
 
     public function test_reciprocal_like_flashes_the_match_contract_once(): void

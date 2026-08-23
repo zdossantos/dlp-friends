@@ -1,5 +1,5 @@
 import { mount } from '@vue/test-utils';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { nextTick } from 'vue';
 import type { DiscoveryProfile } from '@/types';
 import SwipeCard from './SwipeCard.vue';
@@ -25,16 +25,18 @@ function mountCard(locked = false) {
 
 async function dispatchPointerEvent(
     element: Element,
-    type: 'pointerdown' | 'pointerup',
+    type: 'pointerdown' | 'pointerup' | 'pointercancel',
     clientX: number,
+    clientY = 0,
+    pointerId = 1,
 ) {
-    element.dispatchEvent(
-        new MouseEvent(type, {
-            bubbles: true,
-            cancelable: true,
-            clientX,
-        }),
-    );
+    const event = new Event(type, { bubbles: true, cancelable: true });
+    Object.defineProperties(event, {
+        clientX: { value: clientX },
+        clientY: { value: clientY },
+        pointerId: { value: pointerId },
+    });
+    element.dispatchEvent(event);
     await nextTick();
 }
 
@@ -97,6 +99,17 @@ describe('SwipeCard', () => {
         expect(wrapper.emitted('like')).toEqual([[]]);
     });
 
+    it('does not apply card arrow shortcuts from a focused child button', async () => {
+        const wrapper = mountCard();
+
+        await wrapper
+            .get('button[aria-label="Passer ce profil"]')
+            .trigger('keydown.right');
+
+        expect(wrapper.emitted('pass')).toBeUndefined();
+        expect(wrapper.emitted('like')).toBeUndefined();
+    });
+
     it('uses a 72 pixel horizontal pointer threshold for swipe gestures', async () => {
         const passWrapper = mountCard();
         const passCard = passWrapper.get('[tabindex="0"]');
@@ -118,5 +131,59 @@ describe('SwipeCard', () => {
         await dispatchPointerEvent(shortCard.element, 'pointerup', 130);
         expect(shortWrapper.emitted('pass')).toBeUndefined();
         expect(shortWrapper.emitted('like')).toBeUndefined();
+    });
+
+    it('ignores diagonal gestures and clears cancelled pointer state', async () => {
+        const diagonalWrapper = mountCard();
+        const diagonalCard = diagonalWrapper.get('[tabindex="0"]');
+        await dispatchPointerEvent(
+            diagonalCard.element,
+            'pointerdown',
+            200,
+            100,
+        );
+        await dispatchPointerEvent(diagonalCard.element, 'pointerup', 100, 220);
+
+        expect(diagonalWrapper.emitted('pass')).toBeUndefined();
+        expect(diagonalWrapper.emitted('like')).toBeUndefined();
+
+        const cancelledWrapper = mountCard();
+        const cancelledCard = cancelledWrapper.get('[tabindex="0"]');
+        await dispatchPointerEvent(cancelledCard.element, 'pointerdown', 200);
+        await dispatchPointerEvent(cancelledCard.element, 'pointercancel', 200);
+        await dispatchPointerEvent(cancelledCard.element, 'pointerup', 100);
+
+        expect(cancelledWrapper.emitted('pass')).toBeUndefined();
+        expect(cancelledWrapper.emitted('like')).toBeUndefined();
+    });
+
+    it('captures one pointer, ignores other pointer IDs and releases capture', async () => {
+        const wrapper = mountCard();
+        const card = wrapper.get('[tabindex="0"]');
+        const capturedPointers = new Set<number>();
+        const setPointerCapture = vi.fn((pointerId: number) => {
+            capturedPointers.add(pointerId);
+        });
+        const releasePointerCapture = vi.fn((pointerId: number) => {
+            capturedPointers.delete(pointerId);
+        });
+
+        Object.assign(card.element, {
+            setPointerCapture,
+            hasPointerCapture: (pointerId: number) =>
+                capturedPointers.has(pointerId),
+            releasePointerCapture,
+        });
+
+        await dispatchPointerEvent(card.element, 'pointerdown', 200, 0, 7);
+        await dispatchPointerEvent(card.element, 'pointerup', 100, 0, 8);
+
+        expect(setPointerCapture).toHaveBeenCalledWith(7);
+        expect(wrapper.emitted('pass')).toBeUndefined();
+
+        await dispatchPointerEvent(card.element, 'pointerup', 100, 0, 7);
+
+        expect(wrapper.emitted('pass')).toEqual([[]]);
+        expect(releasePointerCapture).toHaveBeenCalledWith(7);
     });
 });

@@ -7,6 +7,7 @@ use App\Enums\SwipeDecision;
 use App\Enums\UserStatus;
 use App\Models\Block;
 use App\Models\MemberMatch;
+use App\Models\Profile;
 use App\Models\Swipe;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
@@ -43,7 +44,13 @@ class CreateSwipe
                     $this->throwUnavailableTarget();
                 }
 
-                $lockedTarget->load('profile');
+                $lockedTarget->setRelation(
+                    'profile',
+                    Profile::query()
+                        ->where('user_id', $lockedTarget->id)
+                        ->lockForUpdate()
+                        ->first(),
+                );
                 $this->ensureTargetIsEligible($lockedActor, $lockedTarget);
                 $this->ensurePairIsNotBlocked($lockedActor, $lockedTarget);
 

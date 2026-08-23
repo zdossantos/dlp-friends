@@ -9,7 +9,10 @@ import DiscoveryIndex from './Index.vue';
 
 type PostOptions = {
     preserveScroll?: boolean;
+    onSuccess?: () => void;
     onError?: (errors: Record<string, string>) => void;
+    onHttpException?: () => boolean | void;
+    onNetworkError?: () => boolean | void;
     onFinish?: () => void;
 };
 
@@ -176,9 +179,12 @@ describe('Discovery/Index', () => {
         await nextTick();
         expect(card.props('locked')).toBe(true);
 
+        await wrapper.setProps({ suggestion: undefined });
         getPostOptions().onError?.({
             decision: 'Impossible d’enregistrer cette décision.',
         });
+        getPostOptions().onFinish?.();
+        await wrapper.setProps({ suggestion });
         await nextTick();
 
         expect(wrapper.get('[role="alert"]').text()).toContain(
@@ -186,13 +192,9 @@ describe('Discovery/Index', () => {
         );
         expect(wrapper.text()).toContain('Mina Parade');
 
-        card.vm.$emit('like');
         expect(router.post).toHaveBeenCalledOnce();
 
-        getPostOptions().onFinish?.();
-        await nextTick();
-
-        expect(card.props('locked')).toBe(false);
+        expect(wrapper.getComponent(SwipeCard).props('locked')).toBe(false);
 
         await wrapper.get('button[aria-label="Réessayer"]').trigger('click');
 
@@ -200,6 +202,53 @@ describe('Discovery/Index', () => {
         expect(router.post).toHaveBeenLastCalledWith(
             '/discover/42/swipe',
             { decision: 'like' },
+            expect.any(Object),
+        );
+    });
+
+    it('never retries an old decision against a replacement suggestion', async () => {
+        const wrapper = mountPage({ suggestion });
+
+        wrapper.getComponent(SwipeCard).vm.$emit('like');
+        getPostOptions().onError?.({ target: 'Profil indisponible.' });
+        getPostOptions().onFinish?.();
+        await nextTick();
+
+        await wrapper.setProps({ suggestion: undefined });
+        await wrapper.setProps({
+            suggestion: {
+                ...suggestion,
+                userId: 84,
+                displayName: 'Nouvelle suggestion',
+            },
+        });
+
+        expect(wrapper.find('[role="alert"]').exists()).toBe(false);
+        expect(wrapper.find('button[aria-label="Réessayer"]').exists()).toBe(
+            false,
+        );
+        expect(router.post).toHaveBeenCalledOnce();
+    });
+
+    it('retains the card and exposes retry after an unexpected HTTP exception', async () => {
+        const wrapper = mountPage({ suggestion });
+
+        wrapper.getComponent(SwipeCard).vm.$emit('pass');
+        const handled = getPostOptions().onHttpException?.();
+        getPostOptions().onFinish?.();
+        await nextTick();
+
+        expect(handled).toBe(false);
+        expect(wrapper.text()).toContain('Mina Parade');
+        expect(wrapper.get('[role="alert"]').text()).toContain(
+            'Le serveur n’a pas pu enregistrer cette décision.',
+        );
+
+        await wrapper.get('button[aria-label="Réessayer"]').trigger('click');
+
+        expect(router.post).toHaveBeenLastCalledWith(
+            '/discover/42/swipe',
+            { decision: 'pass' },
             expect.any(Object),
         );
     });

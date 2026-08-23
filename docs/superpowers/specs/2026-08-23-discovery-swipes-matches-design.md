@@ -60,11 +60,12 @@ Avant l’écriture, l’action refuse l’utilisateur lui-même, une cible inac
 L’écriture s’effectue dans une transaction :
 
 1. verrouillage des deux utilisateurs dans l’ordre canonique pour sérialiser les écritures concurrentes de la paire ;
-2. insertion unique du swipe ;
-3. arrêt immédiat pour un `pass` ;
-4. recherche du like inverse ;
-5. insertion idempotente du match avec identifiants canoniques ;
-6. lecture et retour du match créé ou existant.
+2. verrouillage et nouvelle validation du profil cible afin qu’une mise en retrait concurrente soit respectée ;
+3. insertion unique du swipe ;
+4. arrêt immédiat pour un `pass` ;
+5. recherche du like inverse ;
+6. insertion idempotente du match avec identifiants canoniques ;
+7. lecture et retour du match créé ou existant.
 
 Les contraintes uniques restent la protection définitive contre les doubles requêtes et la concurrence. Une répétition ne crée jamais un deuxième swipe ou match. Une fois la décision acceptée, le profil est exclu de la prochaine réponse de découverte.
 
@@ -72,10 +73,10 @@ Les contraintes uniques restent la protection définitive contre les doubles req
 
 Sous les middlewares membre existants (`auth`, `verified`, `social`, `profile.complete`) :
 
-- `GET /discover` affiche `Discovery/Index` avec la première suggestion ou `null` ;
+- `GET /discover` affiche `Discovery/Index` et charge en différé la première suggestion ou `null` ;
 - `POST /discover/{target}/swipe` valide la décision, appelle l’action métier et redirige vers la page de découverte.
 
-Le contrôleur de page transforme le résultat en propriété sérialisable stable. Le retour du POST place en session une propriété de match minimale quand la réciprocité vient d’être satisfaite. La page suivante consomme cette propriété pour afficher la confirmation. Les erreurs de validation empruntent le mécanisme Inertia standard et conservent la possibilité de réessayer.
+Le contrôleur de page transforme le résultat en propriété sérialisable stable. Le retour du POST place en session une propriété de match minimale quand la réciprocité vient d’être satisfaite. La page suivante consomme cette propriété pour afficher la confirmation. Les erreurs de validation empruntent le mécanisme Inertia standard. Un nouvel essai conserve l’identifiant de la cible ayant échoué et disparaît si une nouvelle suggestion la remplace.
 
 La navigation principale ajoute « Découvrir » pour les membres éligibles.
 
@@ -88,7 +89,7 @@ La navigation principale ajoute « Découvrir » pour les membres éligibles.
 - bio et fréquence de visite ;
 - score expliqué en texte, bonus éventuel et passions communes sous forme de badges.
 
-Les boutons « Passer » et « J’aime » sont de vrais boutons accessibles, avec libellés explicites, focus visible et état désactivé pendant une soumission. Les touches fléchées gauche et droite déclenchent les mêmes actions lorsque la carte a le focus. Pointer Events ajoute un geste horizontal avec seuil ; un mouvement inférieur au seuil annule l’action. Le geste reste une amélioration et ne remplace jamais les contrôles visibles.
+Les boutons « Passer » et « J’aime » sont de vrais boutons accessibles, avec libellés explicites, focus visible et état désactivé pendant une soumission. Les touches fléchées gauche et droite déclenchent les mêmes actions uniquement lorsque la carte elle-même a le focus. Pointer Events ajoute un geste horizontal dominant avec seuil, identité et capture du pointeur ; un mouvement inférieur au seuil, diagonal ou annulé n’émet aucune décision. Le geste reste une amélioration et ne remplace jamais les contrôles visibles.
 
 La page verrouille la carte dès la première action, soumet via le routeur Inertia et ignore toute action supplémentaire jusqu’à `onFinish`. Une erreur serveur affiche un message relié à une zone d’annonce accessible et déverrouille la carte. Le profil suivant est obtenu après le redirect Inertia réussi.
 
@@ -116,7 +117,7 @@ Les erreurs attendues sont rendues comme validation Inertia. Les erreurs inatten
 - nombre borné de requêtes pour prévenir les N+1 ;
 - validation de `like`/`pass`, refus de l’auto-swipe et des cibles inéligibles ;
 - premier like sans match, like inverse créant une paire canonique, pass sans match ;
-- répétitions et simulation de concurrence ne créant aucun doublon ;
+- répétitions et chevauchement réel de deux connexions MySQL ne créant aucun doublon ;
 - rendu Inertia, propriétés publiques, état vide, redirection et confirmation de match.
 
 ### Vitest

@@ -31,7 +31,10 @@ const props = defineProps<{
 
 const isSubmitting = ref(false);
 const errorMessage = ref<string | null>(null);
-const lastDecision = ref<SwipeDecision | null>(null);
+const retryAttempt = ref<{
+    targetUserId: number;
+    decision: SwipeDecision;
+} | null>(null);
 const visibleMatchId = ref(props.match?.id ?? null);
 const matchDialogOpen = ref(props.match !== null);
 
@@ -51,26 +54,62 @@ watch(
     },
 );
 
-function submit(decision: SwipeDecision): void {
-    if (isSubmitting.value || !props.suggestion) {
+watch(
+    () => props.suggestion,
+    (suggestion) => {
+        if (suggestion === undefined) {
+            return;
+        }
+
+        const targetUserId = suggestion?.userId ?? null;
+
+        if (
+            retryAttempt.value !== null &&
+            retryAttempt.value.targetUserId !== targetUserId
+        ) {
+            retryAttempt.value = null;
+            errorMessage.value = null;
+        }
+    },
+);
+
+function submit(decision: SwipeDecision, targetUserId?: number): void {
+    const resolvedTargetUserId = targetUserId ?? props.suggestion?.userId;
+
+    if (isSubmitting.value || resolvedTargetUserId === undefined) {
         return;
     }
 
     isSubmitting.value = true;
-    lastDecision.value = decision;
+    retryAttempt.value = { targetUserId: resolvedTargetUserId, decision };
     errorMessage.value = null;
 
     router.post(
-        swipe(props.suggestion.userId).url,
+        swipe(resolvedTargetUserId).url,
         { decision },
         {
             preserveScroll: true,
+            onSuccess: () => {
+                retryAttempt.value = null;
+            },
             onError: (errors) => {
                 errorMessage.value = String(
                     errors.decision ??
                         errors.target ??
                         'Une erreur est survenue.',
                 );
+            },
+            onHttpException: () => {
+                errorMessage.value =
+                    'Le serveur n’a pas pu enregistrer cette décision.';
+
+                return false;
+            },
+            onNetworkError: () => {
+                errorMessage.value =
+                    'La connexion a échoué avant l’enregistrement de cette décision.';
+
+                return false;
             },
             onFinish: () => {
                 isSubmitting.value = false;
@@ -80,8 +119,8 @@ function submit(decision: SwipeDecision): void {
 }
 
 function retry(): void {
-    if (lastDecision.value) {
-        submit(lastDecision.value);
+    if (retryAttempt.value) {
+        submit(retryAttempt.value.decision, retryAttempt.value.targetUserId);
     }
 }
 
@@ -168,9 +207,13 @@ defineOptions({
         />
 
         <Dialog v-if="match && matchDialogOpen" v-model:open="matchDialogOpen">
-            <DialogContent>
+            <DialogContent
+                class="border-amber-300 bg-amber-50 dark:border-amber-700 dark:bg-amber-950"
+            >
                 <DialogHeader>
-                    <DialogTitle>C’est un match !</DialogTitle>
+                    <DialogTitle class="text-amber-900 dark:text-amber-100">
+                        C’est un match !
+                    </DialogTitle>
                     <DialogDescription>
                         {{ match.displayName }} a aussi aimé votre profil. Vous
                         pouvez continuer à découvrir d’autres membres.

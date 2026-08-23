@@ -29,7 +29,11 @@ const visitFrequencyLabels: Record<VisitFrequency, string> = {
     very_often: 'Très souvent',
 };
 
-const pointerStartX = ref<number | null>(null);
+const pointerStart = ref<{
+    pointerId: number;
+    x: number;
+    y: number;
+} | null>(null);
 
 const initials = computed(() => {
     return props.profile.displayName
@@ -69,21 +73,41 @@ function decide(decision: SwipeDecision) {
 }
 
 function rememberPointerStart(event: PointerEvent) {
-    pointerStartX.value = event.clientX;
+    const target = event.currentTarget as HTMLElement | null;
+
+    pointerStart.value = {
+        pointerId: event.pointerId,
+        x: event.clientX,
+        y: event.clientY,
+    };
+    target?.setPointerCapture?.(event.pointerId);
 }
 
-function forgetPointerStart() {
-    pointerStartX.value = null;
+function forgetPointerStart(event?: PointerEvent) {
+    const target = event?.currentTarget as HTMLElement | null;
+
+    if (event && target?.hasPointerCapture?.(event.pointerId)) {
+        target.releasePointerCapture(event.pointerId);
+    }
+
+    pointerStart.value = null;
 }
 
 function handlePointerEnd(event: PointerEvent) {
-    if (pointerStartX.value === null) {
+    const start = pointerStart.value;
+
+    if (start === null || start.pointerId !== event.pointerId) {
         return;
     }
 
-    const deltaX = event.clientX - pointerStartX.value;
+    const deltaX = event.clientX - start.x;
+    const deltaY = event.clientY - start.y;
 
-    forgetPointerStart();
+    forgetPointerStart(event);
+
+    if (Math.abs(deltaX) <= Math.abs(deltaY)) {
+        return;
+    }
 
     if (deltaX <= -SWIPE_THRESHOLD_PX) {
         decide('pass');
@@ -100,11 +124,12 @@ function handlePointerEnd(event: PointerEvent) {
         class="w-full max-w-md touch-pan-y gap-4 p-4 outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
         tabindex="0"
         :aria-label="`Profil de découverte de ${profile.displayName}`"
-        @keydown.left.prevent.stop="decide('pass')"
-        @keydown.right.prevent.stop="decide('like')"
+        @keydown.left.self.prevent.stop="decide('pass')"
+        @keydown.right.self.prevent.stop="decide('like')"
         @pointerdown="rememberPointerStart"
         @pointerup="handlePointerEnd"
         @pointercancel="forgetPointerStart"
+        @lostpointercapture="forgetPointerStart"
     >
         <CardHeader class="gap-4 px-0">
             <div class="flex items-start gap-4">

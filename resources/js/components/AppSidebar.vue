@@ -22,11 +22,15 @@ import type { NavItem } from '@/types';
 const page = usePage();
 
 const mainNavItems = computed<NavItem[]>(() => [
-    {
-        title: 'Découvrir',
-        href: discovery(),
-        icon: Sparkles,
-    },
+    ...(page.props.auth.user.profile?.onboarding_completed_at
+        ? [
+              {
+                  title: 'Découvrir',
+                  href: discovery(),
+                  icon: Sparkles,
+              },
+          ]
+        : []),
     {
         title: 'Mon profil',
         href: showProfile(),

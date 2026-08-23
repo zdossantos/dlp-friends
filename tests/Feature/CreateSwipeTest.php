@@ -87,6 +87,18 @@ class CreateSwipeTest extends TestCase
         $this->assertDatabaseCount('matches', 0);
     }
 
+    public function test_a_target_without_a_profile_is_rejected_without_recording_a_swipe(): void
+    {
+        $actor = User::factory()->withProfile()->create();
+        $target = User::factory()->create();
+
+        $this->expectTargetValidation(fn () => app(CreateSwipe::class)
+            ->handle($actor, $target, SwipeDecision::Like));
+
+        $this->assertDatabaseCount('swipes', 0);
+        $this->assertDatabaseCount('matches', 0);
+    }
+
     /** @return array<string, array{string}> */
     public static function ineligibleTargetProvider(): array
     {
@@ -276,18 +288,21 @@ class CreateSwipeTest extends TestCase
             'blocker_user_id' => $blocker->id,
             'blocked_user_id' => $blocked->id,
         ]);
-        DB::unprepared(<<<SQL
-            CREATE TRIGGER fail_swipe_with_unrelated_unique_violation
-            BEFORE INSERT ON swipes
-            BEGIN
-                INSERT INTO blocks (blocker_user_id, blocked_user_id, created_at, updated_at)
-                VALUES ({$blocker->id}, {$blocked->id}, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-            END
-            SQL);
+        Swipe::creating(static function () use ($blocker, $blocked): void {
+            Block::query()->create([
+                'blocker_user_id' => $blocker->id,
+                'blocked_user_id' => $blocked->id,
+            ]);
+        });
 
-        $this->expectException(QueryException::class);
-
-        app(CreateSwipe::class)->handle($actor, $target, SwipeDecision::Like);
+        try {
+            app(CreateSwipe::class)->handle($actor, $target, SwipeDecision::Like);
+            $this->fail('An unrelated database error should be rethrown.');
+        } catch (QueryException $exception) {
+            expect($exception)->toBeInstanceOf(QueryException::class);
+        } finally {
+            Swipe::flushEventListeners();
+        }
     }
 
     /** @return array{User, User} */

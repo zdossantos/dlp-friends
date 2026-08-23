@@ -249,6 +249,7 @@ git commit -m "feat: add explainable discovery engine"
 **Files:**
 - Create: `app/Actions/CreateSwipe.php`
 - Test: `tests/Feature/CreateSwipeTest.php`
+- Test: `tests/Feature/CreateSwipeConcurrencyTest.php`
 
 **Interfaces:**
 - Consumes: `SwipeDecision`, `Swipe`, `MemberMatch`, profile eligibility and block relations.
@@ -271,7 +272,7 @@ $this->assertDatabaseHas('swipes', [
 
 - [ ] **Step 2: Write failing reciprocity and idempotency tests**
 
-Prouver qu’un premier like retourne `null`, que le like inverse retourne un `MemberMatch` canonique, et que deux tentatives supplémentaires laissent exactement deux swipes et un match. Simuler l’insertion concurrente par une paire de swipes préexistante puis deux appels inverses entourés d’une capture de l’erreur unique attendue.
+Prouver qu’un premier like retourne `null`, que le like inverse retourne un `MemberMatch` canonique, et que deux tentatives supplémentaires laissent exactement deux swipes et un match. Ajouter un test MySQL dédié qui lance réellement les deux likes inverses en parallèle, sur deux processus et deux connexions, et vérifie deux swipes pour un seul match.
 
 - [ ] **Step 3: Run the action tests and observe the red state**
 
@@ -287,11 +288,20 @@ Dans `handle()`, charger `target.profile`, refuser les états inéligibles avec 
 return DB::transaction(function () use ($actor, $target, $decision): ?MemberMatch {
     [$lowId, $highId] = collect([$actor->id, $target->id])->sort()->values()->all();
 
-    User::query()
+    $lockedUsers = User::query()
         ->whereKey([$lowId, $highId])
         ->orderBy('id')
         ->lockForUpdate()
-        ->get();
+        ->get()
+        ->keyBy('id');
+
+    $lockedTarget = $lockedUsers->get($target->id);
+
+    $lockedTarget->setRelation(
+        'profile',
+        Profile::query()->where('user_id', $lockedTarget->id)->lockForUpdate()->first(),
+    );
+    // Revalider la cible après le verrouillage du profil.
 
     Swipe::query()->create([
         'actor_user_id' => $actor->id,
@@ -375,16 +385,18 @@ Expected: FAIL because the routes and controllers do not exist.
 
 - [ ] **Step 4: Implement controllers and routes**
 
-`DiscoveryController::__invoke(Request $request, DiscoveryService $service): Response` prend le premier résultat et rend :
+`DiscoveryController::__invoke(Request $request, DiscoveryService $service): Response` diffère le calcul du premier résultat et rend :
 
 ```php
 return Inertia::render('Discovery/Index', [
-    'suggestion' => $service->for($request->user())->first()?->toArray(),
+    'suggestion' => Inertia::defer(
+        fn () => $service->for($request->user())->first()?->toArray(),
+    ),
     'match' => fn () => $request->session()->pull('discovery.match'),
 ]);
 ```
 
-`StoreSwipeRequest::rules()` retourne `['decision' => ['required', Rule::enum(SwipeDecision::class)]]`. `SwipeController::__invoke(StoreSwipeRequest $request, User $target, CreateSwipe $action): RedirectResponse` convertit `$request->validated('decision')` avec `SwipeDecision::from()`, appelle l’action et place uniquement `id` et `displayName` sous `discovery.match`. Les deux routes vivent dans le groupe `profile.complete`.
+`StoreSwipeRequest::rules()` retourne `['decision' => ['required', Rule::enum(SwipeDecision::class)]]`. `SwipeController` résout manuellement l’identifiant cible afin qu’un compte absent et un compte devenu inéligible produisent la même erreur générique, convertit la décision avec `SwipeDecision::from()`, appelle l’action et place uniquement `id` et `displayName` sous `discovery.match`. Les deux routes vivent dans le groupe `profile.complete`.
 
 Modifier `LandingController` pour envoyer un membre non-admin complet vers `discovery.index`; conserver le dashboard admin prioritaire.
 
@@ -527,23 +539,25 @@ Expected: FAIL because the page and navigation item do not exist.
 
 - [ ] **Step 5: Implement page state and guarded submission**
 
-Utiliser `isSubmitting`, `errorMessage` et `lastDecision`. La soumission suit ce contrat :
+Utiliser `isSubmitting`, `errorMessage` et `retryAttempt`, qui mémorise ensemble la cible et la décision. La soumission traite les erreurs de validation, HTTP et réseau ; elle invalide le nouvel essai si la suggestion change.
 
 ```ts
-const submit = (decision: SwipeDecision): void => {
-    if (isSubmitting.value || !props.suggestion) return;
+const submit = (decision: SwipeDecision, targetUserId = props.suggestion?.userId): void => {
+    if (isSubmitting.value || targetUserId === undefined) return;
     isSubmitting.value = true;
-    lastDecision.value = decision;
+    retryAttempt.value = { targetUserId, decision };
     errorMessage.value = null;
-    router.post(swipe(props.suggestion.userId).url, { decision }, {
+    router.post(swipe(targetUserId).url, { decision }, {
         preserveScroll: true,
         onError: (errors) => { errorMessage.value = String(errors.decision ?? errors.target ?? 'Une erreur est survenue.'); },
+        onHttpException: () => { errorMessage.value = 'Le serveur n’a pas pu enregistrer cette décision.'; return false; },
+        onNetworkError: () => { errorMessage.value = 'La connexion a échoué avant l’enregistrement de cette décision.'; return false; },
         onFinish: () => { isSubmitting.value = false; },
     });
 };
 
 const retry = (): void => {
-    if (lastDecision.value) submit(lastDecision.value);
+    if (retryAttempt.value) submit(retryAttempt.value.decision, retryAttempt.value.targetUserId);
 };
 ```
 
@@ -551,7 +565,7 @@ Afficher un `Skeleton` pour `undefined`, un `Alert` avec bouton « Réessayer »
 
 - [ ] **Step 6: Add the navigation item**
 
-Importer `Sparkles` et `index as discovery` depuis le binding Wayfinder, puis insérer l’entrée « Découvrir » avant « Mon profil » dans `mainNavItems`.
+Importer `Sparkles` et `index as discovery` depuis le binding Wayfinder, puis insérer l’entrée « Découvrir » avant « Mon profil » uniquement lorsque le profil partagé est complet.
 
 - [ ] **Step 7: Run frontend checks**
 
