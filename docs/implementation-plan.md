@@ -47,24 +47,25 @@
 ### Task 2: Establish automated quality and branch delivery
 
 **Files:**
-- Create: `.github/workflows/pr-develop.yml`, `.github/workflows/release-pr.yml`
+- Create: `.github/workflows/ci.yml`, `.github/workflows/release-please.yml`
+- Create: `.github/scripts/validate-pr-title.sh`, `.github/dependabot.yml`
+- Create: `.github/settings/repository.json`, `.github/settings/main-protection.json`
 - Create: `phpstan.neon`, `vitest.config.ts`, `eslint.config.js`
-- Modify: `composer.json`, `package.json`, `README.md`
+- Modify: `composer.json`, `package.json`, `README.md`, `CONTRIBUTING.md`
 - Test: `tests/Feature/HealthCheckTest.php`
+- Test: `.github/scripts/test-validate-pr-title.sh`
 
-**Produces:** repeatable PHP/Vue checks, required PR validation and a promotion
-branch built from the latest `main` that integrates `develop`.
+**Produces:** repeatable PHP/Vue checks, required pull request validation on
+`main`, automated dependency updates and voluntary SemVer releases.
 
-- [ ] Add scripts named `test`, `test:unit`, `lint`, `format:check`, `types:check`, `analyse` and `build` that fail on errors.
-- [ ] Configure Pest, Laravel Pint, Larastan/PHPStan, ESLint, Vue type checking and Vitest.
-- [ ] Make `pr-develop.yml` run dependency installation, format check, static analysis, Pest against a MySQL service, Vitest, type check, Vite build and Docker build when a PR targets `develop`.
-- [ ] Make the promotion workflow run on pushes to `develop` and `main`, rebuild
-  `automation/promote-develop` from the latest `main`, merge `develop`, publish
-  only that technical branch with an exact force-with-lease, and maintain at
-  most one `automation/promote-develop` → `main` PR.
-- [ ] Configure Coolify separately to watch `main` and deploy it automatically; do not add a Coolify webhook or deployment workflow to GitHub Actions.
-- [ ] Run every local script once; expect each command to exit 0.
-- [ ] Commit: `ci: add quality gates and delivery workflows`.
+- [x] Add scripts named `test`, `test:unit`, `lint`, `format:check`, `types:check`, `analyse` and `build` that fail on errors.
+- [x] Configure Pest, Laravel Pint, Larastan/PHPStan, ESLint, Vue type checking and Vitest.
+- [x] Run six parallel checks for every non-draft pull request into `main`: Conventional PR title, PHP quality, backend tests, frontend quality, Vite build and Docker build.
+- [x] Configure Dependabot for Composer, npm and GitHub Actions with pull requests into `main`.
+- [x] Configure Release Please on `main` to maintain `CHANGELOG.md`, SemVer tags and GitHub Releases without publishing packages.
+- [x] Version squash-only repository settings and a protected, linear `main`; disallow direct pushes, force-pushes and deletion.
+- [x] Configure Coolify separately to watch `main` and deploy it automatically; do not add a Coolify webhook or deployment workflow to GitHub Actions.
+- [x] Document direct contributions to `main`, Conventional Commit titles and voluntary Release PR merges.
 
 ### Task 3: Implement accounts, adulthood and social login
 

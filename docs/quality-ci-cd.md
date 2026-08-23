@@ -2,146 +2,126 @@
 
 ## Stratégie de branches
 
-- `develop` : branche d'intégration. Toute modification arrive par PR.
-- `main` : branche de production. Aucun push direct ; elle reçoit les PR de
-  promotion qui intègrent `develop` et les PR de version de Release Please.
-- Les branches `develop` et `main` sont protégées et les checks CI requis doivent passer avant fusion.
+`main` est l'unique branche principale, stable et déployable. Toute
+modification part d'une branche dédiée (`feature/*`, `fix/*`, `chore/*`,
+`docs/*` ou `refactor/*`) et ouvre une pull request directement vers `main`.
+
+Les pushs directs, force-pushs et suppressions de `main` sont interdits, y
+compris aux administrateurs. Une pull request doit être à jour, résoudre ses
+conversations et réussir les six checks obligatoires. Le dépôt utilise
+uniquement **Squash & Merge** et conserve ainsi un historique linéaire.
+
+Tant qu'un seul contributeur peut relire le dépôt, aucune approbation n'est
+requise : l'auteur ne peut pas approuver sa propre pull request. Cette valeur
+doit passer à une approbation dès qu'un second reviewer est disponible.
 
 ## Conventional Commits
 
-Tous les commits doivent respecter Conventional Commits :
+Le titre de chaque pull request respecte Conventional Commits, car GitHub
+l'utilise comme titre du commit squash final :
 
-- `feat:` → version mineure.
-- `fix:` → version patch.
-- `feat!:` ou `BREAKING CHANGE:` → version majeure.
-- `docs:`, `refactor:`, `test:`, `chore:`, `ci:` → aucune nouvelle version par défaut.
+- `feat:` produit normalement une version mineure ;
+- `fix:` produit normalement une version patch ;
+- `feat!:` ou un pied `BREAKING CHANGE:` produit une version majeure ;
+- `perf:`, `refactor:`, `docs:`, `test:`, `build:`, `ci:`, `chore:` et
+  `revert:` décrivent les autres changements.
 
-Exemples : `feat: add matching filters`, `fix: prevent duplicate matches`, `chore(deps): update laravel`.
+Un scope facultatif précise le domaine, par exemple `fix(auth): préserver la
+session`. Le check `Conventional PR title` bloque les titres non conformes.
 
-## Versioning — Release Please
+## CI des pull requests
 
-Release Please gère automatiquement le versioning SemVer de l'application :
+Le workflow `CI` se déclenche à l'ouverture, la synchronisation, la réouverture
+ou le passage hors brouillon d'une pull request vers `main`. Une concurrence par
+pull request annule les runs devenus obsolètes. Il exécute les cinq checks
+applicatifs sur le commit proposé.
 
-- analyse les Conventional Commits ;
-- génère/met à jour `CHANGELOG.md` ;
-- crée les PR de release ;
-- crée les tags (`v1.0.0`, `v1.1.0`, `v1.1.1`, etc.) ;
-- crée les GitHub Releases.
+Le workflow `PR title` revalide aussi le titre après chaque modification de la
+pull request. Ce workflow de métadonnées est en lecture seule, extrait le
+validateur depuis la branche par défaut et n'exécute jamais le code proposé.
 
-Release Please ne publie aucun package npm : l'application est un site web.
+Les six checks indépendants sont :
 
-Le versioning est effectué à partir de `main` après publication des changements.
+1. `Conventional PR title` valide le futur message du commit squash ;
+2. `PHP quality` exécute Laravel Pint et PHPStan/Larastan ;
+3. `Backend tests` exécute Pest avec MySQL ;
+4. `Frontend quality` génère Wayfinder puis exécute ESLint, Prettier,
+   TypeScript et Vitest ;
+5. `Vite build` compile les assets de production ;
+6. `Docker build` construit l'image runtime sans la publier.
 
-La promotion et Release Please utilisent le secret GitHub Actions
-`RELEASE_PLEASE_TOKEN`, contenant un jeton fin limité à ce dépôt. Ce jeton est
-nécessaire pour que leurs PR déclenchent la CI ; il ne sert à aucun déploiement ni
-publication de package.
+Les dépendances sont installées depuis `composer.lock` et `package-lock.json`.
+GitHub Actions résout dynamiquement le répertoire de cache Composer, et met
+aussi en cache npm et les couches Docker BuildKit. Aucun merge n'est possible
+tant qu'un check requis échoue.
 
-La première version stable est amorcée en `v1.0.0` avec le pied de commit
-`Release-As: 1.0.0`. Les versions suivantes sont calculées automatiquement à
-partir des Conventional Commits publiés sur `main`.
+## Dependabot
 
-## Dépendances — Dependabot
+Dependabot surveille chaque semaine Composer, npm et GitHub Actions. Chaque
+écosystème conserve son propre groupe de mises à jour, son cooldown de cinq
+jours et sa limite de pull requests. Toutes les pull requests Dependabot ciblent
+`main` et passent les six checks comme les autres contributions.
 
-Dependabot surveille et met à jour automatiquement :
+## Release Please et SemVer
 
-- Composer ;
-- npm ;
-- GitHub Actions.
+Release Please est le seul mécanisme autorisé à créer une version. À chaque
+push sur `main`, il analyse les Conventional Commits depuis le dernier tag,
+maintient une Release PR et prépare :
 
-Les mises à jour sont proposées sous forme de PR vers `develop` et doivent passer la CI avant fusion.
+- la prochaine version SemVer ;
+- la mise à jour de `CHANGELOG.md` ;
+- le tag préfixé par `v` ;
+- la GitHub Release correspondante.
 
-## CI — PR vers develop et main
+Le merge d'une feature ou d'un fix dans `main` ne publie donc pas immédiatement
+de version. La publication est volontaire et intervient uniquement lors du
+merge de la Release PR. Aucun package npm ou Composer n'est publié : DLP Friends
+est une application web.
 
-Déclencheurs : ouverture, synchronisation, réouverture ou passage en revue d'une
-PR vers `develop` ou `main`.
-
-Checks obligatoires :
-
-1. `PHP quality` : Laravel Pint et PHPStan/Larastan.
-2. `Backend tests` : tests Pest avec MySQL.
-3. `Frontend quality` : ESLint, Prettier, TypeScript et Vitest.
-4. `Vite build` : compilation des assets frontend.
-5. `Docker build` : construction de l'image applicative sans publication.
-
-Le cache BuildKit de l'image runtime est conservé par GitHub Actions. Il est
-réchauffé depuis `develop` avant la promotion afin que toutes les pull requests
-puissent réutiliser les extensions PHP natives déjà compilées.
-
-Aucun merge n'est autorisé si les checks requis échouent.
-
-## PR automatique de promotion vers main
-
-À chaque push sur `develop` :
-
-- réchauffer le cache Docker partagé ;
-- reconstruire `automation/promote-develop` depuis le dernier `main` ;
-- fusionner `develop` dans cette branche technique avec un merge commit ;
-- publier uniquement la branche technique avec `--force-with-lease` ;
-- créer une PR `automation/promote-develop → main` si elle n'existe pas ;
-- ne jamais fusionner automatiquement cette PR.
-
-Le workflow se déclenche aussi après un push sur `main` et manuellement. Il ferme
-une promotion devenue vide lorsque `main` contient déjà tout `develop`. Il ne
-force-push jamais `develop` ou `main` et ne diminue aucune protection.
-
-Dans l'interface GitHub, sélectionner explicitement **Create a merge commit**
-pour la PR `automation/promote-develop → main`. Ne pas utiliser **Update
-branch**, **Squash and merge** ou rebase : la branche technique contient déjà le
-dernier `main`, et Release Please doit voir les Conventional Commits de
-`develop` devenus ancêtres de `main`.
+Le workflow utilise `RELEASE_PLEASE_TOKEN`, jeton limité à ce dépôt, afin que sa
+pull request déclenche la CI normale. Il dispose seulement des permissions
+d'écriture nécessaires aux contenus, issues et pull requests. Les autres
+workflows restent en lecture et aucun workflow ne crée directement de tag ou de
+release.
 
 ## Production
 
-Coolify surveille uniquement `main` et déploie automatiquement chaque nouveau commit.
+Coolify surveille uniquement `main` et déploie automatiquement chaque commit
+validé qui y est fusionné. GitHub Actions ne déclenche pas Coolify et ne stocke
+aucun webhook ou identifiant de déploiement. Les futurs secrets SMTP de
+production appartiennent à Coolify ; la CI n'envoie jamais d'e-mail réel.
 
-GitHub Actions ne gère pas le déploiement Coolify et ne contient aucun webhook ou identifiant de déploiement.
+## Gestion des échecs
 
-Ne jamais déployer `develop` ou une branche de fonctionnalité en production.
-
-## Protection GitHub
-
-- Interdire les pushes directs sur `develop` et `main`.
-- Conserver un historique linéaire sur `develop` pour les PR de fonctionnalité.
-- Conserver l'exigence de branche à jour sur `main` : la branche technique part
-  toujours du dernier `main`.
-- Autoriser les merge commits sur `main` pour les promotions qui intègrent
-  `develop`.
-- Les futurs identifiants SMTP de production sont des secrets Coolify ; la CI ne doit jamais envoyer d'e-mail réel.
-- Exiger les checks CI requis avant merge.
-- Tant que le dépôt n'a qu'un seul contributeur, ne demander aucune approbation
-  sur `main` afin de ne pas bloquer les publications. Passer à une approbation
-  obligatoire dès qu'un second reviewer est disponible.
-- Annuler les validations obsolètes après nouveau push.
-- Utiliser le principe du moindre privilège pour les permissions GitHub Actions.
-- Autoriser uniquement les workflows nécessaires à créer/modifier les PR et releases.
-- Ne jamais stocker de secrets ou `.env` de production dans Git.
+Un job en échec bloque uniquement la pull request concernée. Une exécution
+annulée après un nouveau push est remplacée par le run le plus récent. Une
+erreur Release Please laisse `main` intact et sera retentée au prochain push.
+Les réglages distants sont reproductibles depuis `.github/settings/` et ne sont
+appliqués qu'après la réussite des checks connus par GitHub.
 
 ## Flux
 
 ```text
-Feature branch
-    ↓
-PR → develop
-    ↓
-CI + tests
-    ↓
-develop
-    ↓
-automation/promote-develop (dernier main + develop)
-    ↓
-PR automatique → main
-    ↓
-Revue + CI + action Promote to production
-    ↓
-main
-    ├── Release Please → SemVer + CHANGELOG + tag + GitHub Release
-    └── Coolify → Production
+branche de travail
+      ↓
+  PR vers main
+      ↓
+ six checks CI
+      ↓
+ Squash & Merge
+      ↓
+main stable ───────────────→ Coolify
+      ↓
+Release Please maintient sa Release PR
+      ↓
+merge volontaire de la Release PR
+      ↓
+CHANGELOG + tag vX.Y.Z + GitHub Release
 
-Dependabot
-    ├── Composer
-    ├── npm
-    └── GitHub Actions
-          ↓
-       PR → develop
+Dependabot (Composer, npm, Actions)
+      ↓
+  PR vers main → même CI
 ```
+
+Le guide pas à pas pour contribuer et publier se trouve dans
+[`CONTRIBUTING.md`](../CONTRIBUTING.md).
