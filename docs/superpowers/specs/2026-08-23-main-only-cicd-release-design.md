@@ -48,8 +48,15 @@ conversations restent obligatoires.
 Le workflow `CI` se déclenche uniquement pour les pull requests vers `main`, y
 compris lors de leur ouverture, réouverture, passage hors brouillon et mise à
 jour. Une concurrence propre à chaque pull request annule les runs obsolètes.
+Il exécute les cinq checks applicatifs sur le commit de la pull request.
 
-Les six checks indépendants s'exécutent en parallèle :
+Le workflow séparé `PR title` exécute `Conventional PR title` lors des mêmes
+événements ainsi qu'à chaque modification de la pull request. Il utilise
+`pull_request_target` avec la permission `contents: read`, extrait uniquement
+le validateur de la branche par défaut et n'exécute jamais le code de la pull
+request. Le titre transite par une variable d'environnement.
+
+Les six checks indépendants sont :
 
 - `Conventional PR title` valide le titre sans dépendance externe ;
 - `PHP quality` exécute Pint et PHPStan ;
@@ -60,9 +67,10 @@ Les six checks indépendants s'exécutent en parallèle :
 - `Docker build` construit l'image runtime sans la publier.
 
 Les installations utilisent les lockfiles. Node utilise le cache npm natif de
-`actions/setup-node`. Composer utilise le cache de téléchargement calculé à
-partir de `composer.lock` dans les jobs qui l'installent. Le cache Docker GHA
-reste partagé par le job de build, sans workflow séparé de préchauffage.
+`actions/setup-node`. Composer résout son répertoire de cache avec
+`composer config cache-files-dir` et calcule la clé à partir de
+`composer.lock` dans les jobs qui l'installent. Le cache Docker GHA reste
+partagé par le job de build, sans workflow séparé de préchauffage.
 
 Le validateur de titre est couvert par un test shell écrit avant son
 implémentation. Les fichiers YAML, JSON et Markdown bénéficient de l'exception

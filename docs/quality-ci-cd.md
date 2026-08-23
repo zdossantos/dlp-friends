@@ -33,9 +33,14 @@ session`. Le check `Conventional PR title` bloque les titres non conformes.
 
 Le workflow `CI` se déclenche à l'ouverture, la synchronisation, la réouverture
 ou le passage hors brouillon d'une pull request vers `main`. Une concurrence par
-pull request annule les runs devenus obsolètes.
+pull request annule les runs devenus obsolètes. Il exécute les cinq checks
+applicatifs sur le commit proposé.
 
-Les jobs indépendants s'exécutent en parallèle :
+Le workflow `PR title` revalide aussi le titre après chaque modification de la
+pull request. Ce workflow de métadonnées est en lecture seule, extrait le
+validateur depuis la branche par défaut et n'exécute jamais le code proposé.
+
+Les six checks indépendants sont :
 
 1. `Conventional PR title` valide le futur message du commit squash ;
 2. `PHP quality` exécute Laravel Pint et PHPStan/Larastan ;
@@ -46,9 +51,9 @@ Les jobs indépendants s'exécutent en parallèle :
 6. `Docker build` construit l'image runtime sans la publier.
 
 Les dépendances sont installées depuis `composer.lock` et `package-lock.json`.
-GitHub Actions met en cache les téléchargements Composer, le cache npm et les
-couches Docker BuildKit. Aucun merge n'est possible tant qu'un check requis
-échoue.
+GitHub Actions résout dynamiquement le répertoire de cache Composer, et met
+aussi en cache npm et les couches Docker BuildKit. Aucun merge n'est possible
+tant qu'un check requis échoue.
 
 ## Dependabot
 

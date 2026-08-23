@@ -19,6 +19,8 @@ invalid_titles=(
     "feature: use an unsupported type"
     "fix(auth) missing colon"
     "fix:"
+    "fix:  "
+    $'fix: \t'
     " fix: leading whitespace"
 )
 

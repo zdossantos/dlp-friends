@@ -4,7 +4,7 @@
 
 **Goal:** Replace the `develop → main` promotion system with protected pull requests directly into `main`, Conventional Commit squash titles, Release Please releases, and main-targeted Dependabot updates.
 
-**Architecture:** One CI workflow validates every non-draft pull request into `main` with six parallel checks. Release Please alone reacts to pushes on `main` and owns release pull requests, changelog updates, SemVer tags, and GitHub Releases; versioned GitHub settings reproduce the matching squash-only branch protection. The repository migration lands through one PR before remote defaults, protection, and obsolete branches are changed in a guarded order.
+**Architecture:** A trusted, read-only metadata workflow validates Conventional Commit pull request titles from the default branch, while the CI workflow runs five parallel application checks on every non-draft pull request into `main`. Release Please alone reacts to pushes on `main` and owns release pull requests, changelog updates, SemVer tags, and GitHub Releases; versioned GitHub settings reproduce the matching squash-only branch protection. The repository migration lands through one PR before remote defaults, protection, and obsolete branches are changed in a guarded order.
 
 **Tech Stack:** GitHub Actions, Bash, GitHub CLI/API, Release Please v5, Dependabot v2, Composer/PHP 8.4, npm/Node 22, Pest, Vitest, Docker Buildx.
 
@@ -60,6 +60,8 @@ invalid_titles=(
     "feature: use an unsupported type"
     "fix(auth) missing colon"
     "fix:"
+    "fix:  "
+    $'fix: \t'
     " fix: leading whitespace"
 )
 
@@ -102,7 +104,7 @@ Create `.github/scripts/validate-pr-title.sh`:
 set -euo pipefail
 
 title="${1:-}"
-pattern='^(feat|fix|perf|refactor|docs|test|build|ci|chore|revert)(\([a-z0-9][a-z0-9._/-]*\))?!?: .+$'
+pattern='^(feat|fix|perf|refactor|docs|test|build|ci|chore|revert)(\([a-z0-9][a-z0-9._/-]*\))?!?: [^[:space:]].*$'
 
 if [[ ! "$title" =~ $pattern ]]; then
     echo "Pull request title must follow Conventional Commits, for example: feat(scope): describe the change" >&2
@@ -139,6 +141,7 @@ git commit -m "ci: validate conventional pull request titles"
 
 **Files:**
 - Modify: `.github/workflows/ci.yml`
+- Create: `.github/workflows/pr-title.yml`
 - Delete: `.github/workflows/promote-develop.yml`
 - Delete: `.github/workflows/promote-to-production.yml`
 - Delete: `.github/scripts/prepare-promotion-branch.sh`
@@ -147,10 +150,10 @@ git commit -m "ci: validate conventional pull request titles"
 - Delete: `.github/scripts/test-merge-promotion-pr.sh`
 
 **Interfaces:**
-- Consumes: non-draft `pull_request` events whose base is `main`.
+- Consumes: non-draft `pull_request` events whose base is `main`, plus trusted `pull_request_target` metadata events.
 - Produces: the six stable check names required by `main-protection.json`.
 
-- [ ] **Step 1: Add the title check and remove the `develop` trigger**
+- [ ] **Step 1: Separate trusted title validation and remove the `develop` trigger**
 
 Change the workflow trigger to:
 
@@ -166,9 +169,27 @@ on:
       - ready_for_review
 ```
 
-Add this independent job before `php-quality`:
+Create `.github/workflows/pr-title.yml` so title edits are revalidated and pull
+request code can never replace the validator:
 
 ```yaml
+name: PR title
+
+on:
+  pull_request_target:
+    branches:
+      - main
+    types:
+      - opened
+      - edited
+      - synchronize
+      - reopened
+      - ready_for_review
+
+permissions:
+  contents: read
+
+jobs:
   conventional-pr-title:
     name: Conventional PR title
     if: github.event.pull_request.draft == false
@@ -176,25 +197,29 @@ Add this independent job before `php-quality`:
     env:
       PR_TITLE: ${{ github.event.pull_request.title }}
     steps:
-      - name: Checkout
+      - name: Checkout trusted validator
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          ref: ${{ github.event.repository.default_branch }}
           persist-credentials: false
       - name: Validate pull request title
         run: .github/scripts/validate-pr-title.sh "$PR_TITLE"
 ```
 
-The title enters the shell only through `env`, never through direct expression interpolation in `run`.
+The title enters the shell only through `env`, never through direct expression interpolation in `run`. The workflow has read-only contents access, checks out the default branch explicitly, and never checks out or executes pull request code.
 
 - [ ] **Step 2: Add Composer download caching**
 
 In `php-quality`, `backend-tests`, `frontend-quality`, and `vite-build`, add the following immediately after `Set up PHP` and before `composer install`:
 
 ```yaml
+      - name: Resolve Composer cache directory
+        id: composer-cache
+        run: echo "dir=$(composer config cache-files-dir)" >> "$GITHUB_OUTPUT"
       - name: Cache Composer downloads
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
-          path: ~/.composer/cache/files
+          path: ${{ steps.composer-cache.outputs.dir }}
           key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
           restore-keys: |
             ${{ runner.os }}-composer-
@@ -216,7 +241,7 @@ rg -n 'branches:|Conventional PR title|actions/cache@|target-branch' .github/wor
 rg -n 'git push|gh release create|npm publish|composer publish' .github/workflows || true
 ```
 
-Expected: both YAML files parse; CI names only `main`; only Release Please contains `target-branch: main`; no direct push, manual release creation, or package publication command exists.
+Expected: all workflow YAML files parse; CI and PR title validation name only `main`; only Release Please contains `target-branch: main`; no direct push, manual release creation, or package publication command exists.
 
 - [ ] **Step 5: Re-run executable script tests**
 
@@ -513,7 +538,7 @@ Expected: one non-draft PR targets `main`; its title passes the new title valida
 gh pr checks --watch --required
 ```
 
-Expected before the settings migration: the five currently protected application checks pass. Also inspect all checks with `gh pr checks` and require `Conventional PR title` to pass even though the old protection does not yet require it.
+Expected before the settings migration: the five currently protected application checks pass. The migration PR title is also validated locally; `PR title` cannot run remotely until its trusted workflow exists on the repository's current default branch.
 
 - [ ] **Step 4: Squash-merge the PR**
 
@@ -616,7 +641,7 @@ gh secret list --app actions
 gh pr list --state open --base main --json number,title,headRefName,url
 ```
 
-Expected: `main` is default; only squash is enabled; neither obsolete branch exists; active workflows are CI, Release Please, and Dependabot Updates; no Actions variable exists; `RELEASE_PLEASE_TOKEN` is the only secret.
+Expected: `main` is default; only squash is enabled; neither obsolete branch exists; active workflows are CI, PR title, Release Please, and Dependabot Updates; no Actions variable exists; `RELEASE_PLEASE_TOKEN` is the only secret.
 
 If a Release PR is open, wait for all six checks with `gh pr checks --watch --required <number>` but do not merge it: release publication remains a deliberate product decision.
 
