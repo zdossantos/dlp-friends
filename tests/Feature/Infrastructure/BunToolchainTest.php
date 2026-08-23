@@ -36,10 +36,10 @@ it('uses the pinned Bun toolchain in automation and Docker', function () {
 it('documents Bun without npm or Yarn residue in active project files', function () {
     $activeDocumentation = collect([
         'README.md',
+        'AGENTS.md',
         'CONTRIBUTING.md',
         'docs/technical-architecture.md',
         'docs/quality-ci-cd.md',
-        'docs/implementation-plan.md',
     ])->map(fn (string $path): string => file_get_contents(base_path($path)))->join("\n");
     $ignoreFiles = file_get_contents(base_path('.gitignore')).file_get_contents(base_path('.dockerignore'));
 

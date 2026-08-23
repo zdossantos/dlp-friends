@@ -2,7 +2,7 @@
 
 ## Périmètre
 
-Cette étape initialise le socle technique de DLP Friends sans implémenter les fonctionnalités métier du MVP. Elle correspond à la tâche 1 de `docs/implementation-plan.md` : application Laravel/Inertia/Vue exécutable, services locaux reproductibles et base de déploiement compatible avec Coolify.
+Cette étape initialise le socle technique de DLP Friends sans implémenter les fonctionnalités métier du MVP : application Laravel/Inertia/Vue exécutable, services locaux reproductibles et base de déploiement compatible avec Coolify.
 
 Les README et documents existants restent la source de vérité et ne sont pas remplacés par le scaffolding.
 
@@ -67,4 +67,4 @@ Le README est mis à jour avec les prérequis, commandes de démarrage, ports lo
 
 ## Hors périmètre
 
-Cette initialisation n'ajoute pas encore Socialite, les règles de majorité, les profils, le matching, la messagerie métier, le catalogue, l'administration, la suppression de compte ni les workflows CI. Ces éléments restent dans les tâches suivantes de `docs/implementation-plan.md`.
+Cette initialisation n'ajoute pas encore Socialite, les règles de majorité, les profils, le matching, la messagerie métier, le catalogue, l'administration, la suppression de compte ni les workflows CI. Ces éléments relèvent de lots fonctionnels ultérieurs.

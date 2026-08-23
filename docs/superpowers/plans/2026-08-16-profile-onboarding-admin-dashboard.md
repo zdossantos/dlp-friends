@@ -907,7 +907,6 @@ git commit -m "feat: apply warm accessible visual system"
 - Modify: `docs/data-model.md`
 - Modify: `docs/ux-design.md`
 - Modify: `docs/mvp-v1.md`
-- Modify: `docs/implementation-plan.md`
 - Modify: `docs/technical-architecture.md`
 - Modify: `resources/js/routes/index.ts`
 - Modify: `resources/js/routes/profile/index.ts`
@@ -947,7 +946,7 @@ Document:
 - account/profile separation and non-unique display names in `docs/data-model.md`;
 - verification → onboarding → profile/admin routing in `docs/ux-design.md` and `docs/mvp-v1.md`;
 - roles, middleware, command, and dashboard boundaries in `docs/technical-architecture.md`;
-- the completed issue #13 scope, early role foundation from #14, and bounded DA slice from #27 in `docs/implementation-plan.md`;
+- the completed issue #13 scope, early role foundation from #14, and bounded DA slice from #27 in the relevant domain documents;
 - local migration, seed login, and `php artisan user:assign-role email admin` usage in `README.md`.
 
 Extend `HealthCheckTest` only with a route-name smoke assertion for `app`, `member-profile.show`, and `dashboard`; authorization behavior remains in the focused feature tests.

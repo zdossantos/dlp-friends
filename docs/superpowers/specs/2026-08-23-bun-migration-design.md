@@ -73,8 +73,7 @@ est renommé pour refléter Bun.
 
 Les sources de vérité actives sont mises à jour : `README.md`,
 `CONTRIBUTING.md`, `docs/technical-architecture.md`,
-`docs/quality-ci-cd.md` et les commandes encore actives de
-`docs/implementation-plan.md`. Les anciens documents sous
+`docs/quality-ci-cd.md`. Les anciens documents sous
 `docs/superpowers/specs/` et `docs/superpowers/plans/` restent inchangés : ils
 décrivent l'état et les décisions historiques au moment de leur rédaction.
 
