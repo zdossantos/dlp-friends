@@ -31,7 +31,7 @@ Une migration ajoute :
 - `matches`, avec les deux utilisateurs dans l’ordre canonique `user_low_id < user_high_id`, paire unique ;
 - `blocks`, paire unique bloqueur–bloqué, utilisée uniquement pour l’exclusion du moteur à ce stade.
 
-Les clés étrangères sont supprimées en cascade avec leurs propriétaires. Les contraintes de contrôle disponibles dans Laravel garantissent les valeurs de décision, l’absence de paire réflexive et l’ordre canonique des matches. Les modèles Eloquent et relations nécessaires sont ajoutés à `User` et `Profile`.
+Les clés étrangères sont supprimées en cascade avec leurs propriétaires. Les contraintes uniques et l’enum de stockage garantissent les valeurs de décision et l’absence de doublons ; l’action métier garantit l’absence de paire réflexive et l’ordre canonique des matches avant l’écriture. Les modèles Eloquent et relations nécessaires sont ajoutés à `User` et `Profile`.
 
 Le catalogue n’est pas rempli avec de fausses données de production. Les factories permettent de construire des jeux de test représentatifs.
 
@@ -42,7 +42,7 @@ Le catalogue n’est pas rempli avec de fausses données de production. Les fact
 La requête exclut :
 
 - l’utilisateur courant ;
-- les comptes qui ne sont pas actifs ;
+- les comptes inactifs, mineurs ou sans date de naissance ;
 - les profils incomplets ou masqués ;
 - les profils déjà évalués par l’utilisateur courant ;
 - toute paire bloquée dans un sens ou dans l’autre.
@@ -55,15 +55,16 @@ Le service charge les relations nécessaires en nombre borné de requêtes et ne
 
 `CreateSwipe::handle(User $actor, User $target, SwipeDecision $decision): ?MemberMatch` porte la règle métier. Le nom `MemberMatch` évite le mot-clé PHP réservé `match`. Un enum partagé limite les décisions à `like` et `pass`.
 
-Avant l’écriture, l’action refuse l’utilisateur lui-même, une cible inactive, incomplète ou masquée, une paire bloquée, ainsi qu’une décision déjà enregistrée. Le contrôleur transforme ces refus en erreur de validation compréhensible sans exposer d’information privée.
+Avant l’écriture, l’action refuse l’utilisateur lui-même, une cible inactive, mineure, sans date de naissance, incomplète ou masquée, une paire bloquée, ainsi qu’une décision déjà enregistrée. Le contrôleur transforme ces refus en erreur de validation compréhensible sans exposer d’information privée.
 
 L’écriture s’effectue dans une transaction :
 
-1. insertion unique du swipe ;
-2. arrêt immédiat pour un `pass` ;
-3. recherche du like inverse ;
-4. insertion idempotente du match avec identifiants canoniques ;
-5. lecture et retour du match créé ou existant.
+1. verrouillage des deux utilisateurs dans l’ordre canonique pour sérialiser les écritures concurrentes de la paire ;
+2. insertion unique du swipe ;
+3. arrêt immédiat pour un `pass` ;
+4. recherche du like inverse ;
+5. insertion idempotente du match avec identifiants canoniques ;
+6. lecture et retour du match créé ou existant.
 
 Les contraintes uniques restent la protection définitive contre les doubles requêtes et la concurrence. Une répétition ne crée jamais un deuxième swipe ou match. Une fois la décision acceptée, le profil est exclu de la prochaine réponse de découverte.
 
