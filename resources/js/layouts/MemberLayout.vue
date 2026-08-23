@@ -1,0 +1,23 @@
+<script setup lang="ts">
+import MemberBottomNavigation from '@/components/MemberBottomNavigation.vue';
+import { Toaster } from '@/components/ui/sonner';
+</script>
+
+<template>
+    <div
+        class="relative flex min-h-svh w-full flex-col overflow-x-hidden bg-background text-foreground"
+    >
+        <div
+            aria-hidden="true"
+            class="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_top_left,var(--color-secondary),transparent_42%),radial-gradient(circle_at_bottom_right,var(--color-accent),transparent_38%)] opacity-35"
+        />
+        <div
+            data-test="member-shell-content"
+            class="relative flex min-h-svh w-full flex-1 flex-col pb-[calc(6rem+env(safe-area-inset-bottom))]"
+        >
+            <slot />
+        </div>
+        <MemberBottomNavigation />
+        <Toaster />
+    </div>
+</template>

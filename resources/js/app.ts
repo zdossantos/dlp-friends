@@ -1,9 +1,7 @@
 import { createInertiaApp } from '@inertiajs/vue3';
 import { configureEcho } from '@laravel/echo-vue';
 import { initializeTheme } from '@/composables/useAppearance';
-import AppLayout from '@/layouts/AppLayout.vue';
-import AuthLayout from '@/layouts/AuthLayout.vue';
-import SettingsLayout from '@/layouts/settings/Layout.vue';
+import { resolvePageLayout } from '@/layouts/resolvePageLayout';
 import { initializeFlashToast } from '@/lib/flashToast';
 
 configureEcho({
@@ -14,18 +12,7 @@ const appName = import.meta.env.VITE_APP_NAME || 'DLP Friends';
 
 createInertiaApp({
     title: (title) => (title ? `${title} - ${appName}` : appName),
-    layout: (name) => {
-        switch (true) {
-            case name === 'Welcome':
-                return null;
-            case name.startsWith('auth/'):
-                return AuthLayout;
-            case name.startsWith('settings/'):
-                return [AppLayout, SettingsLayout];
-            default:
-                return AppLayout;
-        }
-    },
+    layout: resolvePageLayout,
     progress: {
         color: '#7138B6',
     },

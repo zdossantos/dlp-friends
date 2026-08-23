@@ -23,7 +23,9 @@ defineOptions({
 
 <template>
     <Head title="Modifier mon profil" />
-    <div class="mx-auto w-full max-w-2xl space-y-6 p-4 sm:p-6">
+    <div
+        class="mx-auto w-full max-w-xl space-y-6 px-4 pt-[max(1.25rem,env(safe-area-inset-top))] sm:px-6 sm:pt-8"
+    >
         <Heading
             title="Modifier mon profil"
             description="Mettez à jour les informations visibles par les autres membres."

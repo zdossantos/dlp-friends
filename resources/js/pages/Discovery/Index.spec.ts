@@ -51,7 +51,7 @@ const suggestion: DiscoveryProfile = {
 };
 
 function mountPage(props: {
-    suggestion?: DiscoveryProfile | null;
+    suggestions?: DiscoveryProfile[];
     match?: DiscoveryMatch | null;
 }): VueWrapper {
     return mount(DiscoveryIndex, {
@@ -86,12 +86,12 @@ describe('Discovery/Index', () => {
         document.body.innerHTML = '';
     });
 
-    it('renders loading, empty and suggested profile states', () => {
-        expect(mountPage({ suggestion: undefined }).text()).toContain(
+    it('renders loading, empty and a preloaded stack of up to five profiles', () => {
+        expect(mountPage({ suggestions: undefined }).text()).toContain(
             'Recherche de profils…',
         );
 
-        const emptyWrapper = mountPage({ suggestion: null });
+        const emptyWrapper = mountPage({ suggestions: [] });
         expect(emptyWrapper.text()).toContain(
             'Vous avez exploré tous les profils disponibles',
         );
@@ -99,15 +99,38 @@ describe('Discovery/Index', () => {
             'Mon profil',
         );
 
-        const cardWrapper = mountPage({ suggestion });
-        expect(cardWrapper.findComponent(SwipeCard).exists()).toBe(true);
-        expect(cardWrapper.text()).toContain('Mina Parade');
+        const suggestions = Array.from({ length: 5 }, (_, index) => ({
+            ...suggestion,
+            userId: suggestion.userId + index,
+            profileId: suggestion.profileId + index,
+            displayName: `Profil ${index + 1}`,
+        }));
+        const cardWrapper = mountPage({ suggestions });
+        const cards = cardWrapper.findAllComponents(SwipeCard);
+        expect(cards).toHaveLength(5);
+        expect(cards[0]?.props('locked')).toBe(false);
+        expect(cards.slice(1).every((card) => card.props('locked'))).toBe(true);
+        expect(
+            cardWrapper
+                .findAll('[data-test="discovery-card-stack-item"]')
+                .slice(1)
+                .every(
+                    (item) =>
+                        item.attributes('aria-hidden') === 'true' &&
+                        item.attributes('inert') !== undefined,
+                ),
+        ).toBe(true);
+        expect(cardWrapper.text()).toContain('Profil 1');
         expect(cardWrapper.text()).toContain('Attractions');
+        expect(cardWrapper.get('main').classes()).toContain('max-w-md');
+        expect(
+            cardWrapper.find('[data-test="desktop-discovery-intro"]').exists(),
+        ).toBe(false);
     });
 
     it('renders a dismissible match dialog with explicit title and description', async () => {
         mountPage({
-            suggestion: null,
+            suggestions: [],
             match: { id: 99, displayName: 'Noa Orbit' },
         });
         await nextTick();
@@ -124,7 +147,7 @@ describe('Discovery/Index', () => {
     });
 
     it('opens the match dialog for a new Inertia match prop and keeps a dismissed match closed until a new match arrives', async () => {
-        const wrapper = mountPage({ suggestion: null, match: null });
+        const wrapper = mountPage({ suggestions: [], match: null });
 
         expect(matchDialogTitle()).toBeNull();
 
@@ -163,7 +186,7 @@ describe('Discovery/Index', () => {
     });
 
     it('guards duplicate decisions, preserves the suggestion on validation failure and retries the last decision', async () => {
-        const wrapper = mountPage({ suggestion });
+        const wrapper = mountPage({ suggestions: [suggestion] });
         const card = wrapper.getComponent(SwipeCard);
 
         card.vm.$emit('like');
@@ -179,12 +202,12 @@ describe('Discovery/Index', () => {
         await nextTick();
         expect(card.props('locked')).toBe(true);
 
-        await wrapper.setProps({ suggestion: undefined });
+        await wrapper.setProps({ suggestions: undefined });
         getPostOptions().onError?.({
             decision: 'Impossible d’enregistrer cette décision.',
         });
         getPostOptions().onFinish?.();
-        await wrapper.setProps({ suggestion });
+        await wrapper.setProps({ suggestions: [suggestion] });
         await nextTick();
 
         expect(wrapper.get('[role="alert"]').text()).toContain(
@@ -207,20 +230,22 @@ describe('Discovery/Index', () => {
     });
 
     it('never retries an old decision against a replacement suggestion', async () => {
-        const wrapper = mountPage({ suggestion });
+        const wrapper = mountPage({ suggestions: [suggestion] });
 
         wrapper.getComponent(SwipeCard).vm.$emit('like');
         getPostOptions().onError?.({ target: 'Profil indisponible.' });
         getPostOptions().onFinish?.();
         await nextTick();
 
-        await wrapper.setProps({ suggestion: undefined });
+        await wrapper.setProps({ suggestions: undefined });
         await wrapper.setProps({
-            suggestion: {
-                ...suggestion,
-                userId: 84,
-                displayName: 'Nouvelle suggestion',
-            },
+            suggestions: [
+                {
+                    ...suggestion,
+                    userId: 84,
+                    displayName: 'Nouvelle suggestion',
+                },
+            ],
         });
 
         expect(wrapper.find('[role="alert"]').exists()).toBe(false);
@@ -231,7 +256,7 @@ describe('Discovery/Index', () => {
     });
 
     it('retains the card and exposes retry after an unexpected HTTP exception', async () => {
-        const wrapper = mountPage({ suggestion });
+        const wrapper = mountPage({ suggestions: [suggestion] });
 
         wrapper.getComponent(SwipeCard).vm.$emit('pass');
         const handled = getPostOptions().onHttpException?.();

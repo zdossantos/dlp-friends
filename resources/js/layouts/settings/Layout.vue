@@ -36,9 +36,9 @@ const { isCurrentOrParentUrl } = useCurrentUrl();
         />
 
         <div class="flex flex-col lg:flex-row lg:space-x-12">
-            <aside class="w-full max-w-xl lg:w-48">
+            <aside class="w-full lg:w-48">
                 <nav
-                    class="flex flex-col space-y-1 space-x-0"
+                    class="flex gap-1 overflow-x-auto pb-1 lg:flex-col lg:overflow-visible"
                     aria-label="Réglages"
                 >
                     <Button
@@ -46,7 +46,7 @@ const { isCurrentOrParentUrl } = useCurrentUrl();
                         :key="toUrl(item.href)"
                         variant="ghost"
                         :class="[
-                            'w-full justify-start',
+                            'shrink-0 justify-start lg:w-full',
                             { 'bg-muted': isCurrentOrParentUrl(item.href) },
                         ]"
                         as-child

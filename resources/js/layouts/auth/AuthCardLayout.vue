@@ -18,7 +18,7 @@ defineProps<{
 
 <template>
     <div
-        class="relative flex min-h-svh flex-col items-center justify-center overflow-hidden bg-background p-4 sm:p-6 md:p-10"
+        class="relative flex min-h-svh flex-col items-center justify-center overflow-hidden bg-background px-4 pt-[max(1rem,env(safe-area-inset-top))] pb-[max(1rem,env(safe-area-inset-bottom))] sm:px-6 md:px-10"
     >
         <div
             aria-hidden="true"

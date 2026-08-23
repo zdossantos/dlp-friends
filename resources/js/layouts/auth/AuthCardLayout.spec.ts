@@ -39,5 +39,11 @@ describe('AuthCardLayout', () => {
         expect(wrapper.text()).toContain('Rejoignez la communauté');
         expect(wrapper.text()).toContain('Thème');
         expect(wrapper.find('main').text()).toContain('Formulaire');
+        expect(wrapper.get('div').classes()).toContain(
+            'pt-[max(1rem,env(safe-area-inset-top))]',
+        );
+        expect(wrapper.get('div').classes()).toContain(
+            'pb-[max(1rem,env(safe-area-inset-bottom))]',
+        );
     });
 });

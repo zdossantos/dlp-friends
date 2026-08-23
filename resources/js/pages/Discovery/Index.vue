@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, Link, router } from '@inertiajs/vue3';
-import { ref, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 import SwipeCard from '@/components/discovery/SwipeCard.vue';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
@@ -25,9 +25,11 @@ import { show as showProfile } from '@/routes/member-profile';
 import type { DiscoveryMatch, DiscoveryProfile, SwipeDecision } from '@/types';
 
 const props = defineProps<{
-    suggestion?: DiscoveryProfile | null;
+    suggestions?: DiscoveryProfile[];
     match: DiscoveryMatch | null;
 }>();
+
+const activeSuggestion = computed(() => props.suggestions?.[0]);
 
 const isSubmitting = ref(false);
 const errorMessage = ref<string | null>(null);
@@ -55,13 +57,13 @@ watch(
 );
 
 watch(
-    () => props.suggestion,
-    (suggestion) => {
-        if (suggestion === undefined) {
+    () => props.suggestions,
+    (suggestions) => {
+        if (suggestions === undefined) {
             return;
         }
 
-        const targetUserId = suggestion?.userId ?? null;
+        const targetUserId = suggestions[0]?.userId ?? null;
 
         if (
             retryAttempt.value !== null &&
@@ -74,7 +76,7 @@ watch(
 );
 
 function submit(decision: SwipeDecision, targetUserId?: number): void {
-    const resolvedTargetUserId = targetUserId ?? props.suggestion?.userId;
+    const resolvedTargetUserId = targetUserId ?? activeSuggestion.value?.userId;
 
     if (isSubmitting.value || resolvedTargetUserId === undefined) {
         return;
@@ -135,15 +137,12 @@ defineOptions({
     <Head title="Découvrir" />
 
     <main
-        class="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 p-4 sm:p-6"
+        class="mx-auto flex w-full max-w-md flex-1 flex-col gap-4 px-4 pt-[max(1.25rem,env(safe-area-inset-top))] sm:px-6 sm:pt-8"
     >
-        <section class="space-y-2">
-            <p class="text-sm font-medium text-primary">Découverte</p>
-            <h1 class="text-3xl font-semibold tracking-tight">
-                Découvrir des amis fans
-            </h1>
-            <p class="max-w-2xl text-sm leading-6 text-muted-foreground">
-                Parcourez les profils proposés selon vos passions communes.
+        <section class="space-y-1">
+            <h1 class="text-3xl font-semibold tracking-tight">Découvrir</h1>
+            <p class="text-sm leading-6 text-muted-foreground">
+                Des membres qui partagent vos passions.
             </p>
         </section>
 
@@ -151,7 +150,7 @@ defineOptions({
             v-if="errorMessage"
             variant="destructive"
             aria-live="assertive"
-            class="max-w-2xl"
+            class="w-full"
         >
             <AlertTitle>Décision non enregistrée</AlertTitle>
             <AlertDescription class="space-y-3">
@@ -169,7 +168,7 @@ defineOptions({
         </Alert>
 
         <section
-            v-if="suggestion === undefined"
+            v-if="suggestions === undefined"
             class="grid w-full max-w-md gap-4"
             aria-busy="true"
         >
@@ -181,7 +180,7 @@ defineOptions({
             <Skeleton class="h-10 w-full" />
         </section>
 
-        <Card v-else-if="suggestion === null" class="w-full max-w-2xl">
+        <Card v-else-if="suggestions.length === 0" class="w-full rounded-3xl">
             <CardHeader>
                 <CardTitle>
                     Vous avez exploré tous les profils disponibles
@@ -198,13 +197,40 @@ defineOptions({
             </CardContent>
         </Card>
 
-        <SwipeCard
+        <section
             v-else
-            :profile="suggestion"
-            :locked="isSubmitting"
-            @like="submit('like')"
-            @pass="submit('pass')"
-        />
+            class="relative w-full pb-6"
+            aria-label="Profils à découvrir"
+        >
+            <div
+                v-for="(profile, index) in suggestions"
+                :key="profile.userId"
+                data-test="discovery-card-stack-item"
+                class="w-full transition-transform duration-300 ease-out"
+                :class="
+                    index === 0
+                        ? 'relative'
+                        : 'pointer-events-none absolute inset-x-0 top-0'
+                "
+                :style="{
+                    zIndex: suggestions.length - index,
+                    transform:
+                        index === 0
+                            ? undefined
+                            : `translateY(${index * 8}px) scale(${1 - index * 0.015})`,
+                }"
+                :aria-hidden="index > 0 ? 'true' : undefined"
+                :inert="index > 0"
+            >
+                <SwipeCard
+                    :profile="profile"
+                    :locked="isSubmitting || index > 0"
+                    :preview="index > 0"
+                    @like="index === 0 && submit('like')"
+                    @pass="index === 0 && submit('pass')"
+                />
+            </div>
+        </section>
 
         <Dialog v-if="match && matchDialogOpen" v-model:open="matchDialogOpen">
             <DialogContent
