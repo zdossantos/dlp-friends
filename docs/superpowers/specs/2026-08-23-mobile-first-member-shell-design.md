@@ -89,6 +89,8 @@ d'actions, propre à la page et non au shell, se trouve en haut à droite :
 
 - réglages du compte pour tous les membres complets ;
 - administration uniquement pour un utilisateur ayant le rôle `admin` ;
+- déconnexion pour tous les membres, soumise en `POST` après purge de l'état
+  client mis en cache ;
 - modification du profil comme action principale de la page.
 
 Chaque action possède une icône, un libellé accessible et une cible tactile

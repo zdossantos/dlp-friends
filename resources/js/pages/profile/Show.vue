@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { Head, Link, usePage } from '@inertiajs/vue3';
-import { LayoutDashboard, Pencil, Settings } from '@lucide/vue';
+import { Head, Link, router, usePage } from '@inertiajs/vue3';
+import { LayoutDashboard, LogOut, Pencil, Settings } from '@lucide/vue';
 import { computed } from 'vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { dashboard } from '@/routes';
+import { dashboard, logout } from '@/routes';
 import { edit as editAccount } from '@/routes/account';
 import { edit as editProfile, show } from '@/routes/member-profile';
 import type { Profile, VisitFrequency } from '@/types';
@@ -22,6 +22,10 @@ const frequencyLabels: Record<VisitFrequency, string> = {
     often: 'Souvent',
     very_often: 'Très souvent',
 };
+
+function handleLogout(): void {
+    router.flushAll();
+}
 
 defineOptions({
     layout: { breadcrumbs: [{ title: 'Mon profil', href: show() }] },
@@ -51,6 +55,16 @@ defineOptions({
                 >
                     <Link :href="dashboard()" aria-label="Administration">
                         <LayoutDashboard class="size-5" aria-hidden="true" />
+                    </Link>
+                </Button>
+                <Button as-child variant="outline" size="icon" class="size-12">
+                    <Link
+                        :href="logout()"
+                        as="button"
+                        aria-label="Se déconnecter"
+                        @click="handleLogout"
+                    >
+                        <LogOut class="size-5" aria-hidden="true" />
                     </Link>
                 </Button>
             </div>

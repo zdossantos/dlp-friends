@@ -1,17 +1,20 @@
 import { mount } from '@vue/test-utils';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import Show from './Show.vue';
 
 const roleState = vi.hoisted(() => ({
     roles: [{ name: 'user' as const }] as Array<{ name: 'user' | 'admin' }>,
 }));
+const flushAllMock = vi.hoisted(() => vi.fn());
 
 vi.mock('@inertiajs/vue3', () => ({
     Head: { template: '<span />' },
     Link: {
-        props: ['href'],
-        template: '<a :href="href.url ?? href" v-bind="$attrs"><slot /></a>',
+        props: ['href', 'as'],
+        template:
+            '<a :href="href.url ?? href" :data-as="as" v-bind="$attrs" @click.prevent><slot /></a>',
     },
+    router: { flushAll: flushAllMock },
     usePage: () => ({
         props: {
             auth: {
@@ -25,6 +28,7 @@ vi.mock('@inertiajs/vue3', () => ({
 
 vi.mock('@/routes', () => ({
     dashboard: () => ({ url: '/dashboard' }),
+    logout: () => ({ url: '/logout', method: 'post' }),
 }));
 
 vi.mock('@/routes/account', () => ({
@@ -37,6 +41,11 @@ vi.mock('@/routes/member-profile', () => ({
 }));
 
 describe('member profile page', () => {
+    beforeEach(() => {
+        roleState.roles = [{ name: 'user' }];
+        flushAllMock.mockReset();
+    });
+
     const mountProfile = () =>
         mount(Show, {
             props: {
@@ -81,6 +90,20 @@ describe('member profile page', () => {
         expect(wrapper.find('a[aria-label="Administration"]').exists()).toBe(
             false,
         );
+        expect(
+            wrapper.get('a[aria-label="Se déconnecter"]').attributes('href'),
+        ).toBe('/logout');
+        expect(
+            wrapper.get('a[aria-label="Se déconnecter"]').attributes('data-as'),
+        ).toBe('button');
+    });
+
+    it('clears cached client state when logging out', async () => {
+        const wrapper = mountProfile();
+
+        await wrapper.get('a[aria-label="Se déconnecter"]').trigger('click');
+
+        expect(flushAllMock).toHaveBeenCalledOnce();
     });
 
     it('adds administration to profile actions for an admin', () => {
