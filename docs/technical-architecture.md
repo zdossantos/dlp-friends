@@ -8,13 +8,14 @@ livrées restent décrites dans `mvp-v1.md` et `roadmap.md`.
 - Laravel 13 sur PHP 8.4 ;
 - Inertia 3, Vue 3 Composition API et TypeScript ;
 - Tailwind CSS et composants accessibles fondés sur Reka UI ;
+- Bun 1.3.14 pour les dépendances et commandes frontend ;
 - MySQL 8.4 pour les données relationnelles ;
 - Redis pour le cache, les sessions et les files ;
 - Laravel Reverb et Echo pour le temps réel ;
 - Pest, Vitest, PHPStan/Larastan, Pint, ESLint et Prettier pour la qualité.
 
-Les versions exactes sont verrouillées dans `composer.lock` et
-`package-lock.json`.
+Les versions exactes sont verrouillées dans `composer.lock` et `bun.lock`. Bun
+1.3.14 est épinglé dans `package.json`, GitHub Actions et le build Docker.
 
 ## Frontière applicative
 

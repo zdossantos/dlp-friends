@@ -19,8 +19,8 @@ comportement comme existant.
 ## Stack et structure
 
 - Backend : PHP 8.4, Laravel 13, Fortify, Pest et PHPStan/Larastan.
-- Frontend : Inertia 3, Vue 3 Composition API, TypeScript, Tailwind CSS,
-  Reka UI et Vitest.
+- Frontend : Bun 1.3.14, Inertia 3, Vue 3 Composition API, TypeScript,
+  Tailwind CSS, Reka UI et Vitest.
 - Infrastructure : MySQL 8.4, Redis 7.4, Reverb, MinIO, Mailpit et Docker
   Compose.
 - `app/` contient le domaine et les contrôleurs Laravel.
@@ -35,7 +35,7 @@ comportement comme existant.
 composer install
 cp .env.example .env
 php artisan key:generate
-npm ci
+bun install --frozen-lockfile
 docker compose up --build -d
 docker compose exec web php artisan migrate --seed --force
 ```
@@ -44,7 +44,7 @@ Commandes de développement courantes :
 
 ```sh
 composer dev
-npm run dev
+bun run dev
 docker compose ps
 docker compose logs -f web worker reverb
 docker compose exec web php artisan migrate --force
@@ -68,11 +68,11 @@ php artisan test
 
 # Frontend
 php artisan wayfinder:generate --with-form
-npm run lint:check
-npm run format:check
-npm run types:check
-npm run test
-npm run build
+bun run lint:check
+bun run format:check
+bun run types:check
+bun run test
+bun run build
 
 # Image de production
 docker build --target runtime --tag dlp-friends:ci .
@@ -85,7 +85,7 @@ Pour un test ciblé :
 
 ```sh
 php artisan test tests/Feature/MemberProfileTest.php
-npm run test:unit -- resources/js/pages/Dashboard.spec.ts
+bun run test:unit -- resources/js/pages/Dashboard.spec.ts
 ```
 
 ## Conventions de code
@@ -136,6 +136,9 @@ Les règles détaillées sont dans `docs/engineering-principles.md`.
 
 ## Git et pull requests
 
+- Avant de commencer un développement, synchroniser la branche principale avec
+  `git switch main` puis `git pull --ff-only`. Créer ensuite la branche de
+  travail depuis ce `main` à jour.
 - Partir de `main` et travailler sur une branche `feature/*`, `fix/*`, `docs/*`,
   `chore/*` ou `refactor/*`.
 - Ne jamais pousser directement ou forcer un push sur `main`.

@@ -14,12 +14,13 @@ Le projet est indépendant et n'est affilié ni à Disney ni à Disneyland Paris
 - Inertia 3, Vue 3 et TypeScript ;
 - Tailwind CSS et Reka UI ;
 - MySQL, Redis et Laravel Reverb ;
+- Bun 1.3.14 pour les dépendances et commandes frontend ;
 - Docker Compose pour l'environnement local.
 
 ## Prérequis
 
 - PHP 8.4 et Composer 2 ;
-- Node.js 22 et npm ;
+- Bun 1.3.14 ;
 - Docker Desktop avec Docker Compose.
 
 ## Installation
@@ -28,7 +29,7 @@ Le projet est indépendant et n'est affilié ni à Disney ni à Disneyland Paris
 composer install
 cp .env.example .env
 php artisan key:generate
-npm ci
+bun install --frozen-lockfile
 docker compose up --build -d
 docker compose exec web php artisan migrate --seed --force
 ```
@@ -59,7 +60,7 @@ démarrage des conteneurs.
 ```sh
 # Contrôles PHP et frontend
 composer ci:check
-npm run build
+bun run build
 
 # Environnement Docker
 docker compose ps
