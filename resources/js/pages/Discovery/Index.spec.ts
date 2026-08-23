@@ -103,6 +103,10 @@ describe('Discovery/Index', () => {
         expect(cardWrapper.findComponent(SwipeCard).exists()).toBe(true);
         expect(cardWrapper.text()).toContain('Mina Parade');
         expect(cardWrapper.text()).toContain('Attractions');
+        expect(cardWrapper.get('main').classes()).toContain('max-w-md');
+        expect(
+            cardWrapper.find('[data-test="desktop-discovery-intro"]').exists(),
+        ).toBe(false);
     });
 
     it('renders a dismissible match dialog with explicit title and description', async () => {

@@ -41,7 +41,7 @@ async function dispatchPointerEvent(
 }
 
 describe('SwipeCard', () => {
-    it('renders the discovery profile and emits only pass and like from button actions', async () => {
+    it('renders the profile with no visible decision controls and keeps reader-accessible actions', () => {
         const wrapper = mountCard();
 
         expect(wrapper.text()).toContain('Mina Parade');
@@ -55,24 +55,20 @@ describe('SwipeCard', () => {
         expect(wrapper.text()).toContain('Attractions');
         expect(wrapper.text()).toContain('Parades');
         expect(wrapper.text()).toContain('Pins');
+        expect(
+            wrapper.find('[data-test="visible-swipe-actions"]').exists(),
+        ).toBe(false);
 
-        await wrapper
-            .get('button[aria-label="Passer ce profil"]')
-            .trigger('click');
-        await wrapper
-            .get('button[aria-label="Aimer ce profil"]')
-            .trigger('click');
-
-        expect(wrapper.emitted()).toEqual({ pass: [[]], like: [[]] });
+        expect(
+            wrapper.get('button[aria-label="Passer ce profil"]').classes(),
+        ).toContain('sr-only');
+        expect(
+            wrapper.get('button[aria-label="Aimer ce profil"]').classes(),
+        ).toContain('sr-only');
     });
 
-    it('disables visible actions when locked and ignores a second action', async () => {
-        const wrapper = mountCard();
-
-        await wrapper
-            .get('button[aria-label="Aimer ce profil"]')
-            .trigger('click');
-        await wrapper.setProps({ locked: true });
+    it('disables reader actions and keyboard decisions while locked', async () => {
+        const wrapper = mountCard(true);
 
         expect(
             wrapper.get('button[aria-label="Passer ce profil"]').attributes(),
@@ -81,11 +77,9 @@ describe('SwipeCard', () => {
             wrapper.get('button[aria-label="Aimer ce profil"]').attributes(),
         ).toHaveProperty('disabled');
 
-        await wrapper
-            .get('button[aria-label="Passer ce profil"]')
-            .trigger('click');
+        await wrapper.get('[tabindex="0"]').trigger('keydown.right');
 
-        expect(wrapper.emitted()).toEqual({ like: [[]] });
+        expect(wrapper.emitted('like')).toBeUndefined();
     });
 
     it('emits pass and like from focused keyboard arrows', async () => {
@@ -99,15 +93,18 @@ describe('SwipeCard', () => {
         expect(wrapper.emitted('like')).toEqual([[]]);
     });
 
-    it('does not apply card arrow shortcuts from a focused child button', async () => {
+    it('emits decisions from reader-accessible semantic controls', async () => {
         const wrapper = mountCard();
 
         await wrapper
             .get('button[aria-label="Passer ce profil"]')
-            .trigger('keydown.right');
+            .trigger('click');
+        await wrapper
+            .get('button[aria-label="Aimer ce profil"]')
+            .trigger('click');
 
-        expect(wrapper.emitted('pass')).toBeUndefined();
-        expect(wrapper.emitted('like')).toBeUndefined();
+        expect(wrapper.emitted('pass')).toEqual([[]]);
+        expect(wrapper.emitted('like')).toEqual([[]]);
     });
 
     it('uses a 72 pixel horizontal pointer threshold for swipe gestures', async () => {

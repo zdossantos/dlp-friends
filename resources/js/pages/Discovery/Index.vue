@@ -135,15 +135,12 @@ defineOptions({
     <Head title="Découvrir" />
 
     <main
-        class="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 p-4 sm:p-6"
+        class="mx-auto flex w-full max-w-md flex-1 flex-col gap-4 px-4 pt-[max(1.25rem,env(safe-area-inset-top))] sm:px-6 sm:pt-8"
     >
-        <section class="space-y-2">
-            <p class="text-sm font-medium text-primary">Découverte</p>
-            <h1 class="text-3xl font-semibold tracking-tight">
-                Découvrir des amis fans
-            </h1>
-            <p class="max-w-2xl text-sm leading-6 text-muted-foreground">
-                Parcourez les profils proposés selon vos passions communes.
+        <section class="space-y-1">
+            <h1 class="text-3xl font-semibold tracking-tight">Découvrir</h1>
+            <p class="text-sm leading-6 text-muted-foreground">
+                Des membres qui partagent vos passions.
             </p>
         </section>
 
@@ -151,7 +148,7 @@ defineOptions({
             v-if="errorMessage"
             variant="destructive"
             aria-live="assertive"
-            class="max-w-2xl"
+            class="w-full"
         >
             <AlertTitle>Décision non enregistrée</AlertTitle>
             <AlertDescription class="space-y-3">
@@ -181,7 +178,7 @@ defineOptions({
             <Skeleton class="h-10 w-full" />
         </section>
 
-        <Card v-else-if="suggestion === null" class="w-full max-w-2xl">
+        <Card v-else-if="suggestion === null" class="w-full rounded-3xl">
             <CardHeader>
                 <CardTitle>
                     Vous avez exploré tous les profils disponibles

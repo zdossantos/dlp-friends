@@ -2,12 +2,10 @@
 import { computed, ref } from 'vue';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import {
     Card,
     CardContent,
     CardDescription,
-    CardFooter,
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
@@ -121,9 +119,10 @@ function handlePointerEnd(event: PointerEvent) {
 
 <template>
     <Card
-        class="w-full max-w-md touch-pan-y gap-4 p-4 outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
+        class="w-full max-w-md touch-pan-y gap-0 overflow-hidden rounded-[1.75rem] p-0 outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
         tabindex="0"
         :aria-label="`Profil de découverte de ${profile.displayName}`"
+        aria-describedby="swipe-instructions"
         @keydown.left.self.prevent.stop="decide('pass')"
         @keydown.right.self.prevent.stop="decide('like')"
         @pointerdown="rememberPointerStart"
@@ -131,16 +130,20 @@ function handlePointerEnd(event: PointerEvent) {
         @pointercancel="forgetPointerStart"
         @lostpointercapture="forgetPointerStart"
     >
-        <CardHeader class="gap-4 px-0">
-            <div class="flex items-start gap-4">
-                <Avatar class="size-16 border">
-                    <AvatarFallback class="text-lg font-semibold">
+        <CardHeader
+            class="gap-4 bg-[radial-gradient(circle_at_top_left,var(--color-secondary),transparent_50%),radial-gradient(circle_at_bottom_right,var(--color-accent),transparent_48%)] px-6 py-8"
+        >
+            <div class="flex flex-col items-center gap-4 text-center">
+                <Avatar class="size-24 rounded-3xl border-4 border-card shadow-lg">
+                    <AvatarFallback
+                        class="rounded-3xl bg-card/70 text-2xl font-semibold text-primary"
+                    >
                         {{ initials }}
                     </AvatarFallback>
                 </Avatar>
 
                 <div class="min-w-0 flex-1">
-                    <CardTitle class="text-2xl leading-tight">
+                    <CardTitle class="text-3xl leading-tight tracking-tight">
                         {{ profile.displayName }}
                     </CardTitle>
                     <CardDescription class="mt-1 text-base">
@@ -150,7 +153,7 @@ function handlePointerEnd(event: PointerEvent) {
             </div>
         </CardHeader>
 
-        <CardContent class="space-y-5 px-0">
+        <CardContent class="space-y-5 px-6 py-6">
             <p class="text-sm leading-6 text-muted-foreground">
                 {{ profile.bio ?? 'Bio non renseignée.' }}
             </p>
@@ -177,34 +180,29 @@ function handlePointerEnd(event: PointerEvent) {
                     {{ passion }}
                 </Badge>
             </div>
-        </CardContent>
 
-        <CardFooter class="grid gap-3 px-0">
-            <p class="text-center text-sm text-muted-foreground">
-                Utilisez les boutons ou les flèches gauche et droite.
+            <p id="swipe-instructions" class="sr-only">
+                Balayez vers la gauche pour passer ce profil ou vers la droite
+                pour l’aimer. Au clavier, utilisez les flèches gauche et droite.
             </p>
-
-            <div class="grid grid-cols-2 gap-3">
-                <Button
-                    type="button"
-                    variant="outline"
-                    class="w-full"
-                    :disabled="locked"
-                    aria-label="Passer ce profil"
-                    @click.stop="decide('pass')"
-                >
-                    Passer
-                </Button>
-                <Button
-                    type="button"
-                    class="w-full"
-                    :disabled="locked"
-                    aria-label="Aimer ce profil"
-                    @click.stop="decide('like')"
-                >
-                    J'aime
-                </Button>
-            </div>
-        </CardFooter>
+            <button
+                class="sr-only"
+                type="button"
+                :disabled="locked"
+                aria-label="Passer ce profil"
+                @click="decide('pass')"
+            >
+                Passer ce profil
+            </button>
+            <button
+                class="sr-only"
+                type="button"
+                :disabled="locked"
+                aria-label="Aimer ce profil"
+                @click="decide('like')"
+            >
+                Aimer ce profil
+            </button>
+        </CardContent>
     </Card>
 </template>
