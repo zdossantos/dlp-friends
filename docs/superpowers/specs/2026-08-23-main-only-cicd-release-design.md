@@ -149,10 +149,11 @@ erreur lors de l'application des réglages GitHub arrête la séquence avant tou
 suppression de branche et produit un nouvel audit pour identifier précisément
 l'état partiellement appliqué.
 
-La suppression distante ne commence qu'après vérification que `main`,
-`develop` et la branche d'automatisation ont toujours le même arbre Git. La
-suppression locale ne commence qu'après un nouveau contrôle de propreté des
-worktrees.
+La suppression distante ne commence qu'après vérification que `develop` et la
+branche d'automatisation ont toujours l'arbre du parent pré-migration de
+`main`, puis que l'écart entre ce parent et le nouveau `main` correspond
+uniquement à la migration de l'issue 44. La suppression locale ne commence
+qu'après un nouveau contrôle de propreté des worktrees.
 
 ## Vérification et critères d'acceptation
 
