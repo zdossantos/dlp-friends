@@ -363,7 +363,6 @@ git commit -m "ci: configure repository automation for main"
 - Modify: `.github/pull_request_template.md`
 - Modify: `docs/product-vision.md`
 - Modify: `docs/technical-architecture.md`
-- Modify: `docs/implementation-plan.md`
 - Rewrite: `docs/quality-ci-cd.md`
 - Delete: `docs/superpowers/plans/2026-08-16-clean-develop-main-promotion.md`
 - Delete: `docs/superpowers/plans/2026-08-16-github-ci-release.md`
@@ -408,7 +407,6 @@ Update the four existing documents as follows:
 
 - `docs/product-vision.md`: state that every PR into `main` is validated automatically.
 - `docs/technical-architecture.md`: replace separate integration/production branches and promotion automation with protected PRs directly into stable `main`; retain Coolify's observation of `main`.
-- `docs/implementation-plan.md`: replace the obsolete task-2 file list and checklist with the implemented main-only CI, Release Please, Dependabot, and protection deliverables.
 - `docs/quality-ci-cd.md`: describe the six checks, branch protection, Conventional Commit squash titles, weekly Dependabot PRs into `main`, Release Please accumulation/publication semantics, permissions, failure behavior, and the final `branch → PR main → CI → squash → Release PR → release` diagram.
 
 - [ ] **Step 4: Delete historical plans that prescribe the removed system**

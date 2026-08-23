@@ -1,20 +1,28 @@
 # DLP Friends
 
-## But de ce dossier
+DLP Friends est un projet d'application de rencontres amicales entre fans
+majeurs de Disneyland Paris. Son MVP vise à permettre de créer un profil,
+découvrir des membres ayant des passions communes et échanger après un match
+réciproque. Le périmètre prévu et l'état du code sont distingués dans la
+documentation.
 
-Ce dépôt contient le projet DLP Friends, une application de rencontres amicales entre fans majeurs de Disneyland Paris. L'application est indépendante et non affiliée à Disney ou Disneyland Paris.
+Le projet est indépendant et n'est affilié ni à Disney ni à Disneyland Paris.
 
-Les documents dans `docs/` sont la source de vérité fonctionnelle et technique. Ils sont écrits pour être lus aussi bien par une équipe humaine que par une IA qui doit planifier ou implémenter le projet.
+## Stack
 
-Avant toute modification, lire dans cet ordre :
+- Laravel 13 et PHP 8.4 ;
+- Inertia 3, Vue 3 et TypeScript ;
+- Tailwind CSS et Reka UI ;
+- MySQL, Redis et Laravel Reverb ;
+- Docker Compose pour l'environnement local.
 
-1. `docs/product-vision.md`
-2. `docs/mvp-v1.md`
-3. le document concerné par la modification (`docs/data-model.md`, `docs/technical-architecture.md`, etc.)
+## Prérequis
 
-## Démarrage local
+- PHP 8.4 et Composer 2 ;
+- Node.js 22 et npm ;
+- Docker Desktop avec Docker Compose.
 
-Prérequis : PHP 8.4, Composer 2, Node.js avec npm et Docker Desktop avec Docker Compose.
+## Installation
 
 ```sh
 composer install
@@ -25,97 +33,60 @@ docker compose up --build -d
 docker compose exec web php artisan migrate --seed --force
 ```
 
-Le seeder crée un compte local vérifié avec un profil complété :
+L'application est ensuite disponible sur <http://localhost:8000>.
 
-- e-mail : `test@example.com`
-- mot de passe : `password`
-- rôles : `user` et `admin`
+Le seeder crée un compte local vérifié :
 
-Après une inscription classique, l'utilisateur vérifie d'abord son adresse
-e-mail, puis renseigne son nom d'affichage et son profil. Le dashboard
-`/dashboard` est réservé au rôle `admin`. Pour promouvoir un compte existant :
+- e-mail : `test@example.com` ;
+- mot de passe : `password` ;
+- rôles : `user` et `admin`.
 
-```sh
-docker compose exec web php artisan user:assign-role membre@example.com admin
-```
+Les migrations restent explicites et ne sont jamais lancées automatiquement au
+démarrage des conteneurs.
 
-Les migrations restent une action explicite : aucun conteneur ne modifie le schéma au démarrage. Laravel Sail n'est ni installé ni utilisé ; `compose.yaml`, le `Dockerfile` et les points d'entrée du dépôt constituent l'environnement Docker.
+## Services locaux
 
-Services exposés localement :
+| Service | Adresse |
+| --- | --- |
+| Application | <http://localhost:8000> |
+| Route de santé | <http://localhost:8000/up> |
+| Reverb | `ws://localhost:8080` |
+| Mailpit | <http://localhost:8025> |
+| MinIO | <http://localhost:9000> (console sur le port `9001`) |
 
-| Service             | URL ou port                              |
-| ------------------- | ---------------------------------------- |
-| Application Laravel | `http://localhost:8000`                  |
-| Santé Laravel       | `http://localhost:8000/up`               |
-| Laravel Reverb      | `ws://localhost:8080`                    |
-| Mailpit             | `http://localhost:8025` (SMTP `1025`)    |
-| MinIO               | `http://localhost:9000` (console `9001`) |
-
-MySQL et Redis ne publient aucun port sur l'hôte. Les commandes courantes sont :
+## Commandes utiles
 
 ```sh
+# Contrôles PHP et frontend
+composer ci:check
+npm run build
+
+# Environnement Docker
 docker compose ps
 docker compose logs -f web worker reverb
 docker compose exec web php artisan migrate --force
-docker compose exec web php artisan db:seed --force
 docker compose down
 ```
 
-Pour les contrôles applicatifs exécutés sur l'hôte :
+Les contrôles individuels sont décrits dans
+[`CONTRIBUTING.md`](CONTRIBUTING.md).
 
-```sh
-composer lint:check
-composer analyse
-php artisan test
-npm run lint:check
-npm run format:check
-npm run types:check
-npm run test
-npm run build
-docker build --target runtime --tag dlp-friends:ci .
-```
+## Documentation
 
-Ces commandes correspondent aux contrôles exécutés dans GitHub Actions.
+| Document | Sujet |
+| --- | --- |
+| [`docs/product-vision.md`](docs/product-vision.md) | Positionnement et principes produit |
+| [`docs/mvp-v1.md`](docs/mvp-v1.md) | Périmètre fonctionnel de la V1 |
+| [`docs/roadmap.md`](docs/roadmap.md) | Évolutions envisagées après le MVP |
+| [`docs/data-model.md`](docs/data-model.md) | Modèle métier et matching |
+| [`docs/technical-architecture.md`](docs/technical-architecture.md) | Architecture et services |
+| [`docs/ux-design.md`](docs/ux-design.md) | Expérience et direction visuelle |
+| [`docs/security-privacy.md`](docs/security-privacy.md) | Sécurité et données personnelles |
+| [`docs/operations.md`](docs/operations.md) | Exploitation et fiabilité |
+| [`docs/quality-ci-cd.md`](docs/quality-ci-cd.md) | CI, branches et livraison |
+| [`docs/engineering-principles.md`](docs/engineering-principles.md) | Principes de développement |
 
-## Contribution et releases
+## Contribuer
 
-Toute modification part d'une branche dédiée et ouvre une pull request
-directement vers `main`. Les six checks obligatoires doivent réussir avant un
-**Squash & Merge**, et le titre de la pull request suit Conventional Commits.
-
-Le merge d'une fonctionnalité ou d'un correctif ne publie pas immédiatement une
-version. Release Please maintient une Release PR ; son merge volontaire crée le
-changelog, le tag SemVer et la GitHub Release, sans publier de package.
-
-Le processus complet est décrit dans [`CONTRIBUTING.md`](CONTRIBUTING.md). Les
-checks, protections et automatisations sont détaillés dans
-[`docs/quality-ci-cd.md`](docs/quality-ci-cd.md).
-
-L'infrastructure SMTP de production est volontairement différée. Mailpit est l'unique transport SMTP local.
-
-## Règles de travail
-
-- Ne pas ajouter une fonctionnalité hors MVP sans l'inscrire d'abord dans `docs/roadmap.md` ou sans validation produit.
-- DLP Friends est exclusivement une application de rencontres amicales entre majeurs ; ne jamais introduire de vocabulaire, critères ou mécanismes romantiques.
-- Préserver la maîtrise des données : le membre peut modifier, masquer et supprimer son compte depuis le MVP.
-- Toute règle métier importante doit être testée et documentée.
-- Appliquer les principes de `docs/engineering-principles.md` : code lisible, simple, sans abstraction ou dépendance non justifiée.
-- En cas de question, d'ambiguïté, de contradiction ou de décision susceptible de modifier le périmètre, demander explicitement validation au porteur du projet avant d'implémenter ou de supposer une réponse.
-- Le transport des e-mails de production sera configuré ultérieurement, après une décision d'infrastructure explicite.
-- Ne pas utiliser de personnages, logos ou illustrations Disney sans droits d'utilisation démontrés. Le produit est non affilié à Disney.
-
-## Index
-
-| Fichier                          | Contenu                                                 |
-| -------------------------------- | ------------------------------------------------------- |
-| `docs/product-vision.md`         | Positionnement et principes produit                     |
-| `docs/mvp-v1.md`                 | Fonctionnalités livrées en version 1                    |
-| `docs/roadmap.md`                | Évolutions explicitement postérieures au MVP            |
-| `docs/ux-design.md`              | Direction artistique et règles d'interface              |
-| `docs/data-model.md`             | Modèle métier et matching                               |
-| `docs/technical-architecture.md` | Stack, services Docker et déploiement                   |
-| `docs/quality-ci-cd.md`          | Tests, qualité, branches et automatisations GitHub      |
-| `docs/security-privacy.md`       | Sécurité, majorité, blocage et cycle de vie des données |
-| `docs/operations.md`             | Sauvegardes, santé, journaux et exploitation            |
-| `docs/engineering-principles.md` | Règles de simplicité, clean code et abstraction         |
-| `CONTRIBUTING.md`                | Branches, pull requests et publication des versions     |
+Consultez [`CONTRIBUTING.md`](CONTRIBUTING.md) pour le workflow Git, les
+contrôles à exécuter et le processus de release.

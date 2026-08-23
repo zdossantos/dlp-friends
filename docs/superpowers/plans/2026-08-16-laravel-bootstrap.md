@@ -392,12 +392,12 @@ git commit -m "chore: add local Docker services"
 
 **Files:**
 - Modify: `README.md`
-- Modify: `docs/implementation-plan.md`
+- Modify: `docs/technical-architecture.md`
 - Test: `tests/Feature/HealthCheckTest.php`
 
 **Interfaces:**
 - Consumes: all deliverables from Tasks 1–4.
-- Produces: a newcomer-ready local setup and recorded completion evidence for implementation-plan Task 1.
+- Produces: a newcomer-ready local setup and accurate technical documentation.
 
 - [ ] **Step 1: Document prerequisites and local setup**
 
@@ -407,9 +407,9 @@ Add README sections for PHP/Composer/Node when running checks on the host, Docke
 
 State explicitly: no Laravel Sail; Mailpit is local-only; production SMTP is deferred; migrations are never automatic; MySQL/Redis are private; persistent data is removed only with an explicit `docker compose down --volumes` command.
 
-- [ ] **Step 3: Record the implementation-plan outcome**
+- [ ] **Step 3: Record the documented outcome**
 
-Mark Task 1 checkboxes complete only for checks actually observed and record production SMTP as deferred.
+Record only checks actually observed and keep production SMTP explicitly deferred.
 
 - [ ] **Step 4: Run final verification**
 
@@ -446,7 +446,7 @@ Expected: `composer show` exits non-zero; searches find no Sail usage or committ
 - [ ] **Step 6: Commit the completed bootstrap**
 
 ```bash
-git add README.md docs/implementation-plan.md
+git add README.md docs/technical-architecture.md
 git commit -m "docs: document Laravel Docker bootstrap"
 ```
 
@@ -456,4 +456,4 @@ git commit -m "docs: document Laravel Docker bootstrap"
 - The plan preserves existing documentation, forbids Sail, locks dependencies, separates all long-running processes, avoids automatic migrations and defines health evidence.
 - Production SMTP infrastructure remains deferred and outside this bootstrap.
 - Production credentials and DNS changes remain operator-controlled and outside Git.
-- No application feature beyond implementation-plan Task 1 is introduced.
+- No application feature beyond the bootstrap scope is introduced.

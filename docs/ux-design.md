@@ -4,7 +4,7 @@
 
 L'interface doit évoquer une magie contemporaine et chaleureuse, sans reprendre l'identité visuelle, les logos ou les personnages officiels de Disney.
 
-- Application Mobile first
+- Approche mobile first.
 - Fond clair blanc par défaut et thème sombre complet.
 - Palette principale violet et rose ; doré réservé à quelques éléments de mise en valeur (match, badges, états importants).
 - Contraste suffisant dans les deux thèmes ; les couleurs ne sont jamais le seul indicateur d'état.
