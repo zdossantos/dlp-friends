@@ -13,7 +13,7 @@ updates:
         patterns:
           - '*'
 
-  - package-ecosystem: 'npm'
+  - package-ecosystem: 'bun'
     directory: '/'
     target-branch: 'main'
     schedule:
@@ -22,7 +22,7 @@ updates:
       default-days: 5
     open-pull-requests-limit: 10
     groups:
-      npm-dependencies:
+      bun-dependencies:
         patterns:
           - '*'
 
