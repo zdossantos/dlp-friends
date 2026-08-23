@@ -38,6 +38,10 @@ vi.mock('@/routes/member-profile', () => ({
     show: () => ({ url: '/profile' }),
 }));
 
+vi.mock('@/routes/discovery', () => ({
+    index: () => ({ url: '/discover' }),
+}));
+
 describe('AppSidebar', () => {
     const mountSidebar = () =>
         mount(AppSidebar, {
@@ -55,7 +59,7 @@ describe('AppSidebar', () => {
                     NavMain: {
                         props: ['items'],
                         template:
-                            '<nav><span v-for="item in items" :key="item.title">{{ item.title }}</span></nav>',
+                            '<nav><a v-for="item in items" :key="item.title" :href="item.href.url ?? item.href">{{ item.title }}</a></nav>',
                     },
                 },
             },
@@ -68,6 +72,8 @@ describe('AppSidebar', () => {
     it('shows profile without dashboard to a normal member', () => {
         const wrapper = mountSidebar();
 
+        const discover = wrapper.get('a[href="/discover"]');
+        expect(discover.text()).toBe('Découvrir');
         expect(wrapper.text()).toContain('Mon profil');
         expect(wrapper.text()).not.toContain('Administration');
     });
@@ -76,6 +82,7 @@ describe('AppSidebar', () => {
         roleState.roles = [{ name: 'user' }, { name: 'admin' }];
         const wrapper = mountSidebar();
 
+        expect(wrapper.get('a[href="/discover"]').text()).toBe('Découvrir');
         expect(wrapper.text()).toContain('Mon profil');
         expect(wrapper.text()).toContain('Administration');
     });
