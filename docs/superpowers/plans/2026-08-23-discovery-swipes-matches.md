@@ -46,7 +46,7 @@
 - `resources/js/components/discovery/SwipeCard.vue` — carte accessible et geste horizontal.
 - `resources/js/pages/Discovery/Index.vue` — états, soumission et confirmation de match.
 - `resources/js/components/AppSidebar.vue` — entrée « Découvrir ».
-- `resources/js/routes/**` et `resources/js/actions/**` — sorties Wayfinder régénérées.
+- `resources/js/routes/**` et `resources/js/actions/**` — sorties Wayfinder régénérées localement et volontairement ignorées par Git.
 
 ### Tests
 
@@ -342,9 +342,9 @@ git commit -m "feat: create reciprocal matches from swipes"
 - Modify: `routes/web.php`
 - Modify: `app/Http/Controllers/LandingController.php`
 - Test: `tests/Feature/DiscoveryPageTest.php`
-- Regenerate: `resources/js/routes/discovery/index.ts`
-- Regenerate: `resources/js/actions/App/Http/Controllers/DiscoveryController.ts`
-- Regenerate: `resources/js/actions/App/Http/Controllers/SwipeController.ts`
+- Generate locally (git-ignored): `resources/js/routes/discovery/index.ts`
+- Generate locally (git-ignored): `resources/js/actions/App/Http/Controllers/DiscoveryController.ts`
+- Generate locally (git-ignored): `resources/js/actions/App/Http/Controllers/SwipeController.ts`
 
 **Interfaces:**
 - Consumes: `DiscoveryService::for(User): Collection`, `CreateSwipe::handle(...)` and `DiscoveryProfileData::toArray()`.
@@ -403,7 +403,7 @@ Expected: PASS.
 - [ ] **Step 7: Commit the HTTP contract**
 
 ```bash
-git add app/Http/Controllers/DiscoveryController.php app/Http/Controllers/SwipeController.php app/Http/Controllers/LandingController.php app/Http/Requests/StoreSwipeRequest.php routes/web.php tests/Feature/DiscoveryPageTest.php resources/js/routes resources/js/actions
+git add app/Http/Controllers/DiscoveryController.php app/Http/Controllers/SwipeController.php app/Http/Controllers/LandingController.php app/Http/Requests/StoreSwipeRequest.php routes/web.php tests/Feature/DiscoveryPageTest.php
 git commit -m "feat: expose discovery through inertia"
 ```
 
