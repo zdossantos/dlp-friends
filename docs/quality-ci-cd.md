@@ -52,8 +52,8 @@ Les six checks indépendants sont :
 
 Les dépendances sont installées depuis `composer.lock` et `bun.lock` avec Bun
 1.3.14. GitHub Actions résout dynamiquement le répertoire de cache Composer,
-et met aussi en cache les téléchargements Bun et les couches Docker BuildKit. Aucun merge n'est possible
-tant qu'un check requis échoue.
+et met aussi en cache les téléchargements Bun et les couches Docker BuildKit.
+Aucun merge n'est possible tant qu'un check requis échoue.
 
 ## Dependabot
 

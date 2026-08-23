@@ -24,8 +24,9 @@ entre le manifeste et le lockfile.
 Les versions résolues des dépendances directes et transitives sont comparées
 avant et après la conversion afin de détecter toute mise à jour involontaire.
 
-Après validation de cette équivalence, `package-lock.json` et `.npmrc` sont
-supprimés. Aucun lockfile Yarn ou pnpm n'est ajouté. Les dépendances
+Après validation de cette équivalence, `package-lock.json`, `.npmrc` et la
+configuration `pnpm-workspace.yaml` sont supprimés. Aucun lockfile Yarn ou pnpm
+n'est ajouté. Les dépendances
 optionnelles propres aux plateformes continuent d'être décrites dans
 `package.json`; Bun choisit les artefacts compatibles au moment de
 l'installation sans rendre le lockfile dépendant de la plateforme.

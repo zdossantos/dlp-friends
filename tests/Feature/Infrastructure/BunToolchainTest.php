@@ -9,6 +9,7 @@ it('uses Bun as its only JavaScript package manager', function () {
         ->and(base_path('bun.lock'))->toBeFile()
         ->and(base_path('package-lock.json'))->not->toBeFile()
         ->and(base_path('.npmrc'))->not->toBeFile()
+        ->and(base_path('pnpm-workspace.yaml'))->not->toBeFile()
         ->and($composer)->toContain('bun install')
         ->and($composer)->toContain('bun run build')
         ->and($composer)->not->toContain('npm install')

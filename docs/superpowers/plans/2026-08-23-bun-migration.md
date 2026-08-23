@@ -31,6 +31,7 @@
 - Modify: `composer.json`
 - Delete: `package-lock.json`
 - Delete: `.npmrc`
+- Delete: `pnpm-workspace.yaml`
 
 **Interfaces:**
 - Consumes: the current `package.json`, `package-lock.json`, `.npmrc`, and Composer script contract.
@@ -75,6 +76,7 @@ it('uses Bun as its only JavaScript package manager', function () {
         ->and(base_path('bun.lock'))->toBeFile()
         ->and(base_path('package-lock.json'))->not->toBeFile()
         ->and(base_path('.npmrc'))->not->toBeFile()
+        ->and(base_path('pnpm-workspace.yaml'))->not->toBeFile()
         ->and($composer)->toContain('bun install')
         ->and($composer)->toContain('bun run build')
         ->and($composer)->not->toContain('npm install')
@@ -150,7 +152,7 @@ Expected: `diff` exits 0, proving every direct dependency keeps its resolved ver
 
 - [ ] **Step 8: Remove npm-only files and perform a frozen clean install**
 
-Delete `package-lock.json` and `.npmrc`, then run:
+Delete `package-lock.json`, `.npmrc`, and `pnpm-workspace.yaml`, then run:
 
 ```bash
 mv node_modules /tmp/dlp-friends-node-modules-before-bun
@@ -172,7 +174,7 @@ Expected: PASS.
 - [ ] **Step 10: Commit the package-manager migration**
 
 ```bash
-git add package.json composer.json bun.lock package-lock.json .npmrc tests/Feature/Infrastructure/BunToolchainTest.php
+git add package.json composer.json bun.lock package-lock.json .npmrc pnpm-workspace.yaml tests/Feature/Infrastructure/BunToolchainTest.php
 git commit -m "build: migrate dependencies to Bun"
 ```
 
