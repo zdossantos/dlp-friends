@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, Link, router } from '@inertiajs/vue3';
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 import SwipeCard from '@/components/discovery/SwipeCard.vue';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
@@ -32,7 +32,24 @@ const props = defineProps<{
 const isSubmitting = ref(false);
 const errorMessage = ref<string | null>(null);
 const lastDecision = ref<SwipeDecision | null>(null);
+const visibleMatchId = ref(props.match?.id ?? null);
 const matchDialogOpen = ref(props.match !== null);
+
+watch(
+    () => props.match?.id ?? null,
+    (matchId) => {
+        if (matchId === null) {
+            matchDialogOpen.value = false;
+
+            return;
+        }
+
+        if (matchId !== visibleMatchId.value) {
+            visibleMatchId.value = matchId;
+            matchDialogOpen.value = true;
+        }
+    },
+);
 
 function submit(decision: SwipeDecision): void {
     if (isSubmitting.value || !props.suggestion) {

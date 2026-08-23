@@ -64,6 +64,19 @@ function getPostOptions(callIndex = 0): PostOptions {
     return postMock.mock.calls[callIndex]?.[2] as PostOptions;
 }
 
+function matchDialogTitle(): Element | null {
+    return document.body.querySelector('[data-slot="dialog-title"]');
+}
+
+async function dismissMatchDialog(): Promise<void> {
+    document
+        .querySelector<HTMLButtonElement>(
+            'button[aria-label="Continuer à découvrir"]',
+        )
+        ?.click();
+    await nextTick();
+}
+
 describe('Discovery/Index', () => {
     afterEach(() => {
         postMock.mockReset();
@@ -96,25 +109,54 @@ describe('Discovery/Index', () => {
         });
         await nextTick();
 
-        expect(
-            document.body.querySelector('[data-slot="dialog-title"]')
-                ?.textContent,
-        ).toContain('C’est un match !');
+        expect(matchDialogTitle()?.textContent).toContain('C’est un match !');
         expect(
             document.body.querySelector('[data-slot="dialog-description"]')
                 ?.textContent,
         ).toContain('Noa Orbit');
 
-        document
-            .querySelector<HTMLButtonElement>(
-                'button[aria-label="Continuer à découvrir"]',
-            )
-            ?.click();
+        await dismissMatchDialog();
+
+        expect(matchDialogTitle()).toBeNull();
+    });
+
+    it('opens the match dialog for a new Inertia match prop and keeps a dismissed match closed until a new match arrives', async () => {
+        const wrapper = mountPage({ suggestion: null, match: null });
+
+        expect(matchDialogTitle()).toBeNull();
+
+        await wrapper.setProps({
+            match: { id: 101, displayName: 'Lina Castle' },
+        });
         await nextTick();
 
+        expect(matchDialogTitle()?.textContent).toContain('C’est un match !');
         expect(
-            document.body.querySelector('[data-slot="dialog-title"]'),
-        ).toBeNull();
+            document.body.querySelector('[data-slot="dialog-description"]')
+                ?.textContent,
+        ).toContain('Lina Castle');
+
+        await dismissMatchDialog();
+
+        expect(matchDialogTitle()).toBeNull();
+
+        await wrapper.setProps({
+            match: { id: 101, displayName: 'Lina Castle' },
+        });
+        await nextTick();
+
+        expect(matchDialogTitle()).toBeNull();
+
+        await wrapper.setProps({
+            match: { id: 102, displayName: 'Nora Parade' },
+        });
+        await nextTick();
+
+        expect(matchDialogTitle()?.textContent).toContain('C’est un match !');
+        expect(
+            document.body.querySelector('[data-slot="dialog-description"]')
+                ?.textContent,
+        ).toContain('Nora Parade');
     });
 
     it('guards duplicate decisions, preserves the suggestion on validation failure and retries the last decision', async () => {
