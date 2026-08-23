@@ -6,7 +6,7 @@
 
 **Architecture:** Le domaine est séparé en un service de lecture `DiscoveryService` et une action transactionnelle `CreateSwipe`. Les contrôleurs Inertia ne font que sérialiser les résultats et orchestrer les redirects ; Vue gère la présentation, les raccourcis accessibles et le verrouillage immédiat, tandis que les contraintes SQL garantissent l’unicité.
 
-**Tech Stack:** PHP 8.3, Laravel 13, Eloquent, Pest 5, Inertia 3, Vue 3.5, TypeScript 6, Vitest 4, Tailwind CSS 4, shadcn-vue/Reka UI, Wayfinder.
+**Tech Stack:** PHP 8.4, Laravel 13, Eloquent, Pest 5, Inertia 3, Vue 3.5, TypeScript 6, Vitest 4, Tailwind CSS 4, shadcn-vue/Reka UI, Wayfinder, Bun 1.3.14.
 
 **Spec:** `docs/superpowers/specs/2026-08-23-discovery-swipes-matches-design.md`
 
@@ -40,6 +40,7 @@
 
 - `app/Http/Controllers/DiscoveryController.php` — rendu Inertia de la première suggestion.
 - `app/Http/Controllers/SwipeController.php` — validation de la décision et redirect.
+- `app/Http/Requests/StoreSwipeRequest.php` — validation HTTP stricte de `like` ou `pass`.
 - `routes/web.php` — routes membre `discovery.index` et `discovery.swipe`.
 - `resources/js/types/discovery.ts` — contrats TypeScript de la page.
 - `resources/js/components/discovery/SwipeCard.vue` — carte accessible et geste horizontal.
@@ -337,6 +338,7 @@ git commit -m "feat: create reciprocal matches from swipes"
 **Files:**
 - Create: `app/Http/Controllers/DiscoveryController.php`
 - Create: `app/Http/Controllers/SwipeController.php`
+- Create: `app/Http/Requests/StoreSwipeRequest.php`
 - Modify: `routes/web.php`
 - Modify: `app/Http/Controllers/LandingController.php`
 - Test: `tests/Feature/DiscoveryPageTest.php`
@@ -382,26 +384,26 @@ return Inertia::render('Discovery/Index', [
 ]);
 ```
 
-`SwipeController::__invoke(Request $request, User $target, CreateSwipe $action): RedirectResponse` valide avec `Rule::enum(SwipeDecision::class)`, appelle l’action et place uniquement `id` et `displayName` sous `discovery.match`. Les deux routes vivent dans le groupe `profile.complete`.
+`StoreSwipeRequest::rules()` retourne `['decision' => ['required', Rule::enum(SwipeDecision::class)]]`. `SwipeController::__invoke(StoreSwipeRequest $request, User $target, CreateSwipe $action): RedirectResponse` convertit `$request->validated('decision')` avec `SwipeDecision::from()`, appelle l’action et place uniquement `id` et `displayName` sous `discovery.match`. Les deux routes vivent dans le groupe `profile.complete`.
 
 Modifier `LandingController` pour envoyer un membre non-admin complet vers `discovery.index`; conserver le dashboard admin prioritaire.
 
 - [ ] **Step 5: Regenerate Wayfinder bindings**
 
-Run: `php artisan wayfinder:generate`
+Run: `php artisan wayfinder:generate --with-form`
 
 Expected: generated TypeScript includes `discovery.index` and `discovery.swipe` bindings.
 
 - [ ] **Step 6: Run targeted tests and type generation checks**
 
-Run: `php artisan test tests/Feature/DiscoveryPageTest.php && npm run types:check`
+Run: `php artisan test tests/Feature/DiscoveryPageTest.php && bun run types:check`
 
 Expected: PASS.
 
 - [ ] **Step 7: Commit the HTTP contract**
 
 ```bash
-git add app/Http/Controllers routes/web.php tests/Feature/DiscoveryPageTest.php resources/js/routes resources/js/actions
+git add app/Http/Controllers/DiscoveryController.php app/Http/Controllers/SwipeController.php app/Http/Controllers/LandingController.php app/Http/Requests/StoreSwipeRequest.php routes/web.php tests/Feature/DiscoveryPageTest.php resources/js/routes resources/js/actions
 git commit -m "feat: expose discovery through inertia"
 ```
 
@@ -435,7 +437,7 @@ Déclencher `keydown.left`, `keydown.right`, puis des séquences `pointerdown`/`
 
 - [ ] **Step 3: Run the component test and observe the red state**
 
-Run: `npm run test:unit -- resources/js/components/discovery/SwipeCard.spec.ts`
+Run: `bun run test:unit -- resources/js/components/discovery/SwipeCard.spec.ts`
 
 Expected: FAIL because the component and type do not exist.
 
@@ -473,7 +475,7 @@ Composer la carte avec les primitives `Card`, `Avatar`, `Badge` et `Button`. Emp
 
 - [ ] **Step 6: Run component checks**
 
-Run: `npm run test:unit -- resources/js/components/discovery/SwipeCard.spec.ts && npm run types:check && npm run lint:check`
+Run: `bun run test:unit -- resources/js/components/discovery/SwipeCard.spec.ts && bun run types:check && bun run lint:check`
 
 Expected: PASS.
 
@@ -519,7 +521,7 @@ Appeler le callback `onError` avec `{ decision: 'Impossible d’enregistrer cett
 
 - [ ] **Step 4: Run the page tests and observe the red state**
 
-Run: `npm run test:unit -- resources/js/pages/Discovery/Index.spec.ts resources/js/components/AppSidebar.spec.ts`
+Run: `bun run test:unit -- resources/js/pages/Discovery/Index.spec.ts resources/js/components/AppSidebar.spec.ts`
 
 Expected: FAIL because the page and navigation item do not exist.
 
@@ -553,9 +555,9 @@ Importer `Sparkles` et `index as discovery` depuis le binding Wayfinder, puis in
 
 - [ ] **Step 7: Run frontend checks**
 
-Run: `npm run test:unit -- resources/js/pages/Discovery/Index.spec.ts resources/js/components/discovery/SwipeCard.spec.ts resources/js/components/AppSidebar.spec.ts && npm run types:check && npm run lint:check && npm run format:check`
+Run: `bun run test:unit -- resources/js/pages/Discovery/Index.spec.ts resources/js/components/discovery/SwipeCard.spec.ts resources/js/components/AppSidebar.spec.ts && bun run types:check && bun run lint:check && bun run format:check`
 
-Expected: PASS. Si Prettier signale uniquement les nouveaux fichiers, exécuter `npm run format`, relire le diff, puis relancer la commande complète.
+Expected: PASS. Si Prettier signale uniquement les nouveaux fichiers, exécuter `bun run format`, relire le diff, puis relancer la commande complète.
 
 - [ ] **Step 8: Commit the discovery page**
 
@@ -583,7 +585,7 @@ Expected: PASS with zero failures and zero PHPStan errors.
 
 - [ ] **Step 2: Run all frontend checks**
 
-Run: `npm run lint:check && npm run format:check && npm run types:check && npm run test && npm run build`
+Run: `bun run lint:check && bun run format:check && bun run types:check && bun run test && bun run build`
 
 Expected: PASS and a successful Vite production build.
 
