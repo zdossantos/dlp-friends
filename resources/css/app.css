@@ -90,6 +90,7 @@
 }
 
 :root {
+    color-scheme: light;
     --background: hsl(32 40% 98%);
     --foreground: hsl(258 28% 14%);
     --card: hsl(30 50% 100%);
@@ -127,6 +128,7 @@
 }
 
 .dark {
+    color-scheme: dark;
     --background: hsl(258 30% 8%);
     --foreground: hsl(30 28% 95%);
     --card: hsl(258 25% 12%);
@@ -167,6 +169,7 @@
         @apply border-border outline-ring/50;
     }
     body {
+        min-width: 320px;
         @apply bg-background text-foreground selection:bg-primary/20 selection:text-foreground;
     }
 }

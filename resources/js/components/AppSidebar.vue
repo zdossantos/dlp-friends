@@ -1,7 +1,6 @@
 <script setup lang="ts">
-import { Link, usePage } from '@inertiajs/vue3';
+import { Link } from '@inertiajs/vue3';
 import { LayoutDashboard, UserRound } from '@lucide/vue';
-import { computed } from 'vue';
 import AppLogo from '@/components/AppLogo.vue';
 import NavMain from '@/components/NavMain.vue';
 import NavUser from '@/components/NavUser.vue';
@@ -14,28 +13,22 @@ import {
     SidebarMenuButton,
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
-import { app, dashboard } from '@/routes';
+import { dashboard } from '@/routes';
 import { show as showProfile } from '@/routes/member-profile';
 import type { NavItem } from '@/types';
 
-const page = usePage();
-
-const mainNavItems = computed<NavItem[]>(() => [
+const mainNavItems: NavItem[] = [
     {
-        title: 'Mon profil',
+        title: 'Administration',
+        href: dashboard(),
+        icon: LayoutDashboard,
+    },
+    {
+        title: 'Retour au profil',
         href: showProfile(),
         icon: UserRound,
     },
-    ...(page.props.auth.user.roles.some((role) => role.name === 'admin')
-        ? [
-              {
-                  title: 'Administration',
-                  href: dashboard(),
-                  icon: LayoutDashboard,
-              },
-          ]
-        : []),
-]);
+];
 </script>
 
 <template>
@@ -44,7 +37,7 @@ const mainNavItems = computed<NavItem[]>(() => [
             <SidebarMenu>
                 <SidebarMenuItem>
                     <SidebarMenuButton size="lg" as-child>
-                        <Link :href="app()">
+                        <Link :href="dashboard()">
                             <AppLogo />
                         </Link>
                     </SidebarMenuButton>
@@ -53,7 +46,7 @@ const mainNavItems = computed<NavItem[]>(() => [
         </SidebarHeader>
 
         <SidebarContent>
-            <NavMain :items="mainNavItems" />
+            <NavMain :items="mainNavItems" label="Administration" />
         </SidebarContent>
 
         <SidebarFooter>

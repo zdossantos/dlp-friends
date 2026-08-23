@@ -3,7 +3,7 @@
 ## DLP Friends
 
 DLP Friends est une application de rencontres **amicales** pour les fans majeurs de Disneyland Paris et de ses univers associés. Elle aide des personnes partageant des passions à se découvrir, se liker mutuellement puis discuter.
-Le site doit etre penser en mobile first.
+L'interface est conçue selon une approche mobile first.
 
 L'application est indépendante et non affiliée à Disney ou Disneyland Paris.
 

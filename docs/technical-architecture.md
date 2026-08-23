@@ -1,86 +1,84 @@
-# Architecture technique détaillée
+# Architecture technique
 
-## Socle obligatoire
+Ce document décrit l'architecture actuelle. Les fonctions prévues mais non
+livrées restent décrites dans `mvp-v1.md` et `roadmap.md`.
 
-Créer le projet à partir du **starter kit Vue officiel de Laravel**. Ne pas installer Inertia manuellement. Le starter kit fournit la structure Laravel/Inertia/Vue, TypeScript, Tailwind et les bases d'authentification ; le projet l'étend pour les besoins de DLP Friends.
+## Stack applicative
 
-## Versions et stack
+- Laravel 13 sur PHP 8.4 ;
+- Inertia 3, Vue 3 Composition API et TypeScript ;
+- Tailwind CSS et composants accessibles fondés sur Reka UI ;
+- Bun 1.3.14 pour les dépendances et commandes frontend ;
+- MySQL 8.4 pour les données relationnelles ;
+- Redis pour le cache, les sessions et les files ;
+- Laravel Reverb et Echo pour le temps réel ;
+- Pest, Vitest, PHPStan/Larastan, Pint, ESLint et Prettier pour la qualité.
 
-- Dernière version stable de Laravel et de PHP compatible au moment du scaffolding. Les versions exactes sont verrouillées dans `composer.lock` et `bun.lock`; Bun 1.3.14 est épinglé dans tous les environnements et aucune dépendance de production n'utilise une version flottante.
-- Inertia avec ziggy avec Vue 3 Composition API et TypeScript.
-- Tailwind CSS, shadcn-vue comme bibliothèque de composants principale, Reka UI comme complément accessible.
-- MySQL comme base relationnelle.
-- Redis pour cache, verrouillage et queues Laravel.
-- Laravel Socialite pour les fournisseurs Google et Apple.
-- Laravel Reverb + Laravel Echo pour le temps réel de messagerie.
-- Stockage des fichiers via le driver S3-compatible de Laravel en production. MinIO privé est le choix MVP sur Coolify ; le disque local est réservé au développement et aux tests.
-- Mailpit capture les e-mails en développement. Le transport SMTP de production est différé et n'est pas inclus dans le socle initial.
-
-## Services Docker
-
-Le `compose` de développement et le déploiement Coolify séparent les responsabilités :
-
-| Service | Responsabilité |
-| --- | --- |
-| `web` | Application Laravel HTTP, PHP-FPM et serveur web |
-| `worker` | Exécution continue des Laravel Queues avec le même code applicatif |
-| `scheduler` | Exécution unique des tâches Laravel planifiées |
-| `reverb` | Serveur WebSocket Laravel des événements privés de messagerie |
-| `mysql` | Données persistantes MySQL |
-| `redis` | Cache, verrouillage et files de jobs, uniquement en réseau privé |
-| `minio` | Stockage objet privé des photos de profil et avatars téléversés |
-| `mailpit` | Capture SMTP et interface de consultation strictement locales |
-
-`web`, `worker`, `scheduler` et `reverb` sont construits depuis la même image versionnée ; seul leur point d'entrée change. MySQL et MinIO utilisent des volumes persistants. Redis n'est persistant que si la stratégie de queue l'exige. Aucun secret n'est inclus dans l'image ou dans Git.
-
-Seul `web` reçoit le domaine public de l'application. MySQL, Redis, MinIO, worker et scheduler restent strictement sur le réseau privé. Reverb n'expose que le point d'entrée WebSocket indispensable via le proxy. Mailpit n'est jamais déployé en production. Le futur transport SMTP de production utilisera des identifiants stockés dans Coolify.
-
-## Images et exécution
-
-- Dockerfile multi-stage : compilation des assets Vite avec Bun 1.3.14 dans une étape dédiée, exécution PHP dans une étape séparée et minimale.
-- Le conteneur web démarre avec la configuration Laravel mise en cache ; il ne lance pas de migration au démarrage.
-- Les migrations sont exécutées une seule fois lors du déploiement avec `php artisan migrate --force`. Elles doivent être rétrocompatibles avec la version applicative précédente; les migrations destructrices sont réalisées en plusieurs déploiements.
-- Le worker exécute `php artisan queue:work` avec limites de mémoire, tentatives et délai explicites ; `queue:restart` suit chaque déploiement.
-- Le scheduler exécute `php artisan schedule:work` en une seule instance. Toute tâche non idempotente utilise un verrouillage Laravel.
-- Le traitement des images est un job : validation, suppression EXIF, redimensionnement et écriture MinIO. L'interface ne doit pas attendre ce traitement.
-
-## Déploiement Coolify
-
-- Coolify est connecté au dépôt et déploie automatiquement la configuration Docker Compose versionnée dès qu'un nouveau commit arrive sur `main`. Ce fichier Compose est la source de vérité de la stack de production.
-- `main` est l'unique branche principale et de production. Elle ne reçoit que
-  des pull requests validées par les checks obligatoires ; les environnements
-  de prévisualisation éventuels restent hors du périmètre MVP.
-- Le déploiement de production intervient automatiquement après chaque merge
-  validé dans `main`; aucun workflow GitHub ne déclenche Coolify.
-- Définir une route de santé non authentifiée, par exemple `/up`, qui ne divulgue aucun secret.
-- Définir des `healthcheck` Docker pour chaque service long-vivant et des limites CPU/mémoire par service.
-- Les variables critiques sont déclarées comme requises dans Compose et définies dans Coolify, jamais commitées.
-- La V1 utilise un déploiement Compose mono-instance. Le zéro interruption et le rolling update ne sont pas une promesse du MVP; ils ne seront envisagés qu'avec une topologie compatible.
-
-## Configuration par environnement
-
-| Sujet | Développement | CI / production |
-| --- | --- | --- |
-| Base de données | MySQL Docker local | MySQL privé persistant Coolify |
-| Cache / queue | Redis Docker local | Redis privé Coolify |
-| Fichiers | disque local | MinIO S3-compatible privé |
-| Mail | Mailpit | Transport SMTP à définir avant la mise en production |
-| URL applicative | localhost | HTTPS et domaine Coolify |
-| Débogage | activé localement | `APP_DEBUG=false` |
+Les versions exactes sont verrouillées dans `composer.lock` et `bun.lock`. Bun
+1.3.14 est épinglé dans `package.json`, GitHub Actions et le build Docker.
 
 ## Frontière applicative
 
-Laravel est la source de vérité : authentification, autorisations, règles de match, conversations et suppression de données sont côté serveur. Vue/Inertia affiche les pages et appelle les routes Laravel ; ne pas créer d'API séparée sans besoin démontré. Chaque action sensible utilise une Policy Laravel explicite.
+Laravel porte l'authentification, les autorisations et les règles métier.
+Vue/Inertia affiche les pages servies par Laravel ; aucune API distincte n'est
+nécessaire actuellement. Toute action sensible doit être protégée côté serveur,
+de préférence avec une Policy Laravel.
 
-## Comptes, profils et rôles
+`users` contient les données privées de compte. `profiles` contient les données
+publiques et l'état d'onboarding. La vérification de l'e-mail précède
+l'onboarding, puis les middlewares limitent l'accès selon l'état du compte, du
+profil et des rôles.
 
-- `users` porte uniquement les données de compte privées; `profiles` porte le nom d'affichage et les informations publiques.
-- La vérification d'e-mail précède l'onboarding. Le middleware `profile.complete` protège ensuite l'espace membre et redirige les profils incomplets vers leur création.
-- Les rôles normalisés `user` et `admin` sont stockés dans `roles` et `user_roles`. Toute inscription reçoit `user`.
-- Le middleware `role:admin` protège le dashboard côté serveur; masquer son lien dans Vue n'est qu'un complément d'interface.
-- `php artisan user:assign-role {email} {role}` utilise l'action idempotente `AssignRole` pour l'administration locale.
-- Le dashboard admin ne reçoit que des agrégats et une projection limitée des inscriptions récentes, sans date de naissance, secret ni mot de passe.
+## Services Docker
 
-## Simplicité et abstraction
+| Service | Responsabilité |
+| --- | --- |
+| `web` | Application HTTP avec PHP-FPM et Nginx |
+| `worker` | Exécution des files Laravel |
+| `scheduler` | Exécution des tâches planifiées |
+| `reverb` | Serveur WebSocket |
+| `mysql` | Base relationnelle persistante |
+| `redis` | Cache, sessions et files sur le réseau privé |
+| `minio` | Stockage objet compatible S3 |
+| `mailpit` | Capture locale des e-mails |
 
-Toute implémentation suit `engineering-principles.md`. La séparation en modèles, Policies, Form Requests, Actions, jobs et composants Vue sert à clarifier un besoin actuel, jamais à anticiper une architecture future. Une couche supplémentaire doit démontrer qu'elle réduit la complexité globale avant d'être introduite.
+Les quatre services applicatifs utilisent la même image Docker. MySQL, Redis,
+le worker et le scheduler ne publient aucun port sur l'hôte. `compose.yaml`
+décrit la stack locale complète, dont Mailpit ; une configuration de production
+doit exclure Mailpit et fournir un véritable transport SMTP.
+
+Le conteneur applicatif ne lance aucune migration au démarrage. Les migrations
+s'exécutent explicitement avec `php artisan migrate --force` et doivent rester
+compatibles avec la version applicative précédente pendant un déploiement.
+
+## Environnements
+
+| Sujet | Développement | CI | Production |
+| --- | --- | --- | --- |
+| Base de données | MySQL Docker | MySQL de service pour les tests backend | MySQL privé |
+| Cache et files | Redis Docker | Stockages `array` et files synchrones | Redis privé |
+| Fichiers | Disque local par défaut | Disque local éphémère | Stockage S3-compatible prévu |
+| E-mails | Mailpit | Transport `array` | Transport à définir avant mise en ligne |
+
+Les secrets sont fournis par variables d'environnement et ne sont jamais
+intégrés à l'image ou au dépôt.
+
+## Déploiement
+
+`main` est l'unique branche de production. Après les contrôles de pull request,
+Coolify utilise l'image et la configuration Compose versionnée comme base de
+déploiement. La sélection des services de production et les secrets restent des
+réglages opérateur ; Mailpit doit en être exclu. GitHub Actions vérifie
+l'application et l'image Docker mais ne déclenche pas directement le
+déploiement.
+
+La route `/up` sert de contrôle de santé sans exposer de configuration. Les
+services longs possèdent également un healthcheck Docker et des limites de
+ressources.
+
+## Principes de conception
+
+La séparation en modèles, Policies, Form Requests, Actions et composants sert
+un besoin actuel. Une nouvelle couche doit réduire une complexité mesurable ;
+elle ne doit pas anticiper une extension hypothétique. Voir
+`engineering-principles.md`.

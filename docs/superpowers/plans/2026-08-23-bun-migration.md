@@ -322,7 +322,6 @@ git commit -m "ci: run JavaScript tooling with Bun"
 - Modify: `CONTRIBUTING.md`
 - Modify: `docs/technical-architecture.md`
 - Modify: `docs/quality-ci-cd.md`
-- Modify: `docs/implementation-plan.md`
 - Modify: `.gitignore`
 - Modify: `.dockerignore`
 
@@ -341,7 +340,6 @@ it('documents Bun without npm or Yarn residue in active project files', function
         'CONTRIBUTING.md',
         'docs/technical-architecture.md',
         'docs/quality-ci-cd.md',
-        'docs/implementation-plan.md',
     ])->map(fn (string $path): string => file_get_contents(base_path($path)))->join("\n");
     $ignoreFiles = file_get_contents(base_path('.gitignore')).file_get_contents(base_path('.dockerignore'));
 
@@ -379,8 +377,6 @@ In `docs/technical-architecture.md`, replace `package-lock.json` with `bun.lock`
 
 In `docs/quality-ci-cd.md`, document `bun.lock`, the Bun download cache, Bun Dependabot updates, and Bun commands while preserving the six checks and release behavior.
 
-In `docs/implementation-plan.md`, replace the remaining active `npm run types:check` command with `bun run types:check` and update the completed dependency-automation wording from npm to Bun.
-
 - [ ] **Step 5: Remove obsolete npm and Yarn log exclusions**
 
 Delete `npm-debug.log` and `yarn-error.log` from `.gitignore`, and delete `npm-debug.log*` and `yarn-error.log*` from `.dockerignore`.
@@ -409,7 +405,7 @@ Expected: no active commands or lockfile references. Prose stating that no npm p
 - [ ] **Step 8: Commit documentation and cleanup**
 
 ```bash
-git add tests/Feature/Infrastructure/BunToolchainTest.php README.md CONTRIBUTING.md docs/technical-architecture.md docs/quality-ci-cd.md docs/implementation-plan.md .gitignore .dockerignore
+git add tests/Feature/Infrastructure/BunToolchainTest.php README.md CONTRIBUTING.md docs/technical-architecture.md docs/quality-ci-cd.md .gitignore .dockerignore
 git commit -m "docs: document Bun development workflow"
 ```
 

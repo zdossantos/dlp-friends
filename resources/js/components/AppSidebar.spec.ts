@@ -1,28 +1,21 @@
 import { mount } from '@vue/test-utils';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import AppSidebar from './AppSidebar.vue';
 
-const roleState = vi.hoisted(() => ({
-    roles: [{ name: 'user' as const }] as Array<{ name: 'user' | 'admin' }>,
-}));
-
 vi.mock('@inertiajs/vue3', () => ({
-    Link: { template: '<a><slot /></a>' },
+    Link: {
+        props: ['href'],
+        template: '<a :href="href.url ?? href"><slot /></a>',
+    },
     usePage: () => ({
+        url: '/dashboard',
         props: {
             auth: {
                 user: {
-                    id: 1,
-                    email: 'test@example.com',
-                    email_verified_at: '2026-08-16T10:00:00Z',
                     profile: {
-                        display_name: 'Magic Friend',
-                        bio: null,
-                        visit_frequency: 'often',
-                        visibility: 'visible',
-                        onboarding_completed_at: '2026-08-16T10:00:00Z',
+                        onboarding_completed_at: '2026-08-23T10:00:00Z',
                     },
-                    roles: roleState.roles,
+                    roles: [{ name: 'user' }],
                 },
             },
         },
@@ -53,30 +46,28 @@ describe('AppSidebar', () => {
                     AppLogo: true,
                     NavUser: true,
                     NavMain: {
-                        props: ['items'],
+                        props: ['items', 'label'],
                         template:
-                            '<nav><span v-for="item in items" :key="item.title">{{ item.title }}</span></nav>',
+                            '<nav><span data-test="nav-label">{{ label }}</span><a v-for="item in items" :key="item.title" :href="item.href.url ?? item.href">{{ item.title }}</a></nav>',
                     },
                 },
             },
         });
 
-    beforeEach(() => {
-        roleState.roles = [{ name: 'user' }];
-    });
-
-    it('shows profile without dashboard to a normal member', () => {
+    it('contains only admin navigation and a return to the member profile', () => {
         const wrapper = mountSidebar();
+        const adminLink = wrapper
+            .findAll('a[href="/dashboard"]')
+            .find((link) => link.text() === 'Administration');
 
-        expect(wrapper.text()).toContain('Mon profil');
-        expect(wrapper.text()).not.toContain('Administration');
-    });
-
-    it('adds administration dashboard for an admin', () => {
-        roleState.roles = [{ name: 'user' }, { name: 'admin' }];
-        const wrapper = mountSidebar();
-
-        expect(wrapper.text()).toContain('Mon profil');
-        expect(wrapper.text()).toContain('Administration');
+        expect(adminLink?.text()).toBe('Administration');
+        expect(wrapper.get('a[href="/profile"]').text()).toBe(
+            'Retour au profil',
+        );
+        expect(wrapper.get('[data-test="nav-label"]').text()).toBe(
+            'Administration',
+        );
+        expect(wrapper.text()).not.toContain('Espace membre');
+        expect(wrapper.find('a[href="/discover"]').exists()).toBe(false);
     });
 });
