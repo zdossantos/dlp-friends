@@ -17,12 +17,20 @@ class InterestSetting extends Model
 {
     public static function current(): self
     {
-        return self::unguarded(
-            fn (): self => self::query()->firstOrCreate(
-                ['id' => 1],
-                ['max_selections' => 5],
-            ),
-        );
+        $now = now();
+
+        self::query()->insertOrIgnore([
+            'id' => 1,
+            'max_selections' => 5,
+            'created_at' => $now,
+            'updated_at' => $now,
+        ]);
+
+        return self::query()
+            ->useWritePdo()
+            ->whereKey(1)
+            ->lockForUpdate()
+            ->firstOrFail();
     }
 
     /** @return array<string, string> */

@@ -5,7 +5,6 @@ namespace Tests\Unit\Models;
 use App\Models\InterestSetting;
 use Illuminate\Foundation\Testing\DatabaseMigrations;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Event;
 use Tests\TestCase;
 
 class InterestSettingTest extends TestCase
@@ -27,38 +26,37 @@ class InterestSettingTest extends TestCase
         ]);
     }
 
-    public function test_current_returns_row_one_when_a_concurrent_creator_wins(): void
+    public function test_current_returns_row_one_when_another_creator_already_won(): void
     {
         InterestSetting::query()->whereKey(1)->delete();
-        $creatingEvent = 'eloquent.creating: '.InterestSetting::class;
-        $concurrentCreationTriggered = false;
+        DB::table('interest_settings')->insert([
+            'id' => 1,
+            'max_selections' => 9,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
 
-        Event::listen(
-            $creatingEvent,
-            function () use (&$concurrentCreationTriggered): void {
-                if ($concurrentCreationTriggered) {
-                    return;
-                }
+        $setting = InterestSetting::current();
 
-                $concurrentCreationTriggered = true;
-                DB::table('interest_settings')->insert([
-                    'id' => 1,
-                    'max_selections' => 9,
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ]);
-            },
-        );
-
-        try {
-            $setting = InterestSetting::current();
-        } finally {
-            Event::forget($creatingEvent);
-        }
-
-        expect($concurrentCreationTriggered)->toBeTrue()
-            ->and($setting->id)->toBe(1)
+        expect($setting->id)->toBe(1)
             ->and($setting->max_selections)->toBe(9);
         $this->assertDatabaseCount('interest_settings', 1);
+    }
+
+    public function test_current_does_not_open_a_consistent_read_before_its_idempotent_insert(): void
+    {
+        InterestSetting::query()->whereKey(1)->delete();
+        $queries = [];
+
+        DB::listen(function ($query) use (&$queries): void {
+            if (str_contains($query->sql, 'interest_settings')) {
+                $queries[] = ltrim($query->sql);
+            }
+        });
+
+        InterestSetting::current();
+
+        expect($queries)->not->toBeEmpty()
+            ->and(strtolower(strtok($queries[0], ' ')))->toBe('insert');
     }
 }
