@@ -2,13 +2,13 @@
 
 namespace Database\Factories;
 
-use App\Models\PassionCategory;
+use App\Models\InterestCategory;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
-/** @extends Factory<PassionCategory> */
-class PassionCategoryFactory extends Factory
+/** @extends Factory<InterestCategory> */
+class InterestCategoryFactory extends Factory
 {
-    protected $model = PassionCategory::class;
+    protected $model = InterestCategory::class;
 
     /** @return array<string, mixed> */
     public function definition(): array

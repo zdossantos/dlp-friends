@@ -7,8 +7,8 @@ export type DiscoveryProfile = {
     age: number;
     bio: string | null;
     visitFrequency: VisitFrequency | null;
-    commonPassionCount: number;
-    commonPassions: string[];
+    commonInterestCount: number;
+    commonInterests: string[];
     frequencyBonus: boolean;
     score: number;
 };

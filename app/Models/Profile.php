@@ -24,7 +24,8 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property-read User $user
- * @property-read Collection<int, Passion> $passions
+ * @property-read Collection<int, Interest> $interests
+ * @property-read Collection<int, Interest> $interestHistory
  */
 #[Fillable(['display_name', 'bio', 'visit_frequency', 'visibility', 'onboarding_completed_at'])]
 class Profile extends Model
@@ -40,10 +41,18 @@ class Profile extends Model
         return $this->belongsTo(User::class);
     }
 
-    /** @return BelongsToMany<Passion, $this> */
-    public function passions(): BelongsToMany
+    /** @return BelongsToMany<Interest, $this> */
+    public function interests(): BelongsToMany
     {
-        return $this->belongsToMany(Passion::class);
+        return $this->belongsToMany(Interest::class)
+            ->withPivot('is_selected')
+            ->wherePivot('is_selected', true);
+    }
+
+    /** @return BelongsToMany<Interest, $this> */
+    public function interestHistory(): BelongsToMany
+    {
+        return $this->belongsToMany(Interest::class)->withPivot('is_selected');
     }
 
     public function isComplete(): bool

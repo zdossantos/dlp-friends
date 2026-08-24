@@ -8,7 +8,7 @@ use App\Enums\SwipeDecision;
 use App\Enums\UserStatus;
 use App\Enums\VisitFrequency;
 use App\Models\Block;
-use App\Models\Passion;
+use App\Models\Interest;
 use App\Models\Profile;
 use App\Models\Swipe;
 use App\Models\User;
@@ -21,9 +21,9 @@ class DiscoveryServiceTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_it_orders_profiles_by_common_passions_then_frequency_bonus(): void
+    public function test_it_orders_profiles_by_common_interests_then_frequency_bonus(): void
     {
-        [$attractions, $parades, $hotels] = $this->passions('Attractions', 'Parades', 'Hotels');
+        [$attractions, $parades, $hotels] = $this->interests('Attractions', 'Parades', 'Hotels');
         $actor = $this->member('Actor', VisitFrequency::Often, [$attractions, $parades]);
         $oneCommon = $this->member('One common', VisitFrequency::Rarely, [$attractions, $hotels]);
         $sameFrequency = $this->member('Same frequency', VisitFrequency::Often, [$attractions]);
@@ -45,13 +45,13 @@ class DiscoveryServiceTest extends TestCase
             $oneCommon->profile->id,
         ]);
         expect($results[1]->score)->toBe(1.25)
-            ->and($results[1]->commonPassions)->toBe(['Attractions'])
+            ->and($results[1]->commonInterests)->toBe(['Attractions'])
             ->and($results[1]->frequencyBonus)->toBeTrue();
     }
 
-    public function test_rank_only_orders_profiles_with_identical_common_passions_and_frequency_bonus(): void
+    public function test_rank_only_orders_profiles_with_identical_common_interests_and_frequency_bonus(): void
     {
-        [$attractions, $parades] = $this->passions('Attractions', 'Parades');
+        [$attractions, $parades] = $this->interests('Attractions', 'Parades');
         $actor = $this->member('Actor', VisitFrequency::Sometimes, [$attractions, $parades]);
         $higherRank = $this->member('Higher rank', VisitFrequency::Rarely, [$attractions]);
         $lowerRank = $this->member('Lower rank', VisitFrequency::Rarely, [$attractions]);
@@ -80,7 +80,7 @@ class DiscoveryServiceTest extends TestCase
 
     public function test_it_excludes_profiles_that_are_not_discoverable_for_the_actor(): void
     {
-        [$attractions] = $this->passions('Attractions');
+        [$attractions] = $this->interests('Attractions');
         $actor = $this->member('Actor', VisitFrequency::Often, [$attractions]);
         $eligible = $this->member('Eligible', VisitFrequency::Often, [$attractions]);
         $this->member('Hidden', VisitFrequency::Often, [$attractions], [
@@ -123,7 +123,7 @@ class DiscoveryServiceTest extends TestCase
 
     public function test_it_serializes_discovery_profiles_with_the_frontend_camel_case_contract(): void
     {
-        [$attractions] = $this->passions('Attractions');
+        [$attractions] = $this->interests('Attractions');
         $actor = $this->member('Actor', VisitFrequency::Often, [$attractions]);
         $target = $this->member('Target', VisitFrequency::Often, [$attractions], [
             'bio' => 'Parade fan.',
@@ -140,29 +140,29 @@ class DiscoveryServiceTest extends TestCase
             'age' => 30,
             'bio' => 'Parade fan.',
             'visitFrequency' => VisitFrequency::Often->value,
-            'commonPassionCount' => 1,
-            'commonPassions' => ['Attractions'],
+            'commonInterestCount' => 1,
+            'commonInterests' => ['Attractions'],
             'frequencyBonus' => true,
             'score' => 1.25,
         ]);
     }
 
-    public function test_inactive_passions_do_not_contribute_to_the_score_or_explanation(): void
+    public function test_inactive_interests_do_not_contribute_to_the_score_or_explanation(): void
     {
-        [$activePassion] = $this->passions('Attractions');
-        $inactivePassion = Passion::factory()->create([
-            'name' => 'Archived passion',
+        [$activeInterest] = $this->interests('Attractions');
+        $inactiveInterest = Interest::factory()->create([
+            'name' => 'Archived interest',
             'is_active' => false,
         ]);
         $actor = $this->member(
             'Actor',
             VisitFrequency::Rarely,
-            [$activePassion, $inactivePassion],
+            [$activeInterest, $inactiveInterest],
         );
         $target = $this->member(
             'Target',
             VisitFrequency::Often,
-            [$activePassion, $inactivePassion],
+            [$activeInterest, $inactiveInterest],
         );
 
         $result = (new DiscoveryService($this->ascendingTieBreaker()))
@@ -170,19 +170,19 @@ class DiscoveryServiceTest extends TestCase
             ->first();
 
         expect($result?->profileId)->toBe($target->profile->id)
-            ->and($result?->commonPassionCount)->toBe(1)
-            ->and($result?->commonPassions)->toBe(['Attractions'])
+            ->and($result?->commonInterestCount)->toBe(1)
+            ->and($result?->commonInterests)->toBe(['Attractions'])
             ->and($result?->score)->toBe(1.0);
     }
 
     public function test_a_member_on_their_exact_eighteenth_birthday_is_eligible(): void
     {
-        [$passion] = $this->passions('Attractions');
-        $actor = $this->member('Actor', VisitFrequency::Often, [$passion]);
+        [$interest] = $this->interests('Attractions');
+        $actor = $this->member('Actor', VisitFrequency::Often, [$interest]);
         $target = $this->member(
             'Exactly eighteen',
             VisitFrequency::Rarely,
-            [$passion],
+            [$interest],
             userAttributes: ['birth_date' => today()->subYears(18)],
         );
 
@@ -193,7 +193,7 @@ class DiscoveryServiceTest extends TestCase
 
     public function test_it_uses_a_constant_query_budget_for_candidate_transformation(): void
     {
-        [$attractions] = $this->passions('Attractions');
+        [$attractions] = $this->interests('Attractions');
         $actor = $this->member('Actor', VisitFrequency::Often, [$attractions]);
 
         foreach (range(1, 10) as $index) {
@@ -210,24 +210,24 @@ class DiscoveryServiceTest extends TestCase
         expect(count($queries))->toBeLessThanOrEqual(6);
     }
 
-    /** @return list<Passion> */
-    private function passions(string ...$names): array
+    /** @return list<Interest> */
+    private function interests(string ...$names): array
     {
         return array_map(
-            fn (string $name): Passion => Passion::factory()->create(['name' => $name, 'is_active' => true]),
+            fn (string $name): Interest => Interest::factory()->create(['name' => $name, 'is_active' => true]),
             $names,
         );
     }
 
     /**
-     * @param  list<Passion>  $passions
+     * @param  list<Interest>  $interests
      * @param  array<string, mixed>  $profileAttributes
      * @param  array<string, mixed>  $userAttributes
      */
     private function member(
         string $displayName,
         ?VisitFrequency $visitFrequency,
-        array $passions,
+        array $interests,
         array $profileAttributes = [],
         array $userAttributes = [],
     ): User {
@@ -237,9 +237,9 @@ class DiscoveryServiceTest extends TestCase
             'visit_frequency' => $visitFrequency,
         ], $profileAttributes));
 
-        $profile->passions()->attach(array_map(
-            fn (Passion $passion): int => $passion->id,
-            $passions,
+        $profile->interests()->attach(array_map(
+            fn (Interest $interest): int => $interest->id,
+            $interests,
         ));
 
         return $user->load('profile');

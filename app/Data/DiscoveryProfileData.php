@@ -5,7 +5,7 @@ namespace App\Data;
 final readonly class DiscoveryProfileData
 {
     /**
-     * @param  list<string>  $commonPassions
+     * @param  list<string>  $commonInterests
      */
     public function __construct(
         public int $userId,
@@ -14,8 +14,8 @@ final readonly class DiscoveryProfileData
         public int $age,
         public ?string $bio,
         public ?string $visitFrequency,
-        public int $commonPassionCount,
-        public array $commonPassions,
+        public int $commonInterestCount,
+        public array $commonInterests,
         public bool $frequencyBonus,
         public float $score,
     ) {}
@@ -30,8 +30,8 @@ final readonly class DiscoveryProfileData
             'age' => $this->age,
             'bio' => $this->bio,
             'visitFrequency' => $this->visitFrequency,
-            'commonPassionCount' => $this->commonPassionCount,
-            'commonPassions' => $this->commonPassions,
+            'commonInterestCount' => $this->commonInterestCount,
+            'commonInterests' => $this->commonInterests,
             'frequencyBonus' => $this->frequencyBonus,
             'score' => $this->score,
         ];

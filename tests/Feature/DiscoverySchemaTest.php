@@ -2,8 +2,8 @@
 
 namespace Tests\Feature;
 
+use App\Models\Interest;
 use App\Models\MemberMatch;
-use App\Models\Passion;
 use App\Models\Swipe;
 use App\Models\User;
 use Illuminate\Database\QueryException;
@@ -15,16 +15,16 @@ class DiscoverySchemaTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_a_profile_cannot_attach_the_same_passion_twice(): void
+    public function test_a_profile_cannot_attach_the_same_interest_twice(): void
     {
         $profile = User::factory()->withProfile()->create()->profile;
-        $passion = Passion::factory()->create();
+        $interest = Interest::factory()->create();
 
-        $profile->passions()->attach($passion);
+        $profile->interests()->attach($interest);
 
         $this->expectException(QueryException::class);
 
-        $profile->passions()->attach($passion);
+        $profile->interests()->attach($interest);
     }
 
     public function test_a_swipe_rejects_a_decision_outside_the_storage_enum(): void

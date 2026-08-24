@@ -3,8 +3,8 @@
 namespace Tests\Feature;
 
 use App\Enums\SwipeDecision;
+use App\Models\Interest;
 use App\Models\MemberMatch;
-use App\Models\Passion;
 use App\Models\Profile;
 use App\Models\Swipe;
 use App\Models\User;
@@ -30,12 +30,12 @@ class DiscoveryPageTest extends TestCase
 
     public function test_complete_members_preload_up_to_five_public_suggestions(): void
     {
-        $passion = Passion::factory()->create(['name' => 'Attractions']);
+        $interest = Interest::factory()->create(['name' => 'Attractions']);
         $actor = User::factory()->withProfile()->create();
         $target = User::factory()->withProfile()->create();
         User::factory()->withProfile()->count(5)->create();
-        $actor->profile?->passions()->attach($passion);
-        $target->profile?->passions()->attach($passion);
+        $actor->profile?->interests()->attach($interest);
+        $target->profile?->interests()->attach($interest);
 
         $this->actingAs($actor)
             ->get(route('discovery.index'))
@@ -47,7 +47,7 @@ class DiscoveryPageTest extends TestCase
                 ->loadDeferredProps(fn (Assert $deferred) => $deferred
                     ->has('suggestions', 5)
                     ->where('suggestions.0.displayName', $target->profile?->display_name)
-                    ->where('suggestions.0.commonPassions', ['Attractions'])
+                    ->where('suggestions.0.commonInterests', ['Attractions'])
                     ->missing('suggestions.0.email')));
     }
 

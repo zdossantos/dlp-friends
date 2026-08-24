@@ -6,7 +6,7 @@ use App\Contracts\DiscoveryTieBreaker;
 use App\Data\DiscoveryProfileData;
 use App\Enums\ProfileVisibility;
 use App\Enums\UserStatus;
-use App\Models\Passion;
+use App\Models\Interest;
 use App\Models\Profile;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
@@ -24,14 +24,14 @@ final readonly class DiscoveryService
     {
         $actorProfile = Profile::query()
             ->where('user_id', $user->id)
-            ->with(['passions' => $this->activePassions(...)])
+            ->with(['interests' => $this->activeInterests(...)])
             ->first();
 
         if (! $actorProfile instanceof Profile) {
             return collect();
         }
 
-        $actorPassionIds = $actorProfile->passions->modelKeys();
+        $actorInterestIds = $actorProfile->interests->modelKeys();
         $actorVisitFrequency = $actorProfile->visit_frequency?->value;
 
         $profiles = Profile::query()
@@ -54,7 +54,7 @@ final readonly class DiscoveryService
             })
             ->with([
                 'user',
-                'passions' => $this->activePassions(...),
+                'interests' => $this->activeInterests(...),
             ])
             ->get();
 
@@ -62,12 +62,12 @@ final readonly class DiscoveryService
             ->mapWithKeys(fn (Profile $profile): array => [$profile->id => $this->tieBreaker->rank($profile->id)]);
 
         return $profiles
-            ->map(function (Profile $profile) use ($actorPassionIds, $actorVisitFrequency): DiscoveryProfileData {
-                $commonPassions = array_values($profile->passions
-                    ->filter(fn (Passion $passion): bool => in_array($passion->id, $actorPassionIds, true))
+            ->map(function (Profile $profile) use ($actorInterestIds, $actorVisitFrequency): DiscoveryProfileData {
+                $commonInterests = array_values($profile->interests
+                    ->filter(fn (Interest $interest): bool => in_array($interest->id, $actorInterestIds, true))
                     ->pluck('name')
                     ->all());
-                $commonPassionCount = count($commonPassions);
+                $commonInterestCount = count($commonInterests);
                 $visitFrequency = $profile->visit_frequency?->value;
                 $frequencyBonus = $actorVisitFrequency !== null && $actorVisitFrequency === $visitFrequency;
 
@@ -78,14 +78,14 @@ final readonly class DiscoveryService
                     age: (int) $profile->user->age,
                     bio: $profile->bio,
                     visitFrequency: $visitFrequency,
-                    commonPassionCount: $commonPassionCount,
-                    commonPassions: $commonPassions,
+                    commonInterestCount: $commonInterestCount,
+                    commonInterests: $commonInterests,
                     frequencyBonus: $frequencyBonus,
-                    score: $commonPassionCount + ($frequencyBonus ? 0.25 : 0.0),
+                    score: $commonInterestCount + ($frequencyBonus ? 0.25 : 0.0),
                 );
             })
             ->sortBy([
-                ['commonPassionCount', 'desc'],
+                ['commonInterestCount', 'desc'],
                 ['frequencyBonus', 'desc'],
                 fn (DiscoveryProfileData $left, DiscoveryProfileData $right): int => $tieRanks[$left->profileId] <=> $tieRanks[$right->profileId],
             ])
@@ -95,7 +95,7 @@ final readonly class DiscoveryService
     /**
      * @param Relation<*, *, *> $query
      */
-    private function activePassions(Relation $query): void
+    private function activeInterests(Relation $query): void
     {
         $query
             ->where('is_active', true)

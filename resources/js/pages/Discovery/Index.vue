@@ -142,7 +142,7 @@ defineOptions({
         <section class="space-y-1">
             <h1 class="text-3xl font-semibold tracking-tight">Découvrir</h1>
             <p class="text-sm leading-6 text-muted-foreground">
-                Des membres qui partagent vos passions.
+                Des membres qui partagent vos intérêts.
             </p>
         </section>
 
@@ -187,7 +187,7 @@ defineOptions({
                 </CardTitle>
                 <CardDescription>
                     Revenez plus tard ou ajustez votre profil pour mieux
-                    représenter vos passions.
+                    représenter vos intérêts.
                 </CardDescription>
             </CardHeader>
             <CardContent>
