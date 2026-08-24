@@ -124,9 +124,10 @@ choisir manuellement plus tard après avoir libéré une place.
 
 ### Suppression
 
-Un intérêt ne peut être supprimé que s’il n’a aucune association, effective ou
-historique. Lorsqu’il a déjà été utilisé, l’interface demande de l’archiver.
-Cette règle préserve l’historique demandé par l’issue.
+Un intérêt actif déjà utilisé ne peut pas être supprimé : l’interface demande
+de l’archiver au préalable. Une fois archivé, sa suppression devient possible
+et retire définitivement toutes ses associations historiques. Un intérêt
+jamais utilisé peut être supprimé directement.
 
 ### Validation et autorisation
 

@@ -253,21 +253,24 @@ describe('admin interest catalog page', () => {
         ).toBeUndefined();
     });
 
-    it('disables deletion for every interest present in profile history', () => {
+    it('requires an interest with profile history to be archived before deletion', () => {
         const wrapper = mountPage();
+        const activeUsedButton = wrapper.get(
+            '[aria-label="Supprimer Spectacles"]',
+        );
+        const descriptionId = activeUsedButton.attributes('aria-describedby');
 
-        for (const interestName of ['Chill', 'Spectacles']) {
-            const button = wrapper.get(
-                `[aria-label="Supprimer ${interestName}"]`,
-            );
-            const descriptionId = button.attributes('aria-describedby');
+        expect(activeUsedButton.attributes('disabled')).toBeDefined();
+        expect(descriptionId).toBeTruthy();
+        expect(wrapper.get(`#${descriptionId}`).text()).toContain(
+            'doit être archivé',
+        );
 
-            expect(button.attributes('disabled')).toBeDefined();
-            expect(descriptionId).toBeTruthy();
-            expect(wrapper.get(`#${descriptionId}`).text()).toContain(
-                'ne peut pas être supprimé',
-            );
-        }
+        expect(
+            wrapper
+                .get('[aria-label="Supprimer Chill"]')
+                .attributes('disabled'),
+        ).toBeUndefined();
 
         expect(
             wrapper
@@ -395,15 +398,24 @@ describe('admin interest catalog page', () => {
         expect(content.classes()).toContain('p-3');
     });
 
-    it('preserves the scroll position when moving an interest', () => {
+    it('preserves the scroll position when editing, moving, or reactivating an interest', () => {
         const wrapper = mountPage();
 
+        expect(
+            wrapper
+                .get('[data-test="edit-interest-form"]')
+                .attributes('data-preserve-scroll'),
+        ).toBe('true');
         expect(
             formFor(wrapper, 'input[name="direction"][value="up"]').dataset
                 .preserveScroll,
         ).toBe('true');
         expect(
             formFor(wrapper, 'input[name="direction"][value="down"]').dataset
+                .preserveScroll,
+        ).toBe('true');
+        expect(
+            formFor(wrapper, 'input[name="is_active"][value="1"]').dataset
                 .preserveScroll,
         ).toBe('true');
     });
@@ -447,6 +459,9 @@ describe('admin interest catalog page', () => {
         expect(
             archiveForm.get('input[name="is_active"]').attributes('value'),
         ).toBe('0');
+        expect(
+            (archiveForm.element as HTMLFormElement).dataset.preserveScroll,
+        ).toBe('true');
 
         await archiveForm.trigger('submit');
 
@@ -465,20 +480,24 @@ describe('admin interest catalog page', () => {
         );
         expect(formSubmissions).not.toHaveBeenCalled();
 
-        await wrapper.get('[aria-label="Supprimer Parades"]').trigger('click');
+        await wrapper.get('[aria-label="Supprimer Chill"]').trigger('click');
 
-        expect(wrapper.text()).toContain('Supprimer l’intérêt Parades');
+        expect(wrapper.text()).toContain('Supprimer l’intérêt Chill');
+        expect(wrapper.text()).toContain('associations historiques');
         const deleteForm = wrapper.get('[data-test="dialog-content"] form');
         expectForm(
             deleteForm.element as HTMLFormElement,
-            '/admin/interests/3?_method=DELETE',
+            '/admin/interests/1?_method=DELETE',
         );
+        expect(
+            (deleteForm.element as HTMLFormElement).dataset.preserveScroll,
+        ).toBe('true');
 
         await deleteForm.trigger('submit');
 
         expect(formSubmissions).toHaveBeenCalledTimes(1);
         expect(formSubmissions).toHaveBeenCalledWith(
-            '/admin/interests/3?_method=DELETE',
+            '/admin/interests/1?_method=DELETE',
             'post',
         );
     });

@@ -179,6 +179,7 @@ defineOptions({
                     <div class="flex flex-col gap-3 lg:flex-row lg:items-start">
                         <Form
                             v-bind="update.form(interest)"
+                            :options="{ preserveScroll: true }"
                             data-test="edit-interest-form"
                             class="grid min-w-0 flex-1 gap-2"
                             v-slot="{ errors, processing }"
@@ -277,12 +278,15 @@ defineOptions({
                                 dans l’historique
                             </p>
                             <p
-                                v-if="interest.profiles_count > 0"
+                                v-if="
+                                    interest.is_active &&
+                                    interest.profiles_count > 0
+                                "
                                 :id="`delete-interest-help-${interest.id}`"
                                 class="text-xs"
                             >
-                                Cet intérêt apparaît dans l’historique et ne
-                                peut pas être supprimé.
+                                Cet intérêt doit être archivé avant de pouvoir
+                                être supprimé.
                             </p>
                         </div>
                         <div class="flex flex-wrap gap-2">
@@ -299,6 +303,7 @@ defineOptions({
                                     <DialogContent>
                                         <Form
                                             v-bind="status.form(interest)"
+                                            :options="{ preserveScroll: true }"
                                             class="space-y-6"
                                             v-slot="{ errors, processing }"
                                         >
@@ -344,6 +349,7 @@ defineOptions({
                             <Form
                                 v-else
                                 v-bind="status.form(interest)"
+                                :options="{ preserveScroll: true }"
                                 v-slot="{ processing }"
                             >
                                 <input
@@ -367,11 +373,15 @@ defineOptions({
                                         variant="destructive"
                                         :aria-label="`Supprimer ${interest.name}`"
                                         :aria-describedby="
+                                            interest.is_active &&
                                             interest.profiles_count > 0
                                                 ? `delete-interest-help-${interest.id}`
                                                 : undefined
                                         "
-                                        :disabled="interest.profiles_count > 0"
+                                        :disabled="
+                                            interest.is_active &&
+                                            interest.profiles_count > 0
+                                        "
                                     >
                                         Supprimer
                                     </Button>
@@ -379,6 +389,7 @@ defineOptions({
                                 <DialogContent>
                                     <Form
                                         v-bind="destroy.form(interest)"
+                                        :options="{ preserveScroll: true }"
                                         class="space-y-6"
                                         v-slot="{ errors, processing }"
                                     >
@@ -389,8 +400,17 @@ defineOptions({
                                             </DialogTitle>
                                             <DialogDescription>
                                                 Cette action est définitive.
-                                                Seuls les intérêts jamais
-                                                utilisés peuvent être supprimés.
+                                                <template
+                                                    v-if="
+                                                        interest.profiles_count >
+                                                        0
+                                                    "
+                                                >
+                                                    Elle supprimera également
+                                                    toutes les associations
+                                                    historiques liées à cet
+                                                    intérêt.
+                                                </template>
                                             </DialogDescription>
                                         </DialogHeader>
                                         <InputError

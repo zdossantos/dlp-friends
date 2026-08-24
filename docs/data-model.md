@@ -44,7 +44,7 @@
 - Un profil ne peut sélectionner que des intérêts actifs, dans la limite configurée.
 - Archiver un intérêt suspend toutes ses sélections actives sans supprimer leur historique et libère immédiatement la capacité correspondante pour chaque profil.
 - Réactiver un intérêt restaure ses sélections historiques dans l’ordre des profils uniquement lorsque la capacité est disponible au regard de la limite courante ; les sélections sans capacité restent suspendues.
-- Un intérêt ayant déjà été utilisé, y compris par une sélection suspendue, ne peut pas être supprimé.
+- Un intérêt actif ayant déjà été utilisé ne peut pas être supprimé. Après archivage, sa suppression est autorisée et retire en cascade toutes ses associations historiques.
 - Un utilisateur ne peut pas swiper son propre profil.
 - Une paire de profils n'a qu'un swipe par sens, un match et une conversation au maximum.
 - Un blocage est prioritaire sur un match ou une conversation existante.

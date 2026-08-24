@@ -19,7 +19,7 @@
 
 ### Intérêts
 
-Le catalogue est stocké en base et gérable par l'administration : création, renommage, réordonnancement, archivage/réactivation et suppression des intérêts jamais utilisés. Les noms sont uniques après normalisation.
+Le catalogue est stocké en base et gérable par l'administration : création, renommage, réordonnancement, archivage/réactivation et suppression des intérêts jamais utilisés ou préalablement archivés. Supprimer un intérêt archivé retire définitivement toutes ses associations historiques. Les noms sont uniques après normalisation.
 
 Les catégories constituent un regroupement technique interne (la catégorie initiale est « Général ») : elles ne sont ni affichées ni administrables dans le MVP. Il n’y a donc pas de gestion de catégories dans le périmètre implémenté.
 

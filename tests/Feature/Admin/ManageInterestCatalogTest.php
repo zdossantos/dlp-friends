@@ -322,11 +322,11 @@ class ManageInterestCatalogTest extends TestCase
             ->toBe([0, 1]);
     }
 
-    public function test_used_interest_cannot_be_deleted_even_when_its_history_is_suspended(): void
+    public function test_active_used_interest_must_be_archived_before_deletion(): void
     {
-        $used = Interest::factory()->create();
+        $used = Interest::factory()->create(['is_active' => true]);
         $profile = User::factory()->withProfile()->create()->profile;
-        $profile->interestHistory()->attach($used, ['is_selected' => false]);
+        $profile->interestHistory()->attach($used, ['is_selected' => true]);
         $admin = User::factory()->withProfile()->admin()->create();
 
         $this->actingAs($admin)
@@ -334,6 +334,28 @@ class ManageInterestCatalogTest extends TestCase
             ->assertSessionHasErrors('interest');
 
         $this->assertDatabaseHas('interests', ['id' => $used->id]);
+    }
+
+    public function test_archived_used_interest_can_be_deleted_with_its_profile_history(): void
+    {
+        $used = Interest::factory()->create(['is_active' => false]);
+        $profile = User::factory()->withProfile()->create()->profile;
+        $profile->interestHistory()->attach($used, ['is_selected' => false]);
+        $admin = User::factory()->withProfile()->admin()->create();
+
+        $this->actingAs($admin)
+            ->delete(route('admin.interests.destroy', $used))
+            ->assertRedirect()
+            ->assertInertiaFlash('toast', [
+                'type' => 'success',
+                'message' => 'Intérêt supprimé.',
+            ]);
+
+        $this->assertDatabaseMissing('interests', ['id' => $used->id]);
+        $this->assertDatabaseMissing('interest_profile', [
+            'profile_id' => $profile->id,
+            'interest_id' => $used->id,
+        ]);
     }
 
     public function test_deleting_an_unused_interest_normalizes_remaining_positions(): void

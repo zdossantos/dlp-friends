@@ -110,9 +110,9 @@ class InterestController extends Controller
 
             abort_unless($lockedInterest instanceof Interest, 404);
 
-            if ($lockedInterest->profiles()->exists()) {
+            if ($lockedInterest->is_active && $lockedInterest->profiles()->exists()) {
                 throw ValidationException::withMessages([
-                    'interest' => 'Cet intérêt a déjà été utilisé. Archivez-le plutôt que de le supprimer.',
+                    'interest' => 'Cet intérêt a déjà été utilisé. Archivez-le avant de le supprimer.',
                 ]);
             }
 
