@@ -356,6 +356,27 @@ class MemberProfileTest extends TestCase
                 ->where('selectedInterestIds', [$active->id]));
     }
 
+    public function test_profile_show_receives_only_effective_active_interests(): void
+    {
+        config()->set('inertia.testing.ensure_pages_exist', false);
+        [$active, $inactive] = Interest::factory()->count(2)->create();
+        $inactive->update(['is_active' => false]);
+        $user = User::factory()->withProfile()->create();
+        $user->profile->interestHistory()->attach([
+            $active->id => ['is_selected' => true],
+            $inactive->id => ['is_selected' => true],
+        ]);
+
+        $this->actingAs($user)
+            ->get(route('member-profile.show'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('profile/Show')
+                ->where('profile.interests', [
+                    ['id' => $active->id, 'name' => $active->name],
+                ]));
+    }
+
     public function test_member_cannot_submit_the_same_interest_twice(): void
     {
         $interest = Interest::factory()->create();

@@ -3,12 +3,15 @@ import { Head } from '@inertiajs/vue3';
 import Heading from '@/components/Heading.vue';
 import ProfileForm from '@/components/profile/ProfileForm.vue';
 import { show, update } from '@/routes/member-profile';
-import type { Profile } from '@/types';
+import type { InterestOption, Profile } from '@/types';
 
 defineProps<{
     profile: Profile;
     visitFrequencies: Array<{ value: string; label: string }>;
     visibilities: Array<{ value: string; label: string }>;
+    interests: InterestOption[];
+    selectedInterestIds: number[];
+    interestLimit: number;
 }>();
 
 defineOptions({
@@ -37,6 +40,9 @@ defineOptions({
             submit-label="Enregistrer"
             :visit-frequencies="visitFrequencies"
             :visibilities="visibilities"
+            :interests="interests"
+            :selected-interest-ids="selectedInterestIds"
+            :interest-limit="interestLimit"
         />
     </div>
 </template>

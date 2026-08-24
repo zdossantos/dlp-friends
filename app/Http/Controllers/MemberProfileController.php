@@ -66,8 +66,25 @@ class MemberProfileController extends Controller
 
     public function show(Request $request): Response
     {
+        $profile = $request->user()->profile;
+
         return Inertia::render('profile/Show', [
-            'profile' => $request->user()->profile,
+            'profile' => $profile === null ? null : [
+                'display_name' => $profile->display_name,
+                'bio' => $profile->bio,
+                'visit_frequency' => $profile->visit_frequency,
+                'visibility' => $profile->visibility,
+                'onboarding_completed_at' => $profile->onboarding_completed_at,
+                'interests' => $profile->interests()
+                    ->orderBy('interests.sort_order')
+                    ->orderBy('interests.id')
+                    ->get(['interests.id', 'interests.name'])
+                    ->map(fn (Interest $interest): array => [
+                        'id' => $interest->id,
+                        'name' => $interest->name,
+                    ])
+                    ->all(),
+            ],
             'age' => $request->user()->age,
         ]);
     }

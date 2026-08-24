@@ -101,6 +101,18 @@ defineOptions({
                     {{ profile.bio || 'Aucune bio renseignée pour le moment.' }}
                 </p>
             </div>
+            <div v-if="profile.interests?.length">
+                <h2 class="mb-2 text-sm font-medium">Intérêts</h2>
+                <div class="flex flex-wrap gap-2">
+                    <Badge
+                        v-for="interest in profile.interests"
+                        :key="interest.id"
+                        variant="secondary"
+                    >
+                        {{ interest.name }}
+                    </Badge>
+                </div>
+            </div>
         </section>
     </main>
 </template>
