@@ -9,12 +9,15 @@ import {
     CardTitle,
 } from '@/components/ui/card';
 import { store } from '@/routes/member-profile';
-import type { Profile } from '@/types';
+import type { InterestOption, Profile } from '@/types';
 
 defineProps<{
     profile: Profile | null;
     visitFrequencies: Array<{ value: string; label: string }>;
     visibilities: Array<{ value: string; label: string }>;
+    interests: InterestOption[];
+    selectedInterestIds: number[];
+    interestLimit: number;
 }>();
 </script>
 
@@ -42,6 +45,9 @@ defineProps<{
                     submit-label="Créer mon profil"
                     :visit-frequencies="visitFrequencies"
                     :visibilities="visibilities"
+                    :interests="interests"
+                    :selected-interest-ids="selectedInterestIds"
+                    :interest-limit="interestLimit"
                 />
             </CardContent>
         </Card>

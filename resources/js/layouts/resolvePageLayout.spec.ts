@@ -10,6 +10,7 @@ describe('resolvePageLayout', () => {
         ['Welcome', null],
         ['auth/Login', AuthLayout],
         ['Dashboard', AdminLayout],
+        ['Admin/Interests/Index', AdminLayout],
         ['Discovery/Index', MemberLayout],
         ['profile/Create', MemberLayout],
         ['profile/Show', MemberLayout],

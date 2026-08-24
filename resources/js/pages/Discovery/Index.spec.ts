@@ -44,8 +44,8 @@ const suggestion: DiscoveryProfile = {
     age: 29,
     bio: 'Toujours partante pour une journee attractions et spectacles.',
     visitFrequency: 'often',
-    commonPassionCount: 3,
-    commonPassions: ['Attractions', 'Parades', 'Pins'],
+    commonInterestCount: 3,
+    commonInterests: ['Attractions', 'Parades', 'Pins'],
     frequencyBonus: true,
     score: 3.25,
 };

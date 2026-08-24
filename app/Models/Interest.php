@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use Database\Factories\PassionFactory;
+use Database\Factories\InterestFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -13,30 +13,36 @@ use Illuminate\Support\Carbon;
 
 /**
  * @property int $id
- * @property int $passion_category_id
+ * @property int $interest_category_id
  * @property string $name
  * @property bool $is_active
  * @property int $sort_order
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
- * @property-read PassionCategory $category
+ * @property-read InterestCategory $category
  * @property-read Collection<int, Profile> $profiles
  */
-#[Fillable(['passion_category_id', 'name', 'is_active', 'sort_order'])]
-class Passion extends Model
+#[Fillable(['interest_category_id', 'name', 'is_active', 'sort_order'])]
+class Interest extends Model
 {
-    /** @use HasFactory<PassionFactory> */
+    /** @use HasFactory<InterestFactory> */
     use HasFactory;
 
-    /** @return BelongsTo<PassionCategory, $this> */
+    /** @return BelongsTo<InterestCategory, $this> */
     public function category(): BelongsTo
     {
-        return $this->belongsTo(PassionCategory::class, 'passion_category_id');
+        return $this->belongsTo(InterestCategory::class, 'interest_category_id');
     }
 
     /** @return BelongsToMany<Profile, $this> */
     public function profiles(): BelongsToMany
     {
-        return $this->belongsToMany(Profile::class);
+        return $this->belongsToMany(Profile::class)->withPivot('is_selected');
+    }
+
+    /** @return array<string, string> */
+    protected function casts(): array
+    {
+        return ['is_active' => 'boolean'];
     }
 }

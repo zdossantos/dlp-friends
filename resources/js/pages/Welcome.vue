@@ -7,7 +7,7 @@ import { app, login, register } from '@/routes';
 
 const benefits = [
     {
-        title: 'Passions communes',
+        title: 'Intérêts communs',
         description:
             'Découvrez en priorité les membres qui aiment les mêmes expériences que vous.',
         icon: Sparkles,
@@ -78,7 +78,7 @@ const benefits = [
                     <p
                         class="mx-auto mt-6 max-w-2xl text-base leading-7 text-muted-foreground sm:text-lg"
                     >
-                        Trouvez des personnes qui partagent vos passions pour
+                        Trouvez des personnes qui partagent vos intérêts pour
                         Disneyland Paris, découvrez-vous mutuellement puis
                         échangez en toute simplicité.
                     </p>

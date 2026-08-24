@@ -15,7 +15,7 @@ export function resolvePageLayout(
         return AuthLayout;
     }
 
-    if (name === 'Dashboard') {
+    if (name === 'Dashboard' || name.startsWith('Admin/')) {
         return AdminLayout;
     }
 

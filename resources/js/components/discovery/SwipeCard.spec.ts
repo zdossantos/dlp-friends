@@ -11,8 +11,8 @@ const profile: DiscoveryProfile = {
     age: 29,
     bio: 'Toujours partante pour une journee attractions et spectacles.',
     visitFrequency: 'often',
-    commonPassionCount: 3,
-    commonPassions: ['Attractions', 'Parades', 'Pins'],
+    commonInterestCount: 3,
+    commonInterests: ['Attractions', 'Parades', 'Pins'],
     frequencyBonus: true,
     score: 3.25,
 };
@@ -70,7 +70,7 @@ describe('SwipeCard', () => {
         );
         expect(wrapper.text()).not.toContain('Score');
         expect(wrapper.text()).not.toContain('3,25');
-        expect(wrapper.text()).toContain('3 passions communes');
+        expect(wrapper.text()).toContain('3 intérêts communs');
         expect(wrapper.text()).toContain('Souvent');
         expect(wrapper.text()).toContain('Même fréquence de visite');
         expect(wrapper.text()).toContain('Attractions');

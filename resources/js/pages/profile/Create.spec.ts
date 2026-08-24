@@ -17,6 +17,9 @@ describe('profile onboarding page', () => {
                 profile: null,
                 visitFrequencies: [],
                 visibilities: [],
+                interests: [],
+                selectedInterestIds: [],
+                interestLimit: 5,
             },
             global: {
                 stubs: {

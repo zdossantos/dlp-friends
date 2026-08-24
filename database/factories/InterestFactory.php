@@ -2,20 +2,20 @@
 
 namespace Database\Factories;
 
-use App\Models\Passion;
-use App\Models\PassionCategory;
+use App\Models\Interest;
+use App\Models\InterestCategory;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
-/** @extends Factory<Passion> */
-class PassionFactory extends Factory
+/** @extends Factory<Interest> */
+class InterestFactory extends Factory
 {
-    protected $model = Passion::class;
+    protected $model = Interest::class;
 
     /** @return array<string, mixed> */
     public function definition(): array
     {
         return [
-            'passion_category_id' => PassionCategory::factory(),
+            'interest_category_id' => InterestCategory::factory(),
             'name' => fake()->unique()->words(2, true),
             'is_active' => true,
             'sort_order' => fake()->numberBetween(0, 100),

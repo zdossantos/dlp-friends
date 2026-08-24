@@ -251,7 +251,7 @@ watch(
 
             <div class="grid gap-3 rounded-lg border bg-muted/30 p-4 text-sm">
                 <p class="font-medium">
-                    {{ profile.commonPassionCount }} passions communes
+                    {{ profile.commonInterestCount }} intérêts communs
                 </p>
                 <p class="text-muted-foreground">
                     Fréquence de visite : {{ visitFrequencyLabel }}
@@ -261,13 +261,13 @@ watch(
                 </p>
             </div>
 
-            <div class="flex flex-wrap gap-2" aria-label="Passions communes">
+            <div class="flex flex-wrap gap-2" aria-label="Intérêts communs">
                 <Badge
-                    v-for="passion in profile.commonPassions"
-                    :key="passion"
+                    v-for="interest in profile.commonInterests"
+                    :key="interest"
                     variant="secondary"
                 >
-                    {{ passion }}
+                    {{ interest }}
                 </Badge>
             </div>
 

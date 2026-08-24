@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import { Form } from '@inertiajs/vue3';
 import InputError from '@/components/InputError.vue';
+import InterestTagSelector from '@/components/profile/InterestTagSelector.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
-import type { Profile } from '@/types';
+import type { InterestOption, Profile } from '@/types';
 
 type Option = { value: string; label: string };
 
@@ -16,6 +17,9 @@ defineProps<{
     submitLabel: string;
     visitFrequencies: Option[];
     visibilities: Option[];
+    interests: InterestOption[];
+    selectedInterestIds: number[];
+    interestLimit: number;
 }>();
 </script>
 
@@ -97,6 +101,15 @@ defineProps<{
                 Vous pourrez masquer temporairement votre profil plus tard.
             </p>
             <InputError :message="errors.visibility" />
+        </div>
+
+        <div class="grid gap-2">
+            <InterestTagSelector
+                :interests="interests"
+                :selected-ids="selectedInterestIds"
+                :limit="interestLimit"
+            />
+            <InputError :message="errors.interest_ids" />
         </div>
 
         <Button type="submit" :disabled="processing" class="w-full sm:w-auto">

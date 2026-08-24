@@ -1,3 +1,5 @@
+import type { InterestOption } from './interest';
+
 export type User = {
     id: number;
     email: string;
@@ -18,6 +20,7 @@ export type Profile = {
     visit_frequency: VisitFrequency | null;
     visibility: ProfileVisibility;
     onboarding_completed_at: string | null;
+    interests?: InterestOption[];
 };
 
 export type Auth = {

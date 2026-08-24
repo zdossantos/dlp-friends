@@ -1,6 +1,10 @@
 <?php
 
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\InterestController;
+use App\Http\Controllers\Admin\InterestOrderController;
+use App\Http\Controllers\Admin\InterestSettingController;
+use App\Http\Controllers\Admin\InterestStatusController;
 use App\Http\Controllers\DiscoveryController;
 use App\Http\Controllers\LandingController;
 use App\Http\Controllers\MemberProfileController;
@@ -33,6 +37,17 @@ Route::middleware(['auth', 'verified', 'social'])->group(function () {
         Route::get('dashboard', DashboardController::class)
             ->middleware('role:admin')
             ->name('dashboard');
+
+        Route::prefix('admin')->name('admin.')->middleware('role:admin')->group(function (): void {
+            Route::resource('interests', InterestController::class)
+                ->only(['index', 'store', 'update', 'destroy']);
+            Route::patch('interests/{interest}/status', InterestStatusController::class)
+                ->name('interests.status');
+            Route::patch('interests/{interest}/move', InterestOrderController::class)
+                ->name('interests.move');
+            Route::patch('interest-setting', InterestSettingController::class)
+                ->name('interest-setting.update');
+        });
     });
 });
 

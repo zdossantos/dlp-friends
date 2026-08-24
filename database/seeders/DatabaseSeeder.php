@@ -20,6 +20,8 @@ class DatabaseSeeder extends Seeder
      */
     public function run(AssignRole $assignRole): void
     {
+        $this->call(InterestCatalogSeeder::class);
+
         foreach (RoleName::cases() as $roleName) {
             Role::query()->firstOrCreate(['name' => $roleName]);
         }

@@ -56,6 +56,7 @@ describe('member profile page', () => {
                     visit_frequency: 'often',
                     visibility: 'visible',
                     onboarding_completed_at: '2026-08-16T10:00:00Z',
+                    interests: [{ id: 1, name: 'Chill' }],
                 },
             },
             global: {
@@ -77,6 +78,9 @@ describe('member profile page', () => {
         expect(wrapper.text()).toContain('Souvent');
         expect(wrapper.text()).toContain('Visible');
         expect(wrapper.text()).toContain('Modifier mon profil');
+        expect(wrapper.text()).toContain('Intérêts');
+        expect(wrapper.text()).toContain('Chill');
+        expect(wrapper.text()).not.toContain('Archivé');
         expect(wrapper.get('main').classes()).toContain('max-w-md');
     });
 

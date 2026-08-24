@@ -13,7 +13,7 @@ L'interface doit évoquer une magie contemporaine et chaleureuse, sans reprendre
 
 1. Inscription avec e-mail, date de naissance et mot de passe, sans nom public demandé à ce stade.
 2. Vérification obligatoire de l'adresse e-mail.
-3. Création du profil sur une page dédiée : nom d'affichage non unique, bio, fréquence de visite et visibilité. Le prénom n'est pas demandé.
+3. Création du profil sur une page dédiée : nom d'affichage non unique, bio, fréquence de visite, visibilité et sélection d’intérêts actifs. Le prénom n'est pas demandé.
 4. Arrivée sur la page de profil personnel. Un administrateur peut ensuite ouvrir son dashboard réservé.
 5. Découverte : carte, affinités explicables, like ou refus.
 6. Match réciproque : confirmation claire puis accès à la conversation.
@@ -23,7 +23,8 @@ L'interface doit évoquer une magie contemporaine et chaleureuse, sans reprendre
 
 - Utiliser les composants du starter kit Vue Laravel et shadcn-vue en premier.
 - Utiliser Reka UI lorsqu'un primitive accessible manque.
-- Construire les composants métier (carte de swipe, résumé d'affinités, sélecteur de passions, conversation) au-dessus de ces primitives.
+- Construire les composants métier (carte de swipe, résumé d'affinités, sélecteur d’intérêts, conversation) au-dessus de ces primitives.
+- Le sélecteur n’affiche que les intérêts actifs et indique la limite configurée, fixée à cinq par défaut. Les intérêts archivés et l’historique de sélections suspendues ne sont pas exposés au membre.
 
 ## Avatar et photo
 
