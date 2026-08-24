@@ -45,4 +45,29 @@ describe('InterestTagSelector', () => {
         expect(wrapper.text()).toContain('Chill');
         expect(wrapper.text()).not.toContain('Archivé');
     });
+
+    it('drops a selected interest removed from a refreshed catalog', async () => {
+        const wrapper = mount(InterestTagSelector, {
+            props: {
+                interests: [
+                    { id: 1, name: 'Chill' },
+                    { id: 2, name: 'Archivé' },
+                ],
+                selectedIds: [1, 2],
+                limit: 5,
+            },
+        });
+
+        await wrapper.setProps({
+            interests: [{ id: 1, name: 'Chill' }],
+            selectedIds: [1, 2],
+        });
+
+        expect(wrapper.text()).toContain('1 / 5');
+        expect(
+            wrapper
+                .findAll('input[name="interest_ids[]"]')
+                .map((input) => input.attributes('value')),
+        ).toEqual(['1']);
+    });
 });

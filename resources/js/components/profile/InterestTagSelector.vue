@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 import type { InterestOption } from '@/types';
 
 const props = defineProps<{
@@ -8,8 +8,20 @@ const props = defineProps<{
     limit: number;
 }>();
 
-const selected = ref(new Set(props.selectedIds));
+function selectedFromProps(): Set<number> {
+    const availableIds = new Set(
+        props.interests.map((interest) => interest.id),
+    );
+
+    return new Set(props.selectedIds.filter((id) => availableIds.has(id)));
+}
+
+const selected = ref(selectedFromProps());
 const count = computed(() => selected.value.size);
+
+watch([() => props.selectedIds, () => props.interests], () => {
+    selected.value = selectedFromProps();
+});
 
 function toggle(id: number): void {
     const next = new Set(selected.value);
@@ -26,10 +38,10 @@ function toggle(id: number): void {
 
 <template>
     <fieldset class="grid gap-3">
-        <div class="flex items-center justify-between gap-3">
-            <legend class="font-medium">Mes intérêts</legend>
+        <legend class="flex w-full items-center justify-between gap-3">
+            <span class="font-medium">Mes intérêts</span>
             <span aria-live="polite">{{ count }} / {{ limit }}</span>
-        </div>
+        </legend>
         <div class="flex flex-wrap gap-2">
             <button
                 v-for="interest in interests"
