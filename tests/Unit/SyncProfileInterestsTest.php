@@ -6,7 +6,9 @@ use App\Actions\SyncProfileInterests;
 use App\Models\Interest;
 use App\Models\InterestSetting;
 use App\Models\User;
+use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use Tests\TestCase;
 
@@ -40,6 +42,48 @@ class SyncProfileInterestsTest extends TestCase
             'interest_id' => $keep->id,
             'is_selected' => true,
         ]);
+    }
+
+    public function test_it_locks_interests_then_setting_then_profile_before_pivot_writes(): void
+    {
+        $profile = User::factory()->withProfile()->create()->profile;
+        $interest = Interest::factory()->create();
+        $queries = [];
+        DB::listen(function (QueryExecuted $query) use (&$queries): void {
+            $queries[] = $query->sql;
+        });
+
+        app(SyncProfileInterests::class)->handle($profile, [$interest->id]);
+
+        $interestLockIndex = collect($queries)->search(
+            fn (string $sql): bool => preg_match(
+                '/select [`"]id[`"], [`"]is_active[`"] from [`"]interests[`"] /i',
+                $sql,
+            ) === 1,
+        );
+        $settingLockIndex = collect($queries)->search(
+            fn (string $sql): bool => preg_match(
+                '/select \* from [`"]interest_settings[`"] where [`"]interest_settings[`"]\.[`"]id[`"] = \?/i',
+                $sql,
+            ) === 1,
+        );
+        $profileLockIndex = collect($queries)->search(
+            fn (string $sql): bool => preg_match(
+                '/select \* from [`"]profiles[`"] where [`"]profiles[`"]\.[`"]id[`"] = \?/i',
+                $sql,
+            ) === 1,
+        );
+        $pivotWriteIndex = collect($queries)->search(
+            fn (string $sql): bool => preg_match('/delete from [`"]interest_profile[`"] /i', $sql) === 1,
+        );
+
+        expect($interestLockIndex)->not->toBeFalse()
+            ->and($settingLockIndex)->not->toBeFalse()
+            ->and($profileLockIndex)->not->toBeFalse()
+            ->and($pivotWriteIndex)->not->toBeFalse()
+            ->and($interestLockIndex)->toBeLessThan($settingLockIndex)
+            ->and($settingLockIndex)->toBeLessThan($profileLockIndex)
+            ->and($profileLockIndex)->toBeLessThan($pivotWriteIndex);
     }
 
     public function test_it_rejects_an_interest_that_is_inactive_when_the_write_transaction_runs(): void

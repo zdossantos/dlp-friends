@@ -32,25 +32,32 @@ class MemberProfileController extends Controller
 
     public function store(MemberProfileRequest $request): RedirectResponse
     {
-        $completedAt = $request->user()->profile?->onboarding_completed_at;
+        $currentProfile = $request->user()->profile;
+        $completedAt = $currentProfile?->onboarding_completed_at;
         $validated = $request->validated();
-        /** @var list<int> $interestIds */
-        $interestIds = $validated['interest_ids'];
+        $interestIds = $request->interestIds();
         unset($validated['interest_ids']);
 
-        $profile = DB::transaction(function () use ($request, $completedAt, $validated, $interestIds): Profile {
-            $profile = $request->user()->profile()->updateOrCreate(
-                [],
-                [
-                    ...$validated,
-                    'onboarding_completed_at' => $completedAt ?? now(),
-                ],
-            );
+        $profile = DB::transaction(function () use ($request, $currentProfile, $completedAt, $validated, $interestIds): Profile {
+            $profileFields = [
+                ...$validated,
+                'onboarding_completed_at' => $completedAt ?? now(),
+            ];
 
-            Gate::authorize('update', $profile);
-            $this->syncProfileInterests->handle($profile, $interestIds);
+            if ($currentProfile === null) {
+                $profile = $request->user()->profile()->create($profileFields);
 
-            return $profile;
+                Gate::authorize('update', $profile);
+                $this->syncProfileInterests->handle($profile, $interestIds);
+
+                return $profile;
+            }
+
+            Gate::authorize('update', $currentProfile);
+            $this->syncProfileInterests->handle($currentProfile, $interestIds);
+            $currentProfile->update($profileFields);
+
+            return $currentProfile;
         });
         $request->user()->setRelation('profile', $profile);
 
@@ -79,13 +86,12 @@ class MemberProfileController extends Controller
 
         Gate::authorize('update', $profile);
         $validated = $request->validated();
-        /** @var list<int> $interestIds */
-        $interestIds = $validated['interest_ids'];
+        $interestIds = $request->interestIds();
         unset($validated['interest_ids']);
 
         DB::transaction(function () use ($profile, $validated, $interestIds): void {
-            $profile->update($validated);
             $this->syncProfileInterests->handle($profile, $interestIds);
+            $profile->update($validated);
         });
 
         return to_route('member-profile.show');

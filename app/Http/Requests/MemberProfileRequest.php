@@ -46,6 +46,21 @@ class MemberProfileRequest extends FormRequest
         ];
     }
 
+    /** @return list<int> */
+    public function interestIds(): array
+    {
+        $interestIds = $this->validated('interest_ids', []);
+
+        if (! is_array($interestIds)) {
+            return [];
+        }
+
+        return array_values(array_map(
+            fn (mixed $interestId): int => (int) $interestId,
+            $interestIds,
+        ));
+    }
+
     /** @return array<int, callable(Validator): void> */
     public function after(): array
     {
