@@ -105,10 +105,12 @@ jobs:
             ${{ runner.os }}-composer-
       - name: Install Composer dependencies
         run: composer install --no-interaction --no-progress --prefer-dist
+      - name: Verify test database driver
+        run: php tests/Support/verify-test-database.php
       - name: Run database migrations
         run: php artisan migrate --force
       - name: Run Pest
-        run: php artisan test
+        run: php artisan test --display-warnings
 
   frontend-quality:
     name: Frontend quality

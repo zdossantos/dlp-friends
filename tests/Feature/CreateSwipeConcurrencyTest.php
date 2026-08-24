@@ -21,10 +21,6 @@ class CreateSwipeConcurrencyTest extends TestCase
 
     public function test_overlapping_opposite_likes_create_exactly_one_match_on_mysql(): void
     {
-        if (DB::getDriverName() !== 'mysql') {
-            $this->markTestSkipped('This lock test requires two real MySQL connections.');
-        }
-
         if (! function_exists('pcntl_fork')) {
             $this->markTestSkipped('This lock test requires the pcntl extension.');
         }

@@ -76,13 +76,18 @@
             "@analyse"
         ],
         "test:unit": [
+            "@test:database",
             "@php artisan test --testsuite=Unit"
+        ],
+        "test:database": [
+            "@php tests/Support/verify-test-database.php"
         ],
         "test": [
             "@php artisan config:clear --ansi",
             "@lint:check",
             "@types:check",
-            "@php artisan test"
+            "@test:database",
+            "@php artisan test --display-warnings"
         ],
         "post-autoload-dump": [
             "Illuminate\\Foundation\\ComposerScripts::postAutoloadDump",
@@ -96,7 +101,6 @@
         ],
         "post-create-project-cmd": [
             "@php artisan key:generate --ansi",
-            "@php -r \"file_exists('database/database.sqlite') || touch('database/database.sqlite');\"",
             "@php artisan migrate --graceful --ansi"
         ],
         "pre-package-uninstall": [
