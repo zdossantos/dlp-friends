@@ -5,6 +5,7 @@ namespace App\Http\Requests;
 use App\Models\Interest;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
 class UpdateInterestRequest extends FormRequest
@@ -23,7 +24,7 @@ class UpdateInterestRequest extends FormRequest
 
         $this->merge([
             'name' => is_string($name)
-                ? preg_replace('/\s+/u', ' ', trim($name))
+                ? Str::squish($name)
                 : $name,
         ]);
     }

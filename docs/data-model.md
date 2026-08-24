@@ -16,7 +16,7 @@
 | `conversations` | Conversation liée à un match |
 | `messages` | Messages d'une conversation |
 | `blocks` | Blocage unidirectionnel entre deux membres |
-| `avatars` | Catalogue administrable d'avatars et métadonnées de droits |
+| `avatars` | Futur catalogue administrable d'avatars et métadonnées de droits, non implémenté dans cette issue |
 | `roles` / `user_roles` | Attribution du rôle d'administration sans le mélanger aux profils membres |
 
 ## États et contraintes de stockage
@@ -68,4 +68,4 @@ Les résultats sont triés par score décroissant. Le bonus de fréquence ne peu
 - La messagerie accepte uniquement du texte brut, limité à 2 000 caractères. Les pièces jointes, GIF, réactions, édition et suppression de message sont hors V1.
 - Un membre ne peut lire ou envoyer un message que dans une conversation liée à son match et non affectée par un blocage.
 - Chaque compte reçoit le rôle `user`; `admin` est un rôle additionnel attribué explicitement.
-- Le rôle `admin` donne accès au dashboard et à la gestion du catalogue d’intérêts ainsi qu’aux avatars ; il ne donne pas de droit de lecture des messages privés dans le MVP. Les catégories d’intérêts restent techniques et ne sont pas gérées dans cette interface.
+- Le rôle `admin` donne accès au dashboard et à la gestion du catalogue d’intérêts ; l’administration des avatars restera à implémenter dans une issue ultérieure. Ce rôle ne donne pas de droit de lecture des messages privés dans le MVP. Les catégories d’intérêts restent techniques et ne sont pas gérées dans cette interface.

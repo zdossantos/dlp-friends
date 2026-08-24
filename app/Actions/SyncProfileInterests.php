@@ -56,6 +56,12 @@ class SyncProfileInterests
             DB::table('interest_profile')
                 ->where('profile_id', $lockedProfile->id)
                 ->where('is_selected', true)
+                ->whereIn(
+                    'interest_id',
+                    Interest::query()
+                        ->select('id')
+                        ->where('is_active', true),
+                )
                 ->when(
                     $submittedIds->isNotEmpty(),
                     fn ($query) => $query->whereNotIn('interest_id', $submittedIds->all()),

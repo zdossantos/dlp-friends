@@ -6,7 +6,10 @@ use App\Models\Interest;
 use App\Models\InterestCategory;
 use App\Models\InterestSetting;
 use App\Models\User;
+use Illuminate\Foundation\Http\Middleware\TrimStrings;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Event;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
@@ -88,6 +91,128 @@ class ManageInterestCatalogTest extends TestCase
         $this->assertDatabaseHas('interests', [
             'id' => $created->id,
             'name' => 'Intérêt renommé',
+        ]);
+    }
+
+    public function test_create_rejects_a_semantic_duplicate_surrounded_by_unicode_whitespace(): void
+    {
+        $this->withoutMiddleware(TrimStrings::class);
+        $category = InterestCategory::factory()->create(['name' => 'Général']);
+        Interest::factory()->for($category, 'category')->create([
+            'name' => 'Parades nocturnes',
+        ]);
+        $admin = User::factory()->withProfile()->admin()->create();
+
+        $this->actingAs($admin)->post(route('admin.interests.store'), [
+            'name' => "\u{00A0}Parades\u{00A0}\u{00A0}nocturnes\u{00A0}",
+        ])->assertSessionHasErrors('name');
+
+        $this->assertDatabaseCount('interests', 1);
+    }
+
+    public function test_update_rejects_a_semantic_duplicate_surrounded_by_unicode_whitespace(): void
+    {
+        $this->withoutMiddleware(TrimStrings::class);
+        $category = InterestCategory::factory()->create(['name' => 'Général']);
+        Interest::factory()->for($category, 'category')->create([
+            'name' => 'Parades nocturnes',
+        ]);
+        $renamed = Interest::factory()->for($category, 'category')->create([
+            'name' => 'Spectacles',
+        ]);
+        $admin = User::factory()->withProfile()->admin()->create();
+
+        $this->actingAs($admin)->patch(route('admin.interests.update', $renamed), [
+            'name' => "\u{00A0}Parades\u{00A0}\u{00A0}nocturnes\u{00A0}",
+        ])->assertSessionHasErrors('name');
+
+        $this->assertDatabaseHas('interests', [
+            'id' => $renamed->id,
+            'name' => 'Spectacles',
+        ]);
+    }
+
+    public function test_concurrent_unique_name_create_is_returned_as_a_validation_error(): void
+    {
+        $category = InterestCategory::factory()->create(['name' => 'Général']);
+        $admin = User::factory()->withProfile()->admin()->create();
+        $creatingEvent = 'eloquent.creating: '.Interest::class;
+        $raceTriggered = false;
+
+        Event::listen(
+            $creatingEvent,
+            function (Interest $interest) use (&$raceTriggered, $category): void {
+                if ($raceTriggered || $interest->name !== 'Course concurrente création') {
+                    return;
+                }
+
+                $raceTriggered = true;
+                DB::table('interests')->insert([
+                    'interest_category_id' => $category->id,
+                    'name' => $interest->name,
+                    'is_active' => true,
+                    'sort_order' => 99,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            },
+        );
+
+        try {
+            $response = $this->actingAs($admin)->post(route('admin.interests.store'), [
+                'name' => 'Course concurrente création',
+            ]);
+        } finally {
+            Event::forget($creatingEvent);
+        }
+
+        expect($raceTriggered)->toBeTrue();
+        $response->assertSessionHasErrors('name');
+    }
+
+    public function test_concurrent_unique_name_update_is_returned_as_a_validation_error(): void
+    {
+        $category = InterestCategory::factory()->create(['name' => 'Général']);
+        $renamed = Interest::factory()->for($category, 'category')->create([
+            'name' => 'Spectacles',
+        ]);
+        $admin = User::factory()->withProfile()->admin()->create();
+        $updatingEvent = 'eloquent.updating: '.Interest::class;
+        $raceTriggered = false;
+
+        Event::listen(
+            $updatingEvent,
+            function (Interest $interest) use (&$raceTriggered, $category): void {
+                if ($raceTriggered || $interest->name !== 'Course concurrente mise à jour') {
+                    return;
+                }
+
+                $raceTriggered = true;
+                DB::table('interests')->insert([
+                    'interest_category_id' => $category->id,
+                    'name' => $interest->name,
+                    'is_active' => true,
+                    'sort_order' => 99,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            },
+        );
+
+        try {
+            $response = $this->actingAs($admin)->patch(
+                route('admin.interests.update', $renamed),
+                ['name' => 'Course concurrente mise à jour'],
+            );
+        } finally {
+            Event::forget($updatingEvent);
+        }
+
+        expect($raceTriggered)->toBeTrue();
+        $response->assertSessionHasErrors('name');
+        $this->assertDatabaseHas('interests', [
+            'id' => $renamed->id,
+            'name' => 'Spectacles',
         ]);
     }
 

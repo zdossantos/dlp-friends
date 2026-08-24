@@ -6,8 +6,9 @@ import type { InjectionKey, Ref } from 'vue';
 import Index from './Index.vue';
 
 const dialogOpenKey = Symbol('dialog-open') as InjectionKey<Ref<boolean>>;
-const { formSubmissions } = vi.hoisted(() => ({
+const { formSubmissions, processingActions } = vi.hoisted(() => ({
     formSubmissions: vi.fn<(action: string, method: string) => void>(),
+    processingActions: new Set<string>(),
 }));
 
 vi.mock('@inertiajs/vue3', async () => {
@@ -38,7 +39,10 @@ vi.mock('@inertiajs/vue3', async () => {
                                 formSubmissions(action, method);
                             },
                         },
-                        slots.default?.({ errors, processing: false }),
+                        slots.default?.({
+                            errors,
+                            processing: processingActions.has(action),
+                        }),
                     );
             },
         }),
@@ -165,8 +169,10 @@ const expectForm = (
 };
 
 describe('admin interest catalog page', () => {
-    const mountPage = () => {
+    const mountPage = (processing: string[] = []) => {
         formSubmissions.mockClear();
+        processingActions.clear();
+        processing.forEach((action) => processingActions.add(action));
 
         return mount(Index, {
             props: {
@@ -276,6 +282,24 @@ describe('admin interest catalog page', () => {
                 '[data-test="input-error"]',
             )?.textContent,
         ).toBe('La limite est obligatoire.');
+    });
+
+    it('disables move and reactivate controls while their forms are processing', () => {
+        const wrapper = mountPage([
+            '/admin/interests/1/move?_method=PATCH',
+            '/admin/interests/1/status?_method=PATCH',
+        ]);
+
+        expect(
+            wrapper
+                .get('[aria-label="Descendre Chill"]')
+                .attributes('disabled'),
+        ).toBeDefined();
+        expect(
+            wrapper
+                .get('[aria-label="Réactiver Chill"]')
+                .attributes('disabled'),
+        ).toBeDefined();
     });
 
     it('opens archive confirmation before rendering and submitting the status form', async () => {

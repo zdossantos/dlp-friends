@@ -17,6 +17,10 @@ class SetInterestStatus
                 ->lockForUpdate()
                 ->firstOrFail();
 
+            if ($lockedInterest->is_active === $active) {
+                return;
+            }
+
             $lockedInterest->update(['is_active' => $active]);
 
             if (! $active) {
@@ -35,7 +39,6 @@ class SetInterestStatus
                 ->max_selections;
             $profileIds = DB::table('interest_profile')
                 ->where('interest_id', $lockedInterest->id)
-                ->where('is_selected', false)
                 ->orderBy('profile_id')
                 ->pluck('profile_id');
 
@@ -49,16 +52,13 @@ class SetInterestStatus
                     ->where('interest_profile.profile_id', $lockedProfile->id)
                     ->where('interest_profile.is_selected', true)
                     ->where('interests.is_active', true)
+                    ->where('interests.id', '!=', $lockedInterest->id)
                     ->count();
-
-                if ($activeSelectionCount >= $limit) {
-                    continue;
-                }
 
                 DB::table('interest_profile')
                     ->where('profile_id', $lockedProfile->id)
                     ->where('interest_id', $lockedInterest->id)
-                    ->update(['is_selected' => true]);
+                    ->update(['is_selected' => $activeSelectionCount < $limit]);
             }
         });
 

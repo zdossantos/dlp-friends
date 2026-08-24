@@ -71,4 +71,56 @@ class SetInterestStatusTest extends TestCase
             'is_selected' => false,
         ]);
     }
+
+    public function test_reactivation_rechecks_capacity_for_a_legacy_inactive_selection(): void
+    {
+        InterestSetting::current()->update(['max_selections' => 1]);
+        $legacyInactive = Interest::factory()->create(['is_active' => false]);
+        $replacement = Interest::factory()->create(['is_active' => true]);
+        $profile = User::factory()->withProfile()->create()->profile;
+        $profile->interestHistory()->attach([
+            $legacyInactive->id => ['is_selected' => true],
+            $replacement->id => ['is_selected' => true],
+        ]);
+
+        app(SetInterestStatus::class)->handle($legacyInactive, true);
+
+        $this->assertDatabaseHas('interest_profile', [
+            'profile_id' => $profile->id,
+            'interest_id' => $legacyInactive->id,
+            'is_selected' => false,
+        ]);
+        expect($profile->interests()->pluck('interests.id')->all())
+            ->toBe([$replacement->id]);
+    }
+
+    public function test_repeated_stale_reactivation_does_not_restore_a_suspended_selection(): void
+    {
+        InterestSetting::current()->update(['max_selections' => 1]);
+        $archived = Interest::factory()->create(['is_active' => true]);
+        $replacement = Interest::factory()->create(['is_active' => true]);
+        $profile = User::factory()->withProfile()->create()->profile;
+        $profile->interestHistory()->attach($archived, ['is_selected' => true]);
+
+        $action = app(SetInterestStatus::class);
+        $action->handle($archived, false);
+        $profile->interestHistory()->attach($replacement, ['is_selected' => true]);
+        $action->handle($archived, true);
+
+        $this->assertDatabaseHas('interest_profile', [
+            'profile_id' => $profile->id,
+            'interest_id' => $archived->id,
+            'is_selected' => false,
+        ]);
+
+        $profile->interests()->detach($replacement);
+        $action->handle($archived->fresh(), true);
+
+        $this->assertDatabaseHas('interest_profile', [
+            'profile_id' => $profile->id,
+            'interest_id' => $archived->id,
+            'is_selected' => false,
+        ]);
+        expect($profile->interests()->count())->toBe(0);
+    }
 }

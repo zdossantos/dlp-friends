@@ -44,6 +44,21 @@ class SyncProfileInterestsTest extends TestCase
         ]);
     }
 
+    public function test_it_preserves_an_omitted_inactive_legacy_association_marked_selected(): void
+    {
+        $profile = User::factory()->withProfile()->create()->profile;
+        $legacyInactive = Interest::factory()->create(['is_active' => false]);
+        $profile->interestHistory()->attach($legacyInactive, ['is_selected' => true]);
+
+        app(SyncProfileInterests::class)->handle($profile, []);
+
+        $this->assertDatabaseHas('interest_profile', [
+            'profile_id' => $profile->id,
+            'interest_id' => $legacyInactive->id,
+            'is_selected' => true,
+        ]);
+    }
+
     public function test_it_locks_interests_then_setting_then_profile_before_pivot_writes(): void
     {
         $profile = User::factory()->withProfile()->create()->profile;

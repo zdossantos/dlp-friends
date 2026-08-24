@@ -8,6 +8,7 @@ use App\Http\Requests\UpdateInterestRequest;
 use App\Models\Interest;
 use App\Models\InterestCategory;
 use App\Models\InterestSetting;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
@@ -43,33 +44,45 @@ class InterestController extends Controller
 
     public function store(StoreInterestRequest $request): RedirectResponse
     {
-        DB::transaction(function () use ($request): void {
-            $category = InterestCategory::query()
-                ->where('name', 'Général')
-                ->firstOrFail();
-            $lockedInterests = Interest::query()
-                ->orderBy('id')
-                ->lockForUpdate()
-                ->get(['id', 'sort_order']);
+        try {
+            DB::transaction(function () use ($request): void {
+                $category = InterestCategory::query()
+                    ->where('name', 'Général')
+                    ->firstOrFail();
+                $lockedInterests = Interest::query()
+                    ->orderBy('id')
+                    ->lockForUpdate()
+                    ->get(['id', 'sort_order']);
 
-            Interest::query()->create([
-                'interest_category_id' => $category->id,
-                'name' => $request->string('name')->toString(),
-                'is_active' => true,
-                'sort_order' => $lockedInterests->isEmpty()
-                    ? 0
-                    : ((int) $lockedInterests->max('sort_order')) + 1,
+                Interest::query()->create([
+                    'interest_category_id' => $category->id,
+                    'name' => $request->string('name')->toString(),
+                    'is_active' => true,
+                    'sort_order' => $lockedInterests->isEmpty()
+                        ? 0
+                        : ((int) $lockedInterests->max('sort_order')) + 1,
+                ]);
+            });
+        } catch (UniqueConstraintViolationException) {
+            throw ValidationException::withMessages([
+                'name' => 'Un intérêt porte déjà ce nom.',
             ]);
-        });
+        }
 
         return back();
     }
 
     public function update(UpdateInterestRequest $request, Interest $interest): RedirectResponse
     {
-        $interest->update([
-            'name' => $request->string('name')->toString(),
-        ]);
+        try {
+            $interest->update([
+                'name' => $request->string('name')->toString(),
+            ]);
+        } catch (UniqueConstraintViolationException) {
+            throw ValidationException::withMessages([
+                'name' => 'Un intérêt porte déjà ce nom.',
+            ]);
+        }
 
         return back();
     }

@@ -183,7 +183,10 @@ defineOptions({
                                     class="flex flex-wrap gap-2"
                                     aria-label="Réordonner l’intérêt"
                                 >
-                                    <Form v-bind="move.form(interest)">
+                                    <Form
+                                        v-bind="move.form(interest)"
+                                        v-slot="{ processing }"
+                                    >
                                         <input
                                             type="hidden"
                                             name="direction"
@@ -194,12 +197,17 @@ defineOptions({
                                             variant="outline"
                                             size="sm"
                                             :aria-label="`Monter ${interest.name}`"
-                                            :disabled="position === 0"
+                                            :disabled="
+                                                processing || position === 0
+                                            "
                                         >
                                             Monter
                                         </Button>
                                     </Form>
-                                    <Form v-bind="move.form(interest)">
+                                    <Form
+                                        v-bind="move.form(interest)"
+                                        v-slot="{ processing }"
+                                    >
                                         <input
                                             type="hidden"
                                             name="direction"
@@ -211,8 +219,9 @@ defineOptions({
                                             size="sm"
                                             :aria-label="`Descendre ${interest.name}`"
                                             :disabled="
+                                                processing ||
                                                 position ===
-                                                interests.length - 1
+                                                    interests.length - 1
                                             "
                                         >
                                             Descendre
@@ -307,7 +316,11 @@ defineOptions({
                                         </DialogContent>
                                     </Dialog>
                                 </template>
-                                <Form v-else v-bind="status.form(interest)">
+                                <Form
+                                    v-else
+                                    v-bind="status.form(interest)"
+                                    v-slot="{ processing }"
+                                >
                                     <input
                                         type="hidden"
                                         name="is_active"
@@ -317,6 +330,7 @@ defineOptions({
                                         type="submit"
                                         variant="secondary"
                                         :aria-label="`Réactiver ${interest.name}`"
+                                        :disabled="processing"
                                     >
                                         Réactiver
                                     </Button>

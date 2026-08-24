@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
@@ -19,6 +20,15 @@ return new class extends Migration
             $table->renameColumn('passion_id', 'interest_id');
             $table->boolean('is_selected')->default(true)->index();
         });
+
+        DB::table('interest_profile')
+            ->whereIn(
+                'interest_id',
+                DB::table('interests')
+                    ->select('id')
+                    ->where('is_active', false),
+            )
+            ->update(['is_selected' => false]);
     }
 
     public function down(): void

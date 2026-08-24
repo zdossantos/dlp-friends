@@ -338,12 +338,14 @@ class MemberProfileTest extends TestCase
     public function test_profile_edit_receives_only_effective_selected_interest_ids(): void
     {
         config()->set('inertia.testing.ensure_pages_exist', false);
-        [$active, $inactive] = Interest::factory()->count(2)->create();
-        $inactive->update(['is_active' => false]);
+        $active = Interest::factory()->create(['sort_order' => 10]);
+        $inactive = Interest::factory()->create(['is_active' => false, 'sort_order' => 0]);
+        $suspended = Interest::factory()->create(['sort_order' => 20]);
         $user = User::factory()->withProfile()->create();
         $user->profile->interestHistory()->attach([
             $active->id => ['is_selected' => true],
             $inactive->id => ['is_selected' => true],
+            $suspended->id => ['is_selected' => false],
         ]);
 
         $this->actingAs($user)
@@ -352,19 +354,42 @@ class MemberProfileTest extends TestCase
             ->assertInertia(fn (Assert $page) => $page
                 ->where('interests', [
                     ['id' => $active->id, 'name' => $active->name],
+                    ['id' => $suspended->id, 'name' => $suspended->name],
                 ])
                 ->where('selectedInterestIds', [$active->id]));
+    }
+
+    public function test_profile_save_preserves_an_omitted_inactive_legacy_association(): void
+    {
+        $legacyInactive = Interest::factory()->create(['is_active' => false]);
+        $user = User::factory()->withProfile()->create();
+        $user->profile->interestHistory()->attach($legacyInactive, ['is_selected' => true]);
+
+        $this->actingAs($user)->patch(route('member-profile.update'), [
+            'display_name' => $user->profile->display_name,
+            'bio' => 'Historique conservé.',
+            'visit_frequency' => VisitFrequency::Often->value,
+            'visibility' => ProfileVisibility::Visible->value,
+            'interest_ids' => [],
+        ])->assertRedirect(route('member-profile.show'));
+
+        $this->assertDatabaseHas('interest_profile', [
+            'profile_id' => $user->profile->id,
+            'interest_id' => $legacyInactive->id,
+            'is_selected' => true,
+        ]);
     }
 
     public function test_profile_show_receives_only_effective_active_interests(): void
     {
         config()->set('inertia.testing.ensure_pages_exist', false);
-        [$active, $inactive] = Interest::factory()->count(2)->create();
+        [$active, $inactive, $suspended] = Interest::factory()->count(3)->create();
         $inactive->update(['is_active' => false]);
         $user = User::factory()->withProfile()->create();
         $user->profile->interestHistory()->attach([
             $active->id => ['is_selected' => true],
             $inactive->id => ['is_selected' => true],
+            $suspended->id => ['is_selected' => false],
         ]);
 
         $this->actingAs($user)
