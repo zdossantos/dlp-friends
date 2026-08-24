@@ -22,7 +22,7 @@
 - Masquage : suspend les nouvelles suggestions sans supprimer le compte.
 - Suppression : après confirmation explicite, le compte devient immédiatement inaccessible et invisible. Un job asynchrone supprime les images, tokens sociaux, profil, swipes, matches, conversations et messages dans un délai maximal de 30 jours; les sessions sont révoquées immédiatement.
 - Documenter, avant mise en production, les durées de conservation et la politique de confidentialité applicable.
-- Prévoir l'export des données de profil, intérêts (y compris leur historique de sélection), matches et messages dans les réglages. Cet export fait partie du contrôle utilisateur attendu au MVP.
+- Prévoir l'export des données de profil, intérêts, matches et messages dans les réglages. Cet export fait partie du contrôle utilisateur attendu au MVP.
 - Les sauvegardes ne sont pas modifiées rétroactivement lors d'une suppression ; leur durée de rétention doit être documentée et limitée.
 
 ## Autorisation et protection applicative
