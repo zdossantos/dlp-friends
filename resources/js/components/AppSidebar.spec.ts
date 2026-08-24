@@ -31,6 +31,10 @@ vi.mock('@/routes/member-profile', () => ({
     show: () => ({ url: '/profile' }),
 }));
 
+vi.mock('@/routes/admin/interests', () => ({
+    index: () => ({ url: '/admin/interests' }),
+}));
+
 describe('AppSidebar', () => {
     const mountSidebar = () =>
         mount(AppSidebar, {
@@ -54,7 +58,7 @@ describe('AppSidebar', () => {
             },
         });
 
-    it('contains only admin navigation and a return to the member profile', () => {
+    it('contains admin navigation, including interests, and a return to the member profile', () => {
         const wrapper = mountSidebar();
         const adminLink = wrapper
             .findAll('a[href="/dashboard"]')
@@ -63,6 +67,9 @@ describe('AppSidebar', () => {
         expect(adminLink?.text()).toBe('Administration');
         expect(wrapper.get('a[href="/profile"]').text()).toBe(
             'Retour au profil',
+        );
+        expect(wrapper.get('a[href="/admin/interests"]').text()).toBe(
+            'Intérêts',
         );
         expect(wrapper.get('[data-test="nav-label"]').text()).toBe(
             'Administration',
