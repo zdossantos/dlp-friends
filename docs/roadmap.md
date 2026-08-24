@@ -2,7 +2,7 @@
 
 ## V1 — MVP
 
-Voir `mvp-v1.md` : profils, passions, swipe, match réciproque, messagerie, blocage et gestion des données.
+Voir `mvp-v1.md` : profils, intérêts, swipe, match réciproque, messagerie, blocage et gestion des données.
 
 ## V2 — Compagnons de visite
 
@@ -17,5 +17,5 @@ Objectif : permettre de trouver des amis pour une prochaine visite sans faire é
 
 - Notifications de match et de nouveau message.
 - Options de matching plus fines, sans critère romantique.
-- Outils d'administration enrichis pour le catalogue de passions et les avatars.
+- Outils d'administration enrichis pour le catalogue d’intérêts et les avatars.
 - Fonctionnalités communautaires seulement si elles répondent à un besoin validé ; elles ne font pas partie de la direction actuelle du produit.

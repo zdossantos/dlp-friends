@@ -7,9 +7,10 @@
 | `users` | Identité, authentification, date de naissance et statut de compte |
 | `social_accounts` | Lien unique entre un utilisateur et Google ou Apple |
 | `profiles` | Données publiques : nom d'affichage, bio, fréquence de visite, image et visibilité |
-| `passion_categories` | Regroupements administrables de passions |
-| `passions` | Entrées administrables du catalogue, activables/désactivables |
-| `passion_profile` | Association multiple entre profil et passion |
+| `interest_categories` | Regroupement technique interne des intérêts ; non administrable dans le MVP |
+| `interests` | Entrées administrables du catalogue, actives ou archivées |
+| `interest_profile` | Association multiple entre profil et intérêt, avec l’état de sélection courant ou suspendu |
+| `interest_settings` | Réglage unique de la limite de sélections, à 5 par défaut et configurable de 1 à 100 |
 | `swipes` | Décision d'un membre sur un autre : like ou refus |
 | `matches` | Paire unique créée après deux likes |
 | `conversations` | Conversation liée à un match |
@@ -26,6 +27,10 @@
 - `profiles.onboarding_completed_at` indique qu'un membre a terminé le profil minimal requis.
 - `profiles.visibility` vaut `visible` ou `hidden`. Seul un profil `visible` appartenant à un compte `active` est découvrable.
 - `profiles.image_type` vaut `upload`, `avatar` ou `null`. Une image téléversée est référencée par une clé de stockage, jamais par un chemin local public.
+- `interest_categories` sert uniquement à rattacher techniquement les intérêts ; aucune gestion de catégories n’est exposée dans le MVP.
+- `interests.is_active` distingue un intérêt actif d’un intérêt archivé. Un intérêt archivé n’est pas proposé dans les sélecteurs, n’est pas affiché dans les profils publics et ne participe pas au matching.
+- `interest_profile.is_selected` vaut `true` pour une sélection active et `false` pour une sélection suspendue conservée dans l’historique. Les sélections suspendues ne consomment pas la limite.
+- `interest_settings.max_selections` est initialisé à 5 et doit rester compris entre 1 et 100. Réduire cette limite ne supprime pas les sélections existantes ; elle s’applique aux nouvelles sélections et aux restaurations.
 - `swipes.decision` vaut `like` ou `pass`; son unicité est `(actor_user_id, target_user_id)`.
 - `matches` est unique pour une paire non ordonnée : stocker les deux identifiants dans un ordre canonique (`user_low_id < user_high_id`).
 - `messages` porte un identifiant séquentiel, l'auteur, le contenu texte validé et les horodatages. Aucun champ de lecture n'est requis en V1.
@@ -36,6 +41,10 @@
 - Un profil appartient à un seul utilisateur.
 - Le nom d'affichage public n'est pas unique : plusieurs membres peuvent choisir le même libellé.
 - Un profil masqué ne peut pas être proposé à de nouveaux membres.
+- Un profil ne peut sélectionner que des intérêts actifs, dans la limite configurée.
+- Archiver un intérêt suspend toutes ses sélections actives sans supprimer leur historique et libère immédiatement la capacité correspondante pour chaque profil.
+- Réactiver un intérêt restaure ses sélections historiques dans l’ordre des profils uniquement lorsque la capacité est disponible au regard de la limite courante ; les sélections sans capacité restent suspendues.
+- Un intérêt ayant déjà été utilisé, y compris par une sélection suspendue, ne peut pas être supprimé.
 - Un utilisateur ne peut pas swiper son propre profil.
 - Une paire de profils n'a qu'un swipe par sens, un match et une conversation au maximum.
 - Un blocage est prioritaire sur un match ou une conversation existante.
@@ -46,11 +55,11 @@
 Le score est volontairement simple et explicable :
 
 ```text
-score = nombre de passions communes
+score = nombre d’intérêts communs
       + 0,25 si fréquence de visite identique
 ```
 
-Les résultats sont triés par score décroissant. Le bonus de fréquence ne peut donc jamais faire passer un profil avec moins de passions communes devant un autre. À score égal, appliquer un tirage aléatoire contrôlé pour éviter de toujours favoriser les mêmes comptes. Ce score ne crée jamais un match : il détermine seulement l'ordre des profils présentés.
+Les résultats sont triés par score décroissant. Le bonus de fréquence ne peut donc jamais faire passer un profil avec moins d’intérêts communs devant un autre. À score égal, appliquer un tirage aléatoire contrôlé pour éviter de toujours favoriser les mêmes comptes. Les intérêts archivés sont exclus de ce score. Ce score ne crée jamais un match : il détermine seulement l'ordre des profils présentés.
 
 ## Décisions V1 explicites
 
@@ -59,4 +68,4 @@ Les résultats sont triés par score décroissant. Le bonus de fréquence ne peu
 - La messagerie accepte uniquement du texte brut, limité à 2 000 caractères. Les pièces jointes, GIF, réactions, édition et suppression de message sont hors V1.
 - Un membre ne peut lire ou envoyer un message que dans une conversation liée à son match et non affectée par un blocage.
 - Chaque compte reçoit le rôle `user`; `admin` est un rôle additionnel attribué explicitement.
-- Le rôle `admin` donne accès au dashboard et pourra gérer les catégories, passions et avatars; il ne donne pas de droit de lecture des messages privés dans le MVP.
+- Le rôle `admin` donne accès au dashboard et à la gestion du catalogue d’intérêts ainsi qu’aux avatars ; il ne donne pas de droit de lecture des messages privés dans le MVP. Les catégories d’intérêts restent techniques et ne sont pas gérées dans cette interface.
