@@ -69,6 +69,11 @@ class InterestController extends Controller
             ]);
         }
 
+        Inertia::flash('toast', [
+            'type' => 'success',
+            'message' => 'Intérêt ajouté.',
+        ]);
+
         return back();
     }
 
@@ -83,6 +88,11 @@ class InterestController extends Controller
                 'name' => 'Un intérêt porte déjà ce nom.',
             ]);
         }
+
+        Inertia::flash('toast', [
+            'type' => 'success',
+            'message' => 'Intérêt modifié.',
+        ]);
 
         return back();
     }
@@ -118,6 +128,11 @@ class InterestController extends Controller
                     $remainingInterest->update(['sort_order' => $sortOrder]);
                 });
         });
+
+        Inertia::flash('toast', [
+            'type' => 'success',
+            'message' => 'Intérêt supprimé.',
+        ]);
 
         return back();
     }

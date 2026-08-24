@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\UpdateInterestStatusRequest;
 use App\Models\Interest;
 use Illuminate\Http\RedirectResponse;
+use Inertia\Inertia;
 
 class InterestStatusController extends Controller
 {
@@ -18,7 +19,16 @@ class InterestStatusController extends Controller
         UpdateInterestStatusRequest $request,
         Interest $interest,
     ): RedirectResponse {
-        $this->setInterestStatus->handle($interest, $request->boolean('is_active'));
+        $isActive = $request->boolean('is_active');
+
+        $this->setInterestStatus->handle($interest, $isActive);
+
+        Inertia::flash('toast', [
+            'type' => 'success',
+            'message' => $isActive
+                ? 'Intérêt réactivé.'
+                : 'Intérêt archivé.',
+        ]);
 
         return back();
     }

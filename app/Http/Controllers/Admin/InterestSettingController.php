@@ -7,6 +7,7 @@ use App\Http\Requests\UpdateInterestSettingRequest;
 use App\Models\InterestSetting;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
+use Inertia\Inertia;
 
 class InterestSettingController extends Controller
 {
@@ -21,6 +22,11 @@ class InterestSettingController extends Controller
                 'max_selections' => $request->integer('max_selections'),
             ]);
         });
+
+        Inertia::flash('toast', [
+            'type' => 'success',
+            'message' => 'Limite mise à jour.',
+        ]);
 
         return back();
     }

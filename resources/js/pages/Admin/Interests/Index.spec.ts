@@ -34,6 +34,13 @@ vi.mock('@inertiajs/vue3', async () => {
                         'form',
                         {
                             ...attrs,
+                            'data-preserve-scroll':
+                                (
+                                    attrs.options as
+                                        { preserveScroll?: boolean } | undefined
+                                )?.preserveScroll === true
+                                    ? 'true'
+                                    : undefined,
                             onSubmit: (event: Event) => {
                                 event.preventDefault();
                                 formSubmissions(action, method);
@@ -183,8 +190,14 @@ describe('admin interest catalog page', () => {
                 stubs: {
                     Badge: { template: '<span><slot /></span>' },
                     Button: ButtonStub,
-                    Card: { template: '<section><slot /></section>' },
-                    CardContent: { template: '<div><slot /></div>' },
+                    Card: {
+                        inheritAttrs: false,
+                        template: '<section v-bind="$attrs"><slot /></section>',
+                    },
+                    CardContent: {
+                        inheritAttrs: false,
+                        template: '<div v-bind="$attrs"><slot /></div>',
+                    },
                     CardDescription: { template: '<p><slot /></p>' },
                     CardHeader: { template: '<header><slot /></header>' },
                     CardTitle: { template: '<h2><slot /></h2>' },
@@ -282,6 +295,87 @@ describe('admin interest catalog page', () => {
                 '[data-test="input-error"]',
             )?.textContent,
         ).toBe('La limite est obligatoire.');
+    });
+
+    it('keeps the create button aligned with the input when a validation error is shown', () => {
+        const wrapper = mountPage();
+        const form = wrapper.get('[data-test="create-interest-form"]');
+        const input = form.get('input[name="name"]');
+        const button = form.get('button[type="submit"]');
+        const error = form.get('[data-test="input-error"]');
+
+        expect(input.element.parentElement).toBe(button.element.parentElement);
+        expect(error.element.parentElement).not.toBe(
+            input.element.parentElement,
+        );
+    });
+
+    it('keeps the selection limit button aligned with the input when a validation error is shown', () => {
+        const wrapper = mountPage();
+        const form = formFor(wrapper, 'input[name="max_selections"]');
+        const input = form.querySelector('input[name="max_selections"]');
+        const button = form.querySelector('button[type="submit"]');
+        const error = form.querySelector('[data-test="input-error"]');
+
+        expect(input).not.toBeNull();
+        expect(button).not.toBeNull();
+        expect(error).not.toBeNull();
+        expect(input?.parentElement).toBe(button?.parentElement);
+        expect(error?.parentElement).not.toBe(input?.parentElement);
+    });
+
+    it('groups creation and selection limit controls above the catalog', () => {
+        const wrapper = mountPage();
+        const controls = wrapper.get('[data-test="catalog-controls"]');
+
+        expect(
+            controls.find('[data-test="create-interest-form"]').exists(),
+        ).toBe(true);
+        expect(controls.find('input[name="max_selections"]').exists()).toBe(
+            true,
+        );
+        expect(
+            controls
+                .find('[aria-labelledby="interest-catalog-title"]')
+                .exists(),
+        ).toBe(false);
+    });
+
+    it('uses the editable interest name as the compact accessible label', () => {
+        const wrapper = mountPage();
+
+        expect(wrapper.text()).not.toContain('Nom de l’intérêt');
+        expect(
+            wrapper
+                .get('input[aria-label="Nom de l’intérêt Chill"]')
+                .attributes('value'),
+        ).toBe('Chill');
+        expect(wrapper.findAll('h3')).toHaveLength(0);
+    });
+
+    it('removes inherited vertical card padding from catalog items', () => {
+        const wrapper = mountPage();
+        const catalog = wrapper.get(
+            '[aria-labelledby="interest-catalog-title"]',
+        );
+        const card = catalog.get(':scope > section');
+        const content = card.get(':scope > div');
+
+        expect(card.classes()).toContain('py-0');
+        expect(content.classes()).toContain('p-3');
+    });
+
+    it('preserves the scroll position when moving an interest', () => {
+        const wrapper = mountPage();
+
+        expect(
+            formFor(wrapper, 'input[name="direction"][value="up"]').dataset
+                .preserveScroll,
+        ).toBe('true');
+        expect(
+            formFor(wrapper, 'input[name="direction"][value="down"]').dataset
+                .preserveScroll,
+        ).toBe('true');
     });
 
     it('disables move and reactivate controls while their forms are processing', () => {

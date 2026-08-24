@@ -79,7 +79,11 @@ class ManageInterestCatalogTest extends TestCase
 
         $this->actingAs($admin)->patch(route('admin.interests.update', $created), [
             'name' => '  Intérêt   renommé ',
-        ])->assertRedirect();
+        ])->assertRedirect()
+            ->assertInertiaFlash('toast', [
+                'type' => 'success',
+                'message' => 'Intérêt modifié.',
+            ]);
         $this->assertDatabaseHas('interests', [
             'id' => $created->id,
             'name' => 'Intérêt renommé',
@@ -231,6 +235,20 @@ class ManageInterestCatalogTest extends TestCase
         ]);
     }
 
+    public function test_creating_an_interest_flashes_a_success_toast(): void
+    {
+        InterestCategory::factory()->create(['name' => 'Général']);
+        $admin = User::factory()->withProfile()->admin()->create();
+
+        $this->actingAs($admin)->post(route('admin.interests.store'), [
+            'name' => 'Parades',
+        ])->assertRedirect()
+            ->assertInertiaFlash('toast', [
+                'type' => 'success',
+                'message' => 'Intérêt ajouté.',
+            ]);
+    }
+
     public function test_admin_can_archive_and_reactivate_an_interest_through_the_status_endpoint(): void
     {
         $interest = Interest::factory()->create(['is_active' => true]);
@@ -240,7 +258,11 @@ class ManageInterestCatalogTest extends TestCase
 
         $this->actingAs($admin)->patch(route('admin.interests.status', $interest), [
             'is_active' => false,
-        ])->assertRedirect();
+        ])->assertRedirect()
+            ->assertInertiaFlash('toast', [
+                'type' => 'success',
+                'message' => 'Intérêt archivé.',
+            ]);
 
         expect($interest->fresh()->is_active)->toBeFalse();
         $this->assertDatabaseHas('interest_profile', [
@@ -251,7 +273,11 @@ class ManageInterestCatalogTest extends TestCase
 
         $this->actingAs($admin)->patch(route('admin.interests.status', $interest), [
             'is_active' => true,
-        ])->assertRedirect();
+        ])->assertRedirect()
+            ->assertInertiaFlash('toast', [
+                'type' => 'success',
+                'message' => 'Intérêt réactivé.',
+            ]);
         expect($interest->fresh()->is_active)->toBeTrue();
 
         $this->actingAs($admin)->patch(route('admin.interests.status', $interest), [
@@ -319,7 +345,11 @@ class ManageInterestCatalogTest extends TestCase
 
         $this->actingAs($admin)
             ->delete(route('admin.interests.destroy', $deleted))
-            ->assertRedirect();
+            ->assertRedirect()
+            ->assertInertiaFlash('toast', [
+                'type' => 'success',
+                'message' => 'Intérêt supprimé.',
+            ]);
 
         $this->assertDatabaseMissing('interests', ['id' => $deleted->id]);
         expect(Interest::query()->orderBy('sort_order')->pluck('id')->all())
@@ -337,7 +367,11 @@ class ManageInterestCatalogTest extends TestCase
 
         $this->actingAs($admin)->patch(route('admin.interest-setting.update'), [
             'max_selections' => 1,
-        ])->assertRedirect();
+        ])->assertRedirect()
+            ->assertInertiaFlash('toast', [
+                'type' => 'success',
+                'message' => 'Limite mise à jour.',
+            ]);
 
         $this->assertDatabaseHas('interest_settings', [
             'id' => 1,
