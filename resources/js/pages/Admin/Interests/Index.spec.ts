@@ -154,6 +154,13 @@ const interests = [
         sort_order: 1,
         profiles_count: 1,
     },
+    {
+        id: 3,
+        name: 'Parades',
+        is_active: true,
+        sort_order: 2,
+        profiles_count: 0,
+    },
 ];
 
 const formFor = (wrapper: VueWrapper, selector: string): HTMLFormElement => {
@@ -231,7 +238,7 @@ describe('admin interest catalog page', () => {
         ).toBeDefined();
         expect(
             wrapper
-                .get('[aria-label="Descendre Spectacles"]')
+                .get('[aria-label="Descendre Parades"]')
                 .attributes('disabled'),
         ).toBeDefined();
         expect(
@@ -242,6 +249,29 @@ describe('admin interest catalog page', () => {
         expect(
             wrapper
                 .get('[aria-label="Monter Spectacles"]')
+                .attributes('disabled'),
+        ).toBeUndefined();
+    });
+
+    it('disables deletion for every interest present in profile history', () => {
+        const wrapper = mountPage();
+
+        for (const interestName of ['Chill', 'Spectacles']) {
+            const button = wrapper.get(
+                `[aria-label="Supprimer ${interestName}"]`,
+            );
+            const descriptionId = button.attributes('aria-describedby');
+
+            expect(button.attributes('disabled')).toBeDefined();
+            expect(descriptionId).toBeTruthy();
+            expect(wrapper.get(`#${descriptionId}`).text()).toContain(
+                'ne peut pas être supprimé',
+            );
+        }
+
+        expect(
+            wrapper
+                .get('[aria-label="Supprimer Parades"]')
                 .attributes('disabled'),
         ).toBeUndefined();
     });
@@ -435,22 +465,20 @@ describe('admin interest catalog page', () => {
         );
         expect(formSubmissions).not.toHaveBeenCalled();
 
-        await wrapper
-            .get('[aria-label="Supprimer Spectacles"]')
-            .trigger('click');
+        await wrapper.get('[aria-label="Supprimer Parades"]').trigger('click');
 
-        expect(wrapper.text()).toContain('Supprimer l’intérêt Spectacles');
+        expect(wrapper.text()).toContain('Supprimer l’intérêt Parades');
         const deleteForm = wrapper.get('[data-test="dialog-content"] form');
         expectForm(
             deleteForm.element as HTMLFormElement,
-            '/admin/interests/2?_method=DELETE',
+            '/admin/interests/3?_method=DELETE',
         );
 
         await deleteForm.trigger('submit');
 
         expect(formSubmissions).toHaveBeenCalledTimes(1);
         expect(formSubmissions).toHaveBeenCalledWith(
-            '/admin/interests/2?_method=DELETE',
+            '/admin/interests/3?_method=DELETE',
             'post',
         );
     });

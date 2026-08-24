@@ -271,10 +271,20 @@ defineOptions({
                     <div
                         class="flex flex-col justify-between gap-2 border-t pt-2 sm:flex-row sm:items-center"
                     >
-                        <p class="text-sm text-muted-foreground">
-                            {{ profileCountLabel(interest.profiles_count) }}
-                            dans l’historique
-                        </p>
+                        <div class="text-sm text-muted-foreground">
+                            <p>
+                                {{ profileCountLabel(interest.profiles_count) }}
+                                dans l’historique
+                            </p>
+                            <p
+                                v-if="interest.profiles_count > 0"
+                                :id="`delete-interest-help-${interest.id}`"
+                                class="text-xs"
+                            >
+                                Cet intérêt apparaît dans l’historique et ne
+                                peut pas être supprimé.
+                            </p>
+                        </div>
                         <div class="flex flex-wrap gap-2">
                             <template v-if="interest.is_active">
                                 <Dialog>
@@ -356,6 +366,12 @@ defineOptions({
                                     <Button
                                         variant="destructive"
                                         :aria-label="`Supprimer ${interest.name}`"
+                                        :aria-describedby="
+                                            interest.profiles_count > 0
+                                                ? `delete-interest-help-${interest.id}`
+                                                : undefined
+                                        "
+                                        :disabled="interest.profiles_count > 0"
                                     >
                                         Supprimer
                                     </Button>
@@ -372,9 +388,9 @@ defineOptions({
                                                 {{ interest.name }}
                                             </DialogTitle>
                                             <DialogDescription>
-                                                Cette action est définitive. Un
-                                                intérêt déjà utilisé doit être
-                                                archivé.
+                                                Cette action est définitive.
+                                                Seuls les intérêts jamais
+                                                utilisés peuvent être supprimés.
                                             </DialogDescription>
                                         </DialogHeader>
                                         <InputError
