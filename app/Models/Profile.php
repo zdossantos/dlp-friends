@@ -46,7 +46,8 @@ class Profile extends Model
     {
         return $this->belongsToMany(Interest::class)
             ->withPivot('is_selected')
-            ->wherePivot('is_selected', true);
+            ->wherePivot('is_selected', true)
+            ->where('interests.is_active', true);
     }
 
     /** @return BelongsToMany<Interest, $this> */
