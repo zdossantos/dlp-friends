@@ -20,7 +20,20 @@ Utiliser selon le changement `feature/*`, `fix/*`, `chore/*`, `docs/*` ou
 
 ## Vérifier le changement
 
-Exécuter les contrôles concernés avant d'ouvrir une pull request :
+La suite backend s'exécute sur une instance MySQL 8.4 dédiée et éphémère. La
+préparer avant les contrôles PHP :
+
+```sh
+docker compose --profile test up -d --wait mysql-test
+php tests/Support/verify-test-database.php
+```
+
+Le service écoute sur `127.0.0.1:3307` et utilise la configuration versionnée
+dans `.env.testing`. Il ne partage ni données ni volume avec la base de
+développement. Il n'existe aucun repli vers SQLite : une base indisponible ou un
+pilote différent fait échouer immédiatement la commande.
+
+Exécuter ensuite les contrôles concernés avant d'ouvrir une pull request :
 
 ```sh
 composer lint:check
@@ -34,6 +47,11 @@ bun run test
 bun run build
 docker build --target runtime --tag dlp-friends:ci .
 ```
+
+`php artisan test`, `composer test` et `composer ci:check` utilisent tous cette
+même base MySQL. PHPUnit traite également tout nouvel avertissement comme un
+échec. Une fois les contrôles terminés, supprimer le service et ses données
+éphémères avec `docker compose --profile test rm -sf mysql-test`.
 
 ## Ouvrir et fusionner la pull request
 

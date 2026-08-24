@@ -58,6 +58,10 @@ démarrage des conteneurs.
 ## Commandes utiles
 
 ```sh
+# Base MySQL 8.4 isolée pour les tests backend
+docker compose --profile test up -d --wait mysql-test
+php artisan test
+
 # Contrôles PHP et frontend
 composer ci:check
 bun run build
@@ -67,6 +71,17 @@ docker compose ps
 docker compose logs -f web worker reverb
 docker compose exec web php artisan migrate --force
 docker compose down
+```
+
+La suite backend utilise exclusivement la base `dlp_friends_test`, exposée en
+local sur `127.0.0.1:3307` par le service `mysql-test`. Sa configuration est
+versionnée dans `.env.testing` et reste séparée de la base de développement. Les
+commandes échouent explicitement si MySQL est indisponible ou si un autre pilote
+est actif. Pour supprimer cette base éphémère après les tests :
+
+```sh
+docker compose --profile test stop mysql-test
+docker compose --profile test rm -f mysql-test
 ```
 
 Les contrôles individuels sont décrits dans
