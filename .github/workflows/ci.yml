@@ -51,7 +51,7 @@ jobs:
         run: composer analyse
 
   pest-tests:
-    name: Pest tests
+    name: Backend tests
     if: github.event.pull_request.draft == false
     runs-on: ubuntu-latest
     services:
