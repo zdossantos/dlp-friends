@@ -8,6 +8,8 @@ const props = defineProps<{
     limit: number;
 }>();
 
+const emit = defineEmits<{ 'update:selectedIds': [ids: number[]] }>();
+
 function selectedFromProps(): Set<number> {
     const availableIds = new Set(
         props.interests.map((interest) => interest.id),
@@ -33,6 +35,7 @@ function toggle(id: number): void {
     }
 
     selected.value = next;
+    emit('update:selectedIds', [...next]);
 }
 </script>
 

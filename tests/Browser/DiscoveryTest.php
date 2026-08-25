@@ -5,15 +5,21 @@ use App\Enums\SwipeDecision;
 use App\Models\MemberMatch;
 use App\Models\Swipe;
 use App\Models\User;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 
 function discoveryMember(string $displayName): User
 {
     $user = User::factory()->withProfile()->create();
     $user->profile?->update(['display_name' => $displayName]);
+    Storage::disk('local')->put($user->profile->avatar->image_path, base64_decode(
+        'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScL8WQAAAABJRU5ErkJggg==',
+    ));
 
     return $user;
 }
+
+beforeEach(fn () => Storage::fake('local'));
 
 test('discovery renders its deferred empty state and limits the stack to five profiles', function () {
     $actor = discoveryMember('Alice');
@@ -94,6 +100,16 @@ test('the top discovery card accepts keyboard and accessible decisions', functio
     $page = visit('/discover')
         ->assertPresent('[aria-label="Passer ce profil"]')
         ->assertPresent('[aria-label="Aimer ce profil"]')
+        ->assertPresent('[data-test="discovery-avatar-hero"]')
+        ->assertPresent('[data-test="discovery-information-sheet"]')
+        ->assertScript(
+            "document.querySelector('[aria-label=\"Passer ce profil\"]').classList.contains('sr-only')",
+            false,
+        )
+        ->assertScript(
+            "document.querySelector('[data-test=discovery-avatar-hero]').getBoundingClientRect().height >= 300",
+            true,
+        )
         ->keys('[data-test="discovery-card-stack-item"] [tabindex="0"]', 'ArrowLeft')
         ->assertSee('Vous avez exploré tous les profils disponibles');
 

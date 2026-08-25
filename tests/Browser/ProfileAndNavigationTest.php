@@ -29,16 +29,63 @@ test('profile onboarding requires an active avatar and renders its two-color gra
     $this->actingAs($user);
 
     visit('/profile/create')
-        ->assertSee('Choisissez votre avatar')
+        ->assertSee('Votre avatar')
+        ->assertSee('1 sur 4')
         ->assertSee('Aurore')
         ->assertDontSee('Archivé')
-        ->assertPresent("input[name='avatar_id'][value='{$active->id}'][required]")
+        ->assertPresent("input[name='avatar_id'][value='{$active->id}']")
         ->assertPresent('img[alt="Avatar Aurore"]')
         ->assertScript(
             "document.querySelector('[data-test=avatar-option-{$active->id}]').style.backgroundImage.includes('rgb(124, 58, 237)')",
             true,
         )
+        ->assertPresent('[data-test="avatar-carousel"][tabindex="0"]')
         ->assertNoJavaScriptErrors();
+});
+
+test('profile onboarding is a keyboard accessible four-step journey that preserves values', function () {
+    Storage::fake('local');
+    $first = Avatar::factory()->create(['name' => 'Aurore', 'sort_order' => 0]);
+    $second = Avatar::factory()->create(['name' => 'Nova', 'sort_order' => 1]);
+    foreach ([$first, $second] as $avatar) {
+        Storage::disk('local')->put($avatar->image_path, base64_decode(
+            'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScL8WQAAAABJRU5ErkJggg==',
+        ));
+    }
+    Interest::factory()->create(['name' => 'Attractions']);
+    $user = User::factory()->create();
+    $this->actingAs($user);
+
+    $page = visit('/profile/create')
+        ->on()->mobile()
+        ->assertSee('Votre avatar')
+        ->keys('[data-test="avatar-carousel"]', 'ArrowRight')
+        ->assertScript("document.querySelector('input[name=avatar_id][value=\"{$second->id}\"]').checked", true)
+        ->assertSee('Nova')
+        ->click('Continuer')
+        ->assertSee('Votre identité')
+        ->assertSee('2 sur 4')
+        ->fill('display_name', 'Camille')
+        ->fill('bio', 'Toujours partante pour une journée entre fans.')
+        ->click('Continuer')
+        ->assertSee('Vos affinités')
+        ->click('Attractions')
+        ->select('visit_frequency', 'often')
+        ->click('Continuer')
+        ->assertSee('Votre aperçu')
+        ->assertSee('4 sur 4')
+        ->assertSee('Camille')
+        ->assertSee('Toujours partante pour une journée entre fans.')
+        ->click('Retour')
+        ->assertSee('Vos affinités')
+        ->click('Retour')
+        ->assertSee('Votre identité')
+        ->assertValue('display_name', 'Camille')
+        ->assertValue('bio', 'Toujours partante pour une journée entre fans.')
+        ->assertScript('document.documentElement.scrollWidth <= document.documentElement.clientWidth', true)
+        ->assertNoJavaScriptErrors();
+
+    expect($first->id)->not->toBe($second->id);
 });
 
 test('profile onboarding exposes the complete accessible contract', function () {
@@ -50,16 +97,15 @@ test('profile onboarding exposes the complete accessible contract', function () 
     visit('/profile/create')
         ->on()->mobile()
         ->assertSee('Créons votre profil')
+        ->assertSee('Votre avatar')
         ->assertPresent('input[name="display_name"]')
         ->assertPresent('textarea[name="bio"]')
         ->assertAttribute('input[name="display_name"]', 'maxlength', '80')
         ->assertAttribute('textarea[name="bio"]', 'maxlength', '500')
         ->assertPresent('select[name="visit_frequency"]')
         ->assertPresent('select[name="visibility"]')
-        ->assertSee('Visible dans les suggestions')
-        ->assertSee('Créer mon profil')
-        ->assertSee('Attractions')
-        ->assertSee('Spectacles')
+        ->assertSee('Continuer')
+        ->assertPresent('[aria-label="Progression du profil"]')
         ->assertScript(
             "document.querySelector('main').getBoundingClientRect().top < 100",
             true,
@@ -72,13 +118,22 @@ test('profile onboarding exposes the complete accessible contract', function () 
 });
 
 test('interest selection disables only unselected choices at the limit', function () {
+    Storage::fake('local');
     $user = User::factory()->create();
+    $avatar = Avatar::factory()->create();
+    Storage::disk('local')->put($avatar->image_path, base64_decode(
+        'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScL8WQAAAABJRU5ErkJggg==',
+    ));
     InterestSetting::current()->update(['max_selections' => 1]);
     Interest::factory()->create(['name' => 'Attractions']);
     Interest::factory()->create(['name' => 'Spectacles']);
     $this->actingAs($user);
 
-    $page = visit('/profile/create')->click('Attractions');
+    $page = visit('/profile/create')
+        ->click('Continuer')
+        ->fill('display_name', 'Aurore')
+        ->click('Continuer')
+        ->click('Attractions');
 
     $page->assertScript(
         "document.querySelector('[aria-label=\"Retirer Attractions\"]').disabled",
@@ -95,19 +150,25 @@ test('interest selection disables only unselected choices at the limit', functio
 });
 
 test('profile validation displays a changed interest limit', function () {
+    Storage::fake('local');
     $user = User::factory()->create();
-    Avatar::factory()->create(['name' => 'Avatar Aurore']);
+    $avatar = Avatar::factory()->create(['name' => 'Avatar Aurore']);
+    Storage::disk('local')->put($avatar->image_path, base64_decode(
+        'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScL8WQAAAABJRU5ErkJggg==',
+    ));
     InterestSetting::current()->update(['max_selections' => 2]);
     Interest::factory()->create(['name' => 'Attractions']);
     Interest::factory()->create(['name' => 'Spectacles']);
     $this->actingAs($user);
 
     $page = visit('/profile/create')
-        ->click('Avatar Aurore')
+        ->click('Continuer')
         ->fill('display_name', 'Aurore')
+        ->click('Continuer')
         ->select('visit_frequency', 'sometimes')
         ->click('Attractions')
-        ->click('Spectacles');
+        ->click('Spectacles')
+        ->click('Continuer');
 
     InterestSetting::current()->update(['max_selections' => 1]);
 
@@ -116,23 +177,32 @@ test('profile validation displays a changed interest limit', function () {
 });
 
 test('a refreshed catalog drops an archived selected interest', function () {
+    Storage::fake('local');
     $interest = Interest::factory()->create(['name' => 'Attractions']);
     $user = User::factory()->withProfile()->create();
     $user->profile?->interests()->attach($interest, ['is_selected' => true]);
+    Storage::disk('local')->put($user->profile->avatar->image_path, base64_decode(
+        'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScL8WQAAAABJRU5ErkJggg==',
+    ));
     $this->actingAs($user);
 
     visit('/profile/edit')
+        ->click('Continuer')
+        ->click('Continuer')
         ->assertSee('Attractions')
         ->assertPresent("input[name='interest_ids[]'][value='{$interest->id}']");
 
     $interest->update(['is_active' => false]);
 
     visit('/profile/edit')
+        ->click('Continuer')
+        ->click('Continuer')
         ->assertDontSee('Attractions')
         ->assertNotPresent("input[name='interest_ids[]'][value='{$interest->id}']");
 });
 
 test('a completed member sees their public profile and member actions', function () {
+    Storage::fake('local');
     $interest = Interest::factory()->create(['name' => 'Chill']);
     $user = User::factory()->withProfile()->create([
         'birth_date' => today()->subYears(26),
@@ -143,9 +213,13 @@ test('a completed member sees their public profile and member actions', function
         'visit_frequency' => 'often',
     ]);
     $user->profile?->interests()->attach($interest, ['is_selected' => true]);
+    Storage::disk('local')->put($user->profile->avatar->image_path, base64_decode(
+        'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScL8WQAAAABJRU5ErkJggg==',
+    ));
     $this->actingAs($user);
 
     visit('/profile')
+        ->on()->mobile()
         ->assertSee('Aurore')
         ->assertSee('26 ans')
         ->assertSee('Fan des attractions')
@@ -153,6 +227,16 @@ test('a completed member sees their public profile and member actions', function
         ->assertSee('Visible')
         ->assertSee('Chill')
         ->assertSeeLink('Modifier mon profil')
+        ->assertPresent('[data-test="profile-avatar-hero"]')
+        ->assertPresent('[data-test="profile-information-sheet"]')
+        ->assertScript(
+            "document.querySelector('[data-test=profile-avatar-hero]').getBoundingClientRect().height >= 300",
+            true,
+        )
+        ->assertScript(
+            'document.documentElement.scrollWidth <= document.documentElement.clientWidth',
+            true,
+        )
         ->assertPresent('[aria-label="Réglages"]')
         ->assertNotPresent('[aria-label="Administration"]')
         ->assertPresent('[aria-label="Se déconnecter"]');

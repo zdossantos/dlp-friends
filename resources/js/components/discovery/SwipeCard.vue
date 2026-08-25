@@ -1,14 +1,9 @@
 <script setup lang="ts">
+import { Sparkles, Users, X } from '@lucide/vue';
 import { computed, onBeforeUnmount, ref, watch } from 'vue';
-import AvatarPortrait from '@/components/profile/AvatarPortrait.vue';
 import { Badge } from '@/components/ui/badge';
-import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardHeader,
-    CardTitle,
-} from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
 import type { DiscoveryProfile, SwipeDecision, VisitFrequency } from '@/types';
 
 const SWIPE_THRESHOLD_PX = 72;
@@ -60,6 +55,10 @@ const visitFrequencyLabel = computed(() => {
         ? visitFrequencyLabels[props.profile.visitFrequency]
         : 'Fréquence non renseignée';
 });
+
+const avatarGradient = computed(() => ({
+    backgroundImage: `linear-gradient(145deg, ${props.profile.avatar.primary_color}, ${props.profile.avatar.secondary_color})`,
+}));
 
 function decide(decision: SwipeDecision) {
     if (props.locked || props.preview || exitDirection.value !== 0) {
@@ -196,7 +195,7 @@ watch(
 
 <template>
     <Card
-        class="w-full max-w-md touch-pan-y gap-0 overflow-hidden rounded-[1.75rem] p-0 transition-[transform,opacity] ease-[cubic-bezier(0.22,1,0.36,1)] will-change-transform outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 motion-reduce:duration-0"
+        class="w-full max-w-md touch-pan-y gap-0 overflow-hidden rounded-[2rem] p-0 shadow-xl shadow-primary/10 transition-[transform,opacity] ease-[cubic-bezier(0.22,1,0.36,1)] will-change-transform outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 motion-reduce:duration-0"
         :style="cardStyle"
         :tabindex="preview ? -1 : 0"
         :aria-label="`Profil de découverte de ${profile.displayName}`"
@@ -209,75 +208,108 @@ watch(
         @pointercancel="resetCard"
         @lostpointercapture="forgetPointerStart"
     >
-        <CardHeader
-            class="gap-4 bg-[radial-gradient(circle_at_top_left,var(--color-secondary),transparent_50%),radial-gradient(circle_at_bottom_right,var(--color-accent),transparent_48%)] px-6 py-8"
+        <div
+            data-test="discovery-avatar-hero"
+            class="relative flex min-h-[22rem] items-end justify-center overflow-hidden px-8 pt-6 sm:min-h-[27rem]"
+            :style="avatarGradient"
         >
-            <div class="flex flex-col items-center gap-4 text-center">
-                <AvatarPortrait
-                    :avatar="profile.avatar"
-                    class="size-24 border-4 border-card shadow-lg"
-                />
+            <div
+                class="absolute inset-0 bg-[radial-gradient(circle_at_70%_18%,rgba(255,255,255,.5),transparent_34%),radial-gradient(circle_at_12%_72%,rgba(255,255,255,.2),transparent_30%)]"
+            />
+            <div
+                class="absolute right-[8%] bottom-[14%] size-36 rounded-full bg-white/20 blur-3xl"
+                aria-hidden="true"
+            />
+            <img
+                :src="profile.avatar.image_url"
+                :alt="`Avatar ${profile.avatar.name}`"
+                class="relative z-10 max-h-[21rem] w-full object-contain drop-shadow-2xl sm:max-h-[26rem]"
+            />
+        </div>
 
-                <div class="min-w-0 flex-1">
-                    <CardTitle class="text-3xl leading-tight tracking-tight">
+        <div
+            data-test="discovery-information-sheet"
+            class="relative z-20 -mt-7 space-y-5 rounded-t-[2rem] bg-card px-6 pt-6 pb-5"
+        >
+            <div>
+                <div class="flex flex-wrap items-center gap-2">
+                    <h2 class="text-4xl font-semibold tracking-tight">
                         {{ profile.displayName }}
-                    </CardTitle>
-                    <CardDescription class="mt-1 text-base">
+                    </h2>
+                    <Badge class="rounded-full px-3 py-1" variant="secondary">
                         {{ profile.age }} ans
-                    </CardDescription>
+                    </Badge>
                 </div>
-            </div>
-        </CardHeader>
-
-        <CardContent class="space-y-5 px-6 py-6">
-            <p class="text-sm leading-6 text-muted-foreground">
-                {{ profile.bio ?? 'Bio non renseignée.' }}
-            </p>
-
-            <div class="grid gap-3 rounded-lg border bg-muted/30 p-4 text-sm">
-                <p class="font-medium">
-                    {{ profile.commonInterestCount }} intérêts communs
-                </p>
-                <p class="text-muted-foreground">
-                    Fréquence de visite : {{ visitFrequencyLabel }}
-                </p>
-                <p v-if="profile.frequencyBonus" class="text-muted-foreground">
-                    Même fréquence de visite
+                <p class="mt-3 text-sm leading-6 text-muted-foreground">
+                    {{ profile.bio ?? 'Bio non renseignée.' }}
                 </p>
             </div>
 
-            <div class="flex flex-wrap gap-2" aria-label="Intérêts communs">
+            <div class="flex flex-wrap gap-2">
+                <Badge
+                    class="gap-2 rounded-full border-primary/20 bg-primary/10 px-3 py-2 text-primary"
+                    variant="outline"
+                >
+                    <Users class="size-4" aria-hidden="true" />
+                    {{ profile.commonInterestCount }} intérêts en commun
+                </Badge>
                 <Badge
                     v-for="interest in profile.commonInterests"
                     :key="interest"
                     variant="secondary"
+                    class="rounded-full px-3 py-1.5"
                 >
                     {{ interest }}
                 </Badge>
+            </div>
+
+            <div
+                class="flex items-center gap-3 border-t pt-4 text-sm text-muted-foreground"
+            >
+                <Sparkles class="size-5 text-primary" aria-hidden="true" />
+                <p>
+                    <span class="font-medium text-foreground">{{
+                        visitFrequencyLabel
+                    }}</span>
+                    <span v-if="profile.frequencyBonus">
+                        · Même fréquence de visite</span
+                    >
+                </p>
             </div>
 
             <p id="swipe-instructions" class="sr-only">
                 Balayez vers la gauche pour passer ce profil ou vers la droite
                 pour l’aimer. Au clavier, utilisez les flèches gauche et droite.
             </p>
-            <button
-                class="sr-only"
-                type="button"
-                :disabled="locked || preview"
-                aria-label="Passer ce profil"
-                @click="decide('pass')"
+            <div
+                class="grid grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] gap-3"
+                @pointerdown.stop
             >
-                Passer ce profil
-            </button>
-            <button
-                class="sr-only"
-                type="button"
-                :disabled="locked || preview"
-                aria-label="Aimer ce profil"
-                @click="decide('like')"
-            >
-                Aimer ce profil
-            </button>
-        </CardContent>
+                <Button
+                    type="button"
+                    variant="outline"
+                    class="min-h-14 rounded-full"
+                    :disabled="locked || preview"
+                    aria-label="Passer ce profil"
+                    @click="decide('pass')"
+                >
+                    <X class="size-5" aria-hidden="true" />
+                    Passer
+                </Button>
+                <Button
+                    type="button"
+                    class="min-h-14 rounded-full bg-gradient-to-r from-pink-500 to-primary"
+                    :disabled="locked || preview"
+                    aria-label="Aimer ce profil"
+                    @click="decide('like')"
+                >
+                    <Sparkles class="size-5" aria-hidden="true" />
+                    Ça m’intéresse
+                </Button>
+            </div>
+            <p class="text-center text-xs text-muted-foreground">
+                Balayez ou utilisez les boutons
+            </p>
+        </div>
     </Card>
 </template>
