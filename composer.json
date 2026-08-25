@@ -67,7 +67,6 @@
             "bun run lint:check",
             "bun run format:check",
             "bun run types:check",
-            "bun run test",
             "@test"
         ],
         "analyse": [
@@ -87,6 +86,8 @@
             "@php artisan config:clear --ansi",
             "@lint:check",
             "@types:check",
+            "@php artisan wayfinder:generate --with-form",
+            "bun run build",
             "@test:database",
             "@php artisan test --display-warnings"
         ],

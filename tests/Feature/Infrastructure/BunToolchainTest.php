@@ -5,7 +5,8 @@ it('uses Bun as its only JavaScript package manager', function () {
     $composer = file_get_contents(base_path('composer.json'));
 
     expect($package)->toHaveKey('packageManager', 'bun@1.3.14')
-        ->and($package['scripts'])->toHaveKey('test', 'bun run test:unit')
+        ->and($package['scripts'])->not->toHaveKey('test')
+        ->and($package['scripts'])->not->toHaveKey('test:unit')
         ->and(base_path('bun.lock'))->toBeFile()
         ->and(base_path('package-lock.json'))->not->toBeFile()
         ->and(base_path('.npmrc'))->not->toBeFile()
