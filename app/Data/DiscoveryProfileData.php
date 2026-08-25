@@ -6,11 +6,13 @@ final readonly class DiscoveryProfileData
 {
     /**
      * @param  list<string>  $commonInterests
+     * @param  array{id: int, name: string, image_url: string, primary_color: string, secondary_color: string}  $avatar
      */
     public function __construct(
         public int $userId,
         public int $profileId,
         public string $displayName,
+        public array $avatar,
         public int $age,
         public ?string $bio,
         public ?string $visitFrequency,
@@ -27,6 +29,7 @@ final readonly class DiscoveryProfileData
             'userId' => $this->userId,
             'profileId' => $this->profileId,
             'displayName' => $this->displayName,
+            'avatar' => $this->avatar,
             'age' => $this->age,
             'bio' => $this->bio,
             'visitFrequency' => $this->visitFrequency,

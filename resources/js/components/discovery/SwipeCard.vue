@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, ref, watch } from 'vue';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import AvatarPortrait from '@/components/profile/AvatarPortrait.vue';
 import { Badge } from '@/components/ui/badge';
 import {
     Card,
@@ -53,16 +53,6 @@ const cardStyle = computed(() => {
         transform,
         transitionDuration: isDragging.value ? '0ms' : '280ms',
     };
-});
-
-const initials = computed(() => {
-    return props.profile.displayName
-        .split(/\s+/)
-        .filter(Boolean)
-        .slice(0, 2)
-        .map((word) => word.charAt(0))
-        .join('')
-        .toLocaleUpperCase('fr-FR');
 });
 
 const visitFrequencyLabel = computed(() => {
@@ -223,15 +213,10 @@ watch(
             class="gap-4 bg-[radial-gradient(circle_at_top_left,var(--color-secondary),transparent_50%),radial-gradient(circle_at_bottom_right,var(--color-accent),transparent_48%)] px-6 py-8"
         >
             <div class="flex flex-col items-center gap-4 text-center">
-                <Avatar
-                    class="size-24 rounded-3xl border-4 border-card shadow-lg"
-                >
-                    <AvatarFallback
-                        class="rounded-3xl bg-card/70 text-2xl font-semibold text-primary"
-                    >
-                        {{ initials }}
-                    </AvatarFallback>
-                </Avatar>
+                <AvatarPortrait
+                    :avatar="profile.avatar"
+                    class="size-24 border-4 border-card shadow-lg"
+                />
 
                 <div class="min-w-0 flex-1">
                     <CardTitle class="text-3xl leading-tight tracking-tight">

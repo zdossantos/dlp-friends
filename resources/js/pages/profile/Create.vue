@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Head } from '@inertiajs/vue3';
+import { Head, Link } from '@inertiajs/vue3';
 import ProfileForm from '@/components/profile/ProfileForm.vue';
 import {
     Card,
@@ -8,13 +8,16 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
+import { index as avatarIndex } from '@/routes/admin/avatars';
 import { store } from '@/routes/member-profile';
-import type { InterestOption, Profile } from '@/types';
+import type { AvatarOption, InterestOption, Profile } from '@/types';
 
 defineProps<{
     profile: Profile | null;
+    canManageAvatars: boolean;
     visitFrequencies: Array<{ value: string; label: string }>;
     visibilities: Array<{ value: string; label: string }>;
+    avatars: AvatarOption[];
     interests: InterestOption[];
     selectedInterestIds: number[];
     interestLimit: number;
@@ -38,6 +41,16 @@ defineProps<{
                 </CardDescription>
             </CardHeader>
             <CardContent>
+                <p
+                    v-if="avatars.length === 0 && canManageAvatars"
+                    class="mb-6 rounded-xl border border-primary/30 bg-primary/5 p-4 text-sm"
+                >
+                    Le catalogue est vide.
+                    <Link :href="avatarIndex()" class="font-medium underline">
+                        Ajouter le premier avatar
+                    </Link>
+                    pour permettre la complétion des profils.
+                </p>
                 <ProfileForm
                     :profile="profile"
                     :action="store.url()"
@@ -45,6 +58,7 @@ defineProps<{
                     submit-label="Créer mon profil"
                     :visit-frequencies="visitFrequencies"
                     :visibilities="visibilities"
+                    :avatars="avatars"
                     :interests="interests"
                     :selected-interest-ids="selectedInterestIds"
                     :interest-limit="interestLimit"

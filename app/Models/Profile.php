@@ -16,6 +16,7 @@ use Illuminate\Support\Carbon;
 /**
  * @property int $id
  * @property int $user_id
+ * @property int|null $avatar_id
  * @property string $display_name
  * @property string|null $bio
  * @property VisitFrequency|null $visit_frequency
@@ -24,10 +25,11 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property-read User $user
+ * @property-read Avatar|null $avatar
  * @property-read Collection<int, Interest> $interests
  * @property-read Collection<int, Interest> $interestHistory
  */
-#[Fillable(['display_name', 'bio', 'visit_frequency', 'visibility', 'onboarding_completed_at'])]
+#[Fillable(['avatar_id', 'display_name', 'bio', 'visit_frequency', 'visibility', 'onboarding_completed_at'])]
 class Profile extends Model
 {
     /** @use HasFactory<ProfileFactory> */
@@ -39,6 +41,12 @@ class Profile extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    /** @return BelongsTo<Avatar, $this> */
+    public function avatar(): BelongsTo
+    {
+        return $this->belongsTo(Avatar::class);
     }
 
     /** @return BelongsToMany<Interest, $this> */
@@ -58,7 +66,15 @@ class Profile extends Model
 
     public function isComplete(): bool
     {
-        return $this->onboarding_completed_at !== null;
+        if ($this->onboarding_completed_at === null || $this->avatar_id === null) {
+            return false;
+        }
+
+        if ($this->relationLoaded('avatar')) {
+            return $this->avatar?->is_active === true;
+        }
+
+        return $this->avatar()->active()->exists();
     }
 
     /** @return array<string, string> */

@@ -6,6 +6,7 @@ use App\Actions\SyncProfileInterests;
 use App\Enums\ProfileVisibility;
 use App\Enums\VisitFrequency;
 use App\Http\Requests\MemberProfileRequest;
+use App\Models\Avatar;
 use App\Models\Interest;
 use App\Models\InterestSetting;
 use App\Models\Profile;
@@ -13,6 +14,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -26,6 +28,7 @@ class MemberProfileController extends Controller
     {
         return Inertia::render('profile/Create', [
             'profile' => $request->user()->profile,
+            'canManageAvatars' => $request->user()->can('viewAny', Avatar::class),
             ...$this->formOptions($request->user()->profile),
         ]);
     }
@@ -39,6 +42,7 @@ class MemberProfileController extends Controller
         unset($validated['interest_ids']);
 
         $profile = DB::transaction(function () use ($request, $currentProfile, $completedAt, $validated, $interestIds): Profile {
+            $this->lockActiveAvatar((int) $validated['avatar_id']);
             $profileFields = [
                 ...$validated,
                 'onboarding_completed_at' => $completedAt ?? now(),
@@ -71,6 +75,13 @@ class MemberProfileController extends Controller
         return Inertia::render('profile/Show', [
             'profile' => $profile === null ? null : [
                 'display_name' => $profile->display_name,
+                'avatar' => $profile->avatar === null ? null : [
+                    'id' => $profile->avatar->id,
+                    'name' => $profile->avatar->name,
+                    'image_url' => route('avatars.image', $profile->avatar),
+                    'primary_color' => $profile->avatar->primary_color,
+                    'secondary_color' => $profile->avatar->secondary_color,
+                ],
                 'bio' => $profile->bio,
                 'visit_frequency' => $profile->visit_frequency,
                 'visibility' => $profile->visibility,
@@ -107,6 +118,7 @@ class MemberProfileController extends Controller
         unset($validated['interest_ids']);
 
         DB::transaction(function () use ($profile, $validated, $interestIds): void {
+            $this->lockActiveAvatar((int) $validated['avatar_id']);
             $this->syncProfileInterests->handle($profile, $interestIds);
             $profile->update($validated);
         });
@@ -119,6 +131,7 @@ class MemberProfileController extends Controller
      *     visitFrequencies: array<int, array{value: string, label: string}>,
      *     visibilities: array<int, array{value: string, label: string}>,
      *     interests: array<int, array{id: int, name: string}>,
+     *     avatars: array<int, array{id: int, name: string, image_url: string, primary_color: string, secondary_color: string}>,
      *     selectedInterestIds: array<int, int>,
      *     interestLimit: int,
      * }
@@ -140,6 +153,19 @@ class MemberProfileController extends Controller
                 ],
                 ProfileVisibility::cases(),
             ),
+            'avatars' => Avatar::query()
+                ->active()
+                ->orderBy('sort_order')
+                ->orderBy('id')
+                ->get()
+                ->map(fn (Avatar $avatar): array => [
+                    'id' => $avatar->id,
+                    'name' => $avatar->name,
+                    'image_url' => route('avatars.image', $avatar),
+                    'primary_color' => $avatar->primary_color,
+                    'secondary_color' => $avatar->secondary_color,
+                ])
+                ->all(),
             'interests' => Interest::query()
                 ->where('is_active', true)
                 ->orderBy('sort_order')
@@ -151,5 +177,20 @@ class MemberProfileController extends Controller
                 ->all() ?? [],
             'interestLimit' => InterestSetting::current()->max_selections,
         ];
+    }
+
+    private function lockActiveAvatar(int $avatarId): void
+    {
+        $avatar = Avatar::query()
+            ->whereKey($avatarId)
+            ->active()
+            ->lockForUpdate()
+            ->first();
+
+        if ($avatar === null) {
+            throw ValidationException::withMessages([
+                'avatar_id' => 'Cet avatar n’est plus disponible.',
+            ]);
+        }
     }
 }

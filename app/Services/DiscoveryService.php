@@ -6,6 +6,7 @@ use App\Contracts\DiscoveryTieBreaker;
 use App\Data\DiscoveryProfileData;
 use App\Enums\ProfileVisibility;
 use App\Enums\UserStatus;
+use App\Models\Avatar;
 use App\Models\Interest;
 use App\Models\Profile;
 use App\Models\User;
@@ -38,6 +39,7 @@ final readonly class DiscoveryService
             ->whereKeyNot($actorProfile->id)
             ->where('visibility', ProfileVisibility::Visible->value)
             ->whereNotNull('onboarding_completed_at')
+            ->whereHas('avatar', fn (Builder $query) => $query->where('is_active', true))
             ->whereHas('user', function (Builder $query): void {
                 $query
                     ->where('status', UserStatus::Active->value)
@@ -53,6 +55,7 @@ final readonly class DiscoveryService
                 $query->where('blocked_user_id', $user->id);
             })
             ->with([
+                'avatar',
                 'user',
                 'interests' => $this->activeInterests(...),
             ])
@@ -63,6 +66,10 @@ final readonly class DiscoveryService
 
         return $profiles
             ->map(function (Profile $profile) use ($actorInterestIds, $actorVisitFrequency): DiscoveryProfileData {
+                $avatar = $profile->avatar;
+
+                abort_unless($avatar instanceof Avatar, 500);
+
                 $commonInterests = array_values($profile->interests
                     ->filter(fn (Interest $interest): bool => in_array($interest->id, $actorInterestIds, true))
                     ->pluck('name')
@@ -75,6 +82,13 @@ final readonly class DiscoveryService
                     userId: $profile->user->id,
                     profileId: $profile->id,
                     displayName: $profile->display_name,
+                    avatar: [
+                        'id' => $avatar->id,
+                        'name' => $avatar->name,
+                        'image_url' => route('avatars.image', $avatar),
+                        'primary_color' => $avatar->primary_color,
+                        'secondary_color' => $avatar->secondary_color,
+                    ],
                     age: (int) $profile->user->age,
                     bio: $profile->bio,
                     visitFrequency: $visitFrequency,

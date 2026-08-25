@@ -14,7 +14,17 @@ export type RoleName = 'user' | 'admin';
 export type VisitFrequency = 'rarely' | 'sometimes' | 'often' | 'very_often';
 export type ProfileVisibility = 'visible' | 'hidden';
 
+export type AvatarOption = {
+    id: number;
+    name: string;
+    image_url: string;
+    primary_color: string;
+    secondary_color: string;
+};
+
 export type Profile = {
+    avatar_id?: number | null;
+    avatar?: AvatarOption | null;
     display_name: string;
     bio: string | null;
     visit_frequency: VisitFrequency | null;

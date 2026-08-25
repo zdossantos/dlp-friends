@@ -1,9 +1,10 @@
-import type { VisitFrequency } from './auth';
+import type { AvatarOption, VisitFrequency } from './auth';
 
 export type DiscoveryProfile = {
     userId: number;
     profileId: number;
     displayName: string;
+    avatar: AvatarOption;
     age: number;
     bio: string | null;
     visitFrequency: VisitFrequency | null;

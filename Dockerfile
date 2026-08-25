@@ -10,11 +10,14 @@ RUN apk add --no-cache \
         curl \
         git \
         icu-dev \
+        libpng-dev \
+        libwebp-dev \
         libzip-dev \
         linux-headers \
         oniguruma-dev \
         $PHPIZE_DEPS \
-    && docker-php-ext-install -j"$(nproc)" bcmath exif intl pcntl pdo_mysql sockets zip \
+    && docker-php-ext-configure gd --with-webp \
+    && docker-php-ext-install -j"$(nproc)" bcmath exif gd intl pcntl pdo_mysql sockets zip \
     && pecl install redis \
     && docker-php-ext-enable redis
 
@@ -39,6 +42,10 @@ WORKDIR /var/www/html
 RUN apk add --no-cache \
         curl \
         icu-libs \
+        libpng \
+        libpng-dev \
+        libwebp \
+        libwebp-dev \
         libzip \
         nginx \
         $PHPIZE_DEPS \
@@ -46,10 +53,11 @@ RUN apk add --no-cache \
         libzip-dev \
         linux-headers \
         oniguruma-dev \
-    && docker-php-ext-install -j"$(nproc)" bcmath exif intl opcache pcntl pdo_mysql sockets zip \
+    && docker-php-ext-configure gd --with-webp \
+    && docker-php-ext-install -j"$(nproc)" bcmath exif gd intl opcache pcntl pdo_mysql sockets zip \
     && pecl install redis \
     && docker-php-ext-enable redis \
-    && apk del $PHPIZE_DEPS icu-dev libzip-dev linux-headers oniguruma-dev \
+    && apk del $PHPIZE_DEPS icu-dev libpng-dev libwebp-dev libzip-dev linux-headers oniguruma-dev \
     && rm -rf /tmp/pear /var/cache/apk/* /var/lib/nginx/html
 
 COPY docker/nginx/default.conf /etc/nginx/http.d/default.conf

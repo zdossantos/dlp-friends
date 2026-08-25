@@ -137,6 +137,13 @@ class DiscoveryServiceTest extends TestCase
             'userId' => $target->id,
             'profileId' => $target->profile->id,
             'displayName' => 'Target',
+            'avatar' => [
+                'id' => $target->profile->avatar->id,
+                'name' => $target->profile->avatar->name,
+                'image_url' => route('avatars.image', $target->profile->avatar),
+                'primary_color' => $target->profile->avatar->primary_color,
+                'secondary_color' => $target->profile->avatar->secondary_color,
+            ],
             'age' => 30,
             'bio' => 'Parade fan.',
             'visitFrequency' => VisitFrequency::Often->value,

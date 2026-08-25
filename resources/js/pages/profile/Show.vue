@@ -2,6 +2,7 @@
 import { Head, Link, router, usePage } from '@inertiajs/vue3';
 import { LayoutDashboard, LogOut, Pencil, Settings } from '@lucide/vue';
 import { computed } from 'vue';
+import AvatarPortrait from '@/components/profile/AvatarPortrait.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { dashboard, logout } from '@/routes';
@@ -41,6 +42,12 @@ defineOptions({
         <section
             class="space-y-6 rounded-3xl border border-border/70 bg-card/95 p-6 shadow-xl shadow-primary/5 backdrop-blur sm:p-8"
         >
+            <AvatarPortrait
+                v-if="profile.avatar"
+                :avatar="profile.avatar"
+                class="mx-auto size-32 shadow-lg"
+                data-test="profile-avatar"
+            />
             <div class="flex justify-end gap-2" aria-label="Actions du profil">
                 <Button as-child variant="outline" size="icon" class="size-12">
                     <Link :href="editAccount()" aria-label="Réglages">

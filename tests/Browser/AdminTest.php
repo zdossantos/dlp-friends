@@ -1,11 +1,46 @@
 <?php
 
+use App\Models\Avatar;
 use App\Models\Interest;
 use App\Models\InterestCategory;
 use App\Models\InterestSetting;
 use App\Models\User;
 use Illuminate\Contracts\Debug\ExceptionHandler as ExceptionHandlerContract;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
+use Illuminate\Support\Facades\Storage;
+
+test('the avatar catalog renders images color gradients and admin controls', function () {
+    Storage::fake('local');
+    $avatar = Avatar::factory()->create([
+        'name' => 'Aurore',
+        'image_path' => 'avatars/aurore.png',
+        'primary_color' => '#7C3AED',
+        'secondary_color' => '#EC4899',
+        'sort_order' => 0,
+    ]);
+    Storage::disk('local')->put($avatar->image_path, base64_decode(
+        'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScL8WQAAAABJRU5ErkJggg==',
+    ));
+    $admin = User::factory()->admin()->create();
+    $this->actingAs($admin);
+
+    visit('/admin/avatars')
+        ->assertSee('Avatars')
+        ->assertValue("#avatar-name-{$avatar->id}", 'Aurore')
+        ->assertValue("#avatar-primary-{$avatar->id}", '#7c3aed')
+        ->assertValue("#avatar-secondary-{$avatar->id}", '#ec4899')
+        ->assertPresent('input[name="image"][type="file"]')
+        ->assertPresent('input[name="primary_color"][type="color"]')
+        ->assertPresent('input[name="secondary_color"][type="color"]')
+        ->assertPresent('img[alt="Avatar Aurore"]')
+        ->assertScript(
+            "document.querySelector('[data-test=avatar-preview-{$avatar->id}]').style.backgroundImage.includes('rgb(124, 58, 237)')",
+            true,
+        )
+        ->assertPresent('[aria-label="Archiver Aurore"]')
+        ->assertPresent('[aria-label="Supprimer Aurore"]')
+        ->assertNoJavaScriptErrors();
+});
 
 test('the admin dashboard renders account statistics and recent registrations', function () {
     User::factory()->create(['email' => 'recent@example.test']);

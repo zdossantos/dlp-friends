@@ -1,9 +1,45 @@
 <?php
 
 use App\Http\Middleware\EnsureProfileIsComplete;
+use App\Models\Avatar;
 use App\Models\Interest;
 use App\Models\InterestSetting;
 use App\Models\User;
+use Illuminate\Support\Facades\Storage;
+
+test('profile onboarding requires an active avatar and renders its two-color gradient', function () {
+    Storage::fake('local');
+    $active = Avatar::factory()->create([
+        'name' => 'Aurore',
+        'image_path' => 'avatars/aurore.png',
+        'primary_color' => '#7C3AED',
+        'secondary_color' => '#EC4899',
+        'is_active' => true,
+        'sort_order' => 0,
+    ]);
+    Avatar::factory()->create([
+        'name' => 'Archivé',
+        'is_active' => false,
+        'sort_order' => 1,
+    ]);
+    Storage::disk('local')->put($active->image_path, base64_decode(
+        'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScL8WQAAAABJRU5ErkJggg==',
+    ));
+    $user = User::factory()->create();
+    $this->actingAs($user);
+
+    visit('/profile/create')
+        ->assertSee('Choisissez votre avatar')
+        ->assertSee('Aurore')
+        ->assertDontSee('Archivé')
+        ->assertPresent("input[name='avatar_id'][value='{$active->id}'][required]")
+        ->assertPresent('img[alt="Avatar Aurore"]')
+        ->assertScript(
+            "document.querySelector('[data-test=avatar-option-{$active->id}]').style.backgroundImage.includes('rgb(124, 58, 237)')",
+            true,
+        )
+        ->assertNoJavaScriptErrors();
+});
 
 test('profile onboarding exposes the complete accessible contract', function () {
     $user = User::factory()->create();
@@ -60,12 +96,14 @@ test('interest selection disables only unselected choices at the limit', functio
 
 test('profile validation displays a changed interest limit', function () {
     $user = User::factory()->create();
+    Avatar::factory()->create(['name' => 'Avatar Aurore']);
     InterestSetting::current()->update(['max_selections' => 2]);
     Interest::factory()->create(['name' => 'Attractions']);
     Interest::factory()->create(['name' => 'Spectacles']);
     $this->actingAs($user);
 
     $page = visit('/profile/create')
+        ->click('Avatar Aurore')
         ->fill('display_name', 'Aurore')
         ->select('visit_frequency', 'sometimes')
         ->click('Attractions')

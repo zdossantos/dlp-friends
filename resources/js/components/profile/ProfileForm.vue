@@ -1,12 +1,13 @@
 <script setup lang="ts">
 import { Form } from '@inertiajs/vue3';
 import InputError from '@/components/InputError.vue';
+import AvatarPortrait from '@/components/profile/AvatarPortrait.vue';
 import InterestTagSelector from '@/components/profile/InterestTagSelector.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
-import type { InterestOption, Profile } from '@/types';
+import type { AvatarOption, InterestOption, Profile } from '@/types';
 
 type Option = { value: string; label: string };
 
@@ -17,6 +18,7 @@ defineProps<{
     submitLabel: string;
     visitFrequencies: Option[];
     visibilities: Option[];
+    avatars: AvatarOption[];
     interests: InterestOption[];
     selectedInterestIds: number[];
     interestLimit: number;
@@ -30,6 +32,46 @@ defineProps<{
         class="space-y-6"
         v-slot="{ errors, processing }"
     >
+        <fieldset class="grid gap-3">
+            <legend class="text-sm font-medium">Choisissez votre avatar</legend>
+            <p class="text-xs text-muted-foreground">
+                Ce choix est obligatoire pour compléter votre profil.
+            </p>
+            <div
+                v-if="avatars.length"
+                class="grid grid-cols-2 gap-3 sm:grid-cols-3"
+            >
+                <label
+                    v-for="avatar in avatars"
+                    :key="avatar.id"
+                    class="group cursor-pointer rounded-3xl border p-2 transition has-[:checked]:border-primary has-[:checked]:bg-primary/5 has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-ring"
+                >
+                    <input
+                        class="sr-only"
+                        type="radio"
+                        name="avatar_id"
+                        :value="avatar.id"
+                        :checked="profile?.avatar_id === avatar.id"
+                        required
+                    />
+                    <AvatarPortrait
+                        :avatar="avatar"
+                        :data-test="`avatar-option-${avatar.id}`"
+                    />
+                    <span class="mt-2 block text-center text-sm font-medium">
+                        {{ avatar.name }}
+                    </span>
+                </label>
+            </div>
+            <p
+                v-else
+                class="rounded-xl border border-dashed p-4 text-sm text-muted-foreground"
+            >
+                Aucun avatar n’est disponible pour le moment.
+            </p>
+            <InputError :message="errors.avatar_id" />
+        </fieldset>
+
         <div class="grid gap-2">
             <Label for="display_name">Nom affiché</Label>
             <Input
@@ -112,7 +154,11 @@ defineProps<{
             <InputError :message="errors.interest_ids" />
         </div>
 
-        <Button type="submit" :disabled="processing" class="w-full sm:w-auto">
+        <Button
+            type="submit"
+            :disabled="processing || avatars.length === 0"
+            class="w-full sm:w-auto"
+        >
             <Spinner v-if="processing" />
             {{ submitLabel }}
         </Button>
