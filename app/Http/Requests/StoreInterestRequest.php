@@ -38,4 +38,12 @@ class StoreInterestRequest extends FormRequest
             ],
         ];
     }
+
+    /** @return array<string, string> */
+    public function messages(): array
+    {
+        return [
+            'name.unique' => 'Le nom a déjà été utilisé.',
+        ];
+    }
 }

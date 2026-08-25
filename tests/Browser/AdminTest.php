@@ -4,7 +4,8 @@ use App\Models\Interest;
 use App\Models\InterestCategory;
 use App\Models\InterestSetting;
 use App\Models\User;
-use Illuminate\Support\Facades\Route;
+use Illuminate\Contracts\Debug\ExceptionHandler as ExceptionHandlerContract;
+use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 
 test('the admin dashboard renders account statistics and recent registrations', function () {
     User::factory()->create(['email' => 'recent@example.test']);
@@ -140,12 +141,9 @@ test('catalog actions stay aligned with their inputs and reserve validation spac
 });
 
 test('duplicate interest validation keeps the catalog unchanged', function () {
-    Route::middleware(['web', 'auth'])->post(
-        '/admin/interests',
-        fn () => back()->withErrors(['name' => 'Le nom a déjà été utilisé.']),
-    );
     Interest::factory()->create(['name' => 'Chill']);
     $admin = User::factory()->withProfile()->admin()->create();
+    $this->app->instance(ExceptionHandlerContract::class, new ExceptionHandler($this->app));
     $this->actingAs($admin);
 
     visit('/admin/interests')

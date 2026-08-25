@@ -2,11 +2,10 @@
 
 use App\Actions\CreateSwipe;
 use App\Enums\SwipeDecision;
+use App\Models\MemberMatch;
 use App\Models\Swipe;
 use App\Models\User;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Route;
-use Inertia\Inertia;
+use Illuminate\Validation\ValidationException;
 
 function discoveryMember(string $displayName): User
 {
@@ -38,16 +37,52 @@ test('discovery renders its deferred empty state and limits the stack to five pr
 });
 
 test('discovery renders its loading state while suggestions are deferred', function () {
-    Route::middleware(['web', 'auth'])->get(
-        '/__browser/discovery-loading',
-        fn () => Inertia::render('Discovery/Index', ['match' => null]),
-    );
     $actor = discoveryMember('Alice');
+    discoveryMember('Basile');
     $this->actingAs($actor);
 
-    visit('/__browser/discovery-loading')
+    $page = visit('/profile');
+    $page->script(<<<'JS'
+        if (!window.__deferredXhrInstalled) {
+            window.__deferredXhrInstalled = true;
+            window.__realDeferredXhrOpen = XMLHttpRequest.prototype.open;
+            window.__realDeferredXhrSetRequestHeader = XMLHttpRequest.prototype.setRequestHeader;
+            window.__realDeferredXhrSend = XMLHttpRequest.prototype.send;
+            XMLHttpRequest.prototype.open = function (method, url, ...rest) {
+                this.__deferredRequestUrl = String(url);
+                this.__deferredRequestHeaders = {};
+
+                return window.__realDeferredXhrOpen.call(this, method, url, ...rest);
+            };
+            XMLHttpRequest.prototype.setRequestHeader = function (name, value) {
+                this.__deferredRequestHeaders[String(name).toLowerCase()] = String(value);
+
+                return window.__realDeferredXhrSetRequestHeader.call(this, name, value);
+            };
+            XMLHttpRequest.prototype.send = function (body) {
+                const requestUrl = this.__deferredRequestUrl ?? '';
+                const requestHeaders = this.__deferredRequestHeaders ?? {};
+                const partialData = requestHeaders['x-inertia-partial-data'] ?? '';
+
+                if (requestUrl.includes('/discover') && partialData.includes('suggestions')) {
+                    const request = this;
+                    window.__releaseDeferredRequest = () => {
+                        window.__releaseDeferredRequest = undefined;
+                        window.__realDeferredXhrSend.call(request, body);
+                    };
+
+                    return;
+                }
+
+                return window.__realDeferredXhrSend.call(this, body);
+            };
+        }
+        JS);
+    $page->click('[aria-label="Découvrir"]')
         ->assertSee('Recherche de profils…')
-        ->assertPresent('[aria-busy="true"]')
+        ->assertPresent('[aria-busy="true"]');
+    $page->script('window.__releaseDeferredRequest()');
+    $page->assertSee('Basile')
         ->assertNoJavaScriptErrors();
 });
 
@@ -217,23 +252,22 @@ test('a network failure keeps the original decision available for retry', functi
 });
 
 test('a validation response keeps the card and retries the same decision', function () {
-    $failedOnce = false;
-    Route::middleware(['web', 'auth'])->post('/discover/{target}/swipe', function (Request $request, User $target) use (&$failedOnce) {
-        if (! $failedOnce) {
-            $failedOnce = true;
+    $this->app->instance(CreateSwipe::class, new class extends CreateSwipe
+    {
+        private bool $failedOnce = false;
 
-            return back()->withErrors(['target' => 'Ce profil n’est pas disponible.']);
+        public function handle(User $actor, User $target, SwipeDecision $decision): ?MemberMatch
+        {
+            if (! $this->failedOnce) {
+                $this->failedOnce = true;
+
+                throw ValidationException::withMessages([
+                    'target' => 'Ce profil n’est pas disponible.',
+                ]);
+            }
+
+            return parent::handle($actor, $target, $decision);
         }
-
-        /** @var User $actor */
-        $actor = $request->user();
-        app(CreateSwipe::class)->handle(
-            $actor,
-            $target,
-            SwipeDecision::from((string) $request->input('decision')),
-        );
-
-        return redirect('/discover');
     });
     $actor = discoveryMember('Alice');
     $target = discoveryMember('Basile');
@@ -302,10 +336,13 @@ test('a stale failed decision is cleared when a replacement suggestion arrives',
 });
 
 test('an unexpected HTTP response retains the card and exposes retry', function () {
-    Route::middleware(['web', 'auth'])->post(
-        '/discover/{target}/swipe',
-        fn () => response('browser test failure', 500),
-    );
+    $this->app->instance(CreateSwipe::class, new class extends CreateSwipe
+    {
+        public function handle(User $actor, User $target, SwipeDecision $decision): ?MemberMatch
+        {
+            throw new RuntimeException('browser test failure');
+        }
+    });
     $actor = discoveryMember('Alice');
     discoveryMember('Basile');
     $this->actingAs($actor);
