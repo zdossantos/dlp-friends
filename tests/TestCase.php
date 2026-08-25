@@ -22,7 +22,14 @@ abstract class TestCase extends BaseTestCase
     {
         parent::setUp();
 
-        $this->withoutVite();
+        if (! $this->usesViteAssets()) {
+            $this->withoutVite();
+        }
+    }
+
+    protected function usesViteAssets(): bool
+    {
+        return false;
     }
 
     protected function skipUnlessFortifyHas(string $feature, ?string $message = null): void
