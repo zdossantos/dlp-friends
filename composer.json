@@ -75,10 +75,6 @@
         "types:check": [
             "@analyse"
         ],
-        "test:unit": [
-            "@test:database",
-            "@php artisan test --testsuite=Unit"
-        ],
         "test:database": [
             "@php tests/Support/verify-test-database.php"
         ],
