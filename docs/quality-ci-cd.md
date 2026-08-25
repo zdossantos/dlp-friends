@@ -44,9 +44,10 @@ Les six checks indépendants sont :
 
 1. `Conventional PR title` valide le futur message du commit squash ;
 2. `PHP quality` exécute Laravel Pint et PHPStan/Larastan ;
-3. `Backend tests` exécute Pest avec MySQL ;
-4. `Frontend quality` génère Wayfinder puis exécute ESLint, Prettier,
-   TypeScript et Vitest ;
+3. `Pest tests` installe Chromium, construit les assets et exécute avec MySQL
+   les suites Pest unitaires, fonctionnelles et navigateur ;
+4. `Frontend quality` génère Wayfinder puis exécute ESLint, Prettier et
+   TypeScript ;
 5. `Vite build` compile les assets de production ;
 6. `Docker build` construit l'image runtime sans la publier.
 

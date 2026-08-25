@@ -18,15 +18,16 @@ comportement comme existant.
 
 ## Stack et structure
 
-- Backend : PHP 8.4, Laravel 13, Fortify, Pest et PHPStan/Larastan.
+- Backend : PHP 8.4, Laravel 13, Fortify et PHPStan/Larastan.
 - Frontend : Bun 1.3.14, Inertia 3, Vue 3 Composition API, TypeScript,
-  Tailwind CSS, Reka UI et Vitest.
+  Tailwind CSS et Reka UI.
+- Tests : Pest, Pest Browser et Playwright.
 - Infrastructure : MySQL 8.4, Redis 7.4, Reverb, MinIO, Mailpit et Docker
   Compose.
 - `app/` contient le domaine et les contrôleurs Laravel.
-- `resources/js/` contient les pages, layouts, composants et tests Vue.
+- `resources/js/` contient les pages, layouts et composants Vue.
 - `routes/` contient les routes web, de réglages et de diffusion.
-- `tests/` contient les tests Pest unitaires et fonctionnels.
+- `tests/` contient les tests Pest unitaires, fonctionnels et navigateur.
 - `docs/` est la source de vérité produit, technique et opérationnelle.
 
 ## Installation et développement
@@ -36,6 +37,7 @@ composer install
 cp .env.example .env
 php artisan key:generate
 bun install --frozen-lockfile
+bunx playwright install chromium
 docker compose up --build -d
 docker compose exec web php artisan migrate --seed --force
 ```
@@ -64,28 +66,27 @@ concernés avant de terminer :
 # Backend
 composer lint:check
 composer analyse
-php artisan test
+composer test
 
 # Frontend
 php artisan wayfinder:generate --with-form
 bun run lint:check
 bun run format:check
 bun run types:check
-bun run test
 bun run build
 
 # Image de production
 docker build --target runtime --tag dlp-friends:ci .
 ```
 
-`composer ci:check` regroupe les contrôles PHP et frontend, hors génération
-Wayfinder, build Vite et build Docker.
+`composer ci:check` regroupe les contrôles PHP et frontend, la génération
+Wayfinder, le build Vite et tous les tests Pest. Le build Docker reste séparé.
 
 Pour un test ciblé :
 
 ```sh
 php artisan test tests/Feature/MemberProfileTest.php
-bun run test:unit -- resources/js/pages/Dashboard.spec.ts
+php artisan test tests/Browser/AdminTest.php
 ```
 
 ## Conventions de code
@@ -113,8 +114,8 @@ Les règles détaillées sont dans `docs/engineering-principles.md`.
   l'implémentation.
 - Tester le comportement observable, pas les détails d'implémentation ni le
   framework.
-- Les tests backend utilisent Pest ; les composants et composables Vue utilisent
-  Vitest et Vue Test Utils.
+- Tous les tests utilisent Pest. Les parcours frontend s’exécutent dans Chromium
+  avec Pest Browser et Playwright.
 - Exécuter les contrôles complets pertinents après les tests ciblés. Ne jamais
   annoncer un succès sans sortie de commande récente.
 
