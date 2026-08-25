@@ -30,6 +30,7 @@ composer install
 cp .env.example .env
 php artisan key:generate
 bun install --frozen-lockfile
+bunx playwright install chromium
 docker compose up --build -d
 docker compose exec web php artisan migrate --seed --force
 ```
@@ -58,9 +59,9 @@ démarrage des conteneurs.
 ## Commandes utiles
 
 ```sh
-# Base MySQL 8.4 isolée pour les tests backend
+# Base MySQL 8.4 isolée pour les tests Pest
 docker compose --profile test up -d --wait mysql-test
-php artisan test
+composer test
 
 # Contrôles PHP et frontend
 composer ci:check
@@ -73,11 +74,12 @@ docker compose exec web php artisan migrate --force
 docker compose down
 ```
 
-La suite backend utilise exclusivement la base `dlp_friends_test`, exposée en
+La suite Pest utilise exclusivement la base `dlp_friends_test`, exposée en
 local sur `127.0.0.1:3307` par le service `mysql-test`. Sa configuration est
 versionnée dans `.env.testing` et reste séparée de la base de développement. Les
-commandes échouent explicitement si MySQL est indisponible ou si un autre pilote
-est actif. Pour supprimer cette base éphémère après les tests :
+tests navigateur utilisent Pest Browser, Playwright et Chromium. Les commandes
+échouent explicitement si MySQL est indisponible ou si un autre pilote est
+actif. Pour supprimer cette base éphémère après les tests :
 
 ```sh
 docker compose --profile test stop mysql-test

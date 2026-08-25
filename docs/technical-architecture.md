@@ -12,7 +12,8 @@ livrées restent décrites dans `mvp-v1.md` et `roadmap.md`.
 - MySQL 8.4 pour les données relationnelles ;
 - Redis pour le cache, les sessions et les files ;
 - Laravel Reverb et Echo pour le temps réel ;
-- Pest, Vitest, PHPStan/Larastan, Pint, ESLint et Prettier pour la qualité.
+- Pest, Pest Browser, Playwright, PHPStan/Larastan, Pint, ESLint et Prettier
+  pour la qualité.
 
 Les versions exactes sont verrouillées dans `composer.lock` et `bun.lock`. Bun
 1.3.14 est épinglé dans `package.json`, GitHub Actions et le build Docker.
@@ -55,7 +56,7 @@ compatibles avec la version applicative précédente pendant un déploiement.
 
 | Sujet | Développement | CI | Production |
 | --- | --- | --- | --- |
-| Base de données | MySQL Docker | MySQL de service pour les tests backend | MySQL privé |
+| Base de données | MySQL Docker | MySQL de service pour les suites Pest | MySQL privé |
 | Cache et files | Redis Docker | Stockages `array` et files synchrones | Redis privé |
 | Fichiers | Disque local par défaut | Disque local éphémère | Stockage S3-compatible prévu |
 | E-mails | Mailpit | Transport `array` | Transport à définir avant mise en ligne |

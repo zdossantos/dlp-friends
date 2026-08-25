@@ -11,8 +11,6 @@
         "format:check": "prettier --check resources/",
         "lint": "eslint . --fix",
         "lint:check": "eslint .",
-        "test": "bun run test:unit",
-        "test:unit": "vitest run --passWithNoTests",
         "types:check": "vue-tsc --noEmit"
     },
     "devDependencies": {
@@ -24,22 +22,20 @@
         "@types/node": "^26.2.0",
         "@vitejs/plugin-vue": "^6.0.0",
         "@vue/eslint-config-typescript": "^14.3.0",
-        "@vue/test-utils": "^2.4.11",
         "concurrently": "^10.0.3",
         "eslint": "^9.39.5",
         "eslint-config-prettier": "^10.0.1",
         "eslint-import-resolver-typescript": "^4.4.4",
         "eslint-plugin-import": "^2.32.0",
         "eslint-plugin-vue": "^10.10.0",
-        "jsdom": "^30.0.1",
         "laravel-echo": "^2.4.0",
+        "playwright": "^1.62.1",
         "prettier": "^3.4.2",
         "prettier-plugin-tailwindcss": "^0.8.1",
         "pusher-js": "^8.6.0",
         "typescript": "^6.0.3",
         "typescript-eslint": "^8.23.0",
         "vite": "^8.0.0",
-        "vitest": "^4.1.10",
         "vue-tsc": "^3.3.9"
     },
     "dependencies": {

@@ -109,7 +109,9 @@ class ManageInterestCatalogTest extends TestCase
 
         $this->actingAs($admin)->post(route('admin.interests.store'), [
             'name' => "\u{00A0}Parades\u{00A0}\u{00A0}nocturnes\u{00A0}",
-        ])->assertSessionHasErrors('name');
+        ])->assertSessionHasErrors([
+            'name' => 'Le nom a déjà été utilisé.',
+        ]);
 
         $this->assertDatabaseCount('interests', 1);
     }

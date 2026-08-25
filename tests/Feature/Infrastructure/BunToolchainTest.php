@@ -5,7 +5,8 @@ it('uses Bun as its only JavaScript package manager', function () {
     $composer = file_get_contents(base_path('composer.json'));
 
     expect($package)->toHaveKey('packageManager', 'bun@1.3.14')
-        ->and($package['scripts'])->toHaveKey('test', 'bun run test:unit')
+        ->and($package['scripts'])->not->toHaveKey('test')
+        ->and($package['scripts'])->not->toHaveKey('test:unit')
         ->and(base_path('bun.lock'))->toBeFile()
         ->and(base_path('package-lock.json'))->not->toBeFile()
         ->and(base_path('.npmrc'))->not->toBeFile()
@@ -22,6 +23,7 @@ it('uses the pinned Bun toolchain in automation and Docker', function () {
     $dependabot = file_get_contents(base_path('.github/dependabot.yml'));
 
     expect($ci)->toContain('oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6')
+        ->and($ci)->toContain('name: Backend tests')
         ->and($ci)->toContain("bun-version: '1.3.14'")
         ->and($ci)->toContain('bun install --frozen-lockfile')
         ->and($ci)->not->toContain('actions/setup-node')

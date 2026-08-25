@@ -50,7 +50,7 @@ jobs:
       - name: Run static analysis
         run: composer analyse
 
-  backend-tests:
+  pest-tests:
     name: Backend tests
     if: github.event.pull_request.draft == false
     runs-on: ubuntu-latest
@@ -93,6 +93,17 @@ jobs:
           php-version: '8.4'
           tools: composer:v2
           coverage: none
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
+        with:
+          bun-version: '1.3.14'
+      - name: Cache Bun downloads
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.bun/install/cache
+          key: ${{ runner.os }}-bun-1.3.14-${{ hashFiles('bun.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-bun-1.3.14-
       - name: Resolve Composer cache directory
         id: composer-cache
         run: echo "dir=$(composer config cache-files-dir)" >> "$GITHUB_OUTPUT"
@@ -105,10 +116,18 @@ jobs:
             ${{ runner.os }}-composer-
       - name: Install Composer dependencies
         run: composer install --no-interaction --no-progress --prefer-dist
+      - name: Install Bun dependencies
+        run: bun install --frozen-lockfile
       - name: Verify test database driver
         run: php tests/Support/verify-test-database.php
       - name: Run database migrations
         run: php artisan migrate --force
+      - name: Generate Wayfinder modules
+        run: php artisan wayfinder:generate --with-form
+      - name: Build Vite assets
+        run: bun run build
+      - name: Install Playwright Chromium
+        run: bunx playwright install --with-deps chromium
       - name: Run Pest
         run: php artisan test --display-warnings
 
@@ -160,9 +179,6 @@ jobs:
         run: bun run format:check
       - name: Check TypeScript
         run: bun run types:check
-      - name: Run Vitest
-        run: bun run test
-
   vite-build:
     name: Vite build
     if: github.event.pull_request.draft == false

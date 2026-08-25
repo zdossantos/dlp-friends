@@ -25,6 +25,7 @@ préparer avant les contrôles PHP :
 
 ```sh
 docker compose --profile test up -d --wait mysql-test
+bunx playwright install chromium
 php tests/Support/verify-test-database.php
 ```
 
@@ -38,20 +39,20 @@ Exécuter ensuite les contrôles concernés avant d'ouvrir une pull request :
 ```sh
 composer lint:check
 composer analyse
-php artisan test
+composer test
 php artisan wayfinder:generate --with-form
 bun run lint:check
 bun run format:check
 bun run types:check
-bun run test
 bun run build
 docker build --target runtime --tag dlp-friends:ci .
 ```
 
-`php artisan test`, `composer test` et `composer ci:check` utilisent tous cette
-même base MySQL. PHPUnit traite également tout nouvel avertissement comme un
-échec. Une fois les contrôles terminés, supprimer le service et ses données
-éphémères avec `docker compose --profile test rm -sf mysql-test`.
+`composer test` et `composer ci:check` utilisent cette même base MySQL et
+exécutent les suites Pest unitaires, fonctionnelles et navigateur. PHPUnit
+traite également tout nouvel avertissement comme un échec. Une fois les
+contrôles terminés, supprimer le service et ses données éphémères avec
+`docker compose --profile test rm -sf mysql-test`.
 
 ## Ouvrir et fusionner la pull request
 
@@ -64,7 +65,7 @@ Conventional Commits, car il devient le message du commit final lors du squash :
 - `chore:`, `docs:`, `refactor:`, `test:`, `build:`, `ci:` ou `revert:` lorsque
   ces types décrivent mieux le changement.
 
-Attendre la réussite de `Conventional PR title`, `PHP quality`, `Backend tests`,
+Attendre la réussite de `Conventional PR title`, `PHP quality`, `Pest tests`,
 `Frontend quality`, `Vite build` et `Docker build`, puis résoudre toutes les
 conversations. Utiliser uniquement **Squash & Merge**.
 
