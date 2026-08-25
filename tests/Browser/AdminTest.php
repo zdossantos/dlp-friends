@@ -209,3 +209,48 @@ test('an admin manages interests through confirmations and generated actions', f
 
     $this->assertDatabaseMissing('interests', ['id' => $interest->id]);
 });
+
+test('a catalog move disables its control and preserves the scroll position', function () {
+    $interests = collect(range(0, 11))->map(fn (int $index): Interest => Interest::factory()->create([
+        'name' => "Intérêt {$index}",
+        'sort_order' => $index,
+    ]));
+    $interest = $interests->get(5);
+    expect($interest)->toBeInstanceOf(Interest::class);
+
+    $admin = User::factory()->withProfile()->admin()->create();
+    $this->actingAs($admin);
+
+    $page = visit('/admin/interests')->assertValue("#interest-name-{$interest->id}", $interest->name);
+    $page->script(<<<JS
+        window.__realAdminXhrSend = XMLHttpRequest.prototype.send;
+        window.__releaseAdminRequest = null;
+        XMLHttpRequest.prototype.send = function (body) {
+            if (String(this.responseURL || this.__browserTestUrl || '').includes('/admin/interests/{$interest->id}/move')) {
+                window.__releaseAdminRequest = () => window.__realAdminXhrSend.call(this, body);
+
+                return;
+            }
+
+            return window.__realAdminXhrSend.call(this, body);
+        };
+        window.__realAdminXhrOpen = XMLHttpRequest.prototype.open;
+        XMLHttpRequest.prototype.open = function (method, url, ...rest) {
+            this.__browserTestUrl = String(url);
+
+            return window.__realAdminXhrOpen.call(this, method, url, ...rest);
+        };
+        true;
+    JS);
+    $page->script('window.scrollTo(0, document.body.scrollHeight); true;');
+    $scrollY = $page->script('window.scrollY');
+
+    $page->script("document.querySelector('[aria-label=\"Descendre {$interest->name}\"]').click()");
+    $page->assertScript('window.__releaseAdminRequest !== null', true)
+        ->assertDisabled("[aria-label=\"Descendre {$interest->name}\"]");
+    $page->script('window.__releaseAdminRequest(); true;');
+    $page->assertEnabled("[aria-label=\"Descendre {$interest->name}\"]")
+        ->assertScript("Math.abs(window.scrollY - {$scrollY}) <= 1", true);
+
+    expect($interest->fresh()?->sort_order)->toBe(6);
+});
