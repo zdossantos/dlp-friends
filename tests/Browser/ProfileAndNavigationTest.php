@@ -177,10 +177,13 @@ test('logging out removes access to the private profile', function () {
     $user->profile?->update(['display_name' => 'Aurore privée']);
     $this->actingAs($user);
 
-    visit('/profile')
-        ->click('[aria-label="Se déconnecter"]')
+    $page = visit('/profile');
+    $page->script("sessionStorage.setItem('historyKey', 'private'); localStorage.setItem('appearance', 'dark'); true;");
+    $page->click('[aria-label="Se déconnecter"]')
         ->assertPathIs('/')
-        ->assertDontSee('Aurore privée');
+        ->assertDontSee('Aurore privée')
+        ->assertScript("sessionStorage.getItem('historyKey')", null)
+        ->assertScript("localStorage.getItem('appearance')", 'dark');
 
     $this->assertGuest();
 });

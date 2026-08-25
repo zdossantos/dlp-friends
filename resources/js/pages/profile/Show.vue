@@ -24,6 +24,7 @@ const frequencyLabels: Record<VisitFrequency, string> = {
 };
 
 function handleLogout(): void {
+    router.clearHistory();
     router.flushAll();
 }
 

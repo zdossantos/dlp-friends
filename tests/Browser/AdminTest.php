@@ -4,6 +4,7 @@ use App\Models\Interest;
 use App\Models\InterestCategory;
 use App\Models\InterestSetting;
 use App\Models\User;
+use Illuminate\Support\Facades\Route;
 
 test('the admin dashboard renders account statistics and recent registrations', function () {
     User::factory()->create(['email' => 'recent@example.test']);
@@ -136,6 +137,24 @@ test('catalog actions stay aligned with their inputs and reserve validation spac
             true,
         )
         ->assertNoJavaScriptErrors();
+});
+
+test('duplicate interest validation keeps the catalog unchanged', function () {
+    Route::middleware(['web', 'auth'])->post(
+        '/admin/interests',
+        fn () => back()->withErrors(['name' => 'Le nom a déjà été utilisé.']),
+    );
+    Interest::factory()->create(['name' => 'Chill']);
+    $admin = User::factory()->withProfile()->admin()->create();
+    $this->actingAs($admin);
+
+    visit('/admin/interests')
+        ->fill('new_interest_name', 'Chill')
+        ->click('Ajouter')
+        ->assertSee('Le nom a déjà été utilisé.')
+        ->assertValue('new_interest_name', 'Chill');
+
+    $this->assertDatabaseCount('interests', 1);
 });
 
 test('an admin manages interests through confirmations and generated actions', function () {
