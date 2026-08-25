@@ -28,6 +28,7 @@ class MemberProfileController extends Controller
     {
         return Inertia::render('profile/Create', [
             'profile' => $request->user()->profile,
+            'age' => $request->user()->age,
             'canManageAvatars' => $request->user()->can('viewAny', Avatar::class),
             ...$this->formOptions($request->user()->profile),
         ]);
@@ -104,6 +105,7 @@ class MemberProfileController extends Controller
     {
         return Inertia::render('profile/Edit', [
             'profile' => $request->user()->profile,
+            'age' => $request->user()->age,
             ...$this->formOptions($request->user()->profile),
         ]);
     }

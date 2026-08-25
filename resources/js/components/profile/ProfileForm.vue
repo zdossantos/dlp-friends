@@ -2,17 +2,23 @@
 import { Form } from '@inertiajs/vue3';
 import { ArrowLeft, ArrowRight, Check, Eye, Sparkles } from '@lucide/vue';
 import { computed, ref } from 'vue';
+import SwipeCard from '@/components/discovery/SwipeCard.vue';
 import InputError from '@/components/InputError.vue';
 import AvatarCarousel from '@/components/profile/AvatarCarousel.vue';
 import AvatarPortrait from '@/components/profile/AvatarPortrait.vue';
 import InterestTagSelector from '@/components/profile/InterestTagSelector.vue';
 import ProfileFormStepper from '@/components/profile/ProfileFormStepper.vue';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
-import type { AvatarOption, InterestOption, Profile } from '@/types';
+import type {
+    AvatarOption,
+    DiscoveryProfile,
+    InterestOption,
+    Profile,
+    VisitFrequency,
+} from '@/types';
 
 type Option = { value: string; label: string };
 
@@ -27,6 +33,7 @@ const props = defineProps<{
     interests: InterestOption[];
     selectedInterestIds: number[];
     interestLimit: number;
+    age: number;
 }>();
 
 const currentStep = ref(1);
@@ -48,12 +55,33 @@ const selectedInterests = computed(() =>
         interestIds.value.includes(interest.id),
     ),
 );
-const frequencyLabel = computed(
-    () =>
-        props.visitFrequencies.find(
-            (option) => option.value === visitFrequency.value,
-        )?.label ?? 'À choisir',
-);
+const frequencyDescriptions: Record<string, string> = {
+    rarely: 'Quelques fois par an',
+    sometimes: 'Plusieurs fois par an',
+    often: 'Plusieurs fois par mois',
+    very_often: 'Chaque semaine',
+};
+const previewProfile = computed<DiscoveryProfile | null>(() => {
+    if (selectedAvatar.value === null) {
+        return null;
+    }
+
+    return {
+        userId: 0,
+        profileId: 0,
+        displayName: displayName.value || 'Votre nom',
+        avatar: selectedAvatar.value,
+        age: props.age,
+        bio: bio.value || null,
+        visitFrequency: (visitFrequency.value || null) as VisitFrequency | null,
+        commonInterestCount: selectedInterests.value.length,
+        commonInterests: selectedInterests.value.map(
+            (interest) => interest.name,
+        ),
+        frequencyBonus: false,
+        score: 0,
+    };
+});
 const canContinue = computed(() => {
     if (currentStep.value === 1) {
         return avatarId.value !== null;
@@ -105,7 +133,7 @@ function showInvalidStep(errors: Record<string, string>): void {
     <Form
         :action="action"
         :method="method"
-        class="space-y-6"
+        class="flex h-full min-h-0 flex-col gap-3"
         v-slot="{ errors, processing }"
         @error="showInvalidStep"
     >
@@ -117,19 +145,19 @@ function showInvalidStep(errors: Record<string, string>): void {
 
         <section
             v-show="currentStep === 1"
-            class="space-y-5"
+            class="flex min-h-0 flex-1 flex-col gap-2"
             aria-labelledby="profile-step-1-title"
         >
-            <div class="text-center">
+            <div class="shrink-0 text-center">
                 <h2
                     id="profile-step-1-title"
                     data-test="profile-step-title"
-                    class="text-2xl font-semibold tracking-tight outline-none sm:text-3xl"
+                    class="text-xl font-semibold tracking-tight outline-none sm:text-2xl"
                     tabindex="-1"
                 >
                     Votre avatar
                 </h2>
-                <p class="mt-2 text-sm text-muted-foreground">
+                <p class="mt-1 text-xs text-muted-foreground sm:text-sm">
                     Choisissez le personnage qui vous ressemble.
                 </p>
             </div>
@@ -146,14 +174,15 @@ function showInvalidStep(errors: Record<string, string>): void {
 
         <section
             v-show="currentStep === 2"
-            class="space-y-6"
+            data-test="profile-step-content-2"
+            class="min-h-0 flex-1 space-y-4 overflow-y-auto overscroll-contain pr-1 pb-2"
             aria-labelledby="profile-step-2-title"
         >
             <div>
                 <h2
                     id="profile-step-2-title"
                     data-test="profile-step-title"
-                    class="text-2xl font-semibold tracking-tight outline-none sm:text-3xl"
+                    class="text-xl font-semibold tracking-tight outline-none sm:text-2xl"
                     tabindex="-1"
                 >
                     Votre identité
@@ -165,11 +194,11 @@ function showInvalidStep(errors: Record<string, string>): void {
 
             <div
                 v-if="selectedAvatar"
-                class="flex items-center gap-4 rounded-2xl border bg-muted/30 p-3"
+                class="flex items-center gap-3 rounded-2xl border bg-muted/30 p-2"
             >
                 <AvatarPortrait
                     :avatar="selectedAvatar"
-                    class="size-16 shrink-0 rounded-2xl"
+                    class="size-12 shrink-0 rounded-xl"
                 />
                 <div>
                     <p
@@ -211,7 +240,7 @@ function showInvalidStep(errors: Record<string, string>): void {
                     v-model="bio"
                     name="bio"
                     maxlength="500"
-                    class="min-h-36 w-full rounded-2xl border border-input bg-background px-4 py-3 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+                    class="min-h-24 w-full resize-none rounded-2xl border border-input bg-background px-4 py-3 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 sm:min-h-32"
                 />
                 <InputError :message="errors.bio" />
             </div>
@@ -219,14 +248,15 @@ function showInvalidStep(errors: Record<string, string>): void {
 
         <section
             v-show="currentStep === 3"
-            class="space-y-7"
+            data-test="profile-step-content-3"
+            class="min-h-0 flex-1 space-y-4 overflow-y-auto overscroll-contain pr-1 pb-2"
             aria-labelledby="profile-step-3-title"
         >
             <div>
                 <h2
                     id="profile-step-3-title"
                     data-test="profile-step-title"
-                    class="text-2xl font-semibold tracking-tight outline-none sm:text-3xl"
+                    class="text-xl font-semibold tracking-tight outline-none sm:text-2xl"
                     tabindex="-1"
                 >
                     Vos affinités
@@ -245,38 +275,57 @@ function showInvalidStep(errors: Record<string, string>): void {
                 <InputError :message="errors.interest_ids" />
             </div>
 
-            <div class="grid gap-3">
-                <Label for="visit_frequency">Fréquence de visite</Label>
-                <select
-                    id="visit_frequency"
-                    v-model="visitFrequency"
-                    name="visit_frequency"
-                    required
-                    class="min-h-14 rounded-2xl border border-input bg-background px-4 text-sm focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
-                >
-                    <option disabled value="">Choisir une fréquence</option>
-                    <option
+            <fieldset class="grid gap-2">
+                <legend class="font-medium">Fréquence de visite</legend>
+                <div class="grid grid-cols-2 gap-2">
+                    <label
                         v-for="option in visitFrequencies"
                         :key="option.value"
-                        :value="option.value"
+                        class="relative flex min-h-14 cursor-pointer flex-col justify-center rounded-2xl border px-3 py-2 transition-[border-color,background-color,transform] focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 motion-reduce:transition-none"
+                        :class="
+                            visitFrequency === option.value
+                                ? 'border-primary bg-primary/10 text-foreground'
+                                : 'border-input bg-background hover:border-primary/50 hover:bg-accent/50'
+                        "
                     >
-                        {{ option.label }}
-                    </option>
-                </select>
+                        <input
+                            v-model="visitFrequency"
+                            class="sr-only"
+                            type="radio"
+                            name="visit_frequency"
+                            :value="option.value"
+                            required
+                        />
+                        <span class="pr-5 text-sm font-semibold">{{
+                            option.label
+                        }}</span>
+                        <span
+                            class="text-[0.68rem] leading-4 text-muted-foreground"
+                        >
+                            {{ frequencyDescriptions[option.value] }}
+                        </span>
+                        <Check
+                            v-if="visitFrequency === option.value"
+                            class="absolute top-2.5 right-2.5 size-4 text-primary"
+                            aria-hidden="true"
+                        />
+                    </label>
+                </div>
                 <InputError :message="errors.visit_frequency" />
-            </div>
+            </fieldset>
         </section>
 
         <section
             v-show="currentStep === 4"
-            class="space-y-6"
+            data-test="profile-step-content-4"
+            class="min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-contain pr-1 pb-2"
             aria-labelledby="profile-step-4-title"
         >
             <div>
                 <h2
                     id="profile-step-4-title"
                     data-test="profile-step-title"
-                    class="text-2xl font-semibold tracking-tight outline-none sm:text-3xl"
+                    class="text-xl font-semibold tracking-tight outline-none sm:text-2xl"
                     tabindex="-1"
                 >
                     Votre aperçu
@@ -286,51 +335,18 @@ function showInvalidStep(errors: Record<string, string>): void {
                 </p>
             </div>
 
-            <article
-                class="overflow-hidden rounded-[2rem] border bg-card shadow-lg shadow-primary/10"
+            <div
+                v-if="previewProfile"
+                data-test="profile-preview"
+                class="mx-auto w-full max-w-sm"
             >
-                <div
-                    v-if="selectedAvatar"
-                    class="relative flex min-h-64 items-end justify-center overflow-hidden px-8 pt-6"
-                    :style="{
-                        backgroundImage: `linear-gradient(135deg, ${selectedAvatar.primary_color}, ${selectedAvatar.secondary_color})`,
-                    }"
-                >
-                    <div
-                        class="absolute inset-0 bg-[radial-gradient(circle_at_70%_20%,rgba(255,255,255,.45),transparent_36%)]"
-                    />
-                    <img
-                        :src="selectedAvatar.image_url"
-                        :alt="`Avatar ${selectedAvatar.name}`"
-                        class="relative z-10 max-h-60 w-full object-contain drop-shadow-2xl"
-                    />
-                </div>
-                <div
-                    class="relative z-20 -mt-5 space-y-4 rounded-t-[2rem] bg-card p-5"
-                >
-                    <div class="flex flex-wrap items-center gap-2">
-                        <h3 class="text-3xl font-semibold tracking-tight">
-                            {{ displayName || 'Votre nom' }}
-                        </h3>
-                        <Badge variant="secondary">{{ frequencyLabel }}</Badge>
-                    </div>
-                    <p class="text-sm leading-6 text-muted-foreground">
-                        {{ bio || 'Votre bio apparaîtra ici.' }}
-                    </p>
-                    <div
-                        v-if="selectedInterests.length"
-                        class="flex flex-wrap gap-2"
-                    >
-                        <Badge
-                            v-for="interest in selectedInterests"
-                            :key="interest.id"
-                            variant="secondary"
-                        >
-                            {{ interest.name }}
-                        </Badge>
-                    </div>
-                </div>
-            </article>
+                <SwipeCard
+                    :profile="previewProfile"
+                    :locked="true"
+                    :preview="true"
+                    :compact="true"
+                />
+            </div>
 
             <div class="grid gap-3">
                 <Label for="visibility">Visible dans les suggestions</Label>
@@ -363,7 +379,7 @@ function showInvalidStep(errors: Record<string, string>): void {
             </div>
 
             <p
-                class="flex gap-3 rounded-2xl bg-primary/5 p-4 text-sm text-muted-foreground"
+                class="hidden gap-3 rounded-2xl bg-primary/5 p-4 text-sm text-muted-foreground sm:flex"
             >
                 <Sparkles
                     class="size-5 shrink-0 text-primary"
@@ -374,7 +390,7 @@ function showInvalidStep(errors: Record<string, string>): void {
         </section>
 
         <footer
-            class="sticky bottom-0 z-30 -mx-1 flex items-center gap-3 border-t bg-background/95 px-1 pt-4 pb-[max(0.25rem,env(safe-area-inset-bottom))] backdrop-blur"
+            class="z-30 -mx-1 flex shrink-0 items-center gap-3 border-t bg-background/95 px-1 pt-3 pb-1 backdrop-blur"
         >
             <Button
                 v-if="currentStep > 1"

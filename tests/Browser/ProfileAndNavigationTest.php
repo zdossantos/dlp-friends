@@ -47,7 +47,9 @@ test('profile onboarding is a keyboard accessible four-step journey that preserv
     Storage::fake('local');
     $first = Avatar::factory()->create(['name' => 'Aurore', 'sort_order' => 0]);
     $second = Avatar::factory()->create(['name' => 'Nova', 'sort_order' => 1]);
-    foreach ([$first, $second] as $avatar) {
+    $third = Avatar::factory()->create(['name' => 'Sélène', 'sort_order' => 2]);
+    $fourth = Avatar::factory()->create(['name' => 'Orion', 'sort_order' => 3]);
+    foreach ([$first, $second, $third, $fourth] as $avatar) {
         Storage::disk('local')->put($avatar->image_path, base64_decode(
             'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScL8WQAAAABJRU5ErkJggg==',
         ));
@@ -59,21 +61,48 @@ test('profile onboarding is a keyboard accessible four-step journey that preserv
     $page = visit('/profile/create')
         ->on()->mobile()
         ->assertSee('Votre avatar')
-        ->keys('[data-test="avatar-carousel"]', 'ArrowRight')
+        ->assertScript('document.documentElement.scrollHeight <= document.documentElement.clientHeight', true)
+        ->assertAttribute("[data-test=avatar-carousel-item-{$first->id}] img", 'draggable', 'false')
+        ->assertScript("getComputedStyle(document.querySelector('[data-test=avatar-carousel-item-{$first->id}]')).transitionDuration !== '0s'", true)
+        ->assertScript("document.querySelector('[data-test=avatar-carousel-item-{$second->id}]').style.transform.includes('rotate')", true)
+        ->assertAttribute("[data-test=avatar-carousel-item-{$third->id}]", 'tabindex', '-1')
+        ->assertAttribute("[data-test=avatar-carousel-item-{$third->id}]", 'aria-hidden', 'true');
+
+    $page->script("const card = document.querySelector('[data-test=avatar-carousel-item-{$first->id}]'); card.dispatchEvent(new PointerEvent('pointerdown', { pointerId: 21, clientX: 240, clientY: 300, bubbles: true })); card.dispatchEvent(new PointerEvent('pointerup', { pointerId: 21, clientX: 140, clientY: 300, bubbles: true }));");
+
+    $page
+        ->assertScript("document.querySelector('input[name=avatar_id][value=\"{$second->id}\"]').checked", true);
+
+    $page->script("document.querySelector('[aria-label=\"Choisir Aurore\"]').click()");
+
+    $page
+        ->assertScript("document.querySelector('input[name=avatar_id][value=\"{$first->id}\"]').checked", true)
+        ->click('[aria-label="Avatar suivant"]')
         ->assertScript("document.querySelector('input[name=avatar_id][value=\"{$second->id}\"]').checked", true)
         ->assertSee('Nova')
+        ->keys('[data-test="avatar-carousel"]', 'ArrowLeft')
+        ->assertScript("document.querySelector('input[name=avatar_id][value=\"{$first->id}\"]').checked", true)
+        ->keys('[data-test="avatar-carousel"]', 'ArrowRight')
         ->click('Continuer')
         ->assertSee('Votre identité')
         ->assertSee('2 sur 4')
+        ->assertScript('document.documentElement.scrollHeight <= document.documentElement.clientHeight', true)
         ->fill('display_name', 'Camille')
         ->fill('bio', 'Toujours partante pour une journée entre fans.')
         ->click('Continuer')
         ->assertSee('Vos affinités')
+        ->assertScript('document.documentElement.scrollHeight <= document.documentElement.clientHeight', true)
+        ->resize(320, 568)
+        ->assertScript("getComputedStyle(document.querySelector('[data-test=profile-step-content-3]')).overflowY === 'auto'", true)
+        ->assertScript("document.querySelector('[data-test=profile-step-content-3]').scrollHeight >= document.querySelector('[data-test=profile-step-content-3]').clientHeight", true)
+        ->resize(375, 812)
         ->click('Attractions')
-        ->select('visit_frequency', 'often')
+        ->click('Souvent')
         ->click('Continuer')
         ->assertSee('Votre aperçu')
         ->assertSee('4 sur 4')
+        ->assertScript('document.documentElement.scrollHeight <= document.documentElement.clientHeight', true)
+        ->assertPresent('[data-test="profile-preview"] [data-test="discovery-avatar-hero"]')
         ->assertSee('Camille')
         ->assertSee('Toujours partante pour une journée entre fans.')
         ->click('Retour')
@@ -102,7 +131,8 @@ test('profile onboarding exposes the complete accessible contract', function () 
         ->assertPresent('textarea[name="bio"]')
         ->assertAttribute('input[name="display_name"]', 'maxlength', '80')
         ->assertAttribute('textarea[name="bio"]', 'maxlength', '500')
-        ->assertPresent('select[name="visit_frequency"]')
+        ->assertPresent('input[type="radio"][name="visit_frequency"]')
+        ->assertNotPresent('select[name="visit_frequency"]')
         ->assertPresent('select[name="visibility"]')
         ->assertSee('Continuer')
         ->assertPresent('[aria-label="Progression du profil"]')
@@ -165,7 +195,7 @@ test('profile validation displays a changed interest limit', function () {
         ->click('Continuer')
         ->fill('display_name', 'Aurore')
         ->click('Continuer')
-        ->select('visit_frequency', 'sometimes')
+        ->click('De temps en temps')
         ->click('Attractions')
         ->click('Spectacles')
         ->click('Continuer');
@@ -187,6 +217,8 @@ test('a refreshed catalog drops an archived selected interest', function () {
     $this->actingAs($user);
 
     visit('/profile/edit')
+        ->on()->mobile()
+        ->assertScript('document.documentElement.scrollHeight <= document.documentElement.clientHeight', true)
         ->click('Continuer')
         ->click('Continuer')
         ->assertSee('Attractions')

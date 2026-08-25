@@ -14,8 +14,9 @@ const props = withDefaults(
         profile: DiscoveryProfile;
         locked: boolean;
         preview?: boolean;
+        compact?: boolean;
     }>(),
-    { preview: false },
+    { compact: false, preview: false },
 );
 
 const emit = defineEmits<{ like: []; pass: [] }>();
@@ -210,7 +211,12 @@ watch(
     >
         <div
             data-test="discovery-avatar-hero"
-            class="relative flex min-h-[22rem] items-end justify-center overflow-hidden px-8 pt-6 sm:min-h-[27rem]"
+            :class="[
+                'relative flex items-end justify-center overflow-hidden',
+                compact
+                    ? 'min-h-40 px-5 pt-3'
+                    : 'min-h-[22rem] px-8 pt-6 sm:min-h-[27rem]',
+            ]"
             :style="avatarGradient"
         >
             <div
@@ -223,24 +229,45 @@ watch(
             <img
                 :src="profile.avatar.image_url"
                 :alt="`Avatar ${profile.avatar.name}`"
-                class="relative z-10 max-h-[21rem] w-full object-contain drop-shadow-2xl sm:max-h-[26rem]"
+                draggable="false"
+                :class="[
+                    'pointer-events-none relative z-10 w-full object-contain drop-shadow-2xl select-none',
+                    compact ? 'max-h-40' : 'max-h-[21rem] sm:max-h-[26rem]',
+                ]"
             />
         </div>
 
         <div
             data-test="discovery-information-sheet"
-            class="relative z-20 -mt-7 space-y-5 rounded-t-[2rem] bg-card px-6 pt-6 pb-5"
+            :class="[
+                'relative z-20 rounded-t-[2rem] bg-card',
+                compact
+                    ? '-mt-5 space-y-2 px-4 pt-4 pb-3'
+                    : '-mt-7 space-y-5 px-6 pt-6 pb-5',
+            ]"
         >
             <div>
                 <div class="flex flex-wrap items-center gap-2">
-                    <h2 class="text-4xl font-semibold tracking-tight">
+                    <h2
+                        :class="[
+                            'font-semibold tracking-tight',
+                            compact ? 'text-2xl' : 'text-4xl',
+                        ]"
+                    >
                         {{ profile.displayName }}
                     </h2>
                     <Badge class="rounded-full px-3 py-1" variant="secondary">
                         {{ profile.age }} ans
                     </Badge>
                 </div>
-                <p class="mt-3 text-sm leading-6 text-muted-foreground">
+                <p
+                    :class="[
+                        'text-sm text-muted-foreground',
+                        compact
+                            ? 'mt-1 line-clamp-2 leading-5'
+                            : 'mt-3 leading-6',
+                    ]"
+                >
                     {{ profile.bio ?? 'Bio non renseignée.' }}
                 </p>
             </div>
@@ -264,7 +291,10 @@ watch(
             </div>
 
             <div
-                class="flex items-center gap-3 border-t pt-4 text-sm text-muted-foreground"
+                :class="[
+                    'flex items-center gap-3 border-t text-sm text-muted-foreground',
+                    compact ? 'pt-2' : 'pt-4',
+                ]"
             >
                 <Sparkles class="size-5 text-primary" aria-hidden="true" />
                 <p>
@@ -282,13 +312,16 @@ watch(
                 pour l’aimer. Au clavier, utilisez les flèches gauche et droite.
             </p>
             <div
-                class="grid grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] gap-3"
+                :class="[
+                    'grid grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)]',
+                    compact ? 'gap-2' : 'gap-3',
+                ]"
                 @pointerdown.stop
             >
                 <Button
                     type="button"
                     variant="outline"
-                    class="min-h-14 rounded-full"
+                    :class="['rounded-full', compact ? 'min-h-10' : 'min-h-14']"
                     :disabled="locked || preview"
                     aria-label="Passer ce profil"
                     @click="decide('pass')"
@@ -298,7 +331,10 @@ watch(
                 </Button>
                 <Button
                     type="button"
-                    class="min-h-14 rounded-full bg-gradient-to-r from-pink-500 to-primary"
+                    :class="[
+                        'rounded-full bg-gradient-to-r from-pink-500 to-primary',
+                        compact ? 'min-h-10 text-xs' : 'min-h-14',
+                    ]"
                     :disabled="locked || preview"
                     aria-label="Aimer ce profil"
                     @click="decide('like')"
@@ -307,7 +343,10 @@ watch(
                     Ça m’intéresse
                 </Button>
             </div>
-            <p class="text-center text-xs text-muted-foreground">
+            <p
+                v-if="!compact"
+                class="text-center text-xs text-muted-foreground"
+            >
                 Balayez ou utilisez les boutons
             </p>
         </div>

@@ -25,13 +25,14 @@ class MemberProfileTest extends TestCase
         $second = Interest::factory()->create(['name' => 'Spectacles', 'sort_order' => 20]);
         $first = Interest::factory()->create(['name' => 'Attractions', 'sort_order' => 10]);
         Interest::factory()->create(['name' => 'Archivé', 'is_active' => false, 'sort_order' => 0]);
-        $user = User::factory()->create();
+        $user = User::factory()->create(['birth_date' => today()->subYears(31)]);
 
         $this->actingAs($user)
             ->get(route('member-profile.create'))
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->component('profile/Create')
+                ->where('age', 31)
                 ->has('visitFrequencies', 4)
                 ->has('visibilities', 2)
                 ->where('interests', [
@@ -494,7 +495,9 @@ class MemberProfileTest extends TestCase
         $active = Interest::factory()->create(['sort_order' => 10]);
         $inactive = Interest::factory()->create(['is_active' => false, 'sort_order' => 0]);
         $suspended = Interest::factory()->create(['sort_order' => 20]);
-        $user = User::factory()->withProfile()->create();
+        $user = User::factory()->withProfile()->create([
+            'birth_date' => today()->subYears(31),
+        ]);
         $user->profile->interestHistory()->attach([
             $active->id => ['is_selected' => true],
             $inactive->id => ['is_selected' => true],
@@ -509,6 +512,7 @@ class MemberProfileTest extends TestCase
                     ['id' => $active->id, 'name' => $active->name],
                     ['id' => $suspended->id, 'name' => $suspended->name],
                 ])
+                ->where('age', 31)
                 ->where('selectedInterestIds', [$active->id]));
     }
 

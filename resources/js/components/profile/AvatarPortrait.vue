@@ -17,7 +17,8 @@ const gradient = computed(() => ({
         <img
             :src="avatar.image_url"
             :alt="`Avatar ${avatar.name}`"
-            class="h-full w-full object-contain"
+            draggable="false"
+            class="pointer-events-none h-full w-full object-contain select-none"
         />
     </div>
 </template>
