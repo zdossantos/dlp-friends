@@ -11,4 +11,5 @@ return [
         'profile' => 'Mon profil',
         'discovery' => 'Découvrir',
     ],
+    'copy' => [],
 ];

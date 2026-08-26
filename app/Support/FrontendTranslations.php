@@ -7,6 +7,9 @@ final class FrontendTranslations
     /** @return array<string, array<string, string>> */
     public static function messages(): array
     {
+        /** @var array{copy: array<string, string>} $frontend */
+        $frontend = trans('frontend');
+
         return [
             'locale' => [
                 'label' => __('frontend.locale.label'),
@@ -18,6 +21,7 @@ final class FrontendTranslations
                 'profile' => __('frontend.navigation.profile'),
                 'discovery' => __('frontend.navigation.discovery'),
             ],
+            'copy' => $frontend['copy'],
         ];
     }
 }

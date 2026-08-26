@@ -44,7 +44,7 @@ class StoreInterestRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'name.unique' => 'Le nom a déjà été utilisé.',
+            'name.unique' => __('Le nom a déjà été utilisé.'),
         ];
     }
 }

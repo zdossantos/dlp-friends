@@ -40,6 +40,12 @@ test('an unsupported browser language falls back to French', function () {
     expect(app()->getLocale())->toBe('fr');
 });
 
+test('the default test browser language selects French', function () {
+    $this->get('/')->assertOk();
+
+    expect(app()->getLocale())->toBe('fr');
+});
+
 test('an English interest falls back to its French name when untranslated', function () {
     app()->setLocale('en');
     $interest = Interest::factory()->create([

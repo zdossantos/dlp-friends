@@ -11,6 +11,7 @@ export type TranslationMessages = {
         profile: string;
         discovery: string;
     };
+    copy: Record<string, string>;
 };
 
 export type I18n = {

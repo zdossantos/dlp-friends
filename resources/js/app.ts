@@ -3,6 +3,7 @@ import { configureEcho } from '@laravel/echo-vue';
 import { initializeTheme } from '@/composables/useAppearance';
 import { resolvePageLayout } from '@/layouts/resolvePageLayout';
 import { initializeFlashToast } from '@/lib/flashToast';
+import { initializeDomTranslations } from '@/lib/translateDom';
 
 configureEcho({
     broadcaster: 'reverb',
@@ -23,3 +24,4 @@ initializeTheme();
 
 // This will listen for flash toast data from the server...
 initializeFlashToast();
+initializeDomTranslations();

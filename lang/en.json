@@ -1,3 +1,24 @@
 {
-    "registration.adult_only": "You must be an adult to register."
+    "registration.adult_only": "You must be an adult to register.",
+    "profile.interest_limit": "You may select up to :max interests.",
+    "Un ou plusieurs intérêts ne sont plus disponibles.": "One or more interests are no longer available.",
+    "Vous avez déjà évalué ce profil.": "You have already reviewed this profile.",
+    "Le nom a déjà été utilisé.": "The name has already been taken.",
+    "Un intérêt porte déjà ce nom.": "An interest already uses this name.",
+    "Intérêt ajouté.": "Interest added.",
+    "Intérêt modifié.": "Interest updated.",
+    "Intérêt supprimé.": "Interest deleted.",
+    "Intérêt réactivé.": "Interest reactivated.",
+    "Intérêt archivé.": "Interest archived.",
+    "Cet intérêt a déjà été utilisé. Archivez-le avant de le supprimer.": "This interest has already been used. Archive it before deleting it.",
+    "Limite mise à jour.": "Limit updated.",
+    "Avatar ajouté.": "Avatar added.",
+    "Avatar modifié.": "Avatar updated.",
+    "Avatar supprimé.": "Avatar deleted.",
+    "Avatar réactivé.": "Avatar reactivated.",
+    "Avatar archivé.": "Avatar archived.",
+    "Un avatar porte déjà ce nom.": "An avatar already uses this name.",
+    "Cet avatar est encore utilisé par un profil.": "This avatar is still used by a profile.",
+    "Compte mis à jour.": "Account updated.",
+    "Password updated.": "Password updated."
 }

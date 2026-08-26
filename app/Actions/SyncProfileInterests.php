@@ -28,7 +28,7 @@ class SyncProfileInterests
                 )
             ) {
                 throw ValidationException::withMessages([
-                    'interest_ids' => 'Un ou plusieurs intérêts ne sont plus disponibles.',
+                    'interest_ids' => __('Un ou plusieurs intérêts ne sont plus disponibles.'),
                 ]);
             }
 
@@ -49,7 +49,7 @@ class SyncProfileInterests
                 && $submittedIds->diff($currentIds)->isNotEmpty()
             ) {
                 throw ValidationException::withMessages([
-                    'interest_ids' => "Vous pouvez sélectionner au maximum {$setting->max_selections} intérêts.",
+                    'interest_ids' => __('profile.interest_limit', ['max' => $setting->max_selections]),
                 ]);
             }
 

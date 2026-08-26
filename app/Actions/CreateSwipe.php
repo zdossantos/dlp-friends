@@ -86,7 +86,7 @@ class CreateSwipe
             }
 
             throw ValidationException::withMessages([
-                'decision' => 'Vous avez déjà évalué ce profil.',
+                'decision' => __('Vous avez déjà évalué ce profil.'),
             ]);
         }
     }

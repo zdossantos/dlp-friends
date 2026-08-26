@@ -25,7 +25,9 @@ defineProps<{
             aria-hidden="true"
             class="absolute inset-0 bg-[radial-gradient(circle_at_top_left,var(--color-secondary),transparent_48%),radial-gradient(circle_at_bottom_right,var(--color-accent),transparent_42%)] opacity-45"
         />
-        <div class="absolute top-4 right-4 z-10 flex items-center gap-3 sm:top-6 sm:right-6">
+        <div
+            class="absolute top-4 right-4 z-10 flex items-center gap-3 sm:top-6 sm:right-6"
+        >
             <LocaleSwitcher />
             <AppearanceTabs />
         </div>

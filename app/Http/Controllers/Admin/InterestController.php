@@ -67,13 +67,13 @@ class InterestController extends Controller
             });
         } catch (UniqueConstraintViolationException) {
             throw ValidationException::withMessages([
-                'name' => 'Un intérêt porte déjà ce nom.',
+                'name' => __('Un intérêt porte déjà ce nom.'),
             ]);
         }
 
         Inertia::flash('toast', [
             'type' => 'success',
-            'message' => 'Intérêt ajouté.',
+            'message' => __('Intérêt ajouté.'),
         ]);
 
         return back();
@@ -88,13 +88,13 @@ class InterestController extends Controller
             ]);
         } catch (UniqueConstraintViolationException) {
             throw ValidationException::withMessages([
-                'name' => 'Un intérêt porte déjà ce nom.',
+                'name' => __('Un intérêt porte déjà ce nom.'),
             ]);
         }
 
         Inertia::flash('toast', [
             'type' => 'success',
-            'message' => 'Intérêt modifié.',
+            'message' => __('Intérêt modifié.'),
         ]);
 
         return back();
@@ -115,7 +115,7 @@ class InterestController extends Controller
 
             if ($lockedInterest->is_active && $lockedInterest->profiles()->exists()) {
                 throw ValidationException::withMessages([
-                    'interest' => 'Cet intérêt a déjà été utilisé. Archivez-le avant de le supprimer.',
+                    'interest' => __('Cet intérêt a déjà été utilisé. Archivez-le avant de le supprimer.'),
                 ]);
             }
 
@@ -134,7 +134,7 @@ class InterestController extends Controller
 
         Inertia::flash('toast', [
             'type' => 'success',
-            'message' => 'Intérêt supprimé.',
+            'message' => __('Intérêt supprimé.'),
         ]);
 
         return back();

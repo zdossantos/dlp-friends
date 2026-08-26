@@ -65,14 +65,14 @@ class AvatarController extends Controller
         } catch (UniqueConstraintViolationException) {
             $this->deleteImage($imagePath);
 
-            throw ValidationException::withMessages(['name' => 'Un avatar porte déjà ce nom.']);
+            throw ValidationException::withMessages(['name' => __('Un avatar porte déjà ce nom.')]);
         } catch (Throwable $exception) {
             $this->deleteImage($imagePath);
 
             throw $exception;
         }
 
-        Inertia::flash('toast', ['type' => 'success', 'message' => 'Avatar ajouté.']);
+        Inertia::flash('toast', ['type' => 'success', 'message' => __('Avatar ajouté.')]);
 
         return back();
     }
@@ -106,7 +106,7 @@ class AvatarController extends Controller
                 $this->deleteImage($newImagePath);
             }
 
-            throw ValidationException::withMessages(['name' => 'Un avatar porte déjà ce nom.']);
+            throw ValidationException::withMessages(['name' => __('Un avatar porte déjà ce nom.')]);
         } catch (Throwable $exception) {
             if ($newImagePath !== null) {
                 $this->deleteImage($newImagePath);
@@ -119,7 +119,7 @@ class AvatarController extends Controller
             $this->deleteImage($oldImagePath);
         }
 
-        Inertia::flash('toast', ['type' => 'success', 'message' => 'Avatar modifié.']);
+        Inertia::flash('toast', ['type' => 'success', 'message' => __('Avatar modifié.')]);
 
         return back();
     }
@@ -136,7 +136,7 @@ class AvatarController extends Controller
 
             if ($lockedAvatar->profiles()->exists()) {
                 throw ValidationException::withMessages([
-                    'avatar' => 'Cet avatar est encore utilisé par un profil.',
+                    'avatar' => __('Cet avatar est encore utilisé par un profil.'),
                 ]);
             }
 
@@ -152,7 +152,7 @@ class AvatarController extends Controller
         });
 
         $this->deleteImage($imagePath);
-        Inertia::flash('toast', ['type' => 'success', 'message' => 'Avatar supprimé.']);
+        Inertia::flash('toast', ['type' => 'success', 'message' => __('Avatar supprimé.')]);
 
         return back();
     }
