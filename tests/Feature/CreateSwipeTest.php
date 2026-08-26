@@ -224,6 +224,10 @@ class CreateSwipeTest extends TestCase
             ->and($match?->user_high_id)->toBe($highUser->id);
         $this->assertDatabaseCount('swipes', 2);
         $this->assertDatabaseCount('matches', 1);
+        $this->assertDatabaseHas('conversations', [
+            'match_id' => $match?->id,
+            'archived_at' => null,
+        ]);
     }
 
     public function test_additional_attempts_leave_two_swipes_and_one_match(): void
@@ -245,6 +249,7 @@ class CreateSwipeTest extends TestCase
 
         $this->assertDatabaseCount('swipes', 2);
         $this->assertDatabaseCount('matches', 1);
+        $this->assertDatabaseCount('conversations', 1);
     }
 
     public function test_preexisting_concurrent_writes_are_reported_without_creating_duplicates(): void
