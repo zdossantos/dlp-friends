@@ -119,6 +119,10 @@ test('the top discovery card accepts keyboard and accessible decisions', functio
             "document.querySelector('[data-test=discovery-card-stack-item]').getBoundingClientRect().bottom <= document.querySelector('[data-test=member-shell-content]').getBoundingClientRect().bottom",
             true,
         )
+        ->assertScript(
+            "parseFloat(getComputedStyle(document.querySelector('[data-test=discovery-page]')).paddingBottom) >= 16",
+            true,
+        )
         ->keys('[data-test="discovery-card-stack-item"] [tabindex="0"]', 'ArrowLeft')
         ->assertSee('Vous avez exploré tous les profils disponibles');
 
