@@ -44,6 +44,7 @@ class ManageInterestCatalogTest extends TestCase
                     [
                         'id' => $earlier->id,
                         'name' => 'Attractions',
+                        'name_en' => null,
                         'is_active' => true,
                         'sort_order' => 10,
                         'profiles_count' => 0,
@@ -51,6 +52,7 @@ class ManageInterestCatalogTest extends TestCase
                     [
                         'id' => $later->id,
                         'name' => 'Spectacles',
+                        'name_en' => null,
                         'is_active' => false,
                         'sort_order' => 20,
                         'profiles_count' => 1,

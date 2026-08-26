@@ -36,6 +36,7 @@ import {
 type Interest = {
     id: number;
     name: string;
+    name_en: string | null;
     is_active: boolean;
     sort_order: number;
     profiles_count: number;
@@ -113,6 +114,9 @@ defineOptions({
                             </Button>
                         </div>
                         <InputError :message="errors.name" />
+                        <Label for="new_interest_name_en">Nom anglais</Label>
+                        <Input id="new_interest_name_en" name="name_en" autocomplete="off" placeholder="E.g. Parades" />
+                        <InputError :message="errors.name_en" />
                     </Form>
                 </CardContent>
             </Card>
@@ -217,6 +221,8 @@ defineOptions({
                                 </Button>
                             </div>
                             <InputError :message="errors.name" />
+                            <Input :id="`interest-name-en-${interest.id}`" name="name_en" :default-value="interest.name_en ?? ''" autocomplete="off" />
+                            <InputError :message="errors.name_en" />
                         </Form>
 
                         <div

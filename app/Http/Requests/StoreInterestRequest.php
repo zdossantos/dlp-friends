@@ -36,6 +36,7 @@ class StoreInterestRequest extends FormRequest
                 'max:80',
                 Rule::unique('interests', 'name'),
             ],
+            'name_en' => ['nullable', 'string', 'max:80'],
         ];
     }
 

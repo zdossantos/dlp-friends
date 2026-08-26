@@ -39,6 +39,7 @@ class UpdateInterestRequest extends FormRequest
                 'max:80',
                 Rule::unique('interests', 'name')->ignore($this->route('interest')),
             ],
+            'name_en' => ['nullable', 'string', 'max:80'],
         ];
     }
 }
