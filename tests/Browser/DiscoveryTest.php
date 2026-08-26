@@ -98,6 +98,7 @@ test('the top discovery card accepts keyboard and accessible decisions', functio
     $this->actingAs($actor);
 
     $page = visit('/discover')
+        ->on()->mobile()
         ->assertPresent('[aria-label="Passer ce profil"]')
         ->assertPresent('[aria-label="Aimer ce profil"]')
         ->assertPresent('[data-test="discovery-avatar-hero"]')
@@ -107,7 +108,15 @@ test('the top discovery card accepts keyboard and accessible decisions', functio
             false,
         )
         ->assertScript(
-            "document.querySelector('[data-test=discovery-avatar-hero]').getBoundingClientRect().height >= 300",
+            "document.querySelector('[data-test=discovery-avatar-hero]').getBoundingClientRect().height >= 240 && document.querySelector('[data-test=discovery-avatar-hero]').getBoundingClientRect().height <= 290",
+            true,
+        )
+        ->assertScript(
+            'document.querySelector(\'[data-test=member-shell-content]\').scrollHeight <= document.querySelector(\'[data-test=member-shell-content]\').clientHeight',
+            true,
+        )
+        ->assertScript(
+            "document.querySelector('[data-test=discovery-card-stack-item]').getBoundingClientRect().bottom <= document.querySelector('[data-test=member-shell-content]').getBoundingClientRect().bottom",
             true,
         )
         ->keys('[data-test="discovery-card-stack-item"] [tabindex="0"]', 'ArrowLeft')

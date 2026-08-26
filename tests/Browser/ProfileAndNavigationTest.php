@@ -280,7 +280,15 @@ test('a completed member sees their public profile and member actions', function
         ->assertPresent('[data-test="profile-avatar-hero"]')
         ->assertPresent('[data-test="profile-information-sheet"]')
         ->assertScript(
-            "document.querySelector('[data-test=profile-avatar-hero]').getBoundingClientRect().height >= 300",
+            "document.querySelector('[data-test=profile-avatar-hero]').getBoundingClientRect().height >= 240 && document.querySelector('[data-test=profile-avatar-hero]').getBoundingClientRect().height <= 290",
+            true,
+        )
+        ->assertScript(
+            'document.querySelector(\'[data-test=member-shell-content]\').scrollHeight <= document.querySelector(\'[data-test=member-shell-content]\').clientHeight',
+            true,
+        )
+        ->assertScript(
+            "document.querySelector('[data-test=profile-card]').getBoundingClientRect().bottom <= document.querySelector('[data-test=member-shell-content]').getBoundingClientRect().bottom",
             true,
         )
         ->assertScript(

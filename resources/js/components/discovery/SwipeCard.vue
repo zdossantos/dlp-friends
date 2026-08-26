@@ -196,7 +196,7 @@ watch(
 
 <template>
     <Card
-        class="w-full max-w-md touch-pan-y gap-0 overflow-hidden rounded-[2rem] p-0 shadow-xl shadow-primary/10 transition-[transform,opacity] ease-[cubic-bezier(0.22,1,0.36,1)] will-change-transform outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 motion-reduce:duration-0"
+        class="max-h-full w-full max-w-md touch-pan-y gap-0 overflow-hidden rounded-[2rem] p-0 shadow-xl shadow-primary/10 transition-[transform,opacity] ease-[cubic-bezier(0.22,1,0.36,1)] will-change-transform outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 motion-reduce:duration-0"
         :style="cardStyle"
         :tabindex="preview ? -1 : 0"
         :aria-label="`Profil de découverte de ${profile.displayName}`"
@@ -212,10 +212,10 @@ watch(
         <div
             data-test="discovery-avatar-hero"
             :class="[
-                'relative flex items-end justify-center overflow-hidden',
+                'relative flex shrink-0 items-end justify-center overflow-hidden',
                 compact
                     ? 'min-h-40 px-5 pt-3'
-                    : 'min-h-[22rem] px-8 pt-6 sm:min-h-[27rem]',
+                    : 'h-[clamp(15.5rem,34svh,17.5rem)] px-6 pt-4 sm:h-80',
             ]"
             :style="avatarGradient"
         >
@@ -232,7 +232,7 @@ watch(
                 draggable="false"
                 :class="[
                     'pointer-events-none relative z-10 w-full object-contain drop-shadow-2xl select-none',
-                    compact ? 'max-h-40' : 'max-h-[21rem] sm:max-h-[26rem]',
+                    compact ? 'max-h-40' : 'max-h-[17rem] sm:max-h-[19rem]',
                 ]"
             />
         </div>
@@ -243,7 +243,7 @@ watch(
                 'relative z-20 rounded-t-[2rem] bg-card',
                 compact
                     ? '-mt-5 space-y-2 px-4 pt-4 pb-3'
-                    : '-mt-7 space-y-5 px-6 pt-6 pb-5',
+                    : '-mt-6 space-y-2.5 px-4 pt-4 pb-3',
             ]"
         >
             <div>
@@ -251,7 +251,7 @@ watch(
                     <h2
                         :class="[
                             'font-semibold tracking-tight',
-                            compact ? 'text-2xl' : 'text-4xl',
+                            compact ? 'text-2xl' : 'text-2xl sm:text-3xl',
                         ]"
                     >
                         {{ profile.displayName }}
@@ -265,7 +265,7 @@ watch(
                         'text-sm text-muted-foreground',
                         compact
                             ? 'mt-1 line-clamp-2 leading-5'
-                            : 'mt-3 leading-6',
+                            : 'mt-1.5 max-h-10 overflow-hidden leading-5',
                     ]"
                 >
                     {{ profile.bio ?? 'Bio non renseignée.' }}
@@ -281,7 +281,7 @@ watch(
                     {{ profile.commonInterestCount }} intérêts en commun
                 </Badge>
                 <Badge
-                    v-for="interest in profile.commonInterests"
+                    v-for="interest in profile.commonInterests.slice(0, 2)"
                     :key="interest"
                     variant="secondary"
                     class="rounded-full px-3 py-1.5"
@@ -293,7 +293,7 @@ watch(
             <div
                 :class="[
                     'flex items-center gap-3 border-t text-sm text-muted-foreground',
-                    compact ? 'pt-2' : 'pt-4',
+                    compact ? 'pt-2' : 'pt-3',
                 ]"
             >
                 <Sparkles class="size-5 text-primary" aria-hidden="true" />
@@ -321,7 +321,7 @@ watch(
                 <Button
                     type="button"
                     variant="outline"
-                    :class="['rounded-full', compact ? 'min-h-10' : 'min-h-14']"
+                    :class="['rounded-full', compact ? 'min-h-10' : 'min-h-12']"
                     :disabled="locked || preview"
                     aria-label="Passer ce profil"
                     @click="decide('pass')"
@@ -333,7 +333,7 @@ watch(
                     type="button"
                     :class="[
                         'rounded-full bg-gradient-to-r from-pink-500 to-primary',
-                        compact ? 'min-h-10 text-xs' : 'min-h-14',
+                        compact ? 'min-h-10 text-xs' : 'min-h-12',
                     ]"
                     :disabled="locked || preview"
                     aria-label="Aimer ce profil"
@@ -343,12 +343,6 @@ watch(
                     Ça m’intéresse
                 </Button>
             </div>
-            <p
-                v-if="!compact"
-                class="text-center text-xs text-muted-foreground"
-            >
-                Balayez ou utilisez les boutons
-            </p>
         </div>
     </Card>
 </template>

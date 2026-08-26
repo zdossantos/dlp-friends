@@ -44,15 +44,16 @@ defineOptions({
 <template>
     <Head :title="profile.display_name" />
     <main
-        class="mx-auto w-full max-w-lg px-4 pt-[max(1rem,env(safe-area-inset-top))] sm:px-6 sm:pt-8"
+        class="mx-auto flex h-full min-h-0 w-full max-w-lg overflow-hidden px-4 pt-[max(0.75rem,env(safe-area-inset-top))] sm:px-6 sm:pt-6"
     >
         <section
-            class="overflow-hidden rounded-[2rem] border border-border/70 bg-card shadow-xl shadow-primary/10"
+            data-test="profile-card"
+            class="max-h-full w-full overflow-hidden rounded-[2rem] border border-border/70 bg-card shadow-xl shadow-primary/10"
         >
             <div
                 v-if="profile.avatar"
                 data-test="profile-avatar-hero"
-                class="relative flex min-h-[23rem] items-end justify-center overflow-hidden px-8 pt-20 sm:min-h-[28rem]"
+                class="relative flex h-[clamp(15.5rem,34svh,17.5rem)] items-end justify-center overflow-hidden px-6 pt-14 sm:h-80"
                 :style="{
                     backgroundImage: `linear-gradient(145deg, ${profile.avatar.primary_color}, ${profile.avatar.secondary_color})`,
                 }"
@@ -61,14 +62,14 @@ defineOptions({
                     class="absolute inset-0 bg-[radial-gradient(circle_at_70%_20%,rgba(255,255,255,.5),transparent_35%),radial-gradient(circle_at_15%_70%,rgba(255,255,255,.22),transparent_34%)]"
                 />
                 <div
-                    class="absolute top-4 right-4 z-30 flex gap-2"
+                    class="absolute top-3 right-3 z-30 flex gap-2"
                     aria-label="Actions du profil"
                 >
                     <Button
                         as-child
                         variant="secondary"
                         size="icon"
-                        class="size-12 rounded-full border border-white/50 bg-background/90 shadow-lg backdrop-blur"
+                        class="size-10 rounded-full border border-white/50 bg-background/90 shadow-lg backdrop-blur"
                     >
                         <Link :href="editAccount()" aria-label="Réglages">
                             <Settings class="size-5" aria-hidden="true" />
@@ -79,7 +80,7 @@ defineOptions({
                         as-child
                         variant="secondary"
                         size="icon"
-                        class="size-12 rounded-full border border-white/50 bg-background/90 shadow-lg backdrop-blur"
+                        class="size-10 rounded-full border border-white/50 bg-background/90 shadow-lg backdrop-blur"
                     >
                         <Link :href="dashboard()" aria-label="Administration">
                             <LayoutDashboard
@@ -92,7 +93,7 @@ defineOptions({
                         as-child
                         variant="secondary"
                         size="icon"
-                        class="size-12 rounded-full border border-white/50 bg-background/90 shadow-lg backdrop-blur"
+                        class="size-10 rounded-full border border-white/50 bg-background/90 shadow-lg backdrop-blur"
                     >
                         <Link
                             :href="logout()"
@@ -111,21 +112,21 @@ defineOptions({
                 <img
                     :src="profile.avatar.image_url"
                     :alt="`Avatar ${profile.avatar.name}`"
-                    class="relative z-20 max-h-[22rem] w-full object-contain drop-shadow-2xl sm:max-h-[27rem]"
+                    class="relative z-20 max-h-[17rem] w-full object-contain drop-shadow-2xl sm:max-h-[19rem]"
                     data-test="profile-avatar"
                 />
             </div>
 
             <div
                 data-test="profile-information-sheet"
-                class="relative z-20 -mt-8 space-y-6 rounded-t-[2rem] bg-card p-6 sm:p-8"
+                class="relative z-20 -mt-6 space-y-3 rounded-t-[2rem] bg-card p-4 sm:p-6"
             >
                 <div
-                    class="flex flex-col justify-between gap-4 sm:flex-row sm:items-start"
+                    class="flex flex-col justify-between gap-3 sm:flex-row sm:items-start"
                 >
                     <div>
-                        <div class="mb-3 flex flex-wrap items-center gap-2">
-                            <h1 class="text-4xl font-semibold tracking-tight">
+                        <div class="mb-2 flex flex-wrap items-center gap-2">
+                            <h1 class="text-3xl font-semibold tracking-tight">
                                 {{ profile.display_name }}
                             </h1>
                             <Badge
@@ -136,7 +137,7 @@ defineOptions({
                         </div>
                         <div class="flex flex-wrap gap-2 text-sm">
                             <span
-                                class="inline-flex items-center gap-2 rounded-full bg-muted px-3 py-2 font-medium"
+                                class="inline-flex items-center gap-2 rounded-full bg-muted px-3 py-1.5 font-medium"
                             >
                                 <Eye
                                     v-if="profile.visibility === 'visible'"
@@ -155,7 +156,7 @@ defineOptions({
                                 }}
                             </span>
                             <span
-                                class="inline-flex items-center gap-2 rounded-full bg-secondary px-3 py-2 font-medium text-secondary-foreground"
+                                class="inline-flex items-center gap-2 rounded-full bg-secondary px-3 py-1.5 font-medium text-secondary-foreground"
                             >
                                 <Sparkles class="size-4" aria-hidden="true" />
                                 {{
@@ -169,7 +170,7 @@ defineOptions({
                     <Button
                         as-child
                         variant="outline"
-                        class="min-h-12 rounded-full"
+                        class="min-h-10 rounded-full"
                     >
                         <Link :href="editProfile()">
                             <Pencil class="size-4" aria-hidden="true" />
@@ -179,9 +180,9 @@ defineOptions({
                 </div>
 
                 <div>
-                    <h2 class="mb-2 text-sm font-medium">À propos</h2>
+                    <h2 class="mb-1 text-sm font-medium">À propos</h2>
                     <p
-                        class="leading-7 whitespace-pre-line text-muted-foreground"
+                        class="line-clamp-3 leading-5 whitespace-pre-line text-muted-foreground"
                     >
                         {{
                             profile.bio ||
@@ -190,7 +191,7 @@ defineOptions({
                     </p>
                 </div>
                 <div v-if="profile.interests?.length">
-                    <h2 class="mb-3 text-sm font-medium">Intérêts</h2>
+                    <h2 class="mb-2 text-sm font-medium">Intérêts</h2>
                     <div class="flex flex-wrap gap-2">
                         <Badge
                             v-for="interest in profile.interests"
