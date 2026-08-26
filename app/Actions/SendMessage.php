@@ -2,6 +2,7 @@
 
 namespace App\Actions;
 
+use App\Events\MessageSent;
 use App\Models\Conversation;
 use App\Models\Message;
 use App\Models\User;
@@ -14,9 +15,15 @@ final class SendMessage
     {
         Gate::forUser($author)->authorize('send', $conversation);
 
-        return DB::transaction(fn (): Message => $conversation->messages()->create([
-            'author_user_id' => $author->id,
-            'content' => $content,
-        ]));
+        return DB::transaction(function () use ($author, $conversation, $content): Message {
+            $message = $conversation->messages()->create([
+                'author_user_id' => $author->id,
+                'content' => $content,
+            ]);
+
+            MessageSent::dispatch($message);
+
+            return $message;
+        });
     }
 }
