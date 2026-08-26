@@ -57,6 +57,10 @@ const visitFrequencyLabel = computed(() => {
         : 'Fréquence non renseignée';
 });
 
+const hasDenseInterestList = computed(
+    () => !props.compact && props.profile.interests.length >= 4,
+);
+
 const avatarGradient = computed(() => ({
     backgroundImage: `linear-gradient(145deg, ${props.profile.avatar.primary_color}, ${props.profile.avatar.secondary_color})`,
 }));
@@ -215,7 +219,9 @@ watch(
                 'relative flex shrink-0 items-end justify-center overflow-hidden',
                 compact
                     ? 'min-h-40 px-5 pt-3'
-                    : 'h-[clamp(15.5rem,34svh,17.5rem)] px-6 pt-4 sm:h-80',
+                    : hasDenseInterestList
+                      ? 'h-[clamp(12rem,27svh,14rem)] px-6 pt-4 sm:h-72'
+                      : 'h-[clamp(15.5rem,34svh,17.5rem)] px-6 pt-4 sm:h-80',
             ]"
             :style="avatarGradient"
         >
@@ -232,7 +238,11 @@ watch(
                 draggable="false"
                 :class="[
                     'pointer-events-none relative z-10 w-full object-contain drop-shadow-2xl select-none',
-                    compact ? 'max-h-40' : 'max-h-[17rem] sm:max-h-[19rem]',
+                    compact
+                        ? 'max-h-40'
+                        : hasDenseInterestList
+                          ? 'max-h-[13.5rem] sm:max-h-[17rem]'
+                          : 'max-h-[17rem] sm:max-h-[19rem]',
                 ]"
             />
         </div>
@@ -243,7 +253,7 @@ watch(
                 'relative z-20 rounded-t-[2rem] bg-card',
                 compact
                     ? '-mt-5 space-y-2 px-4 pt-4 pb-3'
-                    : '-mt-6 space-y-2.5 px-4 pt-4 pb-3',
+                    : '-mt-6 space-y-2.5 px-4 pt-4 pb-4',
             ]"
         >
             <div>

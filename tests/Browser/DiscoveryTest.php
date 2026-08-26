@@ -123,11 +123,19 @@ test('the top discovery card accepts keyboard and accessible decisions', functio
         ->assertPresent('[data-test="discovery-interest"][data-common="false"]')
         ->assertCount('[data-test="discovery-interest"]', 5)
         ->assertScript(
+            "document.querySelector('[data-test=discovery-avatar-hero]').getBoundingClientRect().height >= 192 && document.querySelector('[data-test=discovery-avatar-hero]').getBoundingClientRect().height <= 230",
+            true,
+        )
+        ->assertScript(
+            "document.querySelector('[aria-label=\"Aimer ce profil\"]').getBoundingClientRect().bottom + 12 <= document.querySelector('[data-test=discovery-card-stack-item] [tabindex=\"0\"]').getBoundingClientRect().bottom",
+            true,
+        )
+        ->assertScript(
             "document.querySelector('[aria-label=\"Passer ce profil\"]').classList.contains('sr-only')",
             false,
         )
         ->assertScript(
-            "document.querySelector('[data-test=discovery-avatar-hero]').getBoundingClientRect().height >= 240 && document.querySelector('[data-test=discovery-avatar-hero]').getBoundingClientRect().height <= 290",
+            "document.querySelector('[data-test=discovery-avatar-hero]').getBoundingClientRect().height >= 192 && document.querySelector('[data-test=discovery-avatar-hero]').getBoundingClientRect().height <= 290",
             true,
         )
         ->assertScript(
