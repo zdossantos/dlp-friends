@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { Link } from '@inertiajs/vue3';
-import AppearanceTabs from '@/components/AppearanceTabs.vue';
 import AppLogoIcon from '@/components/AppLogoIcon.vue';
 import LocaleSwitcher from '@/components/LocaleSwitcher.vue';
 import {
@@ -29,7 +28,6 @@ defineProps<{
             class="absolute top-4 right-4 z-10 flex items-center gap-3 sm:top-6 sm:right-6"
         >
             <LocaleSwitcher />
-            <AppearanceTabs />
         </div>
         <div class="relative flex w-full max-w-md flex-col gap-6">
             <Link

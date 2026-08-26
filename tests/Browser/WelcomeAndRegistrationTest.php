@@ -28,12 +28,17 @@ test('the registration form collects account data without a public name', functi
         ->assertNotPresent('input[name="username"]');
 });
 
-test('the auth card exposes brand theme control and form landmark', function () {
+test('public and authentication pages expose language without theme controls', function () {
+    visit('/', ['locale' => 'fr-FR'])
+        ->assertPresent('[data-test="locale-switcher"]')
+        ->assertNotPresent('[aria-label="Choisir le thème"]');
+
     visit('/login', ['locale' => 'fr-FR'])
         ->assertSee('DLP Friends')
         ->assertPresent('#contenu-principal')
         ->assertPresent('form[action]')
-        ->assertPresent('[aria-label="Choisir le thème"]')
+        ->assertPresent('[data-test="locale-switcher"]')
+        ->assertNotPresent('[aria-label="Choisir le thème"]')
         ->assertNoAccessibilityIssues();
 });
 

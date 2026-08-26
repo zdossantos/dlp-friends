@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { router } from '@inertiajs/vue3';
+import { Languages } from '@lucide/vue';
 import { ref } from 'vue';
 import { useTranslations } from '@/composables/useTranslations';
 import { update } from '@/routes/locale';
@@ -7,9 +8,14 @@ import type { Locale } from '@/types/i18n';
 
 const { locale, t } = useTranslations();
 const status = ref('');
+const isChanging = ref(false);
 
-function changeLocale(event: Event): void {
-    const value = (event.target as HTMLSelectElement).value as Locale;
+function changeLocale(value: Locale): void {
+    if (value === locale.value || isChanging.value) {
+        return;
+    }
+
+    isChanging.value = true;
 
     router.patch(
         update(),
@@ -18,6 +24,10 @@ function changeLocale(event: Event): void {
             preserveScroll: true,
             onSuccess: () => {
                 status.value = t('locale.label');
+                window.location.reload();
+            },
+            onFinish: () => {
+                isChanging.value = false;
             },
         },
     );
@@ -25,20 +35,32 @@ function changeLocale(event: Event): void {
 </script>
 
 <template>
-    <label
+    <div
         data-test="locale-switcher"
-        class="inline-flex items-center gap-2 text-sm font-medium"
+        :aria-label="t('locale.label')"
+        class="inline-flex max-w-full items-center gap-1 rounded-full border border-border/70 bg-card/95 p-1 shadow-sm backdrop-blur"
     >
-        <span>{{ t('locale.label') }}</span>
-        <select
-            name="locale"
-            :value="locale"
-            class="rounded-md border bg-background px-2 py-1 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
-            @change="changeLocale"
+        <Languages
+            class="ml-2 size-4 shrink-0 text-muted-foreground"
+            aria-hidden="true"
+        />
+        <button
+            v-for="value in ['fr', 'en'] as const"
+            :key="value"
+            type="button"
+            :data-test="`locale-${value}`"
+            :aria-pressed="locale === value"
+            :disabled="isChanging"
+            :class="[
+                'inline-flex min-h-10 min-w-10 items-center justify-center rounded-full px-3 text-xs font-semibold tracking-wide uppercase transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-60',
+                locale === value
+                    ? 'bg-primary text-primary-foreground shadow-sm'
+                    : 'text-muted-foreground hover:bg-muted hover:text-foreground',
+            ]"
+            @click="changeLocale(value)"
         >
-            <option value="fr">{{ t('locale.fr') }}</option>
-            <option value="en">{{ t('locale.en') }}</option>
-        </select>
+            {{ value }}
+        </button>
         <span class="sr-only" aria-live="polite">{{ status }}</span>
-    </label>
+    </div>
 </template>

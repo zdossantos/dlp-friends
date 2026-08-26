@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { Head, Link } from '@inertiajs/vue3';
 import { MessageCircle, Sparkles, UsersRound } from '@lucide/vue';
-import AppearanceTabs from '@/components/AppearanceTabs.vue';
 import AppLogoIcon from '@/components/AppLogoIcon.vue';
 import LocaleSwitcher from '@/components/LocaleSwitcher.vue';
 import { app, login, register } from '@/routes';
@@ -60,7 +59,6 @@ const benefits = [
                 </div>
                 <div class="flex items-center gap-3 self-end sm:self-auto">
                     <LocaleSwitcher />
-                    <AppearanceTabs />
                 </div>
             </header>
 
