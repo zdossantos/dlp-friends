@@ -46,11 +46,14 @@ class ConversationSchemaTest extends TestCase
 
     public function test_the_migration_creates_conversations_for_existing_matches(): void
     {
-        $migration = require database_path('migrations/2026_08_26_100000_create_conversations_table.php');
-        $migration->down();
+        $conversationMigration = require database_path('migrations/2026_08_26_100000_create_conversations_table.php');
+        $messageMigration = require database_path('migrations/2026_08_26_110000_create_messages_table.php');
+        $messageMigration->down();
+        $conversationMigration->down();
         $existingMatch = MemberMatch::factory()->create();
 
-        $migration->up();
+        $conversationMigration->up();
+        $messageMigration->up();
 
         $this->assertDatabaseHas('conversations', [
             'match_id' => $existingMatch->id,

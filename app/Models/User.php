@@ -45,6 +45,7 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
  * @property-read Collection<int, MemberMatch> $highMatches
  * @property-read Collection<int, Block> $blocksCreated
  * @property-read Collection<int, Block> $blocksReceived
+ * @property-read Collection<int, Message> $authoredMessages
  */
 #[Fillable(['email', 'locale', 'birth_date', 'password'])]
 #[Hidden(['password', 'two_factor_secret', 'two_factor_recovery_codes', 'remember_token'])]
@@ -99,6 +100,12 @@ class User extends Authenticatable implements HasLocalePreference, MustVerifyEma
     public function blocksReceived(): HasMany
     {
         return $this->hasMany(Block::class, 'blocked_user_id');
+    }
+
+    /** @return HasMany<Message, $this> */
+    public function authoredMessages(): HasMany
+    {
+        return $this->hasMany(Message::class, 'author_user_id');
     }
 
     public function hasRole(string|RoleName $role): bool
