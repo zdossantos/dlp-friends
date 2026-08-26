@@ -155,6 +155,7 @@ class CreateSwipeConcurrencyTest extends TestCase
             ->and($secondResult)->toBe(['blocked' => true, 'matched' => true]);
         $this->assertDatabaseCount('swipes', 2);
         $this->assertDatabaseCount('matches', 1);
+        $this->assertDatabaseCount('conversations', 1);
     }
 
     private function member(): User

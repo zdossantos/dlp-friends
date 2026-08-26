@@ -75,10 +75,18 @@ class CreateSwipe
                     'updated_at' => now(),
                 ]);
 
-                return MemberMatch::query()
+                $match = MemberMatch::query()
                     ->where('user_low_id', $lowId)
                     ->where('user_high_id', $highId)
                     ->firstOrFail();
+
+                DB::table('conversations')->insertOrIgnore([
+                    'match_id' => $match->id,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+
+                return $match;
             });
         } catch (QueryException $exception) {
             if (! $this->isDuplicateSwipeViolation($exception)) {

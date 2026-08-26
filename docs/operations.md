@@ -26,6 +26,30 @@
 - Le worker est supervisé : un job en échec est journalisé et rejoué selon une politique explicite; après le dernier essai, il rejoint la table des jobs échoués.
 - Après un déploiement, redémarrer proprement les workers pour qu'ils consomment le nouveau code.
 
+## Déploiement de la migration des conversations
+
+La migration qui crée `conversations` reprend tous les matches existants. Pour
+éviter qu'une ancienne instance crée un match entre cette reprise et le
+déploiement du nouveau code, ce déploiement exige une courte fenêtre de
+maintenance :
+
+1. placer toutes les instances HTTP en maintenance et arrêter les workers ;
+2. exécuter `php artisan migrate --force` ;
+3. déployer la nouvelle image applicative et redémarrer les workers ;
+4. exécuter la requête suivante et vérifier qu'elle retourne `0`, puis rouvrir
+   le service :
+
+```sql
+SELECT COUNT(*)
+FROM matches
+LEFT JOIN conversations ON conversations.match_id = matches.id
+WHERE conversations.id IS NULL;
+```
+
+La migration reste additive et compatible avec l'image précédente pour
+permettre un retour arrière avant la réouverture. Aucun trafic social ne doit
+cependant être réactivé tant que la nouvelle image n'est pas en service.
+
 ## Procédure d'incident minimale
 
 1. Vérifier la route de santé, les logs Coolify et les logs Laravel.
