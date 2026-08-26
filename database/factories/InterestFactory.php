@@ -17,6 +17,7 @@ class InterestFactory extends Factory
         return [
             'interest_category_id' => InterestCategory::factory(),
             'name' => fake()->unique()->words(2, true),
+            'name_en' => null,
             'is_active' => true,
             'sort_order' => fake()->numberBetween(0, 100),
         ];
