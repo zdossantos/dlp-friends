@@ -237,12 +237,12 @@ watch(
                 :alt="`Avatar ${profile.avatar.name}`"
                 draggable="false"
                 :class="[
-                    'pointer-events-none relative z-10 w-full object-contain drop-shadow-2xl select-none',
+                    'pointer-events-none relative z-10 object-contain drop-shadow-2xl select-none',
                     compact
-                        ? 'max-h-40'
+                        ? 'max-h-40 w-full'
                         : hasDenseInterestList
-                          ? 'max-h-[13.5rem] sm:max-h-[17rem]'
-                          : 'max-h-[17rem] sm:max-h-[19rem]',
+                          ? 'h-[calc(100%-1rem)] w-auto max-w-full'
+                          : 'max-h-[17rem] w-full sm:max-h-[19rem]',
                 ]"
             />
         </div>

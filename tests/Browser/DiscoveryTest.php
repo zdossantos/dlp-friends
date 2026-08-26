@@ -127,6 +127,10 @@ test('the top discovery card accepts keyboard and accessible decisions', functio
             true,
         )
         ->assertScript(
+            "document.querySelector('[data-test=discovery-avatar-hero] img').getBoundingClientRect().top >= document.querySelector('[data-test=discovery-avatar-hero]').getBoundingClientRect().top + 8 && document.querySelector('[data-test=discovery-avatar-hero] img').getBoundingClientRect().bottom <= document.querySelector('[data-test=discovery-avatar-hero]').getBoundingClientRect().bottom",
+            true,
+        )
+        ->assertScript(
             "document.querySelector('[aria-label=\"Aimer ce profil\"]').getBoundingClientRect().bottom + 12 <= document.querySelector('[data-test=discovery-card-stack-item] [tabindex=\"0\"]').getBoundingClientRect().bottom",
             true,
         )
