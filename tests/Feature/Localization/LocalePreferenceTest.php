@@ -1,6 +1,9 @@
 <?php
 
 use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+
+uses(RefreshDatabase::class);
 
 test('a visitor stores an explicit locale in a persistent cookie', function () {
     $this->patch(route('locale.update'), ['locale' => 'en'])

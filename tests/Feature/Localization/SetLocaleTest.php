@@ -2,6 +2,9 @@
 
 use App\Models\Interest;
 use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+
+uses(RefreshDatabase::class);
 
 test('the account locale takes priority over the visitor cookie and browser language', function () {
     $user = User::factory()->create(['locale' => 'fr']);

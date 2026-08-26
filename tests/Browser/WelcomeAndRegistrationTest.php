@@ -3,7 +3,7 @@
 use App\Models\User;
 
 test('the landing page presents the adult friendship service to guests', function () {
-    visit('/')
+    visit('/', ['locale' => 'fr-FR'])
         ->assertSee('DLP Friends')
         ->assertSee('Des rencontres strictement amicales entre fans adultes')
         ->assertSeeLink('Créer mon compte')
@@ -20,7 +20,7 @@ test('the landing page offers the member space when signed in', function () {
 });
 
 test('the registration form collects account data without a public name', function () {
-    visit('/register')
+    visit('/register', ['locale' => 'fr-FR'])
         ->assertPresent('input[name="email"]')
         ->assertPresent('input[name="birth_date"]')
         ->assertPresent('input[name="password"]')
@@ -29,7 +29,7 @@ test('the registration form collects account data without a public name', functi
 });
 
 test('the auth card exposes brand theme control and form landmark', function () {
-    visit('/login')
+    visit('/login', ['locale' => 'fr-FR'])
         ->assertSee('DLP Friends')
         ->assertPresent('#contenu-principal')
         ->assertPresent('form[action]')
@@ -38,7 +38,7 @@ test('the auth card exposes brand theme control and form landmark', function () 
 });
 
 test('the landing header stacks on a mobile viewport', function () {
-    visit('/')
+    visit('/', ['locale' => 'fr-FR'])
         ->on()->mobile()
         ->assertScript(
             "getComputedStyle(document.querySelector('header')).flexDirection",
