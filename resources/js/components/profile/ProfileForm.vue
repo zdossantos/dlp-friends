@@ -390,13 +390,15 @@ function showInvalidStep(errors: Record<string, string>): void {
         </section>
 
         <footer
-            class="z-30 -mx-1 flex shrink-0 items-center gap-3 border-t bg-background/95 px-1 pt-3 pb-1 backdrop-blur"
+            data-test="profile-form-footer"
+            class="z-30 -mx-1 flex shrink-0 items-center gap-3 px-1 pt-3 pb-1"
         >
             <Button
                 v-if="currentStep > 1"
+                data-test="profile-back-button"
                 type="button"
-                variant="ghost"
-                class="min-h-12 px-4"
+                variant="outline"
+                class="min-h-12 rounded-full border-transparent bg-background px-4 shadow-sm hover:bg-accent"
                 @click="previous"
             >
                 <ArrowLeft class="size-4" aria-hidden="true" />

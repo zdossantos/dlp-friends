@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { Head } from '@inertiajs/vue3';
-import Heading from '@/components/Heading.vue';
 import ProfileForm from '@/components/profile/ProfileForm.vue';
 import { show, update } from '@/routes/member-profile';
 import type { AvatarOption, InterestOption, Profile } from '@/types';
@@ -29,13 +28,8 @@ defineOptions({
 <template>
     <Head title="Modifier mon profil" />
     <div
-        class="mx-auto flex h-[calc(100svh-6rem-env(safe-area-inset-bottom))] w-full max-w-xl flex-col gap-3 overflow-hidden px-4 pt-[max(0.75rem,env(safe-area-inset-top))] sm:gap-5 sm:px-6 sm:pt-6"
+        class="mx-auto flex h-full min-h-0 w-full max-w-xl flex-col overflow-hidden px-4 pt-[max(0.75rem,env(safe-area-inset-top))] pb-[max(0.5rem,env(safe-area-inset-bottom))] sm:px-6 sm:py-6"
     >
-        <Heading
-            class="shrink-0"
-            title="Modifier mon profil"
-            description="Mettez à jour les informations visibles par les autres membres."
-        />
         <ProfileForm
             class="min-h-0 flex-1"
             :profile="profile"

@@ -5,7 +5,7 @@ import { Toaster } from '@/components/ui/sonner';
 
 <template>
     <div
-        class="relative flex min-h-svh w-full flex-col overflow-x-hidden bg-background text-foreground"
+        class="relative flex h-svh w-full flex-col overflow-hidden bg-background text-foreground"
     >
         <div
             aria-hidden="true"
@@ -13,7 +13,7 @@ import { Toaster } from '@/components/ui/sonner';
         />
         <div
             data-test="member-shell-content"
-            class="relative flex min-h-svh w-full flex-1 flex-col pb-[calc(6rem+env(safe-area-inset-bottom))]"
+            class="relative flex min-h-0 w-full flex-1 flex-col overflow-y-auto overscroll-contain"
         >
             <slot />
         </div>

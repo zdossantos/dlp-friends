@@ -218,8 +218,26 @@ test('a refreshed catalog drops an archived selected interest', function () {
 
     visit('/profile/edit')
         ->on()->mobile()
+        ->assertDontSee('Modifier mon profil')
+        ->assertScript(
+            "document.querySelector('[data-test=member-bottom-navigation]') === null",
+            true,
+        )
         ->assertScript('document.documentElement.scrollHeight <= document.documentElement.clientHeight', true)
         ->click('Continuer')
+        ->assertPresent('[data-test="profile-form-footer"]')
+        ->assertScript(
+            "getComputedStyle(document.querySelector('[data-test=profile-form-footer]')).borderTopWidth === '0px'",
+            true,
+        )
+        ->assertScript(
+            "getComputedStyle(document.querySelector('[data-test=profile-form-footer]')).backgroundColor === 'rgba(0, 0, 0, 0)'",
+            true,
+        )
+        ->assertScript(
+            "getComputedStyle(document.querySelector('[data-test=profile-back-button]')).backgroundColor !== 'rgba(0, 0, 0, 0)'",
+            true,
+        )
         ->click('Continuer')
         ->assertSee('Attractions')
         ->assertPresent("input[name='interest_ids[]'][value='{$interest->id}']");
@@ -313,15 +331,24 @@ test('member navigation exposes only implemented destinations and tracks setting
         ->assertSee('Réglages du compte');
 });
 
-test('member layout has no header and reserves safe dock space', function () {
+test('member layout keeps navigation in flow below its scrollable content', function () {
     $user = User::factory()->withProfile()->create();
     $this->actingAs($user);
 
     visit('/profile')
         ->on()->mobile()
         ->assertScript("document.querySelector('header') === null", true)
+        ->assertPresent('[data-test="member-bottom-navigation-container"]')
         ->assertScript(
-            "getComputedStyle(document.querySelector('[data-test=member-shell-content]')).paddingBottom !== '0px'",
+            "getComputedStyle(document.querySelector('[data-test=member-bottom-navigation-container]')).position !== 'fixed'",
+            true,
+        )
+        ->assertScript(
+            "getComputedStyle(document.querySelector('[data-test=member-shell-content]')).paddingBottom === '0px'",
+            true,
+        )
+        ->assertScript(
+            "document.querySelector('[data-test=member-shell-content]').getBoundingClientRect().bottom <= document.querySelector('[data-test=member-bottom-navigation-container]').getBoundingClientRect().top",
             true,
         );
 });

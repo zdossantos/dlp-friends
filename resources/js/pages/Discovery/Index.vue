@@ -90,7 +90,10 @@ function submit(decision: SwipeDecision, targetUserId?: number): void {
         swipe(resolvedTargetUserId).url,
         { decision },
         {
+            only: ['suggestions', 'match'],
+            preserveState: true,
             preserveScroll: true,
+            replace: true,
             onSuccess: () => {
                 retryAttempt.value = null;
             },

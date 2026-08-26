@@ -134,6 +134,45 @@ test('the top discovery card accepts keyboard and accessible decisions', functio
     $this->assertDatabaseCount('swipes', 2);
 });
 
+test('an accepted swipe refreshes only the updated discovery data', function () {
+    $actor = discoveryMember('Alice');
+    discoveryMember('Basile');
+    $this->actingAs($actor);
+
+    $page = visit('/discover')->assertSee('Basile');
+    $page->script(<<<'JS'
+        window.__swipePartialData = '';
+        window.__realPartialXhrOpen = XMLHttpRequest.prototype.open;
+        window.__realPartialXhrSetRequestHeader = XMLHttpRequest.prototype.setRequestHeader;
+        XMLHttpRequest.prototype.open = function (method, url, ...rest) {
+            this.__isSwipeRequest = String(url).includes('/swipe');
+
+            return window.__realPartialXhrOpen.call(this, method, url, ...rest);
+        };
+        XMLHttpRequest.prototype.setRequestHeader = function (name, value) {
+            if (
+                this.__isSwipeRequest &&
+                String(name).toLowerCase() === 'x-inertia-partial-data'
+            ) {
+                window.__swipePartialData = String(value);
+            }
+
+            return window.__realPartialXhrSetRequestHeader.call(this, name, value);
+        };
+        true;
+    JS);
+
+    $page->script(<<<'JS'
+        document.querySelector('[aria-label="Passer ce profil"]').click()
+    JS);
+    $page
+        ->assertSee('Vous avez exploré tous les profils disponibles')
+        ->assertScript(
+            "window.__swipePartialData.split(',').sort().join(',')",
+            'match,suggestions',
+        );
+});
+
 test('pointer gestures follow the card and enforce the horizontal threshold', function () {
     $actor = discoveryMember('Alice');
     $target = discoveryMember('Basile');
