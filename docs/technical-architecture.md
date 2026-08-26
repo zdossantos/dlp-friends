@@ -25,6 +25,26 @@ Vue/Inertia affiche les pages servies par Laravel ; aucune API distincte n'est
 nécessaire actuellement. Toute action sensible doit être protégée côté serveur,
 de préférence avec une Policy Laravel.
 
+## Internationalisation
+
+Le français est la langue par défaut et de repli. Le choix de langue suit, dans
+l'ordre, la préférence enregistrée du compte, le cookie `locale`, l'en-tête
+`Accept-Language`, puis le français. Les langues actuellement prises en charge
+sont `fr` et `en`.
+
+Laravel est la source de vérité des traductions. Les messages backend utilisent
+les catalogues `lang/{locale}.json` et les messages structurés transmis à
+Inertia utilisent `lang/{locale}/frontend.php`. Le composable
+`useTranslations` sert les nouveaux libellés Vue. Le dictionnaire
+`frontend.copy` traduit aussi les libellés français historiques rendus dans le
+DOM, afin de couvrir progressivement l'interface existante sans dupliquer un
+catalogue TypeScript.
+
+Les noms d'intérêts restent stockés en français dans `interests.name` et leur
+traduction anglaise visible dans `interests.name_en`. En l'absence de traduction
+anglaise, l'interface affiche le nom français. Cette structure ne s'étend pas à
+des catégories ou à d'autres taxonomies tant qu'elles restent hors périmètre.
+
 `users` contient les données privées de compte. `profiles` contient les données
 publiques et l'état d'onboarding. La vérification de l'e-mail précède
 l'onboarding, puis les middlewares limitent l'accès selon l'état du compte, du

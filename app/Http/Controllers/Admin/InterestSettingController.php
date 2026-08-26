@@ -25,7 +25,7 @@ class InterestSettingController extends Controller
 
         Inertia::flash('toast', [
             'type' => 'success',
-            'message' => 'Limite mise à jour.',
+            'message' => __('Limite mise à jour.'),
         ]);
 
         return back();

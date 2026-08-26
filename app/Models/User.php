@@ -6,6 +6,7 @@ use App\Enums\RoleName;
 use App\Enums\UserStatus;
 use Database\Factories\UserFactory;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Contracts\Translation\HasLocalePreference;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Casts\Attribute;
@@ -24,6 +25,7 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
 /**
  * @property int $id
  * @property string $email
+ * @property string|null $locale
  * @property Carbon|null $email_verified_at
  * @property Carbon|null $birth_date
  * @property UserStatus $status
@@ -44,9 +46,9 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
  * @property-read Collection<int, Block> $blocksCreated
  * @property-read Collection<int, Block> $blocksReceived
  */
-#[Fillable(['email', 'birth_date', 'password'])]
+#[Fillable(['email', 'locale', 'birth_date', 'password'])]
 #[Hidden(['password', 'two_factor_secret', 'two_factor_recovery_codes', 'remember_token'])]
-class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
+class User extends Authenticatable implements HasLocalePreference, MustVerifyEmail, PasskeyUser
 {
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable, PasskeyAuthenticatable, TwoFactorAuthenticatable;
@@ -106,6 +108,11 @@ class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
         return $this->roles->contains(
             fn (Role $assignedRole): bool => $assignedRole->name->value === $value,
         );
+    }
+
+    public function preferredLocale(): string
+    {
+        return $this->locale ?? config('app.fallback_locale', 'fr');
     }
 
     /**

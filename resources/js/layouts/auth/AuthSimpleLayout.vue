@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Link } from '@inertiajs/vue3';
-import AppearanceTabs from '@/components/AppearanceTabs.vue';
 import AppLogoIcon from '@/components/AppLogoIcon.vue';
+import LocaleSwitcher from '@/components/LocaleSwitcher.vue';
 import { home } from '@/routes';
 
 defineProps<{
@@ -19,7 +19,7 @@ defineProps<{
             class="absolute inset-0 bg-[radial-gradient(circle_at_top_left,var(--color-secondary),transparent_48%),radial-gradient(circle_at_bottom_right,var(--color-accent),transparent_42%)] opacity-45"
         />
         <div class="absolute top-4 right-4 z-10 sm:top-6 sm:right-6">
-            <AppearanceTabs />
+            <LocaleSwitcher />
         </div>
         <div class="relative w-full max-w-md">
             <main

@@ -61,6 +61,7 @@ class DashboardTest extends TestCase
                         'id',
                         'email',
                         'email_verified_at',
+                        'locale',
                         'profile',
                         'roles',
                         'two_factor_enabled',

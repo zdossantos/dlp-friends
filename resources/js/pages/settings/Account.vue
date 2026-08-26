@@ -5,6 +5,7 @@ import AccountController from '@/actions/App/Http/Controllers/Settings/AccountCo
 import DeleteUser from '@/components/DeleteUser.vue';
 import Heading from '@/components/Heading.vue';
 import InputError from '@/components/InputError.vue';
+import LocaleSwitcher from '@/components/LocaleSwitcher.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -24,6 +25,7 @@ const user = computed(() => page.props.auth.user);
     <h1 class="sr-only">Réglages du compte</h1>
     <div class="flex flex-col space-y-10">
         <div class="space-y-6">
+            <LocaleSwitcher />
             <Heading
                 variant="small"
                 title="Compte"

@@ -36,6 +36,7 @@ class StoreInterestRequest extends FormRequest
                 'max:80',
                 Rule::unique('interests', 'name'),
             ],
+            'name_en' => ['nullable', 'string', 'max:80'],
         ];
     }
 
@@ -43,7 +44,7 @@ class StoreInterestRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'name.unique' => 'Le nom a déjà été utilisé.',
+            'name.unique' => __('Le nom a déjà été utilisé.'),
         ];
     }
 }

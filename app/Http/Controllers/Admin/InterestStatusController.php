@@ -26,8 +26,8 @@ class InterestStatusController extends Controller
         Inertia::flash('toast', [
             'type' => 'success',
             'message' => $isActive
-                ? 'Intérêt réactivé.'
-                : 'Intérêt archivé.',
+                ? __('Intérêt réactivé.')
+                : __('Intérêt archivé.'),
         ]);
 
         return back();

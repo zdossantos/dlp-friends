@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Link } from '@inertiajs/vue3';
-import AppearanceTabs from '@/components/AppearanceTabs.vue';
 import AppLogoIcon from '@/components/AppLogoIcon.vue';
+import LocaleSwitcher from '@/components/LocaleSwitcher.vue';
 import { home } from '@/routes';
 
 defineProps<{
@@ -33,7 +33,7 @@ defineProps<{
             </p>
         </div>
         <div class="relative p-6 lg:p-8">
-            <div class="absolute top-4 right-4"><AppearanceTabs /></div>
+            <div class="absolute top-4 right-4"><LocaleSwitcher /></div>
             <main
                 id="contenu-principal"
                 class="mx-auto flex w-full flex-col justify-center space-y-6 sm:w-[350px]"

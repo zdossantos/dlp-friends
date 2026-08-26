@@ -86,7 +86,7 @@ class MemberProfileRequest extends FormRequest
             if ($submitted->count() > $limit && $submitted->diff($current)->isNotEmpty()) {
                 $validator->errors()->add(
                     'interest_ids',
-                    "Vous pouvez sélectionner au maximum {$limit} intérêts.",
+                    __('profile.interest_limit', ['max' => $limit]),
                 );
             }
         }];

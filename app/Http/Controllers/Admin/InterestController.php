@@ -27,10 +27,11 @@ class InterestController extends Controller
                 ->withCount('profiles')
                 ->orderBy('sort_order')
                 ->orderBy('id')
-                ->get(['id', 'name', 'is_active', 'sort_order'])
+                ->get(['id', 'name', 'name_en', 'is_active', 'sort_order'])
                 ->map(fn (Interest $interest): array => [
                     'id' => $interest->id,
                     'name' => $interest->name,
+                    'name_en' => $interest->name_en,
                     'is_active' => $interest->is_active,
                     'sort_order' => $interest->sort_order,
                     'profiles_count' => $interest->profiles_count,
@@ -57,6 +58,7 @@ class InterestController extends Controller
                 Interest::query()->create([
                     'interest_category_id' => $category->id,
                     'name' => $request->string('name')->toString(),
+                    'name_en' => $request->string('name_en')->toString() ?: null,
                     'is_active' => true,
                     'sort_order' => $lockedInterests->isEmpty()
                         ? 0
@@ -65,13 +67,13 @@ class InterestController extends Controller
             });
         } catch (UniqueConstraintViolationException) {
             throw ValidationException::withMessages([
-                'name' => 'Un intérêt porte déjà ce nom.',
+                'name' => __('Un intérêt porte déjà ce nom.'),
             ]);
         }
 
         Inertia::flash('toast', [
             'type' => 'success',
-            'message' => 'Intérêt ajouté.',
+            'message' => __('Intérêt ajouté.'),
         ]);
 
         return back();
@@ -82,16 +84,17 @@ class InterestController extends Controller
         try {
             $interest->update([
                 'name' => $request->string('name')->toString(),
+                'name_en' => $request->string('name_en')->toString() ?: null,
             ]);
         } catch (UniqueConstraintViolationException) {
             throw ValidationException::withMessages([
-                'name' => 'Un intérêt porte déjà ce nom.',
+                'name' => __('Un intérêt porte déjà ce nom.'),
             ]);
         }
 
         Inertia::flash('toast', [
             'type' => 'success',
-            'message' => 'Intérêt modifié.',
+            'message' => __('Intérêt modifié.'),
         ]);
 
         return back();
@@ -112,7 +115,7 @@ class InterestController extends Controller
 
             if ($lockedInterest->is_active && $lockedInterest->profiles()->exists()) {
                 throw ValidationException::withMessages([
-                    'interest' => 'Cet intérêt a déjà été utilisé. Archivez-le avant de le supprimer.',
+                    'interest' => __('Cet intérêt a déjà été utilisé. Archivez-le avant de le supprimer.'),
                 ]);
             }
 
@@ -131,7 +134,7 @@ class InterestController extends Controller
 
         Inertia::flash('toast', [
             'type' => 'success',
-            'message' => 'Intérêt supprimé.',
+            'message' => __('Intérêt supprimé.'),
         ]);
 
         return back();

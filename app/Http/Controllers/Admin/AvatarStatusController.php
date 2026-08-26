@@ -17,7 +17,7 @@ class AvatarStatusController extends Controller
 
         Inertia::flash('toast', [
             'type' => 'success',
-            'message' => $isActive ? 'Avatar réactivé.' : 'Avatar archivé.',
+            'message' => $isActive ? __('Avatar réactivé.') : __('Avatar archivé.'),
         ]);
 
         return back();

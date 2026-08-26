@@ -11,11 +11,13 @@ use App\Http\Controllers\Admin\InterestStatusController;
 use App\Http\Controllers\AvatarImageController;
 use App\Http\Controllers\DiscoveryController;
 use App\Http\Controllers\LandingController;
+use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\MemberProfileController;
 use App\Http\Controllers\SwipeController;
 use Illuminate\Support\Facades\Route;
 
 Route::inertia('/', 'Welcome')->name('home');
+Route::patch('locale', LocaleController::class)->name('locale.update');
 
 Route::middleware(['auth', 'verified', 'social'])->group(function () {
     Route::get('avatars/{avatar}/image', AvatarImageController::class)

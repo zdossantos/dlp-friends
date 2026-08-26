@@ -9,18 +9,18 @@ use Illuminate\Database\Seeder;
 
 class InterestCatalogSeeder extends Seeder
 {
-    /** @var list<string> */
+    /** @var array<string, string> */
     private const INTERESTS = [
-        'Chill',
-        'Attractions à sensations',
-        'Attractions calmes',
-        'Collection / merch',
-        'Pins',
-        'Rencontres personnages',
-        'Spectacles',
-        'Food',
-        'Secrets / anecdotes',
-        'Événements',
+        'Chill' => 'Relaxing',
+        'Attractions à sensations' => 'Thrill rides',
+        'Attractions calmes' => 'Gentle rides',
+        'Collection / merch' => 'Collecting / merch',
+        'Pins' => 'Pins',
+        'Rencontres personnages' => 'Character encounters',
+        'Spectacles' => 'Shows',
+        'Food' => 'Food',
+        'Secrets / anecdotes' => 'Secrets / stories',
+        'Événements' => 'Events',
     ];
 
     public function run(): void
@@ -30,11 +30,14 @@ class InterestCatalogSeeder extends Seeder
             ['sort_order' => 0],
         );
 
-        foreach (self::INTERESTS as $sortOrder => $name) {
+        foreach (array_keys(self::INTERESTS) as $sortOrder => $name) {
+            $nameEn = self::INTERESTS[$name];
+
             Interest::query()->firstOrCreate(
                 ['name' => $name],
                 [
                     'interest_category_id' => $category->id,
+                    'name_en' => $nameEn,
                     'is_active' => true,
                     'sort_order' => $sortOrder,
                 ],

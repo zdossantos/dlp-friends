@@ -1,4 +1,5 @@
 import type { Auth } from '@/types/auth';
+import type { I18n } from '@/types/i18n';
 
 // Extend ImportMeta interface for Vite...
 declare module 'vite/client' {
@@ -18,6 +19,7 @@ declare module '@inertiajs/core' {
         sharedPageProps: {
             name: string;
             auth: Auth;
+            i18n: I18n;
             sidebarOpen: boolean;
             [key: string]: unknown;
         };

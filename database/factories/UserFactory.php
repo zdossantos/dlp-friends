@@ -39,6 +39,7 @@ class UserFactory extends Factory
     {
         return [
             'email' => fake()->unique()->safeEmail(),
+            'locale' => null,
             'email_verified_at' => now(),
             'birth_date' => today()->subYears(25),
             'status' => UserStatus::Active,

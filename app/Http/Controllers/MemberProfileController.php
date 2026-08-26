@@ -90,10 +90,10 @@ class MemberProfileController extends Controller
                 'interests' => $profile->interests()
                     ->orderBy('interests.sort_order')
                     ->orderBy('interests.id')
-                    ->get(['interests.id', 'interests.name'])
+                    ->get(['interests.id', 'interests.name', 'interests.name_en'])
                     ->map(fn (Interest $interest): array => [
                         'id' => $interest->id,
-                        'name' => $interest->name,
+                        'name' => $interest->display_name,
                     ])
                     ->all(),
             ],
@@ -172,8 +172,12 @@ class MemberProfileController extends Controller
                 ->where('is_active', true)
                 ->orderBy('sort_order')
                 ->orderBy('id')
-                ->get(['id', 'name'])
-                ->toArray(),
+                ->get(['id', 'name', 'name_en'])
+                ->map(fn (Interest $interest): array => [
+                    'id' => $interest->id,
+                    'name' => $interest->display_name,
+                ])
+                ->all(),
             'selectedInterestIds' => $profile?->interests()
                 ->pluck('interests.id')
                 ->all() ?? [],

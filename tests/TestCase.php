@@ -22,6 +22,9 @@ abstract class TestCase extends BaseTestCase
     {
         parent::setUp();
 
+        app()->setLocale((string) config('app.locale'));
+        $this->withHeader('Accept-Language', 'fr');
+
         if (! $this->usesViteAssets()) {
             $this->withoutVite();
         }
