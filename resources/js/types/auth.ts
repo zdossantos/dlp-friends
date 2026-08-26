@@ -3,6 +3,7 @@ import type { InterestOption } from './interest';
 export type User = {
     id: number;
     email: string;
+    locale: 'fr' | 'en' | null;
     email_verified_at: string | null;
     profile: Profile | null;
     roles: Array<{ name: RoleName }>;
