@@ -72,12 +72,12 @@ final readonly class DiscoveryService
 
                 $commonInterests = array_values($profile->interests
                     ->filter(fn (Interest $interest): bool => in_array($interest->id, $actorInterestIds, true))
-                    ->pluck('name')
+                    ->map(fn (Interest $interest): string => $interest->display_name)
                     ->all());
                 $commonInterestCount = count($commonInterests);
                 $interests = array_values($profile->interests
                     ->map(fn (Interest $interest): array => [
-                        'name' => $interest->name,
+                        'name' => $interest->display_name,
                         'isCommon' => in_array($interest->id, $actorInterestIds, true),
                     ])
                     ->all());
