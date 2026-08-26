@@ -11,7 +11,7 @@ class EnsureProfileIsComplete
     /** @param Closure(Request): Response $next */
     public function handle(Request $request, Closure $next): Response
     {
-        if (! $request->user()?->loadMissing('profile')->profile?->isComplete()) {
+        if (! $request->user()?->loadMissing('profile.avatar')->profile?->isComplete()) {
             return to_route('member-profile.create');
         }
 

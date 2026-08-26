@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Enums\ProfileVisibility;
 use App\Enums\VisitFrequency;
+use App\Models\Avatar;
 use App\Models\Interest;
 use App\Models\InterestSetting;
 use App\Models\User;
@@ -24,13 +25,14 @@ class MemberProfileTest extends TestCase
         $second = Interest::factory()->create(['name' => 'Spectacles', 'sort_order' => 20]);
         $first = Interest::factory()->create(['name' => 'Attractions', 'sort_order' => 10]);
         Interest::factory()->create(['name' => 'Archivé', 'is_active' => false, 'sort_order' => 0]);
-        $user = User::factory()->create();
+        $user = User::factory()->create(['birth_date' => today()->subYears(31)]);
 
         $this->actingAs($user)
             ->get(route('member-profile.create'))
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->component('profile/Create')
+                ->where('age', 31)
                 ->has('visitFrequencies', 4)
                 ->has('visibilities', 2)
                 ->where('interests', [
@@ -41,11 +43,141 @@ class MemberProfileTest extends TestCase
                 ->where('interestLimit', 2));
     }
 
+    public function test_profile_form_only_offers_active_avatars_in_catalog_order(): void
+    {
+        config()->set('inertia.testing.ensure_pages_exist', false);
+        $later = $this->avatar(['name' => 'Brume', 'sort_order' => 20]);
+        $earlier = $this->avatar(['name' => 'Aurore', 'sort_order' => 10]);
+        $this->avatar(['name' => 'Archivé', 'sort_order' => 0, 'is_active' => false]);
+        $user = User::factory()->create();
+
+        $this->actingAs($user)
+            ->get(route('member-profile.create'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page->where('avatars', [
+                [
+                    'id' => $earlier->id,
+                    'name' => 'Aurore',
+                    'image_url' => route('avatars.image', $earlier),
+                    'primary_color' => '#7C3AED',
+                    'secondary_color' => '#EC4899',
+                ],
+                [
+                    'id' => $later->id,
+                    'name' => 'Brume',
+                    'image_url' => route('avatars.image', $later),
+                    'primary_color' => '#7C3AED',
+                    'secondary_color' => '#EC4899',
+                ],
+            ]));
+    }
+
+    public function test_incomplete_admin_can_reach_avatar_management_to_bootstrap_the_catalog(): void
+    {
+        config()->set('inertia.testing.ensure_pages_exist', false);
+        $admin = User::factory()->admin()->create();
+
+        $this->actingAs($admin)
+            ->get(route('member-profile.create'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('canManageAvatars', true));
+    }
+
+    public function test_member_must_select_an_active_avatar_to_complete_their_profile(): void
+    {
+        $inactive = $this->avatar(['is_active' => false]);
+        $user = User::factory()->create();
+        $payload = [
+            'display_name' => 'Magic Friend',
+            'bio' => null,
+            'visit_frequency' => VisitFrequency::Often->value,
+            'visibility' => ProfileVisibility::Visible->value,
+        ];
+
+        $this->actingAs($user)->post(route('member-profile.store'), $payload)
+            ->assertSessionHasErrors('avatar_id');
+        $this->actingAs($user)->post(route('member-profile.store'), [
+            ...$payload,
+            'avatar_id' => $inactive->id,
+        ])->assertSessionHasErrors('avatar_id');
+
+        expect($user->fresh()->profile?->isComplete() ?? false)->toBeFalse();
+    }
+
+    public function test_member_can_complete_their_profile_with_an_active_avatar(): void
+    {
+        $avatar = $this->avatar();
+        $user = User::factory()->create();
+
+        $this->actingAs($user)->post(route('member-profile.store'), [
+            'avatar_id' => $avatar->id,
+            'display_name' => 'Magic Friend',
+            'bio' => null,
+            'visit_frequency' => VisitFrequency::Often->value,
+            'visibility' => ProfileVisibility::Visible->value,
+        ])->assertRedirect(route('app'));
+
+        expect($user->fresh()->profile->avatar->is($avatar))->toBeTrue()
+            ->and($user->fresh()->profile->isComplete())->toBeTrue();
+    }
+
+    public function test_write_time_avatar_revalidation_rolls_back_new_profile_creation(): void
+    {
+        $avatar = $this->avatar();
+        $user = User::factory()->create();
+        $catalogChanged = false;
+
+        DB::listen(function (QueryExecuted $query) use (&$catalogChanged, $avatar): void {
+            if (
+                $catalogChanged
+                || ! str_contains($query->sql, 'count(*)')
+                || ! str_contains($query->sql, 'aggregate')
+                || ! str_contains($query->sql, 'avatars')
+                || ! str_contains($query->sql, 'is_active')
+            ) {
+                return;
+            }
+
+            $catalogChanged = true;
+            Avatar::query()->whereKey($avatar->id)->update(['is_active' => false]);
+        });
+
+        $this->actingAs($user)->post(route('member-profile.store'), [
+            'avatar_id' => $avatar->id,
+            'display_name' => 'Création refusée',
+            'bio' => null,
+            'visit_frequency' => VisitFrequency::Often->value,
+            'visibility' => ProfileVisibility::Visible->value,
+        ])->assertSessionHasErrors('avatar_id');
+
+        expect($catalogChanged)->toBeTrue();
+        $this->assertDatabaseMissing('profiles', ['user_id' => $user->id]);
+    }
+
+    public function test_profile_becomes_incomplete_when_its_selected_avatar_is_archived(): void
+    {
+        $avatar = $this->avatar();
+        $user = User::factory()->withProfile()->create();
+        $user->profile->update(['avatar_id' => $avatar->id]);
+
+        expect($user->profile->fresh()->isComplete())->toBeTrue();
+
+        $avatar->update(['is_active' => false]);
+
+        expect($user->profile->fresh()->isComplete())->toBeFalse();
+        $this->actingAs($user)
+            ->get(route('member-profile.show'))
+            ->assertRedirect(route('member-profile.create'));
+    }
+
     public function test_member_can_complete_their_profile_with_a_normalized_display_name(): void
     {
+        $avatar = $this->avatar();
         $user = User::factory()->create();
 
         $response = $this->actingAs($user)->post(route('member-profile.store'), [
+            'avatar_id' => $avatar->id,
             'display_name' => '  Magic   Friend  ',
             'bio' => 'Toujours partant pour une attraction.',
             'visit_frequency' => VisitFrequency::Often->value,
@@ -87,8 +219,10 @@ class MemberProfileTest extends TestCase
 
     public function test_repeating_onboarding_updates_instead_of_duplicating_the_profile(): void
     {
+        $avatar = $this->avatar();
         $user = User::factory()->create();
         $payload = [
+            'avatar_id' => $avatar->id,
             'display_name' => 'Magic Friend',
             'bio' => null,
             'visit_frequency' => VisitFrequency::Sometimes->value,
@@ -141,9 +275,11 @@ class MemberProfileTest extends TestCase
         InterestSetting::current()->update(['max_selections' => 2]);
         [$first, $second] = Interest::factory()->count(2)->create(['is_active' => true]);
         $inactive = Interest::factory()->create(['is_active' => false]);
+        $avatar = $this->avatar();
         $user = User::factory()->create();
 
         $payload = [
+            'avatar_id' => $avatar->id,
             'display_name' => 'Magic Friend',
             'bio' => null,
             'visit_frequency' => VisitFrequency::Often->value,
@@ -165,11 +301,13 @@ class MemberProfileTest extends TestCase
     public function test_url_encoded_numeric_interest_ids_are_normalized_before_synchronization(): void
     {
         $interest = Interest::factory()->create();
+        $avatar = $this->avatar();
         $user = User::factory()->create();
 
         $response = $this->actingAs($user)
             ->withHeader('Content-Type', 'application/x-www-form-urlencoded')
             ->post(route('member-profile.store'), [
+                'avatar_id' => $avatar->id,
                 'display_name' => 'Magic Friend',
                 'bio' => null,
                 'visit_frequency' => VisitFrequency::Often->value,
@@ -242,6 +380,20 @@ class MemberProfileTest extends TestCase
             ->and($profileLockIndex)->toBeLessThan($profileUpdateIndex);
     }
 
+    /** @param array<string, mixed> $attributes */
+    private function avatar(array $attributes = []): Avatar
+    {
+        return Avatar::query()->create([
+            'name' => 'Aurore',
+            'image_path' => 'avatars/'.fake()->uuid().'.png',
+            'primary_color' => '#7C3AED',
+            'secondary_color' => '#EC4899',
+            'is_active' => true,
+            'sort_order' => 0,
+            ...$attributes,
+        ]);
+    }
+
     public function test_write_time_interest_revalidation_rolls_back_profile_fields_and_pivots(): void
     {
         [$keep, $becomesInactive] = Interest::factory()->count(2)->create();
@@ -300,6 +452,7 @@ class MemberProfileTest extends TestCase
     public function test_write_time_interest_revalidation_rolls_back_new_profile_creation(): void
     {
         $becomesInactive = Interest::factory()->create();
+        $avatar = $this->avatar();
         $user = User::factory()->create();
         $catalogChanged = false;
 
@@ -321,6 +474,7 @@ class MemberProfileTest extends TestCase
         });
 
         $this->actingAs($user)->post(route('member-profile.store'), [
+            'avatar_id' => $avatar->id,
             'display_name' => 'Modification refusée',
             'bio' => 'Cette création doit être annulée.',
             'visit_frequency' => VisitFrequency::Often->value,
@@ -341,7 +495,9 @@ class MemberProfileTest extends TestCase
         $active = Interest::factory()->create(['sort_order' => 10]);
         $inactive = Interest::factory()->create(['is_active' => false, 'sort_order' => 0]);
         $suspended = Interest::factory()->create(['sort_order' => 20]);
-        $user = User::factory()->withProfile()->create();
+        $user = User::factory()->withProfile()->create([
+            'birth_date' => today()->subYears(31),
+        ]);
         $user->profile->interestHistory()->attach([
             $active->id => ['is_selected' => true],
             $inactive->id => ['is_selected' => true],
@@ -356,6 +512,7 @@ class MemberProfileTest extends TestCase
                     ['id' => $active->id, 'name' => $active->name],
                     ['id' => $suspended->id, 'name' => $suspended->name],
                 ])
+                ->where('age', 31)
                 ->where('selectedInterestIds', [$active->id]));
     }
 

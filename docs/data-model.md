@@ -16,7 +16,7 @@
 | `conversations` | Conversation liée à un match |
 | `messages` | Messages d'une conversation |
 | `blocks` | Blocage unidirectionnel entre deux membres |
-| `avatars` | Futur catalogue administrable d'avatars et métadonnées de droits, non implémenté dans cette issue |
+| `avatars` | Catalogue administrable : nom, image privée, deux couleurs de dégradé, activation et ordre |
 | `roles` / `user_roles` | Attribution du rôle d'administration sans le mélanger aux profils membres |
 
 ## États et contraintes de stockage
@@ -25,8 +25,10 @@
 - `users` contient l'identité de connexion et la date de naissance, mais aucun `username` ni `first_name`.
 - `profiles.display_name` est obligatoire une fois l'onboarding terminé et n'est volontairement pas unique.
 - `profiles.onboarding_completed_at` indique qu'un membre a terminé le profil minimal requis.
+- `profiles.avatar_id` référence l'avatar choisi. Le profil n'est complet que si cette référence désigne un avatar actif.
 - `profiles.visibility` vaut `visible` ou `hidden`. Seul un profil `visible` appartenant à un compte `active` est découvrable.
 - `profiles.image_type` vaut `upload`, `avatar` ou `null`. Une image téléversée est référencée par une clé de stockage, jamais par un chemin local public.
+- `avatars.image_path` référence un fichier du stockage privé. `primary_color` et `secondary_color` sont des couleurs hexadécimales utilisées pour générer le fond dégradé à l'affichage.
 - `interest_categories` sert uniquement à rattacher techniquement les intérêts ; aucune gestion de catégories n’est exposée dans le MVP.
 - `interests.is_active` distingue un intérêt actif d’un intérêt archivé. Un intérêt archivé n’est pas proposé dans les sélecteurs, n’est pas affiché dans les profils publics et ne participe pas au matching.
 - `interest_profile.is_selected` vaut `true` pour une sélection active et `false` pour une sélection suspendue conservée dans l’historique. Les sélections suspendues ne consomment pas la limite.
@@ -39,6 +41,7 @@
 ## Règles essentielles
 
 - Un profil appartient à un seul utilisateur.
+- Un profil complet doit sélectionner un avatar actif. Archiver cet avatar conserve la sélection mais rend le profil incomplet jusqu'à sa réactivation ou son remplacement.
 - Le nom d'affichage public n'est pas unique : plusieurs membres peuvent choisir le même libellé.
 - Un profil masqué ne peut pas être proposé à de nouveaux membres.
 - Un profil ne peut sélectionner que des intérêts actifs, dans la limite configurée.
@@ -68,4 +71,4 @@ Les résultats sont triés par score décroissant. Le bonus de fréquence ne peu
 - La messagerie accepte uniquement du texte brut, limité à 2 000 caractères. Les pièces jointes, GIF, réactions, édition et suppression de message sont hors V1.
 - Un membre ne peut lire ou envoyer un message que dans une conversation liée à son match et non affectée par un blocage.
 - Chaque compte reçoit le rôle `user`; `admin` est un rôle additionnel attribué explicitement.
-- Le rôle `admin` donne accès au dashboard et à la gestion du catalogue d’intérêts ; l’administration des avatars restera à implémenter dans une issue ultérieure. Ce rôle ne donne pas de droit de lecture des messages privés dans le MVP. Les catégories d’intérêts restent techniques et ne sont pas gérées dans cette interface.
+- Le rôle `admin` donne accès au dashboard et à la gestion des catalogues d’intérêts et d’avatars. La gestion des avatars reste accessible avant la complétion du profil afin de permettre l’ajout initial au catalogue. Ce rôle ne donne pas de droit de lecture des messages privés dans le MVP. Les catégories d’intérêts restent techniques et ne sont pas gérées dans cette interface.

@@ -12,6 +12,12 @@ const { isCurrentOrParentUrl } = useCurrentUrl();
 const isProfileComplete = computed(() =>
     Boolean(page.props.auth.user.profile?.onboarding_completed_at),
 );
+const isEditingProfile = computed(() =>
+    page.url.split('?')[0]?.startsWith('/profile/edit'),
+);
+const shouldShow = computed(
+    () => isProfileComplete.value && !isEditingProfile.value,
+);
 
 const items = [
     { label: 'Découvrir', href: discovery(), icon: Sparkles },
@@ -34,13 +40,14 @@ function isActive(item: (typeof items)[number]): boolean {
 
 <template>
     <div
-        v-if="isProfileComplete"
-        class="fixed inset-x-0 bottom-0 z-40 flex justify-center px-4 [padding-bottom:max(0.75rem,env(safe-area-inset-bottom))]"
+        v-if="shouldShow"
+        data-test="member-bottom-navigation-container"
+        class="pointer-events-none fixed inset-x-0 bottom-0 z-50 flex justify-center px-4 pt-2 [padding-bottom:max(0.75rem,env(safe-area-inset-bottom))]"
     >
         <nav
             data-test="member-bottom-navigation"
             aria-label="Navigation principale"
-            class="flex min-h-16 w-fit items-center gap-2 rounded-3xl border border-border/80 bg-card/95 px-2 shadow-xl shadow-primary/10 backdrop-blur"
+            class="pointer-events-auto flex min-h-16 w-fit items-center gap-2 rounded-3xl border border-border/80 bg-card/95 px-2 shadow-xl shadow-primary/10 backdrop-blur"
         >
             <Link
                 v-for="item in items"

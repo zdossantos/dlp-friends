@@ -6,6 +6,7 @@ use App\Enums\UserStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Profile;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Builder;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -14,7 +15,7 @@ class DashboardController extends Controller
     public function __invoke(): Response
     {
         $recentRegistrations = User::query()
-            ->with('profile')
+            ->with('profile.avatar')
             ->latest()
             ->limit(8)
             ->get()
@@ -30,7 +31,10 @@ class DashboardController extends Controller
                 'totalAccounts' => User::query()->count(),
                 'activeAccounts' => User::query()->where('status', UserStatus::Active)->count(),
                 'verifiedAccounts' => User::query()->whereNotNull('email_verified_at')->count(),
-                'completedProfiles' => Profile::query()->whereNotNull('onboarding_completed_at')->count(),
+                'completedProfiles' => Profile::query()
+                    ->whereNotNull('onboarding_completed_at')
+                    ->whereHas('avatar', fn (Builder $query) => $query->where('is_active', true))
+                    ->count(),
             ],
             'recentRegistrations' => $recentRegistrations,
         ]);

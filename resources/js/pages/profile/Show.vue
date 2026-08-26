@@ -1,6 +1,14 @@
 <script setup lang="ts">
 import { Head, Link, router, usePage } from '@inertiajs/vue3';
-import { LayoutDashboard, LogOut, Pencil, Settings } from '@lucide/vue';
+import {
+    Eye,
+    EyeOff,
+    LayoutDashboard,
+    LogOut,
+    Pencil,
+    Settings,
+    Sparkles,
+} from '@lucide/vue';
 import { computed } from 'vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -36,82 +44,175 @@ defineOptions({
 <template>
     <Head :title="profile.display_name" />
     <main
-        class="mx-auto w-full max-w-md px-4 pt-[max(1.25rem,env(safe-area-inset-top))] sm:px-6 sm:pt-8"
+        data-test="profile-page"
+        class="mx-auto flex h-full min-h-0 w-full max-w-lg overflow-visible px-4 pt-[max(0.75rem,env(safe-area-inset-top))] pb-4 sm:px-6 sm:pt-6"
     >
         <section
-            class="space-y-6 rounded-3xl border border-border/70 bg-card/95 p-6 shadow-xl shadow-primary/5 backdrop-blur sm:p-8"
+            data-test="profile-card"
+            class="flex h-full max-h-full w-full flex-col overflow-hidden rounded-[2rem] border border-border/70 bg-card shadow-xl shadow-primary/10"
         >
-            <div class="flex justify-end gap-2" aria-label="Actions du profil">
-                <Button as-child variant="outline" size="icon" class="size-12">
-                    <Link :href="editAccount()" aria-label="Réglages">
-                        <Settings class="size-5" aria-hidden="true" />
-                    </Link>
-                </Button>
-                <Button
-                    v-if="isAdmin"
-                    as-child
-                    variant="outline"
-                    size="icon"
-                    class="size-12"
-                >
-                    <Link :href="dashboard()" aria-label="Administration">
-                        <LayoutDashboard class="size-5" aria-hidden="true" />
-                    </Link>
-                </Button>
-                <Button as-child variant="outline" size="icon" class="size-12">
-                    <Link
-                        :href="logout()"
-                        as="button"
-                        aria-label="Se déconnecter"
-                        @click="handleLogout"
-                    >
-                        <LogOut class="size-5" aria-hidden="true" />
-                    </Link>
-                </Button>
-            </div>
             <div
-                class="flex flex-col justify-between gap-4 sm:flex-row sm:items-start"
+                v-if="profile.avatar"
+                data-test="profile-avatar-hero"
+                class="relative flex h-[clamp(15.5rem,34svh,17.5rem)] shrink-0 items-end justify-center overflow-hidden px-6 pt-14 sm:h-80"
+                :style="{
+                    backgroundImage: `linear-gradient(145deg, ${profile.avatar.primary_color}, ${profile.avatar.secondary_color})`,
+                }"
             >
-                <div>
-                    <div class="mb-2 flex flex-wrap items-center gap-2">
-                        <h1 class="text-3xl font-semibold tracking-tight">
-                            {{ profile.display_name }}
-                        </h1>
-                        <Badge variant="secondary">{{ age }} ans</Badge>
-                        <Badge>{{
-                            profile.visibility === 'visible'
-                                ? 'Visible'
-                                : 'Masqué'
-                        }}</Badge>
-                    </div>
-                    <p class="text-sm text-muted-foreground">
-                        Visites :
-                        {{ frequencyLabels[props.profile.visit_frequency!] }}
-                    </p>
-                </div>
-                <Button as-child variant="outline">
-                    <Link :href="editProfile()"
-                        ><Pencil class="size-4" aria-hidden="true" /> Modifier
-                        mon profil</Link
-                    >
-                </Button>
-            </div>
-            <div>
-                <h2 class="mb-2 text-sm font-medium">À propos</h2>
-                <p class="whitespace-pre-line text-muted-foreground">
-                    {{ profile.bio || 'Aucune bio renseignée pour le moment.' }}
-                </p>
-            </div>
-            <div v-if="profile.interests?.length">
-                <h2 class="mb-2 text-sm font-medium">Intérêts</h2>
-                <div class="flex flex-wrap gap-2">
-                    <Badge
-                        v-for="interest in profile.interests"
-                        :key="interest.id"
+                <div
+                    class="absolute inset-0 bg-[radial-gradient(circle_at_70%_20%,rgba(255,255,255,.5),transparent_35%),radial-gradient(circle_at_15%_70%,rgba(255,255,255,.22),transparent_34%)]"
+                />
+                <div
+                    class="absolute top-3 right-3 z-30 flex gap-2"
+                    aria-label="Actions du profil"
+                >
+                    <Button
+                        as-child
                         variant="secondary"
+                        size="icon"
+                        class="size-10 rounded-full border border-white/50 bg-background/90 shadow-lg backdrop-blur"
                     >
-                        {{ interest.name }}
-                    </Badge>
+                        <Link :href="editAccount()" aria-label="Réglages">
+                            <Settings class="size-5" aria-hidden="true" />
+                        </Link>
+                    </Button>
+                    <Button
+                        v-if="isAdmin"
+                        as-child
+                        variant="secondary"
+                        size="icon"
+                        class="size-10 rounded-full border border-white/50 bg-background/90 shadow-lg backdrop-blur"
+                    >
+                        <Link :href="dashboard()" aria-label="Administration">
+                            <LayoutDashboard
+                                class="size-5"
+                                aria-hidden="true"
+                            />
+                        </Link>
+                    </Button>
+                    <Button
+                        as-child
+                        variant="secondary"
+                        size="icon"
+                        class="size-10 rounded-full border border-white/50 bg-background/90 shadow-lg backdrop-blur"
+                    >
+                        <Link
+                            :href="logout()"
+                            as="button"
+                            aria-label="Se déconnecter"
+                            @click="handleLogout"
+                        >
+                            <LogOut class="size-5" aria-hidden="true" />
+                        </Link>
+                    </Button>
+                </div>
+                <div
+                    class="absolute right-[8%] bottom-[12%] size-32 rounded-full bg-white/20 blur-3xl"
+                    aria-hidden="true"
+                />
+                <img
+                    :src="profile.avatar.image_url"
+                    :alt="`Avatar ${profile.avatar.name}`"
+                    class="relative z-20 max-h-[17rem] w-full object-contain drop-shadow-2xl sm:max-h-[19rem]"
+                    data-test="profile-avatar"
+                />
+            </div>
+
+            <div
+                data-test="profile-information-sheet"
+                class="relative z-20 -mt-6 min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-contain rounded-t-[2rem] bg-card p-4 sm:p-6"
+            >
+                <div
+                    class="flex flex-col justify-between gap-3 sm:flex-row sm:items-start"
+                >
+                    <div>
+                        <div class="mb-2 flex flex-wrap items-center gap-2">
+                            <h1 class="text-3xl font-semibold tracking-tight">
+                                {{ profile.display_name }}
+                            </h1>
+                            <Badge
+                                class="rounded-full px-3 py-1"
+                                variant="secondary"
+                                >{{ age }} ans</Badge
+                            >
+                        </div>
+                        <div class="flex flex-wrap gap-2 text-sm">
+                            <span
+                                class="inline-flex items-center gap-2 rounded-full bg-muted px-3 py-1.5 font-medium"
+                            >
+                                <Eye
+                                    v-if="profile.visibility === 'visible'"
+                                    class="size-4 text-primary"
+                                    aria-hidden="true"
+                                />
+                                <EyeOff
+                                    v-else
+                                    class="size-4 text-primary"
+                                    aria-hidden="true"
+                                />
+                                {{
+                                    profile.visibility === 'visible'
+                                        ? 'Visible'
+                                        : 'Masqué'
+                                }}
+                            </span>
+                            <span
+                                class="inline-flex items-center gap-2 rounded-full bg-secondary px-3 py-1.5 font-medium text-secondary-foreground"
+                            >
+                                <Sparkles class="size-4" aria-hidden="true" />
+                                {{
+                                    frequencyLabels[
+                                        props.profile.visit_frequency!
+                                    ]
+                                }}
+                            </span>
+                        </div>
+                    </div>
+                    <Button
+                        as-child
+                        variant="outline"
+                        class="min-h-10 rounded-full"
+                    >
+                        <Link :href="editProfile()">
+                            <Pencil class="size-4" aria-hidden="true" />
+                            Modifier mon profil
+                        </Link>
+                    </Button>
+                </div>
+
+                <div v-if="profile.interests?.length">
+                    <h2
+                        data-test="profile-interests-title"
+                        class="mb-2 text-sm font-medium"
+                    >
+                        Intérêts
+                    </h2>
+                    <div class="flex flex-wrap gap-2">
+                        <Badge
+                            v-for="interest in profile.interests"
+                            :key="interest.id"
+                            variant="secondary"
+                            class="rounded-full px-3 py-1.5"
+                        >
+                            {{ interest.name }}
+                        </Badge>
+                    </div>
+                </div>
+                <div>
+                    <h2
+                        data-test="profile-about-title"
+                        class="mb-1 text-sm font-medium"
+                    >
+                        À propos
+                    </h2>
+                    <p
+                        class="leading-5 whitespace-pre-line text-muted-foreground"
+                    >
+                        {{
+                            profile.bio ||
+                            'Aucune bio renseignée pour le moment.'
+                        }}
+                    </p>
                 </div>
             </div>
         </section>

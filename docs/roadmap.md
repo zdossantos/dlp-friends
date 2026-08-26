@@ -17,5 +17,5 @@ Objectif : permettre de trouver des amis pour une prochaine visite sans faire é
 
 - Notifications de match et de nouveau message.
 - Options de matching plus fines, sans critère romantique.
-- Outils d'administration enrichis pour le catalogue d’intérêts et les avatars.
+- Outils d'administration enrichis au-delà des catalogues d’intérêts et d’avatars déjà disponibles.
 - Fonctionnalités communautaires seulement si elles répondent à un besoin validé ; elles ne font pas partie de la direction actuelle du produit.

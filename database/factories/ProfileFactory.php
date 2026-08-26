@@ -4,6 +4,7 @@ namespace Database\Factories;
 
 use App\Enums\ProfileVisibility;
 use App\Enums\VisitFrequency;
+use App\Models\Avatar;
 use App\Models\Profile;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -29,6 +30,7 @@ class ProfileFactory extends Factory
     public function complete(): static
     {
         return $this->state(fn (): array => [
+            'avatar_id' => Avatar::factory(),
             'visit_frequency' => VisitFrequency::Sometimes,
             'onboarding_completed_at' => now(),
         ]);

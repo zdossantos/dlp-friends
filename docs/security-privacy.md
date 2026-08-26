@@ -13,7 +13,7 @@
 - Vérifier le contenu technique des fichiers côté serveur, limiter les dimensions et créer des variantes optimisées.
 - Retirer les métadonnées EXIF avant stockage ou diffusion.
 - Stocker les images dans le bucket MinIO privé, jamais dans le répertoire public de l'application, et les servir avec une URL contrôlée ou temporaire.
-- Les avatars du catalogue ne peuvent être publiés que si leurs droits d'usage sont établis.
+- Aucun avatar Disney ou asset non autorisé n'est livré. La validation préalable des images ajoutées au catalogue relève de l'administrateur et n'est pas matérialisée par des champs juridiques dans l'application.
 
 ## Données et contrôle utilisateur
 

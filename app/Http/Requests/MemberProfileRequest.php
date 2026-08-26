@@ -22,6 +22,7 @@ class MemberProfileRequest extends FormRequest
         $displayName = $this->input('display_name');
 
         $this->merge([
+            'avatar_id' => $this->input('avatar_id', $this->user()?->profile?->avatar_id),
             'display_name' => is_string($displayName)
                 ? preg_replace('/\s+/u', ' ', trim($displayName))
                 : $displayName,
@@ -33,6 +34,11 @@ class MemberProfileRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'avatar_id' => [
+                'required',
+                'integer',
+                Rule::exists('avatars', 'id')->where('is_active', true),
+            ],
             'display_name' => ['required', 'string', 'min:1', 'max:80'],
             'bio' => ['nullable', 'string', 'max:500'],
             'visit_frequency' => ['required', Rule::enum(VisitFrequency::class)],

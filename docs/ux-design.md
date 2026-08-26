@@ -13,7 +13,7 @@ L'interface doit évoquer une magie contemporaine et chaleureuse, sans reprendre
 
 1. Inscription avec e-mail, date de naissance et mot de passe, sans nom public demandé à ce stade.
 2. Vérification obligatoire de l'adresse e-mail.
-3. Création du profil sur une page dédiée : nom d'affichage non unique, bio, fréquence de visite, visibilité et sélection d’intérêts actifs. Le prénom n'est pas demandé.
+3. Création du profil sur une page dédiée : avatar actif obligatoire, nom d'affichage non unique, bio, fréquence de visite, visibilité et sélection d’intérêts actifs. Le prénom n'est pas demandé.
 4. Arrivée sur la page de profil personnel. Un administrateur peut ensuite ouvrir son dashboard réservé.
 5. Découverte : carte, affinités explicables, like ou refus.
 6. Match réciproque : confirmation claire puis accès à la conversation.
@@ -28,6 +28,7 @@ L'interface doit évoquer une magie contemporaine et chaleureuse, sans reprendre
 
 ## Avatar et photo
 
-- La photo personnelle est facultative.
-- Le membre peut choisir un avatar dans un catalogue. Les assets de ce catalogue doivent disposer de droits d'usage adéquats avant publication.
+- La photo personnelle est facultative, mais ne remplace pas l'avatar obligatoire.
+- Le membre choisit un avatar actif dans un catalogue administrable. Son image est affichée sur un fond dégradé entre les deux couleurs configurées.
+- Aucun asset Disney ou non autorisé n'est livré avec l'application ; la validation des assets ajoutés reste une responsabilité administrative hors application.
 - Aucun téléversement d'image ne doit être obligatoire pour utiliser l'application.

@@ -81,6 +81,20 @@ class DashboardTest extends TestCase
                 ->missing('recentRegistrations.0.password'));
     }
 
+    public function test_archived_avatar_removes_profile_from_completed_aggregate(): void
+    {
+        config()->set('inertia.testing.ensure_pages_exist', false);
+        $admin = User::factory()->withProfile()->admin()->create();
+        $member = User::factory()->withProfile()->create();
+        $member->profile->avatar->update(['is_active' => false]);
+
+        $this->actingAs($admin)
+            ->get(route('dashboard'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('stats.completedProfiles', 1));
+    }
+
     public function test_incomplete_users_are_redirected_to_profile_onboarding(): void
     {
         $user = User::factory()->create();

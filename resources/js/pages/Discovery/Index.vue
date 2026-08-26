@@ -90,7 +90,10 @@ function submit(decision: SwipeDecision, targetUserId?: number): void {
         swipe(resolvedTargetUserId).url,
         { decision },
         {
+            only: ['suggestions', 'match'],
+            preserveState: true,
             preserveScroll: true,
+            replace: true,
             onSuccess: () => {
                 retryAttempt.value = null;
             },
@@ -137,11 +140,14 @@ defineOptions({
     <Head title="Découvrir" />
 
     <main
-        class="mx-auto flex w-full max-w-md flex-1 flex-col gap-4 px-4 pt-[max(1.25rem,env(safe-area-inset-top))] sm:px-6 sm:pt-8"
+        data-test="discovery-page"
+        class="mx-auto flex h-full min-h-0 w-full max-w-md flex-1 flex-col gap-3 overflow-visible px-4 pt-[max(0.75rem,env(safe-area-inset-top))] pb-4 sm:px-6 sm:pt-6"
     >
-        <section class="space-y-1">
-            <h1 class="text-3xl font-semibold tracking-tight">Découvrir</h1>
-            <p class="text-sm leading-6 text-muted-foreground">
+        <section class="shrink-0 space-y-0.5">
+            <h1 class="text-2xl font-semibold tracking-tight sm:text-3xl">
+                Découvrir
+            </h1>
+            <p class="text-sm leading-5 text-muted-foreground">
                 Des membres qui partagent vos intérêts.
             </p>
         </section>
@@ -199,19 +205,15 @@ defineOptions({
 
         <section
             v-else
-            class="relative w-full pb-6"
+            class="relative min-h-0 w-full flex-1 pb-3"
             aria-label="Profils à découvrir"
         >
             <div
                 v-for="(profile, index) in suggestions"
                 :key="profile.userId"
                 data-test="discovery-card-stack-item"
-                class="w-full transition-transform duration-300 ease-out"
-                :class="
-                    index === 0
-                        ? 'relative'
-                        : 'pointer-events-none absolute inset-x-0 top-0'
-                "
+                class="absolute inset-x-0 top-0 bottom-3 flex w-full justify-center transition-transform duration-300 ease-out"
+                :class="index === 0 ? undefined : 'pointer-events-none'"
                 :style="{
                     zIndex: suggestions.length - index,
                     transform:

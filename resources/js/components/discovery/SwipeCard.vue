@@ -1,14 +1,9 @@
 <script setup lang="ts">
+import { Sparkles, Users, X } from '@lucide/vue';
 import { computed, onBeforeUnmount, ref, watch } from 'vue';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardHeader,
-    CardTitle,
-} from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
 import type { DiscoveryProfile, SwipeDecision, VisitFrequency } from '@/types';
 
 const SWIPE_THRESHOLD_PX = 72;
@@ -19,8 +14,9 @@ const props = withDefaults(
         profile: DiscoveryProfile;
         locked: boolean;
         preview?: boolean;
+        compact?: boolean;
     }>(),
-    { preview: false },
+    { compact: false, preview: false },
 );
 
 const emit = defineEmits<{ like: []; pass: [] }>();
@@ -55,21 +51,19 @@ const cardStyle = computed(() => {
     };
 });
 
-const initials = computed(() => {
-    return props.profile.displayName
-        .split(/\s+/)
-        .filter(Boolean)
-        .slice(0, 2)
-        .map((word) => word.charAt(0))
-        .join('')
-        .toLocaleUpperCase('fr-FR');
-});
-
 const visitFrequencyLabel = computed(() => {
     return props.profile.visitFrequency
         ? visitFrequencyLabels[props.profile.visitFrequency]
         : 'Fréquence non renseignée';
 });
+
+const hasDenseInterestList = computed(
+    () => !props.compact && props.profile.interests.length >= 4,
+);
+
+const avatarGradient = computed(() => ({
+    backgroundImage: `linear-gradient(145deg, ${props.profile.avatar.primary_color}, ${props.profile.avatar.secondary_color})`,
+}));
 
 function decide(decision: SwipeDecision) {
     if (props.locked || props.preview || exitDirection.value !== 0) {
@@ -206,7 +200,8 @@ watch(
 
 <template>
     <Card
-        class="w-full max-w-md touch-pan-y gap-0 overflow-hidden rounded-[1.75rem] p-0 transition-[transform,opacity] ease-[cubic-bezier(0.22,1,0.36,1)] will-change-transform outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 motion-reduce:duration-0"
+        data-test="discovery-card"
+        class="h-full max-h-full w-full max-w-md touch-pan-y gap-0 overflow-hidden rounded-[2rem] p-0 shadow-xl shadow-primary/10 transition-[transform,opacity] ease-[cubic-bezier(0.22,1,0.36,1)] will-change-transform outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 motion-reduce:duration-0"
         :style="cardStyle"
         :tabindex="preview ? -1 : 0"
         :aria-label="`Profil de découverte de ${profile.displayName}`"
@@ -219,80 +214,164 @@ watch(
         @pointercancel="resetCard"
         @lostpointercapture="forgetPointerStart"
     >
-        <CardHeader
-            class="gap-4 bg-[radial-gradient(circle_at_top_left,var(--color-secondary),transparent_50%),radial-gradient(circle_at_bottom_right,var(--color-accent),transparent_48%)] px-6 py-8"
+        <div
+            data-test="discovery-avatar-hero"
+            :class="[
+                'relative flex shrink-0 items-end justify-center overflow-hidden',
+                compact
+                    ? 'min-h-40 px-5 pt-3'
+                    : hasDenseInterestList
+                      ? 'h-[clamp(12rem,27svh,14rem)] px-6 pt-4 sm:h-72'
+                      : 'h-[clamp(15.5rem,34svh,17.5rem)] px-6 pt-4 sm:h-80',
+            ]"
+            :style="avatarGradient"
         >
-            <div class="flex flex-col items-center gap-4 text-center">
-                <Avatar
-                    class="size-24 rounded-3xl border-4 border-card shadow-lg"
-                >
-                    <AvatarFallback
-                        class="rounded-3xl bg-card/70 text-2xl font-semibold text-primary"
-                    >
-                        {{ initials }}
-                    </AvatarFallback>
-                </Avatar>
+            <div
+                class="absolute inset-0 bg-[radial-gradient(circle_at_70%_18%,rgba(255,255,255,.5),transparent_34%),radial-gradient(circle_at_12%_72%,rgba(255,255,255,.2),transparent_30%)]"
+            />
+            <div
+                class="absolute right-[8%] bottom-[14%] size-36 rounded-full bg-white/20 blur-3xl"
+                aria-hidden="true"
+            />
+            <img
+                :src="profile.avatar.image_url"
+                :alt="`Avatar ${profile.avatar.name}`"
+                draggable="false"
+                :class="[
+                    'pointer-events-none relative z-10 object-contain drop-shadow-2xl select-none',
+                    compact
+                        ? 'max-h-40 w-full'
+                        : hasDenseInterestList
+                          ? 'h-[calc(100%-1rem)] w-auto max-w-full'
+                          : 'max-h-[17rem] w-full sm:max-h-[19rem]',
+                ]"
+            />
+        </div>
 
-                <div class="min-w-0 flex-1">
-                    <CardTitle class="text-3xl leading-tight tracking-tight">
+        <div
+            data-test="discovery-information-sheet"
+            :class="[
+                'relative z-20 flex-1 rounded-t-[2rem] bg-card',
+                compact
+                    ? '-mt-5 space-y-2 px-4 pt-4 pb-3'
+                    : '-mt-6 space-y-2.5 px-4 pt-4 pb-4',
+            ]"
+        >
+            <div>
+                <div class="flex flex-wrap items-center gap-2">
+                    <h2
+                        :class="[
+                            'font-semibold tracking-tight',
+                            compact ? 'text-2xl' : 'text-2xl sm:text-3xl',
+                        ]"
+                    >
                         {{ profile.displayName }}
-                    </CardTitle>
-                    <CardDescription class="mt-1 text-base">
+                    </h2>
+                    <Badge class="rounded-full px-3 py-1" variant="secondary">
                         {{ profile.age }} ans
-                    </CardDescription>
+                    </Badge>
+                </div>
+                <p
+                    :class="[
+                        'text-sm text-muted-foreground',
+                        compact
+                            ? 'mt-1 line-clamp-2 leading-5'
+                            : 'mt-1.5 max-h-10 overflow-hidden leading-5',
+                    ]"
+                >
+                    {{ profile.bio ?? 'Bio non renseignée.' }}
+                </p>
+            </div>
+
+            <div class="space-y-1.5">
+                <p
+                    class="flex items-center gap-1.5 text-xs font-medium text-muted-foreground"
+                >
+                    <Users class="size-3.5 text-primary" aria-hidden="true" />
+                    {{ profile.commonInterestCount }}
+                    {{
+                        profile.commonInterestCount > 1
+                            ? 'intérêts en commun'
+                            : 'intérêt en commun'
+                    }}
+                </p>
+                <div class="flex flex-wrap gap-1.5">
+                    <Badge
+                        v-for="interest in profile.interests"
+                        :key="interest.name"
+                        data-test="discovery-interest"
+                        :data-common="interest.isCommon"
+                        :variant="interest.isCommon ? 'outline' : 'secondary'"
+                        :class="[
+                            'rounded-full px-2.5 py-1 text-xs',
+                            interest.isCommon
+                                ? 'border-primary/30 bg-primary/10 text-primary'
+                                : 'text-muted-foreground',
+                        ]"
+                    >
+                        <Sparkles
+                            v-if="interest.isCommon"
+                            class="size-3"
+                            aria-hidden="true"
+                        />
+                        {{ interest.name }}
+                    </Badge>
                 </div>
             </div>
-        </CardHeader>
 
-        <CardContent class="space-y-5 px-6 py-6">
-            <p class="text-sm leading-6 text-muted-foreground">
-                {{ profile.bio ?? 'Bio non renseignée.' }}
-            </p>
-
-            <div class="grid gap-3 rounded-lg border bg-muted/30 p-4 text-sm">
-                <p class="font-medium">
-                    {{ profile.commonInterestCount }} intérêts communs
+            <div
+                :class="[
+                    'flex items-center gap-3 border-t text-sm text-muted-foreground',
+                    compact ? 'pt-2' : 'pt-3',
+                ]"
+            >
+                <Sparkles class="size-5 text-primary" aria-hidden="true" />
+                <p>
+                    <span class="font-medium text-foreground">{{
+                        visitFrequencyLabel
+                    }}</span>
+                    <span v-if="profile.frequencyBonus">
+                        · Même fréquence de visite</span
+                    >
                 </p>
-                <p class="text-muted-foreground">
-                    Fréquence de visite : {{ visitFrequencyLabel }}
-                </p>
-                <p v-if="profile.frequencyBonus" class="text-muted-foreground">
-                    Même fréquence de visite
-                </p>
-            </div>
-
-            <div class="flex flex-wrap gap-2" aria-label="Intérêts communs">
-                <Badge
-                    v-for="interest in profile.commonInterests"
-                    :key="interest"
-                    variant="secondary"
-                >
-                    {{ interest }}
-                </Badge>
             </div>
 
             <p id="swipe-instructions" class="sr-only">
                 Balayez vers la gauche pour passer ce profil ou vers la droite
                 pour l’aimer. Au clavier, utilisez les flèches gauche et droite.
             </p>
-            <button
-                class="sr-only"
-                type="button"
-                :disabled="locked || preview"
-                aria-label="Passer ce profil"
-                @click="decide('pass')"
+            <div
+                :class="[
+                    'grid grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)]',
+                    compact ? 'gap-2' : 'gap-3',
+                ]"
+                @pointerdown.stop
             >
-                Passer ce profil
-            </button>
-            <button
-                class="sr-only"
-                type="button"
-                :disabled="locked || preview"
-                aria-label="Aimer ce profil"
-                @click="decide('like')"
-            >
-                Aimer ce profil
-            </button>
-        </CardContent>
+                <Button
+                    type="button"
+                    variant="outline"
+                    :class="['rounded-full', compact ? 'min-h-10' : 'min-h-12']"
+                    :disabled="locked || preview"
+                    aria-label="Passer ce profil"
+                    @click="decide('pass')"
+                >
+                    <X class="size-5" aria-hidden="true" />
+                    Passer
+                </Button>
+                <Button
+                    type="button"
+                    :class="[
+                        'rounded-full bg-gradient-to-r from-pink-500 to-primary',
+                        compact ? 'min-h-10 text-xs' : 'min-h-12',
+                    ]"
+                    :disabled="locked || preview"
+                    aria-label="Aimer ce profil"
+                    @click="decide('like')"
+                >
+                    <Sparkles class="size-5" aria-hidden="true" />
+                    Ça m’intéresse
+                </Button>
+            </div>
+        </div>
     </Card>
 </template>

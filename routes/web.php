@@ -1,10 +1,14 @@
 <?php
 
+use App\Http\Controllers\Admin\AvatarController;
+use App\Http\Controllers\Admin\AvatarOrderController;
+use App\Http\Controllers\Admin\AvatarStatusController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\InterestController;
 use App\Http\Controllers\Admin\InterestOrderController;
 use App\Http\Controllers\Admin\InterestSettingController;
 use App\Http\Controllers\Admin\InterestStatusController;
+use App\Http\Controllers\AvatarImageController;
 use App\Http\Controllers\DiscoveryController;
 use App\Http\Controllers\LandingController;
 use App\Http\Controllers\MemberProfileController;
@@ -14,12 +18,24 @@ use Illuminate\Support\Facades\Route;
 Route::inertia('/', 'Welcome')->name('home');
 
 Route::middleware(['auth', 'verified', 'social'])->group(function () {
+    Route::get('avatars/{avatar}/image', AvatarImageController::class)
+        ->name('avatars.image');
+
     Route::get('app', LandingController::class)->name('app');
 
     Route::get('profile/create', [MemberProfileController::class, 'create'])
         ->name('member-profile.create');
     Route::post('profile', [MemberProfileController::class, 'store'])
         ->name('member-profile.store');
+
+    Route::prefix('admin')->name('admin.')->middleware('role:admin')->group(function (): void {
+        Route::resource('avatars', AvatarController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+        Route::patch('avatars/{avatar}/status', AvatarStatusController::class)
+            ->name('avatars.status');
+        Route::patch('avatars/{avatar}/move', AvatarOrderController::class)
+            ->name('avatars.move');
+    });
 
     Route::middleware('profile.complete')->group(function () {
         Route::get('profile', [MemberProfileController::class, 'show'])

@@ -13,7 +13,8 @@
 ### Profil
 
 - Nom d'affichage non unique, âge calculé depuis le compte, bio courte, fréquence de visite et visibilité. Aucun prénom n'est stocké.
-- Image facultative : téléversement d'une photo personnelle ou sélection d'un avatar depuis un catalogue.
+- Sélection obligatoire d'un avatar actif depuis le catalogue pour compléter le profil. Chaque avatar associe une image à un fond dégradé défini par deux couleurs.
+- Le téléversement facultatif d'une photo personnelle reste distinct de l'avatar obligatoire.
 - Les images doivent être stockées, validées, redimensionnées et dépourvues de métadonnées EXIF.
 - Sélection multiple d’intérêts actifs depuis un catalogue administrable. La limite par défaut est de cinq intérêts par profil ; un administrateur peut la régler entre 1 et 100.
 

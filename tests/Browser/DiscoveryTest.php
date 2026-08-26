@@ -2,18 +2,25 @@
 
 use App\Actions\CreateSwipe;
 use App\Enums\SwipeDecision;
+use App\Models\Interest;
 use App\Models\MemberMatch;
 use App\Models\Swipe;
 use App\Models\User;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 
 function discoveryMember(string $displayName): User
 {
     $user = User::factory()->withProfile()->create();
     $user->profile?->update(['display_name' => $displayName]);
+    Storage::disk('local')->put($user->profile->avatar->image_path, base64_decode(
+        'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScL8WQAAAABJRU5ErkJggg==',
+    ));
 
     return $user;
 }
+
+beforeEach(fn () => Storage::fake('local'));
 
 test('discovery renders its deferred empty state and limits the stack to five profiles', function () {
     $actor = discoveryMember('Alice');
@@ -24,13 +31,23 @@ test('discovery renders its deferred empty state and limits the stack to five pr
         ->assertSee('Vous avez exploré tous les profils disponibles')
         ->assertNoJavaScriptErrors();
 
-    User::factory()->withProfile()->count(6)->create();
+    $candidates = User::factory()->withProfile()->count(6)->create();
+    $denseInterests = Interest::factory()->count(5)->create();
+    $candidates->first()?->profile?->interests()->attach($denseInterests->modelKeys());
 
     visit('/discover')
         ->assertPresent('[aria-label="Profils à découvrir"]')
         ->assertCount('[data-test="discovery-card-stack-item"]', 5)
         ->assertScript(
             "[...document.querySelectorAll('[data-test=\"discovery-card-stack-item\"]')].slice(1).every((card) => card.ariaHidden === 'true' && card.inert)",
+            true,
+        )
+        ->assertScript(
+            "new Set([...document.querySelectorAll('[data-test=discovery-card]')].map((card) => card.offsetHeight)).size === 1",
+            true,
+        )
+        ->assertScript(
+            "document.querySelectorAll('[data-test=discovery-card]')[1].getBoundingClientRect().bottom > document.querySelectorAll('[data-test=discovery-card]')[0].getBoundingClientRect().bottom",
             true,
         )
         ->assertNoJavaScriptErrors();
@@ -89,11 +106,64 @@ test('discovery renders its loading state while suggestions are deferred', funct
 test('the top discovery card accepts keyboard and accessible decisions', function () {
     $actor = discoveryMember('Alice');
     $passed = discoveryMember('Basile');
+    $commonInterest = Interest::factory()->create(['name' => 'Spectacles']);
+    $targetInterest = Interest::factory()->create(['name' => 'Pins']);
+    $otherTargetInterests = Interest::factory()->count(3)->sequence(
+        ['name' => 'Food'],
+        ['name' => 'Chill'],
+        ['name' => 'Événements'],
+    )->create();
+    $actor->profile?->interests()->attach($commonInterest);
+    $passed->profile?->interests()->attach([
+        $commonInterest->id,
+        $targetInterest->id,
+        ...$otherTargetInterests->modelKeys(),
+    ]);
     $this->actingAs($actor);
 
     $page = visit('/discover')
+        ->on()->mobile()
         ->assertPresent('[aria-label="Passer ce profil"]')
         ->assertPresent('[aria-label="Aimer ce profil"]')
+        ->assertPresent('[data-test="discovery-avatar-hero"]')
+        ->assertPresent('[data-test="discovery-information-sheet"]')
+        ->assertSee('Spectacles')
+        ->assertSee('Pins')
+        ->assertPresent('[data-test="discovery-interest"][data-common="true"]')
+        ->assertPresent('[data-test="discovery-interest"][data-common="false"]')
+        ->assertCount('[data-test="discovery-interest"]', 5)
+        ->assertScript(
+            "document.querySelector('[data-test=discovery-avatar-hero]').getBoundingClientRect().height >= 192 && document.querySelector('[data-test=discovery-avatar-hero]').getBoundingClientRect().height <= 230",
+            true,
+        )
+        ->assertScript(
+            "document.querySelector('[data-test=discovery-avatar-hero] img').getBoundingClientRect().top >= document.querySelector('[data-test=discovery-avatar-hero]').getBoundingClientRect().top + 8 && document.querySelector('[data-test=discovery-avatar-hero] img').getBoundingClientRect().bottom <= document.querySelector('[data-test=discovery-avatar-hero]').getBoundingClientRect().bottom",
+            true,
+        )
+        ->assertScript(
+            "document.querySelector('[aria-label=\"Aimer ce profil\"]').getBoundingClientRect().bottom + 12 <= document.querySelector('[data-test=discovery-card-stack-item] [tabindex=\"0\"]').getBoundingClientRect().bottom",
+            true,
+        )
+        ->assertScript(
+            "document.querySelector('[aria-label=\"Passer ce profil\"]').classList.contains('sr-only')",
+            false,
+        )
+        ->assertScript(
+            "document.querySelector('[data-test=discovery-avatar-hero]').getBoundingClientRect().height >= 192 && document.querySelector('[data-test=discovery-avatar-hero]').getBoundingClientRect().height <= 290",
+            true,
+        )
+        ->assertScript(
+            'document.querySelector(\'[data-test=member-shell-content]\').scrollHeight <= document.querySelector(\'[data-test=member-shell-content]\').clientHeight',
+            true,
+        )
+        ->assertScript(
+            "document.querySelector('[data-test=discovery-card-stack-item]').getBoundingClientRect().bottom <= document.querySelector('[data-test=member-shell-content]').getBoundingClientRect().bottom",
+            true,
+        )
+        ->assertScript(
+            "parseFloat(getComputedStyle(document.querySelector('[data-test=discovery-page]')).paddingBottom) >= 16",
+            true,
+        )
         ->keys('[data-test="discovery-card-stack-item"] [tabindex="0"]', 'ArrowLeft')
         ->assertSee('Vous avez exploré tous les profils disponibles');
 
@@ -116,6 +186,45 @@ test('the top discovery card accepts keyboard and accessible decisions', functio
         'decision' => SwipeDecision::Like->value,
     ]);
     $this->assertDatabaseCount('swipes', 2);
+});
+
+test('an accepted swipe refreshes only the updated discovery data', function () {
+    $actor = discoveryMember('Alice');
+    discoveryMember('Basile');
+    $this->actingAs($actor);
+
+    $page = visit('/discover')->assertSee('Basile');
+    $page->script(<<<'JS'
+        window.__swipePartialData = '';
+        window.__realPartialXhrOpen = XMLHttpRequest.prototype.open;
+        window.__realPartialXhrSetRequestHeader = XMLHttpRequest.prototype.setRequestHeader;
+        XMLHttpRequest.prototype.open = function (method, url, ...rest) {
+            this.__isSwipeRequest = String(url).includes('/swipe');
+
+            return window.__realPartialXhrOpen.call(this, method, url, ...rest);
+        };
+        XMLHttpRequest.prototype.setRequestHeader = function (name, value) {
+            if (
+                this.__isSwipeRequest &&
+                String(name).toLowerCase() === 'x-inertia-partial-data'
+            ) {
+                window.__swipePartialData = String(value);
+            }
+
+            return window.__realPartialXhrSetRequestHeader.call(this, name, value);
+        };
+        true;
+    JS);
+
+    $page->script(<<<'JS'
+        document.querySelector('[aria-label="Passer ce profil"]').click()
+    JS);
+    $page
+        ->assertSee('Vous avez exploré tous les profils disponibles')
+        ->assertScript(
+            "window.__swipePartialData.split(',').sort().join(',')",
+            'match,suggestions',
+        );
 });
 
 test('pointer gestures follow the card and enforce the horizontal threshold', function () {

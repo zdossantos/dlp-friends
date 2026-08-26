@@ -31,11 +31,13 @@ class DiscoveryPageTest extends TestCase
     public function test_complete_members_preload_up_to_five_public_suggestions(): void
     {
         $interest = Interest::factory()->create(['name' => 'Attractions']);
+        $targetInterest = Interest::factory()->create(['name' => 'Spectacles']);
         $actor = User::factory()->withProfile()->create();
         $target = User::factory()->withProfile()->create();
         User::factory()->withProfile()->count(5)->create();
         $actor->profile?->interests()->attach($interest);
         $target->profile?->interests()->attach($interest);
+        $target->profile?->interests()->attach($targetInterest);
 
         $this->actingAs($actor)
             ->get(route('discovery.index'))
@@ -47,7 +49,18 @@ class DiscoveryPageTest extends TestCase
                 ->loadDeferredProps(fn (Assert $deferred) => $deferred
                     ->has('suggestions', 5)
                     ->where('suggestions.0.displayName', $target->profile?->display_name)
+                    ->where('suggestions.0.avatar', [
+                        'id' => $target->profile->avatar->id,
+                        'name' => $target->profile->avatar->name,
+                        'image_url' => route('avatars.image', $target->profile->avatar),
+                        'primary_color' => $target->profile->avatar->primary_color,
+                        'secondary_color' => $target->profile->avatar->secondary_color,
+                    ])
                     ->where('suggestions.0.commonInterests', ['Attractions'])
+                    ->where('suggestions.0.interests', [
+                        ['name' => 'Attractions', 'isCommon' => true],
+                        ['name' => 'Spectacles', 'isCommon' => false],
+                    ])
                     ->missing('suggestions.0.email')));
     }
 
@@ -62,6 +75,20 @@ class DiscoveryPageTest extends TestCase
                 ->component('Discovery/Index')
                 ->where('match', null)
                 ->missing('suggestions')
+                ->loadDeferredProps(fn (Assert $deferred) => $deferred
+                    ->where('suggestions', [])));
+    }
+
+    public function test_profile_with_an_archived_avatar_is_not_suggested(): void
+    {
+        $actor = User::factory()->withProfile()->create();
+        $target = User::factory()->withProfile()->create();
+        $target->profile->avatar->update(['is_active' => false]);
+
+        $this->actingAs($actor)
+            ->get(route('discovery.index'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
                 ->loadDeferredProps(fn (Assert $deferred) => $deferred
                     ->where('suggestions', [])));
     }
