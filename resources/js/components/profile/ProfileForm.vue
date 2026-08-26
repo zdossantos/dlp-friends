@@ -179,7 +179,7 @@ function showInvalidStep(errors: Record<string, string>): void {
         <section
             v-show="currentStep === 2"
             data-test="profile-step-content-2"
-            class="min-h-0 flex-1 space-y-4 overflow-y-auto overscroll-contain pr-1 pb-2"
+            class="min-h-0 flex-1 space-y-4 overflow-y-auto overscroll-contain px-1 pb-2"
             aria-labelledby="profile-step-2-title"
         >
             <div>
@@ -253,7 +253,7 @@ function showInvalidStep(errors: Record<string, string>): void {
         <section
             v-show="currentStep === 3"
             data-test="profile-step-content-3"
-            class="min-h-0 flex-1 space-y-4 overflow-y-auto overscroll-contain pr-1 pb-2"
+            class="min-h-0 flex-1 space-y-4 overflow-y-auto overscroll-contain px-1 pb-2"
             aria-labelledby="profile-step-3-title"
         >
             <div>
@@ -322,7 +322,7 @@ function showInvalidStep(errors: Record<string, string>): void {
         <section
             v-show="currentStep === 4"
             data-test="profile-step-content-4"
-            class="min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-contain pr-1 pb-2"
+            class="min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-contain px-1 pb-2"
             aria-labelledby="profile-step-4-title"
         >
             <div>
