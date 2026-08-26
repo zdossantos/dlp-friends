@@ -13,7 +13,7 @@ import { Toaster } from '@/components/ui/sonner';
         />
         <div
             data-test="member-shell-content"
-            class="relative flex min-h-0 w-full flex-1 flex-col overflow-y-auto overscroll-contain"
+            class="relative flex min-h-0 w-full flex-1 flex-col overflow-y-auto overscroll-contain pb-3"
         >
             <slot />
         </div>

@@ -352,11 +352,11 @@ test('member layout keeps navigation in flow below its scrollable content', func
             true,
         )
         ->assertScript(
-            "getComputedStyle(document.querySelector('[data-test=member-shell-content]')).paddingBottom === '0px'",
+            "parseFloat(getComputedStyle(document.querySelector('[data-test=member-shell-content]')).paddingBottom) >= 12",
             true,
         )
         ->assertScript(
-            "document.querySelector('[data-test=member-shell-content]').getBoundingClientRect().bottom <= document.querySelector('[data-test=member-bottom-navigation-container]').getBoundingClientRect().top",
+            "document.querySelector('[data-test=profile-card]').getBoundingClientRect().bottom + 8 <= document.querySelector('[data-test=member-shell-content]').getBoundingClientRect().bottom",
             true,
         );
 });
