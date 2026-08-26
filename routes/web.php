@@ -14,6 +14,7 @@ use App\Http\Controllers\DiscoveryController;
 use App\Http\Controllers\LandingController;
 use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\MemberProfileController;
+use App\Http\Controllers\MessageController;
 use App\Http\Controllers\SwipeController;
 use Illuminate\Support\Facades\Route;
 
@@ -55,6 +56,8 @@ Route::middleware(['auth', 'verified', 'social'])->group(function () {
 
         Route::get('conversations/{conversation}', ConversationController::class)
             ->name('conversations.show');
+        Route::post('conversations/{conversation}/messages', MessageController::class)
+            ->name('conversations.messages.store');
 
         Route::get('dashboard', DashboardController::class)
             ->middleware('role:admin')
