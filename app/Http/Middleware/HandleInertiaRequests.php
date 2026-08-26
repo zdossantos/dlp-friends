@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use App\Models\Role;
+use App\Support\FrontendTranslations;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -39,6 +40,10 @@ class HandleInertiaRequests extends Middleware
         return [
             ...parent::share($request),
             'name' => config('app.name'),
+            'i18n' => [
+                'locale' => app()->getLocale(),
+                'messages' => FrontendTranslations::messages(),
+            ],
             'auth' => [
                 'user' => function () use ($request): ?array {
                     $user = $request->user()?->loadMissing(['profile', 'roles']);
