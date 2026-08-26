@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Form, Head } from '@inertiajs/vue3';
+import { ref } from 'vue';
 import InputError from '@/components/InputError.vue';
 import AvatarPortrait from '@/components/profile/AvatarPortrait.vue';
 import { Badge } from '@/components/ui/badge';
@@ -41,6 +42,21 @@ type AdminAvatar = AvatarOption & {
 };
 
 defineProps<{ avatars: AdminAvatar[] }>();
+
+const newImageName = ref('');
+const replacementImageNames = ref<Record<number, string>>({});
+
+function selectedFileName(event: Event): string {
+    return (event.target as HTMLInputElement).files?.[0]?.name ?? '';
+}
+
+function selectNewImage(event: Event): void {
+    newImageName.value = selectedFileName(event);
+}
+
+function selectReplacementImage(avatarId: number, event: Event): void {
+    replacementImageNames.value[avatarId] = selectedFileName(event);
+}
 
 defineOptions({
     layout: {
@@ -116,13 +132,25 @@ defineOptions({
                     </div>
                     <div class="grid gap-2">
                         <Label for="new_avatar_image">Image</Label>
-                        <Input
+                        <input
                             id="new_avatar_image"
                             name="image"
                             type="file"
                             accept="image/png,image/webp"
                             required
+                            data-test="avatar-file-input"
+                            class="sr-only"
+                            @change="selectNewImage"
                         />
+                        <Label
+                            for="new_avatar_image"
+                            class="inline-flex min-h-10 cursor-pointer items-center justify-center rounded-md border bg-background px-4 text-sm font-medium shadow-xs transition-colors hover:bg-muted"
+                        >
+                            Choisir une image
+                        </Label>
+                        <span class="text-sm text-muted-foreground">
+                            {{ newImageName || 'Aucun fichier sélectionné' }}
+                        </span>
                         <InputError :message="errors.image" />
                     </div>
                     <Button
@@ -220,12 +248,31 @@ defineOptions({
                                         >(facultatif)</span
                                     >
                                 </Label>
-                                <Input
+                                <input
                                     :id="`avatar-image-${avatar.id}`"
                                     name="image"
                                     type="file"
                                     accept="image/png,image/webp"
+                                    class="sr-only"
+                                    @change="
+                                        selectReplacementImage(
+                                            avatar.id,
+                                            $event,
+                                        )
+                                    "
                                 />
+                                <Label
+                                    :for="`avatar-image-${avatar.id}`"
+                                    class="inline-flex min-h-10 cursor-pointer items-center justify-center rounded-md border bg-background px-4 text-sm font-medium shadow-xs transition-colors hover:bg-muted"
+                                >
+                                    Choisir une image
+                                </Label>
+                                <span class="text-sm text-muted-foreground">
+                                    {{
+                                        replacementImageNames[avatar.id] ||
+                                        'Aucun fichier sélectionné'
+                                    }}
+                                </span>
                                 <InputError :message="errors.image" />
                             </div>
                             <Button

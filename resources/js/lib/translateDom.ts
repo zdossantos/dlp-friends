@@ -8,24 +8,61 @@ function translateText(value: string, copy: Record<string, string>): string {
     const translated = copy[trimmed];
 
     if (!translated) {
-        const pattern = Object.entries(copy).find(
-            ([key]) =>
-                key.endsWith('*') && trimmed.startsWith(key.slice(0, -1)),
-        );
+        const pattern = Object.entries(copy).find(([key]) => {
+            if (!key.includes('*')) {
+                return false;
+            }
+
+            const [prefix, suffix] = key.split('*');
+
+            return trimmed.startsWith(prefix) && trimmed.endsWith(suffix);
+        });
 
         if (!pattern) {
             return value;
         }
 
         const [key, replacement] = pattern;
-
-        return value.replace(
-            trimmed,
-            replacement + trimmed.slice(key.length - 1),
+        const [prefix, suffix] = key.split('*');
+        const dynamicValue = trimmed.slice(
+            prefix.length,
+            suffix.length === 0 ? undefined : -suffix.length,
         );
+        const translated = replacement.includes('*')
+            ? replacement.replace('*', dynamicValue)
+            : replacement + dynamicValue;
+
+        return value.replace(trimmed, translated);
     }
 
     return value.replace(trimmed, translated);
+}
+
+function translateTextNode(node: Node, copy: Record<string, string>): void {
+    const value = node.nodeValue ?? '';
+    const translated = translateText(value, copy);
+
+    if (translated !== value) {
+        node.nodeValue = translated;
+    }
+}
+
+function translateAttribute(
+    element: HTMLElement,
+    attribute: (typeof translatedAttributes)[number],
+    copy: Record<string, string>,
+): void {
+    const value = element.getAttribute(attribute);
+
+    if (!value) {
+        return;
+    }
+
+    const translated = translateText(value, copy);
+
+    if (translated !== value) {
+        element.setAttribute(attribute, translated);
+    }
 }
 
 function translate(root: ParentNode, i18n: I18n): void {
@@ -39,10 +76,7 @@ function translate(root: ParentNode, i18n: I18n): void {
 
     while (node) {
         if (!['SCRIPT', 'STYLE'].includes(node.parentElement?.tagName ?? '')) {
-            node.nodeValue = translateText(
-                node.nodeValue ?? '',
-                i18n.messages.copy,
-            );
+            translateTextNode(node, i18n.messages.copy);
         }
 
         node = walker.nextNode();
@@ -50,14 +84,7 @@ function translate(root: ParentNode, i18n: I18n): void {
 
     root.querySelectorAll<HTMLElement>('*').forEach((element) => {
         translatedAttributes.forEach((attribute) => {
-            const value = element.getAttribute(attribute);
-
-            if (value) {
-                element.setAttribute(
-                    attribute,
-                    translateText(value, i18n.messages.copy),
-                );
-            }
+            translateAttribute(element, attribute, i18n.messages.copy);
         });
     });
 }
@@ -85,17 +112,43 @@ export function initializeDomTranslations(): void {
                 if (node instanceof HTMLElement) {
                     translate(node, i18n!);
                 } else if (node.nodeType === Node.TEXT_NODE) {
-                    node.nodeValue = translateText(
-                        node.nodeValue ?? '',
-                        i18n!.messages.copy,
-                    );
+                    translateTextNode(node, i18n!.messages.copy);
                 }
             }),
         );
+
+        mutations
+            .filter((mutation) => mutation.type === 'characterData')
+            .forEach((mutation) =>
+                translateTextNode(mutation.target, i18n!.messages.copy),
+            );
+
+        mutations
+            .filter(
+                (mutation) =>
+                    mutation.type === 'attributes' &&
+                    mutation.target instanceof HTMLElement &&
+                    translatedAttributes.includes(
+                        mutation.attributeName as (typeof translatedAttributes)[number],
+                    ),
+            )
+            .forEach((mutation) =>
+                translateAttribute(
+                    mutation.target as HTMLElement,
+                    mutation.attributeName as (typeof translatedAttributes)[number],
+                    i18n!.messages.copy,
+                ),
+            );
     });
 
     if (root) {
-        observer.observe(root, { childList: true, subtree: true });
+        observer.observe(root, {
+            characterData: true,
+            childList: true,
+            subtree: true,
+            attributes: true,
+            attributeFilter: [...translatedAttributes],
+        });
     }
 
     router.on('navigate', (event) => {

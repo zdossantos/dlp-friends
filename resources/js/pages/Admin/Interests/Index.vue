@@ -101,18 +101,12 @@ defineOptions({
                         v-slot="{ errors, processing }"
                     >
                         <Label for="new_interest_name">Nom</Label>
-                        <div class="flex flex-col gap-3 sm:flex-row">
-                            <Input
-                                id="new_interest_name"
-                                name="name"
-                                class="flex-1"
-                                autocomplete="off"
-                                placeholder="Ex. Parades"
-                            />
-                            <Button type="submit" :disabled="processing">
-                                Ajouter
-                            </Button>
-                        </div>
+                        <Input
+                            id="new_interest_name"
+                            name="name"
+                            autocomplete="off"
+                            placeholder="Ex. Parades"
+                        />
                         <InputError :message="errors.name" />
                         <Label for="new_interest_name_en">Nom anglais</Label>
                         <Input
@@ -122,6 +116,14 @@ defineOptions({
                             placeholder="E.g. Parades"
                         />
                         <InputError :message="errors.name_en" />
+                        <Button
+                            type="submit"
+                            data-test="create-interest-submit"
+                            :disabled="processing"
+                            class="mt-2 w-full"
+                        >
+                            Ajouter
+                        </Button>
                     </Form>
                 </CardContent>
             </Card>
@@ -193,9 +195,10 @@ defineOptions({
                             class="grid min-w-0 flex-1 gap-2"
                             v-slot="{ errors, processing }"
                         >
-                            <div
-                                class="flex flex-col gap-2 sm:flex-row sm:items-center"
-                            >
+                            <Label :for="`interest-name-${interest.id}`">
+                                Nom
+                            </Label>
+                            <div class="flex items-center gap-2">
                                 <Input
                                     :id="`interest-name-${interest.id}`"
                                     name="name"
@@ -205,7 +208,7 @@ defineOptions({
                                     autocomplete="off"
                                 />
                                 <Badge
-                                    class="self-start sm:self-auto"
+                                    class="shrink-0"
                                     :variant="
                                         interest.is_active
                                             ? 'default'
@@ -216,16 +219,11 @@ defineOptions({
                                         interest.is_active ? 'Actif' : 'Archivé'
                                     }}
                                 </Badge>
-                                <Button
-                                    type="submit"
-                                    variant="secondary"
-                                    size="sm"
-                                    :disabled="processing"
-                                >
-                                    Enregistrer
-                                </Button>
                             </div>
                             <InputError :message="errors.name" />
+                            <Label :for="`interest-name-en-${interest.id}`">
+                                Nom anglais
+                            </Label>
                             <Input
                                 :id="`interest-name-en-${interest.id}`"
                                 name="name_en"
@@ -233,6 +231,15 @@ defineOptions({
                                 autocomplete="off"
                             />
                             <InputError :message="errors.name_en" />
+                            <Button
+                                type="submit"
+                                variant="secondary"
+                                size="sm"
+                                :disabled="processing"
+                                class="justify-self-start"
+                            >
+                                Enregistrer
+                            </Button>
                         </Form>
 
                         <div

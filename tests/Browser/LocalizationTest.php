@@ -78,5 +78,21 @@ test('an English administrator sees translated catalog navigation and dashboard 
     visit('/admin/interests')
         ->assertSee('Add an interest')
         ->assertSee('Selection limit')
+        ->assertSee('Return to profile')
+        ->assertDontSee('Retour au profil')
+        ->assertDontSee('intérêts')
+        ->assertScript(
+            "document.querySelector('#new_interest_name_en').getBoundingClientRect().bottom < document.querySelector('[data-test=create-interest-submit]').getBoundingClientRect().top",
+            true,
+        )
+        ->assertNoJavaScriptErrors();
+
+    visit('/admin/avatars')
+        ->assertSee('Color 1')
+        ->assertSee('Color 2')
+        ->assertSee('Choose an image')
+        ->assertPresent('[data-test="avatar-file-input"]')
+        ->assertDontSee('Couleur 1')
+        ->assertDontSee('Choisir le fichier')
         ->assertNoJavaScriptErrors();
 });
