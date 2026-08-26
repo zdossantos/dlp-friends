@@ -272,22 +272,40 @@ watch(
                 </p>
             </div>
 
-            <div class="flex flex-wrap gap-2">
-                <Badge
-                    class="gap-2 rounded-full border-primary/20 bg-primary/10 px-3 py-2 text-primary"
-                    variant="outline"
+            <div class="space-y-1.5">
+                <p
+                    class="flex items-center gap-1.5 text-xs font-medium text-muted-foreground"
                 >
-                    <Users class="size-4" aria-hidden="true" />
-                    {{ profile.commonInterestCount }} intérêts en commun
-                </Badge>
-                <Badge
-                    v-for="interest in profile.commonInterests.slice(0, 2)"
-                    :key="interest"
-                    variant="secondary"
-                    class="rounded-full px-3 py-1.5"
-                >
-                    {{ interest }}
-                </Badge>
+                    <Users class="size-3.5 text-primary" aria-hidden="true" />
+                    {{ profile.commonInterestCount }}
+                    {{
+                        profile.commonInterestCount > 1
+                            ? 'intérêts en commun'
+                            : 'intérêt en commun'
+                    }}
+                </p>
+                <div class="flex flex-wrap gap-1.5">
+                    <Badge
+                        v-for="interest in profile.interests"
+                        :key="interest.name"
+                        data-test="discovery-interest"
+                        :data-common="interest.isCommon"
+                        :variant="interest.isCommon ? 'outline' : 'secondary'"
+                        :class="[
+                            'rounded-full px-2.5 py-1 text-xs',
+                            interest.isCommon
+                                ? 'border-primary/30 bg-primary/10 text-primary'
+                                : 'text-muted-foreground',
+                        ]"
+                    >
+                        <Sparkles
+                            v-if="interest.isCommon"
+                            class="size-3"
+                            aria-hidden="true"
+                        />
+                        {{ interest.name }}
+                    </Badge>
+                </div>
             </div>
 
             <div

@@ -31,11 +31,13 @@ class DiscoveryPageTest extends TestCase
     public function test_complete_members_preload_up_to_five_public_suggestions(): void
     {
         $interest = Interest::factory()->create(['name' => 'Attractions']);
+        $targetInterest = Interest::factory()->create(['name' => 'Spectacles']);
         $actor = User::factory()->withProfile()->create();
         $target = User::factory()->withProfile()->create();
         User::factory()->withProfile()->count(5)->create();
         $actor->profile?->interests()->attach($interest);
         $target->profile?->interests()->attach($interest);
+        $target->profile?->interests()->attach($targetInterest);
 
         $this->actingAs($actor)
             ->get(route('discovery.index'))
@@ -55,6 +57,10 @@ class DiscoveryPageTest extends TestCase
                         'secondary_color' => $target->profile->avatar->secondary_color,
                     ])
                     ->where('suggestions.0.commonInterests', ['Attractions'])
+                    ->where('suggestions.0.interests', [
+                        ['name' => 'Attractions', 'isCommon' => true],
+                        ['name' => 'Spectacles', 'isCommon' => false],
+                    ])
                     ->missing('suggestions.0.email')));
     }
 

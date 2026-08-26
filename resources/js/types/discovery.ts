@@ -10,6 +10,10 @@ export type DiscoveryProfile = {
     visitFrequency: VisitFrequency | null;
     commonInterestCount: number;
     commonInterests: string[];
+    interests: Array<{
+        name: string;
+        isCommon: boolean;
+    }>;
     frequencyBonus: boolean;
     score: number;
 };

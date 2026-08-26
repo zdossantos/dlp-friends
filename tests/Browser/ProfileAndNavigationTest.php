@@ -339,7 +339,7 @@ test('member navigation exposes only implemented destinations and tracks setting
         ->assertSee('Réglages du compte');
 });
 
-test('member layout keeps navigation in flow below its scrollable content', function () {
+test('member layout fixes navigation above reserved content space', function () {
     $user = User::factory()->withProfile()->create();
     $this->actingAs($user);
 
@@ -348,11 +348,11 @@ test('member layout keeps navigation in flow below its scrollable content', func
         ->assertScript("document.querySelector('header') === null", true)
         ->assertPresent('[data-test="member-bottom-navigation-container"]')
         ->assertScript(
-            "getComputedStyle(document.querySelector('[data-test=member-bottom-navigation-container]')).position !== 'fixed'",
+            "getComputedStyle(document.querySelector('[data-test=member-bottom-navigation-container]')).position === 'fixed'",
             true,
         )
         ->assertScript(
-            "parseFloat(getComputedStyle(document.querySelector('[data-test=profile-page]')).paddingBottom) >= 16",
+            "parseFloat(getComputedStyle(document.querySelector('[data-test=member-shell-content]')).paddingBottom) >= 88",
             true,
         )
         ->assertScript(

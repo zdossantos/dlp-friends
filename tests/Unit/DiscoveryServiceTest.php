@@ -46,6 +46,13 @@ class DiscoveryServiceTest extends TestCase
         ]);
         expect($results[1]->score)->toBe(1.25)
             ->and($results[1]->commonInterests)->toBe(['Attractions'])
+            ->and($results[1]->interests)->toBe([
+                ['name' => 'Attractions', 'isCommon' => true],
+            ])
+            ->and($results[2]->interests)->toBe([
+                ['name' => 'Attractions', 'isCommon' => true],
+                ['name' => 'Hotels', 'isCommon' => false],
+            ])
             ->and($results[1]->frequencyBonus)->toBeTrue();
     }
 
@@ -149,6 +156,9 @@ class DiscoveryServiceTest extends TestCase
             'visitFrequency' => VisitFrequency::Often->value,
             'commonInterestCount' => 1,
             'commonInterests' => ['Attractions'],
+            'interests' => [
+                ['name' => 'Attractions', 'isCommon' => true],
+            ],
             'frequencyBonus' => true,
             'score' => 1.25,
         ]);

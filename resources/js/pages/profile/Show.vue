@@ -45,7 +45,7 @@ defineOptions({
     <Head :title="profile.display_name" />
     <main
         data-test="profile-page"
-        class="mx-auto flex h-full min-h-0 w-full max-w-lg overflow-hidden px-4 pt-[max(0.75rem,env(safe-area-inset-top))] pb-4 sm:px-6 sm:pt-6"
+        class="mx-auto flex h-full min-h-0 w-full max-w-lg overflow-visible px-4 pt-[max(0.75rem,env(safe-area-inset-top))] pb-4 sm:px-6 sm:pt-6"
     >
         <section
             data-test="profile-card"

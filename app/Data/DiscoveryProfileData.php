@@ -6,6 +6,7 @@ final readonly class DiscoveryProfileData
 {
     /**
      * @param  list<string>  $commonInterests
+     * @param  list<array{name: string, isCommon: bool}>  $interests
      * @param  array{id: int, name: string, image_url: string, primary_color: string, secondary_color: string}  $avatar
      */
     public function __construct(
@@ -18,6 +19,7 @@ final readonly class DiscoveryProfileData
         public ?string $visitFrequency,
         public int $commonInterestCount,
         public array $commonInterests,
+        public array $interests,
         public bool $frequencyBonus,
         public float $score,
     ) {}
@@ -35,6 +37,7 @@ final readonly class DiscoveryProfileData
             'visitFrequency' => $this->visitFrequency,
             'commonInterestCount' => $this->commonInterestCount,
             'commonInterests' => $this->commonInterests,
+            'interests' => $this->interests,
             'frequencyBonus' => $this->frequencyBonus,
             'score' => $this->score,
         ];

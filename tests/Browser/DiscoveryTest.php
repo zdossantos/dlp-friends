@@ -2,6 +2,7 @@
 
 use App\Actions\CreateSwipe;
 use App\Enums\SwipeDecision;
+use App\Models\Interest;
 use App\Models\MemberMatch;
 use App\Models\Swipe;
 use App\Models\User;
@@ -95,6 +96,19 @@ test('discovery renders its loading state while suggestions are deferred', funct
 test('the top discovery card accepts keyboard and accessible decisions', function () {
     $actor = discoveryMember('Alice');
     $passed = discoveryMember('Basile');
+    $commonInterest = Interest::factory()->create(['name' => 'Spectacles']);
+    $targetInterest = Interest::factory()->create(['name' => 'Pins']);
+    $otherTargetInterests = Interest::factory()->count(3)->sequence(
+        ['name' => 'Food'],
+        ['name' => 'Chill'],
+        ['name' => 'Événements'],
+    )->create();
+    $actor->profile?->interests()->attach($commonInterest);
+    $passed->profile?->interests()->attach([
+        $commonInterest->id,
+        $targetInterest->id,
+        ...$otherTargetInterests->modelKeys(),
+    ]);
     $this->actingAs($actor);
 
     $page = visit('/discover')
@@ -103,6 +117,11 @@ test('the top discovery card accepts keyboard and accessible decisions', functio
         ->assertPresent('[aria-label="Aimer ce profil"]')
         ->assertPresent('[data-test="discovery-avatar-hero"]')
         ->assertPresent('[data-test="discovery-information-sheet"]')
+        ->assertSee('Spectacles')
+        ->assertSee('Pins')
+        ->assertPresent('[data-test="discovery-interest"][data-common="true"]')
+        ->assertPresent('[data-test="discovery-interest"][data-common="false"]')
+        ->assertCount('[data-test="discovery-interest"]', 5)
         ->assertScript(
             "document.querySelector('[aria-label=\"Passer ce profil\"]').classList.contains('sr-only')",
             false,

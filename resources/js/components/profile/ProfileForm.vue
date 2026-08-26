@@ -78,6 +78,10 @@ const previewProfile = computed<DiscoveryProfile | null>(() => {
         commonInterests: selectedInterests.value.map(
             (interest) => interest.name,
         ),
+        interests: selectedInterests.value.map((interest) => ({
+            name: interest.name,
+            isCommon: true,
+        })),
         frequencyBonus: false,
         score: 0,
     };

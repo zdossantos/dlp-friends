@@ -75,6 +75,12 @@ final readonly class DiscoveryService
                     ->pluck('name')
                     ->all());
                 $commonInterestCount = count($commonInterests);
+                $interests = array_values($profile->interests
+                    ->map(fn (Interest $interest): array => [
+                        'name' => $interest->name,
+                        'isCommon' => in_array($interest->id, $actorInterestIds, true),
+                    ])
+                    ->all());
                 $visitFrequency = $profile->visit_frequency?->value;
                 $frequencyBonus = $actorVisitFrequency !== null && $actorVisitFrequency === $visitFrequency;
 
@@ -94,6 +100,7 @@ final readonly class DiscoveryService
                     visitFrequency: $visitFrequency,
                     commonInterestCount: $commonInterestCount,
                     commonInterests: $commonInterests,
+                    interests: $interests,
                     frequencyBonus: $frequencyBonus,
                     score: $commonInterestCount + ($frequencyBonus ? 0.25 : 0.0),
                 );

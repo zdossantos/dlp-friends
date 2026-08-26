@@ -141,7 +141,7 @@ defineOptions({
 
     <main
         data-test="discovery-page"
-        class="mx-auto flex h-full min-h-0 w-full max-w-md flex-1 flex-col gap-3 overflow-hidden px-4 pt-[max(0.75rem,env(safe-area-inset-top))] pb-4 sm:px-6 sm:pt-6"
+        class="mx-auto flex h-full min-h-0 w-full max-w-md flex-1 flex-col gap-3 overflow-visible px-4 pt-[max(0.75rem,env(safe-area-inset-top))] pb-4 sm:px-6 sm:pt-6"
     >
         <section class="shrink-0 space-y-0.5">
             <h1 class="text-2xl font-semibold tracking-tight sm:text-3xl">
