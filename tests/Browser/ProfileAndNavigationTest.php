@@ -253,16 +253,22 @@ test('a refreshed catalog drops an archived selected interest', function () {
 
 test('a completed member sees their public profile and member actions', function () {
     Storage::fake('local');
-    $interest = Interest::factory()->create(['name' => 'Chill']);
+    $interests = Interest::factory()->count(5)->sequence(
+        ['name' => 'Chill'],
+        ['name' => 'Attractions'],
+        ['name' => 'Pins'],
+        ['name' => 'Food'],
+        ['name' => 'Spectacles'],
+    )->create();
     $user = User::factory()->withProfile()->create([
         'birth_date' => today()->subYears(26),
     ]);
     $user->profile?->update([
         'display_name' => 'Aurore',
-        'bio' => 'Fan des attractions',
+        'bio' => str_repeat('Fan des attractions et des spectacles. ', 8),
         'visit_frequency' => 'often',
     ]);
-    $user->profile?->interests()->attach($interest, ['is_selected' => true]);
+    $user->profile?->interests()->attach($interests->modelKeys(), ['is_selected' => true]);
     Storage::disk('local')->put($user->profile->avatar->image_path, base64_decode(
         'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScL8WQAAAABJRU5ErkJggg==',
     ));
@@ -279,6 +285,22 @@ test('a completed member sees their public profile and member actions', function
         ->assertSeeLink('Modifier mon profil')
         ->assertPresent('[data-test="profile-avatar-hero"]')
         ->assertPresent('[data-test="profile-information-sheet"]')
+        ->assertScript(
+            "getComputedStyle(document.querySelector('[data-test=profile-information-sheet]')).overflowY === 'auto'",
+            true,
+        )
+        ->assertScript(
+            "document.querySelector('[data-test=profile-information-sheet]').scrollHeight > document.querySelector('[data-test=profile-information-sheet]').clientHeight",
+            true,
+        )
+        ->assertScript(
+            "(() => { const style = getComputedStyle(document.querySelector('[data-test=profile-information-sheet]')); return style.paddingTop === style.paddingRight && style.paddingRight === style.paddingBottom && style.paddingBottom === style.paddingLeft; })()",
+            true,
+        )
+        ->assertScript(
+            "document.querySelector('[data-test=profile-interests-title]').getBoundingClientRect().top < document.querySelector('[data-test=profile-about-title]').getBoundingClientRect().top",
+            true,
+        )
         ->assertScript(
             "document.querySelector('[data-test=profile-avatar-hero]').getBoundingClientRect().height >= 240 && document.querySelector('[data-test=profile-avatar-hero]').getBoundingClientRect().height <= 290",
             true,

@@ -205,19 +205,15 @@ defineOptions({
 
         <section
             v-else
-            class="relative min-h-0 w-full flex-1 pb-2"
+            class="relative min-h-0 w-full flex-1 pb-3"
             aria-label="Profils à découvrir"
         >
             <div
                 v-for="(profile, index) in suggestions"
                 :key="profile.userId"
                 data-test="discovery-card-stack-item"
-                class="flex max-h-full w-full justify-center transition-transform duration-300 ease-out"
-                :class="
-                    index === 0
-                        ? 'relative'
-                        : 'pointer-events-none absolute inset-x-0 top-0'
-                "
+                class="absolute inset-x-0 top-0 bottom-3 flex w-full justify-center transition-transform duration-300 ease-out"
+                :class="index === 0 ? undefined : 'pointer-events-none'"
                 :style="{
                     zIndex: suggestions.length - index,
                     transform:

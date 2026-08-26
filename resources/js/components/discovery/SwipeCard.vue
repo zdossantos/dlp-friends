@@ -200,7 +200,8 @@ watch(
 
 <template>
     <Card
-        class="max-h-full w-full max-w-md touch-pan-y gap-0 overflow-hidden rounded-[2rem] p-0 shadow-xl shadow-primary/10 transition-[transform,opacity] ease-[cubic-bezier(0.22,1,0.36,1)] will-change-transform outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 motion-reduce:duration-0"
+        data-test="discovery-card"
+        class="h-full max-h-full w-full max-w-md touch-pan-y gap-0 overflow-hidden rounded-[2rem] p-0 shadow-xl shadow-primary/10 transition-[transform,opacity] ease-[cubic-bezier(0.22,1,0.36,1)] will-change-transform outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 motion-reduce:duration-0"
         :style="cardStyle"
         :tabindex="preview ? -1 : 0"
         :aria-label="`Profil de découverte de ${profile.displayName}`"
@@ -250,7 +251,7 @@ watch(
         <div
             data-test="discovery-information-sheet"
             :class="[
-                'relative z-20 rounded-t-[2rem] bg-card',
+                'relative z-20 flex-1 rounded-t-[2rem] bg-card',
                 compact
                     ? '-mt-5 space-y-2 px-4 pt-4 pb-3'
                     : '-mt-6 space-y-2.5 px-4 pt-4 pb-4',

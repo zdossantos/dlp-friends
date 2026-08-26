@@ -49,12 +49,12 @@ defineOptions({
     >
         <section
             data-test="profile-card"
-            class="max-h-full w-full overflow-hidden rounded-[2rem] border border-border/70 bg-card shadow-xl shadow-primary/10"
+            class="flex h-full max-h-full w-full flex-col overflow-hidden rounded-[2rem] border border-border/70 bg-card shadow-xl shadow-primary/10"
         >
             <div
                 v-if="profile.avatar"
                 data-test="profile-avatar-hero"
-                class="relative flex h-[clamp(15.5rem,34svh,17.5rem)] items-end justify-center overflow-hidden px-6 pt-14 sm:h-80"
+                class="relative flex h-[clamp(15.5rem,34svh,17.5rem)] shrink-0 items-end justify-center overflow-hidden px-6 pt-14 sm:h-80"
                 :style="{
                     backgroundImage: `linear-gradient(145deg, ${profile.avatar.primary_color}, ${profile.avatar.secondary_color})`,
                 }"
@@ -120,7 +120,7 @@ defineOptions({
 
             <div
                 data-test="profile-information-sheet"
-                class="relative z-20 -mt-6 space-y-3 rounded-t-[2rem] bg-card p-4 sm:p-6"
+                class="relative z-20 -mt-6 min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-contain rounded-t-[2rem] bg-card p-4 sm:p-6"
             >
                 <div
                     class="flex flex-col justify-between gap-3 sm:flex-row sm:items-start"
@@ -180,19 +180,13 @@ defineOptions({
                     </Button>
                 </div>
 
-                <div>
-                    <h2 class="mb-1 text-sm font-medium">À propos</h2>
-                    <p
-                        class="line-clamp-3 leading-5 whitespace-pre-line text-muted-foreground"
-                    >
-                        {{
-                            profile.bio ||
-                            'Aucune bio renseignée pour le moment.'
-                        }}
-                    </p>
-                </div>
                 <div v-if="profile.interests?.length">
-                    <h2 class="mb-2 text-sm font-medium">Intérêts</h2>
+                    <h2
+                        data-test="profile-interests-title"
+                        class="mb-2 text-sm font-medium"
+                    >
+                        Intérêts
+                    </h2>
                     <div class="flex flex-wrap gap-2">
                         <Badge
                             v-for="interest in profile.interests"
@@ -203,6 +197,22 @@ defineOptions({
                             {{ interest.name }}
                         </Badge>
                     </div>
+                </div>
+                <div>
+                    <h2
+                        data-test="profile-about-title"
+                        class="mb-1 text-sm font-medium"
+                    >
+                        À propos
+                    </h2>
+                    <p
+                        class="leading-5 whitespace-pre-line text-muted-foreground"
+                    >
+                        {{
+                            profile.bio ||
+                            'Aucune bio renseignée pour le moment.'
+                        }}
+                    </p>
                 </div>
             </div>
         </section>

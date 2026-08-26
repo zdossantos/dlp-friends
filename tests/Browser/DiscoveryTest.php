@@ -31,13 +31,23 @@ test('discovery renders its deferred empty state and limits the stack to five pr
         ->assertSee('Vous avez exploré tous les profils disponibles')
         ->assertNoJavaScriptErrors();
 
-    User::factory()->withProfile()->count(6)->create();
+    $candidates = User::factory()->withProfile()->count(6)->create();
+    $denseInterests = Interest::factory()->count(5)->create();
+    $candidates->first()?->profile?->interests()->attach($denseInterests->modelKeys());
 
     visit('/discover')
         ->assertPresent('[aria-label="Profils à découvrir"]')
         ->assertCount('[data-test="discovery-card-stack-item"]', 5)
         ->assertScript(
             "[...document.querySelectorAll('[data-test=\"discovery-card-stack-item\"]')].slice(1).every((card) => card.ariaHidden === 'true' && card.inert)",
+            true,
+        )
+        ->assertScript(
+            "new Set([...document.querySelectorAll('[data-test=discovery-card]')].map((card) => card.offsetHeight)).size === 1",
+            true,
+        )
+        ->assertScript(
+            "document.querySelectorAll('[data-test=discovery-card]')[1].getBoundingClientRect().bottom > document.querySelectorAll('[data-test=discovery-card]')[0].getBoundingClientRect().bottom",
             true,
         )
         ->assertNoJavaScriptErrors();
