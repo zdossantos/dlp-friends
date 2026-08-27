@@ -1,5 +1,7 @@
 <?php
 
+use App\Actions\SendMessage;
+use App\Events\MessageSent;
 use App\Models\MemberMatch;
 use App\Models\Message;
 use App\Models\User;
@@ -51,7 +53,7 @@ test('the conversation list links to a peer and previews its latest message', fu
         ->assertNoJavaScriptErrors();
 });
 
-test('a conversation renders safe recent history and loads older messages at the top', function () {
+test('a conversation renders safe recent history and repeatedly loads older messages without duplicates', function () {
     $member = conversationBrowserMember('Alice');
     $peer = conversationBrowserMember('Basile');
     [$lowId, $highId] = collect([$member->id, $peer->id])->sort()->values()->all();
@@ -61,9 +63,9 @@ test('a conversation renders safe recent history and loads older messages at the
     ]);
     $conversation = $match->conversation()->create();
 
-    foreach (range(1, 15) as $index) {
+    foreach (range(1, 35) as $index) {
         Message::factory()->for($conversation)->for($index % 2 === 0 ? $member : $peer, 'author')->create([
-            'content' => $index === 15
+            'content' => $index === 35
                 ? '<img src=x onerror=window.__messageXss=true>'
                 : "Message {$index} ".str_repeat('contenu ', 12),
             'created_at' => now()->addSeconds($index),
@@ -84,8 +86,64 @@ test('a conversation renders safe recent history and loads older messages at the
         const scroll = document.querySelector('[data-test=message-scroll]');
         scroll.scrollTop = 0;
     JS);
+    $page->assertSee('Message 16')
+        ->assertScript("document.querySelector('[data-test=message-scroll]').scrollTop > 0", true);
+
+    $page->script("document.querySelector('[data-test=message-scroll]').scrollTop = 0; true;");
+    $page->assertSee('Message 6');
+
+    $page->script("document.querySelector('[data-test=message-scroll]').scrollTop = 0; true;");
     $page->assertSee('Message 1')
-        ->assertScript("document.querySelectorAll('[data-message-id]').length", 15)
+        ->assertScript("document.querySelectorAll('[data-message-id]').length", 35)
+        ->assertScript("new Set([...document.querySelectorAll('[data-message-id]')].map((message) => message.dataset.messageId)).size", 35)
+        ->assertNoJavaScriptErrors();
+});
+
+test('a pushed message is announced without moving a member who is reading older messages', function () {
+    if (! filter_var(env('REALTIME_BROWSER_TESTS', false), FILTER_VALIDATE_BOOL)) {
+        $this->markTestSkipped('Set REALTIME_BROWSER_TESTS=true and start Reverb to run this integration test.');
+    }
+
+    $member = conversationBrowserMember('Alice');
+    $peer = conversationBrowserMember('Basile');
+    [$lowId, $highId] = collect([$member->id, $peer->id])->sort()->values()->all();
+    $match = MemberMatch::factory()->create([
+        'user_low_id' => $lowId,
+        'user_high_id' => $highId,
+    ]);
+    $conversation = $match->conversation()->create();
+
+    foreach (range(1, 12) as $index) {
+        Message::factory()->for($conversation)->for($peer, 'author')->create([
+            'content' => "Historique {$index} ".str_repeat('contenu ', 20),
+            'created_at' => now()->addSeconds($index),
+        ]);
+    }
+
+    $this->actingAs($member);
+    $page = visit("/conversations/{$conversation->id}")->on()->mobile()
+        ->assertScript("document.querySelectorAll('[data-message-id]').length", 10);
+
+    $page->script(<<<'JS'
+        const scroll = document.querySelector('[data-test=message-scroll]');
+        scroll.scrollTop = Math.max(1, Math.floor(scroll.scrollHeight / 3));
+        window.__scrollBeforePushedMessage = scroll.scrollTop;
+        true;
+    JS);
+
+    $pushed = $this->app->make(SendMessage::class)->handle(
+        $peer,
+        $conversation,
+        'Message reçu en direct',
+    );
+
+    $page->assertSee('Message reçu en direct')
+        ->assertScript("document.querySelector('[aria-live=polite]').textContent", 'Nouveau message reçu')
+        ->assertScript("document.querySelectorAll('[data-message-id]').length", 11)
+        ->assertScript("Math.abs(document.querySelector('[data-test=message-scroll]').scrollTop - window.__scrollBeforePushedMessage) < 2", true);
+
+    event(new MessageSent($pushed));
+    $page->assertScript("document.querySelectorAll('[data-message-id]').length", 11)
         ->assertNoJavaScriptErrors();
 });
 

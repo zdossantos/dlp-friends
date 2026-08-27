@@ -351,8 +351,9 @@ test('member navigation exposes only implemented destinations and tracks setting
 
     visit('/discover')
         ->on()->mobile()
-        ->assertCount('[data-test="member-bottom-navigation"] a', 2)
+        ->assertCount('[data-test="member-bottom-navigation"] a', 3)
         ->assertPresent('[aria-label="Découvrir"][aria-current="page"]')
+        ->assertPresent('[aria-label="Échanges"]')
         ->assertPresent('[aria-label="Profil"]');
 
     visit('/settings/account')

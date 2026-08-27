@@ -38,7 +38,10 @@ const timelineMessages = computed<PaginatedMessages>(() => ({
 <template>
     <Head :title="participant.display_name" />
 
-    <main class="flex min-h-0 w-full flex-1 flex-col">
+    <main
+        data-test="conversation-page"
+        class="flex min-h-0 w-full flex-1 flex-col"
+    >
         <header
             class="flex shrink-0 items-center gap-3 border-b bg-card/95 px-4 py-3 backdrop-blur sm:px-6"
         >
