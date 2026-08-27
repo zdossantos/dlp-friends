@@ -1,19 +1,9 @@
 <script setup lang="ts">
-import { usePage } from '@inertiajs/vue3';
-import { computed } from 'vue';
 import MemberBottomNavigation from '@/components/MemberBottomNavigation.vue';
 import { Toaster } from '@/components/ui/sonner';
+import { useMemberNavigationVisibility } from '@/composables/useMemberNavigationVisibility';
 
-const page = usePage();
-const isConversationOpen = computed(() =>
-    /^\/conversations\/[^/]+$/.test(page.url.split('?')[0] ?? ''),
-);
-const reservesMemberNavigation = computed(
-    () =>
-        Boolean(page.props.auth.user.profile?.onboarding_completed_at) &&
-        !page.url.split('?')[0]?.startsWith('/profile/edit') &&
-        !isConversationOpen.value,
-);
+const reservesMemberNavigation = useMemberNavigationVisibility();
 </script>
 
 <template>

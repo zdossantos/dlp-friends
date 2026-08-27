@@ -345,7 +345,7 @@ test('administration identity falls back to email without a profile', function (
     visit('/dashboard')->assertSee('admin@example.test');
 });
 
-test('member navigation exposes only implemented destinations and tracks settings', function () {
+test('member navigation appears only on discovery conversations and profile pages', function () {
     $user = User::factory()->withProfile()->create();
     $this->actingAs($user);
 
@@ -356,10 +356,24 @@ test('member navigation exposes only implemented destinations and tracks setting
         ->assertPresent('[aria-label="Échanges"]')
         ->assertPresent('[aria-label="Profil"]');
 
+    visit('/conversations')
+        ->on()->mobile()
+        ->assertPresent('[data-test="member-bottom-navigation"]')
+        ->assertPresent('[aria-label="Échanges"][aria-current="page"]');
+
+    visit('/profile')
+        ->on()->mobile()
+        ->assertPresent('[data-test="member-bottom-navigation"]')
+        ->assertPresent('[aria-label="Profil"][aria-current="page"]');
+
     visit('/settings/account')
         ->on()->mobile()
-        ->assertPresent('[aria-label="Profil"][aria-current="page"]')
-        ->assertSee('Réglages du compte');
+        ->assertSee('Réglages du compte')
+        ->assertNotPresent('[data-test="member-bottom-navigation"]')
+        ->assertScript(
+            "parseFloat(getComputedStyle(document.querySelector('[data-test=member-shell-content]')).paddingBottom) < 88",
+            true,
+        );
 });
 
 test('member layout fixes navigation above reserved content space', function () {
