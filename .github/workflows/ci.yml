@@ -179,6 +179,8 @@ jobs:
         run: bun run format:check
       - name: Check TypeScript
         run: bun run types:check
+      - name: Run frontend unit tests
+        run: bun run test:unit
   vite-build:
     name: Vite build
     if: github.event.pull_request.draft == false
