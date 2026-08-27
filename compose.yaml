@@ -3,6 +3,10 @@ x-app: &app
   env_file:
     - path: .env
       required: false
+  environment:
+    REVERB_HOST: reverb
+    REVERB_PORT: 8080
+    REVERB_SCHEME: http
   networks:
     - dlp-friends
   restart: unless-stopped
@@ -18,6 +22,11 @@ services:
     build:
       context: .
       target: runtime
+      args:
+        VITE_REVERB_APP_KEY: ${VITE_REVERB_APP_KEY:-dlp-friends-local-key}
+        VITE_REVERB_HOST: ${VITE_REVERB_HOST:-localhost}
+        VITE_REVERB_PORT: ${VITE_REVERB_PORT:-8080}
+        VITE_REVERB_SCHEME: ${VITE_REVERB_SCHEME:-http}
     command: web
     ports:
       - "${APP_PORT:-8000}:80"

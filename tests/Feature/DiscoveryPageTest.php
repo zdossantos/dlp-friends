@@ -171,6 +171,7 @@ class DiscoveryPageTest extends TestCase
             ->assertInertia(fn (Assert $page) => $page
                 ->component('Discovery/Index')
                 ->where('match.id', $matchId)
+                ->where('match.conversationId', fn (int $conversationId): bool => $conversationId > 0)
                 ->where('match.displayName', $target->profile?->display_name)
                 ->missing('match.email'));
 

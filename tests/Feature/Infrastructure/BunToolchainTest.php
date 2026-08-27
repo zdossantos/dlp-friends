@@ -51,3 +51,18 @@ it('documents Bun without npm or Yarn residue in active project files', function
         ->and($ignoreFiles)->not->toContain('npm-debug.log')
         ->and($ignoreFiles)->not->toContain('yarn-error.log');
 });
+
+it('injects the public Reverb configuration into Docker frontend builds', function () {
+    $dockerfile = file_get_contents(base_path('Dockerfile'));
+    $compose = file_get_contents(base_path('compose.yaml'));
+
+    expect($dockerfile)->toContain('ARG VITE_REVERB_APP_KEY')
+        ->and($dockerfile)->toContain('ARG VITE_REVERB_HOST')
+        ->and($dockerfile)->toContain('ARG VITE_REVERB_PORT')
+        ->and($dockerfile)->toContain('ARG VITE_REVERB_SCHEME')
+        ->and($compose)->toContain('VITE_REVERB_APP_KEY:')
+        ->and($compose)->toContain('VITE_REVERB_HOST:')
+        ->and($compose)->toContain('VITE_REVERB_PORT:')
+        ->and($compose)->toContain('VITE_REVERB_SCHEME:')
+        ->and($compose)->toContain('REVERB_HOST: reverb');
+});

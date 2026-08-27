@@ -7,11 +7,17 @@ const memberNavigationPaths = new Set([
     '/conversations',
     '/profile',
 ]);
+const memberNavigationPrefixes = ['/settings/'];
 
 export function useMemberNavigationVisibility(): ComputedRef<boolean> {
     const page = usePage();
 
-    return computed(() =>
-        memberNavigationPaths.has(page.url.split('?')[0] ?? ''),
-    );
+    return computed(() => {
+        const path = page.url.split('?')[0] ?? '';
+
+        return (
+            memberNavigationPaths.has(path) ||
+            memberNavigationPrefixes.some((prefix) => path.startsWith(prefix))
+        );
+    });
 }
