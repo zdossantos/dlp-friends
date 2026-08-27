@@ -3,8 +3,10 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
 
 /**
@@ -14,6 +16,7 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property-read MemberMatch $memberMatch
+ * @property-read Collection<int, Message> $messages
  */
 #[Fillable(['match_id', 'archived_at'])]
 class Conversation extends Model
@@ -22,6 +25,12 @@ class Conversation extends Model
     public function memberMatch(): BelongsTo
     {
         return $this->belongsTo(MemberMatch::class, 'match_id');
+    }
+
+    /** @return HasMany<Message, $this> */
+    public function messages(): HasMany
+    {
+        return $this->hasMany(Message::class);
     }
 
     /** @return array<string, string> */

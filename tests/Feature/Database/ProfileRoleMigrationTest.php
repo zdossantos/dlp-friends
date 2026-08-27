@@ -16,6 +16,8 @@ class ProfileRoleMigrationTest extends TestCase
 
     public function test_migration_preserves_legacy_usernames_and_assigns_the_default_role(): void
     {
+        $messageMigration = require database_path('migrations/2026_08_26_110000_create_messages_table.php');
+        $messageMigration->down();
         $conversationMigration = require database_path('migrations/2026_08_26_100000_create_conversations_table.php');
         $conversationMigration->down();
         $interestMigration = require database_path('migrations/2026_08_24_000000_rename_passions_to_interests.php');
@@ -74,10 +76,13 @@ class ProfileRoleMigrationTest extends TestCase
         $discoveryMigration->up();
         $interestMigration->up();
         $conversationMigration->up();
+        $messageMigration->up();
     }
 
     public function test_profile_migration_rollback_avoids_generated_username_collisions(): void
     {
+        $messageMigration = require database_path('migrations/2026_08_26_110000_create_messages_table.php');
+        $messageMigration->down();
         $conversationMigration = require database_path('migrations/2026_08_26_100000_create_conversations_table.php');
         $conversationMigration->down();
         $interestMigration = require database_path('migrations/2026_08_24_000000_rename_passions_to_interests.php');
@@ -122,5 +127,6 @@ class ProfileRoleMigrationTest extends TestCase
         $discoveryMigration->up();
         $interestMigration->up();
         $conversationMigration->up();
+        $messageMigration->up();
     }
 }
