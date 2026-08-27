@@ -26,15 +26,22 @@ export function useConversationRealtime(
     const reconnecting = computed(() =>
         ['connecting', 'reconnecting'].includes(status.value),
     );
+    let hasConnected = status.value === 'connected';
+    let recoveringFromOutage = false;
 
-    watch(status, (currentStatus, previousStatus) => {
-        if (
-            currentStatus === 'connected' &&
-            previousStatus !== undefined &&
-            previousStatus !== 'connected'
-        ) {
+    watch(status, (currentStatus) => {
+        if (currentStatus !== 'connected') {
+            recoveringFromOutage ||= hasConnected;
+
+            return;
+        }
+
+        if (recoveringFromOutage) {
             onReconnect();
         }
+
+        hasConnected = true;
+        recoveringFromOutage = false;
     });
 
     function retry(): void {
