@@ -1,6 +1,8 @@
 import { ref, watch } from 'vue';
 import type { Ref } from 'vue';
+import { applyReadReceipt } from '@/lib/conversationState';
 import type { ConversationMessage } from '@/types';
+import type { MessagesReadReceipt } from '@/types';
 
 export function useConversationMessages(
     initialMessages: () => ConversationMessage[],
@@ -8,6 +10,10 @@ export function useConversationMessages(
     visibleMessages: Ref<ConversationMessage[]>;
     mergeMessage: (message: ConversationMessage) => void;
     mergeMessages: (messages: ConversationMessage[]) => void;
+    markMessagesRead: (
+        receipt: MessagesReadReceipt,
+        currentUserId: number,
+    ) => void;
 } {
     const visibleMessages = ref<ConversationMessage[]>([]);
 
@@ -29,7 +35,23 @@ export function useConversationMessages(
         mergeMessages([message]);
     }
 
+    function markMessagesRead(
+        receipt: MessagesReadReceipt,
+        currentUserId: number,
+    ): void {
+        visibleMessages.value = applyReadReceipt(
+            visibleMessages.value,
+            receipt,
+            currentUserId,
+        );
+    }
+
     watch(initialMessages, mergeMessages, { deep: true, immediate: true });
 
-    return { visibleMessages, mergeMessage, mergeMessages };
+    return {
+        visibleMessages,
+        mergeMessage,
+        mergeMessages,
+        markMessagesRead,
+    };
 }

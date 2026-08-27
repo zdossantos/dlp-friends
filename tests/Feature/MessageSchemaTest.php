@@ -23,6 +23,7 @@ class MessageSchemaTest extends TestCase
             'conversation_id',
             'author_user_id',
             'content',
+            'read_at',
             'created_at',
             'updated_at',
         ]))->toBeTrue();
@@ -36,7 +37,8 @@ class MessageSchemaTest extends TestCase
             ->and($message->author->is($author))->toBeTrue()
             ->and($conversation->messages()->sole()->is($message))->toBeTrue()
             ->and($author->authoredMessages()->sole()->is($message))->toBeTrue()
-            ->and($message->content)->toBe('<script>alert("x")</script>');
+            ->and($message->content)->toBe('<script>alert("x")</script>')
+            ->and($message->read_at)->toBeNull();
     }
 
     public function test_deleting_a_conversation_deletes_its_messages(): void

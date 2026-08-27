@@ -18,9 +18,16 @@ final class MessageSent implements ShouldBroadcast, ShouldDispatchAfterCommit
 
     public function __construct(public Message $message) {}
 
-    public function broadcastOn(): PrivateChannel
+    /** @return array<int, PrivateChannel> */
+    public function broadcastOn(): array
     {
-        return new PrivateChannel("conversation.{$this->message->conversation_id}");
+        $match = $this->message->conversation->memberMatch;
+
+        return [
+            new PrivateChannel("conversation.{$this->message->conversation_id}"),
+            new PrivateChannel("App.Models.User.{$match->user_low_id}"),
+            new PrivateChannel("App.Models.User.{$match->user_high_id}"),
+        ];
     }
 
     public function broadcastAs(): string
@@ -36,6 +43,7 @@ final class MessageSent implements ShouldBroadcast, ShouldDispatchAfterCommit
             'conversation_id' => $this->message->conversation_id,
             'author_user_id' => $this->message->author_user_id,
             'content' => $this->message->content,
+            'read_at' => $this->message->read_at?->toISOString(),
             'created_at' => $this->message->created_at?->toISOString(),
             'updated_at' => $this->message->updated_at?->toISOString(),
         ];

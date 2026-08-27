@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\MarkConversationRead;
 use App\Models\Avatar;
 use App\Models\Conversation;
 use App\Models\Message;
@@ -14,12 +15,16 @@ use Inertia\Response;
 
 final class ConversationController extends Controller
 {
-    public function __invoke(Request $request, Conversation $conversation): Response
-    {
+    public function __invoke(
+        Request $request,
+        Conversation $conversation,
+        MarkConversationRead $markConversationRead,
+    ): Response {
         Gate::authorize('view', $conversation);
 
         /** @var User $member */
         $member = $request->user();
+        $markConversationRead->handle($member, $conversation);
         $conversation->load([
             'memberMatch.lowUser.profile.avatar',
             'memberMatch.highUser.profile.avatar',
@@ -48,6 +53,7 @@ final class ConversationController extends Controller
                 'conversation_id' => $message->conversation_id,
                 'author_user_id' => $message->author_user_id,
                 'content' => $message->content,
+                'read_at' => $message->read_at?->toISOString(),
                 'created_at' => $message->created_at?->toISOString(),
             ]);
         $messages = new LengthAwarePaginator(

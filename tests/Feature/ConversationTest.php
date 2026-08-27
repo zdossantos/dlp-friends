@@ -2,14 +2,18 @@
 
 namespace Tests\Feature;
 
+use App\Actions\MarkConversationRead;
+use App\Events\MessagesRead;
 use App\Models\Conversation;
 use App\Models\MemberMatch;
 use App\Models\Message;
 use App\Models\User;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\Factories\Sequence;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
@@ -117,6 +121,65 @@ class ConversationTest extends TestCase
                 ->where('messages.current_page', 2)
                 ->where('messages.next_page_url', fn (string $url): bool => str_contains($url, "messages_before={$boundary}"))
                 ->has('messages.data', 10));
+    }
+
+    public function test_opening_a_conversation_marks_only_received_messages_as_read_and_broadcasts_the_latest_receipt(): void
+    {
+        [$member, $peer, $conversation] = $this->conversationMembers(withProfiles: true);
+        $alreadyRead = Message::factory()->for($conversation)->for($peer, 'author')->create([
+            'read_at' => now()->subMinute(),
+        ]);
+        $received = Message::factory()->for($conversation)->for($peer, 'author')->create();
+        $sent = Message::factory()->for($conversation)->for($member, 'author')->create();
+        Event::fake([MessagesRead::class]);
+
+        $this->actingAs($member)->get("/conversations/{$conversation->id}")->assertOk();
+
+        expect($alreadyRead->fresh()?->read_at)->not->toBeNull()
+            ->and($received->fresh()?->read_at)->not->toBeNull()
+            ->and($sent->fresh()?->read_at)->toBeNull();
+        Event::assertDispatched(MessagesRead::class, fn (MessagesRead $event): bool => $event->conversationId === $conversation->id
+            && $event->readerUserId === $member->id
+            && $event->lastReadMessageId === $received->id
+        );
+    }
+
+    public function test_opening_a_conversation_without_unread_messages_dispatches_no_receipt(): void
+    {
+        [$member, $peer, $conversation] = $this->conversationMembers(withProfiles: true);
+        Message::factory()->for($conversation)->for($peer, 'author')->create(['read_at' => now()]);
+        Event::fake([MessagesRead::class]);
+
+        $this->actingAs($member)->get("/conversations/{$conversation->id}")->assertOk();
+
+        Event::assertNotDispatched(MessagesRead::class);
+    }
+
+    public function test_a_member_can_mark_a_live_received_message_as_read(): void
+    {
+        [$member, $peer, $conversation] = $this->conversationMembers(withProfiles: true);
+        $received = Message::factory()->for($conversation)->for($peer, 'author')->create();
+        Event::fake([MessagesRead::class]);
+
+        $this->actingAs($member)
+            ->post("/conversations/{$conversation->id}/read")
+            ->assertNoContent();
+
+        expect($received->fresh()?->read_at)->not->toBeNull();
+        Event::assertDispatched(MessagesRead::class);
+    }
+
+    public function test_an_outsider_cannot_mark_a_conversation_as_read_through_the_action(): void
+    {
+        [, $peer, $conversation] = $this->conversationMembers();
+        $outsider = User::factory()->create();
+        $message = Message::factory()->for($conversation)->for($peer, 'author')->create();
+
+        $this->expectException(AuthorizationException::class);
+
+        app(MarkConversationRead::class)->handle($outsider, $conversation);
+
+        expect($message->fresh()?->read_at)->toBeNull();
     }
 
     public function test_a_guessed_conversation_identifier_grants_no_access_to_an_outsider_or_admin(): void

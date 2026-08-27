@@ -9,8 +9,10 @@ import AvatarPortrait from '@/components/profile/AvatarPortrait.vue';
 import { useConversationMessages } from '@/composables/useConversationMessages';
 import { useConversationRealtime } from '@/composables/useConversationRealtime';
 import { index as conversationsIndex } from '@/routes/conversations';
+import { store as storeConversationRead } from '@/routes/conversations/read';
 import type {
     ConversationDetails,
+    ConversationMessage,
     ConversationParticipant,
     PaginatedMessages,
 } from '@/types';
@@ -22,12 +24,38 @@ const props = defineProps<{
     messages: PaginatedMessages;
 }>();
 
-const { visibleMessages, mergeMessage } = useConversationMessages(
-    () => props.messages.data,
-);
+const { visibleMessages, mergeMessage, markMessagesRead } =
+    useConversationMessages(() => props.messages.data);
+
+async function markConversationAsRead(): Promise<void> {
+    const csrfToken = document
+        .querySelector<HTMLMetaElement>('meta[name="csrf-token"]')
+        ?.getAttribute('content');
+
+    await fetch(storeConversationRead(props.conversation.id).url, {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: {
+            Accept: 'application/json',
+            ...(csrfToken === null || csrfToken === undefined
+                ? {}
+                : { 'X-CSRF-TOKEN': csrfToken }),
+        },
+    });
+}
+
+function handleRealtimeMessage(message: ConversationMessage): void {
+    mergeMessage(message);
+
+    if (message.author_user_id !== props.currentUserId) {
+        void markConversationAsRead().catch(() => undefined);
+    }
+}
+
 const { connectionUnavailable, reconnecting, retry } = useConversationRealtime(
     props.conversation.id,
-    mergeMessage,
+    handleRealtimeMessage,
+    (receipt) => markMessagesRead(receipt, props.currentUserId),
     () =>
         router.reload({
             only: ['messages'],

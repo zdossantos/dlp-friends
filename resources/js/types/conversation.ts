@@ -5,7 +5,15 @@ export type ConversationMessage = {
     conversation_id: number;
     author_user_id: number;
     content: string;
+    read_at: string | null;
     created_at: string | null;
+};
+
+export type MessagesReadReceipt = {
+    conversation_id: number;
+    reader_user_id: number;
+    last_read_message_id: number;
+    read_at: string;
 };
 
 export type ConversationParticipant = {
@@ -19,6 +27,7 @@ export type ConversationSummary = {
     participant: ConversationParticipant;
     archived_at: string | null;
     latest_message: ConversationMessage | null;
+    unread_count: number;
     activity_at: string | null;
 };
 

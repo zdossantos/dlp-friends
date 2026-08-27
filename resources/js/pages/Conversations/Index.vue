@@ -1,10 +1,36 @@
 <script setup lang="ts">
 import { Head, Link } from '@inertiajs/vue3';
+import { ref, watch } from 'vue';
 import AvatarPortrait from '@/components/profile/AvatarPortrait.vue';
+import { useConversationListRealtime } from '@/composables/useConversationListRealtime';
+import {
+    applyConversationMessage,
+    conversationPreview,
+} from '@/lib/conversationState';
 import { show as showConversation } from '@/routes/conversations';
 import type { ConversationSummary } from '@/types';
 
-defineProps<{ conversations: ConversationSummary[] }>();
+const props = defineProps<{
+    conversations: ConversationSummary[];
+    currentUserId: number;
+}>();
+const visibleConversations = ref(props.conversations);
+
+watch(
+    () => props.conversations,
+    (conversations) => {
+        visibleConversations.value = conversations;
+    },
+    { deep: true },
+);
+
+useConversationListRealtime(props.currentUserId, (message) => {
+    visibleConversations.value = applyConversationMessage(
+        visibleConversations.value,
+        message,
+        props.currentUserId,
+    );
+});
 </script>
 
 <template>
@@ -23,7 +49,7 @@ defineProps<{ conversations: ConversationSummary[] }>();
         </header>
 
         <section
-            v-if="conversations.length === 0"
+            v-if="visibleConversations.length === 0"
             class="rounded-3xl border bg-card p-6 text-center shadow-sm"
         >
             <h2 class="font-semibold">Aucun échange pour le moment</h2>
@@ -39,12 +65,16 @@ defineProps<{ conversations: ConversationSummary[] }>();
         >
             <ul role="list" class="divide-y">
                 <li
-                    v-for="conversation in conversations"
+                    v-for="conversation in visibleConversations"
                     :key="conversation.id"
                 >
                     <Link
                         :href="showConversation(conversation.id)"
+                        :data-unread="conversation.unread_count > 0"
                         class="flex min-h-20 items-center gap-3 px-4 py-3 transition-colors hover:bg-muted/60 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none focus-visible:ring-inset"
+                        :class="
+                            conversation.unread_count > 0 ? 'bg-primary/8' : ''
+                        "
                     >
                         <AvatarPortrait
                             :avatar="conversation.participant.avatar"
@@ -54,8 +84,22 @@ defineProps<{ conversations: ConversationSummary[] }>();
                             <span
                                 class="flex items-center justify-between gap-2"
                             >
-                                <span class="truncate font-semibold">
+                                <span
+                                    class="truncate"
+                                    :class="
+                                        conversation.unread_count > 0
+                                            ? 'font-bold'
+                                            : 'font-semibold'
+                                    "
+                                >
                                     {{ conversation.participant.display_name }}
+                                </span>
+                                <span
+                                    v-if="conversation.unread_count > 0"
+                                    class="grid min-w-5 shrink-0 place-items-center rounded-full bg-primary px-1.5 py-0.5 text-xs font-bold text-primary-foreground"
+                                    :aria-label="`${conversation.unread_count} message${conversation.unread_count > 1 ? 's' : ''} non lu${conversation.unread_count > 1 ? 's' : ''}`"
+                                >
+                                    {{ conversation.unread_count }}
                                 </span>
                                 <span
                                     v-if="conversation.archived_at"
@@ -68,8 +112,10 @@ defineProps<{ conversations: ConversationSummary[] }>();
                                 class="mt-1 line-clamp-1 block text-sm text-muted-foreground"
                             >
                                 {{
-                                    conversation.latest_message?.content ??
-                                    'Nouvel échange'
+                                    conversationPreview(
+                                        conversation,
+                                        currentUserId,
+                                    )
                                 }}
                             </span>
                         </span>

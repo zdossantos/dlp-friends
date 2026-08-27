@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Actions\SendMessage;
 use App\Events\MessageSent;
+use App\Events\MessagesRead;
 use App\Models\Conversation;
 use App\Models\MemberMatch;
 use App\Models\Message;
@@ -46,20 +47,43 @@ class MessageBroadcastTest extends TestCase
             ->for($author, 'author')
             ->create(['content' => '<b>texte brut</b>']);
         $event = new MessageSent($message);
-        $channel = $event->broadcastOn();
+        $channels = $event->broadcastOn();
 
         expect($event)->toBeInstanceOf(ShouldBroadcast::class)
             ->and($event)->toBeInstanceOf(ShouldDispatchAfterCommit::class)
-            ->and($channel)->toBeInstanceOf(PrivateChannel::class)
-            ->and($channel->name)->toBe("private-conversation.{$conversation->id}")
+            ->and($channels)->toHaveCount(3)
+            ->and($channels[0])->toBeInstanceOf(PrivateChannel::class)
+            ->and($channels[0]->name)->toBe("private-conversation.{$conversation->id}")
+            ->and($channels[1]->name)->toBe("private-App.Models.User.{$conversation->memberMatch->user_low_id}")
+            ->and($channels[2]->name)->toBe("private-App.Models.User.{$conversation->memberMatch->user_high_id}")
             ->and($event->broadcastAs())->toBe('message.sent')
             ->and($event->broadcastWith())->toBe([
                 'id' => $message->id,
                 'conversation_id' => $conversation->id,
                 'author_user_id' => $author->id,
                 'content' => '<b>texte brut</b>',
+                'read_at' => null,
                 'created_at' => $message->created_at?->toISOString(),
                 'updated_at' => $message->updated_at?->toISOString(),
+            ]);
+    }
+
+    public function test_the_read_receipt_has_a_minimal_conversation_broadcast_contract(): void
+    {
+        [, $reader, $conversation] = $this->conversationMembers();
+        $event = new MessagesRead($conversation->id, $reader->id, 42, '2026-08-28T12:00:00.000000Z');
+        $channel = $event->broadcastOn();
+
+        expect($event)->toBeInstanceOf(ShouldBroadcast::class)
+            ->and($event)->toBeInstanceOf(ShouldDispatchAfterCommit::class)
+            ->and($channel)->toBeInstanceOf(PrivateChannel::class)
+            ->and($channel->name)->toBe("private-conversation.{$conversation->id}")
+            ->and($event->broadcastAs())->toBe('messages.read')
+            ->and($event->broadcastWith())->toBe([
+                'conversation_id' => $conversation->id,
+                'reader_user_id' => $reader->id,
+                'last_read_message_id' => 42,
+                'read_at' => '2026-08-28T12:00:00.000000Z',
             ]);
     }
 

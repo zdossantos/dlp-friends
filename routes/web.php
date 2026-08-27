@@ -11,6 +11,7 @@ use App\Http\Controllers\Admin\InterestStatusController;
 use App\Http\Controllers\AvatarImageController;
 use App\Http\Controllers\ConversationController;
 use App\Http\Controllers\ConversationIndexController;
+use App\Http\Controllers\ConversationReadController;
 use App\Http\Controllers\DiscoveryController;
 use App\Http\Controllers\LandingController;
 use App\Http\Controllers\LocaleController;
@@ -61,6 +62,8 @@ Route::middleware(['auth', 'verified', 'social'])->group(function () {
             ->name('conversations.show');
         Route::post('conversations/{conversation}/messages', MessageController::class)
             ->name('conversations.messages.store');
+        Route::post('conversations/{conversation}/read', ConversationReadController::class)
+            ->name('conversations.read.store');
 
         Route::get('dashboard', DashboardController::class)
             ->middleware('role:admin')

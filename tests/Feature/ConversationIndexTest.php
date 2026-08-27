@@ -22,6 +22,7 @@ test('a member sees only their conversations ordered by latest activity', functi
     Message::factory()->for($older)->for($olderPeer, 'author')->create([
         'content' => 'Ancien échange',
         'created_at' => now()->subHour(),
+        'read_at' => now(),
     ]);
     Message::factory()->for($newer)->for($newerPeer, 'author')->create([
         'content' => 'Dernier échange',
@@ -37,7 +38,25 @@ test('a member sees only their conversations ordered by latest activity', functi
             ->where('conversations.0.id', $newer->id)
             ->where('conversations.0.participant.id', $newerPeer->id)
             ->where('conversations.0.latest_message.content', 'Dernier échange')
+            ->where('conversations.0.unread_count', 1)
+            ->where('conversations.1.unread_count', 0)
+            ->where('currentUserId', $member->id)
             ->where('conversations.1.id', $older->id));
+});
+
+test('messages sent by the member never count as unread', function () {
+    $member = User::factory()->withProfile()->create();
+    $peer = User::factory()->withProfile()->create();
+    $conversation = conversationBetween($member, $peer);
+
+    Message::factory()->for($conversation)->for($member, 'author')->create([
+        'content' => 'Message sortant',
+    ]);
+
+    $this->actingAs($member)->get('/conversations')
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('conversations.0.unread_count', 0)
+            ->where('conversations.0.latest_message.author_user_id', $member->id));
 });
 
 test('the conversation list exposes an empty collection', function () {

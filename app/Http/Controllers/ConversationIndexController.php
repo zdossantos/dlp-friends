@@ -25,6 +25,9 @@ final class ConversationIndexController extends Controller
                 'latestMessage',
             ])
             ->withMax('messages', 'created_at')
+            ->withCount(['messages as unread_count' => fn ($query) => $query
+                ->where('author_user_id', '!=', $member->id)
+                ->whereNull('read_at')])
             ->orderByDesc('messages_max_created_at')
             ->orderByDesc('created_at')
             ->get()
@@ -47,6 +50,7 @@ final class ConversationIndexController extends Controller
                     'participant' => $this->participantData($participant),
                     'archived_at' => $conversation->archived_at?->toISOString(),
                     'latest_message' => $this->messageData($latestMessage),
+                    'unread_count' => $conversation->unread_count,
                     'activity_at' => $activityAt?->toISOString(),
                 ];
             })
@@ -54,6 +58,7 @@ final class ConversationIndexController extends Controller
 
         return Inertia::render('Conversations/Index', [
             'conversations' => $conversations,
+            'currentUserId' => $member->id,
         ]);
     }
 
@@ -89,6 +94,7 @@ final class ConversationIndexController extends Controller
             'conversation_id' => $message->conversation_id,
             'author_user_id' => $message->author_user_id,
             'content' => $message->content,
+            'read_at' => $message->read_at?->toISOString(),
             'created_at' => $message->created_at?->toISOString(),
         ];
     }

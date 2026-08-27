@@ -30,6 +30,7 @@ final class MessageController extends Controller
                 'conversation_id' => $message->conversation_id,
                 'author_user_id' => $message->author_user_id,
                 'content' => $message->content,
+                'read_at' => $message->read_at?->toISOString(),
                 'created_at' => $message->created_at?->toISOString(),
                 'updated_at' => $message->updated_at?->toISOString(),
             ],
