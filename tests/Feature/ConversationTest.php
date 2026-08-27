@@ -4,10 +4,14 @@ namespace Tests\Feature;
 
 use App\Models\Conversation;
 use App\Models\MemberMatch;
+use App\Models\Message;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Factories\Sequence;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
+use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
 class ConversationTest extends TestCase
@@ -60,16 +64,36 @@ class ConversationTest extends TestCase
         }
     }
 
-    public function test_both_match_members_can_open_their_conversation(): void
+    public function test_a_member_initially_receives_only_the_ten_newest_messages_in_chronological_order(): void
     {
-        [$lowUser, $highUser, $conversation] = $this->conversationMembers(withProfiles: true);
+        [$member, $peer, $conversation] = $this->conversationMembers(withProfiles: true);
+        $messages = Message::factory()->count(15)->sequence(
+            fn (Sequence $sequence): array => [
+                'author_user_id' => $sequence->index % 2 === 0 ? $member->id : $peer->id,
+                'created_at' => now()->addSeconds($sequence->index),
+            ],
+        )->for($conversation)->create();
 
-        $this->actingAs($lowUser)
+        $expectedNewest = $messages->slice(5)->pluck('id')->all();
+        $expectedOldest = $messages->take(5)->pluck('id')->all();
+
+        $this->actingAs($member)
             ->get("/conversations/{$conversation->id}")
-            ->assertNoContent();
-        $this->actingAs($highUser)
-            ->get("/conversations/{$conversation->id}")
-            ->assertNoContent();
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Conversations/Show')
+                ->where('conversation.id', $conversation->id)
+                ->where('participant.id', $peer->id)
+                ->where('currentUserId', $member->id)
+                ->where('messages.data', fn (Collection $rows): bool => $rows->pluck('id')->all() === $expectedNewest)
+                ->where('messages.current_page', 2)
+                ->has('messages.data', 10));
+
+        $this->actingAs($member)
+            ->get("/conversations/{$conversation->id}?messages=1")
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('messages.data', fn (Collection $rows): bool => $rows->pluck('id')->all() === $expectedOldest)
+                ->where('messages.current_page', 1)
+                ->has('messages.data', 5));
     }
 
     public function test_a_guessed_conversation_identifier_grants_no_access_to_an_outsider_or_admin(): void
