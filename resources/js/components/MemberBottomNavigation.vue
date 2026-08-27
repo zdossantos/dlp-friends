@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { Link, usePage } from '@inertiajs/vue3';
-import { Sparkles, UserRound } from '@lucide/vue';
+import { MessageCircle, Sparkles, UserRound } from '@lucide/vue';
 import { computed } from 'vue';
 import { useCurrentUrl } from '@/composables/useCurrentUrl';
+import { index as conversations } from '@/routes/conversations';
 import { index as discovery } from '@/routes/discovery';
 import { show as showProfile } from '@/routes/member-profile';
 
@@ -21,6 +22,12 @@ const shouldShow = computed(
 
 const items = [
     { label: 'Découvrir', href: discovery(), icon: Sparkles },
+    {
+        label: 'Échanges',
+        href: conversations(),
+        icon: MessageCircle,
+        activeParents: ['/conversations'],
+    },
     {
         label: 'Profil',
         href: showProfile(),

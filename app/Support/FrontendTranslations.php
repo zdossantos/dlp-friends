@@ -20,6 +20,7 @@ final class FrontendTranslations
                 'settings' => __('frontend.navigation.settings'),
                 'profile' => __('frontend.navigation.profile'),
                 'discovery' => __('frontend.navigation.discovery'),
+                'conversations' => __('frontend.navigation.conversations'),
             ],
             'copy' => $frontend['copy'],
         ];
