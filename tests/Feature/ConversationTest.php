@@ -96,6 +96,29 @@ class ConversationTest extends TestCase
                 ->has('messages.data', 5));
     }
 
+    public function test_older_history_keeps_its_initial_boundary_when_live_messages_arrive(): void
+    {
+        [$member, $peer, $conversation] = $this->conversationMembers(withProfiles: true);
+        $initialMessages = Message::factory()->count(25)->sequence(
+            fn (Sequence $sequence): array => [
+                'author_user_id' => $sequence->index % 2 === 0 ? $member->id : $peer->id,
+            ],
+        )->for($conversation)->create();
+        $boundary = $initialMessages->last()->id;
+
+        Message::factory()->for($conversation)->for($peer, 'author')->create();
+
+        $expectedPrevious = $initialMessages->slice(5, 10)->pluck('id')->all();
+
+        $this->actingAs($member)
+            ->get("/conversations/{$conversation->id}?messages=2&messages_before={$boundary}")
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('messages.data', fn (Collection $rows): bool => $rows->pluck('id')->all() === $expectedPrevious)
+                ->where('messages.current_page', 2)
+                ->where('messages.next_page_url', fn (string $url): bool => str_contains($url, "messages_before={$boundary}"))
+                ->has('messages.data', 10));
+    }
+
     public function test_a_guessed_conversation_identifier_grants_no_access_to_an_outsider_or_admin(): void
     {
         [, , $conversation] = $this->conversationMembers();

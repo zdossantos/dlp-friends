@@ -26,7 +26,6 @@ async function submit(): Promise<void> {
 
     pending.value = true;
     error.value = '';
-    let sent = false;
 
     try {
         const csrfToken = document
@@ -61,16 +60,12 @@ async function submit(): Promise<void> {
 
         props.onSent(payload.data);
         content.value = '';
-        sent = true;
     } catch {
         error.value = 'Le message n’a pas pu être envoyé. Réessayez.';
     } finally {
         pending.value = false;
-
-        if (sent) {
-            await nextTick();
-            textarea.value?.focus();
-        }
+        await nextTick();
+        textarea.value?.focus();
     }
 }
 
@@ -99,13 +94,22 @@ function handleKeydown(event: KeyboardEvent): void {
                     name="content"
                     rows="1"
                     maxlength="2000"
+                    aria-describedby="message-character-count message-error"
+                    :aria-invalid="error !== ''"
                     :disabled="pending"
                     placeholder="Écrire un message…"
                     class="max-h-32 min-h-11 w-full resize-none rounded-2xl border bg-background px-4 py-2.5 text-base outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-60"
                     @keydown="handleKeydown"
                 />
                 <p
+                    id="message-character-count"
+                    class="mt-1 text-right text-xs text-muted-foreground"
+                >
+                    {{ content.length }} / 2 000
+                </p>
+                <p
                     v-if="error"
+                    id="message-error"
                     role="alert"
                     class="mt-1 text-sm text-destructive"
                 >

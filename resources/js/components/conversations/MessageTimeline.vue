@@ -25,12 +25,24 @@ onMounted(() => nextTick(scrollToBottom));
 
 watch(
     () => latestMessage.value?.id,
-    (messageId, previousMessageId) => {
+    async (messageId, previousMessageId) => {
         if (messageId === undefined || previousMessageId === undefined) {
             return;
         }
 
+        const container = scrollContainer.value;
+        const wasNearBottom =
+            container !== null &&
+            container.scrollHeight -
+                container.scrollTop -
+                container.clientHeight <=
+                48;
         announcedMessage.value = 'Nouveau message reçu';
+
+        if (wasNearBottom) {
+            await nextTick();
+            scrollToBottom();
+        }
     },
 );
 </script>

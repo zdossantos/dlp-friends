@@ -28,12 +28,17 @@ final class ConversationController extends Controller
         $participant = $conversation->memberMatch->lowUser->is($member)
             ? $conversation->memberMatch->highUser
             : $conversation->memberMatch->lowUser;
-        $messageCount = $conversation->messages()->count();
+        $latestMessageId = (int) ($conversation->messages()->max('id') ?? 0);
+        $historyBoundary = $request->has('messages_before')
+            ? min(max($request->integer('messages_before'), 0), $latestMessageId)
+            : $latestMessageId;
+        $historyQuery = $conversation->messages()->where('id', '<=', $historyBoundary);
+        $messageCount = (clone $historyQuery)->count();
         $lastPage = max((int) ceil($messageCount / 10), 1);
         $page = min(max($request->integer('messages', $lastPage), 1), $lastPage);
         $offset = max($messageCount - (($lastPage - $page + 1) * 10), 0);
         $limit = min(10, max($messageCount - (($lastPage - $page) * 10), 0));
-        $messageRows = $conversation->messages()
+        $messageRows = $historyQuery
             ->oldest('id')
             ->offset($offset)
             ->limit($limit)
@@ -53,7 +58,10 @@ final class ConversationController extends Controller
             options: [
                 'path' => $request->url(),
                 'pageName' => 'messages',
-                'query' => $request->query(),
+                'query' => [
+                    ...$request->query(),
+                    'messages_before' => $historyBoundary,
+                ],
             ],
         );
 

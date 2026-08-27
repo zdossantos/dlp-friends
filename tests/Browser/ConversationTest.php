@@ -145,6 +145,20 @@ test('a pushed message is announced without moving a member who is reading older
     event(new MessageSent($pushed));
     $page->assertScript("document.querySelectorAll('[data-message-id]').length", 11)
         ->assertNoJavaScriptErrors();
+
+    $page->script(<<<'JS'
+        const scroll = document.querySelector('[data-test=message-scroll]');
+        scroll.scrollTop = scroll.scrollHeight;
+        true;
+    JS);
+    $this->app->make(SendMessage::class)->handle(
+        $peer,
+        $conversation,
+        'Message reçu en étant en bas',
+    );
+    $page->assertSee('Message reçu en étant en bas')
+        ->assertScript("(() => { const scroll = document.querySelector('[data-test=message-scroll]'); return scroll.scrollHeight - scroll.scrollTop - scroll.clientHeight < 2; })()", true)
+        ->assertNoJavaScriptErrors();
 });
 
 test('a member sends a message with enter and keeps composer focus', function () {
@@ -161,6 +175,8 @@ test('a member sends a message with enter and keeps composer focus', function ()
     visit("/conversations/{$conversation->id}")->on()->mobile()
         ->assertNoJavaScriptErrors()
         ->assertNotPresent('[data-test="member-bottom-navigation"]')
+        ->assertSee('0 / 2 000')
+        ->assertPresent('textarea[aria-describedby="message-character-count message-error"][aria-invalid="false"]')
         ->assertDisabled('button[aria-label="Envoyer le message"]')
         ->fill('content', 'Bonjour !')
         ->keys('textarea[name="content"]', 'Enter')

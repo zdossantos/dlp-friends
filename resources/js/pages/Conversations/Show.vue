@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Head, Link } from '@inertiajs/vue3';
+import { Head, Link, router } from '@inertiajs/vue3';
 import { ArrowLeft } from '@lucide/vue';
 import { computed } from 'vue';
 import MessageComposer from '@/components/conversations/MessageComposer.vue';
@@ -28,6 +28,10 @@ const { visibleMessages, mergeMessage } = useConversationMessages(
 const { connectionUnavailable, reconnecting, retry } = useConversationRealtime(
     props.conversation.id,
     mergeMessage,
+    () =>
+        router.reload({
+            only: ['messages'],
+        }),
 );
 const timelineMessages = computed<PaginatedMessages>(() => ({
     ...props.messages,
