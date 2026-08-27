@@ -302,5 +302,13 @@ return [
         'Voulez-vous vraiment supprimer « * » ? Elle ne pourra plus servir à vous connecter.' => 'Are you sure you want to delete “*”? It can no longer be used to sign in.',
         'Authentification…' => 'Authenticating…',
         'Même fréquence de visite' => 'Same visit frequency',
+        'Message' => 'Message',
+        'Écrire un message…' => 'Write a message…',
+        'Envoyer le message' => 'Send message',
+        'Le message n’a pas pu être envoyé. Réessayez.' => 'The message could not be sent. Try again.',
+        'Cet échange est archivé. L’envoi de nouveaux messages est désactivé.' => 'This conversation is archived. New messages cannot be sent.',
+        'Temps réel indisponible. Vos messages restent affichés.' => 'Live updates are unavailable. Your messages remain visible.',
+        'Réessayer' => 'Try again',
+        'Connexion au temps réel…' => 'Connecting to live updates…',
     ],
 ];

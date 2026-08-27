@@ -16,8 +16,14 @@ const isProfileComplete = computed(() =>
 const isEditingProfile = computed(() =>
     page.url.split('?')[0]?.startsWith('/profile/edit'),
 );
+const isConversationOpen = computed(() =>
+    /^\/conversations\/[^/]+$/.test(page.url.split('?')[0] ?? ''),
+);
 const shouldShow = computed(
-    () => isProfileComplete.value && !isEditingProfile.value,
+    () =>
+        isProfileComplete.value &&
+        !isEditingProfile.value &&
+        !isConversationOpen.value,
 );
 
 const items = [

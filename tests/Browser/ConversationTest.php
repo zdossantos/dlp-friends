@@ -88,3 +88,56 @@ test('a conversation renders safe recent history and loads older messages at the
         ->assertScript("document.querySelectorAll('[data-message-id]').length", 15)
         ->assertNoJavaScriptErrors();
 });
+
+test('a member sends a message with enter and keeps composer focus', function () {
+    $member = conversationBrowserMember('Alice');
+    $peer = conversationBrowserMember('Basile');
+    [$lowId, $highId] = collect([$member->id, $peer->id])->sort()->values()->all();
+    $match = MemberMatch::factory()->create([
+        'user_low_id' => $lowId,
+        'user_high_id' => $highId,
+    ]);
+    $conversation = $match->conversation()->create();
+    $this->actingAs($member);
+
+    visit("/conversations/{$conversation->id}")->on()->mobile()
+        ->assertNoJavaScriptErrors()
+        ->assertNotPresent('[data-test="member-bottom-navigation"]')
+        ->assertDisabled('button[aria-label="Envoyer le message"]')
+        ->fill('content', 'Bonjour !')
+        ->keys('textarea[name="content"]', 'Enter')
+        ->assertSee('Bonjour !')
+        ->assertValue('content', '')
+        ->assertScript('document.activeElement.name === "content"', true)
+        ->assertNoJavaScriptErrors();
+
+    $this->assertDatabaseHas('messages', [
+        'conversation_id' => $conversation->id,
+        'author_user_id' => $member->id,
+        'content' => 'Bonjour !',
+    ]);
+});
+
+test('an archived conversation remains readable without a composer', function () {
+    $member = conversationBrowserMember('Alice');
+    $peer = conversationBrowserMember('Basile');
+    [$lowId, $highId] = collect([$member->id, $peer->id])->sort()->values()->all();
+    $match = MemberMatch::factory()->create([
+        'user_low_id' => $lowId,
+        'user_high_id' => $highId,
+    ]);
+    $conversation = $match->conversation()->create([
+        'archived_at' => now(),
+    ]);
+    Message::factory()->for($conversation)->for($peer, 'author')->create([
+        'content' => 'Souvenir de notre sortie',
+    ]);
+    $this->actingAs($member);
+
+    visit("/conversations/{$conversation->id}")->on()->mobile()
+        ->assertSee('Souvenir de notre sortie')
+        ->assertSee('Cet échange est archivé. L’envoi de nouveaux messages est désactivé.')
+        ->assertNotPresent('textarea[name="content"]')
+        ->assertNotPresent('[data-test="member-bottom-navigation"]')
+        ->assertNoJavaScriptErrors();
+});

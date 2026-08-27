@@ -5,10 +5,14 @@ import MemberBottomNavigation from '@/components/MemberBottomNavigation.vue';
 import { Toaster } from '@/components/ui/sonner';
 
 const page = usePage();
+const isConversationOpen = computed(() =>
+    /^\/conversations\/[^/]+$/.test(page.url.split('?')[0] ?? ''),
+);
 const reservesMemberNavigation = computed(
     () =>
         Boolean(page.props.auth.user.profile?.onboarding_completed_at) &&
-        !page.url.split('?')[0]?.startsWith('/profile/edit'),
+        !page.url.split('?')[0]?.startsWith('/profile/edit') &&
+        !isConversationOpen.value,
 );
 </script>
 

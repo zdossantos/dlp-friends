@@ -5,9 +5,11 @@ import { resolvePageLayout } from '@/layouts/resolvePageLayout';
 import { initializeFlashToast } from '@/lib/flashToast';
 import { initializeDomTranslations } from '@/lib/translateDom';
 
-configureEcho({
-    broadcaster: 'reverb',
-});
+configureEcho(
+    import.meta.env.VITE_REVERB_APP_KEY
+        ? { broadcaster: 'reverb' }
+        : { broadcaster: 'null' },
+);
 
 const appName = import.meta.env.VITE_APP_NAME || 'DLP Friends';
 
