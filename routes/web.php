@@ -10,6 +10,7 @@ use App\Http\Controllers\Admin\InterestSettingController;
 use App\Http\Controllers\Admin\InterestStatusController;
 use App\Http\Controllers\AvatarImageController;
 use App\Http\Controllers\ConversationController;
+use App\Http\Controllers\ConversationIndexController;
 use App\Http\Controllers\DiscoveryController;
 use App\Http\Controllers\LandingController;
 use App\Http\Controllers\LocaleController;
@@ -54,6 +55,8 @@ Route::middleware(['auth', 'verified', 'social'])->group(function () {
         Route::post('discover/{target}/swipe', SwipeController::class)
             ->name('discovery.swipe');
 
+        Route::get('conversations', ConversationIndexController::class)
+            ->name('conversations.index');
         Route::get('conversations/{conversation}', ConversationController::class)
             ->name('conversations.show');
         Route::post('conversations/{conversation}/messages', MessageController::class)
