@@ -8,6 +8,7 @@ use App\Enums\RoleName;
 use App\Enums\VisitFrequency;
 use App\Models\Avatar;
 use App\Models\Interest;
+use App\Models\ProductOnboardingSetting;
 use App\Models\Role;
 use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
@@ -78,6 +79,18 @@ class DatabaseSeeder extends Seeder
                 ],
             ),
         )->values();
+
+        if ($avatars->count() >= 2) {
+            ProductOnboardingSetting::query()->firstOrCreate(
+                ['id' => ProductOnboardingSetting::SINGLETON_ID],
+                [
+                    'pass_avatar_id' => $avatars[0]->id,
+                    'like_avatar_id' => $avatars[1]->id,
+                ],
+            );
+        }
+
+        $user->profile?->update(['avatar_id' => $avatars->first()?->id]);
         $interestIds = Interest::query()->where('is_active', true)->orderBy('sort_order')->pluck('id')->values();
         $frequencies = VisitFrequency::cases();
 

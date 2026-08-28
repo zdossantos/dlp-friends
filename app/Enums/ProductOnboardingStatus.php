@@ -9,4 +9,3 @@ enum ProductOnboardingStatus: string
     case Completed = 'completed';
     case Skipped = 'skipped';
 }
-

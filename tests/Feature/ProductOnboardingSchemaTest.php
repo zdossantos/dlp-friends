@@ -53,4 +53,3 @@ class ProductOnboardingSchemaTest extends TestCase
         ]))->toBeTrue();
     }
 }
-

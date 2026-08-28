@@ -9,4 +9,3 @@ enum ProductOnboardingStep: string
     case MatchDemo = 'match_demo';
     case ConversationDemo = 'conversation_demo';
 }
-

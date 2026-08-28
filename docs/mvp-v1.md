@@ -8,6 +8,7 @@
 - Connexion simplifiée via Google et Apple.
 - Date de naissance obligatoire ; l'inscription est refusée avant 18 ans.
 - Après vérification de l'e-mail, un onboarding de profil est obligatoire avant l'accès à l'espace membre.
+- À la première complétion du profil, un tutoriel produit interactif enseigne successivement le refus d’une carte, le like, le match puis l’ouverture et l’utilisation d’une conversation fictive. Le membre peut l’ignorer et le relancer depuis ses réglages.
 - Réinitialisation de mot de passe, limites de tentatives et gestion des sessions.
 
 ### Profil
@@ -27,6 +28,8 @@ Les catégories constituent un regroupement technique interne (la catégorie ini
 Un intérêt archivé disparaît des sélecteurs de profil, des profils publics et du calcul des intérêts communs. Ses sélections sont suspendues, mais leur historique est conservé et elles ne consomment plus de capacité. Lors de sa réactivation, seules les sélections historiques des profils qui disposent encore de capacité au regard de la limite alors applicable sont restaurées ; les autres restent suspendues.
 
 Un dashboard protégé par le rôle `admin` expose des agrégats de comptes, les inscriptions récentes et la gestion du catalogue d’intérêts, sans donner accès aux messages privés.
+
+L’administration permet aussi de choisir deux avatars actifs et distincts pour les profils fictifs du tutoriel, puis de consulter ses statistiques et la progression paginée des membres éligibles. Un avatar ainsi configuré ne peut être ni archivé ni supprimé avant son remplacement.
 
 ### Découverte et matching
 

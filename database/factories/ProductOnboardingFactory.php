@@ -31,4 +31,3 @@ class ProductOnboardingFactory extends Factory
         ]);
     }
 }
-
