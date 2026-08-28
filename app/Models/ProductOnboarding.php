@@ -9,7 +9,17 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 
+/**
+ * @property int $id
+ * @property int $user_id
+ * @property ProductOnboardingStatus $status
+ * @property ProductOnboardingStep|null $step
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ * @property-read User $user
+ */
 #[Fillable(['user_id', 'status', 'step'])]
 class ProductOnboarding extends Model
 {
@@ -31,4 +41,3 @@ class ProductOnboarding extends Model
         ];
     }
 }
-

@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-#[Fillable(['pass_avatar_id', 'like_avatar_id'])]
+#[Fillable(['id', 'pass_avatar_id', 'like_avatar_id'])]
 class ProductOnboardingSetting extends Model
 {
     public const int SINGLETON_ID = 1;
@@ -30,4 +30,3 @@ class ProductOnboardingSetting extends Model
             ->find(self::SINGLETON_ID);
     }
 }
-

@@ -2,7 +2,9 @@
 
 namespace Tests\Feature;
 
+use App\Enums\ProductOnboardingStatus;
 use App\Enums\UserStatus;
+use App\Models\ProductOnboarding;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -42,6 +44,10 @@ class LandingTest extends TestCase
     public function test_complete_member_lands_on_discovery(): void
     {
         $user = User::factory()->withProfile()->create();
+        ProductOnboarding::factory()->for($user)->create([
+            'status' => ProductOnboardingStatus::Completed,
+            'step' => null,
+        ]);
 
         $this->actingAs($user)
             ->get('/app')
@@ -51,6 +57,10 @@ class LandingTest extends TestCase
     public function test_complete_admin_lands_on_the_dashboard(): void
     {
         $admin = User::factory()->withProfile()->admin()->create();
+        ProductOnboarding::factory()->for($admin)->create([
+            'status' => ProductOnboardingStatus::Skipped,
+            'step' => null,
+        ]);
 
         $this->actingAs($admin)
             ->get('/app')

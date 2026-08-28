@@ -116,7 +116,7 @@ class MemberProfileTest extends TestCase
             'bio' => null,
             'visit_frequency' => VisitFrequency::Often->value,
             'visibility' => ProfileVisibility::Visible->value,
-        ])->assertRedirect(route('app'));
+        ])->assertRedirect(route('onboarding.show'));
 
         expect($user->fresh()->profile->avatar->is($avatar))->toBeTrue()
             ->and($user->fresh()->profile->isComplete())->toBeTrue();
@@ -184,7 +184,7 @@ class MemberProfileTest extends TestCase
             'visibility' => ProfileVisibility::Visible->value,
         ]);
 
-        $response->assertRedirect(route('app'));
+        $response->assertRedirect(route('onboarding.show'));
         $this->assertDatabaseHas('profiles', [
             'user_id' => $user->id,
             'display_name' => 'Magic Friend',
@@ -288,7 +288,7 @@ class MemberProfileTest extends TestCase
         ];
 
         $this->actingAs($user)->post(route('member-profile.store'), $payload)
-            ->assertRedirect(route('app'));
+            ->assertRedirect(route('onboarding.show'));
         expect($user->fresh()->profile->interests()->pluck('interests.id')->all())
             ->toEqualCanonicalizing([$first->id, $second->id]);
 
@@ -316,7 +316,7 @@ class MemberProfileTest extends TestCase
             ]);
 
         $response->assertSessionHasNoErrors()
-            ->assertRedirect(route('app'));
+            ->assertRedirect(route('onboarding.show'));
 
         expect($user->fresh()->profile->interests()->pluck('interests.id')->all())
             ->toBe([$interest->id]);

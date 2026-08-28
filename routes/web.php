@@ -17,6 +17,7 @@ use App\Http\Controllers\LandingController;
 use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\MemberProfileController;
 use App\Http\Controllers\MessageController;
+use App\Http\Controllers\ProductOnboardingController;
 use App\Http\Controllers\SwipeController;
 use Illuminate\Support\Facades\Route;
 
@@ -44,6 +45,17 @@ Route::middleware(['auth', 'verified', 'social'])->group(function () {
     });
 
     Route::middleware('profile.complete')->group(function () {
+        Route::get('onboarding', [ProductOnboardingController::class, 'show'])
+            ->name('onboarding.show');
+        Route::patch('onboarding', [ProductOnboardingController::class, 'advance'])
+            ->name('onboarding.advance');
+        Route::post('onboarding/skip', [ProductOnboardingController::class, 'skip'])
+            ->name('onboarding.skip');
+        Route::post('onboarding/restart', [ProductOnboardingController::class, 'restart'])
+            ->name('onboarding.restart');
+        Route::post('onboarding/complete', [ProductOnboardingController::class, 'complete'])
+            ->name('onboarding.complete');
+
         Route::get('profile', [MemberProfileController::class, 'show'])
             ->name('member-profile.show');
         Route::get('profile/edit', [MemberProfileController::class, 'edit'])

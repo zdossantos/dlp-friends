@@ -37,6 +37,7 @@ class MemberProfileController extends Controller
     public function store(MemberProfileRequest $request): RedirectResponse
     {
         $currentProfile = $request->user()->profile;
+        $wasComplete = $currentProfile?->isComplete() ?? false;
         $completedAt = $currentProfile?->onboarding_completed_at;
         $validated = $request->validated();
         $interestIds = $request->interestIds();
@@ -65,6 +66,10 @@ class MemberProfileController extends Controller
             return $currentProfile;
         });
         $request->user()->setRelation('profile', $profile);
+
+        if (! $wasComplete && $profile->isComplete()) {
+            return to_route('onboarding.show');
+        }
 
         return to_route('app');
     }
