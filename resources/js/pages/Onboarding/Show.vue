@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { Head, router } from '@inertiajs/vue3';
 import { computed, nextTick, ref, watch } from 'vue';
+import MatchDialog from '@/components/discovery/MatchDialog.vue';
 import SwipeCard from '@/components/discovery/SwipeCard.vue';
 import DemoConversation from '@/components/onboarding/DemoConversation.vue';
-import DemoMatch from '@/components/onboarding/DemoMatch.vue';
 import ProfileFormStepper from '@/components/profile/ProfileFormStepper.vue';
 import { advance, complete } from '@/routes/onboarding';
 import type { DiscoveryCardProfile } from '@/types';
@@ -184,9 +184,12 @@ function post(url: string): void {
             @pass="decide('pass')"
             @like="decide('like')"
         />
-        <DemoMatch
+        <MatchDialog
             v-else-if="step === 'match_demo'"
-            :display-name="demoProfiles[1].displayName"
+            :open="true"
+            :match="{ displayName: demoProfiles[1].displayName }"
+            :dismissible="false"
+            :show-continue="false"
             :locked="busy"
             @open-conversation="submitStep('match_demo')"
         />

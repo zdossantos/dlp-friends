@@ -94,6 +94,34 @@ test('each swipe step disables and blocks the opposite decision', function () {
     $page->assertSee('6 sur 8')->assertNoJavaScriptErrors();
 });
 
+test('onboarding uses the production match dialog without a discovery escape action', function () {
+    [$passAvatar, $likeAvatar] = Avatar::factory()->count(2)->create();
+    ProductOnboardingSetting::query()->create([
+        'id' => ProductOnboardingSetting::SINGLETON_ID,
+        'pass_avatar_id' => $passAvatar->id,
+        'like_avatar_id' => $likeAvatar->id,
+    ]);
+    foreach ([$passAvatar, $likeAvatar] as $avatar) {
+        Storage::disk('local')->put($avatar->image_path, base64_decode(
+            'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScL8WQAAAABJRU5ErkJggg==',
+        ));
+    }
+    $member = User::factory()->withProfile()->create();
+    $member->productOnboarding()->create([
+        'status' => ProductOnboardingStatus::InProgress,
+        'step' => ProductOnboardingStep::MatchDemo,
+    ]);
+    $this->actingAs($member);
+
+    visit('/onboarding')
+        ->assertSee('C’est un match !')
+        ->assertSee('Alex a aussi aimé votre profil.')
+        ->assertSee('Ouvrir la conversation')
+        ->assertDontSee('Continuer à découvrir')
+        ->assertNotPresent('[data-slot="dialog-close"]')
+        ->assertNoJavaScriptErrors();
+});
+
 test('member completes the forced demo journey without real social writes', function () {
     [$passAvatar, $likeAvatar] = Avatar::factory()->count(2)->create();
     ProductOnboardingSetting::query()->create([
