@@ -228,7 +228,7 @@ test('an admin manages interests through confirmations and generated actions', f
         'name' => 'Chill renommé',
     ]);
 
-    $page->click('[aria-label="Archiver Chill renommé"]')
+    $page->click("#archive-interest-{$interest->id}")
         ->assertSee('Archiver l’intérêt Chill renommé')
         ->assertSee('Son historique sera conservé.')
         ->assertSee('Annuler');
@@ -240,7 +240,7 @@ test('an admin manages interests through confirmations and generated actions', f
         'is_active' => false,
     ]);
 
-    $page->click('[aria-label="Réactiver Chill renommé"]')
+    $page->click("#reactivate-interest-{$interest->id}")
         ->assertSee('Intérêt réactivé.');
 
     $this->assertDatabaseHas('interests', [
@@ -248,11 +248,11 @@ test('an admin manages interests through confirmations and generated actions', f
         'is_active' => true,
     ]);
 
-    $page->click('[aria-label="Archiver Chill renommé"]');
+    $page->click("#archive-interest-{$interest->id}");
     $page->script("document.querySelector('[role=dialog] button[type=submit]').click()");
     $page->assertSee('Intérêt archivé.');
 
-    $page->click('[aria-label="Supprimer Chill renommé"]')
+    $page->click("#delete-interest-{$interest->id}")
         ->assertSee('Supprimer l’intérêt Chill renommé')
         ->assertSee('Cette action est définitive.')
         ->assertSee('Annuler');

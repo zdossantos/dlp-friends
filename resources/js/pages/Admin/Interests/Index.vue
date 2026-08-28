@@ -317,6 +317,7 @@ defineOptions({
                                 <Dialog>
                                     <DialogTrigger as-child>
                                         <Button
+                                            :id="`archive-interest-${interest.id}`"
                                             variant="outline"
                                             :aria-label="`Archiver ${interest.name}`"
                                         >
@@ -381,6 +382,7 @@ defineOptions({
                                     value="1"
                                 />
                                 <Button
+                                    :id="`reactivate-interest-${interest.id}`"
                                     type="submit"
                                     variant="secondary"
                                     :aria-label="`Réactiver ${interest.name}`"
@@ -393,6 +395,7 @@ defineOptions({
                             <Dialog>
                                 <DialogTrigger as-child>
                                     <Button
+                                        :id="`delete-interest-${interest.id}`"
                                         variant="destructive"
                                         :aria-label="`Supprimer ${interest.name}`"
                                         :aria-describedby="
