@@ -43,7 +43,7 @@ class LandingTest extends TestCase
 
     public function test_complete_member_lands_on_discovery(): void
     {
-        $user = User::factory()->withProfile()->create();
+        $user = User::factory()->withProfile(false)->create();
         ProductOnboarding::factory()->for($user)->create([
             'status' => ProductOnboardingStatus::Completed,
             'step' => null,
@@ -56,7 +56,7 @@ class LandingTest extends TestCase
 
     public function test_complete_admin_lands_on_the_dashboard(): void
     {
-        $admin = User::factory()->withProfile()->admin()->create();
+        $admin = User::factory()->withProfile(false)->admin()->create();
         ProductOnboarding::factory()->for($admin)->create([
             'status' => ProductOnboardingStatus::Completed,
             'step' => null,

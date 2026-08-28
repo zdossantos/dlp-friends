@@ -77,13 +77,13 @@ class ManageProductOnboardingTest extends TestCase
     public function test_admin_sees_eligible_member_stats_and_progress_table(): void
     {
         config()->set('inertia.testing.ensure_pages_exist', false);
-        $admin = User::factory()->withProfile()->admin()->create(['created_at' => now()->subDays(10)]);
+        $admin = User::factory()->withProfile(false)->admin()->create(['created_at' => now()->subDays(10)]);
         ProductOnboarding::factory()->for($admin)->create([
             'status' => ProductOnboardingStatus::Completed,
             'step' => null,
             'updated_at' => now()->subDays(4),
         ]);
-        $notStarted = User::factory()->withProfile()->create(['created_at' => now()]);
+        $notStarted = User::factory()->withProfile(false)->create(['created_at' => now()]);
         $inProgress = $this->eligibleMember(ProductOnboardingStatus::InProgress, ProductOnboardingStep::LikeDemo, now()->subDay());
         $completed = $this->eligibleMember(ProductOnboardingStatus::Completed, null, now()->subDays(2));
 
@@ -117,7 +117,7 @@ class ManageProductOnboardingTest extends TestCase
         ?ProductOnboardingStep $step,
         \DateTimeInterface $updatedAt,
     ): User {
-        $user = User::factory()->withProfile()->create();
+        $user = User::factory()->withProfile(false)->create();
         ProductOnboarding::factory()->for($user)->create([
             'status' => $status,
             'step' => $step,

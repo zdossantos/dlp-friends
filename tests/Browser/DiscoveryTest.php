@@ -1,7 +1,6 @@
 <?php
 
 use App\Actions\CreateSwipe;
-use App\Enums\ProductOnboardingStatus;
 use App\Enums\SwipeDecision;
 use App\Models\Interest;
 use App\Models\MemberMatch;
@@ -13,10 +12,6 @@ use Illuminate\Validation\ValidationException;
 function discoveryMember(string $displayName): User
 {
     $user = User::factory()->withProfile()->create();
-    $user->productOnboarding()->create([
-        'status' => ProductOnboardingStatus::Completed,
-        'step' => null,
-    ]);
     $user->profile?->update(['display_name' => $displayName]);
     Storage::disk('local')->put($user->profile->avatar->image_path, base64_decode(
         'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScL8WQAAAABJRU5ErkJggg==',

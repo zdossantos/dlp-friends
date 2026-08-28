@@ -32,7 +32,7 @@ class ProductOnboardingTest extends TestCase
     {
         config()->set('inertia.testing.ensure_pages_exist', false);
         [$passAvatar, $likeAvatar] = $this->configureDemoAvatars();
-        $user = User::factory()->withProfile()->create();
+        $user = User::factory()->withProfile(false)->create();
 
         $this->actingAs($user)
             ->get(route('onboarding.show'))
@@ -61,7 +61,7 @@ class ProductOnboardingTest extends TestCase
 
     public function test_completed_tutorial_does_not_auto_launch(): void
     {
-        $user = User::factory()->withProfile()->create();
+        $user = User::factory()->withProfile(false)->create();
         ProductOnboarding::factory()->for($user)->completed()->create();
 
         $this->actingAs($user)->get(route('app'))
@@ -70,8 +70,8 @@ class ProductOnboardingTest extends TestCase
 
     public function test_not_started_and_in_progress_tutorials_auto_launch(): void
     {
-        $notStarted = User::factory()->withProfile()->create();
-        $inProgress = User::factory()->withProfile()->create();
+        $notStarted = User::factory()->withProfile(false)->create();
+        $inProgress = User::factory()->withProfile(false)->create();
         ProductOnboarding::factory()->for($inProgress)->create([
             'status' => ProductOnboardingStatus::InProgress,
             'step' => ProductOnboardingStep::LikeDemo,
@@ -85,7 +85,7 @@ class ProductOnboardingTest extends TestCase
 
     public function test_onboarding_is_unavailable_without_two_distinct_active_demo_avatars(): void
     {
-        $user = User::factory()->withProfile()->create();
+        $user = User::factory()->withProfile(false)->create();
 
         $this->actingAs($user)->get(route('onboarding.show'))
             ->assertStatus(503);
@@ -94,7 +94,7 @@ class ProductOnboardingTest extends TestCase
     public function test_incomplete_onboarding_blocks_member_pages_but_not_its_own_routes(): void
     {
         $this->configureDemoAvatars();
-        $user = User::factory()->withProfile()->create();
+        $user = User::factory()->withProfile(false)->create();
 
         $this->actingAs($user)->get(route('discovery.index'))
             ->assertRedirect(route('onboarding.show'));
@@ -115,7 +115,7 @@ class ProductOnboardingTest extends TestCase
     public function test_authenticated_member_can_advance_and_complete_without_social_identifiers(): void
     {
         $this->configureDemoAvatars();
-        $user = User::factory()->withProfile()->create();
+        $user = User::factory()->withProfile(false)->create();
         $this->actingAs($user)->get(route('onboarding.show'))->assertOk();
 
         foreach ([
@@ -138,7 +138,7 @@ class ProductOnboardingTest extends TestCase
 
     public function test_tutorial_escape_routes_do_not_exist(): void
     {
-        $user = User::factory()->withProfile()->create();
+        $user = User::factory()->withProfile(false)->create();
 
         $this->actingAs($user)->post('/onboarding/skip')->assertNotFound();
         $this->actingAs($user)->post('/onboarding/restart')->assertNotFound();

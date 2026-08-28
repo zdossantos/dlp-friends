@@ -21,7 +21,7 @@ test('onboarding continues the registration stepper at the persisted tutorial st
             'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScL8WQAAAABJRU5ErkJggg==',
         ));
     }
-    $member = User::factory()->withProfile()->create();
+    $member = User::factory()->withProfile(false)->create();
     $member->productOnboarding()->create([
         'status' => ProductOnboardingStatus::InProgress,
         'step' => ProductOnboardingStep::LikeDemo,
@@ -49,7 +49,7 @@ test('each swipe step disables and blocks the opposite decision', function () {
             'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScL8WQAAAABJRU5ErkJggg==',
         ));
     }
-    $member = User::factory()->withProfile()->create();
+    $member = User::factory()->withProfile(false)->create();
     $this->actingAs($member);
 
     $page = visit('/onboarding')
@@ -106,7 +106,7 @@ test('onboarding uses the production match dialog without a discovery escape act
             'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScL8WQAAAABJRU5ErkJggg==',
         ));
     }
-    $member = User::factory()->withProfile()->create();
+    $member = User::factory()->withProfile(false)->create();
     $member->productOnboarding()->create([
         'status' => ProductOnboardingStatus::InProgress,
         'step' => ProductOnboardingStep::MatchDemo,
@@ -134,7 +134,7 @@ test('onboarding uses the production conversation interface and completes on sen
             'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScL8WQAAAABJRU5ErkJggg==',
         ));
     }
-    $member = User::factory()->withProfile()->create();
+    $member = User::factory()->withProfile(false)->create();
     $member->productOnboarding()->create([
         'status' => ProductOnboardingStatus::InProgress,
         'step' => ProductOnboardingStep::ConversationDemo,
@@ -171,7 +171,7 @@ test('member completes the mandatory onboarding without escape actions or social
             'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScL8WQAAAABJRU5ErkJggg==',
         ));
     }
-    $member = User::factory()->withProfile()->create();
+    $member = User::factory()->withProfile(false)->create();
     $this->actingAs($member);
 
     $page = visit('/onboarding')

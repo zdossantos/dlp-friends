@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Enums\ProductOnboardingStatus;
 use App\Enums\ProfileVisibility;
 use App\Enums\VisitFrequency;
 use App\Models\Avatar;
@@ -291,8 +292,12 @@ class MemberProfileTest extends TestCase
             ->assertRedirect(route('onboarding.show'));
         expect($user->fresh()->profile->interests()->pluck('interests.id')->all())
             ->toEqualCanonicalizing([$first->id, $second->id]);
+        $user->productOnboarding()->updateOrCreate([], [
+            'status' => ProductOnboardingStatus::Completed,
+            'step' => null,
+        ]);
 
-        $this->actingAs($user)->patch(route('member-profile.update'), [
+        $this->actingAs($user->fresh())->patch(route('member-profile.update'), [
             ...$payload,
             'interest_ids' => [$inactive->id],
         ])->assertSessionHasErrors('interest_ids.0');

@@ -20,7 +20,7 @@ test('admin configures tutorial avatars and sees member progress', function () {
         'pass_avatar_id' => $passAvatar->id,
         'like_avatar_id' => $likeAvatar->id,
     ]);
-    $member = User::factory()->withProfile()->create(['email' => 'tutorial@example.test']);
+    $member = User::factory()->withProfile(false)->create(['email' => 'tutorial@example.test']);
     ProductOnboarding::factory()->for($member)->create([
         'status' => ProductOnboardingStatus::InProgress,
         'step' => ProductOnboardingStep::LikeDemo,

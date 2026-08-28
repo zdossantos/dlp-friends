@@ -2,7 +2,6 @@
 
 use App\Actions\MarkConversationRead;
 use App\Actions\SendMessage;
-use App\Enums\ProductOnboardingStatus;
 use App\Events\MessageSent;
 use App\Models\MemberMatch;
 use App\Models\Message;
@@ -12,10 +11,6 @@ use Illuminate\Support\Facades\Storage;
 function conversationBrowserMember(string $displayName): User
 {
     $user = User::factory()->withProfile()->create();
-    $user->productOnboarding()->create([
-        'status' => ProductOnboardingStatus::Completed,
-        'completed_at' => now(),
-    ]);
     $user->profile?->update(['display_name' => $displayName]);
     Storage::disk('local')->put($user->profile->avatar->image_path, base64_decode(
         'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScL8WQAAAABJRU5ErkJggg==',
