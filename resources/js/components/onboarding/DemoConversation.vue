@@ -24,7 +24,7 @@ function send(): void {
 </script>
 
 <template>
-    <Card class="w-full max-w-md rounded-[2rem]">
+    <Card class="w-full max-w-md rounded-[2rem] sm:max-w-lg">
         <CardHeader>
             <CardTitle data-test="demo-conversation-heading" tabindex="-1">
                 Conversation de démonstration

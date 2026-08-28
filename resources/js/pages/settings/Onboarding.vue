@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import { Head, router } from '@inertiajs/vue3';
+import { Head, Link, router } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
-import Heading from '@/components/Heading.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useTranslations } from '@/composables/useTranslations';
+import { show } from '@/routes/onboarding';
 import { restart } from '@/routes/onboarding-settings';
 
 type Status = 'not_started' | 'in_progress' | 'completed' | 'skipped';
@@ -52,13 +52,14 @@ defineOptions({
 
 <template>
     <Head title="Tutoriel" />
-    <h1 class="sr-only">Tutoriel</h1>
     <div class="space-y-6">
-        <Heading
-            variant="small"
-            title="Tutoriel"
-            description="Revoyez à tout moment le parcours de démonstration de DLP Friends."
-        />
+        <header>
+            <h1 class="mb-0.5 text-base font-medium">Tutoriel</h1>
+            <p class="text-sm text-muted-foreground">
+                Revoyez à tout moment le parcours de démonstration de DLP
+                Friends.
+            </p>
+        </header>
         <Card>
             <CardHeader>
                 <CardTitle class="flex items-center justify-between gap-3">
@@ -83,9 +84,27 @@ defineOptions({
                     Cette démonstration utilise uniquement des profils et
                     messages fictifs.
                 </p>
-                <Button type="button" :disabled="restarting" @click="relaunch">
-                    Relancer le tutoriel
-                </Button>
+                <div class="flex flex-wrap gap-2">
+                    <Button v-if="onboarding.status === 'in_progress'" as-child>
+                        <Link :href="show()">Reprendre le tutoriel</Link>
+                    </Button>
+                    <Button
+                        type="button"
+                        :variant="
+                            onboarding.status === 'in_progress'
+                                ? 'outline'
+                                : 'default'
+                        "
+                        :disabled="restarting"
+                        @click="relaunch"
+                    >
+                        {{
+                            onboarding.status === 'in_progress'
+                                ? 'Recommencer depuis le début'
+                                : 'Relancer le tutoriel'
+                        }}
+                    </Button>
+                </div>
             </CardContent>
         </Card>
     </div>

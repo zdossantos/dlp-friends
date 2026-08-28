@@ -27,16 +27,26 @@ test('member completes the forced demo journey without real social writes', func
     $page = visit('/onboarding')
         ->assertSee('Démonstration')
         ->assertMissing('[data-test="member-bottom-navigation"]')
+        ->assertSee('Continuer plus tard')
+        ->assertDontSee('Quitter')
+        ->assertScript(
+            "document.querySelector('[data-test=demo-swipe-card]').getBoundingClientRect().width >= 500",
+            true,
+        )
         ->click('[data-test="demo-like"]')
-        ->assertSee('Pour commencer, passez cette carte.')
+        ->assertSee('Cette étape vous demande de passer ce profil.')
         ->click('[data-test="demo-pass"]');
 
     $page->assertNoJavaScriptErrors()
         ->assertSee('Indiquez maintenant votre intérêt.')
+        ->click('[data-test="demo-pass"]')
+        ->assertSee('Cette étape vous demande d’aimer ce profil.')
         ->click('[data-test="demo-like"]')
         ->assertSee('Match de démonstration')
+        ->assertSee('Ouvrez ce match fictif pour découvrir la conversation.')
         ->click('[data-test="open-demo-conversation"]')
         ->assertSee('Conversation de démonstration')
+        ->assertSee('Envoyez une réponse fictive pour terminer le tutoriel.')
         ->type('[data-test="demo-message-input"]', 'Bonjour !')
         ->click('[data-test="send-demo-message"]')
         ->assertSee('Bonjour !')
@@ -71,10 +81,14 @@ test('member resumes, uses the keyboard, restarts and skips the demo', function 
     ]);
     $this->actingAs($member);
 
-    $page = visit('/onboarding')
+    $page = visit('/settings/onboarding')
+        ->assertSee('Reprendre le tutoriel')
+        ->assertSee('Recommencer depuis le début')
+        ->click('Reprendre le tutoriel')
         ->assertSee('Indiquez maintenant votre intérêt.')
+        ->assertSee('Continuer plus tard')
         ->click('[data-test="demo-pass"]')
-        ->assertSee('Indiquez maintenant votre intérêt.')
+        ->assertSee('Cette étape vous demande d’aimer ce profil.')
         ->keys('[data-test="demo-swipe-card"]', 'ArrowRight')
         ->assertSee('Match de démonstration')
         ->assertScript(

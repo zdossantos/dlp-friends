@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, Link, router } from '@inertiajs/vue3';
-import { nextTick, ref, watch } from 'vue';
+import { computed, nextTick, ref, watch } from 'vue';
 import DemoConversation from '@/components/onboarding/DemoConversation.vue';
 import DemoMatch from '@/components/onboarding/DemoMatch.vue';
 import DemoSwipeCard from '@/components/onboarding/DemoSwipeCard.vue';
@@ -30,7 +30,14 @@ const props = defineProps<{
 }>();
 
 const busy = ref(false);
-const instruction = ref('Pour commencer, passez cette carte.');
+const wrongActionFeedback = ref<string | null>(null);
+const feedbackKey = ref(0);
+const stepInstruction = computed<Record<Step, string>>(() => ({
+    pass_demo: 'Pour commencer, passez cette carte.',
+    like_demo: 'Indiquez maintenant votre intérêt.',
+    match_demo: 'Ouvrez ce match fictif pour découvrir la conversation.',
+    conversation_demo: 'Envoyez une réponse fictive pour terminer le tutoriel.',
+}));
 
 watch(
     () => props.step,
@@ -58,18 +65,16 @@ function decide(decision: 'pass' | 'like'): void {
     const required = props.step === 'pass_demo' ? 'pass' : 'like';
 
     if (decision !== required) {
-        instruction.value =
+        wrongActionFeedback.value =
             required === 'pass'
-                ? 'Pour commencer, passez cette carte.'
-                : 'Indiquez maintenant votre intérêt.';
+                ? 'Cette étape vous demande de passer ce profil.'
+                : 'Cette étape vous demande d’aimer ce profil.';
+        feedbackKey.value += 1;
 
         return;
     }
 
-    instruction.value =
-        required === 'pass'
-            ? 'Indiquez maintenant votre intérêt.'
-            : 'Un match fictif va apparaître.';
+    wrongActionFeedback.value = null;
     submitStep(props.step);
 }
 
@@ -100,21 +105,23 @@ function post(url: string): void {
                 </h1>
             </div>
             <Button as-child variant="ghost" size="sm">
-                <Link :href="discovery()">Quitter</Link>
+                <Link :href="discovery()">Continuer plus tard</Link>
             </Button>
         </header>
 
-        <p class="sr-only" aria-live="polite">{{ instruction }}</p>
         <p
-            v-if="step === 'pass_demo' || step === 'like_demo'"
             class="w-full rounded-2xl bg-secondary px-4 py-3 text-center font-medium"
             aria-live="polite"
         >
-            {{
-                step === 'pass_demo'
-                    ? 'Pour commencer, passez cette carte.'
-                    : 'Indiquez maintenant votre intérêt.'
-            }}
+            {{ stepInstruction[step] }}
+        </p>
+        <p
+            v-if="wrongActionFeedback"
+            :key="feedbackKey"
+            role="alert"
+            class="w-full rounded-2xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-center text-sm font-medium text-destructive"
+        >
+            {{ wrongActionFeedback }}
         </p>
 
         <DemoSwipeCard
@@ -150,7 +157,7 @@ function post(url: string): void {
             class="flex w-full flex-wrap justify-center gap-2 border-t pt-4"
         >
             <Button
-                v-if="resumable"
+                v-if="resumable && step !== 'pass_demo'"
                 type="button"
                 variant="outline"
                 :disabled="busy"

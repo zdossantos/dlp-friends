@@ -9,7 +9,7 @@ defineEmits<{ openConversation: [] }>();
 
 <template>
     <Card
-        class="w-full max-w-md rounded-[2rem] border-amber-300 bg-amber-50 text-center dark:border-amber-700 dark:bg-amber-950"
+        class="w-full max-w-md rounded-[2rem] border-amber-300 bg-amber-50 text-center sm:max-w-lg dark:border-amber-700 dark:bg-amber-950"
     >
         <CardHeader class="items-center">
             <Sparkles class="size-12 text-amber-600" aria-hidden="true" />

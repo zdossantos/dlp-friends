@@ -87,7 +87,7 @@ function pointerUp(event: PointerEvent): void {
 <template>
     <Card
         data-test="demo-swipe-card"
-        class="w-full max-w-md touch-pan-y overflow-hidden rounded-[2rem] border-2 p-0 shadow-xl transition-transform outline-none focus-visible:ring-4 focus-visible:ring-ring/50"
+        class="w-full max-w-md touch-pan-y overflow-hidden rounded-[2rem] border-2 p-0 shadow-xl transition-transform outline-none focus-visible:ring-4 focus-visible:ring-ring/50 sm:max-w-lg"
         :style="cardStyle"
         tabindex="0"
         :aria-label="`Profil de démonstration de ${profile.displayName}`"
