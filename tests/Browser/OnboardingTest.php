@@ -122,6 +122,43 @@ test('onboarding uses the production match dialog without a discovery escape act
         ->assertNoJavaScriptErrors();
 });
 
+test('onboarding uses the production conversation interface and completes on send', function () {
+    [$passAvatar, $likeAvatar] = Avatar::factory()->count(2)->create();
+    ProductOnboardingSetting::query()->create([
+        'id' => ProductOnboardingSetting::SINGLETON_ID,
+        'pass_avatar_id' => $passAvatar->id,
+        'like_avatar_id' => $likeAvatar->id,
+    ]);
+    foreach ([$passAvatar, $likeAvatar] as $avatar) {
+        Storage::disk('local')->put($avatar->image_path, base64_decode(
+            'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScL8WQAAAABJRU5ErkJggg==',
+        ));
+    }
+    $member = User::factory()->withProfile()->create();
+    $member->productOnboarding()->create([
+        'status' => ProductOnboardingStatus::InProgress,
+        'step' => ProductOnboardingStep::ConversationDemo,
+    ]);
+    $this->actingAs($member);
+
+    visit('/onboarding')
+        ->assertSee('Alex')
+        ->assertSee('Échange privé')
+        ->assertPresent('[role="log"][aria-label="Historique des messages"]')
+        ->assertPresent('#message-content[placeholder="Écrire un message…"]')
+        ->assertDontSee('fictif')
+        ->type('#message-content', 'Bonjour !')
+        ->click('[aria-label="Envoyer le message"]')
+        ->assertPathIs('/discover')
+        ->assertNoJavaScriptErrors();
+
+    expect($member->productOnboarding()->firstOrFail()->status)
+        ->toBe(ProductOnboardingStatus::Completed);
+    $this->assertDatabaseCount('matches', 0);
+    $this->assertDatabaseCount('conversations', 0);
+    $this->assertDatabaseCount('messages', 0);
+});
+
 test('member completes the forced demo journey without real social writes', function () {
     [$passAvatar, $likeAvatar] = Avatar::factory()->count(2)->create();
     ProductOnboardingSetting::query()->create([
