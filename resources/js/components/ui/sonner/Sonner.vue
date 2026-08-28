@@ -42,3 +42,9 @@ const props = defineProps<ToasterProps>()
     </template>
   </Sonner>
 </template>
+
+<style>
+[data-sonner-toast] {
+    pointer-events: none;
+}
+</style>
