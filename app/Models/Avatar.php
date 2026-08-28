@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Carbon;
 
 /**
@@ -41,6 +42,18 @@ class Avatar extends Model
     public function profiles(): HasMany
     {
         return $this->hasMany(Profile::class);
+    }
+
+    /** @return HasOne<ProductOnboardingSetting, $this> */
+    public function passOnboardingSetting(): HasOne
+    {
+        return $this->hasOne(ProductOnboardingSetting::class, 'pass_avatar_id');
+    }
+
+    /** @return HasOne<ProductOnboardingSetting, $this> */
+    public function likeOnboardingSetting(): HasOne
+    {
+        return $this->hasOne(ProductOnboardingSetting::class, 'like_avatar_id');
     }
 
     /** @return array<string, string> */

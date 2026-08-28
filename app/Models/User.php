@@ -38,6 +38,7 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property-read Profile|null $profile
+ * @property-read ProductOnboarding|null $productOnboarding
  * @property-read Collection<int, Role> $roles
  * @property-read Collection<int, Swipe> $sentSwipes
  * @property-read Collection<int, Swipe> $receivedSwipes
@@ -58,6 +59,12 @@ class User extends Authenticatable implements HasLocalePreference, MustVerifyEma
     public function profile(): HasOne
     {
         return $this->hasOne(Profile::class);
+    }
+
+    /** @return HasOne<ProductOnboarding, $this> */
+    public function productOnboarding(): HasOne
+    {
+        return $this->hasOne(ProductOnboarding::class);
     }
 
     /** @return BelongsToMany<Role, $this> */
