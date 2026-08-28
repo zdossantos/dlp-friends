@@ -37,6 +37,63 @@ test('onboarding continues the registration stepper at the persisted tutorial st
         ->assertNoJavaScriptErrors();
 });
 
+test('each swipe step disables and blocks the opposite decision', function () {
+    [$passAvatar, $likeAvatar] = Avatar::factory()->count(2)->create();
+    ProductOnboardingSetting::query()->create([
+        'id' => ProductOnboardingSetting::SINGLETON_ID,
+        'pass_avatar_id' => $passAvatar->id,
+        'like_avatar_id' => $likeAvatar->id,
+    ]);
+    foreach ([$passAvatar, $likeAvatar] as $avatar) {
+        Storage::disk('local')->put($avatar->image_path, base64_decode(
+            'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScL8WQAAAABJRU5ErkJggg==',
+        ));
+    }
+    $member = User::factory()->withProfile()->create();
+    $this->actingAs($member);
+
+    $page = visit('/onboarding')
+        ->assertPresent('[data-test="discovery-card"]')
+        ->assertPresent('[aria-label="Aimer ce profil"][disabled]')
+        ->assertNotPresent('[aria-label="Passer ce profil"][disabled]');
+
+    $page->script(<<<'JS'
+        const card = document.querySelector('[data-test="discovery-card"]');
+        card.dispatchEvent(new PointerEvent('pointerdown', { pointerId: 31, clientX: 100, clientY: 200, bubbles: true }));
+        card.dispatchEvent(new PointerEvent('pointermove', { pointerId: 31, clientX: 220, clientY: 200, bubbles: true }));
+    JS);
+    $page->assertScript(
+        "document.querySelector('[data-test=discovery-card]').style.transform.includes('translate3d(0px')",
+        true,
+    );
+    $page->script(<<<'JS'
+        const card = document.querySelector('[data-test="discovery-card"]');
+        card.dispatchEvent(new PointerEvent('pointerup', { pointerId: 31, clientX: 220, clientY: 200, bubbles: true }));
+        card.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
+    JS);
+    $page->assertSee('5 sur 8')
+        ->click('[aria-label="Passer ce profil"]')
+        ->assertSee('6 sur 8')
+        ->assertPresent('[aria-label="Passer ce profil"][disabled]')
+        ->assertNotPresent('[aria-label="Aimer ce profil"][disabled]');
+
+    $page->script(<<<'JS'
+        const card = document.querySelector('[data-test="discovery-card"]');
+        card.dispatchEvent(new PointerEvent('pointerdown', { pointerId: 32, clientX: 220, clientY: 200, bubbles: true }));
+        card.dispatchEvent(new PointerEvent('pointermove', { pointerId: 32, clientX: 100, clientY: 200, bubbles: true }));
+    JS);
+    $page->assertScript(
+        "document.querySelector('[data-test=discovery-card]').style.transform.includes('translate3d(0px')",
+        true,
+    );
+    $page->script(<<<'JS'
+        const card = document.querySelector('[data-test="discovery-card"]');
+        card.dispatchEvent(new PointerEvent('pointerup', { pointerId: 32, clientX: 100, clientY: 200, bubbles: true }));
+        card.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowLeft', bubbles: true }));
+    JS);
+    $page->assertSee('6 sur 8')->assertNoJavaScriptErrors();
+});
+
 test('member completes the forced demo journey without real social writes', function () {
     [$passAvatar, $likeAvatar] = Avatar::factory()->count(2)->create();
     ProductOnboardingSetting::query()->create([

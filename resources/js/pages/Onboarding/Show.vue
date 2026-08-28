@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import { Head, router } from '@inertiajs/vue3';
 import { computed, nextTick, ref, watch } from 'vue';
+import SwipeCard from '@/components/discovery/SwipeCard.vue';
 import DemoConversation from '@/components/onboarding/DemoConversation.vue';
 import DemoMatch from '@/components/onboarding/DemoMatch.vue';
-import DemoSwipeCard from '@/components/onboarding/DemoSwipeCard.vue';
 import ProfileFormStepper from '@/components/profile/ProfileFormStepper.vue';
 import { advance, complete } from '@/routes/onboarding';
+import type { DiscoveryCardProfile } from '@/types';
 
 type Step = 'pass_demo' | 'like_demo' | 'match_demo' | 'conversation_demo';
 type DemoProfile = {
@@ -49,6 +50,31 @@ const currentRegistrationStep = computed(
             conversation_demo: 8,
         })[props.step],
 );
+const swipeProfiles = computed<[DiscoveryCardProfile, DiscoveryCardProfile]>(
+    () => [toSwipeProfile(props.demoProfiles[0], 28), toSwipeProfile(props.demoProfiles[1], 31)],
+);
+
+function toSwipeProfile(profile: DemoProfile, age: number): DiscoveryCardProfile {
+    return {
+        displayName: profile.displayName,
+        age,
+        bio: profile.bio,
+        visitFrequency: null,
+        commonInterestCount: 0,
+        commonInterests: [],
+        interests: profile.interests.map((name) => ({
+            name,
+            isCommon: false,
+        })),
+        frequencyBonus: false,
+        avatar: {
+            name: profile.avatar.name,
+            image_url: profile.avatar.imageUrl,
+            primary_color: profile.avatar.primaryColor,
+            secondary_color: profile.avatar.secondaryColor,
+        },
+    };
+}
 const stepInstruction = computed<Record<Step, string>>(() => ({
     pass_demo:
         'Pour découvrir comment écarter un profil qui ne vous correspond pas, choisissez Passer.',
@@ -140,19 +166,21 @@ function post(url: string): void {
             {{ wrongActionFeedback }}
         </p>
 
-        <DemoSwipeCard
+        <SwipeCard
             v-if="step === 'pass_demo'"
-            :profile="demoProfiles[0]"
-            required-decision="pass"
+            :profile="swipeProfiles[0]"
+            allowed-decision="pass"
             :locked="busy"
+            compact
             @pass="decide('pass')"
             @like="decide('like')"
         />
-        <DemoSwipeCard
+        <SwipeCard
             v-else-if="step === 'like_demo'"
-            :profile="demoProfiles[1]"
-            required-decision="like"
+            :profile="swipeProfiles[1]"
+            allowed-decision="like"
             :locked="busy"
+            compact
             @pass="decide('pass')"
             @like="decide('like')"
         />
