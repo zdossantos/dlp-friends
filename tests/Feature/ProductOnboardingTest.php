@@ -60,18 +60,13 @@ class ProductOnboardingTest extends TestCase
                 ->missing('conversationId'));
     }
 
-    public function test_completed_and_skipped_tutorials_do_not_auto_launch(): void
+    public function test_completed_tutorial_does_not_auto_launch(): void
     {
-        foreach ([ProductOnboardingStatus::Completed, ProductOnboardingStatus::Skipped] as $status) {
-            $user = User::factory()->withProfile()->create();
-            ProductOnboarding::factory()->for($user)->create([
-                'status' => $status,
-                'step' => null,
-            ]);
+        $user = User::factory()->withProfile()->create();
+        ProductOnboarding::factory()->for($user)->completed()->create();
 
-            $this->actingAs($user)->get(route('app'))
-                ->assertRedirect(route('discovery.index'));
-        }
+        $this->actingAs($user)->get(route('app'))
+            ->assertRedirect(route('discovery.index'));
     }
 
     public function test_not_started_and_in_progress_tutorials_auto_launch(): void
@@ -97,7 +92,28 @@ class ProductOnboardingTest extends TestCase
             ->assertStatus(503);
     }
 
-    public function test_authenticated_member_can_advance_skip_restart_and_complete_without_social_identifiers(): void
+    public function test_incomplete_onboarding_blocks_member_pages_but_not_its_own_routes(): void
+    {
+        $this->configureDemoAvatars();
+        $user = User::factory()->withProfile()->create();
+
+        $this->actingAs($user)->get(route('discovery.index'))
+            ->assertRedirect(route('onboarding.show'));
+        $this->actingAs($user)->get(route('account.edit'))
+            ->assertRedirect(route('onboarding.show'));
+        $this->actingAs($user)->get(route('onboarding.show'))
+            ->assertOk();
+    }
+
+    public function test_incomplete_profile_is_redirected_to_profile_creation_before_onboarding(): void
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user)->get(route('discovery.index'))
+            ->assertRedirect(route('member-profile.create'));
+    }
+
+    public function test_authenticated_member_can_advance_and_complete_without_social_identifiers(): void
     {
         $this->configureDemoAvatars();
         $user = User::factory()->withProfile()->create();
@@ -115,15 +131,20 @@ class ProductOnboardingTest extends TestCase
         $this->actingAs($user)->post(route('onboarding.complete'))
             ->assertRedirect(route('discovery.index'));
 
-        $this->actingAs($user)->post(route('onboarding.restart'))
-            ->assertRedirect(route('onboarding.show'));
-        $this->actingAs($user)->post(route('onboarding.skip'))
-            ->assertRedirect(route('discovery.index'));
-
         $this->assertDatabaseCount('swipes', 0);
         $this->assertDatabaseCount('matches', 0);
         $this->assertDatabaseCount('conversations', 0);
         $this->assertDatabaseCount('messages', 0);
+    }
+
+    public function test_tutorial_escape_routes_do_not_exist(): void
+    {
+        $user = User::factory()->withProfile()->create();
+
+        $this->actingAs($user)->post('/onboarding/skip')->assertNotFound();
+        $this->actingAs($user)->post('/onboarding/restart')->assertNotFound();
+        $this->actingAs($user)->get('/settings/onboarding')->assertNotFound();
+        $this->actingAs($user)->post('/settings/onboarding/restart')->assertNotFound();
     }
 
     /** @return array{Avatar, Avatar} */

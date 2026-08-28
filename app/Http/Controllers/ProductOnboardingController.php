@@ -45,20 +45,6 @@ class ProductOnboardingController extends Controller
         return to_route('onboarding.show');
     }
 
-    public function skip(Request $request): RedirectResponse
-    {
-        $this->onboarding->skip($request->user());
-
-        return to_route('discovery.index');
-    }
-
-    public function restart(Request $request): RedirectResponse
-    {
-        $this->onboarding->start($request->user(), restart: true);
-
-        return to_route('onboarding.show');
-    }
-
     public function complete(Request $request): RedirectResponse
     {
         $this->onboarding->complete($request->user());

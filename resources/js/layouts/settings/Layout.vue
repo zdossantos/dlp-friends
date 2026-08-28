@@ -7,7 +7,6 @@ import { useCurrentUrl } from '@/composables/useCurrentUrl';
 import { toUrl } from '@/lib/utils';
 import { edit as editAccount } from '@/routes/account';
 import { edit as editAppearance } from '@/routes/appearance';
-import { edit as editOnboarding } from '@/routes/onboarding-settings';
 import { edit as editSecurity } from '@/routes/security';
 import type { NavItem } from '@/types';
 
@@ -23,10 +22,6 @@ const sidebarNavItems: NavItem[] = [
     {
         title: 'Apparence',
         href: editAppearance(),
-    },
-    {
-        title: 'Tutoriel',
-        href: editOnboarding(),
     },
 ];
 

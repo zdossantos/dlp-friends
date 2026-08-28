@@ -58,7 +58,7 @@ class LandingTest extends TestCase
     {
         $admin = User::factory()->withProfile()->admin()->create();
         ProductOnboarding::factory()->for($admin)->create([
-            'status' => ProductOnboardingStatus::Skipped,
+            'status' => ProductOnboardingStatus::Completed,
             'step' => null,
         ]);
 
