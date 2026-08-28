@@ -1,0 +1,171 @@
+<script setup lang="ts">
+import { Head, Link, router } from '@inertiajs/vue3';
+import { nextTick, ref, watch } from 'vue';
+import DemoConversation from '@/components/onboarding/DemoConversation.vue';
+import DemoMatch from '@/components/onboarding/DemoMatch.vue';
+import DemoSwipeCard from '@/components/onboarding/DemoSwipeCard.vue';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { index as discovery } from '@/routes/discovery';
+import { advance, complete, restart, skip } from '@/routes/onboarding';
+
+type Step = 'pass_demo' | 'like_demo' | 'match_demo' | 'conversation_demo';
+type DemoProfile = {
+    displayName: string;
+    bio: string;
+    interests: string[];
+    avatar: {
+        name: string;
+        imageUrl: string;
+        primaryColor: string;
+        secondaryColor: string;
+    };
+};
+
+const props = defineProps<{
+    status: 'in_progress';
+    step: Step;
+    resumable: boolean;
+    demoProfiles: [DemoProfile, DemoProfile];
+}>();
+
+const busy = ref(false);
+const instruction = ref('Pour commencer, passez cette carte.');
+
+watch(
+    () => props.step,
+    async () => {
+        await nextTick();
+        document.querySelector<HTMLElement>('[data-test$="-heading"]')?.focus();
+    },
+);
+
+function submitStep(expected: Step): void {
+    busy.value = true;
+    router.patch(
+        advance().url,
+        { step: expected },
+        {
+            preserveScroll: true,
+            onFinish: () => {
+                busy.value = false;
+            },
+        },
+    );
+}
+
+function decide(decision: 'pass' | 'like'): void {
+    const required = props.step === 'pass_demo' ? 'pass' : 'like';
+
+    if (decision !== required) {
+        instruction.value =
+            required === 'pass'
+                ? 'Pour commencer, passez cette carte.'
+                : 'Indiquez maintenant votre intérêt.';
+
+        return;
+    }
+
+    instruction.value =
+        required === 'pass'
+            ? 'Indiquez maintenant votre intérêt.'
+            : 'Un match fictif va apparaître.';
+    submitStep(props.step);
+}
+
+function post(url: string): void {
+    busy.value = true;
+    router.post(
+        url,
+        {},
+        {
+            onFinish: () => {
+                busy.value = false;
+            },
+        },
+    );
+}
+</script>
+
+<template>
+    <Head title="Démonstration" />
+    <main
+        class="mx-auto flex min-h-full w-full max-w-2xl flex-col items-center gap-5 overflow-y-auto px-4 py-[max(1rem,env(safe-area-inset-top))] sm:px-6"
+    >
+        <header class="flex w-full items-start justify-between gap-3">
+            <div class="space-y-1">
+                <Badge>Démonstration</Badge>
+                <h1 class="text-2xl font-semibold tracking-tight">
+                    Découvrez le fonctionnement
+                </h1>
+            </div>
+            <Button as-child variant="ghost" size="sm">
+                <Link :href="discovery()">Quitter</Link>
+            </Button>
+        </header>
+
+        <p class="sr-only" aria-live="polite">{{ instruction }}</p>
+        <p
+            v-if="step === 'pass_demo' || step === 'like_demo'"
+            class="w-full rounded-2xl bg-secondary px-4 py-3 text-center font-medium"
+            aria-live="polite"
+        >
+            {{
+                step === 'pass_demo'
+                    ? 'Pour commencer, passez cette carte.'
+                    : 'Indiquez maintenant votre intérêt.'
+            }}
+        </p>
+
+        <DemoSwipeCard
+            v-if="step === 'pass_demo'"
+            :profile="demoProfiles[0]"
+            required-decision="pass"
+            :locked="busy"
+            @pass="decide('pass')"
+            @like="decide('like')"
+        />
+        <DemoSwipeCard
+            v-else-if="step === 'like_demo'"
+            :profile="demoProfiles[1]"
+            required-decision="like"
+            :locked="busy"
+            @pass="decide('pass')"
+            @like="decide('like')"
+        />
+        <DemoMatch
+            v-else-if="step === 'match_demo'"
+            :display-name="demoProfiles[1].displayName"
+            :locked="busy"
+            @open-conversation="submitStep('match_demo')"
+        />
+        <DemoConversation
+            v-else
+            :display-name="demoProfiles[1].displayName"
+            :locked="busy"
+            @complete="post(complete().url)"
+        />
+
+        <footer
+            class="flex w-full flex-wrap justify-center gap-2 border-t pt-4"
+        >
+            <Button
+                v-if="resumable"
+                type="button"
+                variant="outline"
+                :disabled="busy"
+                @click="post(restart().url)"
+            >
+                Recommencer
+            </Button>
+            <Button
+                type="button"
+                variant="ghost"
+                :disabled="busy"
+                @click="post(skip().url)"
+            >
+                Ignorer le tutoriel
+            </Button>
+        </footer>
+    </main>
+</template>
