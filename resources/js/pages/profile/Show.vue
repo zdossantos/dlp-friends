@@ -10,8 +10,9 @@ import {
     Sparkles,
 } from '@lucide/vue';
 import { computed } from 'vue';
-import { Badge } from '@/components/ui/badge';
+import ProfilePresentation from '@/components/profile/ProfilePresentation.vue';
 import { Button } from '@/components/ui/button';
+import { useTranslations } from '@/composables/useTranslations';
 import { dashboard, logout } from '@/routes';
 import { edit as editAccount } from '@/routes/account';
 import { edit as editProfile, show } from '@/routes/member-profile';
@@ -19,6 +20,7 @@ import type { Profile, VisitFrequency } from '@/types';
 
 const props = defineProps<{ profile: Profile; age: number }>();
 const page = usePage();
+const { t } = useTranslations();
 
 const isAdmin = computed(() =>
     page.props.auth.user.roles.some((role) => role.name === 'admin'),
@@ -30,6 +32,12 @@ const frequencyLabels: Record<VisitFrequency, string> = {
     often: 'Souvent',
     very_often: 'Très souvent',
 };
+
+const visitFrequency = computed(() =>
+    props.profile.visit_frequency
+        ? frequencyLabels[props.profile.visit_frequency]
+        : 'Fréquence non renseignée',
+);
 
 function handleLogout(): void {
     router.clearHistory();
@@ -48,126 +56,96 @@ defineOptions({
         class="mx-auto flex h-full min-h-0 w-full max-w-lg overflow-visible px-4 pt-[max(0.75rem,env(safe-area-inset-top))] pb-4 sm:px-6 sm:pt-6"
     >
         <section
+            v-if="profile.avatar"
             data-test="profile-card"
-            class="flex h-full max-h-full w-full flex-col overflow-hidden rounded-[2rem] border border-border/70 bg-card shadow-xl shadow-primary/10"
+            class="h-full max-h-full w-full"
         >
-            <div
-                v-if="profile.avatar"
-                data-test="profile-avatar-hero"
-                class="relative flex h-[clamp(15.5rem,34svh,17.5rem)] shrink-0 items-end justify-center overflow-hidden px-6 pt-14 sm:h-80"
-                :style="{
-                    backgroundImage: `linear-gradient(145deg, ${profile.avatar.primary_color}, ${profile.avatar.secondary_color})`,
-                }"
+            <ProfilePresentation
+                :avatar="profile.avatar"
+                :display-name="profile.display_name"
+                :age-label="t('blocking.age', { age })"
+                :bio="profile.bio || t('blocking.empty_bio')"
+                :visit-frequency="visitFrequency"
+                :interests="profile.interests ?? []"
+                :about-label="t('blocking.about')"
+                :interests-label="t('blocking.interests')"
+                :visit-frequency-label="t('blocking.visit_frequency')"
+                class="h-full"
             >
-                <div
-                    class="absolute inset-0 bg-[radial-gradient(circle_at_70%_20%,rgba(255,255,255,.5),transparent_35%),radial-gradient(circle_at_15%_70%,rgba(255,255,255,.22),transparent_34%)]"
-                />
-                <div
-                    class="absolute top-3 right-3 z-30 flex gap-2"
-                    aria-label="Actions du profil"
-                >
-                    <Button
-                        as-child
-                        variant="secondary"
-                        size="icon"
-                        class="size-10 rounded-full border border-white/50 bg-background/90 shadow-lg backdrop-blur"
-                    >
-                        <Link :href="editAccount()" aria-label="Réglages">
-                            <Settings class="size-5" aria-hidden="true" />
-                        </Link>
-                    </Button>
-                    <Button
-                        v-if="isAdmin"
-                        as-child
-                        variant="secondary"
-                        size="icon"
-                        class="size-10 rounded-full border border-white/50 bg-background/90 shadow-lg backdrop-blur"
-                    >
-                        <Link :href="dashboard()" aria-label="Administration">
-                            <LayoutDashboard
-                                class="size-5"
-                                aria-hidden="true"
-                            />
-                        </Link>
-                    </Button>
-                    <Button
-                        as-child
-                        variant="secondary"
-                        size="icon"
-                        class="size-10 rounded-full border border-white/50 bg-background/90 shadow-lg backdrop-blur"
-                    >
-                        <Link
-                            :href="logout()"
-                            as="button"
-                            aria-label="Se déconnecter"
-                            @click="handleLogout"
+                <template #hero-actions>
+                    <div class="flex gap-2" aria-label="Actions du profil">
+                        <Button
+                            as-child
+                            variant="secondary"
+                            size="icon"
+                            class="size-10 rounded-full border border-white/50 bg-background/90 shadow-lg backdrop-blur"
                         >
-                            <LogOut class="size-5" aria-hidden="true" />
-                        </Link>
-                    </Button>
-                </div>
-                <div
-                    class="absolute right-[8%] bottom-[12%] size-32 rounded-full bg-white/20 blur-3xl"
-                    aria-hidden="true"
-                />
-                <img
-                    :src="profile.avatar.image_url"
-                    :alt="`Avatar ${profile.avatar.name}`"
-                    class="relative z-20 max-h-[17rem] w-full object-contain drop-shadow-2xl sm:max-h-[19rem]"
-                    data-test="profile-avatar"
-                />
-            </div>
-
-            <div
-                data-test="profile-information-sheet"
-                class="relative z-20 -mt-6 min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-contain rounded-t-[2rem] bg-card p-4 sm:p-6"
-            >
-                <div
-                    class="flex flex-col justify-between gap-3 sm:flex-row sm:items-start"
-                >
-                    <div>
-                        <div class="mb-2 flex flex-wrap items-center gap-2">
-                            <h1 class="text-3xl font-semibold tracking-tight">
-                                {{ profile.display_name }}
-                            </h1>
-                            <Badge
-                                class="rounded-full px-3 py-1"
-                                variant="secondary"
-                                >{{ age }} ans</Badge
+                            <Link :href="editAccount()" aria-label="Réglages">
+                                <Settings class="size-5" aria-hidden="true" />
+                            </Link>
+                        </Button>
+                        <Button
+                            v-if="isAdmin"
+                            as-child
+                            variant="secondary"
+                            size="icon"
+                            class="size-10 rounded-full border border-white/50 bg-background/90 shadow-lg backdrop-blur"
+                        >
+                            <Link
+                                :href="dashboard()"
+                                aria-label="Administration"
                             >
-                        </div>
-                        <div class="flex flex-wrap gap-2 text-sm">
-                            <span
-                                class="inline-flex items-center gap-2 rounded-full bg-muted px-3 py-1.5 font-medium"
-                            >
-                                <Eye
-                                    v-if="profile.visibility === 'visible'"
-                                    class="size-4 text-primary"
+                                <LayoutDashboard
+                                    class="size-5"
                                     aria-hidden="true"
                                 />
-                                <EyeOff
-                                    v-else
-                                    class="size-4 text-primary"
-                                    aria-hidden="true"
-                                />
-                                {{
-                                    profile.visibility === 'visible'
-                                        ? 'Visible'
-                                        : 'Masqué'
-                                }}
-                            </span>
-                            <span
-                                class="inline-flex items-center gap-2 rounded-full bg-secondary px-3 py-1.5 font-medium text-secondary-foreground"
+                            </Link>
+                        </Button>
+                        <Button
+                            as-child
+                            variant="secondary"
+                            size="icon"
+                            class="size-10 rounded-full border border-white/50 bg-background/90 shadow-lg backdrop-blur"
+                        >
+                            <Link
+                                :href="logout()"
+                                as="button"
+                                aria-label="Se déconnecter"
+                                @click="handleLogout"
                             >
-                                <Sparkles class="size-4" aria-hidden="true" />
-                                {{
-                                    frequencyLabels[
-                                        props.profile.visit_frequency!
-                                    ]
-                                }}
-                            </span>
-                        </div>
+                                <LogOut class="size-5" aria-hidden="true" />
+                            </Link>
+                        </Button>
                     </div>
+                </template>
+                <template #badges>
+                    <span
+                        class="inline-flex items-center gap-2 rounded-full bg-muted px-3 py-1.5 text-sm font-medium"
+                    >
+                        <Eye
+                            v-if="profile.visibility === 'visible'"
+                            class="size-4 text-primary"
+                            aria-hidden="true"
+                        />
+                        <EyeOff
+                            v-else
+                            class="size-4 text-primary"
+                            aria-hidden="true"
+                        />
+                        {{
+                            profile.visibility === 'visible'
+                                ? 'Visible'
+                                : 'Masqué'
+                        }}
+                    </span>
+                    <span
+                        class="inline-flex items-center gap-2 rounded-full bg-secondary px-3 py-1.5 text-sm font-medium text-secondary-foreground"
+                    >
+                        <Sparkles class="size-4" aria-hidden="true" />
+                        {{ visitFrequency }}
+                    </span>
+                </template>
+                <template #summary-actions>
                     <Button
                         as-child
                         variant="outline"
@@ -178,43 +156,8 @@ defineOptions({
                             Modifier mon profil
                         </Link>
                     </Button>
-                </div>
-
-                <div v-if="profile.interests?.length">
-                    <h2
-                        data-test="profile-interests-title"
-                        class="mb-2 text-sm font-medium"
-                    >
-                        Intérêts
-                    </h2>
-                    <div class="flex flex-wrap gap-2">
-                        <Badge
-                            v-for="interest in profile.interests"
-                            :key="interest.id"
-                            variant="secondary"
-                            class="rounded-full px-3 py-1.5"
-                        >
-                            {{ interest.name }}
-                        </Badge>
-                    </div>
-                </div>
-                <div>
-                    <h2
-                        data-test="profile-about-title"
-                        class="mb-1 text-sm font-medium"
-                    >
-                        À propos
-                    </h2>
-                    <p
-                        class="leading-5 whitespace-pre-line text-muted-foreground"
-                    >
-                        {{
-                            profile.bio ||
-                            'Aucune bio renseignée pour le moment.'
-                        }}
-                    </p>
-                </div>
-            </div>
+                </template>
+            </ProfilePresentation>
         </section>
     </main>
 </template>

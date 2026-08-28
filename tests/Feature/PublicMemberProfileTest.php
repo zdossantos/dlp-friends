@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Block;
+use App\Models\MemberMatch;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
@@ -43,5 +44,25 @@ class PublicMemberProfileTest extends TestCase
 
             $this->actingAs($viewer)->get(route('members.show', $member))->assertNotFound();
         }
+    }
+
+    public function test_a_profile_opened_from_a_shared_conversation_returns_to_that_conversation(): void
+    {
+        config()->set('inertia.testing.ensure_pages_exist', false);
+        $viewer = User::factory()->withProfile()->create();
+        $member = User::factory()->withProfile()->create();
+        $conversation = MemberMatch::factory()->create([
+            'user_low_id' => min($viewer->id, $member->id),
+            'user_high_id' => max($viewer->id, $member->id),
+        ])->conversation()->create();
+
+        $this->actingAs($viewer)
+            ->get(route('members.show', [
+                'member' => $member,
+                'conversation' => $conversation->id,
+            ]))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('backHref', route('conversations.show', $conversation, absolute: false)));
     }
 }

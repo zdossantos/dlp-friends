@@ -37,7 +37,7 @@ test('a member blocks another member from the public profile', function () {
     ]);
 });
 
-test('a conversation links to the public profile and exposes the same block action', function () {
+test('a conversation links to the public profile without duplicating its block action', function () {
     $member = blockingBrowserMember('Alice');
     $peer = blockingBrowserMember('Basile');
     $conversation = MemberMatch::factory()->create([
@@ -47,7 +47,29 @@ test('a conversation links to the public profile and exposes the same block acti
     $this->actingAs($member);
 
     visit(route('conversations.show', $conversation))->on()->mobile()
-        ->assertPresent("a[href='/members/{$peer->id}']")
-        ->assertPresent('[data-test="block-member-trigger"]')
+        ->assertPresent("a[href='/members/{$peer->id}?conversation={$conversation->id}']")
+        ->assertNotPresent('[data-test="block-member-trigger"]')
+        ->assertNoJavaScriptErrors();
+});
+
+test('public and personal profiles share the compact profile presentation', function () {
+    $viewer = blockingBrowserMember('Alice');
+    $member = blockingBrowserMember('Basile');
+    $this->actingAs($viewer);
+
+    $page = visit(route('members.show', $member))->on()->mobile()
+        ->assertPresent('[data-test="profile-presentation"]')
+        ->assertPresent('[data-test="profile-back-action"]')
+        ->assertScript(
+            "document.querySelector('[data-test=profile-presentation-hero]').getBoundingClientRect().height <= 224",
+            true,
+        );
+
+    $page->navigate(route('member-profile.show'))
+        ->assertPresent('[data-test="profile-presentation"]')
+        ->assertScript(
+            "document.querySelector('[data-test=profile-presentation-hero]').getBoundingClientRect().height <= 224",
+            true,
+        )
         ->assertNoJavaScriptErrors();
 });

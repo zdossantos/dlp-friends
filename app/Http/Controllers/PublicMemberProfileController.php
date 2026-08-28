@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Conversation;
 use App\Models\Interest;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -21,6 +22,7 @@ final class PublicMemberProfileController extends Controller
         abort_if($avatar === null, 404);
 
         return Inertia::render('Members/Show', [
+            'backHref' => $this->backHref($request, $member),
             'member' => [
                 'id' => $member->id,
                 'display_name' => $profile->display_name,
@@ -42,5 +44,29 @@ final class PublicMemberProfileController extends Controller
                     ])->values()->all(),
             ],
         ]);
+    }
+
+    private function backHref(Request $request, User $member): string
+    {
+        $conversationId = $request->integer('conversation');
+
+        if ($conversationId === 0) {
+            return route('discovery.index', absolute: false);
+        }
+
+        $conversation = Conversation::query()
+            ->with('memberMatch')
+            ->find($conversationId);
+
+        if ($conversation === null
+            || ! Gate::forUser($request->user())->allows('view', $conversation)
+            || ! in_array($member->id, [
+                $conversation->memberMatch->user_low_id,
+                $conversation->memberMatch->user_high_id,
+            ], true)) {
+            return route('discovery.index', absolute: false);
+        }
+
+        return route('conversations.show', $conversation, absolute: false);
     }
 }

@@ -77,8 +77,11 @@ const timelineMessages = computed<PaginatedMessages>(() => ({
         <ConversationHeader
             :participant="participant"
             :back-href="conversationsIndex().url"
-            :profile-href="showMember(participant.id).url"
-            :blockable="conversation.archived_at === null"
+            :profile-href="
+                showMember(participant.id, {
+                    query: { conversation: conversation.id },
+                }).url
+            "
         />
 
         <RealtimeStatus

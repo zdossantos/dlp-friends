@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { Link } from '@inertiajs/vue3';
 import { ArrowLeft } from '@lucide/vue';
-import BlockMemberDialog from '@/components/members/BlockMemberDialog.vue';
 import AvatarPortrait from '@/components/profile/AvatarPortrait.vue';
 import { useTranslations } from '@/composables/useTranslations';
 import type { ConversationParticipant } from '@/types';
@@ -10,7 +9,6 @@ defineProps<{
     participant: ConversationParticipant;
     backHref?: string;
     profileHref?: string;
-    blockable?: boolean;
 }>();
 
 const { t } = useTranslations();
@@ -61,6 +59,5 @@ const { t } = useTranslations();
                 {{ t('blocking.private_conversation') }}
             </p>
         </div>
-        <BlockMemberDialog v-if="blockable" :member-id="participant.id" />
     </header>
 </template>

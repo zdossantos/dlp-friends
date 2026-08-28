@@ -1,11 +1,9 @@
 <script setup lang="ts">
-import { Link } from '@inertiajs/vue3';
 import { Sparkles, Users, X } from '@lucide/vue';
 import { computed, onBeforeUnmount, ref, watch } from 'vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { useTranslations } from '@/composables/useTranslations';
 import type {
     DiscoveryCardProfile,
     SwipeDecision,
@@ -13,6 +11,7 @@ import type {
 } from '@/types';
 
 const SWIPE_THRESHOLD_PX = 72;
+const TAP_SLOP_PX = 8;
 const SWIPE_EXIT_DURATION_MS = 280;
 type AllowedDecision = SwipeDecision | 'both';
 
@@ -28,8 +27,7 @@ const props = withDefaults(
     { allowedDecision: 'both', compact: false, preview: false },
 );
 
-const emit = defineEmits<{ like: []; pass: [] }>();
-const { t } = useTranslations();
+const emit = defineEmits<{ like: []; pass: []; open: [] }>();
 
 const visitFrequencyLabels: Record<VisitFrequency, string> = {
     rarely: 'Rarement',
@@ -45,6 +43,7 @@ const pointerStart = ref<{
 } | null>(null);
 const dragOffset = ref({ x: 0, y: 0 });
 const isDragging = ref(false);
+const suppressNextClick = ref(false);
 const exitDirection = ref<-1 | 0 | 1>(0);
 let exitTimer: number | undefined;
 
@@ -157,6 +156,11 @@ function handlePointerMove(event: PointerEvent) {
 
     const rawDeltaX = event.clientX - start.x;
     const deltaY = event.clientY - start.y;
+
+    if (Math.hypot(rawDeltaX, deltaY) > TAP_SLOP_PX) {
+        suppressNextClick.value = true;
+    }
+
     const deltaX =
         (rawDeltaX > 0 && !canDecide('like')) ||
         (rawDeltaX < 0 && !canDecide('pass'))
@@ -168,6 +172,26 @@ function handlePointerMove(event: PointerEvent) {
     if (Math.abs(deltaX) > Math.abs(deltaY)) {
         event.preventDefault();
     }
+}
+
+function openPublicProfile(event: MouseEvent) {
+    if (
+        !props.publicProfileHref ||
+        props.preview ||
+        (event.target as HTMLElement | null)?.closest(
+            'a, button, input, select, textarea',
+        )
+    ) {
+        return;
+    }
+
+    if (suppressNextClick.value) {
+        suppressNextClick.value = false;
+
+        return;
+    }
+
+    emit('open');
 }
 
 function forgetPointerStart(event?: PointerEvent) {
@@ -242,11 +266,13 @@ watch(
         aria-describedby="swipe-instructions"
         @keydown.left.self.prevent.stop="decide('pass')"
         @keydown.right.self.prevent.stop="decide('like')"
+        @keydown.enter.self.prevent="publicProfileHref && emit('open')"
         @pointerdown="rememberPointerStart"
         @pointermove="handlePointerMove"
         @pointerup="handlePointerEnd"
         @pointercancel="resetCard"
         @lostpointercapture="forgetPointerStart"
+        @click="openPublicProfile"
     >
         <div
             data-test="discovery-avatar-hero"
@@ -385,18 +411,6 @@ watch(
                     et droite.
                 </template>
             </p>
-            <Button
-                v-if="publicProfileHref && !preview"
-                as-child
-                variant="ghost"
-                class="w-full rounded-full"
-                @pointerdown.stop
-                @pointerup.stop
-            >
-                <Link :href="publicProfileHref" @click.stop>
-                    {{ t('blocking.view_profile') }}
-                </Link>
-            </Button>
             <div
                 :class="[
                     'grid grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)]',

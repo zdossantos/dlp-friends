@@ -226,6 +226,10 @@ defineOptions({
                     :public-profile-href="showMember(profile.userId).url"
                     @like="index === 0 && submit('like')"
                     @pass="index === 0 && submit('pass')"
+                    @open="
+                        index === 0 &&
+                        router.visit(showMember(profile.userId).url)
+                    "
                 />
             </div>
         </section>

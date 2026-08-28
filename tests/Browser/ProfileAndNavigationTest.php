@@ -299,11 +299,11 @@ test('a completed member sees their public profile and member actions', function
             true,
         )
         ->assertScript(
-            "document.querySelector('[data-test=profile-interests-title]').getBoundingClientRect().top < document.querySelector('[data-test=profile-about-title]').getBoundingClientRect().top",
+            "document.querySelector('[data-test=profile-about-title]').getBoundingClientRect().top < document.querySelector('[data-test=profile-interests-title]').getBoundingClientRect().top",
             true,
         )
         ->assertScript(
-            "document.querySelector('[data-test=profile-avatar-hero]').getBoundingClientRect().height >= 240 && document.querySelector('[data-test=profile-avatar-hero]').getBoundingClientRect().height <= 290",
+            "document.querySelector('[data-test=profile-avatar-hero]').getBoundingClientRect().height >= 176 && document.querySelector('[data-test=profile-avatar-hero]').getBoundingClientRect().height <= 224",
             true,
         )
         ->assertScript(
