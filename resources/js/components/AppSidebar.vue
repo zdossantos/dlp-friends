@@ -1,6 +1,12 @@
 <script setup lang="ts">
 import { Link } from '@inertiajs/vue3';
-import { Images, LayoutDashboard, Tags, UserRound } from '@lucide/vue';
+import {
+    GraduationCap,
+    Images,
+    LayoutDashboard,
+    Tags,
+    UserRound,
+} from '@lucide/vue';
 import AppLogo from '@/components/AppLogo.vue';
 import NavMain from '@/components/NavMain.vue';
 import NavUser from '@/components/NavUser.vue';
@@ -16,6 +22,7 @@ import {
 import { dashboard } from '@/routes';
 import { index as avatarIndex } from '@/routes/admin/avatars';
 import { index as interestIndex } from '@/routes/admin/interests';
+import { index as onboardingIndex } from '@/routes/admin/onboarding';
 import { show as showProfile } from '@/routes/member-profile';
 import type { NavItem } from '@/types';
 
@@ -34,6 +41,11 @@ const mainNavItems: NavItem[] = [
         title: 'Avatars',
         href: avatarIndex(),
         icon: Images,
+    },
+    {
+        title: 'Tutoriel',
+        href: onboardingIndex(),
+        icon: GraduationCap,
     },
     {
         title: 'Retour au profil',

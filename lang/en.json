@@ -19,6 +19,8 @@
     "Avatar archivé.": "Avatar archived.",
     "Un avatar porte déjà ce nom.": "An avatar already uses this name.",
     "Cet avatar est encore utilisé par un profil.": "This avatar is still used by a profile.",
+    "Cet avatar est utilisé par le tutoriel. Remplacez-le dans la configuration avant de continuer.": "This avatar is used by the tutorial. Replace it in the configuration before continuing.",
+    "Configuration du tutoriel enregistrée.": "Tutorial configuration saved.",
     "Compte mis à jour.": "Account updated.",
     "Password updated.": "Password updated."
 }

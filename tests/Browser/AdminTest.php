@@ -1,13 +1,47 @@
 <?php
 
+use App\Enums\ProductOnboardingStatus;
+use App\Enums\ProductOnboardingStep;
 use App\Models\Avatar;
 use App\Models\Interest;
 use App\Models\InterestCategory;
 use App\Models\InterestSetting;
+use App\Models\ProductOnboarding;
+use App\Models\ProductOnboardingSetting;
 use App\Models\User;
 use Illuminate\Contracts\Debug\ExceptionHandler as ExceptionHandlerContract;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 use Illuminate\Support\Facades\Storage;
+
+test('admin configures tutorial avatars and sees member progress', function () {
+    [$passAvatar, $likeAvatar] = Avatar::factory()->count(2)->create();
+    ProductOnboardingSetting::query()->create([
+        'id' => ProductOnboardingSetting::SINGLETON_ID,
+        'pass_avatar_id' => $passAvatar->id,
+        'like_avatar_id' => $likeAvatar->id,
+    ]);
+    $member = User::factory()->withProfile()->create(['email' => 'tutorial@example.test']);
+    ProductOnboarding::factory()->for($member)->create([
+        'status' => ProductOnboardingStatus::InProgress,
+        'step' => ProductOnboardingStep::LikeDemo,
+    ]);
+    $admin = User::factory()->withProfile()->admin()->create();
+    $this->actingAs($admin);
+
+    visit('/admin/onboarding')
+        ->assertSee('Tutoriel produit')
+        ->assertSee('Taux de complétion')
+        ->assertSee('tutorial@example.test')
+        ->assertSee('Carte à liker')
+        ->assertValue('#pass_avatar_id', (string) $passAvatar->id)
+        ->assertValue('#like_avatar_id', (string) $likeAvatar->id)
+        ->assertNoJavaScriptErrors();
+
+    visit('/admin/avatars')
+        ->assertDisabled("[aria-label=\"Archiver {$passAvatar->name}\"]")
+        ->assertDisabled("[aria-label=\"Supprimer {$likeAvatar->name}\"]")
+        ->assertSee('Utilisé par le tutoriel');
+});
 
 test('the avatar catalog renders images color gradients and admin controls', function () {
     Storage::fake('local');

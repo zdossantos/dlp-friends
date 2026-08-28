@@ -50,6 +50,7 @@ class ManageAvatarCatalogTest extends TestCase
                         'is_active' => true,
                         'sort_order' => 10,
                         'profiles_count' => 0,
+                        'used_by_onboarding' => false,
                     ],
                     [
                         'id' => $later->id,
@@ -60,6 +61,7 @@ class ManageAvatarCatalogTest extends TestCase
                         'is_active' => false,
                         'sort_order' => 20,
                         'profiles_count' => 0,
+                        'used_by_onboarding' => false,
                     ],
                 ]));
     }

@@ -39,6 +39,7 @@ type AdminAvatar = AvatarOption & {
     is_active: boolean;
     sort_order: number;
     profiles_count: number;
+    used_by_onboarding: boolean;
 };
 
 defineProps<{ avatars: AdminAvatar[] }>();
@@ -341,7 +342,11 @@ defineOptions({
                                 <Button
                                     type="submit"
                                     variant="outline"
-                                    :disabled="processing"
+                                    :disabled="
+                                        processing ||
+                                        (avatar.is_active &&
+                                            avatar.used_by_onboarding)
+                                    "
                                     :aria-label="`${avatar.is_active ? 'Archiver' : 'Réactiver'} ${avatar.name}`"
                                 >
                                     {{
@@ -356,7 +361,10 @@ defineOptions({
                                 <DialogTrigger as-child>
                                     <Button
                                         variant="destructive"
-                                        :disabled="avatar.profiles_count > 0"
+                                        :disabled="
+                                            avatar.profiles_count > 0 ||
+                                            avatar.used_by_onboarding
+                                        "
                                         :aria-label="`Supprimer ${avatar.name}`"
                                     >
                                         Supprimer
@@ -410,6 +418,14 @@ defineOptions({
                                     : 'profils utilisent'
                             }}
                             cet avatar.
+                        </p>
+                        <p
+                            v-if="avatar.used_by_onboarding"
+                            class="text-xs font-medium text-primary"
+                        >
+                            Utilisé par le tutoriel : remplacez-le dans sa
+                            configuration avant de l’archiver ou de le
+                            supprimer.
                         </p>
                     </div>
                 </CardContent>
