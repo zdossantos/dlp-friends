@@ -22,6 +22,8 @@ import type {
 
 type Option = { value: string; label: string };
 
+const profileStepLabels = ['Avatar', 'Identité', 'Affinités', 'Aperçu'] as const;
+
 const props = defineProps<{
     profile: Profile | null;
     action: string;
@@ -142,6 +144,7 @@ function showInvalidStep(errors: Record<string, string>): void {
         @error="showInvalidStep"
     >
         <ProfileFormStepper
+            :labels="profileStepLabels"
             :current-step="currentStep"
             :furthest-step="furthestStep"
             @select="goTo"
