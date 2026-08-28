@@ -27,7 +27,9 @@ function selectStep(step: number): void {
         </div>
         <ol
             class="grid gap-2"
-            :style="{ gridTemplateColumns: `repeat(${labels.length}, minmax(0, 1fr))` }"
+            :style="{
+                gridTemplateColumns: `repeat(${labels.length}, minmax(0, 1fr))`,
+            }"
         >
             <li v-for="(label, index) in labels" :key="label">
                 <button

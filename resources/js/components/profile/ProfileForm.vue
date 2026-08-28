@@ -22,7 +22,12 @@ import type {
 
 type Option = { value: string; label: string };
 
-const profileStepLabels = ['Avatar', 'Identité', 'Affinités', 'Aperçu'] as const;
+const profileStepLabels = [
+    'Avatar',
+    'Identité',
+    'Affinités',
+    'Aperçu',
+] as const;
 
 const props = defineProps<{
     profile: Profile | null;

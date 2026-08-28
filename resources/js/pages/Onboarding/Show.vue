@@ -65,7 +65,10 @@ const currentRegistrationStep = computed(
         })[props.step],
 );
 const swipeProfiles = computed<[DiscoveryCardProfile, DiscoveryCardProfile]>(
-    () => [toSwipeProfile(props.demoProfiles[0], 28), toSwipeProfile(props.demoProfiles[1], 31)],
+    () => [
+        toSwipeProfile(props.demoProfiles[0], 28),
+        toSwipeProfile(props.demoProfiles[1], 31),
+    ],
 );
 const tutorialParticipant = computed<ConversationParticipant>(() => ({
     id: 0,
@@ -79,7 +82,10 @@ const tutorialParticipant = computed<ConversationParticipant>(() => ({
     },
 }));
 
-function toSwipeProfile(profile: DemoProfile, age: number): DiscoveryCardProfile {
+function toSwipeProfile(
+    profile: DemoProfile,
+    age: number,
+): DiscoveryCardProfile {
     return {
         displayName: profile.displayName,
         age,
@@ -107,7 +113,8 @@ const stepInstruction = computed<Record<Step, string>>(() => ({
         'Aimez ce profil pour indiquer que vous souhaitez faire connaissance.',
     match_demo:
         'Lorsque deux membres s’aiment mutuellement, un match amical est créé.',
-    conversation_demo: 'Envoyez un premier message pour terminer votre inscription.',
+    conversation_demo:
+        'Envoyez un premier message pour terminer votre inscription.',
 }));
 
 watch(
@@ -253,6 +260,5 @@ function completeWithMessage(content: string): Promise<ConversationMessage> {
                 :submit-message="completeWithMessage"
             />
         </section>
-
     </main>
 </template>

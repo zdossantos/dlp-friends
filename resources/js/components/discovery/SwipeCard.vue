@@ -119,7 +119,9 @@ function animateDecision(decision: SwipeDecision) {
 }
 
 function canDecide(decision: SwipeDecision): boolean {
-    return props.allowedDecision === 'both' || props.allowedDecision === decision;
+    return (
+        props.allowedDecision === 'both' || props.allowedDecision === decision
+    );
 }
 
 function rememberPointerStart(event: PointerEvent) {

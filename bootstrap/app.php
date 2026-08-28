@@ -1,7 +1,7 @@
 <?php
 
-use App\Http\Middleware\EnsureProfileIsComplete;
 use App\Http\Middleware\EnsureProductOnboardingIsComplete;
+use App\Http\Middleware\EnsureProfileIsComplete;
 use App\Http\Middleware\EnsureUserCanAccessSocialFeatures;
 use App\Http\Middleware\EnsureUserHasRole;
 use App\Http\Middleware\HandleAppearance;

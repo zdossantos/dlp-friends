@@ -25,7 +25,7 @@ class AdvanceProductOnboarding
                 return $onboarding;
             }
 
-            $onboarding ??= new ProductOnboarding(['user_id' => $user->getKey()]);
+            $onboarding = new ProductOnboarding(['user_id' => $user->getKey()]);
             $onboarding->forceFill([
                 'status' => ProductOnboardingStatus::InProgress,
                 'step' => ProductOnboardingStep::PassDemo,
