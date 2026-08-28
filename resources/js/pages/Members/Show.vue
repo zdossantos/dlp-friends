@@ -3,12 +3,17 @@ import { Head, Link } from '@inertiajs/vue3';
 import { ArrowLeft } from '@lucide/vue';
 import { computed } from 'vue';
 import BlockMemberDialog from '@/components/members/BlockMemberDialog.vue';
+import UnblockMemberButton from '@/components/members/UnblockMemberButton.vue';
 import ProfilePresentation from '@/components/profile/ProfilePresentation.vue';
 import { Button } from '@/components/ui/button';
 import { useTranslations } from '@/composables/useTranslations';
 import type { PublicMember, VisitFrequency } from '@/types';
 
-const props = defineProps<{ member: PublicMember; backHref: string }>();
+const props = defineProps<{
+    member: PublicMember;
+    backHref: string;
+    canUnblock: boolean;
+}>();
 const { t } = useTranslations();
 const frequencyKeys: Record<
     VisitFrequency,
@@ -56,7 +61,8 @@ const visitFrequency = computed(() =>
             :visit-frequency-label="t('blocking.visit_frequency')"
         >
             <template #summary-actions>
-                <BlockMemberDialog :member-id="member.id" />
+                <UnblockMemberButton v-if="canUnblock" :member-id="member.id" />
+                <BlockMemberDialog v-else :member-id="member.id" />
             </template>
         </ProfilePresentation>
     </main>

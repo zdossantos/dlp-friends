@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Block;
 use App\Models\Conversation;
 use App\Models\Interest;
 use App\Models\User;
@@ -23,6 +24,10 @@ final class PublicMemberProfileController extends Controller
 
         return Inertia::render('Members/Show', [
             'backHref' => $this->backHref($request, $member),
+            'canUnblock' => Block::query()
+                ->where('blocker_user_id', $request->user()->id)
+                ->where('blocked_user_id', $member->id)
+                ->exists(),
             'member' => [
                 'id' => $member->id,
                 'display_name' => $profile->display_name,

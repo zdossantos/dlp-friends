@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Block;
 use App\Models\MemberMatch;
 use App\Models\User;
 use Illuminate\Support\Facades\Storage;
@@ -32,6 +33,29 @@ test('a member blocks another member from the public profile', function () {
         ->assertNoJavaScriptErrors();
 
     $this->assertDatabaseHas('blocks', [
+        'blocker_user_id' => $viewer->id,
+        'blocked_user_id' => $member->id,
+    ]);
+});
+
+test('a member can view and unblock a member they blocked', function () {
+    $viewer = blockingBrowserMember('Alice');
+    $member = blockingBrowserMember('Basile');
+    Block::factory()->create([
+        'blocker_user_id' => $viewer->id,
+        'blocked_user_id' => $member->id,
+    ]);
+    $this->actingAs($viewer);
+
+    visit(route('members.show', $member))->on()->mobile()
+        ->assertPresent('[data-test="public-member-profile"]')
+        ->assertPresent('[data-test="unblock-member-trigger"]')
+        ->click('@unblock-member-trigger')
+        ->assertPathIs("/members/{$member->id}")
+        ->assertPresent('[data-test="block-member-trigger"]')
+        ->assertNoJavaScriptErrors();
+
+    $this->assertDatabaseMissing('blocks', [
         'blocker_user_id' => $viewer->id,
         'blocked_user_id' => $member->id,
     ]);

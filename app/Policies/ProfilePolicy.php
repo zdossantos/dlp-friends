@@ -16,8 +16,7 @@ class ProfilePolicy
 
     public function viewPublic(User $user, Profile $profile): bool
     {
-        return $this->isPublicTarget($user, $profile)
-            && ! $user->hasBlockedRelationshipWith($profile->user);
+        return $this->isPublicTarget($user, $profile);
     }
 
     public function block(User $user, Profile $profile): bool

@@ -30,19 +30,24 @@ class PublicMemberProfileTest extends TestCase
                 ->missing('member.birth_date'));
     }
 
-    public function test_a_block_in_either_direction_makes_the_public_profile_unavailable(): void
+    public function test_a_blocked_pair_can_still_view_the_public_profile_without_revealing_an_incoming_block(): void
     {
+        config()->set('inertia.testing.ensure_pages_exist', false);
         $viewer = User::factory()->withProfile()->create();
         $member = User::factory()->withProfile()->create();
 
-        foreach ([[$viewer, $member], [$member, $viewer]] as [$blocker, $blocked]) {
+        foreach ([[$viewer, $member, true], [$member, $viewer, false]] as [$blocker, $blocked, $canUnblock]) {
             Block::query()->delete();
             Block::factory()->create([
                 'blocker_user_id' => $blocker->id,
                 'blocked_user_id' => $blocked->id,
             ]);
 
-            $this->actingAs($viewer)->get(route('members.show', $member))->assertNotFound();
+            $this->actingAs($viewer)->get(route('members.show', $member))
+                ->assertOk()
+                ->assertInertia(fn (Assert $page) => $page
+                    ->where('member.id', $member->id)
+                    ->where('canUnblock', $canUnblock));
         }
     }
 

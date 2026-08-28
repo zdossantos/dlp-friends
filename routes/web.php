@@ -22,6 +22,7 @@ use App\Http\Controllers\MessageController;
 use App\Http\Controllers\ProductOnboardingController;
 use App\Http\Controllers\PublicMemberProfileController;
 use App\Http\Controllers\SwipeController;
+use App\Http\Controllers\UnblockMemberController;
 use Illuminate\Support\Facades\Route;
 
 Route::inertia('/', 'Welcome')->name('home');
@@ -74,6 +75,8 @@ Route::middleware(['auth', 'verified', 'social'])->group(function () {
                 ->name('members.show');
             Route::post('members/{member}/block', BlockMemberController::class)
                 ->name('members.block');
+            Route::delete('members/{member}/block', UnblockMemberController::class)
+                ->name('members.unblock');
 
             Route::get('discover', DiscoveryController::class)
                 ->name('discovery.index');

@@ -12,8 +12,8 @@ conversation est archivée et aucun nouveau message ne peut être envoyé dans u
 sens comme dans l’autre.
 
 L’interface et les réponses HTTP ne révèlent jamais lequel des deux membres a
-bloqué l’autre. Le signalement, la modération et le déblocage restent hors
-périmètre.
+bloqué l’autre. Le signalement et la modération restent hors périmètre. Un
+membre peut retirer le blocage qu’il a lui-même créé.
 
 ## Modèle de données et invariants
 
@@ -50,9 +50,9 @@ actifs.
 
 Une `UserPolicy` protège cette page. L’utilisateur cible doit être distinct du
 membre connecté, actif, majeur, avoir terminé son profil, posséder un avatar
-actif et être visible. Une paire bloquée dans l’un ou l’autre sens produit la
-même réponse introuvable qu’un profil absent ou indisponible. Le profil personnel
-existant reste accessible par sa route actuelle.
+actif et être visible. Un blocage ne masque pas le profil public : les deux
+membres peuvent continuer à le consulter sans que l’interface révèle l’auteur
+du blocage. Le profil personnel existant reste accessible par sa route actuelle.
 
 Le profil public propose « Bloquer ce membre » dans une zone secondaire. La
 conversation propose la même action dans son en-tête. Les deux surfaces ouvrent
@@ -69,7 +69,11 @@ cible sans exposer son état, autorise l’action côté serveur, puis redirige 
 la découverte avec un message flash neutre : « Ce profil n’est plus accessible. »
 
 Après succès, l’auteur quitte donc immédiatement le profil ou la conversation.
-Une répétition du POST reçoit le même résultat de succès. Une cible absente,
+Le profil reste ensuite consultable et propose à l’auteur « Débloquer ce
+membre ». Le déblocage supprime uniquement son blocage et désarchive la
+conversation existante si aucun blocage orienté ne subsiste dans la paire. Il
+ne crée jamais une nouvelle conversation. Une répétition du POST reçoit le même
+résultat de succès. Une cible absente,
 l’auto-blocage ou une cible non autorisée emploie une réponse générique qui ne
 permet pas de déduire un blocage antérieur.
 
@@ -121,8 +125,10 @@ ne distingue un archivage causé par un blocage d’un autre archivage futur.
 - deux appels concurrents sans doublon ni interblocage ;
 - archivage immédiat de la conversation existante et succès sans conversation ;
 - exclusion réciproque des suggestions ;
-- autorisation du profil public et réponse identique pour un profil bloqué ou
-  indisponible ;
+- consultation du profil public dans les deux sens d’un blocage sans révéler
+  son auteur ;
+- suppression du blocage de l’auteur et désarchivage uniquement lorsque plus
+  aucun blocage ne subsiste ;
 - consultation de l’historique archivé par les deux membres ;
 - refus de tout nouveau message dans les deux sens, y compris face à une course
   blocage/envoi ;
@@ -146,4 +152,3 @@ ciblés du dépôt. Ils couvrent :
 Exécuter les tests ciblés pendant le cycle rouge–vert–refactorisation, puis les
 contrôles PHP, frontend, analyse statique, formatage et build concernés avant de
 considérer l’issue terminée.
-
