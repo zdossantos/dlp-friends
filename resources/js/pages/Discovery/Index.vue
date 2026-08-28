@@ -16,6 +16,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { show as showConversation } from '@/routes/conversations';
 import { swipe } from '@/routes/discovery';
 import { show as showProfile } from '@/routes/member-profile';
+import { show as showMember } from '@/routes/members';
 import type { DiscoveryMatch, DiscoveryProfile, SwipeDecision } from '@/types';
 
 const props = defineProps<{
@@ -222,8 +223,13 @@ defineOptions({
                     :profile="profile"
                     :locked="isSubmitting || index > 0"
                     :preview="index > 0"
+                    :public-profile-href="showMember(profile.userId).url"
                     @like="index === 0 && submit('like')"
                     @pass="index === 0 && submit('pass')"
+                    @open="
+                        index === 0 &&
+                        router.visit(showMember(profile.userId).url)
+                    "
                 />
             </div>
         </section>

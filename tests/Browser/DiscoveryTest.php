@@ -252,6 +252,24 @@ test('pointer gestures follow the card and enforce the horizontal threshold', fu
     ]);
 });
 
+test('a tap opens the profile while a horizontal drag keeps the swipe interaction', function () {
+    $actor = discoveryMember('Alice');
+    $target = discoveryMember('Basile');
+    $this->actingAs($actor);
+
+    $page = visit('/discover')->on()->mobile();
+    $card = "document.querySelector('[data-test=discovery-card]')";
+
+    $page->click('[data-test="discovery-avatar-hero"]')
+        ->assertPathIs("/members/{$target->id}");
+
+    $page->navigate('/discover');
+    $page->script("{$card}.setPointerCapture = () => {}; {$card}.hasPointerCapture = () => false; {$card}.releasePointerCapture = () => {};");
+    $page->script("{$card}.dispatchEvent(new PointerEvent('pointerdown', { pointerId: 21, isPrimary: true, clientX: 100, clientY: 100, bubbles: true })); {$card}.dispatchEvent(new PointerEvent('pointermove', { pointerId: 21, clientX: 140, clientY: 100, bubbles: true })); {$card}.dispatchEvent(new PointerEvent('pointerup', { pointerId: 21, clientX: 140, clientY: 100, bubbles: true })); {$card}.click();");
+    $page->assertPathIs('/discover');
+    $this->assertDatabaseCount('swipes', 0);
+});
+
 test('vertical and cancelled pointer gestures return the card to its centre', function () {
     $actor = discoveryMember('Alice');
     discoveryMember('Basile');

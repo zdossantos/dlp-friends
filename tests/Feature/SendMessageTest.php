@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Actions\SendMessage;
+use App\Models\Block;
 use App\Models\Conversation;
 use App\Models\MemberMatch;
 use App\Models\User;
@@ -54,6 +55,18 @@ class SendMessageTest extends TestCase
         foreach ([$lowUser, $highUser] as $member) {
             $this->assertSendingIsForbidden($member, $conversation);
         }
+    }
+
+    public function test_a_block_in_either_direction_rejects_messages_from_both_members(): void
+    {
+        [$lowUser, $highUser, $conversation] = $this->conversationMembers();
+        Block::factory()->create([
+            'blocker_user_id' => $highUser->id,
+            'blocked_user_id' => $lowUser->id,
+        ]);
+
+        $this->assertSendingIsForbidden($lowUser, $conversation);
+        $this->assertSendingIsForbidden($highUser, $conversation);
     }
 
     /** @return array{User, User, Conversation} */

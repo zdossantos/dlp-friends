@@ -10,6 +10,7 @@ use App\Http\Controllers\Admin\InterestSettingController;
 use App\Http\Controllers\Admin\InterestStatusController;
 use App\Http\Controllers\Admin\ProductOnboardingController as AdminProductOnboardingController;
 use App\Http\Controllers\AvatarImageController;
+use App\Http\Controllers\BlockMemberController;
 use App\Http\Controllers\ConversationController;
 use App\Http\Controllers\ConversationIndexController;
 use App\Http\Controllers\ConversationReadController;
@@ -19,7 +20,9 @@ use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\MemberProfileController;
 use App\Http\Controllers\MessageController;
 use App\Http\Controllers\ProductOnboardingController;
+use App\Http\Controllers\PublicMemberProfileController;
 use App\Http\Controllers\SwipeController;
+use App\Http\Controllers\UnblockMemberController;
 use Illuminate\Support\Facades\Route;
 
 Route::inertia('/', 'Welcome')->name('home');
@@ -67,6 +70,13 @@ Route::middleware(['auth', 'verified', 'social'])->group(function () {
                 ->name('member-profile.edit');
             Route::patch('profile', [MemberProfileController::class, 'update'])
                 ->name('member-profile.update');
+
+            Route::get('members/{member}', PublicMemberProfileController::class)
+                ->name('members.show');
+            Route::post('members/{member}/block', BlockMemberController::class)
+                ->name('members.block');
+            Route::delete('members/{member}/block', UnblockMemberController::class)
+                ->name('members.unblock');
 
             Route::get('discover', DiscoveryController::class)
                 ->name('discovery.index');
