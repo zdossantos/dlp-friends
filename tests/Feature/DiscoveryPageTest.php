@@ -5,7 +5,6 @@ namespace Tests\Feature;
 use App\Enums\SwipeDecision;
 use App\Models\Interest;
 use App\Models\MemberMatch;
-use App\Models\Profile;
 use App\Models\Swipe;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -189,10 +188,6 @@ class DiscoveryPageTest extends TestCase
 
     private function member(): User
     {
-        $user = User::factory()->create();
-
-        Profile::factory()->complete()->for($user)->create();
-
-        return $user;
+        return User::factory()->withProfile()->create();
     }
 }

@@ -18,6 +18,13 @@ export type DiscoveryProfile = {
     score: number;
 };
 
+export type DiscoveryCardProfile = Omit<
+    DiscoveryProfile,
+    'userId' | 'profileId' | 'score' | 'avatar'
+> & {
+    avatar: Omit<AvatarOption, 'id'>;
+};
+
 export type SwipeDecision = 'like' | 'pass';
 
 export type DiscoveryMatch = {

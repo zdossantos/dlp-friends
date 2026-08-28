@@ -275,7 +275,7 @@ test('a discovery card captures one pointer and ignores other pointer identifier
     $page = visit('/discover')->assertSee('Basile');
     $card = "document.querySelector('[data-test=\"discovery-card-stack-item\"] [tabindex=\"0\"]')";
     $page->script("window.__capturedPointer = null; window.__releasedPointer = null; {$card}.setPointerCapture = (id) => window.__capturedPointer = id; {$card}.hasPointerCapture = (id) => window.__capturedPointer === id; {$card}.releasePointerCapture = (id) => window.__releasedPointer = id; true;");
-    $page->script("{$card}.dispatchEvent(new PointerEvent('pointerdown', { pointerId: 7, clientX: 200, clientY: 100, bubbles: true })); {$card}.dispatchEvent(new PointerEvent('pointerup', { pointerId: 8, clientX: 100, clientY: 100, bubbles: true }));");
+    $page->script("{$card}.dispatchEvent(new PointerEvent('pointerdown', { pointerId: 7, isPrimary: true, clientX: 200, clientY: 100, bubbles: true })); {$card}.dispatchEvent(new PointerEvent('pointerup', { pointerId: 8, clientX: 100, clientY: 100, bubbles: true }));");
     $page->assertScript('window.__capturedPointer', 7)
         ->assertScript('window.__releasedPointer', null);
     $this->assertDatabaseCount('swipes', 0);

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\EnsureProductOnboardingIsComplete;
 use App\Http\Middleware\EnsureProfileIsComplete;
 use App\Http\Middleware\EnsureUserCanAccessSocialFeatures;
 use App\Http\Middleware\EnsureUserHasRole;
@@ -22,6 +23,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
             'profile.complete' => EnsureProfileIsComplete::class,
+            'onboarding.complete' => EnsureProductOnboardingIsComplete::class,
             'role' => EnsureUserHasRole::class,
             'social' => EnsureUserCanAccessSocialFeatures::class,
         ]);

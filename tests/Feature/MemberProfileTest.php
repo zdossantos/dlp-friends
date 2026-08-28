@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Enums\ProductOnboardingStatus;
 use App\Enums\ProfileVisibility;
 use App\Enums\VisitFrequency;
 use App\Models\Avatar;
@@ -116,7 +117,7 @@ class MemberProfileTest extends TestCase
             'bio' => null,
             'visit_frequency' => VisitFrequency::Often->value,
             'visibility' => ProfileVisibility::Visible->value,
-        ])->assertRedirect(route('app'));
+        ])->assertRedirect(route('onboarding.show'));
 
         expect($user->fresh()->profile->avatar->is($avatar))->toBeTrue()
             ->and($user->fresh()->profile->isComplete())->toBeTrue();
@@ -184,7 +185,7 @@ class MemberProfileTest extends TestCase
             'visibility' => ProfileVisibility::Visible->value,
         ]);
 
-        $response->assertRedirect(route('app'));
+        $response->assertRedirect(route('onboarding.show'));
         $this->assertDatabaseHas('profiles', [
             'user_id' => $user->id,
             'display_name' => 'Magic Friend',
@@ -288,11 +289,15 @@ class MemberProfileTest extends TestCase
         ];
 
         $this->actingAs($user)->post(route('member-profile.store'), $payload)
-            ->assertRedirect(route('app'));
+            ->assertRedirect(route('onboarding.show'));
         expect($user->fresh()->profile->interests()->pluck('interests.id')->all())
             ->toEqualCanonicalizing([$first->id, $second->id]);
+        $user->productOnboarding()->updateOrCreate([], [
+            'status' => ProductOnboardingStatus::Completed,
+            'step' => null,
+        ]);
 
-        $this->actingAs($user)->patch(route('member-profile.update'), [
+        $this->actingAs($user->fresh())->patch(route('member-profile.update'), [
             ...$payload,
             'interest_ids' => [$inactive->id],
         ])->assertSessionHasErrors('interest_ids.0');
@@ -316,7 +321,7 @@ class MemberProfileTest extends TestCase
             ]);
 
         $response->assertSessionHasNoErrors()
-            ->assertRedirect(route('app'));
+            ->assertRedirect(route('onboarding.show'));
 
         expect($user->fresh()->profile->interests()->pluck('interests.id')->all())
             ->toBe([$interest->id]);

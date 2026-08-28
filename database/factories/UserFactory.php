@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Enums\ProductOnboardingStatus;
 use App\Enums\RoleName;
 use App\Enums\UserStatus;
 use App\Models\Profile;
@@ -61,10 +62,16 @@ class UserFactory extends Factory
         ]);
     }
 
-    public function withProfile(): static
+    public function withProfile(bool $onboardingCompleted = true): static
     {
-        return $this->afterCreating(function (User $user): void {
+        return $this->afterCreating(function (User $user) use ($onboardingCompleted): void {
             Profile::factory()->complete()->for($user)->create();
+
+            if ($onboardingCompleted) {
+                $user->productOnboarding()->create([
+                    'status' => ProductOnboardingStatus::Completed,
+                ]);
+            }
         });
     }
 

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Head, Link, router } from '@inertiajs/vue3';
 import { computed, ref, watch } from 'vue';
+import MatchDialog from '@/components/discovery/MatchDialog.vue';
 import SwipeCard from '@/components/discovery/SwipeCard.vue';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
@@ -11,14 +12,6 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-} from '@/components/ui/dialog';
 import { Skeleton } from '@/components/ui/skeleton';
 import { show as showConversation } from '@/routes/conversations';
 import { swipe } from '@/routes/discovery';
@@ -235,37 +228,11 @@ defineOptions({
             </div>
         </section>
 
-        <Dialog v-if="match && matchDialogOpen" v-model:open="matchDialogOpen">
-            <DialogContent
-                class="border-amber-300 bg-amber-50 dark:border-amber-700 dark:bg-amber-950"
-            >
-                <DialogHeader>
-                    <DialogTitle class="text-amber-900 dark:text-amber-100">
-                        C’est un match !
-                    </DialogTitle>
-                    <DialogDescription>
-                        {{ match.displayName }} a aussi aimé votre profil. Vous
-                        pouvez maintenant commencer à échanger.
-                    </DialogDescription>
-                </DialogHeader>
-                <DialogFooter>
-                    <Button as-child variant="outline">
-                        <Link
-                            :href="showConversation(match.conversationId)"
-                            data-test="open-match-conversation"
-                        >
-                            Ouvrir la conversation
-                        </Link>
-                    </Button>
-                    <Button
-                        type="button"
-                        aria-label="Continuer à découvrir"
-                        @click="matchDialogOpen = false"
-                    >
-                        Continuer à découvrir
-                    </Button>
-                </DialogFooter>
-            </DialogContent>
-        </Dialog>
+        <MatchDialog
+            v-if="match"
+            v-model:open="matchDialogOpen"
+            :match="match"
+            :conversation-href="showConversation(match.conversationId).url"
+        />
     </main>
 </template>

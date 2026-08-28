@@ -3,13 +3,12 @@ import { computed } from 'vue';
 import type { ComputedRef } from 'vue';
 import type { I18n, Locale, TranslationMessages } from '@/types/i18n';
 
-type TranslationKey =
-    | 'locale.label'
-    | 'locale.fr'
-    | 'locale.en'
-    | 'navigation.settings'
-    | 'navigation.profile'
-    | 'navigation.discovery';
+type TranslationGroup = Exclude<keyof TranslationMessages, 'copy'>;
+export type TranslationKey = {
+    [
+        Group in TranslationGroup
+    ]: `${Group & string}.${keyof TranslationMessages[Group] & string}`;
+}[TranslationGroup];
 
 const translationFor = (
     messages: TranslationMessages,
@@ -17,7 +16,7 @@ const translationFor = (
 ): string => {
     const [group, item] = key.split('.') as [keyof TranslationMessages, string];
 
-    return messages[group][item as never];
+    return (messages[group] as Record<string, string>)[item];
 };
 
 export function useTranslations(): {

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreAvatarRequest;
 use App\Http\Requests\UpdateAvatarRequest;
 use App\Models\Avatar;
+use App\Models\ProductOnboardingSetting;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\UploadedFile;
@@ -24,6 +25,13 @@ class AvatarController extends Controller
     public function index(): Response
     {
         Gate::authorize('viewAny', Avatar::class);
+        $onboardingAvatarIds = ProductOnboardingSetting::query()
+            ->whereKey(ProductOnboardingSetting::SINGLETON_ID)
+            ->get(['pass_avatar_id', 'like_avatar_id'])
+            ->flatMap(fn (ProductOnboardingSetting $setting): array => [
+                $setting->pass_avatar_id,
+                $setting->like_avatar_id,
+            ]);
 
         return Inertia::render('Admin/Avatars/Index', [
             'avatars' => Avatar::query()
@@ -40,6 +48,7 @@ class AvatarController extends Controller
                     'is_active' => $avatar->is_active,
                     'sort_order' => $avatar->sort_order,
                     'profiles_count' => $avatar->profiles_count,
+                    'used_by_onboarding' => $onboardingAvatarIds->contains($avatar->id),
                 ])
                 ->all(),
         ]);
@@ -137,6 +146,17 @@ class AvatarController extends Controller
             if ($lockedAvatar->profiles()->exists()) {
                 throw ValidationException::withMessages([
                     'avatar' => __('Cet avatar est encore utilisé par un profil.'),
+                ]);
+            }
+
+            if (ProductOnboardingSetting::query()
+                ->where(fn ($query) => $query
+                    ->where('pass_avatar_id', $lockedAvatar->id)
+                    ->orWhere('like_avatar_id', $lockedAvatar->id))
+                ->lockForUpdate()
+                ->exists()) {
+                throw ValidationException::withMessages([
+                    'avatar' => __('onboarding.avatar_in_use'),
                 ]);
             }
 

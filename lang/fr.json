@@ -19,6 +19,8 @@
     "Avatar archivé.": "Avatar archivé.",
     "Un avatar porte déjà ce nom.": "Un avatar porte déjà ce nom.",
     "Cet avatar est encore utilisé par un profil.": "Cet avatar est encore utilisé par un profil.",
+    "Cet avatar est utilisé par le tutoriel. Remplacez-le dans la configuration avant de continuer.": "Cet avatar est utilisé par le tutoriel. Remplacez-le dans la configuration avant de continuer.",
+    "Configuration du tutoriel enregistrée.": "Configuration du tutoriel enregistrée.",
     "Compte mis à jour.": "Compte mis à jour.",
     "Password updated.": "Mot de passe mis à jour."
 }

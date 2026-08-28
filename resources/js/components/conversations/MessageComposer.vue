@@ -6,9 +6,10 @@ import { store as storeMessage } from '@/routes/conversations/messages';
 import type { ConversationMessage } from '@/types';
 
 const props = defineProps<{
-    conversationId: number;
+    conversationId?: number;
     archived: boolean;
     onSent: (message: ConversationMessage) => void;
+    submitMessage?: (content: string) => Promise<ConversationMessage>;
 }>();
 
 const content = ref('');
@@ -28,6 +29,18 @@ async function submit(): Promise<void> {
     error.value = '';
 
     try {
+        if (props.submitMessage !== undefined) {
+            const message = await props.submitMessage(content.value);
+            props.onSent(message);
+            content.value = '';
+
+            return;
+        }
+
+        if (props.conversationId === undefined) {
+            throw new Error('A conversation id is required.');
+        }
+
         const csrfToken = document
             .querySelector<HTMLMetaElement>('meta[name="csrf-token"]')
             ?.getAttribute('content');

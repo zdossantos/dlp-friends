@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\InterestController;
 use App\Http\Controllers\Admin\InterestOrderController;
 use App\Http\Controllers\Admin\InterestSettingController;
 use App\Http\Controllers\Admin\InterestStatusController;
+use App\Http\Controllers\Admin\ProductOnboardingController as AdminProductOnboardingController;
 use App\Http\Controllers\AvatarImageController;
 use App\Http\Controllers\ConversationController;
 use App\Http\Controllers\ConversationIndexController;
@@ -17,6 +18,7 @@ use App\Http\Controllers\LandingController;
 use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\MemberProfileController;
 use App\Http\Controllers\MessageController;
+use App\Http\Controllers\ProductOnboardingController;
 use App\Http\Controllers\SwipeController;
 use Illuminate\Support\Facades\Route;
 
@@ -44,40 +46,56 @@ Route::middleware(['auth', 'verified', 'social'])->group(function () {
     });
 
     Route::middleware('profile.complete')->group(function () {
-        Route::get('profile', [MemberProfileController::class, 'show'])
-            ->name('member-profile.show');
-        Route::get('profile/edit', [MemberProfileController::class, 'edit'])
-            ->name('member-profile.edit');
-        Route::patch('profile', [MemberProfileController::class, 'update'])
-            ->name('member-profile.update');
-
-        Route::get('discover', DiscoveryController::class)
-            ->name('discovery.index');
-        Route::post('discover/{target}/swipe', SwipeController::class)
-            ->name('discovery.swipe');
-
-        Route::get('conversations', ConversationIndexController::class)
-            ->name('conversations.index');
-        Route::get('conversations/{conversation}', ConversationController::class)
-            ->name('conversations.show');
-        Route::post('conversations/{conversation}/messages', MessageController::class)
-            ->name('conversations.messages.store');
-        Route::post('conversations/{conversation}/read', ConversationReadController::class)
-            ->name('conversations.read.store');
-
-        Route::get('dashboard', DashboardController::class)
-            ->middleware('role:admin')
-            ->name('dashboard');
+        Route::get('onboarding', [ProductOnboardingController::class, 'show'])
+            ->name('onboarding.show');
+        Route::patch('onboarding', [ProductOnboardingController::class, 'advance'])
+            ->name('onboarding.advance');
+        Route::post('onboarding/complete', [ProductOnboardingController::class, 'complete'])
+            ->name('onboarding.complete');
 
         Route::prefix('admin')->name('admin.')->middleware('role:admin')->group(function (): void {
-            Route::resource('interests', InterestController::class)
-                ->only(['index', 'store', 'update', 'destroy']);
-            Route::patch('interests/{interest}/status', InterestStatusController::class)
-                ->name('interests.status');
-            Route::patch('interests/{interest}/move', InterestOrderController::class)
-                ->name('interests.move');
-            Route::patch('interest-setting', InterestSettingController::class)
-                ->name('interest-setting.update');
+            Route::get('onboarding', [AdminProductOnboardingController::class, 'index'])
+                ->name('onboarding.index');
+            Route::patch('onboarding', [AdminProductOnboardingController::class, 'update'])
+                ->name('onboarding.update');
+        });
+
+        Route::middleware('onboarding.complete')->group(function () {
+            Route::get('profile', [MemberProfileController::class, 'show'])
+                ->name('member-profile.show');
+            Route::get('profile/edit', [MemberProfileController::class, 'edit'])
+                ->name('member-profile.edit');
+            Route::patch('profile', [MemberProfileController::class, 'update'])
+                ->name('member-profile.update');
+
+            Route::get('discover', DiscoveryController::class)
+                ->name('discovery.index');
+            Route::post('discover/{target}/swipe', SwipeController::class)
+                ->name('discovery.swipe');
+
+            Route::get('conversations', ConversationIndexController::class)
+                ->name('conversations.index');
+            Route::get('conversations/{conversation}', ConversationController::class)
+                ->name('conversations.show');
+            Route::post('conversations/{conversation}/messages', MessageController::class)
+                ->name('conversations.messages.store');
+            Route::post('conversations/{conversation}/read', ConversationReadController::class)
+                ->name('conversations.read.store');
+
+            Route::get('dashboard', DashboardController::class)
+                ->middleware('role:admin')
+                ->name('dashboard');
+
+            Route::prefix('admin')->name('admin.')->middleware('role:admin')->group(function (): void {
+                Route::resource('interests', InterestController::class)
+                    ->only(['index', 'store', 'update', 'destroy']);
+                Route::patch('interests/{interest}/status', InterestStatusController::class)
+                    ->name('interests.status');
+                Route::patch('interests/{interest}/move', InterestOrderController::class)
+                    ->name('interests.move');
+                Route::patch('interest-setting', InterestSettingController::class)
+                    ->name('interest-setting.update');
+            });
         });
     });
 });

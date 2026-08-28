@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\ProductOnboardingSetting;
 use App\Models\User;
 use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -34,4 +35,11 @@ test('it seeds 24 reusable completed demo members idempotently', function (): vo
     }
 
     $this->assertDatabaseCount('users', 25);
+
+    $setting = ProductOnboardingSetting::current();
+
+    expect($setting)->not->toBeNull()
+        ->and($setting?->pass_avatar_id)->not->toBe($setting?->like_avatar_id)
+        ->and($setting?->passAvatar?->is_active)->toBeTrue()
+        ->and($setting?->likeAvatar?->is_active)->toBeTrue();
 });

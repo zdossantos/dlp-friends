@@ -21,6 +21,7 @@ test('the landing page offers the member space when signed in', function () {
 
 test('the registration form collects account data without a public name', function () {
     visit('/register', ['locale' => 'fr-FR'])
+        ->assertSee('Vous créerez ensuite votre profil, puis un tutoriel vous expliquera comment rencontrer d’autres membres.')
         ->assertPresent('input[name="email"]')
         ->assertPresent('input[name="birth_date"]')
         ->assertPresent('input[name="password"]')

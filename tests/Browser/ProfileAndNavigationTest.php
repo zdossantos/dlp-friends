@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\ProductOnboardingStatus;
 use App\Http\Middleware\EnsureProfileIsComplete;
 use App\Models\Avatar;
 use App\Models\Interest;
@@ -338,6 +339,9 @@ test('an administrator sees administration and member return navigation', functi
 test('administration identity falls back to email without a profile', function () {
     $admin = User::factory()->admin()->create([
         'email' => 'admin@example.test',
+    ]);
+    $admin->productOnboarding()->create([
+        'status' => ProductOnboardingStatus::Completed,
     ]);
     $this->withoutMiddleware(EnsureProfileIsComplete::class);
     $this->actingAs($admin);

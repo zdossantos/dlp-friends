@@ -4,19 +4,25 @@ import { computed, onBeforeUnmount, ref, watch } from 'vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import type { DiscoveryProfile, SwipeDecision, VisitFrequency } from '@/types';
+import type {
+    DiscoveryCardProfile,
+    SwipeDecision,
+    VisitFrequency,
+} from '@/types';
 
 const SWIPE_THRESHOLD_PX = 72;
 const SWIPE_EXIT_DURATION_MS = 280;
+type AllowedDecision = SwipeDecision | 'both';
 
 const props = withDefaults(
     defineProps<{
-        profile: DiscoveryProfile;
+        profile: DiscoveryCardProfile;
         locked: boolean;
         preview?: boolean;
         compact?: boolean;
+        allowedDecision?: AllowedDecision;
     }>(),
-    { compact: false, preview: false },
+    { allowedDecision: 'both', compact: false, preview: false },
 );
 
 const emit = defineEmits<{ like: []; pass: [] }>();
@@ -66,7 +72,12 @@ const avatarGradient = computed(() => ({
 }));
 
 function decide(decision: SwipeDecision) {
-    if (props.locked || props.preview || exitDirection.value !== 0) {
+    if (
+        props.locked ||
+        props.preview ||
+        exitDirection.value !== 0 ||
+        !canDecide(decision)
+    ) {
         return;
     }
 
@@ -80,7 +91,12 @@ function decide(decision: SwipeDecision) {
 }
 
 function animateDecision(decision: SwipeDecision) {
-    if (props.locked || props.preview || exitDirection.value !== 0) {
+    if (
+        props.locked ||
+        props.preview ||
+        exitDirection.value !== 0 ||
+        !canDecide(decision)
+    ) {
         return;
     }
 
@@ -102,6 +118,12 @@ function animateDecision(decision: SwipeDecision) {
     );
 }
 
+function canDecide(decision: SwipeDecision): boolean {
+    return (
+        props.allowedDecision === 'both' || props.allowedDecision === decision
+    );
+}
+
 function rememberPointerStart(event: PointerEvent) {
     if (props.locked || props.preview || exitDirection.value !== 0) {
         return;
@@ -116,7 +138,10 @@ function rememberPointerStart(event: PointerEvent) {
     };
     dragOffset.value = { x: 0, y: 0 };
     isDragging.value = true;
-    target?.setPointerCapture?.(event.pointerId);
+
+    if (event.isPrimary) {
+        target?.setPointerCapture?.(event.pointerId);
+    }
 }
 
 function handlePointerMove(event: PointerEvent) {
@@ -126,8 +151,13 @@ function handlePointerMove(event: PointerEvent) {
         return;
     }
 
-    const deltaX = event.clientX - start.x;
+    const rawDeltaX = event.clientX - start.x;
     const deltaY = event.clientY - start.y;
+    const deltaX =
+        (rawDeltaX > 0 && !canDecide('like')) ||
+        (rawDeltaX < 0 && !canDecide('pass'))
+            ? 0
+            : rawDeltaX;
 
     dragOffset.value = { x: deltaX, y: deltaY * 0.15 };
 
@@ -170,13 +200,13 @@ function handlePointerEnd(event: PointerEvent) {
         return;
     }
 
-    if (deltaX <= -SWIPE_THRESHOLD_PX) {
+    if (deltaX <= -SWIPE_THRESHOLD_PX && canDecide('pass')) {
         animateDecision('pass');
 
         return;
     }
 
-    if (deltaX >= SWIPE_THRESHOLD_PX) {
+    if (deltaX >= SWIPE_THRESHOLD_PX && canDecide('like')) {
         animateDecision('like');
 
         return;
@@ -337,8 +367,19 @@ watch(
             </div>
 
             <p id="swipe-instructions" class="sr-only">
-                Balayez vers la gauche pour passer ce profil ou vers la droite
-                pour l’aimer. Au clavier, utilisez les flèches gauche et droite.
+                <template v-if="allowedDecision === 'pass'">
+                    Balayez vers la gauche ou utilisez la flèche gauche pour
+                    passer ce profil.
+                </template>
+                <template v-else-if="allowedDecision === 'like'">
+                    Balayez vers la droite ou utilisez la flèche droite pour
+                    aimer ce profil.
+                </template>
+                <template v-else>
+                    Balayez vers la gauche pour passer ce profil ou vers la
+                    droite pour l’aimer. Au clavier, utilisez les flèches gauche
+                    et droite.
+                </template>
             </p>
             <div
                 :class="[
@@ -351,7 +392,7 @@ watch(
                     type="button"
                     variant="outline"
                     :class="['rounded-full', compact ? 'min-h-10' : 'min-h-12']"
-                    :disabled="locked || preview"
+                    :disabled="locked || preview || !canDecide('pass')"
                     aria-label="Passer ce profil"
                     @click="decide('pass')"
                 >
@@ -364,7 +405,7 @@ watch(
                         'rounded-full bg-gradient-to-r from-pink-500 to-primary',
                         compact ? 'min-h-10 text-xs' : 'min-h-12',
                     ]"
-                    :disabled="locked || preview"
+                    :disabled="locked || preview || !canDecide('like')"
                     aria-label="Aimer ce profil"
                     @click="decide('like')"
                 >
