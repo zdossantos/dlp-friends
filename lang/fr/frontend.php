@@ -10,6 +10,7 @@ return [
         'settings' => 'Réglages',
         'profile' => 'Mon profil',
         'discovery' => 'Découvrir',
+        'conversations' => 'Échanges',
     ],
     'copy' => [],
 ];

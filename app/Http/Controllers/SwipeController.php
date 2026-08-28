@@ -30,12 +30,14 @@ class SwipeController extends Controller
         $match = $action->handle($actor, $targetUser, $decision);
 
         if ($match !== null) {
+            $match->loadMissing('conversation');
             $targetUser->loadMissing('profile');
             $profile = $targetUser->profile;
 
-            if ($profile instanceof Profile) {
+            if ($profile instanceof Profile && $match->conversation !== null) {
                 $request->session()->flash('discovery.match', [
                     'id' => $match->id,
+                    'conversationId' => $match->conversation->id,
                     'displayName' => $profile->display_name,
                 ]);
             }

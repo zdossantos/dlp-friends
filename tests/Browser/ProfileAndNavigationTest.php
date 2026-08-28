@@ -345,20 +345,47 @@ test('administration identity falls back to email without a profile', function (
     visit('/dashboard')->assertSee('admin@example.test');
 });
 
-test('member navigation exposes only implemented destinations and tracks settings', function () {
+test('member navigation appears on discovery conversations profile and settings pages', function () {
     $user = User::factory()->withProfile()->create();
     $this->actingAs($user);
+    $this->withSession(['auth.password_confirmed_at' => time()]);
 
     visit('/discover')
         ->on()->mobile()
-        ->assertCount('[data-test="member-bottom-navigation"] a', 2)
+        ->assertCount('[data-test="member-bottom-navigation"] a', 3)
         ->assertPresent('[aria-label="Découvrir"][aria-current="page"]')
+        ->assertPresent('[aria-label="Échanges"]')
         ->assertPresent('[aria-label="Profil"]');
+
+    visit('/conversations')
+        ->on()->mobile()
+        ->assertPresent('[data-test="member-bottom-navigation"]')
+        ->assertPresent('[aria-label="Échanges"][aria-current="page"]');
+
+    visit('/profile')
+        ->on()->mobile()
+        ->assertPresent('[data-test="member-bottom-navigation"]')
+        ->assertPresent('[aria-label="Profil"][aria-current="page"]');
 
     visit('/settings/account')
         ->on()->mobile()
+        ->assertSee('Réglages du compte')
+        ->assertPresent('[data-test="member-bottom-navigation"]')
         ->assertPresent('[aria-label="Profil"][aria-current="page"]')
-        ->assertSee('Réglages du compte');
+        ->assertScript(
+            "parseFloat(getComputedStyle(document.querySelector('[data-test=member-shell-content]')).paddingBottom) >= 88",
+            true,
+        );
+
+    visit('/settings/security')
+        ->on()->mobile()
+        ->assertPresent('[data-test="member-bottom-navigation"]')
+        ->assertPresent('[aria-label="Profil"][aria-current="page"]');
+
+    visit('/settings/appearance')
+        ->on()->mobile()
+        ->assertPresent('[data-test="member-bottom-navigation"]')
+        ->assertPresent('[aria-label="Profil"][aria-current="page"]');
 });
 
 test('member layout fixes navigation above reserved content space', function () {

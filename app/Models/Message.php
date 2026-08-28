@@ -14,6 +14,7 @@ use Illuminate\Support\Carbon;
  * @property int $conversation_id
  * @property int $author_user_id
  * @property string $content
+ * @property Carbon|null $read_at
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property-read Conversation $conversation
@@ -35,5 +36,13 @@ class Message extends Model
     public function author(): BelongsTo
     {
         return $this->belongsTo(User::class, 'author_user_id');
+    }
+
+    /** @return array<string, string> */
+    protected function casts(): array
+    {
+        return [
+            'read_at' => 'datetime',
+        ];
     }
 }

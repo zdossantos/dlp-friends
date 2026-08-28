@@ -6,7 +6,7 @@ it('uses Bun as its only JavaScript package manager', function () {
 
     expect($package)->toHaveKey('packageManager', 'bun@1.3.14')
         ->and($package['scripts'])->not->toHaveKey('test')
-        ->and($package['scripts'])->not->toHaveKey('test:unit')
+        ->and($package['scripts'])->toHaveKey('test:unit', 'bun test tests/Frontend')
         ->and(base_path('bun.lock'))->toBeFile()
         ->and(base_path('package-lock.json'))->not->toBeFile()
         ->and(base_path('.npmrc'))->not->toBeFile()
@@ -50,4 +50,19 @@ it('documents Bun without npm or Yarn residue in active project files', function
         ->and($activeDocumentation)->not->toContain('package-lock.json')
         ->and($ignoreFiles)->not->toContain('npm-debug.log')
         ->and($ignoreFiles)->not->toContain('yarn-error.log');
+});
+
+it('injects the public Reverb configuration into Docker frontend builds', function () {
+    $dockerfile = file_get_contents(base_path('Dockerfile'));
+    $compose = file_get_contents(base_path('compose.yaml'));
+
+    expect($dockerfile)->toContain('ARG VITE_REVERB_APP_KEY')
+        ->and($dockerfile)->toContain('ARG VITE_REVERB_HOST')
+        ->and($dockerfile)->toContain('ARG VITE_REVERB_PORT')
+        ->and($dockerfile)->toContain('ARG VITE_REVERB_SCHEME')
+        ->and($compose)->toContain('VITE_REVERB_APP_KEY:')
+        ->and($compose)->toContain('VITE_REVERB_HOST:')
+        ->and($compose)->toContain('VITE_REVERB_PORT:')
+        ->and($compose)->toContain('VITE_REVERB_SCHEME:')
+        ->and($compose)->toContain('REVERB_HOST: reverb');
 });

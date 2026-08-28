@@ -307,6 +307,14 @@ test('a reciprocal like opens a dismissible match dialog only once', function ()
         ->assertSee('Basile a aussi aimé votre profil.')
         ->assertPresent('[data-slot="dialog-title"]')
         ->assertPresent('[data-slot="dialog-description"]')
+        ->assertSeeLink('Ouvrir la conversation');
+
+    $conversationId = MemberMatch::query()->firstOrFail()->conversation()->firstOrFail()->id;
+    $page->assertAttribute(
+        '[data-test="open-match-conversation"]',
+        'href',
+        "/conversations/{$conversationId}",
+    )
         ->click('Continuer à découvrir')
         ->assertNotPresent('[data-slot="dialog-title"]');
 

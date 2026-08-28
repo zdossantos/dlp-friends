@@ -10,6 +10,7 @@ export type TranslationMessages = {
         settings: string;
         profile: string;
         discovery: string;
+        conversations: string;
     };
     copy: Record<string, string>;
 };

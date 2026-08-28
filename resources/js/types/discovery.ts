@@ -22,5 +22,6 @@ export type SwipeDecision = 'like' | 'pass';
 
 export type DiscoveryMatch = {
     id: number;
+    conversationId: number;
     displayName: string;
 };

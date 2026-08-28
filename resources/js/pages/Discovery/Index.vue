@@ -20,6 +20,7 @@ import {
     DialogTitle,
 } from '@/components/ui/dialog';
 import { Skeleton } from '@/components/ui/skeleton';
+import { show as showConversation } from '@/routes/conversations';
 import { swipe } from '@/routes/discovery';
 import { show as showProfile } from '@/routes/member-profile';
 import type { DiscoveryMatch, DiscoveryProfile, SwipeDecision } from '@/types';
@@ -244,10 +245,18 @@ defineOptions({
                     </DialogTitle>
                     <DialogDescription>
                         {{ match.displayName }} a aussi aimé votre profil. Vous
-                        pouvez continuer à découvrir d’autres membres.
+                        pouvez maintenant commencer à échanger.
                     </DialogDescription>
                 </DialogHeader>
                 <DialogFooter>
+                    <Button as-child variant="outline">
+                        <Link
+                            :href="showConversation(match.conversationId)"
+                            data-test="open-match-conversation"
+                        >
+                            Ouvrir la conversation
+                        </Link>
+                    </Button>
                     <Button
                         type="button"
                         aria-label="Continuer à découvrir"

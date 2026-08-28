@@ -1,26 +1,24 @@
 <script setup lang="ts">
-import { Link, usePage } from '@inertiajs/vue3';
-import { Sparkles, UserRound } from '@lucide/vue';
-import { computed } from 'vue';
+import { Link } from '@inertiajs/vue3';
+import { MessageCircle, Sparkles, UserRound } from '@lucide/vue';
 import { useCurrentUrl } from '@/composables/useCurrentUrl';
+import { useMemberNavigationVisibility } from '@/composables/useMemberNavigationVisibility';
+import { index as conversations } from '@/routes/conversations';
 import { index as discovery } from '@/routes/discovery';
 import { show as showProfile } from '@/routes/member-profile';
 
-const page = usePage();
 const { isCurrentOrParentUrl } = useCurrentUrl();
 
-const isProfileComplete = computed(() =>
-    Boolean(page.props.auth.user.profile?.onboarding_completed_at),
-);
-const isEditingProfile = computed(() =>
-    page.url.split('?')[0]?.startsWith('/profile/edit'),
-);
-const shouldShow = computed(
-    () => isProfileComplete.value && !isEditingProfile.value,
-);
+const shouldShow = useMemberNavigationVisibility();
 
 const items = [
     { label: 'Découvrir', href: discovery(), icon: Sparkles },
+    {
+        label: 'Échanges',
+        href: conversations(),
+        icon: MessageCircle,
+        activeParents: ['/conversations'],
+    },
     {
         label: 'Profil',
         href: showProfile(),

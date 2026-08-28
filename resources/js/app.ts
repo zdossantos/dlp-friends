@@ -3,11 +3,24 @@ import { configureEcho } from '@laravel/echo-vue';
 import { initializeTheme } from '@/composables/useAppearance';
 import { resolvePageLayout } from '@/layouts/resolvePageLayout';
 import { initializeFlashToast } from '@/lib/flashToast';
+import { resolveReverbHost } from '@/lib/reverbHost';
 import { initializeDomTranslations } from '@/lib/translateDom';
 
-configureEcho({
-    broadcaster: 'reverb',
-});
+const configuredReverbHost = import.meta.env.VITE_REVERB_HOST;
+
+configureEcho(
+    import.meta.env.VITE_REVERB_APP_KEY
+        ? {
+              broadcaster: 'reverb',
+              wsHost: resolveReverbHost(
+                  configuredReverbHost,
+                  typeof window === 'undefined'
+                      ? configuredReverbHost
+                      : window.location.hostname,
+              ),
+          }
+        : { broadcaster: 'null' },
+);
 
 const appName = import.meta.env.VITE_APP_NAME || 'DLP Friends';
 

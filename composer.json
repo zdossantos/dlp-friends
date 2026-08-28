@@ -84,6 +84,7 @@
             "@lint:check",
             "@types:check",
             "@php artisan wayfinder:generate --with-form",
+            "bun run test:unit",
             "bun run build",
             "@test:database",
             "@php artisan test --display-warnings"
