@@ -28,7 +28,7 @@ class ProductOnboardingTest extends TestCase
             ->assertRedirect(route('onboarding.show'));
     }
 
-    public function test_product_onboarding_exposes_only_demo_presentation_data(): void
+    public function test_product_onboarding_exposes_only_tutorial_presentation_data(): void
     {
         config()->set('inertia.testing.ensure_pages_exist', false);
         [$passAvatar, $likeAvatar] = $this->configureDemoAvatars();
@@ -41,7 +41,6 @@ class ProductOnboardingTest extends TestCase
                 ->component('Onboarding/Show')
                 ->where('status', ProductOnboardingStatus::InProgress->value)
                 ->where('step', ProductOnboardingStep::PassDemo->value)
-                ->has('resumable')
                 ->has('demoProfiles', 2)
                 ->where('demoProfiles.0.avatar', [
                     'name' => $passAvatar->name,

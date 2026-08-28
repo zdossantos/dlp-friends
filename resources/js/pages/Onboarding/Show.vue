@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Head, router } from '@inertiajs/vue3';
 import { computed, nextTick, ref, watch } from 'vue';
+import { toast } from 'vue-sonner';
 import ConversationHeader from '@/components/conversations/ConversationHeader.vue';
 import MessageComposer from '@/components/conversations/MessageComposer.vue';
 import MessageItems from '@/components/conversations/MessageItems.vue';
@@ -30,7 +31,6 @@ type DemoProfile = {
 const props = defineProps<{
     status: 'in_progress';
     step: Step;
-    resumable: boolean;
     demoProfiles: [DemoProfile, DemoProfile];
 }>();
 
@@ -45,8 +45,6 @@ const tutorialMessages = ref<ConversationMessage[]>([
         created_at: null,
     },
 ]);
-const wrongActionFeedback = ref<string | null>(null);
-const feedbackKey = ref(0);
 const registrationStepLabels = [
     'Avatar',
     'Identité',
@@ -130,6 +128,9 @@ function submitStep(expected: Step): void {
             onFinish: () => {
                 busy.value = false;
             },
+            onError: () => {
+                toast.error('Cette étape n’a pas pu être validée. Réessayez.');
+            },
         },
     );
 }
@@ -138,16 +139,15 @@ function decide(decision: 'pass' | 'like'): void {
     const required = props.step === 'pass_demo' ? 'pass' : 'like';
 
     if (decision !== required) {
-        wrongActionFeedback.value =
+        toast.error(
             required === 'pass'
-                ? 'Cette étape vous demande de passer ce profil.'
-                : 'Cette étape vous demande d’aimer ce profil.';
-        feedbackKey.value += 1;
+                ? 'Passez ce profil pour continuer.'
+                : 'Aimez ce profil pour continuer.',
+        );
 
         return;
     }
 
-    wrongActionFeedback.value = null;
     submitStep(props.step);
 }
 
@@ -168,7 +168,12 @@ function completeWithMessage(content: string): Promise<ConversationMessage> {
             {},
             {
                 onSuccess: () => resolve(message),
-                onError: () => reject(new Error('Unable to complete onboarding.')),
+                onError: () => {
+                    toast.error(
+                        'Votre message n’a pas pu être envoyé. Réessayez.',
+                    );
+                    reject(new Error('Unable to complete onboarding.'));
+                },
                 onFinish: () => {
                     busy.value = false;
                 },
@@ -197,15 +202,6 @@ function completeWithMessage(content: string): Promise<ConversationMessage> {
         >
             {{ stepInstruction[step] }}
         </p>
-        <p
-            v-if="wrongActionFeedback"
-            :key="feedbackKey"
-            role="alert"
-            class="w-full rounded-2xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-center text-sm font-medium text-destructive"
-        >
-            {{ wrongActionFeedback }}
-        </p>
-
         <SwipeCard
             v-if="step === 'pass_demo'"
             :profile="swipeProfiles[0]"

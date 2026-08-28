@@ -54,11 +54,11 @@ Le tutoriel produit possède un état séparé dans `product_onboardings` : stat
 `not_started`, `in_progress`, `completed` ou `skipped`, et étape courante. Une
 Action transactionnelle verrouille la progression et impose l’ordre des étapes.
 La page Vue n’appelle jamais les routes sociales : ses cartes, son match, sa
-conversation et son message restent des données fictives locales et ne créent
+conversation et son message restent des données locales et ne créent
 aucun swipe, match, conversation, message ni diffusion temps réel.
 
 La table singleton `product_onboarding_settings` référence les deux avatars de
-démonstration. Les validations imposent des avatars actifs et distincts ; les
+tutoriel. Les validations imposent des avatars actifs et distincts ; les
 actions d’archivage et de suppression les protègent également côté serveur.
 L’écran admin calcule ses agrégats et sa liste paginée sur le même périmètre de
 membres adultes, actifs, vérifiés et disposant d’un profil complet.

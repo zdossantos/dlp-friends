@@ -24,7 +24,7 @@ type Member = {
     id: number;
     display_name: string;
     email: string;
-    status: 'not_started' | 'in_progress' | 'completed' | 'skipped';
+    status: 'not_started' | 'in_progress' | 'completed';
     step: string | null;
     updated_at: string;
 };
@@ -45,7 +45,6 @@ const props = defineProps<{
         not_started: number;
         in_progress: number;
         completed: number;
-        skipped: number;
         completion_rate: number;
     };
     members: {
@@ -59,14 +58,12 @@ const statCards = [
     { key: 'not_started' as const, label: 'Pas commencé' },
     { key: 'in_progress' as const, label: 'En cours' },
     { key: 'completed' as const, label: 'Terminé' },
-    { key: 'skipped' as const, label: 'Passé' },
 ];
 
 const statusLabels: Record<Member['status'], string> = {
     not_started: 'Pas commencé',
     in_progress: 'En cours',
     completed: 'Terminé',
-    skipped: 'Passé',
 };
 
 const stepLabels: Record<string, string> = {
@@ -107,12 +104,12 @@ defineOptions({
                 Tutoriel produit
             </h1>
             <p class="mt-1 text-muted-foreground">
-                Configurez les profils de démonstration et suivez la progression
-                des membres.
+                Configurez les profils du tutoriel et suivez la progression des
+                membres.
             </p>
         </header>
 
-        <section class="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+        <section class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
             <Card v-for="stat in statCards" :key="stat.key">
                 <CardHeader class="pb-2">
                     <CardDescription>{{ stat.label }}</CardDescription>
@@ -133,7 +130,7 @@ defineOptions({
 
         <Card>
             <CardHeader>
-                <CardTitle>Profils de démonstration</CardTitle>
+                <CardTitle>Profils du tutoriel</CardTitle>
                 <CardDescription>
                     Choisissez deux avatars actifs et distincts. Ils ne pourront
                     plus être archivés ou supprimés tant qu’ils sont utilisés

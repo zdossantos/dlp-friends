@@ -8,7 +8,7 @@
 - Connexion simplifiée via Google et Apple.
 - Date de naissance obligatoire ; l'inscription est refusée avant 18 ans.
 - Après vérification de l'e-mail, un onboarding de profil est obligatoire avant l'accès à l'espace membre.
-- À la première complétion du profil, un tutoriel produit interactif enseigne successivement le refus d’une carte, le like, le match puis l’ouverture et l’utilisation d’une conversation fictive. Le membre peut l’ignorer et le relancer depuis ses réglages.
+- À la première complétion du profil, l’inscription se poursuit par un tutoriel produit obligatoire. Il enseigne successivement le refus d’une carte, le like, le match puis l’ouverture et l’utilisation d’une conversation avec les composants réels de l’application. Les interactions restent locales et ne créent aucune donnée sociale.
 - Réinitialisation de mot de passe, limites de tentatives et gestion des sessions.
 
 ### Profil
@@ -29,7 +29,7 @@ Un intérêt archivé disparaît des sélecteurs de profil, des profils publics 
 
 Un dashboard protégé par le rôle `admin` expose des agrégats de comptes, les inscriptions récentes et la gestion du catalogue d’intérêts, sans donner accès aux messages privés.
 
-L’administration permet aussi de choisir deux avatars actifs et distincts pour les profils fictifs du tutoriel, puis de consulter ses statistiques et la progression paginée des membres éligibles. Un avatar ainsi configuré ne peut être ni archivé ni supprimé avant son remplacement.
+L’administration permet aussi de choisir deux avatars actifs et distincts pour les profils du tutoriel, puis de consulter ses statistiques et la progression paginée des membres éligibles. Un avatar ainsi configuré ne peut être ni archivé ni supprimé avant son remplacement.
 
 ### Découverte et matching
 

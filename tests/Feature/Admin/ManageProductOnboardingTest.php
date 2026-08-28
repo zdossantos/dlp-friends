@@ -86,7 +86,6 @@ class ManageProductOnboardingTest extends TestCase
         $notStarted = User::factory()->withProfile()->create(['created_at' => now()]);
         $inProgress = $this->eligibleMember(ProductOnboardingStatus::InProgress, ProductOnboardingStep::LikeDemo, now()->subDay());
         $completed = $this->eligibleMember(ProductOnboardingStatus::Completed, null, now()->subDays(2));
-        $skipped = $this->eligibleMember(ProductOnboardingStatus::Skipped, null, now()->subDays(3));
 
         User::factory()->withProfile()->unverified()->create();
         User::factory()->withProfile()->create(['birth_date' => today()->subYears(17)]);
@@ -101,16 +100,14 @@ class ManageProductOnboardingTest extends TestCase
                     'not_started' => 1,
                     'in_progress' => 1,
                     'completed' => 2,
-                    'skipped' => 1,
-                    'completion_rate' => 40,
+                    'completion_rate' => 50,
                 ])
-                ->where('members.total', 5)
+                ->where('members.total', 4)
                 ->where('members.per_page', 20)
                 ->where('members.data.0.id', $notStarted->id)
                 ->where('members.data.1.id', $inProgress->id)
                 ->where('members.data.2.id', $completed->id)
-                ->where('members.data.3.id', $skipped->id)
-                ->where('members.data.4.id', $admin->id)
+                ->where('members.data.3.id', $admin->id)
                 ->where('members.data.0.status', ProductOnboardingStatus::NotStarted->value)
                 ->where('members.data.1.step', ProductOnboardingStep::LikeDemo->value));
     }

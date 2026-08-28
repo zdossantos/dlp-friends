@@ -24,13 +24,11 @@ class ProductOnboardingController extends Controller
 
         abort_unless($this->hasValidSettings($settings), 503, __('Le tutoriel est temporairement indisponible.'));
 
-        $existingProgress = $request->user()->productOnboarding()->first();
         $progress = $this->onboarding->start($request->user());
 
         return Inertia::render('Onboarding/Show', [
             'status' => $progress->status->value,
             'step' => $progress->step?->value,
-            'resumable' => $existingProgress?->is($progress) ?? false,
             'demoProfiles' => [
                 $this->demoProfile($settings->passAvatar, 'pass'),
                 $this->demoProfile($settings->likeAvatar, 'like'),
