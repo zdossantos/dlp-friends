@@ -6,6 +6,16 @@ import DemoMatch from '@/components/onboarding/DemoMatch.vue';
 import DemoSwipeCard from '@/components/onboarding/DemoSwipeCard.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import {
+    Dialog,
+    DialogClose,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from '@/components/ui/dialog';
 import { index as discovery } from '@/routes/discovery';
 import { advance, complete, restart, skip } from '@/routes/onboarding';
 
@@ -33,9 +43,12 @@ const busy = ref(false);
 const wrongActionFeedback = ref<string | null>(null);
 const feedbackKey = ref(0);
 const stepInstruction = computed<Record<Step, string>>(() => ({
-    pass_demo: 'Pour commencer, passez cette carte.',
-    like_demo: 'Indiquez maintenant votre intérêt.',
-    match_demo: 'Ouvrez ce match fictif pour découvrir la conversation.',
+    pass_demo:
+        'Pour découvrir comment écarter un profil qui ne vous correspond pas, choisissez Passer.',
+    like_demo:
+        'Aimez ce profil pour indiquer que vous souhaitez faire connaissance.',
+    match_demo:
+        'Lorsque deux membres s’aiment mutuellement, un match amical est créé.',
     conversation_demo: 'Envoyez une réponse fictive pour terminer le tutoriel.',
 }));
 
@@ -109,6 +122,11 @@ function post(url: string): void {
             </Button>
         </header>
 
+        <p class="w-full text-center text-sm text-muted-foreground">
+            Cette démonstration est entièrement fictive : aucun J’aime, match ou
+            message réel ne sera envoyé.
+        </p>
+
         <p
             class="w-full rounded-2xl bg-secondary px-4 py-3 text-center font-medium"
             aria-live="polite"
@@ -165,14 +183,41 @@ function post(url: string): void {
             >
                 Recommencer
             </Button>
-            <Button
-                type="button"
-                variant="ghost"
-                :disabled="busy"
-                @click="post(skip().url)"
-            >
-                Ignorer le tutoriel
-            </Button>
+            <Dialog>
+                <DialogTrigger as-child>
+                    <Button type="button" variant="ghost" :disabled="busy">
+                        Ignorer le tutoriel
+                    </Button>
+                </DialogTrigger>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle
+                            >Quitter le tutoriel maintenant ?</DialogTitle
+                        >
+                        <DialogDescription>
+                            Continuer plus tard conserve votre progression.
+                            Ignorer le tutoriel le marque comme passé, mais vous
+                            pourrez toujours le relancer depuis les réglages.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter class="gap-2">
+                        <DialogClose as-child>
+                            <Button type="button" variant="secondary">
+                                Annuler
+                            </Button>
+                        </DialogClose>
+                        <Button
+                            type="button"
+                            variant="destructive"
+                            :disabled="busy"
+                            data-test="confirm-skip-onboarding"
+                            @click="post(skip().url)"
+                        >
+                            Ignorer le tutoriel
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </footer>
     </main>
 </template>

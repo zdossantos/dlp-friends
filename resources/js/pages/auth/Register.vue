@@ -17,7 +17,8 @@ defineProps<{
 defineOptions({
     layout: {
         title: 'Créer un compte',
-        description: 'Renseignez vos informations de compte',
+        description:
+            'Vous créerez ensuite votre profil, puis un tutoriel vous expliquera comment rencontrer d’autres membres.',
     },
 });
 </script>

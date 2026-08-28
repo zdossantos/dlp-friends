@@ -28,6 +28,8 @@ test('member completes the forced demo journey without real social writes', func
         ->assertSee('Démonstration')
         ->assertMissing('[data-test="member-bottom-navigation"]')
         ->assertSee('Continuer plus tard')
+        ->assertSee('Cette démonstration est entièrement fictive')
+        ->assertSee('Pour découvrir comment écarter un profil qui ne vous correspond pas, choisissez Passer.')
         ->assertDontSee('Quitter')
         ->assertScript(
             "document.querySelector('[data-test=demo-swipe-card]').getBoundingClientRect().width >= 500",
@@ -38,12 +40,12 @@ test('member completes the forced demo journey without real social writes', func
         ->click('[data-test="demo-pass"]');
 
     $page->assertNoJavaScriptErrors()
-        ->assertSee('Indiquez maintenant votre intérêt.')
+        ->assertSee('Aimez ce profil pour indiquer que vous souhaitez faire connaissance.')
         ->click('[data-test="demo-pass"]')
         ->assertSee('Cette étape vous demande d’aimer ce profil.')
         ->click('[data-test="demo-like"]')
         ->assertSee('Match de démonstration')
-        ->assertSee('Ouvrez ce match fictif pour découvrir la conversation.')
+        ->assertSee('Lorsque deux membres s’aiment mutuellement, un match amical est créé.')
         ->click('[data-test="open-demo-conversation"]')
         ->assertSee('Conversation de démonstration')
         ->assertSee('Envoyez une réponse fictive pour terminer le tutoriel.')
@@ -51,6 +53,9 @@ test('member completes the forced demo journey without real social writes', func
         ->click('[data-test="send-demo-message"]')
         ->assertSee('Bonjour !')
         ->click('[data-test="complete-demo-conversation"]')
+        ->assertPathIs('/onboarding')
+        ->assertSee('Vous êtes prêt ! Découvrez maintenant de vrais profils.')
+        ->click('[data-test="discover-real-profiles"]')
         ->assertPathIs('/discover')
         ->assertNoJavaScriptErrors();
 
@@ -85,7 +90,7 @@ test('member resumes, uses the keyboard, restarts and skips the demo', function 
         ->assertSee('Reprendre le tutoriel')
         ->assertSee('Recommencer depuis le début')
         ->click('Reprendre le tutoriel')
-        ->assertSee('Indiquez maintenant votre intérêt.')
+        ->assertSee('Aimez ce profil pour indiquer que vous souhaitez faire connaissance.')
         ->assertSee('Continuer plus tard')
         ->click('[data-test="demo-pass"]')
         ->assertSee('Cette étape vous demande d’aimer ce profil.')
@@ -96,8 +101,15 @@ test('member resumes, uses the keyboard, restarts and skips the demo', function 
             true,
         )
         ->click('Recommencer')
-        ->assertSee('Pour commencer, passez cette carte.')
+        ->assertSee('Pour découvrir comment écarter un profil qui ne vous correspond pas, choisissez Passer.')
         ->click('Ignorer le tutoriel')
+        ->assertSee('Quitter le tutoriel maintenant ?')
+        ->assertSee('Continuer plus tard conserve votre progression')
+        ->assertPathIs('/onboarding')
+        ->click('Annuler')
+        ->assertPathIs('/onboarding')
+        ->click('Ignorer le tutoriel')
+        ->click('[data-test="confirm-skip-onboarding"]')
         ->assertPathIs('/discover')
         ->assertNoJavaScriptErrors();
 

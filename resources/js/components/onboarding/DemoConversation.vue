@@ -10,6 +10,7 @@ const emit = defineEmits<{ complete: [] }>();
 
 const draft = ref('');
 const sentMessage = ref<string | null>(null);
+const readyToDiscover = ref(false);
 
 function send(): void {
     const message = draft.value.trim();
@@ -20,6 +21,10 @@ function send(): void {
 
     sentMessage.value = message;
     draft.value = '';
+}
+
+function finish(): void {
+    readyToDiscover.value = true;
 }
 </script>
 
@@ -50,7 +55,11 @@ function send(): void {
                     {{ sentMessage }}
                 </p>
             </div>
-            <form class="flex gap-2" @submit.prevent="send">
+            <form
+                v-if="!readyToDiscover"
+                class="flex gap-2"
+                @submit.prevent="send"
+            >
                 <Input
                     v-model="draft"
                     data-test="demo-message-input"
@@ -68,14 +77,33 @@ function send(): void {
                 </Button>
             </form>
             <Button
+                v-if="!readyToDiscover"
                 type="button"
                 class="w-full"
                 data-test="complete-demo-conversation"
                 :disabled="locked || sentMessage === null"
-                @click="emit('complete')"
+                @click="finish"
             >
                 Terminer le tutoriel
             </Button>
+            <div
+                v-else
+                class="space-y-4 rounded-2xl bg-secondary p-4 text-center"
+                aria-live="polite"
+            >
+                <p class="font-semibold">
+                    Vous êtes prêt ! Découvrez maintenant de vrais profils.
+                </p>
+                <Button
+                    type="button"
+                    class="w-full"
+                    data-test="discover-real-profiles"
+                    :disabled="locked"
+                    @click="emit('complete')"
+                >
+                    Découvrir les profils
+                </Button>
+            </div>
         </CardContent>
     </Card>
 </template>

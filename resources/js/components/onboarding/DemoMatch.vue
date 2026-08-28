@@ -20,7 +20,7 @@ defineEmits<{ openConversation: [] }>();
         <CardContent class="space-y-5">
             <p>
                 {{ displayName }} a aussi indiqué vouloir faire connaissance
-                amicalement.
+                amicalement. Vous pouvez maintenant discuter ensemble.
             </p>
             <Button
                 type="button"
