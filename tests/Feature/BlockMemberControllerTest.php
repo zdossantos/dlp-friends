@@ -16,6 +16,7 @@ class BlockMemberControllerTest extends TestCase
     {
         $blocker = User::factory()->withProfile()->create();
         $blocked = User::factory()->withProfile()->create();
+        $blocked->profile?->update(['display_name' => 'Basile']);
         [$low, $high] = $blocker->id < $blocked->id ? [$blocker, $blocked] : [$blocked, $blocker];
         $conversation = MemberMatch::factory()->create([
             'user_low_id' => $low->id,
@@ -24,10 +25,10 @@ class BlockMemberControllerTest extends TestCase
 
         foreach ([1, 2] as $_attempt) {
             $this->actingAs($blocker)->post(route('members.block', $blocked))
-                ->assertRedirectToRoute('discovery.index')
+                ->assertRedirectToRoute('members.show', $blocked)
                 ->assertInertiaFlash('toast', [
                     'type' => 'success',
-                    'message' => __('blocking.completed'),
+                    'message' => 'Basile bloqué.',
                 ]);
         }
 
@@ -47,6 +48,7 @@ class BlockMemberControllerTest extends TestCase
     {
         $blocker = User::factory()->withProfile()->create();
         $blocked = User::factory()->withProfile()->create();
+        $blocked->profile?->update(['display_name' => 'Basile']);
         $block = Block::factory()->create([
             'blocker_user_id' => $blocker->id,
             'blocked_user_id' => $blocked->id,
@@ -58,7 +60,11 @@ class BlockMemberControllerTest extends TestCase
 
         $this->actingAs($blocker)
             ->delete(route('members.unblock', $blocked))
-            ->assertRedirect(route('members.show', $blocked));
+            ->assertRedirect(route('members.show', $blocked))
+            ->assertInertiaFlash('toast', [
+                'type' => 'success',
+                'message' => 'Basile débloqué.',
+            ]);
 
         $this->assertDatabaseMissing('blocks', ['id' => $block->id]);
         expect($conversation->fresh()->archived_at)->toBeNull();

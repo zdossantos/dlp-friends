@@ -11,6 +11,7 @@ return [
         'profile' => 'Mon profil',
         'discovery' => 'Découvrir',
         'conversations' => 'Échanges',
+        'back' => 'Retour',
     ],
     'onboarding' => [
         'page_title' => 'Prise en main',

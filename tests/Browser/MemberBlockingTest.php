@@ -18,18 +18,23 @@ function blockingBrowserMember(string $displayName): User
 
 beforeEach(fn () => Storage::fake('local'));
 
-test('a member blocks another member from the public profile', function () {
+test('blocking from a profile returns to the previous page with the member name', function () {
     $viewer = blockingBrowserMember('Alice');
     $member = blockingBrowserMember('Basile');
+    $conversation = MemberMatch::factory()->create([
+        'user_low_id' => min($viewer->id, $member->id),
+        'user_high_id' => max($viewer->id, $member->id),
+    ])->conversation()->create();
     $this->actingAs($viewer);
 
-    visit(route('members.show', $member))->on()->mobile()
+    visit(route('conversations.show', $conversation))->on()->mobile()
+        ->click("a[aria-label='Voir le profil de Basile']")
         ->assertPresent('[data-test="public-member-profile"]')
         ->click('@block-member-trigger')
         ->assertSee('Bloquer ce membre ?')
         ->click('@confirm-block-member')
-        ->assertPathIs('/discover')
-        ->assertSee('Ce profil n’est plus accessible.')
+        ->assertPathIs("/conversations/{$conversation->id}")
+        ->assertSee('Basile bloqué.')
         ->assertNoJavaScriptErrors();
 
     $this->assertDatabaseHas('blocks', [
@@ -41,18 +46,23 @@ test('a member blocks another member from the public profile', function () {
 test('a member can view and unblock a member they blocked', function () {
     $viewer = blockingBrowserMember('Alice');
     $member = blockingBrowserMember('Basile');
+    $conversation = MemberMatch::factory()->create([
+        'user_low_id' => min($viewer->id, $member->id),
+        'user_high_id' => max($viewer->id, $member->id),
+    ])->conversation()->create(['archived_at' => now()]);
     Block::factory()->create([
         'blocker_user_id' => $viewer->id,
         'blocked_user_id' => $member->id,
     ]);
     $this->actingAs($viewer);
 
-    visit(route('members.show', $member))->on()->mobile()
+    visit(route('conversations.show', $conversation))->on()->mobile()
+        ->click("a[aria-label='Voir le profil de Basile']")
         ->assertPresent('[data-test="public-member-profile"]')
         ->assertPresent('[data-test="unblock-member-trigger"]')
         ->click('@unblock-member-trigger')
-        ->assertPathIs("/members/{$member->id}")
-        ->assertPresent('[data-test="block-member-trigger"]')
+        ->assertPathIs("/conversations/{$conversation->id}")
+        ->assertSee('Basile débloqué.')
         ->assertNoJavaScriptErrors();
 
     $this->assertDatabaseMissing('blocks', [
@@ -84,6 +94,7 @@ test('public and personal profiles share the compact profile presentation', func
     $page = visit(route('members.show', $member))->on()->mobile()
         ->assertPresent('[data-test="profile-presentation"]')
         ->assertPresent('[data-test="profile-back-action"]')
+        ->assertNotPresent('[data-test="profile-back-label"]')
         ->assertScript(
             "document.querySelector('[data-test=profile-presentation-hero]').getBoundingClientRect().height <= 224",
             true,

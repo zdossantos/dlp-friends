@@ -20,9 +20,19 @@ final class BlockMemberController extends Controller
         $blockUser->handle($request->user(), $member);
         Inertia::flash('toast', [
             'type' => 'success',
-            'message' => __('blocking.completed'),
+            'message' => __('blocking.completed', ['name' => $profile->display_name]),
         ]);
 
-        return to_route('discovery.index');
+        return redirect($this->returnTo($request, $member));
+    }
+
+    private function returnTo(Request $request, User $member): string
+    {
+        $fallback = route('members.show', $member, absolute: false);
+        $returnTo = $request->string('return_to')->toString();
+
+        return str_starts_with($returnTo, '/') && ! str_starts_with($returnTo, '//')
+            ? $returnTo
+            : $fallback;
     }
 }

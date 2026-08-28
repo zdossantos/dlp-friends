@@ -65,10 +65,13 @@ cas d’annulation.
 
 Une route membre `POST /members/{member}/block` appelle `BlockUser`. Elle exige
 les middlewares sociaux et de profil complet existants. Le contrôleur résout la
-cible sans exposer son état, autorise l’action côté serveur, puis redirige vers
-la découverte avec un message flash neutre : « Ce profil n’est plus accessible. »
+cible sans exposer son état et autorise l’action côté serveur. Après le succès,
+l’interface revient simplement à la page précédente et affiche un message flash
+avec le nom public du membre : « :nom bloqué. » Le déblocage suit la même
+navigation et affiche « :nom débloqué. »
 
-Après succès, l’auteur quitte donc immédiatement le profil ou la conversation.
+Après succès, l’auteur quitte donc immédiatement le profil et retrouve la page
+depuis laquelle il l’avait ouvert.
 Le profil reste ensuite consultable et propose à l’auteur « Débloquer ce
 membre ». Le déblocage supprime uniquement son blocage et désarchive la
 conversation existante si aucun blocage orienté ne subsiste dans la paire. Il

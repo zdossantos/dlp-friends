@@ -16,7 +16,7 @@ import {
 import { useTranslations } from '@/composables/useTranslations';
 import { block as blockMember } from '@/routes/members';
 
-const props = defineProps<{ memberId: number }>();
+const props = defineProps<{ memberId: number; returnHref: string }>();
 const { t } = useTranslations();
 const open = ref(false);
 const submitting = ref(false);
@@ -26,7 +26,7 @@ function submit(): void {
     failed.value = false;
     router.post(
         blockMember(props.memberId).url,
-        {},
+        { return_to: props.returnHref },
         {
             preserveScroll: true,
             onStart: () => (submitting.value = true),

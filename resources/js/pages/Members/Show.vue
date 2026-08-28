@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Head, Link } from '@inertiajs/vue3';
+import { Head, router } from '@inertiajs/vue3';
 import { ArrowLeft } from '@lucide/vue';
 import { computed } from 'vue';
 import BlockMemberDialog from '@/components/members/BlockMemberDialog.vue';
@@ -29,6 +29,16 @@ const visitFrequency = computed(() =>
         ? t(frequencyKeys[props.member.visit_frequency])
         : t('blocking.frequency_unknown'),
 );
+
+function goBack(): void {
+    if (window.history.length > 1) {
+        window.history.back();
+
+        return;
+    }
+
+    router.visit(props.backHref);
+}
 </script>
 
 <template>
@@ -39,14 +49,14 @@ const visitFrequency = computed(() =>
     >
         <Button
             data-test="profile-back-action"
-            as-child
-            variant="ghost"
-            class="mb-2 w-fit shrink-0"
+            type="button"
+            variant="outline"
+            size="icon"
+            :aria-label="t('navigation.back')"
+            class="mb-3 size-11 shrink-0 rounded-full bg-card shadow-md"
+            @click="goBack"
         >
-            <Link :href="backHref">
-                <ArrowLeft class="size-4" aria-hidden="true" />
-                {{ t('navigation.discovery') }}
-            </Link>
+            <ArrowLeft class="size-5" aria-hidden="true" />
         </Button>
 
         <ProfilePresentation
@@ -61,8 +71,16 @@ const visitFrequency = computed(() =>
             :visit-frequency-label="t('blocking.visit_frequency')"
         >
             <template #summary-actions>
-                <UnblockMemberButton v-if="canUnblock" :member-id="member.id" />
-                <BlockMemberDialog v-else :member-id="member.id" />
+                <UnblockMemberButton
+                    v-if="canUnblock"
+                    :member-id="member.id"
+                    :return-href="backHref"
+                />
+                <BlockMemberDialog
+                    v-else
+                    :member-id="member.id"
+                    :return-href="backHref"
+                />
             </template>
         </ProfilePresentation>
     </main>

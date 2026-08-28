@@ -1,6 +1,7 @@
 <?php
 
 return [
-    'completed' => 'This profile is no longer available.',
+    'completed' => ':name blocked.',
+    'unblocked' => ':name unblocked.',
     'unavailable' => 'This action is unavailable.',
 ];

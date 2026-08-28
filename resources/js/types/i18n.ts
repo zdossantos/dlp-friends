@@ -11,6 +11,7 @@ export type TranslationMessages = {
         profile: string;
         discovery: string;
         conversations: string;
+        back: string;
     };
     onboarding: Record<string, string>;
     admin_onboarding: Record<string, string>;

@@ -6,12 +6,13 @@ import { Button } from '@/components/ui/button';
 import { useTranslations } from '@/composables/useTranslations';
 import { unblock as unblockMember } from '@/routes/members';
 
-const props = defineProps<{ memberId: number }>();
+const props = defineProps<{ memberId: number; returnHref: string }>();
 const { t } = useTranslations();
 const submitting = ref(false);
 
 function submit(): void {
     router.delete(unblockMember(props.memberId).url, {
+        data: { return_to: props.returnHref },
         preserveScroll: true,
         onStart: () => (submitting.value = true),
         onFinish: () => (submitting.value = false),
