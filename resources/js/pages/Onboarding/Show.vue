@@ -14,6 +14,7 @@ import type {
     ConversationParticipant,
     DiscoveryCardProfile,
 } from '@/types';
+import { DotLottieVue } from '@lottiefiles/dotlottie-vue'  
 
 type Step = 'pass_demo' | 'like_demo' | 'match_demo' | 'conversation_demo';
 type DemoProfile = {
@@ -193,7 +194,7 @@ function completeWithMessage(content: string): Promise<ConversationMessage> {
 <template>
     <Head title="Prise en main" />
     <main
-        class="mx-auto flex min-h-full w-full max-w-2xl flex-col items-center gap-5 overflow-y-auto px-4 py-[max(1rem,env(safe-area-inset-top))] sm:px-6"
+        class="mx-auto relative flex min-h-full w-full max-w-2xl flex-col items-center gap-5 overflow-y-auto px-4 py-[max(1rem,env(safe-area-inset-top))] sm:px-6"
     >
         <ProfileFormStepper
             class="w-full"
@@ -209,12 +210,22 @@ function completeWithMessage(content: string): Promise<ConversationMessage> {
         >
             {{ stepInstruction[step] }}
         </p>
+        <DotLottieVue
+            v-if="['pass_demo', 'like_demo'].includes(step)"
+            :class="step === 'like_demo' ? 'scale-x-[-1]' : ''"
+            class="absolute left-1/2 top-1/2 z-50 size-52 pointer-events-none -translate-x-1/2 -translate-y-1/2"
+            autoplay
+            :speed="0.9"
+            loop
+            src="https://lottie.host/a3e34c03-f307-482b-a419-703ada211358/Ye6Cz6TKop.lottie"
+        />  
         <SwipeCard
             v-if="step === 'pass_demo'"
             :profile="swipeProfiles[0]"
             allowed-decision="pass"
             :locked="busy"
             compact
+            swipe-anime="left"
             @pass="decide('pass')"
             @like="decide('like')"
         />
@@ -224,6 +235,7 @@ function completeWithMessage(content: string): Promise<ConversationMessage> {
             allowed-decision="like"
             :locked="busy"
             compact
+            swipe-anime="right"
             @pass="decide('pass')"
             @like="decide('like')"
         />

@@ -1,12 +1,12 @@
 {
   "lockfileVersion": 1,
-  "configVersion": 0,
   "workspaces": {
     "": {
       "dependencies": {
         "@inertiajs/vite": "^3.0.0",
         "@inertiajs/vue3": "^3.0.0",
         "@laravel/passkeys": "^0.2.0",
+        "@lottiefiles/dotlottie-vue": "^0.11.27",
         "@lucide/vue": "^1.17.0",
         "@vueuse/core": "^14.4.0",
         "class-variance-authority": "^0.7.1",
@@ -136,6 +136,10 @@
     "@laravel/passkeys": ["@laravel/passkeys@0.2.0", "", { "dependencies": { "@simplewebauthn/browser": "^13.0.0" }, "peerDependencies": { "react": "^18.0.0 || ^19.0.0", "svelte": "^5.0.0", "vue": "^3.0.0" }, "optionalPeers": ["svelte"] }, "sha512-K+owv26weKrYaoTJutqU40UsJZpwYkqB9jdlz5Bv/C54nxj2+Py9jbVwxASWg21fLsPhn3ngPKZE5RnfakCQKg=="],
 
     "@laravel/vite-plugin-wayfinder": ["@laravel/vite-plugin-wayfinder@0.1.7", "", {}, "sha512-yZYIr1iwuCQ7LFI+GsJk9vacw1HWMp3ZlDlW0pdfz3zXyKeu4US7oH79KmQQ031L0cYaSyaUMo/Ha1D4BosKqw=="],
+
+    "@lottiefiles/dotlottie-vue": ["@lottiefiles/dotlottie-vue@0.11.27", "", { "dependencies": { "@lottiefiles/dotlottie-web": "0.80.0" }, "peerDependencies": { "vue": "^3.3.4" } }, "sha512-3IdS5SCFeD/cCi0V2SljJ37dvXCmgyyHcTmp82Ev35WBgCk9vwf7Gu08eJonxOx8UBBgWxMgCzv/MvgGkPmFJg=="],
+
+    "@lottiefiles/dotlottie-web": ["@lottiefiles/dotlottie-web@0.80.0", "", {}, "sha512-M00APgOJfP6xPZ3kAzZAUNATxluFiMU0wD3asp6HQSXDX8qLzSDh/Jmqbo0H7+WcqfpQkN8WYBu3aOzm2y/b4g=="],
 
     "@lucide/vue": ["@lucide/vue@1.31.0", "", { "peerDependencies": { "vue": ">=3.0.1" } }, "sha512-NtjEHhcAa7umPh40wrRmlESJqNGdnpc7LziBKFnW3fmlrW0g2xMCDpdWU7WeEHRSl3xOpxbqiFTLKxoK3CoVCg=="],
 

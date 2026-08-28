@@ -43,6 +43,7 @@
         "@inertiajs/vite": "^3.0.0",
         "@inertiajs/vue3": "^3.0.0",
         "@laravel/passkeys": "^0.2.0",
+        "@lottiefiles/dotlottie-vue": "^0.11.27",
         "@lucide/vue": "^1.17.0",
         "@vueuse/core": "^14.4.0",
         "class-variance-authority": "^0.7.1",
