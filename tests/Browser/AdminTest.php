@@ -275,7 +275,9 @@ test('an admin manages interests through confirmations and generated actions', f
     ]);
 
     $page->click("#reactivate-interest-{$interest->id}")
-        ->assertSee('Intérêt réactivé.');
+        ->assertSee('Intérêt réactivé.')
+        ->hover('[data-test="catalog-controls"]')
+        ->assertNotPresent('[data-sonner-toast]');
 
     $this->assertDatabaseHas('interests', [
         'id' => $interest->id,
