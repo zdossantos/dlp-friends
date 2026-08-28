@@ -10,6 +10,7 @@ use App\Models\ProductOnboardingSetting;
 use App\Models\User;
 use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
 
@@ -51,5 +52,31 @@ class ProductOnboardingSchemaTest extends TestCase
         ]))->toBeTrue()->and(Schema::hasColumns('product_onboarding_settings', [
             'id', 'pass_avatar_id', 'like_avatar_id', 'created_at', 'updated_at',
         ]))->toBeTrue();
+    }
+
+    public function test_skipped_progress_is_normalized_to_the_mandatory_first_step(): void
+    {
+        $user = User::factory()->create();
+
+        DB::table('product_onboardings')->insert([
+            'user_id' => $user->id,
+            'status' => 'skipped',
+            'step' => null,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $migration = require database_path(
+            'migrations/2026_08_28_110000_normalize_mandatory_product_onboarding_status.php',
+        );
+        $migration->up();
+
+        $progress = DB::table('product_onboardings')
+            ->where('user_id', $user->id)
+            ->first();
+
+        expect($progress)
+            ->status->toBe(ProductOnboardingStatus::InProgress->value)
+            ->step->toBe(ProductOnboardingStep::PassDemo->value);
     }
 }

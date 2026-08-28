@@ -46,14 +46,13 @@ class ProductOnboardingTransitionTest extends TestCase
         }
     }
 
-    public function test_restart_resets_progress_and_skip_is_terminal(): void
+    public function test_start_resumes_existing_progress_without_rewinding_it(): void
     {
         $user = User::factory()->create();
         $action = app(AdvanceProductOnboarding::class);
         $action->start($user);
         $action->advance($user, ProductOnboardingStep::PassDemo);
 
-        expect($action->start($user, restart: true)->step)->toBe(ProductOnboardingStep::PassDemo)
-            ->and($action->skip($user)->status)->toBe(ProductOnboardingStatus::Skipped);
+        expect($action->start($user)->step)->toBe(ProductOnboardingStep::LikeDemo);
     }
 }

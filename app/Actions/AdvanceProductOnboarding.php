@@ -11,9 +11,9 @@ use Illuminate\Validation\ValidationException;
 
 class AdvanceProductOnboarding
 {
-    public function start(User $user, bool $restart = false): ProductOnboarding
+    public function start(User $user): ProductOnboarding
     {
-        return DB::transaction(function () use ($user, $restart): ProductOnboarding {
+        return DB::transaction(function () use ($user): ProductOnboarding {
             $this->lockUser($user);
 
             $onboarding = ProductOnboarding::query()
@@ -21,7 +21,7 @@ class AdvanceProductOnboarding
                 ->lockForUpdate()
                 ->first();
 
-            if ($onboarding !== null && ! $restart) {
+            if ($onboarding !== null) {
                 return $onboarding;
             }
 
@@ -73,24 +73,6 @@ class AdvanceProductOnboarding
 
             $onboarding->update([
                 'status' => ProductOnboardingStatus::Completed,
-                'step' => null,
-            ]);
-
-            return $onboarding->refresh();
-        });
-    }
-
-    public function skip(User $user): ProductOnboarding
-    {
-        return DB::transaction(function () use ($user): ProductOnboarding {
-            $onboarding = $this->lockProgress($user);
-
-            if ($onboarding->status !== ProductOnboardingStatus::InProgress) {
-                $this->invalidTransition();
-            }
-
-            $onboarding->update([
-                'status' => ProductOnboardingStatus::Skipped,
                 'step' => null,
             ]);
 
