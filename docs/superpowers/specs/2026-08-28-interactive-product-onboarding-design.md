@@ -56,6 +56,19 @@ réglages remettent le statut à `in_progress` et l’étape à `pass_demo`. Ign
 marque `skipped`; terminer marque `completed`. Ces deux états empêchent tout
 redémarrage automatique, mais pas une relance volontaire.
 
+Une table singleton `product_onboarding_settings` configure les deux cartes de
+démonstration :
+
+- `pass_avatar_id`, clé étrangère vers l’avatar de la première carte ;
+- `like_avatar_id`, clé étrangère vers l’avatar de la seconde carte ;
+- les timestamps Laravel.
+
+Les deux avatars doivent être actifs et distincts. La configuration référence
+le catalogue existant et ne duplique ni image ni métadonnée d’avatar. Une valeur
+initiale déterministe est créée depuis les deux premiers avatars actifs lors du
+seeding local ; en production, l’administration doit enregistrer une
+configuration valide avant que le tutoriel ne puisse démarrer.
+
 ## Déclenchement et navigation
 
 La première complétion du profil détecte la transition d’un profil incomplet
@@ -70,10 +83,11 @@ tutoriel utilisent les middlewares membre existants et exigent un profil
 complet.
 
 La page utilise le layout membre en mode focalisé : la navigation principale
-est masquée pendant le parcours, mais les actions explicites « Quitter » et
-« Ignorer le tutoriel » restent disponibles. Quitter revient à l’espace membre
-sans changer un statut `in_progress`. Une nouvelle page « Tutoriel » dans les
-réglages décrit l’état actuel et propose de relancer le parcours.
+et la navigation inférieure sont entièrement masquées pendant toutes les pages
+du parcours, mais les actions explicites « Quitter » et « Ignorer le tutoriel »
+restent disponibles. Quitter revient à l’espace membre sans changer un statut
+`in_progress`. Une nouvelle page « Tutoriel » dans les réglages décrit l’état
+actuel et propose de relancer le parcours.
 
 ## Architecture backend
 
@@ -91,6 +105,42 @@ séparation structurelle garantit que la démonstration ne peut pas écrire dans
 Les propriétés Inertia contiennent uniquement le statut, l’étape et du contenu
 de démonstration localisé. Les données fictives sont définies côté application,
 pas dans les tables membres.
+
+## Administration du tutoriel
+
+Une page protégée par le rôle `admin`, accessible depuis la navigation
+d’administration sous le libellé « Onboarding », réunit configuration et suivi.
+
+La section de configuration présente deux sélecteurs limités aux avatars actifs
+et enregistre les avatars des cartes Pass et Like. Une Form Request valide leur
+présence, leur activité et leur différence. L’autorisation et la validation
+restent côté Laravel.
+
+Un avatar référencé par l’une des deux cartes ne peut être ni archivé ni
+supprimé. Les actions existantes du catalogue vérifient la configuration dans
+la même opération serveur et renvoient une erreur explicite indiquant que
+l’avatar doit d’abord être remplacé dans la configuration du tutoriel. Masquer
+le bouton dans Vue ne constitue qu’une aide visuelle ; la protection backend
+reste définitive.
+
+Au-dessus du tableau de suivi, cinq indicateurs affichent :
+
+- le nombre de membres `not_started` ;
+- le nombre de membres `in_progress` ;
+- le nombre de membres `completed` ;
+- le nombre de membres `skipped` ;
+- le taux de complétion, calculé comme `completed / total des membres éligibles`
+  et affiché à zéro lorsque le dénominateur est nul.
+
+Un membre éligible est un compte membre actif, majeur, vérifié et doté d’un
+profil complet. L’absence de ligne `product_onboardings` est agrégée et affichée
+comme `not_started`.
+
+Le tableau paginé affiche, pour chaque membre éligible, le nom d’affichage,
+l’e-mail, le statut, l’étape courante lorsqu’elle existe et la date de dernière
+activité du tutoriel. Il est trié par activité décroissante, puis par identifiant
+utilisateur décroissant afin de rester stable. Il n’expose aucun swipe, match,
+conversation, message privé ou autre contenu social.
 
 ## Architecture frontend et accessibilité
 
@@ -142,13 +192,21 @@ Les tests Pest couvrent :
   la relance depuis les réglages ;
 - l’absence de toute ligne nouvelle dans `swipes`, `matches`, `conversations`
   et `messages` pendant l’ensemble du parcours ;
-- les propriétés Inertia limitées au contenu fictif.
+- les propriétés Inertia limitées au contenu fictif ;
+- la configuration administrative, les avatars actifs et distincts, ainsi que
+  l’interdiction d’archiver ou supprimer un avatar utilisé ;
+- les agrégats, le taux de complétion, le traitement des absences de ligne et la
+  pagination stable du tableau de suivi ;
+- l’accès strictement administrateur à la configuration et aux statistiques.
 
 Les tests Pest Browser remplacent les tests Vitest demandés par l’issue, car le
 dépôt a migré ses parcours frontend vers Pest Browser. Ils couvrent Pass
 obligatoire, Like obligatoire, faux match, bouton d’ouverture, conversation
 guidée, reprise et relance, en tactile simulé, souris et clavier, avec les
-libellés accessibles et le focus attendu.
+libellés accessibles et le focus attendu. Ils vérifient aussi l’absence de toute
+navigation inférieure pendant le parcours. Le parcours navigateur admin couvre
+la sélection des deux avatars, les erreurs de validation et le rendu des
+statistiques et du tableau.
 
 Les contrôles finaux comprennent les tests ciblés, `composer test`, les
 contrôles frontend, le build Vite et la génération Wayfinder.
@@ -156,6 +214,6 @@ contrôles frontend, le build Vite et la génération Wayfinder.
 ## Hors périmètre
 
 Le parcours n’ajoute ni vidéo, récompense, succès, personnalisation
-comportementale, analytics, profil de démonstration administrable, vraie
-interaction sociale, pièce jointe, réaction ou fonctionnalité de messagerie
-supplémentaire.
+comportementale, analytics événementielles, édition administrative des noms,
+bios ou messages fictifs, vraie interaction sociale, pièce jointe, réaction ou
+fonctionnalité de messagerie supplémentaire.
