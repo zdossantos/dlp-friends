@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Head, router } from '@inertiajs/vue3';
+import { DotLottieVue } from '@lottiefiles/dotlottie-vue';
 import { computed, nextTick, ref, watch } from 'vue';
 import { toast } from 'vue-sonner';
 import ConversationHeader from '@/components/conversations/ConversationHeader.vue';
@@ -8,13 +9,13 @@ import MessageItems from '@/components/conversations/MessageItems.vue';
 import MatchDialog from '@/components/discovery/MatchDialog.vue';
 import SwipeCard from '@/components/discovery/SwipeCard.vue';
 import ProfileFormStepper from '@/components/profile/ProfileFormStepper.vue';
+import { useTranslations } from '@/composables/useTranslations';
 import { advance, complete } from '@/routes/onboarding';
 import type {
     ConversationMessage,
     ConversationParticipant,
     DiscoveryCardProfile,
 } from '@/types';
-import { DotLottieVue } from '@lottiefiles/dotlottie-vue'  
 
 type Step = 'pass_demo' | 'like_demo' | 'match_demo' | 'conversation_demo';
 type DemoProfile = {
@@ -34,6 +35,7 @@ const props = defineProps<{
     step: Step;
     demoProfiles: [DemoProfile, DemoProfile];
 }>();
+const { t } = useTranslations();
 
 const busy = ref(false);
 const tutorialMessages = ref<ConversationMessage[]>([
@@ -41,21 +43,21 @@ const tutorialMessages = ref<ConversationMessage[]>([
         id: 1,
         conversation_id: 0,
         author_user_id: 0,
-        content: 'Bonjour ! Quel est ton endroit préféré dans le parc ?',
+        content: t('onboarding.initial_message'),
         read_at: null,
         created_at: null,
     },
 ]);
-const registrationStepLabels = [
-    'Avatar',
-    'Identité',
-    'Affinités',
-    'Aperçu',
-    'Passer',
-    'J’aime',
-    'Match',
-    'Discussion',
-] as const;
+const registrationStepLabels = computed(() => [
+    t('onboarding.step_avatar'),
+    t('onboarding.step_identity'),
+    t('onboarding.step_affinities'),
+    t('onboarding.step_preview'),
+    t('onboarding.step_pass'),
+    t('onboarding.step_like'),
+    t('onboarding.step_match'),
+    t('onboarding.step_conversation'),
+]);
 const currentRegistrationStep = computed(
     () =>
         ({
@@ -108,14 +110,10 @@ function toSwipeProfile(
     };
 }
 const stepInstruction = computed<Record<Step, string>>(() => ({
-    pass_demo:
-        'Pour découvrir comment écarter un profil qui ne vous correspond pas, choisissez Passer.',
-    like_demo:
-        'Aimez ce profil pour indiquer que vous souhaitez faire connaissance.',
-    match_demo:
-        'Lorsque deux membres s’aiment mutuellement, un match amical est créé.',
-    conversation_demo:
-        'Envoyez un premier message pour terminer votre inscription.',
+    pass_demo: t('onboarding.pass_instruction'),
+    like_demo: t('onboarding.like_instruction'),
+    match_demo: t('onboarding.match_instruction'),
+    conversation_demo: t('onboarding.conversation_instruction'),
 }));
 
 watch(
@@ -137,7 +135,7 @@ function submitStep(expected: Step): void {
                 busy.value = false;
             },
             onError: () => {
-                toast.error('Cette étape n’a pas pu être validée. Réessayez.');
+                toast.error(t('onboarding.step_error'));
             },
         },
     );
@@ -149,8 +147,8 @@ function decide(decision: 'pass' | 'like'): void {
     if (decision !== required) {
         toast.error(
             required === 'pass'
-                ? 'Passez ce profil pour continuer.'
-                : 'Aimez ce profil pour continuer.',
+                ? t('onboarding.reject_instruction')
+                : t('onboarding.like_required'),
         );
 
         return;
@@ -177,9 +175,7 @@ function completeWithMessage(content: string): Promise<ConversationMessage> {
             {
                 onSuccess: () => resolve(message),
                 onError: () => {
-                    toast.error(
-                        'Votre message n’a pas pu être envoyé. Réessayez.',
-                    );
+                    toast.error(t('onboarding.message_error'));
                     reject(new Error('Unable to complete onboarding.'));
                 },
                 onFinish: () => {
@@ -192,9 +188,9 @@ function completeWithMessage(content: string): Promise<ConversationMessage> {
 </script>
 
 <template>
-    <Head title="Prise en main" />
+    <Head :title="t('onboarding.page_title')" />
     <main
-        class="mx-auto relative flex min-h-full w-full max-w-2xl flex-col items-center gap-5 overflow-y-auto px-4 py-[max(1rem,env(safe-area-inset-top))] sm:px-6"
+        class="relative mx-auto flex min-h-full w-full max-w-2xl flex-col items-center gap-5 overflow-y-auto px-4 py-[max(1rem,env(safe-area-inset-top))] sm:px-6"
     >
         <ProfileFormStepper
             class="w-full"
@@ -213,12 +209,12 @@ function completeWithMessage(content: string): Promise<ConversationMessage> {
         <DotLottieVue
             v-if="['pass_demo', 'like_demo'].includes(step)"
             :class="step === 'like_demo' ? 'scale-x-[-1]' : ''"
-            class="absolute left-1/2 top-1/2 z-50 size-52 pointer-events-none -translate-x-1/2 -translate-y-1/2"
+            class="pointer-events-none absolute top-1/2 left-1/2 z-50 size-52 -translate-x-1/2 -translate-y-1/2"
             autoplay
             :speed="0.9"
             loop
             src="https://lottie.host/a3e34c03-f307-482b-a419-703ada211358/Ye6Cz6TKop.lottie"
-        />  
+        />
         <SwipeCard
             v-if="step === 'pass_demo'"
             :profile="swipeProfiles[0]"
@@ -255,7 +251,7 @@ function completeWithMessage(content: string): Promise<ConversationMessage> {
             <ConversationHeader :participant="tutorialParticipant" />
             <section
                 role="log"
-                aria-label="Historique des messages"
+                :aria-label="t('onboarding.message_history')"
                 aria-relevant="additions text"
                 class="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-4 sm:px-6"
             >

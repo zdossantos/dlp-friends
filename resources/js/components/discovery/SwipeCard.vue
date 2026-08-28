@@ -138,7 +138,10 @@ function rememberPointerStart(event: PointerEvent) {
     };
     dragOffset.value = { x: 0, y: 0 };
     isDragging.value = true;
-    target?.setPointerCapture?.(event.pointerId);
+
+    if (event.isPrimary) {
+        target?.setPointerCapture?.(event.pointerId);
+    }
 }
 
 function handlePointerMove(event: PointerEvent) {

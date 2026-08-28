@@ -104,7 +104,7 @@ class AdvanceProductOnboarding
     private function invalidTransition(): never
     {
         throw ValidationException::withMessages([
-            'onboarding' => __('Cette étape du tutoriel n’est pas encore disponible.'),
+            'onboarding' => __('onboarding.invalid_transition'),
         ]);
     }
 }

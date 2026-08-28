@@ -22,7 +22,7 @@ class ProductOnboardingController extends Controller
     {
         $settings = ProductOnboardingSetting::current();
 
-        abort_unless($this->hasValidSettings($settings), 503, __('Le tutoriel est temporairement indisponible.'));
+        abort_unless($this->hasValidSettings($settings), 503, __('onboarding.unavailable'));
 
         $progress = $this->onboarding->start($request->user());
 

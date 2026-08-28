@@ -21,7 +21,7 @@ class AvatarStatusController extends Controller
 
             if (! $isActive && $this->isUsedByOnboarding($lockedAvatar)) {
                 throw ValidationException::withMessages([
-                    'avatar' => __('Cet avatar est utilisé par le tutoriel. Remplacez-le dans la configuration avant de continuer.'),
+                    'avatar' => __('onboarding.avatar_in_use'),
                 ]);
             }
 

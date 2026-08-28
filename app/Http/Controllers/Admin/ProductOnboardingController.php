@@ -95,7 +95,7 @@ class ProductOnboardingController extends Controller
 
         Inertia::flash('toast', [
             'type' => 'success',
-            'message' => __('Configuration du tutoriel enregistrée.'),
+            'message' => __('onboarding.configuration_saved'),
         ]);
 
         return back();

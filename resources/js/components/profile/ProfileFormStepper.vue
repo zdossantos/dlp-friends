@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { useTranslations } from '@/composables/useTranslations';
+
 const props = defineProps<{
     labels: readonly string[];
     currentStep: number;
@@ -7,6 +9,7 @@ const props = defineProps<{
 }>();
 
 const emit = defineEmits<{ select: [step: number] }>();
+const { t } = useTranslations();
 
 function selectStep(step: number): void {
     if (props.selectable !== false && step <= props.furthestStep) {
@@ -16,10 +19,15 @@ function selectStep(step: number): void {
 </script>
 
 <template>
-    <nav aria-label="Progression du profil" class="space-y-3">
+    <nav :aria-label="t('stepper.navigation')" class="space-y-3">
         <div class="flex items-center justify-between gap-4">
             <p class="text-sm font-semibold text-foreground">
-                {{ currentStep }} sur {{ labels.length }}
+                {{
+                    t('stepper.progress', {
+                        current: currentStep,
+                        total: labels.length,
+                    })
+                }}
             </p>
             <p class="text-sm text-muted-foreground">
                 {{ labels[currentStep - 1] }}
@@ -36,7 +44,12 @@ function selectStep(step: number): void {
                     type="button"
                     class="group block min-h-11 w-full rounded-full focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-default"
                     :disabled="selectable === false || index + 1 > furthestStep"
-                    :aria-label="`Étape ${index + 1} : ${label}`"
+                    :aria-label="
+                        t('stepper.step', {
+                            number: index + 1,
+                            label,
+                        })
+                    "
                     :aria-current="
                         currentStep === index + 1 ? 'step' : undefined
                     "

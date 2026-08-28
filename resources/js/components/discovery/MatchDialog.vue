@@ -9,6 +9,7 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
+import { useTranslations } from '@/composables/useTranslations';
 
 const props = withDefaults(
     defineProps<{
@@ -26,6 +27,7 @@ const emit = defineEmits<{
     'update:open': [value: boolean];
     openConversation: [];
 }>();
+const { t } = useTranslations();
 
 function updateOpen(open: boolean): void {
     if (open || props.dismissible) {
@@ -46,11 +48,14 @@ function updateOpen(open: boolean): void {
                     class="text-amber-900 outline-none dark:text-amber-100"
                     tabindex="-1"
                 >
-                    C’est un match !
+                    {{ t('match_dialog.title') }}
                 </DialogTitle>
                 <DialogDescription>
-                    {{ match.displayName }} a aussi aimé votre profil. Vous
-                    pouvez maintenant commencer à échanger.
+                    {{
+                        t('match_dialog.description', {
+                            name: match.displayName,
+                        })
+                    }}
                 </DialogDescription>
             </DialogHeader>
             <DialogFooter>
@@ -59,7 +64,7 @@ function updateOpen(open: boolean): void {
                         :href="conversationHref"
                         data-test="open-match-conversation"
                     >
-                        Ouvrir la conversation
+                        {{ t('match_dialog.open_conversation') }}
                     </Link>
                 </Button>
                 <Button
@@ -70,15 +75,15 @@ function updateOpen(open: boolean): void {
                     :disabled="locked"
                     @click="emit('openConversation')"
                 >
-                    Ouvrir la conversation
+                    {{ t('match_dialog.open_conversation') }}
                 </Button>
                 <Button
                     v-if="showContinue"
                     type="button"
-                    aria-label="Continuer à découvrir"
+                    :aria-label="t('match_dialog.continue')"
                     @click="emit('update:open', false)"
                 >
-                    Continuer à découvrir
+                    {{ t('match_dialog.continue') }}
                 </Button>
             </DialogFooter>
         </DialogContent>

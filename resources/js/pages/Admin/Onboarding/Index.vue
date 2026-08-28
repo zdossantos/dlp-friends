@@ -11,6 +11,7 @@ import {
     CardTitle,
 } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
+import { useTranslations } from '@/composables/useTranslations';
 import { dashboard } from '@/routes';
 import { index, update } from '@/routes/admin/onboarding';
 
@@ -53,24 +54,25 @@ const props = defineProps<{
         links: PaginationLink[];
     };
 }>();
+const { formatDate: formatLocalizedDate, t } = useTranslations();
 
 const statCards = [
-    { key: 'not_started' as const, label: 'Pas commencé' },
-    { key: 'in_progress' as const, label: 'En cours' },
-    { key: 'completed' as const, label: 'Terminé' },
+    { key: 'not_started' as const, label: t('admin_onboarding.not_started') },
+    { key: 'in_progress' as const, label: t('admin_onboarding.in_progress') },
+    { key: 'completed' as const, label: t('admin_onboarding.completed') },
 ];
 
 const statusLabels: Record<Member['status'], string> = {
-    not_started: 'Pas commencé',
-    in_progress: 'En cours',
-    completed: 'Terminé',
+    not_started: t('admin_onboarding.not_started'),
+    in_progress: t('admin_onboarding.in_progress'),
+    completed: t('admin_onboarding.completed'),
 };
 
 const stepLabels: Record<string, string> = {
-    pass_demo: 'Carte à passer',
-    like_demo: 'Carte à liker',
-    match_demo: 'Match',
-    conversation_demo: 'Conversation',
+    pass_demo: t('admin_onboarding.pass_demo'),
+    like_demo: t('admin_onboarding.like_demo'),
+    match_demo: t('admin_onboarding.match_demo'),
+    conversation_demo: t('admin_onboarding.conversation_demo'),
 };
 
 function avatarById(id: number | null): Avatar | undefined {
@@ -78,34 +80,43 @@ function avatarById(id: number | null): Avatar | undefined {
 }
 
 function formatDate(value: string): string {
-    return new Intl.DateTimeFormat('fr-FR', {
+    return formatLocalizedDate(value, {
         dateStyle: 'short',
         timeStyle: 'short',
-    }).format(new Date(value));
+    });
 }
 
 defineOptions({
     layout: {
         breadcrumbs: [
-            { title: 'Administration', href: dashboard() },
-            { title: 'Tutoriel', href: index() },
+            {
+                title: '',
+                titleKey: 'admin_onboarding.administration',
+                href: dashboard(),
+            },
+            {
+                title: '',
+                titleKey: 'admin_onboarding.breadcrumb',
+                href: index(),
+            },
         ],
     },
 });
 </script>
 
 <template>
-    <Head title="Tutoriel produit" />
+    <Head :title="t('admin_onboarding.page_title')" />
 
     <main class="flex flex-1 flex-col gap-6 p-4 sm:p-6">
         <header>
-            <p class="text-sm font-medium text-primary">Administration</p>
+            <p class="text-sm font-medium text-primary">
+                {{ t('admin_onboarding.administration') }}
+            </p>
             <h1 class="text-3xl font-semibold tracking-tight">
-                Tutoriel produit
+                {{ t('admin_onboarding.page_title') }}
             </h1>
             <p class="mt-1 text-muted-foreground">
-                Configurez les profils du tutoriel et suivez la progression des
-                membres.
+                {{ t('admin_onboarding.description') }}
             </p>
         </header>
 
@@ -120,7 +131,9 @@ defineOptions({
             </Card>
             <Card>
                 <CardHeader class="pb-2">
-                    <CardDescription>Taux de complétion</CardDescription>
+                    <CardDescription>{{
+                        t('admin_onboarding.completion_rate')
+                    }}</CardDescription>
                     <CardTitle class="text-3xl"
                         >{{ stats.completion_rate }} %</CardTitle
                     >
@@ -130,11 +143,11 @@ defineOptions({
 
         <Card>
             <CardHeader>
-                <CardTitle>Profils du tutoriel</CardTitle>
+                <CardTitle>{{
+                    t('admin_onboarding.profiles_title')
+                }}</CardTitle>
                 <CardDescription>
-                    Choisissez deux avatars actifs et distincts. Ils ne pourront
-                    plus être archivés ou supprimés tant qu’ils sont utilisés
-                    ici.
+                    {{ t('admin_onboarding.profiles_description') }}
                 </CardDescription>
             </CardHeader>
             <CardContent>
@@ -144,9 +157,9 @@ defineOptions({
                     v-slot="{ errors, processing }"
                 >
                     <div class="grid gap-2">
-                        <Label for="pass_avatar_id"
-                            >Première carte à passer</Label
-                        >
+                        <Label for="pass_avatar_id">{{
+                            t('admin_onboarding.pass_avatar')
+                        }}</Label>
                         <select
                             id="pass_avatar_id"
                             name="pass_avatar_id"
@@ -154,7 +167,9 @@ defineOptions({
                             :value="setting.pass_avatar_id ?? ''"
                             class="h-10 rounded-md border bg-background px-3 text-sm"
                         >
-                            <option value="" disabled>Choisir un avatar</option>
+                            <option value="" disabled>
+                                {{ t('admin_onboarding.choose_avatar') }}
+                            </option>
                             <option
                                 v-for="avatar in avatars"
                                 :key="avatar.id"
@@ -173,9 +188,9 @@ defineOptions({
                     </div>
 
                     <div class="grid gap-2">
-                        <Label for="like_avatar_id"
-                            >Deuxième carte à liker</Label
-                        >
+                        <Label for="like_avatar_id">{{
+                            t('admin_onboarding.like_avatar')
+                        }}</Label>
                         <select
                             id="like_avatar_id"
                             name="like_avatar_id"
@@ -183,7 +198,9 @@ defineOptions({
                             :value="setting.like_avatar_id ?? ''"
                             class="h-10 rounded-md border bg-background px-3 text-sm"
                         >
-                            <option value="" disabled>Choisir un avatar</option>
+                            <option value="" disabled>
+                                {{ t('admin_onboarding.choose_avatar') }}
+                            </option>
                             <option
                                 v-for="avatar in avatars"
                                 :key="avatar.id"
@@ -206,7 +223,7 @@ defineOptions({
                         :disabled="processing || avatars.length < 2"
                         class="lg:col-span-2 lg:justify-self-start"
                     >
-                        Enregistrer la configuration
+                        {{ t('admin_onboarding.save') }}
                     </Button>
                 </Form>
             </CardContent>
@@ -214,22 +231,34 @@ defineOptions({
 
         <Card>
             <CardHeader>
-                <CardTitle>Progression des membres</CardTitle>
+                <CardTitle>{{ t('admin_onboarding.members_title') }}</CardTitle>
                 <CardDescription>
-                    {{ members.total }} membre{{
-                        members.total > 1 ? 's' : ''
+                    {{
+                        t(
+                            members.total === 1
+                                ? 'admin_onboarding.eligible_member'
+                                : 'admin_onboarding.eligible_members',
+                            { count: members.total },
+                        )
                     }}
-                    éligible{{ members.total > 1 ? 's' : '' }} au tutoriel.
                 </CardDescription>
             </CardHeader>
             <CardContent class="overflow-x-auto">
                 <table class="w-full min-w-3xl text-left text-sm">
                     <thead class="border-b text-muted-foreground">
                         <tr>
-                            <th class="px-3 py-2 font-medium">Membre</th>
-                            <th class="px-3 py-2 font-medium">Statut</th>
-                            <th class="px-3 py-2 font-medium">Étape</th>
-                            <th class="px-3 py-2 font-medium">Mise à jour</th>
+                            <th class="px-3 py-2 font-medium">
+                                {{ t('admin_onboarding.member') }}
+                            </th>
+                            <th class="px-3 py-2 font-medium">
+                                {{ t('admin_onboarding.status') }}
+                            </th>
+                            <th class="px-3 py-2 font-medium">
+                                {{ t('admin_onboarding.step') }}
+                            </th>
+                            <th class="px-3 py-2 font-medium">
+                                {{ t('admin_onboarding.updated_at') }}
+                            </th>
                         </tr>
                     </thead>
                     <tbody>
@@ -274,7 +303,7 @@ defineOptions({
                                 colspan="4"
                                 class="px-3 py-8 text-center text-muted-foreground"
                             >
-                                Aucun membre éligible pour le moment.
+                                {{ t('admin_onboarding.empty') }}
                             </td>
                         </tr>
                     </tbody>
@@ -282,7 +311,7 @@ defineOptions({
 
                 <nav
                     v-if="members.links.length > 3"
-                    aria-label="Pagination des membres"
+                    :aria-label="t('admin_onboarding.pagination')"
                     class="mt-4 flex flex-wrap gap-2"
                 >
                     <Button

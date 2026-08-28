@@ -12,6 +12,11 @@ export type TranslationMessages = {
         discovery: string;
         conversations: string;
     };
+    onboarding: Record<string, string>;
+    admin_onboarding: Record<string, string>;
+    registration: Record<string, string>;
+    match_dialog: Record<string, string>;
+    stepper: Record<string, string>;
     copy: Record<string, string>;
 };
 

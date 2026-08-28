@@ -7,24 +7,25 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
+import { useTranslations } from '@/composables/useTranslations';
 import { login } from '@/routes';
 import { store } from '@/routes/register';
 
 defineProps<{
     passwordRules: string;
 }>();
+const { t } = useTranslations();
 
 defineOptions({
     layout: {
-        title: 'Créer un compte',
-        description:
-            'Vous créerez ensuite votre profil, puis un tutoriel vous expliquera comment rencontrer d’autres membres.',
+        titleKey: 'registration.title',
+        descriptionKey: 'registration.description',
     },
 });
 </script>
 
 <template>
-    <Head title="Créer un compte" />
+    <Head :title="t('registration.title')" />
 
     <Form
         v-bind="store.form()"
@@ -34,7 +35,7 @@ defineOptions({
     >
         <div class="grid gap-6">
             <div class="grid gap-2">
-                <Label for="email">Adresse e-mail</Label>
+                <Label for="email">{{ t('registration.email') }}</Label>
                 <Input
                     id="email"
                     type="email"
@@ -42,13 +43,15 @@ defineOptions({
                     :tabindex="1"
                     autocomplete="email"
                     name="email"
-                    placeholder="vous@exemple.fr"
+                    :placeholder="t('registration.email_placeholder')"
                 />
                 <InputError :message="errors.email" />
             </div>
 
             <div class="grid gap-2">
-                <Label for="birth_date">Date de naissance</Label>
+                <Label for="birth_date">{{
+                    t('registration.birth_date')
+                }}</Label>
                 <Input
                     id="birth_date"
                     type="date"
@@ -61,30 +64,30 @@ defineOptions({
             </div>
 
             <div class="grid gap-2">
-                <Label for="password">Mot de passe</Label>
+                <Label for="password">{{ t('registration.password') }}</Label>
                 <PasswordInput
                     id="password"
                     required
                     :tabindex="3"
                     autocomplete="new-password"
                     name="password"
-                    placeholder="Mot de passe"
+                    :placeholder="t('registration.password')"
                     :passwordrules="passwordRules"
                 />
                 <InputError :message="errors.password" />
             </div>
 
             <div class="grid gap-2">
-                <Label for="password_confirmation"
-                    >Confirmer le mot de passe</Label
-                >
+                <Label for="password_confirmation">{{
+                    t('registration.password_confirmation')
+                }}</Label>
                 <PasswordInput
                     id="password_confirmation"
                     required
                     :tabindex="4"
                     autocomplete="new-password"
                     name="password_confirmation"
-                    placeholder="Confirmer le mot de passe"
+                    :placeholder="t('registration.password_confirmation')"
                     :passwordrules="passwordRules"
                 />
                 <InputError :message="errors.password_confirmation" />
@@ -98,17 +101,17 @@ defineOptions({
                 data-test="register-user-button"
             >
                 <Spinner v-if="processing" />
-                Créer mon compte
+                {{ t('registration.submit') }}
             </Button>
         </div>
 
         <div class="text-center text-sm text-muted-foreground">
-            Vous avez déjà un compte ?
+            {{ t('registration.existing_account') }}
             <TextLink
                 :href="login()"
                 class="underline underline-offset-4"
                 :tabindex="6"
-                >Se connecter</TextLink
+                >{{ t('registration.login') }}</TextLink
             >
         </div>
     </Form>

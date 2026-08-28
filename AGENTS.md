@@ -100,6 +100,11 @@ php artisan test tests/Browser/AdminTest.php
 - Préférer la Composition API et TypeScript dans les composants Vue.
 - Réutiliser les composants existants et Reka UI avant d'ajouter une nouvelle
   primitive.
+- Ajouter les traductions pendant le développement de chaque fonctionnalité.
+  Aucun texte visible par l'utilisateur ne doit être écrit en dur dans les
+  templates, le code frontend ou les réponses backend : utiliser les catalogues
+  Laravel/frontend existants, y compris pour les placeholders, libellés
+  d'accessibilité, toasts et messages d'erreur.
 - Appliquer KISS et YAGNI. Ne pas ajouter d'abstraction ou de dépendance en
   prévision d'un besoin futur.
 - Ne pas effectuer de refactorisation sans rapport avec la demande.
