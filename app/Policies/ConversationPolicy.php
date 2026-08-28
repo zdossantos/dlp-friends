@@ -17,7 +17,10 @@ final class ConversationPolicy
 
     public function send(User $user, Conversation $conversation): bool
     {
+        $match = $conversation->memberMatch;
+
         return $conversation->archived_at === null
-            && $this->view($user, $conversation);
+            && $this->view($user, $conversation)
+            && ! $match->lowUser->hasBlockedRelationshipWith($match->highUser);
     }
 }

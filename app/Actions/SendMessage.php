@@ -13,10 +13,24 @@ final class SendMessage
 {
     public function handle(User $author, Conversation $conversation, string $content): Message
     {
-        Gate::forUser($author)->authorize('send', $conversation);
-
         return DB::transaction(function () use ($author, $conversation, $content): Message {
-            $message = $conversation->messages()->create([
+            $conversation->loadMissing('memberMatch');
+            $match = $conversation->memberMatch;
+
+            User::query()
+                ->whereKey([$match->user_low_id, $match->user_high_id])
+                ->orderBy('id')
+                ->lockForUpdate()
+                ->get();
+
+            $lockedConversation = Conversation::query()
+                ->with('memberMatch.lowUser', 'memberMatch.highUser')
+                ->lockForUpdate()
+                ->findOrFail($conversation->id);
+
+            Gate::forUser($author)->authorize('send', $lockedConversation);
+
+            $message = $lockedConversation->messages()->create([
                 'author_user_id' => $author->id,
                 'content' => $content,
             ]);

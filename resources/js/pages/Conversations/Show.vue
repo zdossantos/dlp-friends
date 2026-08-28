@@ -9,6 +9,7 @@ import { useConversationMessages } from '@/composables/useConversationMessages';
 import { useConversationRealtime } from '@/composables/useConversationRealtime';
 import { index as conversationsIndex } from '@/routes/conversations';
 import { store as storeConversationRead } from '@/routes/conversations/read';
+import { show as showMember } from '@/routes/members';
 import type {
     ConversationDetails,
     ConversationMessage,
@@ -76,6 +77,8 @@ const timelineMessages = computed<PaginatedMessages>(() => ({
         <ConversationHeader
             :participant="participant"
             :back-href="conversationsIndex().url"
+            :profile-href="showMember(participant.id).url"
+            :blockable="conversation.archived_at === null"
         />
 
         <RealtimeStatus

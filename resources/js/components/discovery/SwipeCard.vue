@@ -1,9 +1,11 @@
 <script setup lang="ts">
+import { Link } from '@inertiajs/vue3';
 import { Sparkles, Users, X } from '@lucide/vue';
 import { computed, onBeforeUnmount, ref, watch } from 'vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { useTranslations } from '@/composables/useTranslations';
 import type {
     DiscoveryCardProfile,
     SwipeDecision,
@@ -21,11 +23,13 @@ const props = withDefaults(
         preview?: boolean;
         compact?: boolean;
         allowedDecision?: AllowedDecision;
+        publicProfileHref?: string;
     }>(),
     { allowedDecision: 'both', compact: false, preview: false },
 );
 
 const emit = defineEmits<{ like: []; pass: [] }>();
+const { t } = useTranslations();
 
 const visitFrequencyLabels: Record<VisitFrequency, string> = {
     rarely: 'Rarement',
@@ -381,6 +385,18 @@ watch(
                     et droite.
                 </template>
             </p>
+            <Button
+                v-if="publicProfileHref && !preview"
+                as-child
+                variant="ghost"
+                class="w-full rounded-full"
+                @pointerdown.stop
+                @pointerup.stop
+            >
+                <Link :href="publicProfileHref" @click.stop>
+                    {{ t('blocking.view_profile') }}
+                </Link>
+            </Button>
             <div
                 :class="[
                     'grid grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)]',

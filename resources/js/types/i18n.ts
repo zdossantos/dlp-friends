@@ -16,6 +16,7 @@ export type TranslationMessages = {
     admin_onboarding: Record<string, string>;
     registration: Record<string, string>;
     match_dialog: Record<string, string>;
+    blocking: Record<string, string>;
     stepper: Record<string, string>;
     copy: Record<string, string>;
 };

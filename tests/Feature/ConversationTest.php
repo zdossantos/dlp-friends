@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Actions\MarkConversationRead;
 use App\Events\MessagesRead;
+use App\Models\Block;
 use App\Models\Conversation;
 use App\Models\MemberMatch;
 use App\Models\Message;
@@ -21,6 +22,20 @@ use Tests\TestCase;
 class ConversationTest extends TestCase
 {
     use RefreshDatabase;
+
+    public function test_both_members_keep_history_access_but_cannot_send_after_a_block(): void
+    {
+        [$lowUser, $highUser, $conversation] = $this->conversationMembers();
+        Block::factory()->create([
+            'blocker_user_id' => $lowUser->id,
+            'blocked_user_id' => $highUser->id,
+        ]);
+
+        expect(Gate::forUser($lowUser)->allows('view', $conversation))->toBeTrue()
+            ->and(Gate::forUser($highUser)->allows('view', $conversation))->toBeTrue()
+            ->and(Gate::forUser($lowUser)->allows('send', $conversation))->toBeFalse()
+            ->and(Gate::forUser($highUser)->allows('send', $conversation))->toBeFalse();
+    }
 
     public function test_a_match_exposes_its_conversation(): void
     {

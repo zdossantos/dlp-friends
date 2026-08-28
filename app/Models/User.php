@@ -9,6 +9,7 @@ use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Contracts\Translation\HasLocalePreference;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -113,6 +114,20 @@ class User extends Authenticatable implements HasLocalePreference, MustVerifyEma
     public function authoredMessages(): HasMany
     {
         return $this->hasMany(Message::class, 'author_user_id');
+    }
+
+    public function hasBlockedRelationshipWith(User $other): bool
+    {
+        return Block::query()
+            ->where(function (Builder $query) use ($other): void {
+                $query->where('blocker_user_id', $this->id)
+                    ->where('blocked_user_id', $other->id);
+            })
+            ->orWhere(function (Builder $query) use ($other): void {
+                $query->where('blocker_user_id', $other->id)
+                    ->where('blocked_user_id', $this->id);
+            })
+            ->exists();
     }
 
     public function hasRole(string|RoleName $role): bool
