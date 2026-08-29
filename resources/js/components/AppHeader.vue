@@ -100,6 +100,7 @@ const rightNavItems: NavItem[] = [
                             >
                             <SheetHeader class="flex justify-start text-left">
                                 <AppLogoIcon
+                                    accessible-name="DLP Friends"
                                     class="size-6 fill-current text-black dark:text-white"
                                 />
                             </SheetHeader>

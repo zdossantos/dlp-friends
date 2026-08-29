@@ -5,6 +5,8 @@ use App\Models\User;
 test('the landing page presents the adult friendship service to guests', function () {
     visit('/', ['locale' => 'fr-FR'])
         ->assertSee('DLP Friends')
+        ->assertPresent('[data-test="app-logo-icon"]')
+        ->assertAttribute('[data-test="app-logo-icon"]', 'aria-hidden', 'true')
         ->assertSee('Des rencontres strictement amicales entre fans adultes')
         ->assertSeeLink('Créer mon compte')
         ->assertSeeLink('Se connecter')
@@ -36,6 +38,8 @@ test('public and authentication pages expose language without theme controls', f
 
     visit('/login', ['locale' => 'fr-FR'])
         ->assertSee('DLP Friends')
+        ->assertPresent('[data-test="app-logo-icon"]')
+        ->assertAttribute('[data-test="app-logo-icon"]', 'aria-hidden', 'true')
         ->assertPresent('#contenu-principal')
         ->assertPresent('form[action]')
         ->assertPresent('[data-test="locale-switcher"]')
