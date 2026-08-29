@@ -16,6 +16,7 @@ partie du parcours de lecture courant et restent strictement inchangés.
 | Source | Audience | Rôle | Statut | Doublons ou liens entrants | Décision | Destination ou justification |
 | --- | --- | --- | --- | --- | --- | --- |
 | `AGENTS.md` | Agents de développement | Instructions opérationnelles du dépôt | Normatif | Aucun lien entrant explicite ; recoupe certains guides techniques | Conserver et raccourcir le parcours métier | `avatar.md`, `docs/PRD.md`, puis référence spécialisée |
+| `avatar.md` | Agents de développement | Persona, principes de décision et règles de réponse | Normatif pour les sessions assistées | Lié depuis `AGENTS.md` | Créer et conserver | Contexte comportemental de l’agent, sans dupliquer les règles opérationnelles |
 | `CHANGELOG.md` | Utilisateurs et mainteneurs | Historique des versions publiées | Normatif pour les releases | Aucun lien entrant explicite | Conserver sans fusion | Alimenté par Release Please |
 | `CONTRIBUTING.md` | Contributeurs | Workflow Git, contrôles et releases | Normatif | Lié depuis `README.md` ; recoupe `quality-ci-cd.md` | Conserver et remplacer les détails répétés par des liens | `AGENTS.md` et `docs/quality-ci-cd.md` |
 | `README.md` | Nouveaux contributeurs | Installation et index documentaire | Normatif pour le démarrage | Lié depuis `CONTRIBUTING.md` | Conserver et actualiser l’index | Nouvelles références canoniques |
@@ -26,10 +27,12 @@ partie du parcours de lecture courant et restent strictement inchangés.
 | `docs/engineering-principles.md` | Développeurs et reviewers | Principes d’implémentation | Normatif | Lié depuis `README.md` ; repris partiellement dans `AGENTS.md` | Conserver et dédupliquer | `AGENTS.md` garde seulement les instructions opérationnelles |
 | `docs/mvp-v1.md` | Produit et développement | Périmètre fonctionnel cible du MVP | Normatif avant migration | Lié depuis `README.md`, `AGENTS.md`, `roadmap.md` et `technical-architecture.md` | Fusionner puis supprimer | `docs/PRD.md`, avec détails dans les références spécialisées |
 | `docs/operations.md` | Exploitants | Exploitation, sauvegardes et incidents | Normatif | Lié depuis `README.md` | Conserver | Procédures opérationnelles uniques |
+| `docs/PRD.md` | Produit et développement | Vision, périmètre, état d’implémentation et roadmap | Normatif | Lié depuis `AGENTS.md`, `README.md` et les références spécialisées | Créer et conserver | Source de vérité produit canonique issue de la fusion |
 | `docs/product-vision.md` | Produit et développement | Vision et principes produit | Normatif avant migration | Lié depuis `README.md` et `AGENTS.md` | Fusionner puis supprimer | `docs/PRD.md` |
 | `docs/quality-ci-cd.md` | Contributeurs et exploitants | Branches, CI, déploiement et releases | Normatif | Lié depuis `README.md` et `CONTRIBUTING.md` | Conserver et dédupliquer | Source détaillée liée par les guides racine |
 | `docs/roadmap.md` | Produit et développement | Évolutions après le MVP | Normatif avant migration | Lié depuis `README.md` et `technical-architecture.md` | Fusionner puis supprimer | `docs/PRD.md` |
 | `docs/security-privacy.md` | Produit, sécurité et développement | Sécurité, confidentialité et contrôle des données | Normatif | Lié depuis `README.md` et référencé par `data-model.md` | Conserver et distinguer cible et existant | Exigences de sécurité ; statut de livraison dans `docs/PRD.md` |
+| `docs/design-system.md` | Produit, design et frontend | Tokens, composants, responsive et accessibilité | Normatif | Lié depuis `README.md`, `docs/PRD.md` et les références techniques | Créer et conserver | Source de vérité visuelle canonique issue de la fusion |
 | `docs/technical-architecture.md` | Développeurs et exploitants | Architecture technique actuelle | Normatif | Lié depuis `README.md` ; renvoie vers MVP, roadmap et ingénierie | Conserver et actualiser les liens | Architecture implémentée uniquement |
 | `docs/ux-design.md` | Produit et frontend | Parcours et direction visuelle | Normatif avant migration | Lié depuis `README.md` ; recoupe `mvp-v1.md` | Fusionner puis supprimer | Parcours dans `docs/PRD.md`, règles visuelles dans `docs/design-system.md` |
 

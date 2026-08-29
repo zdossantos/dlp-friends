@@ -93,16 +93,19 @@ Les contrôles individuels sont décrits dans
 
 | Document | Sujet |
 | --- | --- |
-| [`docs/product-vision.md`](docs/product-vision.md) | Positionnement et principes produit |
-| [`docs/mvp-v1.md`](docs/mvp-v1.md) | Périmètre fonctionnel de la V1 |
-| [`docs/roadmap.md`](docs/roadmap.md) | Évolutions envisagées après le MVP |
+| [`docs/PRD.md`](docs/PRD.md) | Contrat produit, périmètre et état d’implémentation |
+| [`docs/design-system.md`](docs/design-system.md) | Langage visuel, composants et accessibilité |
 | [`docs/data-model.md`](docs/data-model.md) | Modèle métier et matching |
 | [`docs/technical-architecture.md`](docs/technical-architecture.md) | Architecture et services |
-| [`docs/ux-design.md`](docs/ux-design.md) | Expérience et direction visuelle |
 | [`docs/security-privacy.md`](docs/security-privacy.md) | Sécurité et données personnelles |
 | [`docs/operations.md`](docs/operations.md) | Exploitation et fiabilité |
 | [`docs/quality-ci-cd.md`](docs/quality-ci-cd.md) | CI, branches et livraison |
 | [`docs/engineering-principles.md`](docs/engineering-principles.md) | Principes de développement |
+| [`docs/documentation-inventory.md`](docs/documentation-inventory.md) | Inventaire et traçabilité de la consolidation |
+
+Les plans et spécifications sous `docs/superpowers/` sont des traces
+historiques non normatives. Ils restent consultables, mais ne font pas partie du
+parcours de lecture nécessaire au développement courant.
 
 ## Contribuer
 

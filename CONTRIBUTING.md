@@ -4,6 +4,7 @@
 
 Installer PHP 8.4, Composer 2, Bun 1.3.14 et Docker Desktop. Le
 [`README.md`](README.md) décrit le démarrage local et les commandes de contrôle.
+Les agents de développement suivent aussi [`AGENTS.md`](AGENTS.md).
 
 ## Créer une branche de travail
 
@@ -77,4 +78,6 @@ prépare `CHANGELOG.md` ainsi que la prochaine version SemVer.
 
 La publication est volontaire : merger la Release PR avec **Squash & Merge**
 finalise le changelog, crée le tag `vX.Y.Z` et la GitHub Release correspondante.
-Aucun package npm ou Composer n'est publié.
+Aucun package npm ou Composer n'est publié. La politique détaillée de qualité,
+de CI et de livraison est définie dans
+[`docs/quality-ci-cd.md`](docs/quality-ci-cd.md).
