@@ -53,6 +53,67 @@ test('discovery renders its deferred empty state and limits the stack to five pr
         ->assertNoJavaScriptErrors();
 });
 
+test('discovery cards keep predictable content zones for extreme profile content', function () {
+    $actor = discoveryMember('Alice');
+    $longProfile = discoveryMember('Un nom de membre volontairement très long pour la carte');
+    $shortProfile = discoveryMember('Zoé');
+    $longProfile->profile?->update([
+        'bio' => str_repeat('Une longue bio destinée à vérifier la troncature visuelle. ', 8),
+        'visit_frequency' => null,
+    ]);
+    $shortProfile->profile?->update(['bio' => null]);
+    $denseInterests = Interest::factory()->count(5)->create();
+    $longProfile->profile?->interests()->attach($denseInterests->modelKeys());
+    $actor->profile?->interests()->attach($denseInterests->firstOrFail());
+    $this->actingAs($actor);
+
+    visit('/discover')
+        ->on()->mobile()
+        ->assertCount('[data-test="discovery-card-stack-item"]', 2)
+        ->assertScript("new Set([...document.querySelectorAll('[data-test=discovery-identity]')].map((element) => getComputedStyle(element).height)).size === 1", true)
+        ->assertScript("new Set([...document.querySelectorAll('[data-test=discovery-bio]')].map((element) => getComputedStyle(element).height)).size === 1", true)
+        ->assertScript("new Set([...document.querySelectorAll('[data-test=discovery-frequency]')].map((element) => getComputedStyle(element).height)).size === 1", true)
+        ->assertScript(
+            "document.querySelector('[data-test=discovery-bio]').scrollHeight > document.querySelector('[data-test=discovery-bio]').clientHeight",
+            true,
+        )
+        ->assertScript(
+            "document.querySelector('[data-test=discovery-information-sheet]').scrollHeight <= document.querySelector('[data-test=discovery-information-sheet]').clientHeight",
+            true,
+        )
+        ->assertScript(
+            "document.querySelector('[data-test=discovery-affinities]').getBoundingClientRect().top < document.querySelector('[data-test=discovery-bio]').getBoundingClientRect().top",
+            true,
+        )
+        ->assertScript(
+            "[...document.querySelectorAll('[data-test=discovery-card-stack-item]:first-child [data-test=discovery-interest]')].every((interest) => interest.getBoundingClientRect().bottom <= document.querySelector('[data-test=discovery-affinities]').getBoundingClientRect().bottom)",
+            true,
+        )
+        ->assertDontSee('Même fréquence de visite')
+        ->assertNoJavaScriptErrors();
+});
+
+test('discovery decisions are icon controls below the card with accessible touch targets', function () {
+    $actor = discoveryMember('Alice');
+    discoveryMember('Basile');
+    $this->actingAs($actor);
+
+    visit('/discover')
+        ->on()->mobile()
+        ->assertPresent('[data-test="discovery-actions"][aria-label="Actions du profil"]')
+        ->assertPresent('[aria-label="Passer ce profil"] .sr-only')
+        ->assertPresent('[aria-label="Aimer ce profil"] .sr-only')
+        ->assertScript(
+            "document.querySelector('[data-test=discovery-actions]').getBoundingClientRect().top >= document.querySelector('[data-test=discovery-card]').getBoundingClientRect().bottom",
+            true,
+        )
+        ->assertScript(
+            "[...document.querySelectorAll('[data-test=discovery-actions] button')].every((button) => button.getBoundingClientRect().width >= 44 && button.getBoundingClientRect().height >= 44)",
+            true,
+        )
+        ->assertNoJavaScriptErrors();
+});
+
 test('discovery renders its loading state while suggestions are deferred', function () {
     $actor = discoveryMember('Alice');
     discoveryMember('Basile');
@@ -133,7 +194,7 @@ test('the top discovery card accepts keyboard and accessible decisions', functio
         ->assertPresent('[data-test="discovery-interest"][data-common="false"]')
         ->assertCount('[data-test="discovery-interest"]', 5)
         ->assertScript(
-            "document.querySelector('[data-test=discovery-avatar-hero]').getBoundingClientRect().height >= 192 && document.querySelector('[data-test=discovery-avatar-hero]').getBoundingClientRect().height <= 230",
+            "document.querySelector('[data-test=discovery-avatar-hero]').getBoundingClientRect().height >= 160 && document.querySelector('[data-test=discovery-avatar-hero]').getBoundingClientRect().height <= 200",
             true,
         )
         ->assertScript(
@@ -141,7 +202,7 @@ test('the top discovery card accepts keyboard and accessible decisions', functio
             true,
         )
         ->assertScript(
-            "document.querySelector('[aria-label=\"Aimer ce profil\"]').getBoundingClientRect().bottom + 12 <= document.querySelector('[data-test=discovery-card-stack-item] [tabindex=\"0\"]').getBoundingClientRect().bottom",
+            "document.querySelector('[data-test=discovery-actions]').getBoundingClientRect().top >= document.querySelector('[data-test=discovery-card]').getBoundingClientRect().bottom",
             true,
         )
         ->assertScript(
@@ -149,7 +210,7 @@ test('the top discovery card accepts keyboard and accessible decisions', functio
             false,
         )
         ->assertScript(
-            "document.querySelector('[data-test=discovery-avatar-hero]').getBoundingClientRect().height >= 192 && document.querySelector('[data-test=discovery-avatar-hero]').getBoundingClientRect().height <= 290",
+            "document.querySelector('[data-test=discovery-avatar-hero]').getBoundingClientRect().height >= 160 && document.querySelector('[data-test=discovery-avatar-hero]').getBoundingClientRect().height <= 200",
             true,
         )
         ->assertScript(
@@ -234,10 +295,12 @@ test('pointer gestures follow the card and enforce the horizontal threshold', fu
 
     $page = visit('/discover');
     $card = "document.querySelector('[data-test=\"discovery-card-stack-item\"] [tabindex=\"0\"]')";
+    $actions = "document.querySelector('[data-test=\"discovery-card-stack-item\"] [data-test=\"discovery-actions\"]')";
 
     $page->script("{$card}.setPointerCapture = () => {}; {$card}.hasPointerCapture = () => false; {$card}.releasePointerCapture = () => {};");
     $page->script("{$card}.dispatchEvent(new PointerEvent('pointerdown', { pointerId: 1, clientX: 100, clientY: 100, bubbles: true })); {$card}.dispatchEvent(new PointerEvent('pointermove', { pointerId: 1, clientX: 171, clientY: 100, bubbles: true }));");
-    $page->assertScript("{$card}.style.transform.includes('71px')", true);
+    $page->assertScript("{$card}.style.transform.includes('71px')", true)
+        ->assertScript("getComputedStyle({$actions}).transform", 'none');
     $page->script("{$card}.dispatchEvent(new PointerEvent('pointerup', { pointerId: 1, clientX: 171, clientY: 100, bubbles: true }));");
     $page->assertScript("{$card}.style.transform.includes('0px')", true);
     $this->assertDatabaseCount('swipes', 0);
