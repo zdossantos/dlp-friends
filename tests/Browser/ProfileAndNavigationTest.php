@@ -331,6 +331,8 @@ test('an administrator sees administration and member return navigation', functi
     visit('/profile')->assertPresent('[aria-label="Administration"]');
 
     visit('/dashboard')
+        ->assertPresent('[data-test="app-logo-icon"]')
+        ->assertAttribute('[data-test="app-logo-icon"]', 'aria-hidden', 'true')
         ->assertSeeLink('Intérêts')
         ->assertSeeLink('Retour au profil')
         ->assertSee('Admin Aurore');
