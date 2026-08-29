@@ -1,5 +1,9 @@
 # Qualité, CI et livraison continue
 
+Ce document est la source détaillée du processus de qualité et de livraison.
+Le guide contributeur pas à pas reste dans
+[`CONTRIBUTING.md`](../CONTRIBUTING.md).
+
 ## Stratégie de branches
 
 `main` est l'unique branche principale, stable et déployable. Toute

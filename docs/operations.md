@@ -1,5 +1,9 @@
 # Exploitation et fiabilité
 
+Ce document porte les exigences et procédures opérateur. Les objectifs produit
+et l’état des capacités applicatives sont définis dans le
+[`PRD.md`](PRD.md).
+
 ## Sauvegardes
 
 - Sauvegarde chiffrée quotidienne de MySQL, avec conservation de 30 jours et test mensuel de restauration.
@@ -22,7 +26,10 @@
 
 ## Tâches récurrentes
 
-- Le scheduler traite les suppressions de compte arrivées à échéance, les nettoyages de fichiers orphelins et les opérations de maintenance déclarées par le produit.
+- La cible opérationnelle prévoit que le scheduler traite les suppressions de
+  compte arrivées à échéance, les nettoyages de fichiers orphelins et les
+  opérations de maintenance déclarées par le produit. La purge différée des
+  comptes n’est pas encore implémentée.
 - Le worker est supervisé : un job en échec est journalisé et rejoué selon une politique explicite; après le dernier essai, il rejoint la table des jobs échoués.
 - Après un déploiement, redémarrer proprement les workers pour qu'ils consomment le nouveau code.
 

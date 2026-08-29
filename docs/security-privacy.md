@@ -1,5 +1,9 @@
 # Sécurité, confidentialité et données personnelles
 
+Ce document définit les exigences de sécurité et de confidentialité, qu’elles
+soient déjà implémentées ou nécessaires avant la mise en production. Leur état
+de livraison est suivi dans le [`PRD.md`](PRD.md).
+
 ## Majorité et accès
 
 - La date de naissance est obligatoire à l'inscription.
@@ -20,9 +24,9 @@
 - Réglages : édition des données visibles et des intérêts actifs, dans la limite configurée.
 - Un intérêt archivé est retiré des sélections visibles et du matching. La sélection historique est conservée comme suspendue et ne consomme plus de capacité ; elle ne peut être restaurée à la réactivation que si le profil a alors une capacité disponible.
 - Masquage : suspend les nouvelles suggestions sans supprimer le compte.
-- Suppression : après confirmation explicite, le compte devient immédiatement inaccessible et invisible. Un job asynchrone supprime les images, tokens sociaux, profil, swipes, matches, conversations et messages dans un délai maximal de 30 jours; les sessions sont révoquées immédiatement.
+- Suppression cible : après confirmation explicite, le compte devient immédiatement inaccessible et invisible. Un job asynchrone doit supprimer les images, tokens sociaux, profil, swipes, matches, conversations et messages dans un délai maximal de 30 jours ; les sessions sont révoquées immédiatement. Le code actuel supprime directement le compte et ne livre pas encore cette purge différée.
 - Documenter, avant mise en production, les durées de conservation et la politique de confidentialité applicable.
-- Prévoir l'export des données de profil, intérêts, matches et messages dans les réglages. Cet export fait partie du contrôle utilisateur attendu au MVP.
+- Prévoir l'export des données de profil, intérêts, matches et messages dans les réglages. Cet export attendu au MVP n’est pas encore implémenté.
 - Les sauvegardes ne sont pas modifiées rétroactivement lors d'une suppression ; leur durée de rétention doit être documentée et limitée.
 
 ## Autorisation et protection applicative

@@ -1,5 +1,9 @@
 # Principes d'ingénierie
 
+Ces principes encadrent l’implémentation. Le contrat fonctionnel appartient au
+[`PRD.md`](PRD.md) et les règles visuelles partagées au
+[`design-system.md`](design-system.md).
+
 ## Objectif
 
 Le code de DLP Friends doit être le plus simple, lisible et maintenable possible. Une solution plus courte, explicite et conforme aux conventions du framework est préférée à une architecture théorique ou prématurée.
