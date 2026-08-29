@@ -1,7 +1,7 @@
 # Architecture technique
 
 Ce document décrit l'architecture actuelle. Les fonctions prévues mais non
-livrées restent décrites dans `mvp-v1.md` et `roadmap.md`.
+livrées restent décrites dans le [`PRD.md`](PRD.md).
 
 ## Stack applicative
 
@@ -114,5 +114,7 @@ ressources.
 
 La séparation en modèles, Policies, Form Requests, Actions et composants sert
 un besoin actuel. Une nouvelle couche doit réduire une complexité mesurable ;
-elle ne doit pas anticiper une extension hypothétique. Voir
-`engineering-principles.md`.
+elle ne doit pas anticiper une extension hypothétique. Voir les
+[`engineering-principles.md`](engineering-principles.md). Le langage visuel et
+les règles de composants sont définis dans le
+[`design-system.md`](design-system.md).

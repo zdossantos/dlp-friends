@@ -8,9 +8,9 @@ non affilié à Disney ou Disneyland Paris.
 
 Avant une modification métier, lire :
 
-1. `docs/product-vision.md` ;
-2. `docs/mvp-v1.md` ;
-3. le document du domaine concerné dans `docs/`.
+1. `avatar.md` pour la posture et les principes de collaboration ;
+2. `docs/PRD.md` pour le contrat produit et l’état d’implémentation ;
+3. le document spécialisé du domaine concerné dans `docs/`.
 
 Ne pas confondre le périmètre produit documenté avec les fonctionnalités déjà
 implémentées. Vérifier le code, les migrations et les tests avant de décrire un
