@@ -66,10 +66,6 @@ const visitFrequencyLabel = computed(() => {
         : 'Fréquence non renseignée';
 });
 
-const hasDenseInterestList = computed(
-    () => !props.compact && props.profile.interests.length >= 4,
-);
-
 const avatarGradient = computed(() => ({
     backgroundImage: `linear-gradient(145deg, ${props.profile.avatar.primary_color}, ${props.profile.avatar.secondary_color})`,
 }));
@@ -257,192 +253,217 @@ watch(
 </script>
 
 <template>
-    <Card
-        data-test="discovery-card"
-        class="h-full max-h-full w-full max-w-md touch-pan-y gap-0 overflow-hidden rounded-[2rem] p-0 shadow-xl shadow-primary/10 transition-[transform,opacity] ease-[cubic-bezier(0.22,1,0.36,1)] will-change-transform outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 motion-reduce:duration-0"
-        :style="cardStyle"
-        :tabindex="preview ? -1 : 0"
-        :aria-label="`Profil de découverte de ${profile.displayName}`"
-        aria-describedby="swipe-instructions"
-        @keydown.left.self.prevent.stop="decide('pass')"
-        @keydown.right.self.prevent.stop="decide('like')"
-        @keydown.enter.self.prevent="publicProfileHref && emit('open')"
-        @pointerdown="rememberPointerStart"
-        @pointermove="handlePointerMove"
-        @pointerup="handlePointerEnd"
-        @pointercancel="resetCard"
-        @lostpointercapture="forgetPointerStart"
-        @click="openPublicProfile"
+    <div
+        data-test="discovery-swipe-surface"
+        class="flex h-full max-h-full w-full max-w-md flex-col gap-2"
     >
-        <div
-            data-test="discovery-avatar-hero"
-            :class="[
-                'relative flex shrink-0 items-end justify-center overflow-hidden',
-                compact
-                    ? 'min-h-40 px-5 pt-3'
-                    : hasDenseInterestList
-                      ? 'h-[clamp(12rem,27svh,14rem)] px-6 pt-4 sm:h-72'
-                      : 'h-[clamp(15.5rem,34svh,17.5rem)] px-6 pt-4 sm:h-80',
-            ]"
-            :style="avatarGradient"
+        <Card
+            data-test="discovery-card"
+            class="flex min-h-0 w-full flex-1 touch-pan-y flex-col gap-0 overflow-hidden rounded-[2rem] p-0 shadow-xl shadow-primary/10 transition-[transform,opacity] ease-[cubic-bezier(0.22,1,0.36,1)] will-change-transform outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 motion-reduce:duration-0"
+            :style="cardStyle"
+            :tabindex="preview ? -1 : 0"
+            :aria-label="`Profil de découverte de ${profile.displayName}`"
+            aria-describedby="swipe-instructions"
+            @keydown.left.self.prevent.stop="decide('pass')"
+            @keydown.right.self.prevent.stop="decide('like')"
+            @keydown.enter.self.prevent="publicProfileHref && emit('open')"
+            @pointerdown="rememberPointerStart"
+            @pointermove="handlePointerMove"
+            @pointerup="handlePointerEnd"
+            @pointercancel="resetCard"
+            @lostpointercapture="forgetPointerStart"
+            @click="openPublicProfile"
         >
             <div
-                class="absolute inset-0 bg-[radial-gradient(circle_at_70%_18%,rgba(255,255,255,.5),transparent_34%),radial-gradient(circle_at_12%_72%,rgba(255,255,255,.2),transparent_30%)]"
-            />
-            <div
-                class="absolute right-[8%] bottom-[14%] size-36 rounded-full bg-white/20 blur-3xl"
-                aria-hidden="true"
-            />
-            <img
-                :src="profile.avatar.image_url"
-                :alt="`Avatar ${profile.avatar.name}`"
-                draggable="false"
+                data-test="discovery-avatar-hero"
                 :class="[
-                    'pointer-events-none relative z-10 object-contain drop-shadow-2xl select-none',
+                    'relative flex shrink-0 items-end justify-center overflow-hidden px-6 pt-4',
                     compact
-                        ? 'max-h-40 w-full'
-                        : hasDenseInterestList
-                          ? 'h-[calc(100%-1rem)] w-auto max-w-full'
-                          : 'max-h-[17rem] w-full sm:max-h-[19rem]',
+                        ? 'h-40 px-5 pt-3'
+                        : 'h-[clamp(10rem,23svh,12rem)] sm:h-64',
                 ]"
-            />
-        </div>
+                :style="avatarGradient"
+            >
+                <div
+                    class="absolute inset-0 bg-[radial-gradient(circle_at_70%_18%,rgba(255,255,255,.5),transparent_34%),radial-gradient(circle_at_12%_72%,rgba(255,255,255,.2),transparent_30%)]"
+                />
+                <div
+                    class="absolute right-[8%] bottom-[14%] size-36 rounded-full bg-white/20 blur-3xl"
+                    aria-hidden="true"
+                />
+                <img
+                    :src="profile.avatar.image_url"
+                    :alt="`Avatar ${profile.avatar.name}`"
+                    draggable="false"
+                    :class="[
+                        'pointer-events-none relative z-10 w-full object-contain drop-shadow-2xl select-none',
+                        compact ? 'max-h-40' : 'max-h-[11rem] sm:max-h-[15rem]',
+                    ]"
+                />
+            </div>
 
-        <div
-            data-test="discovery-information-sheet"
-            :class="[
-                'relative z-20 flex-1 rounded-t-[2rem] bg-card',
-                compact
-                    ? '-mt-5 space-y-2 px-4 pt-4 pb-3'
-                    : '-mt-6 space-y-2.5 px-4 pt-4 pb-4',
-            ]"
-        >
-            <div>
-                <div class="flex flex-wrap items-center gap-2">
+            <div
+                data-test="discovery-information-sheet"
+                :class="[
+                    'relative z-20 flex min-h-0 flex-1 flex-col rounded-t-[2rem] bg-card',
+                    compact ? '-mt-5 px-4 pt-4 pb-3' : '-mt-6 px-4 pt-3 pb-3',
+                ]"
+            >
+                <div
+                    data-test="discovery-identity"
+                    class="flex min-h-8 items-center gap-2 overflow-hidden"
+                >
                     <h2
                         :class="[
-                            'font-semibold tracking-tight',
+                            'min-w-0 truncate font-semibold tracking-tight',
                             compact ? 'text-2xl' : 'text-2xl sm:text-3xl',
                         ]"
+                        :title="profile.displayName"
                     >
                         {{ profile.displayName }}
                     </h2>
-                    <Badge class="rounded-full px-3 py-1" variant="secondary">
+                    <Badge
+                        class="shrink-0 rounded-full px-3 py-1"
+                        variant="secondary"
+                    >
                         {{ profile.age }} ans
                     </Badge>
                 </div>
+                <div
+                    data-test="discovery-affinities"
+                    class="mt-1.5 shrink-0 space-y-1"
+                >
+                    <p
+                        class="flex items-center gap-1.5 text-xs font-medium text-muted-foreground"
+                    >
+                        <Users
+                            class="size-3.5 text-primary"
+                            aria-hidden="true"
+                        />
+                        {{ profile.commonInterestCount }}
+                        {{
+                            profile.commonInterestCount > 1
+                                ? 'intérêts en commun'
+                                : 'intérêt en commun'
+                        }}
+                    </p>
+                    <div class="flex flex-wrap gap-1">
+                        <Badge
+                            v-for="interest in profile.interests"
+                            :key="interest.name"
+                            data-test="discovery-interest"
+                            :data-common="interest.isCommon"
+                            :variant="
+                                interest.isCommon ? 'outline' : 'secondary'
+                            "
+                            :class="[
+                                'max-w-full rounded-full px-2 py-0.5 text-xs leading-4',
+                                interest.isCommon
+                                    ? 'border-primary/30 bg-primary/10 text-primary'
+                                    : 'text-muted-foreground',
+                            ]"
+                        >
+                            <Sparkles
+                                v-if="interest.isCommon"
+                                class="size-3 shrink-0"
+                                aria-hidden="true"
+                            />
+                            <span class="truncate">{{ interest.name }}</span>
+                        </Badge>
+                    </div>
+                </div>
+
                 <p
-                    :class="[
-                        'text-sm text-muted-foreground',
-                        compact
-                            ? 'mt-1 line-clamp-2 leading-5'
-                            : 'mt-1.5 max-h-10 overflow-hidden leading-5',
-                    ]"
+                    data-test="discovery-bio"
+                    class="mt-1.5 line-clamp-2 h-9 shrink-0 overflow-hidden text-sm leading-[1.125rem] text-muted-foreground"
                 >
                     {{ profile.bio ?? 'Bio non renseignée.' }}
                 </p>
-            </div>
 
-            <div class="space-y-1.5">
-                <p
-                    class="flex items-center gap-1.5 text-xs font-medium text-muted-foreground"
+                <div
+                    data-test="discovery-frequency"
+                    class="mt-auto flex min-h-9 items-center gap-3 border-t pt-2 text-sm text-muted-foreground"
                 >
-                    <Users class="size-3.5 text-primary" aria-hidden="true" />
-                    {{ profile.commonInterestCount }}
-                    {{
-                        profile.commonInterestCount > 1
-                            ? 'intérêts en commun'
-                            : 'intérêt en commun'
-                    }}
-                </p>
-                <div class="flex flex-wrap gap-1.5">
-                    <Badge
-                        v-for="interest in profile.interests"
-                        :key="interest.name"
-                        data-test="discovery-interest"
-                        :data-common="interest.isCommon"
-                        :variant="interest.isCommon ? 'outline' : 'secondary'"
-                        :class="[
-                            'rounded-full px-2.5 py-1 text-xs',
-                            interest.isCommon
-                                ? 'border-primary/30 bg-primary/10 text-primary'
-                                : 'text-muted-foreground',
-                        ]"
-                    >
-                        <Sparkles
-                            v-if="interest.isCommon"
-                            class="size-3"
-                            aria-hidden="true"
-                        />
-                        {{ interest.name }}
-                    </Badge>
+                    <Sparkles
+                        class="size-5 shrink-0 text-primary"
+                        aria-hidden="true"
+                    />
+                    <p class="min-w-0 truncate">
+                        <span class="font-medium text-foreground">{{
+                            visitFrequencyLabel
+                        }}</span>
+                    </p>
                 </div>
-            </div>
 
-            <div
-                :class="[
-                    'flex items-center gap-3 border-t text-sm text-muted-foreground',
-                    compact ? 'pt-2' : 'pt-3',
-                ]"
-            >
-                <Sparkles class="size-5 text-primary" aria-hidden="true" />
-                <p>
-                    <span class="font-medium text-foreground">{{
-                        visitFrequencyLabel
-                    }}</span>
-                    <span v-if="profile.frequencyBonus">
-                        · Même fréquence de visite</span
-                    >
+                <p id="swipe-instructions" class="sr-only">
+                    <template v-if="allowedDecision === 'pass'">
+                        Balayez vers la gauche ou utilisez la flèche gauche pour
+                        passer ce profil.
+                    </template>
+                    <template v-else-if="allowedDecision === 'like'">
+                        Balayez vers la droite ou utilisez la flèche droite pour
+                        aimer ce profil.
+                    </template>
+                    <template v-else>
+                        Balayez vers la gauche pour passer ce profil ou vers la
+                        droite pour l’aimer. Au clavier, utilisez les flèches
+                        gauche et droite.
+                    </template>
                 </p>
             </div>
+        </Card>
 
-            <p id="swipe-instructions" class="sr-only">
-                <template v-if="allowedDecision === 'pass'">
-                    Balayez vers la gauche ou utilisez la flèche gauche pour
-                    passer ce profil.
-                </template>
-                <template v-else-if="allowedDecision === 'like'">
-                    Balayez vers la droite ou utilisez la flèche droite pour
-                    aimer ce profil.
-                </template>
-                <template v-else>
-                    Balayez vers la gauche pour passer ce profil ou vers la
-                    droite pour l’aimer. Au clavier, utilisez les flèches gauche
-                    et droite.
-                </template>
-            </p>
-            <div
-                :class="[
-                    'grid grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)]',
-                    compact ? 'gap-2' : 'gap-3',
-                ]"
-                @pointerdown.stop
-            >
+        <div
+            v-if="!preview"
+            data-test="discovery-actions"
+            class="flex h-[4.5rem] shrink-0 items-start justify-center gap-10"
+            aria-label="Actions du profil"
+            @pointerdown.stop
+        >
+            <div class="flex flex-col items-center gap-1">
                 <Button
                     type="button"
                     variant="outline"
-                    :class="['rounded-full', compact ? 'min-h-10' : 'min-h-12']"
-                    :disabled="locked || preview || !canDecide('pass')"
+                    class="size-12 rounded-full border-2 bg-background shadow-sm focus-visible:ring-[3px]"
+                    :disabled="locked || !canDecide('pass')"
                     aria-label="Passer ce profil"
+                    title="Passer ce profil"
                     @click="decide('pass')"
                 >
                     <X class="size-5" aria-hidden="true" />
-                    Passer
+                    <span class="sr-only">Passer ce profil</span>
                 </Button>
+                <span
+                    class="text-xs font-medium text-muted-foreground"
+                    aria-hidden="true"
+                >
+                    Passer
+                </span>
+            </div>
+            <div class="flex flex-col items-center gap-1">
                 <Button
                     type="button"
-                    :class="[
-                        'rounded-full bg-gradient-to-r from-pink-500 to-primary',
-                        compact ? 'min-h-10 text-xs' : 'min-h-12',
-                    ]"
-                    :disabled="locked || preview || !canDecide('like')"
+                    class="size-12 rounded-full bg-gradient-to-br from-pink-500 to-primary shadow-sm focus-visible:ring-[3px]"
+                    :disabled="locked || !canDecide('like')"
                     aria-label="Aimer ce profil"
+                    title="Aimer ce profil"
                     @click="decide('like')"
                 >
                     <Sparkles class="size-5" aria-hidden="true" />
-                    Ça m’intéresse
+                    <span class="sr-only">Aimer ce profil</span>
                 </Button>
+                <span
+                    class="text-xs font-medium text-muted-foreground"
+                    aria-hidden="true"
+                >
+                    Ça m’intéresse
+                </span>
             </div>
         </div>
-    </Card>
+        <div
+            v-else-if="!compact"
+            class="h-[4.5rem] shrink-0"
+            aria-hidden="true"
+        />
+    </div>
 </template>
