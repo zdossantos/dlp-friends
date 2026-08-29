@@ -15,6 +15,8 @@ partie du parcours de lecture courant et restent strictement inchangés.
 
 | Source | Audience | Rôle | Statut | Doublons ou liens entrants | Décision | Destination ou justification |
 | --- | --- | --- | --- | --- | --- | --- |
+| `.github/pull_request_template.md` | Contributeurs et reviewers | Checklist des pull requests | Normatif pour les contributions | Utilisé automatiquement par GitHub ; complète `CONTRIBUTING.md` | Conserver sans fusion | Gabarit opérationnel propre aux pull requests |
+| `.github/settings/README.md` | Mainteneurs | Explication de la configuration de dépôt versionnée | Normatif pour l’administration GitHub | Proche de `docs/quality-ci-cd.md`, mais lié au fichier de réglages voisin | Conserver sans fusion | Documentation locale de `.github/settings.yml` |
 | `AGENTS.md` | Agents de développement | Instructions opérationnelles du dépôt | Normatif | Aucun lien entrant explicite ; recoupe certains guides techniques | Conserver et raccourcir le parcours métier | `avatar.md`, `docs/PRD.md`, puis référence spécialisée |
 | `avatar.md` | Agents de développement | Persona, principes de décision et règles de réponse | Normatif pour les sessions assistées | Lié depuis `AGENTS.md` | Créer et conserver | Contexte comportemental de l’agent, sans dupliquer les règles opérationnelles |
 | `CHANGELOG.md` | Utilisateurs et mainteneurs | Historique des versions publiées | Normatif pour les releases | Aucun lien entrant explicite | Conserver sans fusion | Alimenté par Release Please |
