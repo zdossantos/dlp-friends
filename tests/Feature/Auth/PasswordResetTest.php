@@ -38,6 +38,20 @@ class PasswordResetTest extends TestCase
         Mail::assertSent(ResetPasswordMail::class, $user->email);
     }
 
+    public function test_password_reset_link_confirmation_is_translated_in_french(): void
+    {
+        Mail::fake();
+
+        $user = User::factory()->create();
+
+        $this->withHeader('Accept-Language', 'fr-FR,fr;q=0.9')
+            ->post(route('password.email'), ['email' => $user->email])
+            ->assertSessionHas(
+                'status',
+                'Nous vous avons envoyé le lien de réinitialisation de votre mot de passe par e-mail.',
+            );
+    }
+
     public function test_reset_password_screen_can_be_rendered()
     {
         Mail::fake();
