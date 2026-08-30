@@ -9,6 +9,7 @@ final class FrontendTranslations
     {
         /** @var array{
          *     copy: array<string, string>,
+         *     mail: array<string, string>,
          *     onboarding: array<string, mixed>,
          *     admin_onboarding: array<string, string>,
          *     registration: array<string, string>,
@@ -35,6 +36,7 @@ final class FrontendTranslations
                 'discovery' => __('frontend.navigation.discovery'),
                 'conversations' => __('frontend.navigation.conversations'),
             ],
+            'mail' => $frontend['mail'],
             'onboarding' => $onboarding,
             'admin_onboarding' => $frontend['admin_onboarding'],
             'registration' => $frontend['registration'],
