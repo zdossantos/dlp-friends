@@ -154,7 +154,8 @@ test('a conversation renders safe recent history and repeatedly loads older mess
         ->assertScript("document.querySelector('[data-test=message-scroll]').scrollTop > 0", true);
 
     $page->script("document.querySelector('[data-test=message-scroll]').scrollTop = 0; true;");
-    $page->assertSee('Message 6');
+    $page->assertSee('Message 6')
+        ->assertScript("document.querySelector('[data-test=message-scroll]').scrollTop > 0", true);
 
     $page->script("document.querySelector('[data-test=message-scroll]').scrollTop = 0; true;");
     $page->assertSee('Message 1')
