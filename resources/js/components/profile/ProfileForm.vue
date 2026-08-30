@@ -19,6 +19,7 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { Spinner } from '@/components/ui/spinner';
+import { useTranslations } from '@/composables/useTranslations';
 import type {
     AvatarOption,
     DiscoveryProfile,
@@ -29,12 +30,13 @@ import type {
 
 type Option = { value: string; label: string };
 
-const profileStepLabels = [
-    'Avatar',
-    'Identité',
-    'Affinités',
-    'Aperçu',
-] as const;
+const { t } = useTranslations();
+const profileStepLabels = computed(() => [
+    t('profile.form.steps.avatar'),
+    t('profile.form.steps.identity'),
+    t('profile.form.steps.affinities'),
+    t('profile.form.steps.preview'),
+]);
 
 const props = defineProps<{
     profile: Profile | null;
@@ -69,11 +71,17 @@ const selectedInterests = computed(() =>
         interestIds.value.includes(interest.id),
     ),
 );
+const frequencyDescriptionKeys = {
+    rarely: 'profile.form.frequency_descriptions.rarely',
+    sometimes: 'profile.form.frequency_descriptions.sometimes',
+    often: 'profile.form.frequency_descriptions.often',
+    very_often: 'profile.form.frequency_descriptions.very_often',
+} as const;
 const frequencyDescriptions: Record<string, string> = {
-    rarely: 'Quelques fois par an',
-    sometimes: 'Plusieurs fois par an',
-    often: 'Plusieurs fois par mois',
-    very_often: 'Chaque semaine',
+    rarely: t(frequencyDescriptionKeys.rarely),
+    sometimes: t(frequencyDescriptionKeys.sometimes),
+    often: t(frequencyDescriptionKeys.often),
+    very_often: t(frequencyDescriptionKeys.very_often),
 };
 const previewProfile = computed<DiscoveryProfile | null>(() => {
     if (selectedAvatar.value === null) {
@@ -83,7 +91,7 @@ const previewProfile = computed<DiscoveryProfile | null>(() => {
     return {
         userId: 0,
         profileId: 0,
-        displayName: displayName.value || 'Votre nom',
+        displayName: displayName.value || t('profile.form.preview_name'),
         avatar: selectedAvatar.value,
         age: props.age,
         bio: bio.value || null,
@@ -174,10 +182,10 @@ function showInvalidStep(errors: Record<string, string>): void {
                     class="text-xl font-semibold tracking-tight outline-none sm:text-2xl"
                     tabindex="-1"
                 >
-                    Votre avatar
+                    {{ t('profile.form.avatar_title') }}
                 </h2>
                 <p class="mt-1 text-xs text-muted-foreground sm:text-sm">
-                    Choisissez le personnage qui vous ressemble.
+                    {{ t('profile.form.avatar_description') }}
                 </p>
             </div>
 
@@ -186,7 +194,7 @@ function showInvalidStep(errors: Record<string, string>): void {
                 v-if="avatars.length === 0"
                 class="rounded-xl border border-dashed p-4 text-sm text-muted-foreground"
             >
-                Aucun avatar n’est disponible pour le moment.
+                {{ t('profile.form.avatar_empty') }}
             </p>
             <InputError :message="errors.avatar_id" />
         </section>
@@ -204,10 +212,10 @@ function showInvalidStep(errors: Record<string, string>): void {
                     class="text-xl font-semibold tracking-tight outline-none sm:text-2xl"
                     tabindex="-1"
                 >
-                    Votre identité
+                    {{ t('profile.form.identity_title') }}
                 </h2>
                 <p class="mt-2 text-sm text-muted-foreground">
-                    Parlez un peu de vous et personnalisez votre profil.
+                    {{ t('profile.form.identity_description') }}
                 </p>
             </div>
 
@@ -223,14 +231,16 @@ function showInvalidStep(errors: Record<string, string>): void {
                     <p
                         class="text-xs font-medium tracking-wide text-muted-foreground uppercase"
                     >
-                        Aperçu
+                        {{ t('profile.form.preview_label') }}
                     </p>
                     <p class="font-semibold">{{ selectedAvatar.name }}</p>
                 </div>
             </div>
 
             <div class="grid gap-2">
-                <Label for="display_name">Nom affiché</Label>
+                <Label for="display_name">{{
+                    t('profile.form.display_name')
+                }}</Label>
                 <Input
                     id="display_name"
                     v-model="displayName"
@@ -245,10 +255,10 @@ function showInvalidStep(errors: Record<string, string>): void {
             <div class="grid gap-2">
                 <div class="flex items-center justify-between gap-3">
                     <Label for="bio"
-                        >Votre bio
-                        <span class="text-muted-foreground"
-                            >(facultative)</span
-                        ></Label
+                        >{{ t('profile.form.bio') }}
+                        <span class="text-muted-foreground">{{
+                            t('profile.form.optional')
+                        }}</span></Label
                     >
                     <span class="text-xs text-muted-foreground"
                         >{{ bio.length }} / 500</span
@@ -278,10 +288,10 @@ function showInvalidStep(errors: Record<string, string>): void {
                     class="text-xl font-semibold tracking-tight outline-none sm:text-2xl"
                     tabindex="-1"
                 >
-                    Vos affinités
+                    {{ t('profile.form.affinities_title') }}
                 </h2>
                 <p class="mt-2 text-sm text-muted-foreground">
-                    Ce que vous aimez et votre rythme de visite.
+                    {{ t('profile.form.affinities_description') }}
                 </p>
             </div>
 
@@ -295,7 +305,9 @@ function showInvalidStep(errors: Record<string, string>): void {
             </div>
 
             <fieldset class="grid gap-2">
-                <legend class="font-medium">Fréquence de visite</legend>
+                <legend class="font-medium">
+                    {{ t('profile.form.visit_frequency') }}
+                </legend>
                 <div class="grid grid-cols-2 gap-2">
                     <label
                         v-for="option in visitFrequencies"
@@ -347,10 +359,10 @@ function showInvalidStep(errors: Record<string, string>): void {
                     class="text-xl font-semibold tracking-tight outline-none sm:text-2xl"
                     tabindex="-1"
                 >
-                    Votre aperçu
+                    {{ t('profile.form.preview_title') }}
                 </h2>
                 <p class="mt-2 text-sm text-muted-foreground">
-                    Voici comment les autres membres vous découvriront.
+                    {{ t('profile.form.preview_description') }}
                 </p>
             </div>
 
@@ -368,7 +380,9 @@ function showInvalidStep(errors: Record<string, string>): void {
             </div>
 
             <div class="grid gap-3">
-                <Label for="visibility">Visible dans les suggestions</Label>
+                <Label for="visibility">{{
+                    t('profile.form.visibility')
+                }}</Label>
                 <input type="hidden" name="visibility" :value="visibility" />
                 <Select v-model="visibility" required>
                     <SelectTrigger
@@ -402,7 +416,7 @@ function showInvalidStep(errors: Record<string, string>): void {
                     class="size-5 shrink-0 text-primary"
                     aria-hidden="true"
                 />
-                Vous pourrez modifier ces informations à tout moment.
+                {{ t('profile.form.editable') }}
             </p>
         </section>
 
@@ -419,7 +433,7 @@ function showInvalidStep(errors: Record<string, string>): void {
                 @click="previous"
             >
                 <ArrowLeft class="size-4" aria-hidden="true" />
-                Retour
+                {{ t('profile.actions.previous') }}
             </Button>
             <span v-else class="flex-1" />
 
@@ -430,7 +444,7 @@ function showInvalidStep(errors: Record<string, string>): void {
                 class="ml-auto min-h-12 flex-1 rounded-full bg-gradient-to-r from-primary to-pink-500 sm:max-w-64"
                 @click="next"
             >
-                Continuer
+                {{ t('profile.actions.next') }}
                 <ArrowRight class="size-4" aria-hidden="true" />
             </Button>
             <Button

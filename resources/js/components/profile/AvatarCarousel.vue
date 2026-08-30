@@ -4,7 +4,10 @@ import type { CSSProperties } from 'vue';
 import { computed, ref } from 'vue';
 import AvatarPortrait from '@/components/profile/AvatarPortrait.vue';
 import { Button } from '@/components/ui/button';
+import { useTranslations } from '@/composables/useTranslations';
 import type { AvatarOption } from '@/types';
+
+const { t } = useTranslations();
 
 const props = defineProps<{
     avatars: AvatarOption[];
@@ -138,8 +141,10 @@ function cancelPointer(): void {
         class="flex min-h-0 flex-1 touch-pan-y flex-col rounded-[2rem] select-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-4 focus-visible:outline-none"
         tabindex="0"
         role="group"
-        aria-roledescription="carrousel"
-        :aria-label="`Avatar sélectionné : ${selectedAvatar.name}`"
+        :aria-roledescription="t('profile.avatar.carousel_role')"
+        :aria-label="
+            t('profile.avatar.selected_avatar', { name: selectedAvatar.name })
+        "
         @keydown.left.prevent="previous"
         @keydown.right.prevent="next"
     >
@@ -162,8 +167,8 @@ function cancelPointer(): void {
                 :aria-hidden="isVisible(index) ? undefined : 'true'"
                 :aria-label="
                     avatar.id === modelValue
-                        ? `${avatar.name}, sélectionné`
-                        : `Choisir ${avatar.name}`
+                        ? t('profile.avatar.selected', { name: avatar.name })
+                        : t('profile.avatar.choose', { name: avatar.name })
                 "
                 @pointerdown="startPointer"
                 @pointerup="endPointer"
@@ -188,7 +193,7 @@ function cancelPointer(): void {
                     class="absolute right-3 bottom-3 flex items-center gap-2 rounded-full border border-white/70 bg-background/95 px-3 py-2 text-xs font-semibold text-foreground shadow-lg backdrop-blur"
                 >
                     <Check class="size-4" aria-hidden="true" />
-                    Sélectionné
+                    {{ t('profile.avatar.selected_badge') }}
                 </span>
             </button>
 
@@ -198,7 +203,7 @@ function cancelPointer(): void {
                 variant="secondary"
                 size="icon"
                 class="absolute left-2 z-30 size-11 rounded-full shadow-lg sm:left-4"
-                aria-label="Avatar précédent"
+                :aria-label="t('profile.avatar.previous')"
                 @pointerdown.stop
                 @click.stop="previous"
             >
@@ -210,7 +215,7 @@ function cancelPointer(): void {
                 variant="secondary"
                 size="icon"
                 class="absolute right-2 z-30 size-11 rounded-full shadow-lg sm:right-4"
-                aria-label="Avatar suivant"
+                :aria-label="t('profile.avatar.next')"
                 @pointerdown.stop
                 @click.stop="next"
             >
@@ -236,7 +241,7 @@ function cancelPointer(): void {
                 class="flex items-center justify-center gap-2 text-xs text-muted-foreground"
             >
                 <MoveHorizontal class="size-4" aria-hidden="true" />
-                Balayez ou utilisez les flèches
+                {{ t('profile.avatar.instructions') }}
             </p>
         </div>
 

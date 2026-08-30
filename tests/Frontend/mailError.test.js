@@ -8,10 +8,10 @@ describe('mail form errors', () => {
         const english = (key) => `en:${key}`;
 
         expect(localizeMailError('mail.rate_limited', french)).toBe(
-            'fr:mail.rate_limited',
+            'fr:account.email_delivery.rate_limited',
         );
         expect(localizeMailError('mail.rate_limited', english)).toBe(
-            'en:mail.rate_limited',
+            'en:account.email_delivery.rate_limited',
         );
     });
 

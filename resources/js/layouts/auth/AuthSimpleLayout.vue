@@ -2,12 +2,14 @@
 import { Link } from '@inertiajs/vue3';
 import AppLogoIcon from '@/components/AppLogoIcon.vue';
 import LocaleSwitcher from '@/components/LocaleSwitcher.vue';
+import { useTranslations } from '@/composables/useTranslations';
 import { home } from '@/routes';
 
 defineProps<{
     title?: string;
     description?: string;
 }>();
+const { t } = useTranslations();
 </script>
 
 <template>
@@ -38,7 +40,7 @@ defineProps<{
                         </div>
                         <span
                             class="font-accent text-lg font-bold tracking-tight"
-                            >DLP Friends</span
+                            >{{ t('common.brand.name') }}</span
                         >
                     </Link>
                     <div class="space-y-2 text-center">

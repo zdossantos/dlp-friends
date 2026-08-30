@@ -1,5 +1,8 @@
 <script setup lang="ts">
+import { useTranslations } from '@/composables/useTranslations';
 import type { ConversationMessage } from '@/types';
+
+const { t } = useTranslations();
 
 defineProps<{
     messages: ConversationMessage[];
@@ -41,7 +44,7 @@ defineProps<{
                 data-test="last-message-read"
                 class="mt-1 px-1 text-xs text-muted-foreground"
             >
-                Lu
+                {{ t('conversations.message.read') }}
             </p>
         </div>
     </li>

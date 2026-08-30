@@ -15,8 +15,8 @@ const { t } = useTranslations();
 
 defineOptions({
     layout: {
-        title: 'Mot de passe oublié',
-        description: 'Recevez un lien pour choisir un nouveau mot de passe.',
+        titleKey: 'account.forgot_password.title',
+        descriptionKey: 'account.forgot_password.description',
     },
 });
 
@@ -26,7 +26,7 @@ defineProps<{
 </script>
 
 <template>
-    <Head title="Mot de passe oublié" />
+    <Head :title="t('account.forgot_password.title')" />
 
     <div
         v-if="status"
@@ -39,14 +39,14 @@ defineProps<{
     <div class="space-y-6">
         <Form v-bind="email.form()" v-slot="{ errors, processing }">
             <div class="grid gap-2">
-                <Label for="email">Adresse e-mail</Label>
+                <Label for="email">{{ t('account.fields.email') }}</Label>
                 <Input
                     id="email"
                     type="email"
                     name="email"
                     autocomplete="off"
                     autofocus
-                    placeholder="vous@exemple.fr"
+                    :placeholder="t('account.fields.email_placeholder')"
                 />
                 <InputError :message="localizeMailError(errors.email, t)" />
             </div>
@@ -58,14 +58,15 @@ defineProps<{
                     data-test="email-password-reset-link-button"
                 >
                     <Spinner v-if="processing" />
-                    Envoyer le lien de réinitialisation
+                    {{ t('account.forgot_password.submit') }}
                 </Button>
             </div>
         </Form>
 
         <div class="space-x-1 text-center text-sm text-muted-foreground">
-            <span>Revenir à la</span>
-            <TextLink :href="login()">connexion</TextLink>
+            <TextLink :href="login()">{{
+                t('account.forgot_password.back')
+            }}</TextLink>
         </div>
     </div>
 </template>

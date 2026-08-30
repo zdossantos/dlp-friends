@@ -3,6 +3,7 @@ import { Head, Link } from '@inertiajs/vue3';
 import { ref, watch } from 'vue';
 import AvatarPortrait from '@/components/profile/AvatarPortrait.vue';
 import { useConversationListRealtime } from '@/composables/useConversationListRealtime';
+import { useTranslations } from '@/composables/useTranslations';
 import {
     applyConversationMessage,
     conversationPreview,
@@ -15,6 +16,16 @@ const props = defineProps<{
     currentUserId: number;
 }>();
 const visibleConversations = ref(props.conversations);
+const { t } = useTranslations();
+
+function unreadLabel(count: number): string {
+    return t(
+        count === 1
+            ? 'conversations.page.unread_message'
+            : 'conversations.page.unread_messages',
+        { count },
+    );
+}
 
 watch(
     () => props.conversations,
@@ -34,17 +45,17 @@ useConversationListRealtime(props.currentUserId, (message) => {
 </script>
 
 <template>
-    <Head title="Mes échanges" />
+    <Head :title="t('conversations.page.title')" />
 
     <main
         class="mx-auto flex min-h-full w-full max-w-2xl flex-col gap-6 px-4 pt-[max(1rem,env(safe-area-inset-top))] sm:px-6 sm:pt-8"
     >
         <header class="space-y-1">
             <h1 class="text-2xl font-semibold tracking-tight sm:text-3xl">
-                Mes échanges
+                {{ t('conversations.page.title') }}
             </h1>
             <p class="text-sm text-muted-foreground">
-                Retrouvez ici vos conversations amicales.
+                {{ t('conversations.page.description') }}
             </p>
         </header>
 
@@ -52,15 +63,17 @@ useConversationListRealtime(props.currentUserId, (message) => {
             v-if="visibleConversations.length === 0"
             class="rounded-3xl border bg-card p-6 text-center shadow-sm"
         >
-            <h2 class="font-semibold">Aucun échange pour le moment</h2>
+            <h2 class="font-semibold">
+                {{ t('conversations.page.empty_title') }}
+            </h2>
             <p class="mt-2 text-sm text-muted-foreground">
-                Vos échanges apparaîtront ici après une découverte réciproque.
+                {{ t('conversations.page.empty_description') }}
             </p>
         </section>
 
         <section
             v-else
-            aria-label="Conversations"
+            :aria-label="t('conversations.page.list_label')"
             class="overflow-hidden rounded-3xl border bg-card shadow-sm"
         >
             <ul role="list" class="divide-y">
@@ -97,7 +110,9 @@ useConversationListRealtime(props.currentUserId, (message) => {
                                 <span
                                     v-if="conversation.unread_count > 0"
                                     class="grid min-w-5 shrink-0 place-items-center rounded-full bg-primary px-1.5 py-0.5 text-xs font-bold text-primary-foreground"
-                                    :aria-label="`${conversation.unread_count} message${conversation.unread_count > 1 ? 's' : ''} non lu${conversation.unread_count > 1 ? 's' : ''}`"
+                                    :aria-label="
+                                        unreadLabel(conversation.unread_count)
+                                    "
                                 >
                                     {{ conversation.unread_count }}
                                 </span>
@@ -105,7 +120,7 @@ useConversationListRealtime(props.currentUserId, (message) => {
                                     v-if="conversation.archived_at"
                                     class="shrink-0 text-xs font-medium text-muted-foreground"
                                 >
-                                    Archivé
+                                    {{ t('conversations.page.archived') }}
                                 </span>
                             </span>
                             <span
@@ -115,6 +130,10 @@ useConversationListRealtime(props.currentUserId, (message) => {
                                     conversationPreview(
                                         conversation,
                                         currentUserId,
+                                        t('conversations.page.new_exchange'),
+                                        t(
+                                            'conversations.page.current_user_prefix',
+                                        ),
                                     )
                                 }}
                             </span>

@@ -16,7 +16,7 @@ class VerifyEmailMail extends Mailable
 
     public function envelope(): Envelope
     {
-        return new Envelope(subject: __('mail.verification.subject'));
+        return new Envelope(subject: __('account.mail.verification.subject'));
     }
 
     public function content(): Content

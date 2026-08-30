@@ -71,7 +71,7 @@ function submit(): void {
                         variant="outline"
                         :disabled="submitting"
                     >
-                        {{ t('blocking.cancel') }}
+                        {{ t('common.actions.cancel') }}
                     </Button>
                 </DialogClose>
                 <Button

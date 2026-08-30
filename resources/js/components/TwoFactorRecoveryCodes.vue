@@ -11,12 +11,14 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
+import { useTranslations } from '@/composables/useTranslations';
 import { useTwoFactorAuth } from '@/composables/useTwoFactorAuth';
 import { regenerateRecoveryCodes } from '@/routes/two-factor';
 
 const { recoveryCodesList, fetchRecoveryCodes, errors } = useTwoFactorAuth();
 const isRecoveryCodesVisible = ref<boolean>(false);
 const recoveryCodeSectionRef = useTemplateRef('recoveryCodeSectionRef');
+const { t } = useTranslations();
 
 const toggleRecoveryCodesVisibility = async () => {
     if (!isRecoveryCodesVisible.value && !recoveryCodesList.value.length) {
@@ -42,11 +44,12 @@ onMounted(async () => {
     <Card class="w-full">
         <CardHeader>
             <CardTitle class="flex gap-3">
-                <LockKeyhole class="size-4" />Codes de récupération
+                <LockKeyhole class="size-4" />{{
+                    t('account.two_factor.recovery_title')
+                }}
             </CardTitle>
             <CardDescription>
-                Ils permettent de retrouver l’accès à votre compte.
-                Conservez-les dans un gestionnaire de mots de passe sécurisé.
+                {{ t('account.two_factor.recovery_description') }}
             </CardDescription>
         </CardHeader>
         <CardContent>
@@ -58,8 +61,11 @@ onMounted(async () => {
                         :is="isRecoveryCodesVisible ? EyeOff : Eye"
                         class="size-4"
                     />
-                    {{ isRecoveryCodesVisible ? 'Masquer' : 'Afficher' }} les
-                    codes
+                    {{
+                        isRecoveryCodesVisible
+                            ? t('account.two_factor.hide_codes')
+                            : t('account.two_factor.show_codes')
+                    }}
                 </Button>
 
                 <Form
@@ -75,7 +81,7 @@ onMounted(async () => {
                         type="submit"
                         :disabled="processing"
                     >
-                        <RefreshCw /> Régénérer les codes
+                        <RefreshCw /> {{ t('account.two_factor.regenerate') }}
                     </Button>
                 </Form>
             </div>
@@ -111,9 +117,7 @@ onMounted(async () => {
                         </div>
                     </div>
                     <p class="text-xs text-muted-foreground select-none">
-                        Chaque code ne peut être utilisé qu’une fois. Pour en
-                        obtenir de nouveaux, cliquez sur
-                        <span class="font-bold">Régénérer les codes</span>.
+                        {{ t('account.two_factor.recovery_help') }}
                     </p>
                 </div>
             </div>

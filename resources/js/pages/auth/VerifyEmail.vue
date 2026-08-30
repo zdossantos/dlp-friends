@@ -13,9 +13,8 @@ const { t } = useTranslations();
 
 defineOptions({
     layout: {
-        title: 'Vérifiez votre adresse e-mail',
-        description:
-            'Cliquez sur le lien que nous venons de vous envoyer avant de créer votre profil.',
+        titleKey: 'account.verification.title',
+        descriptionKey: 'account.verification.description',
     },
 });
 
@@ -25,15 +24,14 @@ defineProps<{
 </script>
 
 <template>
-    <Head title="Vérification de l’adresse e-mail" />
+    <Head :title="t('account.verification.page_title')" />
 
     <div
         v-if="status === 'verification-link-sent'"
         role="status"
         class="mb-4 rounded-xl bg-secondary p-3 text-center text-sm font-medium text-secondary-foreground"
     >
-        Un nouveau lien de vérification vient d’être envoyé à votre adresse
-        e-mail.
+        {{ t('account.verification.sent') }}
     </div>
 
     <Form
@@ -45,11 +43,11 @@ defineProps<{
 
         <Button :disabled="processing" variant="secondary">
             <Spinner v-if="processing" />
-            Renvoyer l’e-mail de vérification
+            {{ t('account.verification.resend') }}
         </Button>
 
         <TextLink :href="logout()" as="button" class="mx-auto block text-sm">
-            Se déconnecter
+            {{ t('account.verification.logout') }}
         </TextLink>
     </Form>
 </template>

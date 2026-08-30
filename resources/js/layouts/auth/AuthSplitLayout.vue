@@ -2,12 +2,14 @@
 import { Link } from '@inertiajs/vue3';
 import AppLogoIcon from '@/components/AppLogoIcon.vue';
 import LocaleSwitcher from '@/components/LocaleSwitcher.vue';
+import { useTranslations } from '@/composables/useTranslations';
 import { home } from '@/routes';
 
 defineProps<{
     title?: string;
     description?: string;
 }>();
+const { t } = useTranslations();
 </script>
 
 <template>
@@ -25,7 +27,7 @@ defineProps<{
                 class="relative z-20 flex items-center font-accent text-lg font-bold"
             >
                 <AppLogoIcon class="mr-2 size-8 fill-current text-white" />
-                DLP Friends
+                {{ t('common.brand.name') }}
             </Link>
             <p class="relative z-20 mt-auto max-w-md text-2xl font-medium">
                 Les rencontres Disney commencent par un profil qui vous

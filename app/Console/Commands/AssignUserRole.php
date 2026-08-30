@@ -19,7 +19,7 @@ class AssignUserRole extends Command
         $roleName = RoleName::tryFrom((string) $this->argument('role'));
 
         if ($roleName === null) {
-            $this->error('Rôle inconnu. Valeurs autorisées : user, admin.');
+            $this->error(__('administration.commands.unknown_role'));
 
             return self::FAILURE;
         }
@@ -27,14 +27,16 @@ class AssignUserRole extends Command
         $user = User::query()->where('email', $email)->first();
 
         if ($user === null) {
-            $this->error('Aucun compte ne correspond à cette adresse e-mail.');
+            $this->error(__('administration.commands.user_not_found'));
 
             return self::FAILURE;
         }
 
         $attached = $assignRole->handle($user, $roleName);
 
-        $this->info($attached ? 'Rôle attribué.' : 'Ce rôle est déjà attribué.');
+        $this->info($attached
+            ? __('administration.commands.role_assigned')
+            : __('administration.commands.role_already_assigned'));
 
         return self::SUCCESS;
     }

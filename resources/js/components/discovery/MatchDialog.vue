@@ -48,11 +48,11 @@ function updateOpen(open: boolean): void {
                     class="text-amber-900 outline-none dark:text-amber-100"
                     tabindex="-1"
                 >
-                    {{ t('match_dialog.title') }}
+                    {{ t('discovery.match.title') }}
                 </DialogTitle>
                 <DialogDescription>
                     {{
-                        t('match_dialog.description', {
+                        t('discovery.match.description', {
                             name: match.displayName,
                         })
                     }}
@@ -64,7 +64,7 @@ function updateOpen(open: boolean): void {
                         :href="conversationHref"
                         data-test="open-match-conversation"
                     >
-                        {{ t('match_dialog.open_conversation') }}
+                        {{ t('discovery.match.open_conversation') }}
                     </Link>
                 </Button>
                 <Button
@@ -75,15 +75,15 @@ function updateOpen(open: boolean): void {
                     :disabled="locked"
                     @click="emit('openConversation')"
                 >
-                    {{ t('match_dialog.open_conversation') }}
+                    {{ t('discovery.match.open_conversation') }}
                 </Button>
                 <Button
                     v-if="showContinue"
                     type="button"
-                    :aria-label="t('match_dialog.continue')"
+                    :aria-label="t('discovery.match.continue')"
                     @click="emit('update:open', false)"
                 >
-                    {{ t('match_dialog.continue') }}
+                    {{ t('discovery.match.continue') }}
                 </Button>
             </DialogFooter>
         </DialogContent>

@@ -24,6 +24,6 @@ test('the adult-only registration message is translated into the active locale',
         ])
         ->assertSessionHasErrors(['birth_date' => $message]);
 })->with([
-    ['fr-FR,fr;q=0.9', 'Vous devez être majeur pour vous inscrire.'],
+    ['fr-FR,fr;q=0.9', 'Tu dois être majeur pour t’inscrire.'],
     ['en-US,en;q=0.9', 'You must be an adult to register.'],
 ]);

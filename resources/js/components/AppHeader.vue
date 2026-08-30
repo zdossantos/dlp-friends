@@ -34,6 +34,7 @@ import {
 import UserMenuContent from '@/components/UserMenuContent.vue';
 import { useCurrentUrl } from '@/composables/useCurrentUrl';
 import { getInitials } from '@/composables/useInitials';
+import { useTranslations } from '@/composables/useTranslations';
 import { toUrl } from '@/lib/utils';
 import { dashboard } from '@/routes';
 import type { BreadcrumbItem, NavItem } from '@/types';
@@ -52,13 +53,14 @@ const identityLabel = computed(
     () => auth.value.user.profile?.display_name || auth.value.user.email,
 );
 const { isCurrentUrl, whenCurrentUrl } = useCurrentUrl();
+const { t } = useTranslations();
 
 const activeItemStyles =
     'text-neutral-900 dark:bg-neutral-800 dark:text-neutral-100';
 
 const mainNavItems: NavItem[] = [
     {
-        title: 'Dashboard',
+        title: t('administration.navigation.dashboard'),
         href: dashboard(),
         icon: LayoutGrid,
     },
@@ -66,12 +68,12 @@ const mainNavItems: NavItem[] = [
 
 const rightNavItems: NavItem[] = [
     {
-        title: 'Repository',
+        title: t('administration.navigation.repository'),
         href: 'https://github.com/laravel/vue-starter-kit',
         icon: Folder,
     },
     {
-        title: 'Documentation',
+        title: t('administration.navigation.documentation'),
         href: 'https://laravel.com/docs/starter-kits#vue',
         icon: BookOpen,
     },
@@ -95,12 +97,12 @@ const rightNavItems: NavItem[] = [
                             </Button>
                         </SheetTrigger>
                         <SheetContent side="left" class="w-[300px] p-6">
-                            <SheetTitle class="sr-only"
-                                >Navigation menu</SheetTitle
-                            >
+                            <SheetTitle class="sr-only">
+                                {{ t('common.accessibility.menu_navigation') }}
+                            </SheetTitle>
                             <SheetHeader class="flex justify-start text-left">
                                 <AppLogoIcon
-                                    accessible-name="DLP Friends"
+                                    :accessible-name="t('common.brand.name')"
                                     class="size-6 fill-current text-black dark:text-white"
                                 />
                             </SheetHeader>
@@ -198,6 +200,7 @@ const rightNavItems: NavItem[] = [
                             variant="ghost"
                             size="icon"
                             class="group h-9 w-9 cursor-pointer"
+                            :aria-label="t('common.accessibility.search')"
                         >
                             <Search
                                 class="size-5 opacity-80 group-hover:opacity-100"

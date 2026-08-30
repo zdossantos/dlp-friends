@@ -1,22 +1,35 @@
 import { usePage } from '@inertiajs/vue3';
 import { computed } from 'vue';
 import type { ComputedRef } from 'vue';
-import type { I18n, Locale, TranslationMessages } from '@/types/i18n';
+import type {
+    I18n,
+    Locale,
+    TranslationMessages,
+    TranslationTree,
+} from '@/types/i18n';
 
-type TranslationGroup = Exclude<keyof TranslationMessages, 'copy'>;
-export type TranslationKey = {
-    [
-        Group in TranslationGroup
-    ]: `${Group & string}.${keyof TranslationMessages[Group] & string}`;
-}[TranslationGroup];
+type TranslationGroup = keyof TranslationMessages;
+export type TranslationKey = `${TranslationGroup & string}.${string}`;
 
-const translationFor = (
+export const translationFor = (
     messages: TranslationMessages,
     key: TranslationKey,
 ): string => {
-    const [group, item] = key.split('.') as [keyof TranslationMessages, string];
+    const translation = key
+        .split('.')
+        .reduce<string | TranslationTree>((current, segment) => {
+            if (typeof current === 'string' || current[segment] === undefined) {
+                throw new Error(`Missing translation: ${key}`);
+            }
 
-    return (messages[group] as Record<string, string>)[item];
+            return current[segment];
+        }, messages);
+
+    if (typeof translation !== 'string') {
+        throw new Error(`Translation is not a string: ${key}`);
+    }
+
+    return translation;
 };
 
 export function useTranslations(): {

@@ -99,7 +99,7 @@ class RegistrationTest extends TestCase
 
         $response->assertRedirect(route('register'));
         $response->assertSessionHasErrors([
-            'birth_date' => 'Vous devez être majeur pour vous inscrire.',
+            'birth_date' => 'Tu dois être majeur pour t’inscrire.',
         ]);
         $this->assertGuest();
     }

@@ -5,6 +5,7 @@ import { destroy } from '@/actions/Laravel/Passkeys/Http/Controllers/PasskeyRegi
 import Heading from '@/components/Heading.vue';
 import PasskeyItem from '@/components/PasskeyItem.vue';
 import PasskeyRegister from '@/components/PasskeyRegister.vue';
+import { useTranslations } from '@/composables/useTranslations';
 import type { Passkey } from '@/types/auth';
 
 export type Props = {
@@ -27,14 +28,15 @@ const handleDelete = (id: number, onError: () => void) => {
 const handleRegisterSuccess = () => {
     router.reload();
 };
+const { t } = useTranslations();
 </script>
 
 <template>
     <div v-if="canManagePasskeys" class="space-y-6">
         <Heading
             variant="small"
-            title="Clés d’accès"
-            description="Gérez la connexion sans mot de passe."
+            :title="t('account.passkeys.title')"
+            :description="t('account.passkeys.description')"
         />
 
         <div class="overflow-hidden rounded-lg border border-border">
@@ -53,9 +55,9 @@ const handleRegisterSuccess = () => {
                 >
                     <KeyRound class="h-7 w-7 text-muted-foreground" />
                 </div>
-                <p class="font-medium">Aucune clé d’accès</p>
+                <p class="font-medium">{{ t('account.passkeys.empty') }}</p>
                 <p class="mt-1 text-sm text-muted-foreground">
-                    Ajoutez-en une pour vous connecter sans mot de passe.
+                    {{ t('account.passkeys.empty_description') }}
                 </p>
             </div>
         </div>

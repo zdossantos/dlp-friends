@@ -5,10 +5,12 @@ import InputError from '@/components/InputError.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { useTranslations } from '@/composables/useTranslations';
 
 const emit = defineEmits<{
     success: [];
 }>();
+const { t } = useTranslations();
 
 const getDefaultPasskeyName = () => {
     const ua = navigator.userAgent;
@@ -61,11 +63,11 @@ const handleCancel = () => {
 
 <template>
     <div v-if="!isSupported" class="text-sm text-muted-foreground">
-        Les clés d’accès ne sont pas prises en charge par ce navigateur.
+        {{ t('account.passkeys.unsupported') }}
     </div>
 
     <Button v-else-if="!showForm" variant="outline" @click="showForm = true">
-        Ajouter une clé d’accès
+        {{ t('account.passkeys.add') }}
     </Button>
 
     <form
@@ -74,17 +76,17 @@ const handleCancel = () => {
         class="space-y-4 rounded-lg border border-border bg-muted/50 p-4"
     >
         <div class="grid gap-2">
-            <Label for="passkey-name">Nom de la clé d’accès</Label>
+            <Label for="passkey-name">{{ t('account.passkeys.name') }}</Label>
             <Input
                 id="passkey-name"
                 type="text"
                 v-model="name"
-                placeholder="Ex. MacBook Pro, iPhone"
+                :placeholder="t('account.passkeys.placeholder')"
                 class="mt-1 block w-full border-foreground/20"
                 autofocus
             />
             <p class="text-xs text-muted-foreground">
-                Ce nom vous permettra de reconnaître cette clé plus tard.
+                {{ t('account.passkeys.name_help') }}
             </p>
         </div>
 
@@ -92,10 +94,14 @@ const handleCancel = () => {
 
         <div class="flex gap-2">
             <Button type="submit" :disabled="isLoading || !name.trim()">
-                {{ isLoading ? 'Enregistrement…' : 'Enregistrer la clé' }}
+                {{
+                    isLoading
+                        ? t('account.passkeys.saving')
+                        : t('account.passkeys.save')
+                }}
             </Button>
             <Button type="button" variant="ghost" @click="handleCancel">
-                Annuler
+                {{ t('common.actions.cancel') }}
             </Button>
         </div>
     </form>

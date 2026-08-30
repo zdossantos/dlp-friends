@@ -95,6 +95,7 @@ Il sert de preuve pour la matrice de statut du futur PRD.
 | Blocage immédiat d’un membre | Implémenté | `app/Actions/BlockUser.php`, `app/Actions/UnblockUser.php`, routes de blocage et tests `Block*`/`MemberBlockingTest.php` |
 | Tutoriel produit obligatoire | Implémenté | migrations `product_onboarding`, action de progression, contrôleurs/pages et tests `ProductOnboarding*`/`OnboardingTest.php` |
 | Français et anglais | Implémenté | `app/Http/Middleware/SetLocale.php`, catalogues `lang/`, composable de traduction et tests `Localization/*` |
+| Univers éditorial | Implémenté | `docs/editorial-guidelines.md`, catalogues métier `lang/{fr,en}/`, `tests/Feature/Localization/EditorialCopyTest.php` |
 | Connexion Google et Apple | Planifié | aucune migration `social_accounts`, aucune route ou action OAuth et aucun test de connexion sociale |
 | Photo personnelle facultative | Planifié | aucun champ de photo dans les migrations de profil et aucun flux HTTP de téléversement membre |
 | Export des données du compte | Planifié | aucune route, aucun contrôleur et aucun test d’export |

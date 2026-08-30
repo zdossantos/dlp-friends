@@ -1,7 +1,10 @@
 <script setup lang="ts">
 import { InfiniteScroll } from '@inertiajs/vue3';
 import { computed, nextTick, onMounted, ref, watch } from 'vue';
+import { useTranslations } from '@/composables/useTranslations';
 import type { ConversationMessage, PaginatedMessages } from '@/types';
+
+const { t } = useTranslations();
 
 const props = defineProps<{
     messages: PaginatedMessages;
@@ -43,7 +46,7 @@ watch(
                 container.scrollTop -
                 container.clientHeight <=
                 48;
-        announcedMessage.value = 'Nouveau message reçu';
+        announcedMessage.value = t('conversations.message.received');
 
         if (wasNearBottom) {
             await nextTick();
@@ -57,7 +60,7 @@ watch(
     <section
         ref="scrollContainer"
         role="log"
-        aria-label="Historique des messages"
+        :aria-label="t('conversations.message.timeline')"
         aria-relevant="additions text"
         data-test="message-scroll"
         class="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-4 sm:px-6"
@@ -79,7 +82,7 @@ watch(
                     class="pb-3 text-center text-sm text-muted-foreground"
                     role="status"
                 >
-                    Chargement des messages précédents…
+                    {{ t('conversations.message.loading_previous') }}
                 </p>
             </template>
 
@@ -115,7 +118,7 @@ watch(
                         data-test="last-message-read"
                         class="mt-1 px-1 text-xs text-muted-foreground"
                     >
-                        Lu
+                        {{ t('conversations.message.read') }}
                     </p>
                 </div>
             </li>

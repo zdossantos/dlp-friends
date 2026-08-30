@@ -8,12 +8,14 @@ import {
     CardDescription,
     CardHeader,
 } from '@/components/ui/card';
+import { useTranslations } from '@/composables/useTranslations';
 import { home } from '@/routes';
 
 defineProps<{
     title?: string;
     description?: string;
 }>();
+const { t } = useTranslations();
 </script>
 
 <template>
@@ -39,9 +41,9 @@ defineProps<{
                 >
                     <AppLogoIcon class="size-7 fill-current" />
                 </div>
-                <span class="font-accent text-lg font-bold tracking-tight"
-                    >DLP Friends</span
-                >
+                <span class="font-accent text-lg font-bold tracking-tight">{{
+                    t('common.brand.name')
+                }}</span>
             </Link>
 
             <main id="contenu-principal" class="flex flex-col gap-6">

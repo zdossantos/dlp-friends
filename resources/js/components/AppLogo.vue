@@ -1,5 +1,8 @@
 <script setup lang="ts">
 import AppLogoIcon from '@/components/AppLogoIcon.vue';
+import { useTranslations } from '@/composables/useTranslations';
+
+const { t } = useTranslations();
 </script>
 
 <template>
@@ -10,7 +13,7 @@ import AppLogoIcon from '@/components/AppLogoIcon.vue';
     </div>
     <div class="ml-1 grid flex-1 text-left text-sm">
         <span class="mb-0.5 truncate font-accent leading-tight font-bold">
-            DLP Friends
+            {{ t('common.brand.name') }}
         </span>
     </div>
 </template>

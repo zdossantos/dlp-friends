@@ -8,9 +8,12 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
+import { useTranslations } from '@/composables/useTranslations';
 import { index as avatarIndex } from '@/routes/admin/avatars';
 import { store } from '@/routes/member-profile';
 import type { AvatarOption, InterestOption, Profile } from '@/types';
+
+const { t } = useTranslations();
 
 defineProps<{
     profile: Profile | null;
@@ -26,7 +29,7 @@ defineProps<{
 </script>
 
 <template>
-    <Head title="Créer mon profil" />
+    <Head :title="t('profile.create.title')" />
 
     <main
         class="fixed inset-0 mx-auto flex h-svh w-full max-w-xl overflow-hidden px-3 py-[max(0.5rem,env(safe-area-inset-top))] sm:px-6 sm:py-6"
@@ -35,10 +38,9 @@ defineProps<{
             class="flex h-full min-h-0 w-full gap-2 rounded-3xl border-border/70 py-3 shadow-xl shadow-primary/5 sm:gap-4 sm:py-6"
         >
             <CardHeader class="shrink-0 px-4 sm:px-6">
-                <CardTitle>Créons votre profil</CardTitle>
+                <CardTitle>{{ t('profile.create.heading') }}</CardTitle>
                 <CardDescription>
-                    Ces informations aideront les autres membres à vous
-                    découvrir.
+                    {{ t('profile.create.description') }}
                 </CardDescription>
             </CardHeader>
             <CardContent class="min-h-0 flex-1 px-4 sm:px-6">
@@ -46,17 +48,17 @@ defineProps<{
                     v-if="avatars.length === 0 && canManageAvatars"
                     class="mb-6 rounded-xl border border-primary/30 bg-primary/5 p-4 text-sm"
                 >
-                    Le catalogue est vide.
+                    {{ t('profile.create.empty_catalogue') }}
                     <Link :href="avatarIndex()" class="font-medium underline">
-                        Ajouter le premier avatar
+                        {{ t('profile.create.add_first_avatar') }}
                     </Link>
-                    pour permettre la complétion des profils.
+                    {{ t('profile.create.empty_catalogue_suffix') }}
                 </p>
                 <ProfileForm
                     :profile="profile"
                     :action="store.url()"
                     method="post"
-                    submit-label="Créer mon profil"
+                    :submit-label="t('profile.create.submit')"
                     :visit-frequencies="visitFrequencies"
                     :visibilities="visibilities"
                     :avatars="avatars"

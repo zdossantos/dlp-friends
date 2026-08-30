@@ -6,6 +6,7 @@ import Heading from '@/components/Heading.vue';
 import TwoFactorRecoveryCodes from '@/components/TwoFactorRecoveryCodes.vue';
 import TwoFactorSetupModal from '@/components/TwoFactorSetupModal.vue';
 import { Button } from '@/components/ui/button';
+import { useTranslations } from '@/composables/useTranslations';
 import { useTwoFactorAuth } from '@/composables/useTwoFactorAuth';
 import { disable, enable } from '@/routes/two-factor';
 
@@ -23,6 +24,7 @@ withDefaults(defineProps<Props>(), {
 
 const { hasSetupData, clearTwoFactorAuthData } = useTwoFactorAuth();
 const showSetupModal = ref<boolean>(false);
+const { t } = useTranslations();
 
 onUnmounted(() => clearTwoFactorAuthData());
 </script>
@@ -31,8 +33,8 @@ onUnmounted(() => clearTwoFactorAuthData());
     <div v-if="canManageTwoFactor" class="space-y-6">
         <Heading
             variant="small"
-            title="Authentification à deux facteurs"
-            description="Renforcez la sécurité de votre compte."
+            :title="t('account.two_factor.title')"
+            :description="t('account.two_factor.description')"
         />
 
         <div
@@ -40,13 +42,12 @@ onUnmounted(() => clearTwoFactorAuthData());
             class="flex flex-col items-start justify-start space-y-4"
         >
             <p class="text-sm text-muted-foreground">
-                Une fois activée, un code temporaire fourni par votre
-                application d’authentification sera demandé à la connexion.
+                {{ t('account.two_factor.disabled_description') }}
             </p>
 
             <div>
                 <Button v-if="hasSetupData" @click="showSetupModal = true">
-                    <ShieldCheck />Continuer la configuration
+                    <ShieldCheck />{{ t('account.two_factor.continue_setup') }}
                 </Button>
                 <Form
                     v-else
@@ -55,7 +56,7 @@ onUnmounted(() => clearTwoFactorAuthData());
                     #default="{ processing }"
                 >
                     <Button type="submit" :disabled="processing">
-                        Activer la double authentification
+                        {{ t('account.two_factor.enable') }}
                     </Button>
                 </Form>
             </div>
@@ -63,8 +64,7 @@ onUnmounted(() => clearTwoFactorAuthData());
 
         <div v-else class="flex flex-col items-start justify-start space-y-4">
             <p class="text-sm text-muted-foreground">
-                Un code temporaire fourni par votre application
-                d’authentification sera demandé à chaque connexion.
+                {{ t('account.two_factor.enabled_description') }}
             </p>
 
             <div class="relative inline">
@@ -74,7 +74,7 @@ onUnmounted(() => clearTwoFactorAuthData());
                         type="submit"
                         :disabled="processing"
                     >
-                        Désactiver la double authentification
+                        {{ t('account.two_factor.disable') }}
                     </Button>
                 </Form>
             </div>

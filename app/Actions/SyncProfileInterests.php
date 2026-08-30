@@ -49,7 +49,7 @@ class SyncProfileInterests
                 && $submittedIds->diff($currentIds)->isNotEmpty()
             ) {
                 throw ValidationException::withMessages([
-                    'interest_ids' => __('profile.interest_limit', ['max' => $setting->max_selections]),
+                    'interest_ids' => trans_choice('profile.interest_limit', $setting->max_selections, ['max' => $setting->max_selections]),
                 ]);
             }
 

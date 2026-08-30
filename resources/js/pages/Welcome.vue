@@ -3,32 +3,33 @@ import { Head, Link } from '@inertiajs/vue3';
 import { MessageCircle, Sparkles, UsersRound } from '@lucide/vue';
 import AppLogoIcon from '@/components/AppLogoIcon.vue';
 import LocaleSwitcher from '@/components/LocaleSwitcher.vue';
+import { useTranslations } from '@/composables/useTranslations';
 import { app, login, register } from '@/routes';
+
+const { t } = useTranslations();
 
 const benefits = [
     {
-        title: 'Intérêts communs',
-        description:
-            'Découvrez en priorité les membres qui aiment les mêmes expériences que vous.',
+        title: 'common.welcome.benefits.interests.title' as const,
+        description: 'common.welcome.benefits.interests.description' as const,
         icon: Sparkles,
     },
     {
-        title: 'Découverte réciproque',
-        description:
-            'Un match existe seulement lorsque deux membres souhaitent faire connaissance.',
+        title: 'common.welcome.benefits.discovery.title' as const,
+        description: 'common.welcome.benefits.discovery.description' as const,
         icon: UsersRound,
     },
     {
-        title: 'Échanges privés',
+        title: 'common.welcome.benefits.conversations.title' as const,
         description:
-            'Discutez dans un espace privé après un match amical réciproque.',
+            'common.welcome.benefits.conversations.description' as const,
         icon: MessageCircle,
     },
 ];
 </script>
 
 <template>
-    <Head title="DLP Friends" />
+    <Head :title="t('common.brand.name')" />
 
     <div
         class="relative min-h-svh overflow-hidden bg-background text-foreground"
@@ -54,7 +55,7 @@ const benefits = [
                         />
                     </span>
                     <span class="font-accent text-lg font-bold tracking-tight">
-                        DLP Friends
+                        {{ t('common.brand.name') }}
                     </span>
                 </div>
                 <div class="flex items-center gap-3 self-end sm:self-auto">
@@ -70,19 +71,17 @@ const benefits = [
                     <p
                         class="mx-auto mb-5 w-fit rounded-full bg-secondary px-4 py-2 text-sm font-medium text-secondary-foreground"
                     >
-                        Entre fans, simplement
+                        {{ t('common.welcome.eyebrow') }}
                     </p>
                     <h1
                         class="font-accent text-4xl font-bold tracking-tight text-balance sm:text-5xl lg:text-6xl"
                     >
-                        Des rencontres strictement amicales entre fans adultes
+                        {{ t('common.welcome.title') }}
                     </h1>
                     <p
                         class="mx-auto mt-6 max-w-2xl text-base leading-7 text-muted-foreground sm:text-lg"
                     >
-                        Trouvez des personnes qui partagent vos intérêts pour
-                        Disneyland Paris, découvrez-vous mutuellement puis
-                        échangez en toute simplicité.
+                        {{ t('common.welcome.description') }}
                     </p>
 
                     <div
@@ -93,20 +92,20 @@ const benefits = [
                             :href="app()"
                             class="inline-flex min-h-12 items-center justify-center rounded-2xl bg-primary px-6 font-medium text-primary-foreground shadow-lg shadow-primary/20 transition-transform hover:-translate-y-0.5 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none"
                         >
-                            Ouvrir mon espace
+                            {{ t('common.welcome.open_space') }}
                         </Link>
                         <template v-else>
                             <Link
                                 :href="register()"
                                 class="inline-flex min-h-12 items-center justify-center rounded-2xl bg-primary px-6 font-medium text-primary-foreground shadow-lg shadow-primary/20 transition-transform hover:-translate-y-0.5 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none"
                             >
-                                Créer mon compte
+                                {{ t('common.welcome.create_account') }}
                             </Link>
                             <Link
                                 :href="login()"
                                 class="inline-flex min-h-12 items-center justify-center rounded-2xl border bg-card px-6 font-medium shadow-sm transition-colors hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none"
                             >
-                                Se connecter
+                                {{ t('common.welcome.login') }}
                             </Link>
                         </template>
                     </div>
@@ -114,7 +113,7 @@ const benefits = [
 
                 <section
                     class="mx-auto mt-14 grid w-full max-w-5xl gap-4 sm:grid-cols-3"
-                    aria-label="Fonctionnement"
+                    :aria-label="t('common.welcome.how_it_works')"
                 >
                     <article
                         v-for="benefit in benefits"
@@ -130,9 +129,9 @@ const benefits = [
                                 aria-hidden="true"
                             />
                         </span>
-                        <h2 class="font-semibold">{{ benefit.title }}</h2>
+                        <h2 class="font-semibold">{{ t(benefit.title) }}</h2>
                         <p class="mt-2 text-sm leading-6 text-muted-foreground">
-                            {{ benefit.description }}
+                            {{ t(benefit.description) }}
                         </p>
                     </article>
                 </section>
@@ -140,8 +139,7 @@ const benefits = [
                 <p
                     class="mx-auto mt-10 max-w-2xl text-center text-xs leading-5 text-muted-foreground"
                 >
-                    DLP Friends est réservé aux adultes, indépendant et non
-                    affilié à Disney ou Disneyland Paris.
+                    {{ t('common.brand.disclaimer') }}
                 </p>
             </main>
         </div>

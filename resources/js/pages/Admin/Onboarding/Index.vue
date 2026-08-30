@@ -12,8 +12,7 @@ import {
 } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { useTranslations } from '@/composables/useTranslations';
-import { dashboard } from '@/routes';
-import { index, update } from '@/routes/admin/onboarding';
+import { update } from '@/routes/admin/onboarding';
 
 type Avatar = {
     id: number;
@@ -57,22 +56,31 @@ const props = defineProps<{
 const { formatDate: formatLocalizedDate, t } = useTranslations();
 
 const statCards = [
-    { key: 'not_started' as const, label: t('admin_onboarding.not_started') },
-    { key: 'in_progress' as const, label: t('admin_onboarding.in_progress') },
-    { key: 'completed' as const, label: t('admin_onboarding.completed') },
+    {
+        key: 'not_started' as const,
+        label: t('administration.onboarding.not_started'),
+    },
+    {
+        key: 'in_progress' as const,
+        label: t('administration.onboarding.in_progress'),
+    },
+    {
+        key: 'completed' as const,
+        label: t('administration.onboarding.completed'),
+    },
 ];
 
 const statusLabels: Record<Member['status'], string> = {
-    not_started: t('admin_onboarding.not_started'),
-    in_progress: t('admin_onboarding.in_progress'),
-    completed: t('admin_onboarding.completed'),
+    not_started: t('administration.onboarding.not_started'),
+    in_progress: t('administration.onboarding.in_progress'),
+    completed: t('administration.onboarding.completed'),
 };
 
 const stepLabels: Record<string, string> = {
-    pass_demo: t('admin_onboarding.pass_demo'),
-    like_demo: t('admin_onboarding.like_demo'),
-    match_demo: t('admin_onboarding.match_demo'),
-    conversation_demo: t('admin_onboarding.conversation_demo'),
+    pass_demo: t('administration.onboarding.pass_demo'),
+    like_demo: t('administration.onboarding.discover_demo'),
+    match_demo: t('administration.onboarding.crossed_worlds_demo'),
+    conversation_demo: t('administration.onboarding.conversation_demo'),
 };
 
 function avatarById(id: number | null): Avatar | undefined {
@@ -85,38 +93,21 @@ function formatDate(value: string): string {
         timeStyle: 'short',
     });
 }
-
-defineOptions({
-    layout: {
-        breadcrumbs: [
-            {
-                title: '',
-                titleKey: 'admin_onboarding.administration',
-                href: dashboard(),
-            },
-            {
-                title: '',
-                titleKey: 'admin_onboarding.breadcrumb',
-                href: index(),
-            },
-        ],
-    },
-});
 </script>
 
 <template>
-    <Head :title="t('admin_onboarding.page_title')" />
+    <Head :title="t('administration.onboarding.page_title')" />
 
     <main class="flex flex-1 flex-col gap-6 p-4 sm:p-6">
         <header>
             <p class="text-sm font-medium text-primary">
-                {{ t('admin_onboarding.administration') }}
+                {{ t('administration.title') }}
             </p>
             <h1 class="text-3xl font-semibold tracking-tight">
-                {{ t('admin_onboarding.page_title') }}
+                {{ t('administration.onboarding.page_title') }}
             </h1>
             <p class="mt-1 text-muted-foreground">
-                {{ t('admin_onboarding.description') }}
+                {{ t('administration.onboarding.description') }}
             </p>
         </header>
 
@@ -132,7 +123,7 @@ defineOptions({
             <Card>
                 <CardHeader class="pb-2">
                     <CardDescription>{{
-                        t('admin_onboarding.completion_rate')
+                        t('administration.onboarding.completion_rate')
                     }}</CardDescription>
                     <CardTitle class="text-3xl"
                         >{{ stats.completion_rate }} %</CardTitle
@@ -144,10 +135,10 @@ defineOptions({
         <Card>
             <CardHeader>
                 <CardTitle>{{
-                    t('admin_onboarding.profiles_title')
+                    t('administration.onboarding.profiles_title')
                 }}</CardTitle>
                 <CardDescription>
-                    {{ t('admin_onboarding.profiles_description') }}
+                    {{ t('administration.onboarding.profiles_description') }}
                 </CardDescription>
             </CardHeader>
             <CardContent>
@@ -158,7 +149,7 @@ defineOptions({
                 >
                     <div class="grid gap-2">
                         <Label for="pass_avatar_id">{{
-                            t('admin_onboarding.pass_avatar')
+                            t('administration.onboarding.pass_avatar')
                         }}</Label>
                         <select
                             id="pass_avatar_id"
@@ -168,7 +159,9 @@ defineOptions({
                             class="h-10 rounded-md border bg-background px-3 text-sm"
                         >
                             <option value="" disabled>
-                                {{ t('admin_onboarding.choose_avatar') }}
+                                {{
+                                    t('administration.onboarding.choose_avatar')
+                                }}
                             </option>
                             <option
                                 v-for="avatar in avatars"
@@ -189,7 +182,7 @@ defineOptions({
 
                     <div class="grid gap-2">
                         <Label for="like_avatar_id">{{
-                            t('admin_onboarding.like_avatar')
+                            t('administration.onboarding.discover_avatar')
                         }}</Label>
                         <select
                             id="like_avatar_id"
@@ -199,7 +192,9 @@ defineOptions({
                             class="h-10 rounded-md border bg-background px-3 text-sm"
                         >
                             <option value="" disabled>
-                                {{ t('admin_onboarding.choose_avatar') }}
+                                {{
+                                    t('administration.onboarding.choose_avatar')
+                                }}
                             </option>
                             <option
                                 v-for="avatar in avatars"
@@ -223,7 +218,7 @@ defineOptions({
                         :disabled="processing || avatars.length < 2"
                         class="lg:col-span-2 lg:justify-self-start"
                     >
-                        {{ t('admin_onboarding.save') }}
+                        {{ t('administration.onboarding.save') }}
                     </Button>
                 </Form>
             </CardContent>
@@ -231,13 +226,15 @@ defineOptions({
 
         <Card>
             <CardHeader>
-                <CardTitle>{{ t('admin_onboarding.members_title') }}</CardTitle>
+                <CardTitle>{{
+                    t('administration.onboarding.members_title')
+                }}</CardTitle>
                 <CardDescription>
                     {{
                         t(
                             members.total === 1
-                                ? 'admin_onboarding.eligible_member'
-                                : 'admin_onboarding.eligible_members',
+                                ? 'administration.onboarding.eligible_member'
+                                : 'administration.onboarding.eligible_members',
                             { count: members.total },
                         )
                     }}
@@ -248,16 +245,16 @@ defineOptions({
                     <thead class="border-b text-muted-foreground">
                         <tr>
                             <th class="px-3 py-2 font-medium">
-                                {{ t('admin_onboarding.member') }}
+                                {{ t('administration.onboarding.member') }}
                             </th>
                             <th class="px-3 py-2 font-medium">
-                                {{ t('admin_onboarding.status') }}
+                                {{ t('administration.onboarding.status') }}
                             </th>
                             <th class="px-3 py-2 font-medium">
-                                {{ t('admin_onboarding.step') }}
+                                {{ t('administration.onboarding.step') }}
                             </th>
                             <th class="px-3 py-2 font-medium">
-                                {{ t('admin_onboarding.updated_at') }}
+                                {{ t('administration.onboarding.updated_at') }}
                             </th>
                         </tr>
                     </thead>
@@ -303,7 +300,7 @@ defineOptions({
                                 colspan="4"
                                 class="px-3 py-8 text-center text-muted-foreground"
                             >
-                                {{ t('admin_onboarding.empty') }}
+                                {{ t('administration.onboarding.empty') }}
                             </td>
                         </tr>
                     </tbody>
@@ -311,7 +308,7 @@ defineOptions({
 
                 <nav
                     v-if="members.links.length > 3"
-                    :aria-label="t('admin_onboarding.pagination')"
+                    :aria-label="t('administration.onboarding.pagination')"
                     class="mt-4 flex flex-wrap gap-2"
                 >
                     <Button

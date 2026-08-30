@@ -1,19 +1,21 @@
 <script setup lang="ts">
 import { Monitor, Moon, Sun } from '@lucide/vue';
 import { useAppearance } from '@/composables/useAppearance';
+import { useTranslations } from '@/composables/useTranslations';
 
 const { appearance, updateAppearance } = useAppearance();
+const { t } = useTranslations();
 
 const tabs = [
-    { value: 'light', Icon: Sun, label: 'Clair' },
-    { value: 'dark', Icon: Moon, label: 'Sombre' },
-    { value: 'system', Icon: Monitor, label: 'Système' },
+    { value: 'light', Icon: Sun, label: t('account.appearance.light') },
+    { value: 'dark', Icon: Moon, label: t('account.appearance.dark') },
+    { value: 'system', Icon: Monitor, label: t('account.appearance.system') },
 ] as const;
 </script>
 
 <template>
     <div
-        aria-label="Choisir le thème"
+        :aria-label="t('account.appearance.label')"
         class="inline-flex gap-1 rounded-xl bg-muted p-1"
     >
         <button

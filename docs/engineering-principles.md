@@ -24,7 +24,7 @@ Le code de DLP Friends doit être le plus simple, lisible et maintenable possibl
 - Une abstraction doit réduire la complexité globale. Si elle ajoute des fichiers, des indirections ou un vocabulaire sans supprimer une difficulté réelle, ne pas la créer.
 - Préférer une Policy Laravel pour une autorisation, une Form Request pour une validation HTTP, une Action pour un cas d'usage métier non trivial et un Eloquent scope pour une requête réutilisée. Ne pas dupliquer ces rôles.
 - Éviter les composants Vue « universels » avec de nombreuses props conditionnelles. Extraire un composant quand une structure et un comportement sont effectivement réutilisés.
-- Tout nouveau texte visible doit être ajouté aux catalogues Laravel français et anglais. Dans Vue, utiliser `useTranslations` pour les nouveaux libellés structurés ; si un libellé français historique reste écrit dans un composant, ajouter sa correspondance à `frontend.copy`. Ne pas créer de catalogue TypeScript parallèle.
+- Tout texte visible doit être ajouté aux catalogues Laravel français et anglais, organisés par feature métier avec `common.php` pour les libellés partagés. Dans Vue, utiliser `useTranslations`. Ne pas créer de catalogue TypeScript parallèle ni écrire de libellé visible directement dans le code.
 
 ## Revue de code
 

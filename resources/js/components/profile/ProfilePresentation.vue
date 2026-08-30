@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import { CalendarDays, Sparkles } from '@lucide/vue';
 import { Badge } from '@/components/ui/badge';
+import { useTranslations } from '@/composables/useTranslations';
+
+const { t } = useTranslations();
 
 defineProps<{
     avatar: {
@@ -41,7 +44,7 @@ defineProps<{
                 />
                 <img
                     :src="avatar.image_url"
-                    :alt="`Avatar ${avatar.name}`"
+                    :alt="t('profile.avatar.image_alt', { name: avatar.name })"
                     class="relative z-20 h-[calc(100%-0.75rem)] w-full object-contain drop-shadow-2xl"
                     data-test="profile-avatar"
                 />

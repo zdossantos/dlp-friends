@@ -7,12 +7,12 @@ test('the verification email renders the french content and accessible fallback 
     $url = 'https://dlp-friends.test/email/verify/42/example-signature';
     $mail = (new VerifyEmailMail($url))->locale('fr');
 
-    $mail->assertHasSubject('Vérifiez votre adresse e-mail');
+    $mail->assertHasSubject('Vérifie ton adresse e-mail');
     foreach ([
         'DLP Friends',
         'Bienvenue dans la communauté',
         'Vérifier mon adresse e-mail',
-        'Copiez et collez ce lien dans votre navigateur',
+        'Copie et colle ce lien dans ton navigateur',
         'indépendant et non affilié à Disney ou Disneyland Paris',
         $url,
     ] as $text) {
@@ -21,7 +21,7 @@ test('the verification email renders the french content and accessible fallback 
 
     foreach ([
         'Vérifier mon adresse e-mail',
-        'Copiez et collez ce lien dans votre navigateur',
+        'Copie et colle ce lien dans ton navigateur',
         $url,
     ] as $text) {
         $mail->assertSeeInText($text);
@@ -56,12 +56,12 @@ test('the password reset email renders the french content and expiry', function 
     $url = 'https://dlp-friends.test/reset-password/example-token?email=membre%40example.test';
     $mail = (new ResetPasswordMail('example-token', $url))->locale('fr');
 
-    $mail->assertHasSubject('Réinitialisez votre mot de passe');
+    $mail->assertHasSubject('Réinitialise ton mot de passe');
     foreach ([
         'Réinitialisation du mot de passe',
         'Réinitialiser mon mot de passe',
         'Ce lien expirera dans 60 minutes.',
-        'Copiez et collez ce lien dans votre navigateur',
+        'Copie et colle ce lien dans ton navigateur',
         $url,
     ] as $text) {
         $mail->assertSeeInHtml($text);

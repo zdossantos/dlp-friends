@@ -9,27 +9,27 @@ import {
     InputOTPGroup,
     InputOTPSlot,
 } from '@/components/ui/input-otp';
+import { useTranslations } from '@/composables/useTranslations';
 import { store } from '@/routes/two-factor/login';
 import type { TwoFactorConfigContent } from '@/types';
 
 const showRecoveryInput = ref<boolean>(false);
 const code = ref<string>('');
+const { t } = useTranslations();
 
 const authConfigContent = computed<TwoFactorConfigContent>(() => {
     if (showRecoveryInput.value) {
         return {
-            title: 'Code de récupération',
-            description:
-                'Confirmez l’accès à votre compte avec l’un de vos codes de récupération.',
-            buttonText: 'utiliser un code d’authentification',
+            title: t('account.two_factor_challenge.recovery_title'),
+            description: t('account.two_factor_challenge.recovery_description'),
+            buttonText: t('account.two_factor_challenge.use_auth'),
         };
     }
 
     return {
-        title: 'Code d’authentification',
-        description:
-            'Saisissez le code fourni par votre application d’authentification.',
-        buttonText: 'utiliser un code de récupération',
+        title: t('account.two_factor_challenge.auth_title'),
+        description: t('account.two_factor_challenge.auth_description'),
+        buttonText: t('account.two_factor_challenge.use_recovery'),
     };
 });
 
@@ -48,7 +48,7 @@ const toggleRecoveryMode = (clearErrors: () => void): void => {
 </script>
 
 <template>
-    <Head title="Authentification à deux facteurs" />
+    <Head :title="t('account.two_factor_challenge.page_title')" />
 
     <div class="space-y-6">
         <template v-if="!showRecoveryInput">
@@ -82,11 +82,13 @@ const toggleRecoveryMode = (clearErrors: () => void): void => {
                     </div>
                     <InputError :message="errors.code" />
                 </div>
-                <Button type="submit" class="w-full" :disabled="processing"
-                    >Continuer</Button
-                >
+                <Button type="submit" class="w-full" :disabled="processing">{{
+                    t('account.two_factor_challenge.continue')
+                }}</Button>
                 <div class="text-center text-sm text-muted-foreground">
-                    <span>Vous pouvez aussi </span>
+                    <span
+                        >{{ t('account.two_factor_challenge.alternative') }}
+                    </span>
                     <button
                         type="button"
                         class="text-foreground underline decoration-neutral-300 underline-offset-4 transition-colors duration-300 ease-out hover:decoration-current! dark:decoration-neutral-500"
@@ -108,18 +110,24 @@ const toggleRecoveryMode = (clearErrors: () => void): void => {
                 <Input
                     name="recovery_code"
                     type="text"
-                    placeholder="Code de récupération"
-                    aria-label="Code de récupération"
+                    :placeholder="
+                        t('account.two_factor_challenge.recovery_title')
+                    "
+                    :aria-label="
+                        t('account.two_factor_challenge.recovery_title')
+                    "
                     :autofocus="showRecoveryInput"
                     required
                 />
                 <InputError :message="errors.recovery_code" />
-                <Button type="submit" class="w-full" :disabled="processing"
-                    >Continuer</Button
-                >
+                <Button type="submit" class="w-full" :disabled="processing">{{
+                    t('account.two_factor_challenge.continue')
+                }}</Button>
 
                 <div class="text-center text-sm text-muted-foreground">
-                    <span>Vous pouvez aussi </span>
+                    <span
+                        >{{ t('account.two_factor_challenge.alternative') }}
+                    </span>
                     <button
                         type="button"
                         class="text-foreground underline decoration-neutral-300 underline-offset-4 transition-colors duration-300 ease-out hover:decoration-current! dark:decoration-neutral-500"

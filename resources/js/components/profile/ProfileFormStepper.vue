@@ -19,11 +19,11 @@ function selectStep(step: number): void {
 </script>
 
 <template>
-    <nav :aria-label="t('stepper.navigation')" class="space-y-3">
+    <nav :aria-label="t('profile.stepper.navigation')" class="space-y-3">
         <div class="flex items-center justify-between gap-4">
             <p class="text-sm font-semibold text-foreground">
                 {{
-                    t('stepper.progress', {
+                    t('profile.stepper.progress', {
                         current: currentStep,
                         total: labels.length,
                     })
@@ -45,7 +45,7 @@ function selectStep(step: number): void {
                     class="group block min-h-11 w-full rounded-full focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-default"
                     :disabled="selectable === false || index + 1 > furthestStep"
                     :aria-label="
-                        t('stepper.step', {
+                        t('profile.stepper.step', {
                             number: index + 1,
                             label,
                         })

@@ -9,16 +9,19 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
+import { useTranslations } from '@/composables/useTranslations';
 import { register } from '@/routes';
 import { store } from '@/routes/login';
 import { request } from '@/routes/password';
 
 defineOptions({
     layout: {
-        title: 'Bon retour parmi nous',
-        description: 'Connectez-vous pour retrouver la communauté.',
+        titleKey: 'account.login.title',
+        descriptionKey: 'account.login.description',
     },
 });
+
+const { t } = useTranslations();
 
 defineProps<{
     status?: string;
@@ -27,7 +30,7 @@ defineProps<{
 </script>
 
 <template>
-    <Head title="Connexion" />
+    <Head :title="t('account.login.page_title')" />
 
     <div
         v-if="status"
@@ -47,7 +50,7 @@ defineProps<{
     >
         <div class="grid gap-6">
             <div class="grid gap-2">
-                <Label for="email">Adresse e-mail</Label>
+                <Label for="email">{{ t('account.fields.email') }}</Label>
                 <Input
                     id="email"
                     type="email"
@@ -55,20 +58,22 @@ defineProps<{
                     required
                     autofocus
                     autocomplete="email"
-                    placeholder="vous@exemple.fr"
+                    :placeholder="t('account.fields.email_placeholder')"
                 />
                 <InputError :message="errors.email" />
             </div>
 
             <div class="grid gap-2">
                 <div class="flex items-center justify-between">
-                    <Label for="password">Mot de passe</Label>
+                    <Label for="password">{{
+                        t('account.fields.password')
+                    }}</Label>
                     <TextLink
                         v-if="canResetPassword"
                         :href="request()"
                         class="text-sm"
                     >
-                        Mot de passe oublié ?
+                        {{ t('account.login.forgot_password') }}
                     </TextLink>
                 </div>
                 <PasswordInput
@@ -76,7 +81,7 @@ defineProps<{
                     name="password"
                     required
                     autocomplete="current-password"
-                    placeholder="Mot de passe"
+                    :placeholder="t('account.fields.password')"
                 />
                 <InputError :message="errors.password" />
             </div>
@@ -84,7 +89,7 @@ defineProps<{
             <div class="flex items-center justify-between">
                 <Label for="remember" class="flex items-center space-x-3">
                     <Checkbox id="remember" name="remember" />
-                    <span>Se souvenir de moi</span>
+                    <span>{{ t('account.login.remember') }}</span>
                 </Label>
             </div>
 
@@ -95,13 +100,15 @@ defineProps<{
                 data-test="login-button"
             >
                 <Spinner v-if="processing" />
-                Se connecter
+                {{ t('account.login.submit') }}
             </Button>
         </div>
 
         <div class="text-center text-sm text-muted-foreground">
-            Pas encore de compte ?
-            <TextLink :href="register()">Créer un compte</TextLink>
+            {{ t('account.login.no_account') }}
+            <TextLink :href="register()">{{
+                t('account.login.create_account')
+            }}</TextLink>
         </div>
     </Form>
 </template>

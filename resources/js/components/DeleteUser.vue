@@ -17,30 +17,34 @@ import {
     DialogTrigger,
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
+import { useTranslations } from '@/composables/useTranslations';
 
 const passwordInput = useTemplateRef('passwordInput');
+const { t } = useTranslations();
 </script>
 
 <template>
     <div class="space-y-6">
         <Heading
             variant="small"
-            title="Supprimer le compte"
-            description="Supprimez définitivement votre compte et ses données."
+            :title="t('account.deletion.title')"
+            :description="t('account.deletion.description')"
         />
         <div
             class="space-y-4 rounded-lg border border-red-100 bg-red-50 p-4 dark:border-red-200/10 dark:bg-red-700/10"
         >
             <div class="relative space-y-0.5 text-red-600 dark:text-red-100">
-                <p class="font-medium">Attention</p>
+                <p class="font-medium">{{ t('account.deletion.warning') }}</p>
                 <p class="text-sm">
-                    Cette action est définitive et ne peut pas être annulée.
+                    {{ t('account.deletion.irreversible') }}
                 </p>
             </div>
             <Dialog>
                 <DialogTrigger as-child>
-                    <Button variant="destructive" data-test="delete-user-button"
-                        >Supprimer le compte</Button
+                    <Button
+                        variant="destructive"
+                        data-test="delete-user-button"
+                        >{{ t('account.deletion.submit') }}</Button
                     >
                 </DialogTrigger>
                 <DialogContent>
@@ -55,26 +59,23 @@ const passwordInput = useTemplateRef('passwordInput');
                         v-slot="{ errors, processing, reset, clearErrors }"
                     >
                         <DialogHeader class="space-y-3">
-                            <DialogTitle
-                                >Voulez-vous vraiment supprimer votre compte
-                                ?</DialogTitle
-                            >
+                            <DialogTitle>{{
+                                t('account.deletion.question')
+                            }}</DialogTitle>
                             <DialogDescription>
-                                Toutes vos données seront supprimées
-                                définitivement. Saisissez votre mot de passe
-                                pour confirmer.
+                                {{ t('account.deletion.confirmation') }}
                             </DialogDescription>
                         </DialogHeader>
 
                         <div class="grid gap-2">
-                            <Label for="password" class="sr-only"
-                                >Mot de passe</Label
-                            >
+                            <Label for="password" class="sr-only">{{
+                                t('account.fields.password')
+                            }}</Label>
                             <PasswordInput
                                 id="password"
                                 name="password"
                                 ref="passwordInput"
-                                placeholder="Mot de passe"
+                                :placeholder="t('account.fields.password')"
                             />
                             <InputError :message="errors.password" />
                         </div>
@@ -90,7 +91,7 @@ const passwordInput = useTemplateRef('passwordInput');
                                         }
                                     "
                                 >
-                                    Annuler
+                                    {{ t('common.actions.cancel') }}
                                 </Button>
                             </DialogClose>
 
@@ -100,7 +101,7 @@ const passwordInput = useTemplateRef('passwordInput');
                                 :disabled="processing"
                                 data-test="confirm-delete-user-button"
                             >
-                                Supprimer le compte
+                                {{ t('account.deletion.submit') }}
                             </Button>
                         </DialogFooter>
                     </Form>

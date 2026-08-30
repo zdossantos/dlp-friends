@@ -1,8 +1,8 @@
 import type { TranslationKey } from '@/composables/useTranslations';
 
 const translationKeys = {
-    'mail.delivery_failed': 'mail.delivery_failed',
-    'mail.rate_limited': 'mail.rate_limited',
+    'mail.delivery_failed': 'account.email_delivery.failed',
+    'mail.rate_limited': 'account.email_delivery.rate_limited',
 } as const satisfies Record<string, TranslationKey>;
 
 export const localizeMailError = (
