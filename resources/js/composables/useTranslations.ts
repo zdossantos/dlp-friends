@@ -8,7 +8,7 @@ import type {
     TranslationTree,
 } from '@/types/i18n';
 
-type TranslationGroup = Exclude<keyof TranslationMessages, 'copy'>;
+type TranslationGroup = keyof TranslationMessages;
 export type TranslationKey = `${TranslationGroup & string}.${string}`;
 
 export const translationFor = (

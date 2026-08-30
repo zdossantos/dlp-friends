@@ -63,8 +63,8 @@ async function submit(): Promise<void> {
             error.value =
                 response.status === 422
                     ? (payload.errors?.content?.[0] ??
-                      t('messaging.send_error'))
-                    : t('messaging.send_error');
+                      t('conversations.message.send_error'))
+                    : t('conversations.message.send_error');
 
             return;
         }
@@ -72,7 +72,7 @@ async function submit(): Promise<void> {
         props.onSent(payload.data);
         content.value = '';
     } catch {
-        error.value = t('messaging.send_error');
+        error.value = t('conversations.message.send_error');
     } finally {
         pending.value = false;
         await nextTick();
@@ -93,12 +93,12 @@ function handleKeydown(event: KeyboardEvent): void {
 <template>
     <footer class="shrink-0 border-t bg-card/95 px-4 py-3 sm:px-6">
         <p v-if="archived" class="text-center text-sm text-muted-foreground">
-            {{ t('messaging.archived') }}
+            {{ t('conversations.message.archived') }}
         </p>
         <form v-else class="flex items-end gap-2" @submit.prevent="submit">
             <div class="min-w-0 flex-1">
                 <label for="message-content" class="sr-only">
-                    {{ t('messaging.label') }}
+                    {{ t('conversations.message.label') }}
                 </label>
                 <textarea
                     id="message-content"
@@ -110,7 +110,7 @@ function handleKeydown(event: KeyboardEvent): void {
                     aria-describedby="message-character-count message-error"
                     :aria-invalid="error !== ''"
                     :disabled="pending"
-                    :placeholder="t('messaging.placeholder')"
+                    :placeholder="t('conversations.message.placeholder')"
                     class="max-h-32 min-h-11 w-full resize-none rounded-2xl border bg-background px-4 py-2.5 text-base outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-60"
                     @keydown="handleKeydown"
                 />
@@ -133,7 +133,7 @@ function handleKeydown(event: KeyboardEvent): void {
                 type="submit"
                 size="icon"
                 class="size-11 shrink-0 rounded-2xl"
-                :aria-label="t('messaging.send')"
+                :aria-label="t('conversations.message.send')"
                 :disabled="disabled"
             >
                 <SendHorizontal class="size-5" aria-hidden="true" />

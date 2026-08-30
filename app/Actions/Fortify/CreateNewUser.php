@@ -31,7 +31,7 @@ class CreateNewUser implements CreatesNewUsers
             ],
             'password' => $this->passwordRules(),
         ], [
-            'birth_date.before_or_equal' => __('registration.adult_only'),
+            'birth_date.before_or_equal' => __('account.registration.adult_only'),
         ])->validate();
 
         return DB::transaction(function () use ($input): User {

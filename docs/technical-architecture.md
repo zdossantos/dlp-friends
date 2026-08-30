@@ -32,13 +32,11 @@ l'ordre, la préférence enregistrée du compte, le cookie `locale`, l'en-tête
 `Accept-Language`, puis le français. Les langues actuellement prises en charge
 sont `fr` et `en`.
 
-Laravel est la source de vérité des traductions. Les messages backend utilisent
-les catalogues `lang/{locale}.json` et les messages structurés transmis à
-Inertia utilisent `lang/{locale}/frontend.php`. Le composable
-`useTranslations` sert les nouveaux libellés Vue. Le dictionnaire
-`frontend.copy` traduit aussi les libellés français historiques rendus dans le
-DOM, afin de couvrir progressivement l'interface existante sans dupliquer un
-catalogue TypeScript.
+Laravel est la source de vérité des traductions. Les catalogues sont organisés
+par feature métier dans `lang/{locale}/`, avec un catalogue `common.php` pour
+les libellés réellement partagés. Les mêmes clés servent au backend et sont
+transmises à Inertia pour le composable `useTranslations`. Aucun texte visible
+n'est écrit directement dans Vue, PHP ou Blade.
 
 Les noms d'intérêts restent stockés en français dans `interests.name` et leur
 traduction anglaise visible dans `interests.name_en`. En l'absence de traduction

@@ -4,53 +4,22 @@ namespace App\Support;
 
 final class FrontendTranslations
 {
-    /** @return array<string, array<string, string>> */
+    /** @return array<string, array<string, mixed>> */
     public static function messages(): array
     {
-        /** @var array{
-         *     copy: array<string, string>,
-         *     mail: array<string, string>,
-         *     onboarding: array<string, mixed>,
-         *     admin_onboarding: array<string, string>,
-         *     registration: array<string, string>,
-         *     match_dialog: array<string, string>,
-         *     messaging: array<string, string>,
-         *     blocking: array<string, string>,
-         *     stepper: array<string, string>
-         * } $frontend
-         */
-        $frontend = trans('frontend');
-
-        $onboarding = $frontend['onboarding'];
+        /** @var array<string, mixed> $onboarding */
+        $onboarding = trans('onboarding');
         unset($onboarding['demo_profiles']);
 
         return [
             'common' => trans('common'),
             'account' => trans('account'),
             'profile' => trans('profile'),
+            'onboarding' => $onboarding,
             'discovery' => trans('discovery'),
             'conversations' => trans('conversations'),
+            'blocking' => trans('blocking'),
             'administration' => trans('administration'),
-            'locale' => [
-                'label' => __('frontend.locale.label'),
-                'fr' => __('frontend.locale.fr'),
-                'en' => __('frontend.locale.en'),
-            ],
-            'navigation' => [
-                'settings' => __('frontend.navigation.settings'),
-                'profile' => __('frontend.navigation.profile'),
-                'discovery' => __('frontend.navigation.discovery'),
-                'conversations' => __('frontend.navigation.conversations'),
-            ],
-            'mail' => $frontend['mail'],
-            'onboarding' => $onboarding,
-            'admin_onboarding' => $frontend['admin_onboarding'],
-            'registration' => $frontend['registration'],
-            'match_dialog' => $frontend['match_dialog'],
-            'messaging' => $frontend['messaging'],
-            'blocking' => $frontend['blocking'],
-            'stepper' => $frontend['stepper'],
-            'copy' => $frontend['copy'],
         ];
     }
 }

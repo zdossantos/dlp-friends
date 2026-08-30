@@ -49,14 +49,14 @@ const tutorialMessages = ref<ConversationMessage[]>([
     },
 ]);
 const registrationStepLabels = computed(() => [
-    t('onboarding.step_avatar'),
-    t('onboarding.step_identity'),
-    t('onboarding.step_affinities'),
-    t('onboarding.step_preview'),
-    t('onboarding.step_pass'),
-    t('onboarding.step_like'),
-    t('onboarding.step_match'),
-    t('onboarding.step_conversation'),
+    t('onboarding.steps.avatar'),
+    t('onboarding.steps.identity'),
+    t('onboarding.steps.affinities'),
+    t('onboarding.steps.preview'),
+    t('onboarding.steps.pass'),
+    t('onboarding.steps.discover'),
+    t('onboarding.steps.crossed_worlds'),
+    t('onboarding.steps.conversation'),
 ]);
 const currentRegistrationStep = computed(
     () =>
@@ -110,10 +110,10 @@ function toSwipeProfile(
     };
 }
 const stepInstruction = computed<Record<Step, string>>(() => ({
-    pass_demo: t('onboarding.pass_instruction'),
-    like_demo: t('onboarding.like_instruction'),
-    match_demo: t('onboarding.match_instruction'),
-    conversation_demo: t('onboarding.conversation_instruction'),
+    pass_demo: t('onboarding.instructions.pass'),
+    like_demo: t('onboarding.instructions.discover'),
+    match_demo: t('onboarding.instructions.crossed_worlds'),
+    conversation_demo: t('onboarding.instructions.conversation'),
 }));
 
 watch(
@@ -135,7 +135,7 @@ function submitStep(expected: Step): void {
                 busy.value = false;
             },
             onError: () => {
-                toast.error(t('onboarding.step_error'));
+                toast.error(t('onboarding.errors.step'));
             },
         },
     );
@@ -147,8 +147,8 @@ function decide(decision: 'pass' | 'like'): void {
     if (decision !== required) {
         toast.error(
             required === 'pass'
-                ? t('onboarding.reject_instruction')
-                : t('onboarding.like_required'),
+                ? t('onboarding.instructions.reject')
+                : t('onboarding.instructions.discover_required'),
         );
 
         return;
@@ -175,7 +175,7 @@ function completeWithMessage(content: string): Promise<ConversationMessage> {
             {
                 onSuccess: () => resolve(message),
                 onError: () => {
-                    toast.error(t('onboarding.message_error'));
+                    toast.error(t('onboarding.errors.message'));
                     reject(new Error('Unable to complete onboarding.'));
                 },
                 onFinish: () => {

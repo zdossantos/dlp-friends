@@ -24,4 +24,30 @@ return [
             'conversations' => ['title' => 'Échanges privés', 'description' => 'Échange dans un espace privé lorsque vos univers se croisent.'],
         ],
     ],
+    'actions' => [
+        'cancel' => 'Annuler',
+        'close' => 'Fermer',
+        'delete' => 'Supprimer',
+    ],
+    'errors' => [
+        'generic_title' => 'Une erreur est survenue',
+    ],
+    'accessibility' => [
+        'main_navigation' => 'Navigation principale',
+        'menu_navigation' => 'Menu de navigation',
+        'breadcrumb' => 'Fil d’Ariane',
+        'more' => 'Plus',
+        'close' => 'Fermer',
+        'sidebar' => 'Barre latérale',
+        'sidebar_description' => 'Affiche la barre latérale sur mobile.',
+        'toggle_sidebar' => 'Afficher ou masquer la barre latérale',
+        'loading' => 'Chargement',
+        'search' => 'Rechercher',
+    ],
+    'mail' => [
+        'tagline' => 'Des amitiés entre fans adultes, avec un peu de magie.',
+        'disclaimer' => 'DLP Friends est un service indépendant et non affilié à Disney ou Disneyland Paris.',
+        'fallback_link' => 'Copie et colle ce lien dans ton navigateur si le bouton ne fonctionne pas :',
+        'copyright' => '© :year DLP Friends',
+    ],
 ];

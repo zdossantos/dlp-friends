@@ -32,7 +32,7 @@ test('admin configures tutorial avatars and sees member progress', function () {
         ->assertSee('Tutoriel produit')
         ->assertSee('Taux de complétion')
         ->assertSee('tutorial@example.test')
-        ->assertSee('Carte à liker')
+        ->assertSee('Carte à découvrir')
         ->assertValue('#pass_avatar_id', (string) $passAvatar->id)
         ->assertValue('#like_avatar_id', (string) $likeAvatar->id)
         ->assertNoJavaScriptErrors();
@@ -85,7 +85,7 @@ test('the admin dashboard renders account statistics and recent registrations', 
         ->assertSee('Administration')
         ->assertSee('Comptes créés')
         ->assertSee('Comptes actifs')
-        ->assertSee('Emails vérifiés')
+        ->assertSee('E-mails vérifiés')
         ->assertSee('Profils complétés')
         ->assertSee('recent@example.test')
         ->assertSee('Profil à compléter')
@@ -139,7 +139,7 @@ test('the catalog shows state history limit ordering and deletion boundaries', f
             "document.querySelector('[aria-label=\"Supprimer Spectacles\"]').disabled",
             true,
         )
-        ->assertSee('Cet intérêt doit être archivé avant de pouvoir être supprimé.')
+        ->assertSee('Cet univers doit être archivé avant de pouvoir être supprimé.')
         ->assertScript(
             "document.querySelector('[aria-label=\"Supprimer Chill\"]').disabled",
             false,
@@ -157,7 +157,7 @@ test('catalog controls expose generated forms and compact accessible layout', fu
     visit('/admin/interests')
         ->assertPresent('[data-test="catalog-controls"]')
         ->assertPresent('[data-test="create-interest-form"]')
-        ->assertPresent("input[aria-label='Nom de l’intérêt Chill']")
+        ->assertPresent("input[aria-label='Nom de l’univers Chill']")
         ->assertScript(
             "document.querySelector('[data-test=\"catalog-controls\"] input[name=max_selections]') !== null",
             true,
@@ -263,7 +263,7 @@ test('an admin manages interests through confirmations and generated actions', f
     ]);
 
     $page->click("#archive-interest-{$interest->id}")
-        ->assertSee('Archiver l’intérêt Chill renommé')
+        ->assertSee('Archiver l’univers Chill renommé')
         ->assertSee('Son historique sera conservé.')
         ->assertSee('Annuler');
     $page->script("document.querySelector('[role=dialog] button[type=submit]').click()");
@@ -287,7 +287,7 @@ test('an admin manages interests through confirmations and generated actions', f
     $page->assertSee('Intérêt archivé.');
 
     $page->click("#delete-interest-{$interest->id}")
-        ->assertSee('Supprimer l’intérêt Chill renommé')
+        ->assertSee('Supprimer l’univers Chill renommé')
         ->assertSee('Cette action est définitive.')
         ->assertSee('Annuler');
     $page->script("document.querySelector('[role=dialog] button[type=submit]').click()");

@@ -1,7 +1,26 @@
 <?php
 
 return [
+    'email_delivery' => [
+        'failed' => 'L’e-mail n’a pas pu être envoyé. Réessaie dans quelques instants.',
+        'rate_limited' => 'Trop de demandes ont été effectuées. Patiente une minute avant de réessayer.',
+    ],
+    'mail' => [
+        'verification' => [
+            'subject' => 'Vérifie ton adresse e-mail', 'heading' => 'Bienvenue dans la communauté',
+            'intro' => 'Confirme ton adresse e-mail pour sécuriser ton compte et commencer ton parcours sur DLP Friends.',
+            'action' => 'Vérifier mon adresse e-mail',
+            'ignore' => 'Si tu n’as pas créé de compte DLP Friends, tu peux ignorer cet e-mail.',
+        ],
+        'password_reset' => [
+            'subject' => 'Réinitialise ton mot de passe', 'heading' => 'Réinitialisation du mot de passe',
+            'intro' => 'Une demande de réinitialisation a été reçue pour ton compte DLP Friends.',
+            'action' => 'Réinitialiser mon mot de passe', 'expires' => 'Ce lien expirera dans :count minutes.',
+            'ignore' => 'Si tu n’es pas à l’origine de cette demande, aucune action n’est nécessaire.',
+        ],
+    ],
     'registration' => [
+        'adult_only' => 'Tu dois être majeur pour t’inscrire.',
         'title' => 'Crée ton compte',
         'description' => 'Tu créeras ensuite ton profil, puis un tutoriel te montrera comment découvrir d’autres membres.',
         'email' => 'Adresse e-mail',
@@ -86,4 +105,38 @@ return [
         'password_title' => 'Modifier le mot de passe',
         'password_description' => 'Utilise un mot de passe long et unique pour protéger ton compte.',
     ],
+    'appearance' => [
+        'label' => 'Choisir le thème', 'light' => 'Clair', 'dark' => 'Sombre', 'system' => 'Système',
+    ],
+    'deletion' => [
+        'title' => 'Supprimer ton compte', 'description' => 'Supprime définitivement ton compte et ses données.',
+        'warning' => 'Attention', 'irreversible' => 'Cette action est définitive et ne peut pas être annulée.',
+        'question' => 'Veux-tu vraiment supprimer ton compte ?',
+        'confirmation' => 'Toutes tes données seront supprimées définitivement. Saisis ton mot de passe pour confirmer.',
+        'submit' => 'Supprimer mon compte',
+    ],
+    'passkeys' => [
+        'title' => 'Clés d’accès', 'description' => 'Gère la connexion sans mot de passe.', 'empty' => 'Aucune clé d’accès',
+        'empty_description' => 'Ajoute-en une pour te connecter sans mot de passe.', 'unsupported' => 'Les clés d’accès ne sont pas prises en charge par ce navigateur.',
+        'add' => 'Ajouter une clé d’accès', 'name' => 'Nom de la clé d’accès', 'placeholder' => 'Ex. MacBook Pro, iPhone',
+        'name_help' => 'Ce nom te permettra de reconnaître cette clé plus tard.', 'saving' => 'Enregistrement…', 'save' => 'Enregistrer la clé',
+        'added' => 'Ajoutée :date', 'last_used' => 'Dernière utilisation :date', 'delete_title' => 'Supprimer la clé d’accès',
+        'delete_description' => 'Veux-tu vraiment supprimer « :name » ? Elle ne pourra plus servir à te connecter.',
+        'deleting' => 'Suppression…', 'delete' => 'Supprimer la clé', 'verify' => 'Se connecter avec une clé d’accès',
+        'verifying' => 'Authentification…', 'separator' => 'Ou continuer avec l’adresse e-mail',
+    ],
+    'two_factor' => [
+        'title' => 'Authentification à deux facteurs', 'description' => 'Renforce la sécurité de ton compte.',
+        'disabled_description' => 'Une fois activée, un code temporaire fourni par ton application d’authentification sera demandé à la connexion.',
+        'enabled_description' => 'Un code temporaire fourni par ton application d’authentification sera demandé à chaque connexion.',
+        'continue_setup' => 'Continuer la configuration', 'enable' => 'Activer la double authentification', 'disable' => 'Désactiver la double authentification',
+        'recovery_title' => 'Codes de récupération', 'recovery_description' => 'Ils permettent de retrouver l’accès à ton compte. Conserve-les dans un gestionnaire de mots de passe sécurisé.',
+        'show_codes' => 'Afficher les codes', 'hide_codes' => 'Masquer les codes', 'regenerate' => 'Régénérer les codes',
+        'recovery_help' => 'Chaque code ne peut être utilisé qu’une fois. Pour en obtenir de nouveaux, utilise « Régénérer les codes ».',
+        'enabled_title' => 'Authentification à deux facteurs activée', 'scan' => 'Scanne le QR code ou saisis la clé dans ton application d’authentification.',
+        'verify_title' => 'Vérifier le code d’authentification', 'verify_description' => 'Saisis le code à 6 chiffres de ton application.',
+        'enable_title' => 'Activer l’authentification à deux facteurs', 'continue' => 'Continuer', 'manual' => 'ou saisis la clé manuellement',
+        'copy_key' => 'Copier la clé de configuration', 'back' => 'Retour', 'confirm' => 'Confirmer',
+    ],
+    'password_visibility' => ['show' => 'Afficher le mot de passe', 'hide' => 'Masquer le mot de passe'],
 ];

@@ -19,6 +19,7 @@ import {
     SidebarMenuButton,
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
+import { useTranslations } from '@/composables/useTranslations';
 import { dashboard } from '@/routes';
 import { index as avatarIndex } from '@/routes/admin/avatars';
 import { index as interestIndex } from '@/routes/admin/interests';
@@ -26,29 +27,31 @@ import { index as onboardingIndex } from '@/routes/admin/onboarding';
 import { show as showProfile } from '@/routes/member-profile';
 import type { NavItem } from '@/types';
 
+const { t } = useTranslations();
+
 const mainNavItems: NavItem[] = [
     {
-        title: 'Administration',
+        title: t('administration.navigation.dashboard'),
         href: dashboard(),
         icon: LayoutDashboard,
     },
     {
-        title: 'Intérêts',
+        title: t('administration.navigation.interests'),
         href: interestIndex(),
         icon: Tags,
     },
     {
-        title: 'Avatars',
+        title: t('administration.navigation.avatars'),
         href: avatarIndex(),
         icon: Images,
     },
     {
-        title: 'Tutoriel',
+        title: t('administration.navigation.onboarding'),
         href: onboardingIndex(),
         icon: GraduationCap,
     },
     {
-        title: 'Retour au profil',
+        title: t('administration.navigation.back_to_profile'),
         href: showProfile(),
         icon: UserRound,
     },
@@ -70,7 +73,10 @@ const mainNavItems: NavItem[] = [
         </SidebarHeader>
 
         <SidebarContent>
-            <NavMain :items="mainNavItems" label="Administration" />
+            <NavMain
+                :items="mainNavItems"
+                :label="t('administration.navigation.label')"
+            />
         </SidebarContent>
 
         <SidebarFooter>

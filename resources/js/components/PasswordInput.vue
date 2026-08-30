@@ -3,6 +3,7 @@ import { Eye, EyeOff } from '@lucide/vue';
 import { ref, useTemplateRef } from 'vue';
 import type { HTMLAttributes } from 'vue';
 import { Input } from '@/components/ui/input';
+import { useTranslations } from '@/composables/useTranslations';
 import { cn } from '@/lib/utils';
 
 defineOptions({ inheritAttrs: false });
@@ -13,6 +14,7 @@ const props = defineProps<{
 
 const showPassword = ref(false);
 const inputRef = useTemplateRef('inputRef');
+const { t } = useTranslations();
 
 defineExpose({
     $el: inputRef,
@@ -38,8 +40,8 @@ defineExpose({
             "
             :aria-label="
                 showPassword
-                    ? 'Masquer le mot de passe'
-                    : 'Afficher le mot de passe'
+                    ? t('account.password_visibility.hide')
+                    : t('account.password_visibility.show')
             "
             :tabindex="-1"
         >

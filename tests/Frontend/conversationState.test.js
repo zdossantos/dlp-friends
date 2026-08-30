@@ -48,7 +48,7 @@ describe('conversation list state', () => {
         );
 
         expect(updated[0].unread_count).toBe(0);
-        expect(conversationPreview(updated[0], 7)).toBe('Vous : Bonjour');
+        expect(conversationPreview(updated[0], 7, 'Nouvel échange', 'Toi : ')).toBe('Toi : Bonjour');
     });
 
     test('a duplicate realtime message does not increment unread twice', () => {

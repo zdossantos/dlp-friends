@@ -24,15 +24,8 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { dashboard } from '@/routes';
-import {
-    destroy,
-    index,
-    move,
-    status,
-    store,
-    update,
-} from '@/routes/admin/avatars';
+import { useTranslations } from '@/composables/useTranslations';
+import { destroy, move, status, store, update } from '@/routes/admin/avatars';
 import type { AvatarOption } from '@/types';
 
 type AdminAvatar = AvatarOption & {
@@ -46,6 +39,7 @@ defineProps<{ avatars: AdminAvatar[] }>();
 
 const newImageName = ref('');
 const replacementImageNames = ref<Record<number, string>>({});
+const { t } = useTranslations();
 
 function selectedFileName(event: Event): string {
     return (event.target as HTMLInputElement).files?.[0]?.name ?? '';
@@ -58,34 +52,31 @@ function selectNewImage(event: Event): void {
 function selectReplacementImage(avatarId: number, event: Event): void {
     replacementImageNames.value[avatarId] = selectedFileName(event);
 }
-
-defineOptions({
-    layout: {
-        breadcrumbs: [
-            { title: 'Administration', href: dashboard() },
-            { title: 'Avatars', href: index() },
-        ],
-    },
-});
 </script>
 
 <template>
-    <Head title="Avatars" />
+    <Head :title="t('administration.avatars.title')" />
 
     <main class="flex flex-1 flex-col gap-6 p-4 sm:p-6">
         <header>
-            <p class="text-sm font-medium text-primary">Administration</p>
-            <h1 class="text-3xl font-semibold tracking-tight">Avatars</h1>
+            <p class="text-sm font-medium text-primary">
+                {{ t('administration.title') }}
+            </p>
+            <h1 class="text-3xl font-semibold tracking-tight">
+                {{ t('administration.avatars.title') }}
+            </h1>
             <p class="mt-1 text-muted-foreground">
-                Gérez les images proposées aux membres et leurs fonds colorés.
+                {{ t('administration.avatars.description') }}
             </p>
         </header>
 
         <Card>
             <CardHeader>
-                <CardTitle>Ajouter un avatar</CardTitle>
+                <CardTitle>{{
+                    t('administration.avatars.add_title')
+                }}</CardTitle>
                 <CardDescription>
-                    Formats PNG ou WebP, 2 Mo et 1 200 pixels maximum.
+                    {{ t('administration.avatars.add_description') }}
                 </CardDescription>
             </CardHeader>
             <CardContent>
@@ -95,7 +86,9 @@ defineOptions({
                     v-slot="{ errors, processing }"
                 >
                     <div class="grid gap-2">
-                        <Label for="new_avatar_name">Nom</Label>
+                        <Label for="new_avatar_name">{{
+                            t('administration.common.name')
+                        }}</Label>
                         <Input
                             id="new_avatar_name"
                             name="name"
@@ -106,7 +99,9 @@ defineOptions({
                         <InputError :message="errors.name" />
                     </div>
                     <div class="grid gap-2">
-                        <Label for="new_avatar_primary_color">Couleur 1</Label>
+                        <Label for="new_avatar_primary_color">{{
+                            t('administration.avatars.primary_color')
+                        }}</Label>
                         <Input
                             id="new_avatar_primary_color"
                             name="primary_color"
@@ -118,9 +113,9 @@ defineOptions({
                         <InputError :message="errors.primary_color" />
                     </div>
                     <div class="grid gap-2">
-                        <Label for="new_avatar_secondary_color"
-                            >Couleur 2</Label
-                        >
+                        <Label for="new_avatar_secondary_color">{{
+                            t('administration.avatars.secondary_color')
+                        }}</Label>
                         <Input
                             id="new_avatar_secondary_color"
                             name="secondary_color"
@@ -132,7 +127,9 @@ defineOptions({
                         <InputError :message="errors.secondary_color" />
                     </div>
                     <div class="grid gap-2">
-                        <Label for="new_avatar_image">Image</Label>
+                        <Label for="new_avatar_image">{{
+                            t('administration.avatars.image')
+                        }}</Label>
                         <input
                             id="new_avatar_image"
                             name="image"
@@ -147,10 +144,13 @@ defineOptions({
                             for="new_avatar_image"
                             class="inline-flex min-h-10 cursor-pointer items-center justify-center rounded-md border bg-background px-4 text-sm font-medium shadow-xs transition-colors hover:bg-muted"
                         >
-                            Choisir une image
+                            {{ t('administration.avatars.choose_image') }}
                         </Label>
                         <span class="text-sm text-muted-foreground">
-                            {{ newImageName || 'Aucun fichier sélectionné' }}
+                            {{
+                                newImageName ||
+                                t('administration.avatars.no_file')
+                            }}
                         </span>
                         <InputError :message="errors.image" />
                     </div>
@@ -159,7 +159,7 @@ defineOptions({
                         :disabled="processing"
                         class="lg:col-span-4 lg:justify-self-start"
                     >
-                        Ajouter
+                        {{ t('administration.common.add') }}
                     </Button>
                 </Form>
             </CardContent>
@@ -169,7 +169,9 @@ defineOptions({
             aria-labelledby="avatar-catalog-title"
             class="grid gap-4 xl:grid-cols-2"
         >
-            <h2 id="avatar-catalog-title" class="sr-only">Catalogue</h2>
+            <h2 id="avatar-catalog-title" class="sr-only">
+                {{ t('administration.common.catalogue') }}
+            </h2>
 
             <Card v-for="(avatar, indexInCatalog) in avatars" :key="avatar.id">
                 <CardContent class="grid gap-4 p-4 sm:grid-cols-[8rem_1fr]">
@@ -185,7 +187,11 @@ defineOptions({
                                 avatar.is_active ? 'default' : 'secondary'
                             "
                         >
-                            {{ avatar.is_active ? 'Actif' : 'Archivé' }}
+                            {{
+                                avatar.is_active
+                                    ? t('administration.common.active')
+                                    : t('administration.common.archived')
+                            }}
                         </Badge>
                     </div>
 
@@ -197,9 +203,9 @@ defineOptions({
                             v-slot="{ errors, processing }"
                         >
                             <div class="grid gap-2">
-                                <Label :for="`avatar-name-${avatar.id}`"
-                                    >Nom</Label
-                                >
+                                <Label :for="`avatar-name-${avatar.id}`">{{
+                                    t('administration.common.name')
+                                }}</Label>
                                 <Input
                                     :id="`avatar-name-${avatar.id}`"
                                     name="name"
@@ -211,8 +217,13 @@ defineOptions({
                             </div>
                             <div class="grid grid-cols-2 gap-3">
                                 <div class="grid gap-2">
-                                    <Label :for="`avatar-primary-${avatar.id}`"
-                                        >Couleur 1</Label
+                                    <Label
+                                        :for="`avatar-primary-${avatar.id}`"
+                                        >{{
+                                            t(
+                                                'administration.avatars.primary_color',
+                                            )
+                                        }}</Label
                                     >
                                     <Input
                                         :id="`avatar-primary-${avatar.id}`"
@@ -225,7 +236,11 @@ defineOptions({
                                 <div class="grid gap-2">
                                     <Label
                                         :for="`avatar-secondary-${avatar.id}`"
-                                        >Couleur 2</Label
+                                        >{{
+                                            t(
+                                                'administration.avatars.secondary_color',
+                                            )
+                                        }}</Label
                                     >
                                     <Input
                                         :id="`avatar-secondary-${avatar.id}`"
@@ -244,10 +259,14 @@ defineOptions({
                             />
                             <div class="grid gap-2">
                                 <Label :for="`avatar-image-${avatar.id}`">
-                                    Remplacer l’image
-                                    <span class="text-muted-foreground"
-                                        >(facultatif)</span
-                                    >
+                                    {{
+                                        t(
+                                            'administration.avatars.replace_image',
+                                        )
+                                    }}
+                                    <span class="text-muted-foreground">{{
+                                        t('administration.avatars.optional')
+                                    }}</span>
                                 </Label>
                                 <input
                                     :id="`avatar-image-${avatar.id}`"
@@ -266,12 +285,14 @@ defineOptions({
                                     :for="`avatar-image-${avatar.id}`"
                                     class="inline-flex min-h-10 cursor-pointer items-center justify-center rounded-md border bg-background px-4 text-sm font-medium shadow-xs transition-colors hover:bg-muted"
                                 >
-                                    Choisir une image
+                                    {{
+                                        t('administration.avatars.choose_image')
+                                    }}
                                 </Label>
                                 <span class="text-sm text-muted-foreground">
                                     {{
                                         replacementImageNames[avatar.id] ||
-                                        'Aucun fichier sélectionné'
+                                        t('administration.avatars.no_file')
                                     }}
                                 </span>
                                 <InputError :message="errors.image" />
@@ -281,7 +302,7 @@ defineOptions({
                                 variant="outline"
                                 :disabled="processing"
                             >
-                                Enregistrer
+                                {{ t('administration.common.save') }}
                             </Button>
                         </Form>
 
@@ -302,9 +323,14 @@ defineOptions({
                                     :disabled="
                                         processing || indexInCatalog === 0
                                     "
-                                    :aria-label="`Monter ${avatar.name}`"
+                                    :aria-label="
+                                        t(
+                                            'administration.common.move_up_named',
+                                            { name: avatar.name },
+                                        )
+                                    "
                                 >
-                                    Monter
+                                    {{ t('administration.common.move_up') }}
                                 </Button>
                             </Form>
                             <Form
@@ -324,9 +350,14 @@ defineOptions({
                                         processing ||
                                         indexInCatalog === avatars.length - 1
                                     "
-                                    :aria-label="`Descendre ${avatar.name}`"
+                                    :aria-label="
+                                        t(
+                                            'administration.common.move_down_named',
+                                            { name: avatar.name },
+                                        )
+                                    "
                                 >
-                                    Descendre
+                                    {{ t('administration.common.move_down') }}
                                 </Button>
                             </Form>
                             <Form
@@ -347,12 +378,21 @@ defineOptions({
                                         (avatar.is_active &&
                                             avatar.used_by_onboarding)
                                     "
-                                    :aria-label="`${avatar.is_active ? 'Archiver' : 'Réactiver'} ${avatar.name}`"
+                                    :aria-label="
+                                        t(
+                                            avatar.is_active
+                                                ? 'administration.common.archive_named'
+                                                : 'administration.common.reactivate_named',
+                                            { name: avatar.name },
+                                        )
+                                    "
                                 >
                                     {{
                                         avatar.is_active
-                                            ? 'Archiver'
-                                            : 'Réactiver'
+                                            ? t('administration.common.archive')
+                                            : t(
+                                                  'administration.common.reactivate',
+                                              )
                                     }}
                                 </Button>
                             </Form>
@@ -365,9 +405,14 @@ defineOptions({
                                             avatar.profiles_count > 0 ||
                                             avatar.used_by_onboarding
                                         "
-                                        :aria-label="`Supprimer ${avatar.name}`"
+                                        :aria-label="
+                                            t(
+                                                'administration.common.delete_named',
+                                                { name: avatar.name },
+                                            )
+                                        "
                                     >
-                                        Supprimer
+                                        {{ t('administration.common.delete') }}
                                     </Button>
                                 </DialogTrigger>
                                 <DialogContent>
@@ -377,13 +422,18 @@ defineOptions({
                                         v-slot="{ errors, processing }"
                                     >
                                         <DialogHeader>
-                                            <DialogTitle
-                                                >Supprimer l’avatar
-                                                {{ avatar.name }}</DialogTitle
-                                            >
+                                            <DialogTitle>{{
+                                                t(
+                                                    'administration.avatars.delete_title',
+                                                    { name: avatar.name },
+                                                )
+                                            }}</DialogTitle>
                                             <DialogDescription>
-                                                Cette action supprime
-                                                définitivement son image.
+                                                {{
+                                                    t(
+                                                        'administration.avatars.delete_description',
+                                                    )
+                                                }}
                                             </DialogDescription>
                                         </DialogHeader>
                                         <InputError
@@ -395,7 +445,11 @@ defineOptions({
                                                 <Button
                                                     type="button"
                                                     variant="secondary"
-                                                    >Annuler</Button
+                                                    >{{
+                                                        t(
+                                                            'common.actions.cancel',
+                                                        )
+                                                    }}</Button
                                                 >
                                             </DialogClose>
                                             <Button
@@ -403,7 +457,11 @@ defineOptions({
                                                 variant="destructive"
                                                 :disabled="processing"
                                             >
-                                                Supprimer
+                                                {{
+                                                    t(
+                                                        'administration.common.delete',
+                                                    )
+                                                }}
                                             </Button>
                                         </DialogFooter>
                                     </Form>
@@ -411,21 +469,20 @@ defineOptions({
                             </Dialog>
                         </div>
                         <p class="text-xs text-muted-foreground">
-                            {{ avatar.profiles_count }}
                             {{
-                                avatar.profiles_count === 1
-                                    ? 'profil utilise'
-                                    : 'profils utilisent'
+                                t(
+                                    avatar.profiles_count === 1
+                                        ? 'administration.avatars.profile_uses'
+                                        : 'administration.avatars.profiles_use',
+                                    { count: avatar.profiles_count },
+                                )
                             }}
-                            cet avatar.
                         </p>
                         <p
                             v-if="avatar.used_by_onboarding"
                             class="text-xs font-medium text-primary"
                         >
-                            Utilisé par le tutoriel : remplacez-le dans sa
-                            configuration avant de l’archiver ou de le
-                            supprimer.
+                            {{ t('administration.avatars.used_onboarding') }}
                         </p>
                     </div>
                 </CardContent>
@@ -435,7 +492,7 @@ defineOptions({
                 v-if="avatars.length === 0"
                 class="rounded-xl border border-dashed p-6 text-muted-foreground"
             >
-                Aucun avatar dans le catalogue.
+                {{ t('administration.avatars.empty') }}
             </p>
         </section>
     </main>

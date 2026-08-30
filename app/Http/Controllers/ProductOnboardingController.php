@@ -62,7 +62,7 @@ class ProductOnboardingController extends Controller
     private function demoProfile(Avatar $avatar, string $kind): array
     {
         /** @var array{display_name: string, bio: string, interests: array<int, string>} $copy */
-        $copy = trans("frontend.onboarding.demo_profiles.{$kind}");
+        $copy = trans("onboarding.demo_profiles.{$kind}");
 
         return [
             'displayName' => $copy['display_name'],

@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import { computed } from 'vue';
+import { useTranslations } from '@/composables/useTranslations';
 import type { AvatarOption } from '@/types';
+
+const { t } = useTranslations();
 
 const props = defineProps<{ avatar: AvatarOption }>();
 
@@ -16,7 +19,7 @@ const gradient = computed(() => ({
     >
         <img
             :src="avatar.image_url"
-            :alt="`Avatar ${avatar.name}`"
+            :alt="t('profile.avatar.image_alt', { name: avatar.name })"
             draggable="false"
             class="pointer-events-none h-full w-full object-contain select-none"
         />

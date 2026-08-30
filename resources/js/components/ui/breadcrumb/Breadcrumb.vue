@@ -1,5 +1,8 @@
 <script lang="ts" setup>
 import type { HTMLAttributes } from "vue"
+import { useTranslations } from '@/composables/useTranslations'
+
+const { t } = useTranslations()
 
 const props = defineProps<{
   class?: HTMLAttributes["class"]
@@ -8,7 +11,7 @@ const props = defineProps<{
 
 <template>
   <nav
-    aria-label="breadcrumb"
+    :aria-label="t('common.accessibility.breadcrumb')"
     data-slot="breadcrumb"
     :class="props.class"
   >

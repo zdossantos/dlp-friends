@@ -4,7 +4,6 @@ import { initializeTheme } from '@/composables/useAppearance';
 import { resolvePageLayout } from '@/layouts/resolvePageLayout';
 import { initializeFlashToast } from '@/lib/flashToast';
 import { resolveReverbHost } from '@/lib/reverbHost';
-import { initializeDomTranslations } from '@/lib/translateDom';
 
 const configuredReverbHost = import.meta.env.VITE_REVERB_HOST;
 
@@ -22,7 +21,7 @@ configureEcho(
         : { broadcaster: 'null' },
 );
 
-const appName = import.meta.env.VITE_APP_NAME || 'DLP Friends';
+const appName = import.meta.env.VITE_APP_NAME;
 
 createInertiaApp({
     title: (title) => (title ? `${title} - ${appName}` : appName),
@@ -37,4 +36,3 @@ initializeTheme();
 
 // This will listen for flash toast data from the server...
 initializeFlashToast();
-initializeDomTranslations();

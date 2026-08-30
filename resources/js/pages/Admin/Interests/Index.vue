@@ -22,16 +22,9 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { dashboard } from '@/routes';
+import { useTranslations } from '@/composables/useTranslations';
 import { update as updateSetting } from '@/routes/admin/interest-setting';
-import {
-    destroy,
-    index,
-    move,
-    status,
-    store,
-    update,
-} from '@/routes/admin/interests';
+import { destroy, move, status, store, update } from '@/routes/admin/interests';
 
 type Interest = {
     id: number;
@@ -48,36 +41,30 @@ defineProps<{
         max_selections: number;
     };
 }>();
+const { t } = useTranslations();
 
 const profileCountLabel = (count: number): string =>
-    `${count} ${count === 1 ? 'profil' : 'profils'}`;
-
-defineOptions({
-    layout: {
-        breadcrumbs: [
-            {
-                title: 'Administration',
-                href: dashboard(),
-            },
-            {
-                title: 'Intérêts',
-                href: index(),
-            },
-        ],
-    },
-});
+    t(
+        count === 1
+            ? 'administration.interests.profile'
+            : 'administration.interests.profiles',
+        { count },
+    );
 </script>
 
 <template>
-    <Head title="Intérêts" />
+    <Head :title="t('administration.interests.title')" />
 
     <main class="flex flex-1 flex-col gap-6 p-4 sm:p-6">
         <header>
-            <p class="text-sm font-medium text-primary">Administration</p>
-            <h1 class="text-3xl font-semibold tracking-tight">Intérêts</h1>
+            <p class="text-sm font-medium text-primary">
+                {{ t('administration.title') }}
+            </p>
+            <h1 class="text-3xl font-semibold tracking-tight">
+                {{ t('administration.interests.title') }}
+            </h1>
             <p class="mt-1 text-muted-foreground">
-                Gérez le catalogue visible par les membres et conservez son
-                historique d’utilisation.
+                {{ t('administration.interests.description') }}
             </p>
         </header>
 
@@ -87,10 +74,11 @@ defineOptions({
         >
             <Card>
                 <CardHeader>
-                    <CardTitle>Ajouter un intérêt</CardTitle>
+                    <CardTitle>{{
+                        t('administration.interests.add_title')
+                    }}</CardTitle>
                     <CardDescription>
-                        Les nouveaux intérêts sont ajoutés à la fin du
-                        catalogue.
+                        {{ t('administration.interests.add_description') }}
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -100,20 +88,30 @@ defineOptions({
                         class="grid gap-2"
                         v-slot="{ errors, processing }"
                     >
-                        <Label for="new_interest_name">Nom</Label>
+                        <Label for="new_interest_name">{{
+                            t('administration.common.name')
+                        }}</Label>
                         <Input
                             id="new_interest_name"
                             name="name"
                             autocomplete="off"
-                            placeholder="Ex. Parades"
+                            :placeholder="
+                                t('administration.interests.name_placeholder')
+                            "
                         />
                         <InputError :message="errors.name" />
-                        <Label for="new_interest_name_en">Nom anglais</Label>
+                        <Label for="new_interest_name_en">{{
+                            t('administration.common.english_name')
+                        }}</Label>
                         <Input
                             id="new_interest_name_en"
                             name="name_en"
                             autocomplete="off"
-                            placeholder="E.g. Parades"
+                            :placeholder="
+                                t(
+                                    'administration.interests.english_name_placeholder',
+                                )
+                            "
                         />
                         <InputError :message="errors.name_en" />
                         <Button
@@ -122,7 +120,7 @@ defineOptions({
                             :disabled="processing"
                             class="mt-2 w-full"
                         >
-                            Ajouter
+                            {{ t('administration.common.add') }}
                         </Button>
                     </Form>
                 </CardContent>
@@ -130,10 +128,11 @@ defineOptions({
 
             <Card>
                 <CardHeader>
-                    <CardTitle>Limite de sélection</CardTitle>
+                    <CardTitle>{{
+                        t('administration.interests.limit_title')
+                    }}</CardTitle>
                     <CardDescription>
-                        Nombre maximal d’intérêts actifs qu’un membre peut
-                        sélectionner.
+                        {{ t('administration.interests.limit_description') }}
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -142,7 +141,9 @@ defineOptions({
                         class="grid gap-2"
                         v-slot="{ errors, processing }"
                     >
-                        <Label for="max_selections">Maximum par membre</Label>
+                        <Label for="max_selections">{{
+                            t('administration.interests.maximum')
+                        }}</Label>
                         <div class="flex flex-col gap-3 sm:flex-row">
                             <Input
                                 id="max_selections"
@@ -154,7 +155,7 @@ defineOptions({
                                 :default-value="setting.max_selections"
                             />
                             <Button type="submit" :disabled="processing">
-                                Enregistrer
+                                {{ t('administration.common.save') }}
                             </Button>
                         </div>
                         <InputError :message="errors.max_selections" />
@@ -166,11 +167,14 @@ defineOptions({
         <section aria-labelledby="interest-catalog-title" class="space-y-3">
             <div class="flex items-baseline justify-between gap-3">
                 <h2 id="interest-catalog-title" class="text-lg font-semibold">
-                    Catalogue
+                    {{ t('administration.common.catalogue') }}
                 </h2>
                 <p class="text-sm text-muted-foreground">
-                    {{ interests.length }}
-                    {{ interests.length === 1 ? 'intérêt' : 'intérêts' }}
+                    {{
+                        t('administration.interests.count', {
+                            count: interests.length,
+                        })
+                    }}
                 </p>
             </div>
 
@@ -178,7 +182,7 @@ defineOptions({
                 v-if="interests.length === 0"
                 class="rounded-lg border border-dashed p-8 text-center text-sm text-muted-foreground"
             >
-                Aucun intérêt n’a encore été créé.
+                {{ t('administration.interests.empty') }}
             </p>
 
             <Card
@@ -196,14 +200,19 @@ defineOptions({
                             v-slot="{ errors, processing }"
                         >
                             <Label :for="`interest-name-${interest.id}`">
-                                Nom
+                                {{ t('administration.common.name') }}
                             </Label>
                             <div class="flex items-center gap-2">
                                 <Input
                                     :id="`interest-name-${interest.id}`"
                                     name="name"
                                     class="min-w-0 flex-1"
-                                    :aria-label="`Nom de l’intérêt ${interest.name}`"
+                                    :aria-label="
+                                        t(
+                                            'administration.interests.name_label',
+                                            { name: interest.name },
+                                        )
+                                    "
                                     :default-value="interest.name"
                                     autocomplete="off"
                                 />
@@ -216,13 +225,17 @@ defineOptions({
                                     "
                                 >
                                     {{
-                                        interest.is_active ? 'Actif' : 'Archivé'
+                                        interest.is_active
+                                            ? t('administration.common.active')
+                                            : t(
+                                                  'administration.common.archived',
+                                              )
                                     }}
                                 </Badge>
                             </div>
                             <InputError :message="errors.name" />
                             <Label :for="`interest-name-en-${interest.id}`">
-                                Nom anglais
+                                {{ t('administration.common.english_name') }}
                             </Label>
                             <Input
                                 :id="`interest-name-en-${interest.id}`"
@@ -238,13 +251,13 @@ defineOptions({
                                 :disabled="processing"
                                 class="justify-self-start"
                             >
-                                Enregistrer
+                                {{ t('administration.common.save') }}
                             </Button>
                         </Form>
 
                         <div
                             class="flex shrink-0 flex-wrap gap-2"
-                            aria-label="Réordonner l’intérêt"
+                            :aria-label="t('administration.interests.reorder')"
                         >
                             <Form
                                 v-bind="move.form(interest)"
@@ -260,10 +273,15 @@ defineOptions({
                                     type="submit"
                                     variant="outline"
                                     size="sm"
-                                    :aria-label="`Monter ${interest.name}`"
+                                    :aria-label="
+                                        t(
+                                            'administration.common.move_up_named',
+                                            { name: interest.name },
+                                        )
+                                    "
                                     :disabled="processing || position === 0"
                                 >
-                                    Monter
+                                    {{ t('administration.common.move_up') }}
                                 </Button>
                             </Form>
                             <Form
@@ -280,13 +298,18 @@ defineOptions({
                                     type="submit"
                                     variant="outline"
                                     size="sm"
-                                    :aria-label="`Descendre ${interest.name}`"
+                                    :aria-label="
+                                        t(
+                                            'administration.common.move_down_named',
+                                            { name: interest.name },
+                                        )
+                                    "
                                     :disabled="
                                         processing ||
                                         position === interests.length - 1
                                     "
                                 >
-                                    Descendre
+                                    {{ t('administration.common.move_down') }}
                                 </Button>
                             </Form>
                         </div>
@@ -297,8 +320,16 @@ defineOptions({
                     >
                         <div class="text-sm text-muted-foreground">
                             <p>
-                                {{ profileCountLabel(interest.profiles_count) }}
-                                dans l’historique
+                                {{
+                                    t(
+                                        'administration.interests.history_count',
+                                        {
+                                            count: profileCountLabel(
+                                                interest.profiles_count,
+                                            ),
+                                        },
+                                    )
+                                }}
                             </p>
                             <p
                                 v-if="
@@ -308,8 +339,11 @@ defineOptions({
                                 :id="`delete-interest-help-${interest.id}`"
                                 class="text-xs"
                             >
-                                Cet intérêt doit être archivé avant de pouvoir
-                                être supprimé.
+                                {{
+                                    t(
+                                        'administration.interests.archive_required',
+                                    )
+                                }}
                             </p>
                         </div>
                         <div class="flex flex-wrap gap-2">
@@ -319,9 +353,18 @@ defineOptions({
                                         <Button
                                             :id="`archive-interest-${interest.id}`"
                                             variant="outline"
-                                            :aria-label="`Archiver ${interest.name}`"
+                                            :aria-label="
+                                                t(
+                                                    'administration.common.archive_named',
+                                                    { name: interest.name },
+                                                )
+                                            "
                                         >
-                                            Archiver
+                                            {{
+                                                t(
+                                                    'administration.common.archive',
+                                                )
+                                            }}
                                         </Button>
                                     </DialogTrigger>
                                     <DialogContent>
@@ -338,13 +381,21 @@ defineOptions({
                                             />
                                             <DialogHeader>
                                                 <DialogTitle>
-                                                    Archiver l’intérêt
-                                                    {{ interest.name }}
+                                                    {{
+                                                        t(
+                                                            'administration.interests.archive_title',
+                                                            {
+                                                                name: interest.name,
+                                                            },
+                                                        )
+                                                    }}
                                                 </DialogTitle>
                                                 <DialogDescription>
-                                                    Il disparaîtra du catalogue
-                                                    membre. Son historique sera
-                                                    conservé.
+                                                    {{
+                                                        t(
+                                                            'administration.interests.archive_description',
+                                                        )
+                                                    }}
                                                 </DialogDescription>
                                             </DialogHeader>
                                             <InputError
@@ -356,14 +407,22 @@ defineOptions({
                                                         type="button"
                                                         variant="secondary"
                                                     >
-                                                        Annuler
+                                                        {{
+                                                            t(
+                                                                'common.actions.cancel',
+                                                            )
+                                                        }}
                                                     </Button>
                                                 </DialogClose>
                                                 <Button
                                                     type="submit"
                                                     :disabled="processing"
                                                 >
-                                                    Archiver
+                                                    {{
+                                                        t(
+                                                            'administration.common.archive',
+                                                        )
+                                                    }}
                                                 </Button>
                                             </DialogFooter>
                                         </Form>
@@ -385,10 +444,15 @@ defineOptions({
                                     :id="`reactivate-interest-${interest.id}`"
                                     type="submit"
                                     variant="secondary"
-                                    :aria-label="`Réactiver ${interest.name}`"
+                                    :aria-label="
+                                        t(
+                                            'administration.common.reactivate_named',
+                                            { name: interest.name },
+                                        )
+                                    "
                                     :disabled="processing"
                                 >
-                                    Réactiver
+                                    {{ t('administration.common.reactivate') }}
                                 </Button>
                             </Form>
 
@@ -397,7 +461,12 @@ defineOptions({
                                     <Button
                                         :id="`delete-interest-${interest.id}`"
                                         variant="destructive"
-                                        :aria-label="`Supprimer ${interest.name}`"
+                                        :aria-label="
+                                            t(
+                                                'administration.common.delete_named',
+                                                { name: interest.name },
+                                            )
+                                        "
                                         :aria-describedby="
                                             interest.is_active &&
                                             interest.profiles_count > 0
@@ -409,7 +478,7 @@ defineOptions({
                                             interest.profiles_count > 0
                                         "
                                     >
-                                        Supprimer
+                                        {{ t('administration.common.delete') }}
                                     </Button>
                                 </DialogTrigger>
                                 <DialogContent>
@@ -421,21 +490,30 @@ defineOptions({
                                     >
                                         <DialogHeader>
                                             <DialogTitle>
-                                                Supprimer l’intérêt
-                                                {{ interest.name }}
+                                                {{
+                                                    t(
+                                                        'administration.interests.delete_title',
+                                                        { name: interest.name },
+                                                    )
+                                                }}
                                             </DialogTitle>
                                             <DialogDescription>
-                                                Cette action est définitive.
+                                                {{
+                                                    t(
+                                                        'administration.interests.delete_description',
+                                                    )
+                                                }}
                                                 <template
                                                     v-if="
                                                         interest.profiles_count >
                                                         0
                                                     "
                                                 >
-                                                    Elle supprimera également
-                                                    toutes les associations
-                                                    historiques liées à cet
-                                                    intérêt.
+                                                    {{
+                                                        t(
+                                                            'administration.interests.delete_history',
+                                                        )
+                                                    }}
                                                 </template>
                                             </DialogDescription>
                                         </DialogHeader>
@@ -448,7 +526,11 @@ defineOptions({
                                                     type="button"
                                                     variant="secondary"
                                                 >
-                                                    Annuler
+                                                    {{
+                                                        t(
+                                                            'common.actions.cancel',
+                                                        )
+                                                    }}
                                                 </Button>
                                             </DialogClose>
                                             <Button
@@ -456,7 +538,11 @@ defineOptions({
                                                 variant="destructive"
                                                 :disabled="processing"
                                             >
-                                                Supprimer
+                                                {{
+                                                    t(
+                                                        'administration.common.delete',
+                                                    )
+                                                }}
                                             </Button>
                                         </DialogFooter>
                                     </Form>

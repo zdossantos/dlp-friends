@@ -6,11 +6,11 @@ test('a visitor changes locale from the public language selector', function () {
     visit('/')
         ->assertVisible('[data-test="locale-switcher"]')
         ->click('[data-test="locale-en"]')
-        ->assertSee('Strictly friendly connections between adult fans')
+        ->assertSee('Friendships between adult fans, with a touch of magic')
         ->assertSee('Create my account')
         ->assertScript('document.documentElement.lang', 'en')
         ->click('[data-test="locale-fr"]')
-        ->assertSee('Des rencontres strictement amicales entre fans adultes')
+        ->assertSee('Des amitiés entre fans adultes, avec un peu de magie')
         ->assertScript('document.documentElement.lang', 'fr')
         ->assertNoJavaScriptErrors();
 });
@@ -20,7 +20,7 @@ test('the visitor locale remains active on authentication pages', function () {
         ->click('[data-test="locale-en"]')
         ->navigate('/login')
         ->assertSee('Welcome back')
-        ->assertSee('Sign in')
+        ->assertSee('Log in')
         ->assertScript('document.documentElement.lang', 'en')
         ->assertNoJavaScriptErrors();
 });
@@ -55,13 +55,13 @@ test('an English member sees translated profile and discovery pages', function (
     $this->actingAs($member);
 
     visit('/profile')
-        ->assertSee('My profile')
+        ->assertSee('Profile')
         ->assertSee('About')
         ->assertNoJavaScriptErrors();
 
     visit('/discover')
-        ->assertSee('Discover')
-        ->assertSee('Members who share your interests.')
+        ->assertSee('Explore')
+        ->assertSee('Members who share your favourite worlds.')
         ->assertNoJavaScriptErrors();
 });
 
@@ -76,9 +76,9 @@ test('an English administrator sees translated catalog navigation and dashboard 
         ->assertNoJavaScriptErrors();
 
     visit('/admin/interests')
-        ->assertSee('Add an interest')
+        ->assertSee('Add a world')
         ->assertSee('Selection limit')
-        ->assertSee('Return to profile')
+        ->assertSee('Back to profile')
         ->assertDontSee('Retour au profil')
         ->assertDontSee('intérêts')
         ->assertScript(

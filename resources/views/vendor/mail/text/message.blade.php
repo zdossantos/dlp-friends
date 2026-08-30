@@ -1,7 +1,7 @@
 <x-mail::layout>
     <x-slot:header>
         <x-mail::header :url="config('app.url')">
-            DLP Friends — {{ __('mail.brand.tagline') }}
+            {{ __('common.brand.name') }} — {{ __('common.mail.tagline') }}
         </x-mail::header>
     </x-slot:header>
 
@@ -17,9 +17,9 @@
 
     <x-slot:footer>
         <x-mail::footer>
-            {{ __('mail.brand.disclaimer') }}
+            {{ __('common.mail.disclaimer') }}
 
-            © {{ date('Y') }} DLP Friends
+            {{ __('common.mail.copyright', ['year' => date('Y')]) }}
         </x-mail::footer>
     </x-slot:footer>
 </x-mail::layout>

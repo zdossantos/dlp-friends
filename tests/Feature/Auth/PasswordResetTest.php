@@ -101,7 +101,7 @@ class PasswordResetTest extends TestCase
             ->post(route('password.email'), ['email' => $user->email])
             ->assertSessionHas(
                 'status',
-                'Nous vous avons envoyé le lien de réinitialisation de votre mot de passe par e-mail.',
+                'Le lien de réinitialisation de ton mot de passe vient de t’être envoyé par e-mail.',
             );
     }
 

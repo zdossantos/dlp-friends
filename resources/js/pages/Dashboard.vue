@@ -8,7 +8,9 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
-import { dashboard } from '@/routes';
+import { useTranslations } from '@/composables/useTranslations';
+
+const { t, formatDate: localizeDate } = useTranslations();
 
 defineProps<{
     stats: {
@@ -27,42 +29,32 @@ defineProps<{
 
 const formatDate = (value: string | null): string =>
     value
-        ? new Intl.DateTimeFormat('fr-FR', {
-              dateStyle: 'medium',
-              timeStyle: 'short',
-          }).format(new Date(value))
-        : 'Date inconnue';
-
-defineOptions({
-    layout: {
-        breadcrumbs: [
-            {
-                title: 'Administration',
-                href: dashboard(),
-            },
-        ],
-    },
-});
+        ? localizeDate(value, { dateStyle: 'medium', timeStyle: 'short' })
+        : t('administration.dashboard.unknown_date');
 </script>
 
 <template>
-    <Head title="Administration" />
+    <Head :title="t('administration.title')" />
 
     <main class="flex flex-1 flex-col gap-6 p-4 sm:p-6">
         <div>
-            <p class="text-sm font-medium text-primary">Vue d’ensemble</p>
+            <p class="text-sm font-medium text-primary">
+                {{ t('administration.dashboard.eyebrow') }}
+            </p>
             <h1 class="text-3xl font-semibold tracking-tight">
-                Administration
+                {{ t('administration.title') }}
             </h1>
             <p class="mt-1 text-muted-foreground">
-                Suivez l’activité et la complétion des comptes membres.
+                {{ t('administration.dashboard.description') }}
             </p>
         </div>
 
         <section class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
             <Card>
                 <CardHeader class="pb-2">
-                    <CardDescription>Comptes créés</CardDescription>
+                    <CardDescription>{{
+                        t('administration.dashboard.total_accounts')
+                    }}</CardDescription>
                     <CardTitle class="text-3xl">{{
                         stats.totalAccounts
                     }}</CardTitle>
@@ -70,7 +62,9 @@ defineOptions({
             </Card>
             <Card>
                 <CardHeader class="pb-2">
-                    <CardDescription>Comptes actifs</CardDescription>
+                    <CardDescription>{{
+                        t('administration.dashboard.active_accounts')
+                    }}</CardDescription>
                     <CardTitle class="text-3xl">{{
                         stats.activeAccounts
                     }}</CardTitle>
@@ -78,7 +72,9 @@ defineOptions({
             </Card>
             <Card>
                 <CardHeader class="pb-2">
-                    <CardDescription>Emails vérifiés</CardDescription>
+                    <CardDescription>{{
+                        t('administration.dashboard.verified_accounts')
+                    }}</CardDescription>
                     <CardTitle class="text-3xl">{{
                         stats.verifiedAccounts
                     }}</CardTitle>
@@ -86,7 +82,9 @@ defineOptions({
             </Card>
             <Card class="border-accent bg-accent/25">
                 <CardHeader class="pb-2">
-                    <CardDescription>Profils complétés</CardDescription>
+                    <CardDescription>{{
+                        t('administration.dashboard.completed_profiles')
+                    }}</CardDescription>
                     <CardTitle class="text-3xl">{{
                         stats.completedProfiles
                     }}</CardTitle>
@@ -96,9 +94,11 @@ defineOptions({
 
         <Card>
             <CardHeader>
-                <CardTitle>Inscriptions récentes</CardTitle>
+                <CardTitle>{{
+                    t('administration.dashboard.recent_title')
+                }}</CardTitle>
                 <CardDescription>
-                    Les huit derniers comptes créés sur la plateforme.
+                    {{ t('administration.dashboard.recent_description') }}
                 </CardDescription>
             </CardHeader>
             <CardContent>
@@ -118,8 +118,8 @@ defineOptions({
                             <Badge variant="secondary">
                                 {{
                                     registration.status === 'active'
-                                        ? 'Actif'
-                                        : 'Inactif'
+                                        ? t('administration.common.active')
+                                        : t('administration.common.inactive')
                                 }}
                             </Badge>
                             <Badge
@@ -131,15 +131,19 @@ defineOptions({
                             >
                                 {{
                                     registration.profile_completed
-                                        ? 'Profil complété'
-                                        : 'Profil à compléter'
+                                        ? t(
+                                              'administration.dashboard.profile_completed',
+                                          )
+                                        : t(
+                                              'administration.dashboard.profile_incomplete',
+                                          )
                                 }}
                             </Badge>
                         </div>
                     </div>
                 </div>
                 <p v-else class="py-8 text-center text-muted-foreground">
-                    Aucune inscription pour le moment.
+                    {{ t('administration.dashboard.empty') }}
                 </p>
             </CardContent>
         </Card>

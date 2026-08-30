@@ -32,8 +32,8 @@ test('onboarding continues the registration stepper at the persisted tutorial st
         ->assertSee('6 sur 8')
         ->assertPresent('[aria-label="Étape 1 : Avatar"]')
         ->assertPresent('[aria-label="Étape 5 : Passer"]')
-        ->assertPresent('[aria-label="Étape 6 : J’aime"][aria-current="step"]')
-        ->assertPresent('[aria-label="Étape 8 : Discussion"]')
+        ->assertPresent('[aria-label="Étape 6 : Découvrir"][aria-current="step"]')
+        ->assertPresent('[aria-label="Étape 8 : Échange"]')
         ->assertNoJavaScriptErrors();
 });
 
@@ -54,7 +54,7 @@ test('each swipe step disables and blocks the opposite decision', function () {
 
     $page = visit('/onboarding')
         ->assertPresent('[data-test="discovery-card"]')
-        ->assertPresent('[aria-label="Aimer ce profil"][disabled]')
+        ->assertPresent('[aria-label="Découvrir ce profil"][disabled]')
         ->assertNotPresent('[aria-label="Passer ce profil"][disabled]');
 
     $page->script(<<<'JS'
@@ -75,7 +75,7 @@ test('each swipe step disables and blocks the opposite decision', function () {
         ->click('[aria-label="Passer ce profil"]')
         ->assertSee('6 sur 8')
         ->assertPresent('[aria-label="Passer ce profil"][disabled]')
-        ->assertNotPresent('[aria-label="Aimer ce profil"][disabled]');
+        ->assertNotPresent('[aria-label="Découvrir ce profil"][disabled]');
 
     $page->script(<<<'JS'
         const card = document.querySelector('[data-test="discovery-card"]');
@@ -114,9 +114,9 @@ test('onboarding uses the production match dialog without a discovery escape act
     $this->actingAs($member);
 
     visit('/onboarding')
-        ->assertSee('C’est un match !')
-        ->assertSee('Alex a aussi aimé votre profil.')
-        ->assertSee('Ouvrir la conversation')
+        ->assertSee('Vos univers se croisent')
+        ->assertSee('Alex souhaite aussi te découvrir.')
+        ->assertSee('Commencer l’échange')
         ->assertDontSee('Continuer à découvrir')
         ->assertNotPresent('[data-slot="dialog-close"]')
         ->assertNoJavaScriptErrors();
@@ -145,7 +145,7 @@ test('onboarding uses the production conversation interface and completes on sen
         ->assertSee('Alex')
         ->assertSee('Échange privé')
         ->assertPresent('[role="log"][aria-label="Historique des messages"]')
-        ->assertPresent('#message-content[placeholder="Écrire un message…"]')
+        ->assertPresent('#message-content[placeholder="Écris un message…"]')
         ->assertDontSee('fictif')
         ->type('#message-content', 'Bonjour !')
         ->click('[aria-label="Envoyer le message"]')
@@ -181,19 +181,19 @@ test('member completes the mandatory onboarding without escape actions or social
         ->assertDontSee('Recommencer')
         ->assertDontSee('Démonstration')
         ->assertDontSee('fictif')
-        ->assertSee('Pour découvrir comment écarter un profil qui ne vous correspond pas, choisissez Passer.')
-        ->assertPresent('[aria-label="Aimer ce profil"][disabled]')
+        ->assertSee('Pour découvrir comment écarter un profil, choisis Passer.')
+        ->assertPresent('[aria-label="Découvrir ce profil"][disabled]')
         ->click('[aria-label="Passer ce profil"]');
 
     $page->assertNoJavaScriptErrors()
-        ->assertSee('Aimez ce profil pour indiquer que vous souhaitez faire connaissance.')
+        ->assertSee('Choisis Découvrir pour indiquer que tu souhaites faire connaissance.')
         ->assertPresent('[aria-label="Passer ce profil"][disabled]')
-        ->click('[aria-label="Aimer ce profil"]')
-        ->assertSee('C’est un match !')
-        ->assertSee('Lorsque deux membres s’aiment mutuellement, un match amical est créé.')
+        ->click('[aria-label="Découvrir ce profil"]')
+        ->assertSee('Vos univers se croisent')
+        ->assertSee('Lorsque deux membres choisissent Découvrir, leurs univers se croisent.')
         ->click('[data-test="open-match-conversation"]')
         ->assertSee('Échange privé')
-        ->assertSee('Envoyez un premier message pour terminer votre inscription.')
+        ->assertSee('Envoie un premier message pour terminer ton inscription.')
         ->type('#message-content', 'Bonjour !')
         ->click('[aria-label="Envoyer le message"]')
         ->assertPathIs('/discover')

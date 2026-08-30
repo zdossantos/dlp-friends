@@ -23,7 +23,7 @@ function changeLocale(value: Locale): void {
         {
             preserveScroll: true,
             onSuccess: () => {
-                status.value = t('locale.label');
+                status.value = t('common.locale.label');
                 window.location.reload();
             },
             onFinish: () => {
@@ -37,7 +37,7 @@ function changeLocale(value: Locale): void {
 <template>
     <div
         data-test="locale-switcher"
-        :aria-label="t('locale.label')"
+        :aria-label="t('common.locale.label')"
         class="inline-flex max-w-full items-center gap-1 rounded-full border border-border/70 bg-card/95 p-1 shadow-sm backdrop-blur"
     >
         <Languages

@@ -17,17 +17,17 @@ const props = defineProps<{
 const { t } = useTranslations();
 const frequencyKeys: Record<
     VisitFrequency,
-    `blocking.frequency_${VisitFrequency}`
+    `profile.details.frequency_${VisitFrequency}`
 > = {
-    rarely: 'blocking.frequency_rarely',
-    sometimes: 'blocking.frequency_sometimes',
-    often: 'blocking.frequency_often',
-    very_often: 'blocking.frequency_very_often',
+    rarely: 'profile.details.frequency_rarely',
+    sometimes: 'profile.details.frequency_sometimes',
+    often: 'profile.details.frequency_often',
+    very_often: 'profile.details.frequency_very_often',
 };
 const visitFrequency = computed(() =>
     props.member.visit_frequency
         ? t(frequencyKeys[props.member.visit_frequency])
-        : t('blocking.frequency_unknown'),
+        : t('profile.details.frequency_unknown'),
 );
 
 function goBack(): void {
@@ -52,7 +52,7 @@ function goBack(): void {
             type="button"
             variant="outline"
             size="icon"
-            :aria-label="t('navigation.back')"
+            :aria-label="t('profile.actions.back')"
             class="mb-3 size-11 shrink-0 rounded-full bg-card shadow-md"
             @click="goBack"
         >
@@ -62,13 +62,13 @@ function goBack(): void {
         <ProfilePresentation
             :avatar="member.avatar"
             :display-name="member.display_name"
-            :age-label="t('blocking.age', { age: member.age })"
-            :bio="member.bio ?? t('blocking.empty_bio')"
+            :age-label="t('profile.details.age', { age: member.age })"
+            :bio="member.bio ?? t('profile.details.empty_bio')"
             :visit-frequency="visitFrequency"
             :interests="member.interests"
-            :about-label="t('blocking.about')"
-            :interests-label="t('blocking.interests')"
-            :visit-frequency-label="t('blocking.visit_frequency')"
+            :about-label="t('profile.details.about')"
+            :interests-label="t('profile.details.interests')"
+            :visit-frequency-label="t('profile.details.visit_frequency')"
         >
             <template #summary-actions>
                 <UnblockMemberButton

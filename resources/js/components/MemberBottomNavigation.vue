@@ -3,24 +3,26 @@ import { Link } from '@inertiajs/vue3';
 import { MessageCircle, Sparkles, UserRound } from '@lucide/vue';
 import { useCurrentUrl } from '@/composables/useCurrentUrl';
 import { useMemberNavigationVisibility } from '@/composables/useMemberNavigationVisibility';
+import { useTranslations } from '@/composables/useTranslations';
 import { index as conversations } from '@/routes/conversations';
 import { index as discovery } from '@/routes/discovery';
 import { show as showProfile } from '@/routes/member-profile';
 
 const { isCurrentOrParentUrl } = useCurrentUrl();
+const { t } = useTranslations();
 
 const shouldShow = useMemberNavigationVisibility();
 
 const items = [
-    { label: 'Découvrir', href: discovery(), icon: Sparkles },
+    { label: t('discovery.navigation'), href: discovery(), icon: Sparkles },
     {
-        label: 'Échanges',
+        label: t('conversations.navigation'),
         href: conversations(),
         icon: MessageCircle,
         activeParents: ['/conversations'],
     },
     {
-        label: 'Profil',
+        label: t('profile.navigation'),
         href: showProfile(),
         icon: UserRound,
         activeParents: ['/settings'],
@@ -44,7 +46,7 @@ function isActive(item: (typeof items)[number]): boolean {
     >
         <nav
             data-test="member-bottom-navigation"
-            aria-label="Navigation principale"
+            :aria-label="t('common.accessibility.main_navigation')"
             class="pointer-events-auto flex min-h-16 w-fit items-center gap-2 rounded-3xl border border-border/80 bg-card/95 px-2 shadow-xl shadow-primary/10 backdrop-blur"
         >
             <Link

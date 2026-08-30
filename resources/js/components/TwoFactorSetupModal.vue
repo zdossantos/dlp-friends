@@ -20,6 +20,7 @@ import {
 } from '@/components/ui/input-otp';
 import { Spinner } from '@/components/ui/spinner';
 import { useAppearance } from '@/composables/useAppearance';
+import { useTranslations } from '@/composables/useTranslations';
 import { useTwoFactorAuth } from '@/composables/useTwoFactorAuth';
 import { confirm } from '@/routes/two-factor';
 import type { TwoFactorConfigContent } from '@/types';
@@ -30,6 +31,7 @@ type Props = {
 };
 
 const { resolvedAppearance } = useAppearance();
+const { t } = useTranslations();
 
 const props = defineProps<Props>();
 const isOpen = defineModel<boolean>('isOpen');
@@ -46,26 +48,24 @@ const pinInputContainerRef = useTemplateRef('pinInputContainerRef');
 const modalConfig = computed<TwoFactorConfigContent>(() => {
     if (props.twoFactorEnabled) {
         return {
-            title: 'Authentification à deux facteurs activée',
-            description:
-                'Scannez le QR code ou saisissez la clé dans votre application d’authentification.',
-            buttonText: 'Fermer',
+            title: t('account.two_factor.enabled_title'),
+            description: t('account.two_factor.scan'),
+            buttonText: t('common.actions.close'),
         };
     }
 
     if (showVerificationStep.value) {
         return {
-            title: 'Vérifier le code d’authentification',
-            description: 'Saisissez le code à 6 chiffres de votre application.',
-            buttonText: 'Continuer',
+            title: t('account.two_factor.verify_title'),
+            description: t('account.two_factor.verify_description'),
+            buttonText: t('account.two_factor.continue'),
         };
     }
 
     return {
-        title: 'Activer l’authentification à deux facteurs',
-        description:
-            'Scannez le QR code ou saisissez la clé dans votre application d’authentification.',
-        buttonText: 'Continuer',
+        title: t('account.two_factor.enable_title'),
+        description: t('account.two_factor.scan'),
+        buttonText: t('account.two_factor.continue'),
     };
 });
 
@@ -196,9 +196,9 @@ watch(
                             <div
                                 class="absolute inset-0 top-1/2 h-px w-full bg-border"
                             />
-                            <span class="relative bg-card px-2 py-1"
-                                >ou saisissez la clé manuellement</span
-                            >
+                            <span class="relative bg-card px-2 py-1">{{
+                                t('account.two_factor.manual')
+                            }}</span>
                         </div>
 
                         <div
@@ -222,7 +222,9 @@ watch(
                                     />
                                     <button
                                         type="button"
-                                        aria-label="Copier la clé de configuration"
+                                        :aria-label="
+                                            t('account.two_factor.copy_key')
+                                        "
                                         @click="copy(manualSetupKey || '')"
                                         class="relative block h-auto border-l border-border px-3 hover:bg-muted"
                                     >
@@ -281,14 +283,14 @@ watch(
                                     @click="showVerificationStep = false"
                                     :disabled="processing"
                                 >
-                                    Retour
+                                    {{ t('account.two_factor.back') }}
                                 </Button>
                                 <Button
                                     type="submit"
                                     class="w-auto flex-1"
                                     :disabled="processing || code.length < 6"
                                 >
-                                    Confirmer
+                                    {{ t('account.two_factor.confirm') }}
                                 </Button>
                             </div>
                         </div>

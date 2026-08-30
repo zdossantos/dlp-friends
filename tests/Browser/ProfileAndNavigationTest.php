@@ -31,7 +31,7 @@ test('profile onboarding requires an active avatar and renders its two-color gra
     $this->actingAs($user);
 
     visit('/profile/create')
-        ->assertSee('Votre avatar')
+        ->assertSee('Ton avatar')
         ->assertSee('1 sur 4')
         ->assertSee('Aurore')
         ->assertDontSee('Archivé')
@@ -62,7 +62,7 @@ test('profile onboarding is a keyboard accessible four-step journey that preserv
 
     $page = visit('/profile/create')
         ->on()->mobile()
-        ->assertSee('Votre avatar')
+        ->assertSee('Ton avatar')
         ->assertScript('document.documentElement.scrollHeight <= document.documentElement.clientHeight', true)
         ->assertAttribute("[data-test=avatar-carousel-item-{$first->id}] img", 'draggable', 'false')
         ->assertScript("getComputedStyle(document.querySelector('[data-test=avatar-carousel-item-{$first->id}]')).transitionDuration !== '0s'", true)
@@ -85,14 +85,14 @@ test('profile onboarding is a keyboard accessible four-step journey that preserv
         ->keys('[data-test="avatar-carousel"]', 'ArrowLeft')
         ->assertScript("document.querySelector('input[name=avatar_id][value=\"{$first->id}\"]').checked", true)
         ->keys('[data-test="avatar-carousel"]', 'ArrowRight')
-        ->click('Continuer')
-        ->assertSee('Votre identité')
+        ->click('Suivant')
+        ->assertSee('Ton identité')
         ->assertSee('2 sur 4')
         ->assertScript('document.documentElement.scrollHeight <= document.documentElement.clientHeight', true)
         ->fill('display_name', 'Camille')
         ->fill('bio', 'Toujours partante pour une journée entre fans.')
-        ->click('Continuer')
-        ->assertSee('Vos affinités')
+        ->click('Suivant')
+        ->assertSee('Tes univers')
         ->assertScript('document.documentElement.scrollHeight <= document.documentElement.clientHeight', true)
         ->resize(320, 568)
         ->assertScript("getComputedStyle(document.querySelector('[data-test=profile-step-content-3]')).overflowY === 'auto'", true)
@@ -100,17 +100,17 @@ test('profile onboarding is a keyboard accessible four-step journey that preserv
         ->resize(375, 812)
         ->click('Attractions')
         ->click('Souvent')
-        ->click('Continuer')
-        ->assertSee('Votre aperçu')
+        ->click('Suivant')
+        ->assertSee('Ton aperçu')
         ->assertSee('4 sur 4')
         ->assertScript('document.documentElement.scrollHeight <= document.documentElement.clientHeight', true)
         ->assertPresent('[data-test="profile-preview"] [data-test="discovery-avatar-hero"]')
         ->assertSee('Camille')
         ->assertSee('Toujours partante pour une journée entre fans.')
         ->click('Retour')
-        ->assertSee('Vos affinités')
+        ->assertSee('Tes univers')
         ->click('Retour')
-        ->assertSee('Votre identité')
+        ->assertSee('Ton identité')
         ->assertValue('display_name', 'Camille')
         ->assertValue('bio', 'Toujours partante pour une journée entre fans.')
         ->assertScript('document.documentElement.scrollWidth <= document.documentElement.clientWidth', true)
@@ -127,8 +127,8 @@ test('profile onboarding exposes the complete accessible contract', function () 
 
     visit('/profile/create')
         ->on()->mobile()
-        ->assertSee('Créons votre profil')
-        ->assertSee('Votre avatar')
+        ->assertSee('Créons ton profil')
+        ->assertSee('Ton avatar')
         ->assertPresent('input[name="display_name"]')
         ->assertPresent('textarea[name="bio"]')
         ->assertAttribute('input[name="display_name"]', 'maxlength', '80')
@@ -138,7 +138,7 @@ test('profile onboarding exposes the complete accessible contract', function () 
         ->assertNotPresent('select[name="visibility"]')
         ->assertPresent('button#visibility[data-slot="select-trigger"]')
         ->assertPresent('input[type="hidden"][name="visibility"]')
-        ->assertSee('Continuer')
+        ->assertSee('Suivant')
         ->assertPresent('[aria-label="Progression du profil"]')
         ->assertScript(
             "document.querySelector('main').getBoundingClientRect().top < 100",
@@ -170,11 +170,11 @@ test('profile visibility can be created and edited with the accessible select ke
 
     visit('/profile/create')
         ->on()->mobile()
-        ->click('Continuer')
+        ->click('Suivant')
         ->fill('display_name', 'Aurore')
-        ->click('Continuer')
+        ->click('Suivant')
         ->click('Souvent')
-        ->click('Continuer')
+        ->click('Suivant')
         ->assertSee('Visible')
         ->assertPresent('button#visibility[data-slot="select-trigger"]')
         ->keys('#visibility', 'Enter')
@@ -194,9 +194,9 @@ test('profile visibility can be created and edited with the accessible select ke
 
     visit('/profile/edit')
         ->click('[data-test="avatar-carousel-item-'.$profile->avatar_id.'"]')
-        ->click('Continuer')
-        ->click('Continuer')
-        ->click('Continuer')
+        ->click('Suivant')
+        ->click('Suivant')
+        ->click('Suivant')
         ->assertSee('Masqué')
         ->keys('#visibility', 'Enter')
         ->keys('[data-slot="select-item"]:first-child', 'Enter')
@@ -220,9 +220,9 @@ test('interest selection disables only unselected choices at the limit', functio
     $this->actingAs($user);
 
     $page = visit('/profile/create')
-        ->click('Continuer')
+        ->click('Suivant')
         ->fill('display_name', 'Aurore')
-        ->click('Continuer')
+        ->click('Suivant')
         ->click('Attractions');
 
     $page->assertScript(
@@ -252,18 +252,18 @@ test('profile validation displays a changed interest limit', function () {
     $this->actingAs($user);
 
     $page = visit('/profile/create')
-        ->click('Continuer')
+        ->click('Suivant')
         ->fill('display_name', 'Aurore')
-        ->click('Continuer')
+        ->click('Suivant')
         ->click('De temps en temps')
         ->click('Attractions')
         ->click('Spectacles')
-        ->click('Continuer');
+        ->click('Suivant');
 
     InterestSetting::current()->update(['max_selections' => 1]);
 
     $page->click('Créer mon profil')
-        ->assertSee('Vous pouvez sélectionner au maximum 1 intérêts.');
+        ->assertSee('Tu peux sélectionner au maximum un univers favori.');
 });
 
 test('a refreshed catalog drops an archived selected interest', function () {
@@ -284,7 +284,7 @@ test('a refreshed catalog drops an archived selected interest', function () {
             true,
         )
         ->assertScript('document.documentElement.scrollHeight <= document.documentElement.clientHeight', true)
-        ->click('Continuer')
+        ->click('Suivant')
         ->assertPresent('[data-test="profile-form-footer"]')
         ->assertScript(
             "getComputedStyle(document.querySelector('[data-test=profile-form-footer]')).borderTopWidth === '0px'",
@@ -298,15 +298,15 @@ test('a refreshed catalog drops an archived selected interest', function () {
             "getComputedStyle(document.querySelector('[data-test=profile-back-button]')).backgroundColor !== 'rgba(0, 0, 0, 0)'",
             true,
         )
-        ->click('Continuer')
+        ->click('Suivant')
         ->assertSee('Attractions')
         ->assertPresent("input[name='interest_ids[]'][value='{$interest->id}']");
 
     $interest->update(['is_active' => false]);
 
     visit('/profile/edit')
-        ->click('Continuer')
-        ->click('Continuer')
+        ->click('Suivant')
+        ->click('Suivant')
         ->assertDontSee('Attractions')
         ->assertNotPresent("input[name='interest_ids[]'][value='{$interest->id}']");
 });
@@ -392,7 +392,7 @@ test('an administrator sees administration and member return navigation', functi
     visit('/dashboard')
         ->assertPresent('[data-test="app-logo-icon"]')
         ->assertAttribute('[data-test="app-logo-icon"]', 'aria-hidden', 'true')
-        ->assertSeeLink('Intérêts')
+        ->assertSeeLink('Univers favoris')
         ->assertSeeLink('Retour au profil')
         ->assertSee('Admin Aurore');
 });
@@ -418,7 +418,7 @@ test('member navigation appears on discovery conversations profile and settings 
     visit('/discover')
         ->on()->mobile()
         ->assertCount('[data-test="member-bottom-navigation"] a', 3)
-        ->assertPresent('[aria-label="Découvrir"][aria-current="page"]')
+        ->assertPresent('[aria-label="Explorer"][aria-current="page"]')
         ->assertPresent('[aria-label="Échanges"]')
         ->assertPresent('[aria-label="Profil"]');
 

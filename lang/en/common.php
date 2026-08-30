@@ -24,4 +24,17 @@ return [
             'conversations' => ['title' => 'Private chats', 'description' => 'Chat in a private space when your worlds cross.'],
         ],
     ],
+    'actions' => ['cancel' => 'Cancel', 'close' => 'Close', 'delete' => 'Delete'],
+    'errors' => ['generic_title' => 'Something went wrong'],
+    'accessibility' => [
+        'main_navigation' => 'Main navigation', 'menu_navigation' => 'Navigation menu', 'breadcrumb' => 'Breadcrumb',
+        'more' => 'More', 'close' => 'Close', 'sidebar' => 'Sidebar', 'sidebar_description' => 'Displays the mobile sidebar.',
+        'toggle_sidebar' => 'Toggle sidebar', 'loading' => 'Loading', 'search' => 'Search',
+    ],
+    'mail' => [
+        'tagline' => 'Friendships between adult fans, with a touch of magic.',
+        'disclaimer' => 'DLP Friends is an independent service and not affiliated with Disney or Disneyland Paris.',
+        'fallback_link' => 'Copy and paste this link into your browser if the button does not work:',
+        'copyright' => '© :year DLP Friends',
+    ],
 ];

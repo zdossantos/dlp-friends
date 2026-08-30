@@ -71,7 +71,7 @@ test('the conversation list prefixes the member latest message with vous', funct
     $this->actingAs($member);
 
     visit('/conversations')->on()->mobile()
-        ->assertSee('Vous : À tout de suite !')
+        ->assertSee('Toi : À tout de suite !')
         ->assertPresent("a[href='/conversations/{$conversation->id}'][data-unread='false']")
         ->assertNoJavaScriptErrors();
 });
@@ -112,7 +112,7 @@ test('the conversation list updates and reorders its preview in realtime', funct
 
     $this->app->make(SendMessage::class)->handle($member, $first, 'Réponse en direct');
 
-    $page->assertSee('Vous : Réponse en direct')
+    $page->assertSee('Toi : Réponse en direct')
         ->assertScript("document.querySelector('[aria-label=Conversations] li:first-child a').getAttribute('href')", "/conversations/{$first->id}")
         ->assertNoJavaScriptErrors();
 });
@@ -310,7 +310,7 @@ test('an archived conversation remains readable without a composer', function ()
 
     visit("/conversations/{$conversation->id}")->on()->mobile()
         ->assertSee('Souvenir de notre sortie')
-        ->assertSee('Cet échange est archivé. L’envoi de nouveaux messages est désactivé.')
+        ->assertSee('Cet échange est archivé. Tu ne peux plus envoyer de nouveaux messages.')
         ->assertNotPresent('textarea[name="content"]')
         ->assertNotPresent('[data-test="member-bottom-navigation"]')
         ->assertNoJavaScriptErrors();

@@ -158,6 +158,7 @@ Paris.
 | Blocage et déblocage | **Implémenté** | Effet immédiat sur découverte et conversation. |
 | Tutoriel produit obligatoire | **Implémenté** | Progression persistée et statistiques admin sont livrées. |
 | Français et anglais | **Implémenté** | Résolution de locale et catalogues backend/frontend sont présents. |
+| Univers éditorial | **Implémenté** | Tutoiement, vocabulaire canonique et catalogues par feature sont contrôlés automatiquement. |
 | Thèmes clair, sombre et système | **Implémenté** | Préférence persistée et interface correspondante sont présentes. |
 | Connexion Google et Apple | **Planifié** | Aucun flux OAuth ou stockage de compte social n’existe. |
 | Photo personnelle facultative | **Planifié** | Aucun flux de téléversement membre n’existe. |
@@ -201,6 +202,8 @@ modération.
   réellement implémentée ;
 - [`design-system.md`](design-system.md) : langage visuel, composants et
   accessibilité ;
+- [`editorial-guidelines.md`](editorial-guidelines.md) : voix, vocabulaire et
+  règles de rédaction ;
 - [`security-privacy.md`](security-privacy.md) : sécurité, confidentialité et
   contrôle des données ;
 - [`operations.md`](operations.md) : exploitation et fiabilité ;

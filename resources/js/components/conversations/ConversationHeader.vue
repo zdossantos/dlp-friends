@@ -21,7 +21,7 @@ const { t } = useTranslations();
         <Link
             v-if="backHref"
             :href="backHref"
-            :aria-label="t('blocking.back_to_conversations')"
+            :aria-label="t('conversations.header.back')"
             class="grid size-11 shrink-0 place-items-center rounded-2xl text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
         >
             <ArrowLeft class="size-5" aria-hidden="true" />
@@ -30,7 +30,9 @@ const { t } = useTranslations();
             v-if="profileHref"
             :href="profileHref"
             :aria-label="
-                t('blocking.profile_link', { name: participant.display_name })
+                t('conversations.header.profile_link', {
+                    name: participant.display_name,
+                })
             "
             class="shrink-0 rounded-2xl focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
         >
@@ -56,7 +58,7 @@ const { t } = useTranslations();
                 <template v-else>{{ participant.display_name }}</template>
             </h1>
             <p class="text-xs text-muted-foreground">
-                {{ t('blocking.private_conversation') }}
+                {{ t('conversations.header.private_exchange') }}
             </p>
         </div>
     </header>

@@ -19,7 +19,7 @@ class ResetPasswordMail extends Mailable
 
     public function envelope(): Envelope
     {
-        return new Envelope(subject: __('mail.password_reset.subject'));
+        return new Envelope(subject: __('account.mail.password_reset.subject'));
     }
 
     public function content(): Content

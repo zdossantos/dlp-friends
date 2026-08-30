@@ -27,7 +27,7 @@ test('discovery renders its deferred empty state and limits the stack to five pr
     $this->actingAs($actor);
 
     visit('/discover')
-        ->assertSee('Découvrir')
+        ->assertSee('Explorer')
         ->assertSee('Tu as exploré tous les profils disponibles')
         ->assertNoJavaScriptErrors();
 
@@ -156,7 +156,7 @@ test('discovery renders its loading state while suggestions are deferred', funct
             };
         }
         JS);
-    $page->click('[aria-label="Découvrir"]')
+    $page->click('[aria-label="Explorer"]')
         ->assertSee('Recherche de profils…')
         ->assertPresent('[aria-busy="true"]');
     $page->script('window.__releaseDeferredRequest()');

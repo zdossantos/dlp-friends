@@ -11,6 +11,7 @@ import {
     DialogTitle,
     DialogTrigger,
 } from '@/components/ui/dialog';
+import { useTranslations } from '@/composables/useTranslations';
 import type { Passkey } from '@/types/auth';
 
 const props = defineProps<{
@@ -22,6 +23,7 @@ const emit = defineEmits<{
 }>();
 
 const isDeleting = ref(false);
+const { t } = useTranslations();
 
 const handleDelete = () => {
     isDeleting.value = true;
@@ -50,10 +52,18 @@ const handleDelete = () => {
                     </span>
                 </div>
                 <p class="text-sm text-muted-foreground">
-                    Ajoutée {{ passkey.created_at_diff }}
+                    {{
+                        t('account.passkeys.added', {
+                            date: passkey.created_at_diff,
+                        })
+                    }}
                     <template v-if="passkey.last_used_at_diff">
                         <span class="mx-1 text-muted-foreground/50">/</span>
-                        Dernière utilisation {{ passkey.last_used_at_diff }}
+                        {{
+                            t('account.passkeys.last_used', {
+                                date: passkey.last_used_at_diff,
+                            })
+                        }}
                     </template>
                 </p>
             </div>
@@ -67,26 +77,39 @@ const handleDelete = () => {
                     class="text-destructive hover:bg-destructive/10 hover:text-destructive"
                 >
                     <Trash2 class="h-4 w-4" />
-                    <span class="sr-only">Supprimer</span>
+                    <span class="sr-only">{{
+                        t('common.actions.delete')
+                    }}</span>
                 </Button>
             </DialogTrigger>
 
             <DialogContent>
-                <DialogTitle>Supprimer la clé d’accès</DialogTitle>
+                <DialogTitle>{{
+                    t('account.passkeys.delete_title')
+                }}</DialogTitle>
                 <DialogDescription>
-                    Voulez-vous vraiment supprimer « {{ passkey.name }} » ? Elle
-                    ne pourra plus servir à vous connecter.
+                    {{
+                        t('account.passkeys.delete_description', {
+                            name: passkey.name,
+                        })
+                    }}
                 </DialogDescription>
                 <DialogFooter class="gap-2">
                     <DialogClose as-child>
-                        <Button variant="secondary">Annuler</Button>
+                        <Button variant="secondary">{{
+                            t('common.actions.cancel')
+                        }}</Button>
                     </DialogClose>
                     <Button
                         variant="destructive"
                         :disabled="isDeleting"
                         @click="handleDelete"
                     >
-                        {{ isDeleting ? 'Suppression…' : 'Supprimer la clé' }}
+                        {{
+                            isDeleting
+                                ? t('account.passkeys.deleting')
+                                : t('account.passkeys.delete')
+                        }}
                     </Button>
                 </DialogFooter>
             </DialogContent>

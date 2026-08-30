@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
+import { useTranslations } from '@/composables/useTranslations';
 import type { InterestOption } from '@/types';
+
+const { t } = useTranslations();
 
 const props = defineProps<{
     interests: InterestOption[];
@@ -42,7 +45,7 @@ function toggle(id: number): void {
 <template>
     <fieldset class="grid gap-3">
         <legend class="flex w-full items-center justify-between gap-3">
-            <span class="font-medium">Mes intérêts</span>
+            <span class="font-medium">{{ t('profile.interests.title') }}</span>
             <span aria-live="polite">{{ count }} / {{ limit }}</span>
         </legend>
         <div class="flex flex-wrap gap-2">
@@ -51,7 +54,14 @@ function toggle(id: number): void {
                 :key="interest.id"
                 type="button"
                 :aria-pressed="selected.has(interest.id)"
-                :aria-label="`${selected.has(interest.id) ? 'Retirer' : 'Ajouter'} ${interest.name}`"
+                :aria-label="
+                    t(
+                        selected.has(interest.id)
+                            ? 'profile.interests.remove'
+                            : 'profile.interests.add',
+                        { name: interest.name },
+                    )
+                "
                 :disabled="count >= limit && !selected.has(interest.id)"
                 :class="[
                     'rounded-full border px-3 py-1.5 text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50',

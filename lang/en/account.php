@@ -1,7 +1,26 @@
 <?php
 
 return [
+    'email_delivery' => [
+        'failed' => 'The email could not be sent. Please try again in a few moments.',
+        'rate_limited' => 'Too many requests have been made. Please wait one minute before trying again.',
+    ],
+    'mail' => [
+        'verification' => [
+            'subject' => 'Verify your email address', 'heading' => 'Welcome to the community',
+            'intro' => 'Confirm your email address to secure your account and start your DLP Friends journey.',
+            'action' => 'Verify my email address',
+            'ignore' => 'If you did not create a DLP Friends account, you can ignore this email.',
+        ],
+        'password_reset' => [
+            'subject' => 'Reset your password', 'heading' => 'Password reset',
+            'intro' => 'We received a password reset request for your DLP Friends account.',
+            'action' => 'Reset my password', 'expires' => 'This link will expire in :count minutes.',
+            'ignore' => 'If you did not make this request, no action is required.',
+        ],
+    ],
     'registration' => [
+        'adult_only' => 'You must be an adult to register.',
         'title' => 'Create your account',
         'description' => 'You will then create your profile, and a tutorial will show you how to discover other members.',
         'email' => 'Email address',
@@ -48,4 +67,32 @@ return [
         'appearance_description' => 'Choose the theme that is most comfortable for you.',
         'password_title' => 'Change password', 'password_description' => 'Use a long, unique password to protect your account.',
     ],
+    'appearance' => ['label' => 'Choose theme', 'light' => 'Light', 'dark' => 'Dark', 'system' => 'System'],
+    'deletion' => [
+        'title' => 'Delete your account', 'description' => 'Permanently delete your account and its data.', 'warning' => 'Warning',
+        'irreversible' => 'This action is permanent and cannot be undone.', 'question' => 'Do you really want to delete your account?',
+        'confirmation' => 'All your data will be permanently deleted. Enter your password to confirm.', 'submit' => 'Delete my account',
+    ],
+    'passkeys' => [
+        'title' => 'Passkeys', 'description' => 'Manage passwordless login.', 'empty' => 'No passkeys', 'empty_description' => 'Add one to log in without a password.',
+        'unsupported' => 'Passkeys are not supported by this browser.', 'add' => 'Add a passkey', 'name' => 'Passkey name', 'placeholder' => 'E.g. MacBook Pro, iPhone',
+        'name_help' => 'This name will help you recognise this key later.', 'saving' => 'Saving…', 'save' => 'Save passkey', 'added' => 'Added :date',
+        'last_used' => 'Last used :date', 'delete_title' => 'Delete passkey', 'delete_description' => 'Do you really want to delete “:name”? It can no longer be used to log in.',
+        'deleting' => 'Deleting…', 'delete' => 'Delete passkey', 'verify' => 'Log in with a passkey', 'verifying' => 'Authenticating…',
+        'separator' => 'Or continue with your email address',
+    ],
+    'two_factor' => [
+        'title' => 'Two-factor authentication', 'description' => 'Strengthen your account security.',
+        'disabled_description' => 'Once enabled, a temporary code from your authentication app will be required when you log in.',
+        'enabled_description' => 'A temporary code from your authentication app will be required each time you log in.',
+        'continue_setup' => 'Continue setup', 'enable' => 'Enable two-factor authentication', 'disable' => 'Disable two-factor authentication',
+        'recovery_title' => 'Recovery codes', 'recovery_description' => 'They let you regain access to your account. Store them in a secure password manager.',
+        'show_codes' => 'Show codes', 'hide_codes' => 'Hide codes', 'regenerate' => 'Regenerate codes',
+        'recovery_help' => 'Each code can only be used once. To get new ones, use “Regenerate codes”.',
+        'enabled_title' => 'Two-factor authentication enabled', 'scan' => 'Scan the QR code or enter the key in your authentication app.',
+        'verify_title' => 'Verify authentication code', 'verify_description' => 'Enter the 6-digit code from your app.',
+        'enable_title' => 'Enable two-factor authentication', 'continue' => 'Continue', 'manual' => 'or enter the key manually',
+        'copy_key' => 'Copy setup key', 'back' => 'Back', 'confirm' => 'Confirm',
+    ],
+    'password_visibility' => ['show' => 'Show password', 'hide' => 'Hide password'],
 ];

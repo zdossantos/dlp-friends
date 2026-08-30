@@ -55,14 +55,16 @@ export function applyConversationMessage(
 export function conversationPreview(
     conversation: ConversationSummary,
     currentUserId: number,
+    emptyLabel: string,
+    currentUserPrefix: string,
 ): string {
     const latestMessage = conversation.latest_message;
 
     if (latestMessage === null) {
-        return 'Nouvel échange';
+        return emptyLabel;
     }
 
-    return `${latestMessage.author_user_id === currentUserId ? 'Vous : ' : ''}${latestMessage.content}`;
+    return `${latestMessage.author_user_id === currentUserId ? currentUserPrefix : ''}${latestMessage.content}`;
 }
 
 export function applyReadReceipt(

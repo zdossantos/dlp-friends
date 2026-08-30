@@ -1,8 +1,8 @@
 <x-mail::layout>
 <div class="message-brand">
 <a href="{{ config('app.url') }}">
-<span class="brand-name">DLP Friends</span>
-<span class="brand-tagline">{{ __('mail.brand.tagline') }}</span>
+<span class="brand-name">{{ __('common.brand.name') }}</span>
+<span class="brand-tagline">{{ __('common.mail.tagline') }}</span>
 </a>
 </div>
 
@@ -18,9 +18,9 @@
 
 <x-slot:footer>
 <x-mail::footer>
-{{ __('mail.brand.disclaimer') }}
+{{ __('common.mail.disclaimer') }}
 
-© {{ date('Y') }} DLP Friends
+{{ __('common.mail.copyright', ['year' => date('Y')]) }}
 </x-mail::footer>
 </x-slot:footer>
 </x-mail::layout>
