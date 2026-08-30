@@ -1,6 +1,16 @@
 export type Locale = 'fr' | 'en';
 
+export type TranslationTree = {
+    [key: string]: string | TranslationTree;
+};
+
 export type TranslationMessages = {
+    common: TranslationTree;
+    account: TranslationTree;
+    profile: TranslationTree;
+    discovery: TranslationTree;
+    conversations: TranslationTree;
+    administration: TranslationTree;
     locale: {
         label: string;
         fr: string;

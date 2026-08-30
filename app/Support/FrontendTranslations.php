@@ -25,6 +25,12 @@ final class FrontendTranslations
         unset($onboarding['demo_profiles']);
 
         return [
+            'common' => trans('common'),
+            'account' => trans('account'),
+            'profile' => trans('profile'),
+            'discovery' => trans('discovery'),
+            'conversations' => trans('conversations'),
+            'administration' => trans('administration'),
             'locale' => [
                 'label' => __('frontend.locale.label'),
                 'fr' => __('frontend.locale.fr'),
