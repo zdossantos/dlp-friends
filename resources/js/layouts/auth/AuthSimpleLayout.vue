@@ -37,7 +37,7 @@ defineProps<{
                             <AppLogoIcon class="size-8 fill-current" />
                         </div>
                         <span
-                            class="font-accent text-lg font-semibold tracking-tight"
+                            class="font-accent text-lg font-bold tracking-tight"
                             >DLP Friends</span
                         >
                     </Link>

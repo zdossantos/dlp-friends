@@ -7,8 +7,8 @@ et à la licence de leurs auteurs respectifs.
 
 - Instrument Sans : Copyright 2022 The Instrument Sans Project Authors
   (https://github.com/Instrument/instrument-sans)
-- Fraunces : Copyright 2018 The Fraunces Project Authors
-  (https://github.com/undercasetype/Fraunces)
+- Cinzel Decorative : Copyright 2012 Natanael Gama
+  (https://github.com/NDISCOVER/Cinzel)
 
 ## SIL Open Font License 1.1
 

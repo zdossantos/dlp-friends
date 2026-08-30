@@ -56,11 +56,19 @@ test('the landing header stacks on a mobile viewport', function () {
         );
 });
 
-test('the landing page reserves the accent typeface for editorial content', function () {
+test('the landing page uses a bold decorative typeface for editorial content', function () {
     visit('/', ['locale' => 'fr-FR'])
         ->assertScript(
-            "getComputedStyle(document.querySelector('main h1')).fontFamily.includes('Fraunces')",
+            "getComputedStyle(document.querySelector('main h1')).fontFamily.includes('Cinzel Decorative')",
             true,
+        )
+        ->assertScript(
+            "getComputedStyle(document.querySelector('header .font-accent')).fontWeight",
+            '700',
+        )
+        ->assertScript(
+            "getComputedStyle(document.querySelector('main h1')).fontWeight",
+            '700',
         )
         ->assertScript(
             "getComputedStyle(document.querySelector('main a')).fontFamily.includes('Instrument Sans')",

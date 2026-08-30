@@ -53,9 +53,7 @@ const benefits = [
                             aria-hidden="true"
                         />
                     </span>
-                    <span
-                        class="font-accent text-lg font-semibold tracking-tight"
-                    >
+                    <span class="font-accent text-lg font-bold tracking-tight">
                         DLP Friends
                     </span>
                 </div>
@@ -75,7 +73,7 @@ const benefits = [
                         Entre fans, simplement
                     </p>
                     <h1
-                        class="font-accent text-4xl font-semibold tracking-tight text-balance sm:text-5xl lg:text-6xl"
+                        class="font-accent text-4xl font-bold tracking-tight text-balance sm:text-5xl lg:text-6xl"
                     >
                         Des rencontres strictement amicales entre fans adultes
                     </h1>

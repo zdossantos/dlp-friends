@@ -17,8 +17,8 @@ export default defineConfig({
                     preload: [{ weight: 400, style: 'normal' }],
                     fallbacks: ['ui-sans-serif', 'system-ui', 'sans-serif'],
                 }),
-                bunny('Fraunces', {
-                    weights: [600],
+                bunny('Cinzel Decorative', {
+                    weights: [700],
                     preload: false,
                     fallbacks: ['ui-serif', 'Georgia', 'serif'],
                     optimizedFallbacks: false,

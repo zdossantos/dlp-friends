@@ -9,7 +9,7 @@
 
 @theme inline {
     --font-sans: var(--font-instrument-sans);
-    --font-accent: var(--font-fraunces);
+    --font-accent: var(--font-cinzel-decorative);
 
     --radius-lg: var(--radius);
     --radius-md: calc(var(--radius) - 2px);
