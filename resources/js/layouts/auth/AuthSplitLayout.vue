@@ -22,7 +22,7 @@ defineProps<{
             />
             <Link
                 :href="home()"
-                class="relative z-20 flex items-center text-lg font-medium"
+                class="relative z-20 flex items-center font-accent text-lg font-semibold"
             >
                 <AppLogoIcon class="mr-2 size-8 fill-current text-white" />
                 DLP Friends

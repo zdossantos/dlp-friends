@@ -55,3 +55,15 @@ test('the landing header stacks on a mobile viewport', function () {
             'column',
         );
 });
+
+test('the landing page reserves the accent typeface for editorial content', function () {
+    visit('/', ['locale' => 'fr-FR'])
+        ->assertScript(
+            "getComputedStyle(document.querySelector('main h1')).fontFamily.includes('Fraunces')",
+            true,
+        )
+        ->assertScript(
+            "getComputedStyle(document.querySelector('main a')).fontFamily.includes('Instrument Sans')",
+            true,
+        );
+});

@@ -50,10 +50,57 @@ réellement spécifique.
 
 ## Typographie, espacement, rayons et ombres
 
-- La police principale est **Instrument Sans**, avec repli vers les polices
-  système sans serif.
-- Les titres emploient un poids semi-gras et un interlettrage resserré ; le
-  texte courant privilégie une hauteur de ligne confortable.
+### Choix typographique
+
+La combinaison retenue est **Instrument Sans** pour la lecture et
+**Fraunces** pour une accentuation éditoriale rare. Les deux familles sont
+distribuées sous SIL Open Font License 1.1, qui autorise leur intégration et
+leur redistribution avec l’application. Leurs sous-ensembles latins couvrent
+les caractères, accents, apostrophes et ponctuations nécessaires au français
+et à l’anglais.
+
+| Combinaison évaluée | Qualités | Limites | Décision |
+| --- | --- | --- | --- |
+| Instrument Sans seule | Très lisible, sobre et économique | Identité peu différenciée sur les moments de marque | Écartée : elle ne répond pas au besoin d’accentuation |
+| Instrument Sans + Bricolage Grotesque | Chaleureuse, expressive et cohérente avec une interface contemporaine | Deux sans serif créent une distinction moins immédiate et Bricolage est plus agitée dans les grands titres | Écartée au profit d’un contraste plus calme |
+| Instrument Sans + Fraunces | Lecture fonctionnelle stable, contraste clair et serif douce adaptée aux grands titres | Fraunces perd en lisibilité dans les petites tailles et les contenus denses | Retenue avec un périmètre strict |
+
+Références de licence et de couverture :
+[Instrument Sans](https://github.com/Instrument/instrument-sans),
+[Fraunces](https://github.com/undercasetype/Fraunces) et
+[Bricolage Grotesque](https://github.com/ateliertriay/bricolage). Les notices
+et le texte OFL des deux familles distribuées sont conservés dans
+[`THIRD_PARTY_FONTS.md`](../THIRD_PARTY_FONTS.md).
+
+### Tokens et règles d’usage
+
+| Token | Famille et replis | Graisses chargées | Usage |
+| --- | --- | --- | --- |
+| `font-sans` | Instrument Sans, repli sans serif métriquement ajusté, polices système | 400, 500, 600 | Corps, formulaires, navigation, messages, tableaux et majorité des titres |
+| `font-accent` | Fraunces, repli serif métriquement ajusté, Georgia, serif | 600 | Nom de marque dans les signatures visuelles et grand titre éditorial de l’accueil |
+
+- Le texte courant part de `1rem` avec une hauteur de ligne de `1.5`; les
+  petites annotations restent au minimum à `0.75rem` avec une hauteur de ligne
+  suffisante pour le zoom et le repli.
+- Les titres fonctionnels utilisent Instrument Sans en 600 avec
+  l’interlettrage resserré déjà établi. Le grand titre d’accueil utilise
+  Fraunces 600 de `2.25rem` à `3.75rem`, avec la hauteur de ligne Tailwind
+  correspondante et sans italique.
+- Fraunces est interdite dans les paragraphes, petites tailles, formulaires,
+  contrôles, erreurs, données, tableaux, navigation et conversations. La
+  typographie ne porte jamais seule le sens ou l’état d’un contrôle.
+- Les fichiers sont récupérés au build puis servis avec les assets de
+  l’application, sans requête vers un fournisseur de polices en production.
+  Seuls les poids et le sous-ensemble latin utilisés sont produits ; seul
+  Instrument Sans 400, critique pour le texte courant, est préchargé. Les
+  autres WOFF2 sont chargés à l’usage et le WOFF reste disponible pour
+  compatibilité. `font-display: swap` garantit un texte visible. Le repli
+  d’Instrument Sans est métriquement ajusté ; Fraunces conserve volontairement
+  un repli serif (`ui-serif`, Georgia) pour préserver le caractère éditorial en
+  cas d’indisponibilité.
+
+### Espacement, rayons et ombres
+
 - L’espacement suit l’échelle Tailwind existante. Les interfaces rapprochent
   les éléments d’un même groupe et séparent clairement les groupes distincts.
 - Le rayon sémantique de base vaut `0.875rem`; `sm`, `md` et `lg` en dérivent.
