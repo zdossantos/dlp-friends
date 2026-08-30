@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Form, Head } from '@inertiajs/vue3';
+import InputError from '@/components/InputError.vue';
 import TextLink from '@/components/TextLink.vue';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
@@ -34,8 +35,10 @@ defineProps<{
     <Form
         v-bind="send.form()"
         class="space-y-6 text-center"
-        v-slot="{ processing }"
+        v-slot="{ errors, processing }"
     >
+        <InputError :message="errors.email" />
+
         <Button :disabled="processing" variant="secondary">
             <Spinner v-if="processing" />
             Renvoyer l’e-mail de vérification

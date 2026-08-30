@@ -1,6 +1,11 @@
 <?php
 
 return [
+    'errors' => [
+        'delivery_failed' => 'The email could not be sent. Please try again in a few moments.',
+        'rate_limited' => 'Too many requests have been made. Please wait one minute before trying again.',
+    ],
+
     'brand' => [
         'tagline' => 'Friendly connections for adult Disneyland Paris fans.',
         'disclaimer' => 'DLP Friends is an independent service and not affiliated with Disney or Disneyland Paris.',

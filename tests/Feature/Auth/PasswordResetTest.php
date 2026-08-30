@@ -7,6 +7,7 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
 use Laravel\Fortify\Features;
+use Symfony\Component\Mailer\Exception\TransportException;
 use Tests\TestCase;
 
 class PasswordResetTest extends TestCase
@@ -36,6 +37,56 @@ class PasswordResetTest extends TestCase
         $this->post(route('password.email'), ['email' => $user->email]);
 
         Mail::assertSent(ResetPasswordMail::class, $user->email);
+    }
+
+    public function test_password_reset_emails_are_limited_per_address(): void
+    {
+        Mail::fake();
+        config()->set('auth.passwords.users.throttle', 0);
+
+        $user = User::factory()->create();
+
+        foreach (range(1, 3) as $_) {
+            $this->post(route('password.email'), ['email' => $user->email])
+                ->assertSessionHasNoErrors();
+        }
+
+        $this->post(route('password.email'), ['email' => $user->email])
+            ->assertSessionHasErrors([
+                'email' => 'Trop de demandes ont été effectuées. Veuillez patienter une minute avant de réessayer.',
+            ]);
+
+        Mail::assertSentCount(3);
+    }
+
+    public function test_password_reset_emails_are_limited_per_ip_across_addresses(): void
+    {
+        Mail::fake();
+        config()->set('auth.passwords.users.throttle', 0);
+
+        $users = User::factory()->count(11)->create();
+
+        foreach ($users->take(10) as $user) {
+            $this->post(route('password.email'), ['email' => $user->email])
+                ->assertSessionHasNoErrors();
+        }
+
+        $this->post(route('password.email'), ['email' => $users->last()->email])
+            ->assertSessionHasErrors('email');
+
+        Mail::assertSentCount(10);
+    }
+
+    public function test_password_reset_mail_transport_errors_are_returned_safely(): void
+    {
+        Mail::shouldReceive('to')->once()->andThrow(new TransportException('SMTP credentials exposed here'));
+
+        $user = User::factory()->create();
+
+        $this->post(route('password.email'), ['email' => $user->email])
+            ->assertSessionHasErrors([
+                'email' => 'L’e-mail n’a pas pu être envoyé. Veuillez réessayer dans quelques instants.',
+            ]);
     }
 
     public function test_password_reset_link_confirmation_is_translated_in_french(): void

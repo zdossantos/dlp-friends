@@ -11,7 +11,9 @@ use App\Http\Responses\TwoFactorLoginResponse;
 use App\Http\Responses\VerifyEmailResponse;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Middleware\ThrottleRequests;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Password;
@@ -46,6 +48,7 @@ class FortifyServiceProvider extends ServiceProvider
         $this->configureActions();
         $this->configureViews();
         $this->configureRateLimiting();
+        $this->app->booted(fn () => $this->throttleMailRoutes());
     }
 
     /**
@@ -95,6 +98,23 @@ class FortifyServiceProvider extends ServiceProvider
      */
     private function configureRateLimiting(): void
     {
+        RateLimiter::for('mail', function (Request $request) {
+            $recipient = $request->user()?->getAuthIdentifier()
+                ?? Str::lower((string) $request->input(Fortify::email()));
+            $response = fn () => back()
+                ->withInput($request->only(Fortify::email()))
+                ->withErrors([Fortify::email() => __('mail.errors.rate_limited')]);
+
+            return [
+                Limit::perMinute(3)
+                    ->by('mail-recipient:'.$recipient)
+                    ->response($response),
+                Limit::perMinute(10)
+                    ->by('mail-ip:'.$request->ip())
+                    ->response($response),
+            ];
+        });
+
         RateLimiter::for('two-factor', function (Request $request) {
             return Limit::perMinute(5)->by($request->session()->get('login.id'));
         });
@@ -110,5 +130,16 @@ class FortifyServiceProvider extends ServiceProvider
                 ($request->input('credential.id') ?: $request->session()->getId()).'|'.$request->ip(),
             );
         });
+    }
+
+    private function throttleMailRoutes(): void
+    {
+        Route::getRoutes()->refreshNameLookups();
+
+        foreach (['password.email', 'verification.send'] as $routeName) {
+            Route::getRoutes()
+                ->getByName($routeName)
+                ?->middleware(ThrottleRequests::using('mail'));
+        }
     }
 }

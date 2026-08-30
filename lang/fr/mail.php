@@ -1,6 +1,11 @@
 <?php
 
 return [
+    'errors' => [
+        'delivery_failed' => 'L’e-mail n’a pas pu être envoyé. Veuillez réessayer dans quelques instants.',
+        'rate_limited' => 'Trop de demandes ont été effectuées. Veuillez patienter une minute avant de réessayer.',
+    ],
+
     'brand' => [
         'tagline' => 'Des rencontres amicales entre fans majeurs de Disneyland Paris.',
         'disclaimer' => 'DLP Friends est un service indépendant et non affilié à Disney ou Disneyland Paris.',
