@@ -7,7 +7,7 @@ test('the landing page presents the adult friendship service to guests', functio
         ->assertSee('DLP Friends')
         ->assertPresent('[data-test="app-logo-icon"]')
         ->assertAttribute('[data-test="app-logo-icon"]', 'aria-hidden', 'true')
-        ->assertSee('Des rencontres strictement amicales entre fans adultes')
+        ->assertSee('Des amitiés entre fans adultes, avec un peu de magie')
         ->assertSeeLink('Créer mon compte')
         ->assertSeeLink('Se connecter')
         ->assertNoJavaScriptErrors();
@@ -23,7 +23,7 @@ test('the landing page offers the member space when signed in', function () {
 
 test('the registration form collects account data without a public name', function () {
     visit('/register', ['locale' => 'fr-FR'])
-        ->assertSee('Vous créerez ensuite votre profil, puis un tutoriel vous expliquera comment rencontrer d’autres membres.')
+        ->assertSee('Tu créeras ensuite ton profil, puis un tutoriel te montrera comment découvrir d’autres membres.')
         ->assertPresent('input[name="email"]')
         ->assertPresent('input[name="birth_date"]')
         ->assertPresent('input[name="password"]')

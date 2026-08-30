@@ -18,14 +18,14 @@ const { t } = useTranslations();
 
 defineOptions({
     layout: {
-        titleKey: 'registration.title',
-        descriptionKey: 'registration.description',
+        titleKey: 'account.registration.title',
+        descriptionKey: 'account.registration.description',
     },
 });
 </script>
 
 <template>
-    <Head :title="t('registration.title')" />
+    <Head :title="t('account.registration.title')" />
 
     <Form
         v-bind="store.form()"
@@ -35,7 +35,7 @@ defineOptions({
     >
         <div class="grid gap-6">
             <div class="grid gap-2">
-                <Label for="email">{{ t('registration.email') }}</Label>
+                <Label for="email">{{ t('account.registration.email') }}</Label>
                 <Input
                     id="email"
                     type="email"
@@ -43,14 +43,14 @@ defineOptions({
                     :tabindex="1"
                     autocomplete="email"
                     name="email"
-                    :placeholder="t('registration.email_placeholder')"
+                    :placeholder="t('account.registration.email_placeholder')"
                 />
                 <InputError :message="errors.email" />
             </div>
 
             <div class="grid gap-2">
                 <Label for="birth_date">{{
-                    t('registration.birth_date')
+                    t('account.registration.birth_date')
                 }}</Label>
                 <Input
                     id="birth_date"
@@ -64,14 +64,14 @@ defineOptions({
             </div>
 
             <div class="grid gap-2">
-                <Label for="password">{{ t('registration.password') }}</Label>
+                <Label for="password">{{ t('account.registration.password') }}</Label>
                 <PasswordInput
                     id="password"
                     required
                     :tabindex="3"
                     autocomplete="new-password"
                     name="password"
-                    :placeholder="t('registration.password')"
+                    :placeholder="t('account.registration.password')"
                     :passwordrules="passwordRules"
                 />
                 <InputError :message="errors.password" />
@@ -79,7 +79,7 @@ defineOptions({
 
             <div class="grid gap-2">
                 <Label for="password_confirmation">{{
-                    t('registration.password_confirmation')
+                    t('account.registration.password_confirmation')
                 }}</Label>
                 <PasswordInput
                     id="password_confirmation"
@@ -87,7 +87,7 @@ defineOptions({
                     :tabindex="4"
                     autocomplete="new-password"
                     name="password_confirmation"
-                    :placeholder="t('registration.password_confirmation')"
+                    :placeholder="t('account.registration.password_confirmation')"
                     :passwordrules="passwordRules"
                 />
                 <InputError :message="errors.password_confirmation" />
@@ -101,17 +101,17 @@ defineOptions({
                 data-test="register-user-button"
             >
                 <Spinner v-if="processing" />
-                {{ t('registration.submit') }}
+                {{ t('account.registration.submit') }}
             </Button>
         </div>
 
         <div class="text-center text-sm text-muted-foreground">
-            {{ t('registration.existing_account') }}
+            {{ t('account.registration.existing_account') }}
             <TextLink
                 :href="login()"
                 class="underline underline-offset-4"
                 :tabindex="6"
-                >{{ t('registration.login') }}</TextLink
+                >{{ t('account.registration.login') }}</TextLink
             >
         </div>
     </Form>
