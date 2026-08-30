@@ -26,10 +26,13 @@ test('the verification email renders the french content and accessible fallback 
     ] as $text) {
         $mail->assertSeeInText($text);
     }
+
+    expect(substr_count($mail->render(), 'href="'.e($url).'"'))->toBeGreaterThanOrEqual(2);
 });
 
 test('the verification email renders the english content', function () {
-    $mail = (new VerifyEmailMail('https://dlp-friends.test/email/verify/42/signature'))->locale('en');
+    $url = 'https://dlp-friends.test/email/verify/42/signature';
+    $mail = (new VerifyEmailMail($url))->locale('en');
 
     $mail->assertHasSubject('Verify your email address');
     foreach ([
@@ -40,6 +43,12 @@ test('the verification email renders the english content', function () {
     ] as $text) {
         $mail->assertSeeInHtml($text);
     }
+
+    foreach (['Verify my email address', 'Copy and paste this link into your browser', $url] as $text) {
+        $mail->assertSeeInText($text);
+    }
+
+    expect(substr_count($mail->render(), 'href="'.e($url).'"'))->toBeGreaterThanOrEqual(2);
 });
 
 test('the password reset email renders the french content and expiry', function () {
@@ -65,13 +74,16 @@ test('the password reset email renders the french content and expiry', function 
     ] as $text) {
         $mail->assertSeeInText($text);
     }
+
+    expect(substr_count($mail->render(), 'href="'.e($url).'"'))->toBeGreaterThanOrEqual(2);
 });
 
 test('the password reset email renders the english content and expiry', function () {
     config()->set('auth.passwords.users.expire', 60);
+    $url = 'https://dlp-friends.test/reset-password/example-token?email=member%40example.test';
     $mail = (new ResetPasswordMail(
         'example-token',
-        'https://dlp-friends.test/reset-password/example-token?email=member%40example.test',
+        $url,
     ))->locale('en');
 
     $mail->assertHasSubject('Reset your password');
@@ -83,4 +95,10 @@ test('the password reset email renders the english content and expiry', function
     ] as $text) {
         $mail->assertSeeInHtml($text);
     }
+
+    foreach (['Reset my password', 'This link will expire in 60 minutes.', $url] as $text) {
+        $mail->assertSeeInText($text);
+    }
+
+    expect(substr_count($mail->render(), 'href="'.e($url).'"'))->toBeGreaterThanOrEqual(2);
 });
