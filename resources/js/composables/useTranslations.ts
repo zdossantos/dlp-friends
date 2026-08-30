@@ -15,16 +15,15 @@ export const translationFor = (
     messages: TranslationMessages,
     key: TranslationKey,
 ): string => {
-    const translation = key.split('.').reduce<string | TranslationTree>(
-        (current, segment) => {
+    const translation = key
+        .split('.')
+        .reduce<string | TranslationTree>((current, segment) => {
             if (typeof current === 'string' || current[segment] === undefined) {
                 throw new Error(`Missing translation: ${key}`);
             }
 
             return current[segment];
-        },
-        messages,
-    );
+        }, messages);
 
     if (typeof translation !== 'string') {
         throw new Error(`Translation is not a string: ${key}`);

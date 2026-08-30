@@ -64,7 +64,9 @@ defineOptions({
             </div>
 
             <div class="grid gap-2">
-                <Label for="password">{{ t('account.registration.password') }}</Label>
+                <Label for="password">{{
+                    t('account.registration.password')
+                }}</Label>
                 <PasswordInput
                     id="password"
                     required
@@ -87,7 +89,9 @@ defineOptions({
                     :tabindex="4"
                     autocomplete="new-password"
                     name="password_confirmation"
-                    :placeholder="t('account.registration.password_confirmation')"
+                    :placeholder="
+                        t('account.registration.password_confirmation')
+                    "
                     :passwordrules="passwordRules"
                 />
                 <InputError :message="errors.password_confirmation" />

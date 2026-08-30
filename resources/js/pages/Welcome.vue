@@ -21,7 +21,8 @@ const benefits = [
     },
     {
         title: 'common.welcome.benefits.conversations.title' as const,
-        description: 'common.welcome.benefits.conversations.description' as const,
+        description:
+            'common.welcome.benefits.conversations.description' as const,
         icon: MessageCircle,
     },
 ];

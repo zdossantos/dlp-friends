@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Form, Head } from '@inertiajs/vue3';
+import { Form, Head, setLayoutProps } from '@inertiajs/vue3';
 import SecurityController from '@/actions/App/Http/Controllers/Settings/SecurityController';
 import Heading from '@/components/Heading.vue';
 import InputError from '@/components/InputError.vue';
@@ -10,6 +10,7 @@ import ManageTwoFactor from '@/components/ManageTwoFactor.vue';
 import PasswordInput from '@/components/PasswordInput.vue';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
+import { useTranslations } from '@/composables/useTranslations';
 import { edit } from '@/routes/security';
 
 type Props = {
@@ -19,28 +20,22 @@ type Props = {
 
 const props = defineProps<Props>();
 
-defineOptions({
-    layout: {
-        breadcrumbs: [
-            {
-                title: 'Sécurité',
-                href: edit(),
-            },
-        ],
-    },
+const { t } = useTranslations();
+setLayoutProps({
+    breadcrumbs: [{ title: t('account.settings.security'), href: edit() }],
 });
 </script>
 
 <template>
-    <Head title="Sécurité" />
+    <Head :title="t('account.settings.security')" />
 
-    <h1 class="sr-only">Sécurité</h1>
+    <h1 class="sr-only">{{ t('account.settings.security') }}</h1>
 
     <div class="space-y-6">
         <Heading
             variant="small"
-            title="Modifier le mot de passe"
-            description="Utilisez un mot de passe long et unique pour protéger votre compte."
+            :title="t('account.settings.password_title')"
+            :description="t('account.settings.password_description')"
         />
 
         <Form
@@ -58,25 +53,29 @@ defineOptions({
             v-slot="{ errors, processing }"
         >
             <div class="grid gap-2">
-                <Label for="current_password">Mot de passe actuel</Label>
+                <Label for="current_password">{{
+                    t('account.fields.current_password')
+                }}</Label>
                 <PasswordInput
                     id="current_password"
                     name="current_password"
                     class="mt-1 block w-full"
                     autocomplete="current-password"
-                    placeholder="Mot de passe actuel"
+                    :placeholder="t('account.fields.current_password')"
                 />
                 <InputError :message="errors.current_password" />
             </div>
 
             <div class="grid gap-2">
-                <Label for="password">Nouveau mot de passe</Label>
+                <Label for="password">{{
+                    t('account.fields.new_password')
+                }}</Label>
                 <PasswordInput
                     id="password"
                     name="password"
                     class="mt-1 block w-full"
                     autocomplete="new-password"
-                    placeholder="Nouveau mot de passe"
+                    :placeholder="t('account.fields.new_password')"
                     :passwordrules="props.passwordRules"
                 />
                 <InputError :message="errors.password" />
@@ -84,14 +83,14 @@ defineOptions({
 
             <div class="grid gap-2">
                 <Label for="password_confirmation">
-                    Confirmer le mot de passe
+                    {{ t('account.fields.password_confirmation') }}
                 </Label>
                 <PasswordInput
                     id="password_confirmation"
                     name="password_confirmation"
                     class="mt-1 block w-full"
                     autocomplete="new-password"
-                    placeholder="Confirmer le mot de passe"
+                    :placeholder="t('account.fields.password_confirmation')"
                     :passwordrules="props.passwordRules"
                 />
                 <InputError :message="errors.password_confirmation" />
@@ -102,7 +101,7 @@ defineOptions({
                     :disabled="processing"
                     data-test="update-password-button"
                 >
-                    Enregistrer
+                    {{ t('account.settings.save') }}
                 </Button>
             </div>
         </Form>

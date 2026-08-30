@@ -10,28 +10,29 @@ import PasswordInput from '@/components/PasswordInput.vue';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
+import { useTranslations } from '@/composables/useTranslations';
 import { store } from '@/routes/password/confirm';
 
 defineOptions({
     layout: {
-        title: 'Confirmez votre mot de passe',
-        description:
-            'Cette zone est sécurisée. Confirmez votre mot de passe pour continuer.',
+        titleKey: 'account.confirm_password.title',
+        descriptionKey: 'account.confirm_password.description',
     },
 });
+const { t } = useTranslations();
 </script>
 
 <template>
-    <Head title="Confirmation du mot de passe" />
+    <Head :title="t('account.confirm_password.page_title')" />
 
     <PasskeyVerify
         :routes="{
             options: confirmOptions(),
             submit: confirmStore(),
         }"
-        label="Confirmer avec une clé d’accès"
-        loading-label="Confirmation…"
-        separator="Ou confirmer avec le mot de passe"
+        :label="t('account.confirm_password.passkey')"
+        :loading-label="t('account.confirm_password.loading')"
+        :separator="t('account.confirm_password.separator')"
     />
 
     <Form
@@ -41,7 +42,7 @@ defineOptions({
     >
         <div class="space-y-6">
             <div class="grid gap-2">
-                <Label for="password">Mot de passe</Label>
+                <Label for="password">{{ t('account.fields.password') }}</Label>
                 <PasswordInput
                     id="password"
                     name="password"
@@ -61,7 +62,7 @@ defineOptions({
                     data-test="confirm-password-button"
                 >
                     <Spinner v-if="processing" />
-                    Confirmer
+                    {{ t('account.confirm_password.submit') }}
                 </Button>
             </div>
         </div>

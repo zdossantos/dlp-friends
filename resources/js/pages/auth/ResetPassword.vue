@@ -7,12 +7,13 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
+import { useTranslations } from '@/composables/useTranslations';
 import { update } from '@/routes/password';
 
 defineOptions({
     layout: {
-        title: 'Réinitialiser le mot de passe',
-        description: 'Choisissez ci-dessous votre nouveau mot de passe.',
+        titleKey: 'account.reset_password.title',
+        descriptionKey: 'account.reset_password.description',
     },
 });
 
@@ -23,10 +24,11 @@ const props = defineProps<{
 }>();
 
 const inputEmail = ref(props.email);
+const { t } = useTranslations();
 </script>
 
 <template>
-    <Head title="Réinitialiser le mot de passe" />
+    <Head :title="t('account.reset_password.title')" />
 
     <Form
         v-bind="update.form()"
@@ -36,7 +38,7 @@ const inputEmail = ref(props.email);
     >
         <div class="grid gap-6">
             <div class="grid gap-2">
-                <Label for="email">Adresse e-mail</Label>
+                <Label for="email">{{ t('account.fields.email') }}</Label>
                 <Input
                     id="email"
                     type="email"
@@ -50,14 +52,16 @@ const inputEmail = ref(props.email);
             </div>
 
             <div class="grid gap-2">
-                <Label for="password">Nouveau mot de passe</Label>
+                <Label for="password">{{
+                    t('account.fields.new_password')
+                }}</Label>
                 <PasswordInput
                     id="password"
                     name="password"
                     autocomplete="new-password"
                     class="mt-1 block w-full"
                     autofocus
-                    placeholder="Nouveau mot de passe"
+                    :placeholder="t('account.fields.new_password')"
                     :passwordrules="passwordRules"
                 />
                 <InputError :message="errors.password" />
@@ -65,14 +69,14 @@ const inputEmail = ref(props.email);
 
             <div class="grid gap-2">
                 <Label for="password_confirmation">
-                    Confirmer le mot de passe
+                    {{ t('account.fields.password_confirmation') }}
                 </Label>
                 <PasswordInput
                     id="password_confirmation"
                     name="password_confirmation"
                     autocomplete="new-password"
                     class="mt-1 block w-full"
-                    placeholder="Confirmer le mot de passe"
+                    :placeholder="t('account.fields.password_confirmation')"
                     :passwordrules="passwordRules"
                 />
                 <InputError :message="errors.password_confirmation" />
@@ -85,7 +89,7 @@ const inputEmail = ref(props.email);
                 data-test="reset-password-button"
             >
                 <Spinner v-if="processing" />
-                Réinitialiser le mot de passe
+                {{ t('account.reset_password.submit') }}
             </Button>
         </div>
     </Form>
