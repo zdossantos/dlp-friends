@@ -14,6 +14,14 @@ export default defineConfig({
             fonts: [
                 bunny('Instrument Sans', {
                     weights: [400, 500, 600],
+                    preload: [{ weight: 400, style: 'normal' }],
+                    fallbacks: ['ui-sans-serif', 'system-ui', 'sans-serif'],
+                }),
+                bunny('Fraunces', {
+                    weights: [600],
+                    preload: false,
+                    fallbacks: ['ui-serif', 'Georgia', 'serif'],
+                    optimizedFallbacks: false,
                 }),
             ],
         }),
