@@ -4,6 +4,8 @@ namespace App\Models;
 
 use App\Enums\RoleName;
 use App\Enums\UserStatus;
+use App\Mail\ResetPasswordMail;
+use App\Mail\VerifyEmailMail;
 use Database\Factories\UserFactory;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Contracts\Translation\HasLocalePreference;
@@ -19,6 +21,8 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\URL;
 use Laravel\Fortify\Contracts\PasskeyUser;
 use Laravel\Fortify\PasskeyAuthenticatable;
 use Laravel\Fortify\TwoFactorAuthenticatable;
@@ -142,6 +146,36 @@ class User extends Authenticatable implements HasLocalePreference, MustVerifyEma
     public function preferredLocale(): string
     {
         return $this->locale ?? config('app.fallback_locale', 'fr');
+    }
+
+    public function sendEmailVerificationNotification(): void
+    {
+        $url = URL::temporarySignedRoute(
+            'verification.verify',
+            now()->addMinutes((int) config('auth.verification.expire', 60)),
+            ['id' => $this->getKey(), 'hash' => sha1($this->getEmailForVerification())],
+        );
+
+        Mail::to($this->email)->send(
+            (new VerifyEmailMail($url))->locale($this->mailLocale()),
+        );
+    }
+
+    public function sendPasswordResetNotification(#[\SensitiveParameter] $token): void
+    {
+        $url = route('password.reset', [
+            'token' => $token,
+            'email' => $this->getEmailForPasswordReset(),
+        ]);
+
+        Mail::to($this->email)->send(
+            (new ResetPasswordMail($token, $url))->locale($this->mailLocale()),
+        );
+    }
+
+    private function mailLocale(): string
+    {
+        return $this->locale ?? app()->getLocale();
     }
 
     /**
