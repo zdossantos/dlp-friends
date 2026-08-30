@@ -13,6 +13,10 @@ return [
         'conversations' => 'Échanges',
         'back' => 'Retour',
     ],
+    'mail' => [
+        'delivery_failed' => 'L’e-mail n’a pas pu être envoyé. Veuillez réessayer dans quelques instants.',
+        'rate_limited' => 'Trop de demandes ont été effectuées. Veuillez patienter une minute avant de réessayer.',
+    ],
     'onboarding' => [
         'page_title' => 'Prise en main',
         'initial_message' => 'Bonjour ! Quel est ton endroit préféré dans le parc ?',

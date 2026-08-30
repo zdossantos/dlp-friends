@@ -13,6 +13,7 @@ export type TranslationMessages = {
         conversations: string;
         back: string;
     };
+    mail: Record<string, string>;
     onboarding: Record<string, string>;
     admin_onboarding: Record<string, string>;
     registration: Record<string, string>;
