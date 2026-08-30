@@ -4,6 +4,7 @@ import { computed, onBeforeUnmount, ref, watch } from 'vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { useTranslations } from '@/composables/useTranslations';
 import type {
     DiscoveryCardProfile,
     SwipeDecision,
@@ -28,12 +29,13 @@ const props = withDefaults(
 );
 
 const emit = defineEmits<{ like: []; pass: []; open: [] }>();
+const { t } = useTranslations();
 
 const visitFrequencyLabels: Record<VisitFrequency, string> = {
-    rarely: 'Rarement',
-    sometimes: 'De temps en temps',
-    often: 'Souvent',
-    very_often: 'Très souvent',
+    rarely: t('discovery.card.frequency_rarely'),
+    sometimes: t('discovery.card.frequency_sometimes'),
+    often: t('discovery.card.frequency_often'),
+    very_often: t('discovery.card.frequency_very_often'),
 };
 
 const pointerStart = ref<{
@@ -63,7 +65,7 @@ const cardStyle = computed(() => {
 const visitFrequencyLabel = computed(() => {
     return props.profile.visitFrequency
         ? visitFrequencyLabels[props.profile.visitFrequency]
-        : 'Fréquence non renseignée';
+        : t('discovery.card.frequency_unknown');
 });
 
 const avatarGradient = computed(() => ({
@@ -262,7 +264,9 @@ watch(
             class="flex min-h-0 w-full flex-1 touch-pan-y flex-col gap-0 overflow-hidden rounded-[2rem] p-0 shadow-xl shadow-primary/10 transition-[transform,opacity] ease-[cubic-bezier(0.22,1,0.36,1)] will-change-transform outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 motion-reduce:duration-0"
             :style="cardStyle"
             :tabindex="preview ? -1 : 0"
-            :aria-label="`Profil de découverte de ${profile.displayName}`"
+            :aria-label="
+                t('discovery.card.label', { name: profile.displayName })
+            "
             aria-describedby="swipe-instructions"
             @keydown.left.self.prevent.stop="decide('pass')"
             @keydown.right.self.prevent.stop="decide('like')"
@@ -293,7 +297,11 @@ watch(
                 />
                 <img
                     :src="profile.avatar.image_url"
-                    :alt="`Avatar ${profile.avatar.name}`"
+                    :alt="
+                        t('discovery.card.avatar_alt', {
+                            name: profile.avatar.name,
+                        })
+                    "
                     draggable="false"
                     :class="[
                         'pointer-events-none relative z-10 w-full object-contain drop-shadow-2xl select-none',
@@ -326,7 +334,7 @@ watch(
                         class="shrink-0 rounded-full px-3 py-1"
                         variant="secondary"
                     >
-                        {{ profile.age }} ans
+                        {{ t('discovery.card.age', { age: profile.age }) }}
                     </Badge>
                 </div>
                 <div
@@ -340,11 +348,14 @@ watch(
                             class="size-3.5 text-primary"
                             aria-hidden="true"
                         />
-                        {{ profile.commonInterestCount }}
                         {{
                             profile.commonInterestCount > 1
-                                ? 'intérêts en commun'
-                                : 'intérêt en commun'
+                                ? t('discovery.card.common_interests', {
+                                      count: profile.commonInterestCount,
+                                  })
+                                : t('discovery.card.common_interest', {
+                                      count: profile.commonInterestCount,
+                                  })
                         }}
                     </p>
                     <div class="flex flex-wrap gap-1">
@@ -377,7 +388,7 @@ watch(
                     data-test="discovery-bio"
                     class="mt-1.5 line-clamp-2 h-9 shrink-0 overflow-hidden text-sm leading-[1.125rem] text-muted-foreground"
                 >
-                    {{ profile.bio ?? 'Bio non renseignée.' }}
+                    {{ profile.bio ?? t('discovery.card.empty_bio') }}
                 </p>
 
                 <div
@@ -397,17 +408,13 @@ watch(
 
                 <p id="swipe-instructions" class="sr-only">
                     <template v-if="allowedDecision === 'pass'">
-                        Balayez vers la gauche ou utilisez la flèche gauche pour
-                        passer ce profil.
+                        {{ t('discovery.card.instructions_pass') }}
                     </template>
                     <template v-else-if="allowedDecision === 'like'">
-                        Balayez vers la droite ou utilisez la flèche droite pour
-                        aimer ce profil.
+                        {{ t('discovery.card.instructions_discover') }}
                     </template>
                     <template v-else>
-                        Balayez vers la gauche pour passer ce profil ou vers la
-                        droite pour l’aimer. Au clavier, utilisez les flèches
-                        gauche et droite.
+                        {{ t('discovery.card.instructions_both') }}
                     </template>
                 </p>
             </div>
@@ -417,7 +424,7 @@ watch(
             v-if="!preview"
             data-test="discovery-actions"
             class="flex h-[4.5rem] shrink-0 items-start justify-center gap-10"
-            aria-label="Actions du profil"
+            :aria-label="t('discovery.card.actions_label')"
             @pointerdown.stop
         >
             <div class="flex flex-col items-center gap-1">
@@ -426,18 +433,20 @@ watch(
                     variant="outline"
                     class="size-12 rounded-full border-2 bg-background shadow-sm focus-visible:ring-[3px]"
                     :disabled="locked || !canDecide('pass')"
-                    aria-label="Passer ce profil"
-                    title="Passer ce profil"
+                    :aria-label="t('discovery.actions.pass_profile')"
+                    :title="t('discovery.actions.pass_profile')"
                     @click="decide('pass')"
                 >
                     <X class="size-5" aria-hidden="true" />
-                    <span class="sr-only">Passer ce profil</span>
+                    <span class="sr-only">{{
+                        t('discovery.actions.pass_profile')
+                    }}</span>
                 </Button>
                 <span
                     class="text-xs font-medium text-muted-foreground"
                     aria-hidden="true"
                 >
-                    Passer
+                    {{ t('discovery.actions.pass') }}
                 </span>
             </div>
             <div class="flex flex-col items-center gap-1">
@@ -445,18 +454,20 @@ watch(
                     type="button"
                     class="size-12 rounded-full bg-gradient-to-br from-pink-500 to-primary shadow-sm focus-visible:ring-[3px]"
                     :disabled="locked || !canDecide('like')"
-                    aria-label="Aimer ce profil"
-                    title="Aimer ce profil"
+                    :aria-label="t('discovery.actions.discover_profile')"
+                    :title="t('discovery.actions.discover_profile')"
                     @click="decide('like')"
                 >
                     <Sparkles class="size-5" aria-hidden="true" />
-                    <span class="sr-only">Aimer ce profil</span>
+                    <span class="sr-only">{{
+                        t('discovery.actions.discover_profile')
+                    }}</span>
                 </Button>
                 <span
                     class="text-xs font-medium text-muted-foreground"
                     aria-hidden="true"
                 >
-                    Ça m’intéresse
+                    {{ t('discovery.actions.discover') }}
                 </span>
             </div>
         </div>

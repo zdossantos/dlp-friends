@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Head, Link, router } from '@inertiajs/vue3';
+import { Head, Link, router, setLayoutProps } from '@inertiajs/vue3';
 import { computed, ref, watch } from 'vue';
 import MatchDialog from '@/components/discovery/MatchDialog.vue';
 import SwipeCard from '@/components/discovery/SwipeCard.vue';
@@ -13,6 +13,7 @@ import {
     CardTitle,
 } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useTranslations } from '@/composables/useTranslations';
 import { show as showConversation } from '@/routes/conversations';
 import { swipe } from '@/routes/discovery';
 import { show as showProfile } from '@/routes/member-profile';
@@ -23,6 +24,12 @@ const props = defineProps<{
     suggestions?: DiscoveryProfile[];
     match: DiscoveryMatch | null;
 }>();
+const { t } = useTranslations();
+setLayoutProps({
+    breadcrumbs: [
+        { title: t('discovery.navigation'), href: { url: '/discover' } },
+    ],
+});
 
 const activeSuggestion = computed(() => props.suggestions?.[0]);
 
@@ -96,18 +103,16 @@ function submit(decision: SwipeDecision, targetUserId?: number): void {
                 errorMessage.value = String(
                     errors.decision ??
                         errors.target ??
-                        'Une erreur est survenue.',
+                        t('discovery.page.generic_error'),
                 );
             },
             onHttpException: () => {
-                errorMessage.value =
-                    'Le serveur n’a pas pu enregistrer cette décision.';
+                errorMessage.value = t('discovery.page.server_error');
 
                 return false;
             },
             onNetworkError: () => {
-                errorMessage.value =
-                    'La connexion a échoué avant l’enregistrement de cette décision.';
+                errorMessage.value = t('discovery.page.network_error');
 
                 return false;
             },
@@ -123,16 +128,10 @@ function retry(): void {
         submit(retryAttempt.value.decision, retryAttempt.value.targetUserId);
     }
 }
-
-defineOptions({
-    layout: {
-        breadcrumbs: [{ title: 'Découvrir', href: { url: '/discover' } }],
-    },
-});
 </script>
 
 <template>
-    <Head title="Découvrir" />
+    <Head :title="t('discovery.page.title')" />
 
     <main
         data-test="discovery-page"
@@ -140,10 +139,10 @@ defineOptions({
     >
         <section class="shrink-0 space-y-0.5">
             <h1 class="text-2xl font-semibold tracking-tight sm:text-3xl">
-                Découvrir
+                {{ t('discovery.page.title') }}
             </h1>
             <p class="text-sm leading-5 text-muted-foreground">
-                Des membres qui partagent vos intérêts.
+                {{ t('discovery.page.description') }}
             </p>
         </section>
 
@@ -153,17 +152,17 @@ defineOptions({
             aria-live="assertive"
             class="w-full"
         >
-            <AlertTitle>Décision non enregistrée</AlertTitle>
+            <AlertTitle>{{ t('discovery.page.error_title') }}</AlertTitle>
             <AlertDescription class="space-y-3">
                 <p>{{ errorMessage }}</p>
                 <Button
                     type="button"
                     variant="outline"
-                    aria-label="Réessayer"
+                    :aria-label="t('discovery.page.retry')"
                     :disabled="isSubmitting"
                     @click="retry"
                 >
-                    Réessayer
+                    {{ t('discovery.page.retry') }}
                 </Button>
             </AlertDescription>
         </Alert>
@@ -174,7 +173,7 @@ defineOptions({
             aria-busy="true"
         >
             <p class="text-sm font-medium text-muted-foreground">
-                Recherche de profils…
+                {{ t('discovery.page.loading') }}
             </p>
             <Skeleton class="h-12 w-32" />
             <Skeleton class="h-64 w-full" />
@@ -184,16 +183,17 @@ defineOptions({
         <Card v-else-if="suggestions.length === 0" class="w-full rounded-3xl">
             <CardHeader>
                 <CardTitle>
-                    Vous avez exploré tous les profils disponibles
+                    {{ t('discovery.page.empty_title') }}
                 </CardTitle>
                 <CardDescription>
-                    Revenez plus tard ou ajustez votre profil pour mieux
-                    représenter vos intérêts.
+                    {{ t('discovery.page.empty_description') }}
                 </CardDescription>
             </CardHeader>
             <CardContent>
                 <Button as-child variant="outline">
-                    <Link :href="showProfile()">Mon profil</Link>
+                    <Link :href="showProfile()">{{
+                        t('discovery.page.profile')
+                    }}</Link>
                 </Button>
             </CardContent>
         </Card>
@@ -201,7 +201,7 @@ defineOptions({
         <section
             v-else
             class="relative min-h-0 w-full flex-1 pb-3"
-            aria-label="Profils à découvrir"
+            :aria-label="t('discovery.page.profiles_label')"
         >
             <div
                 v-for="(profile, index) in suggestions"

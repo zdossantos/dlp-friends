@@ -28,7 +28,7 @@ test('discovery renders its deferred empty state and limits the stack to five pr
 
     visit('/discover')
         ->assertSee('Découvrir')
-        ->assertSee('Vous avez exploré tous les profils disponibles')
+        ->assertSee('Tu as exploré tous les profils disponibles')
         ->assertNoJavaScriptErrors();
 
     $candidates = User::factory()->withProfile()->count(6)->create();
@@ -102,7 +102,7 @@ test('discovery decisions are icon controls below the card with accessible touch
         ->on()->mobile()
         ->assertPresent('[data-test="discovery-actions"][aria-label="Actions du profil"]')
         ->assertPresent('[aria-label="Passer ce profil"] .sr-only')
-        ->assertPresent('[aria-label="Aimer ce profil"] .sr-only')
+        ->assertPresent('[aria-label="Découvrir ce profil"] .sr-only')
         ->assertScript(
             "document.querySelector('[data-test=discovery-actions]').getBoundingClientRect().top >= document.querySelector('[data-test=discovery-card]').getBoundingClientRect().bottom",
             true,
@@ -185,7 +185,7 @@ test('the top discovery card accepts keyboard and accessible decisions', functio
     $page = visit('/discover')
         ->on()->mobile()
         ->assertPresent('[aria-label="Passer ce profil"]')
-        ->assertPresent('[aria-label="Aimer ce profil"]')
+        ->assertPresent('[aria-label="Découvrir ce profil"]')
         ->assertPresent('[data-test="discovery-avatar-hero"]')
         ->assertPresent('[data-test="discovery-information-sheet"]')
         ->assertSee('Spectacles')
@@ -226,7 +226,7 @@ test('the top discovery card accepts keyboard and accessible decisions', functio
             true,
         )
         ->keys('[data-test="discovery-card-stack-item"] [tabindex="0"]', 'ArrowLeft')
-        ->assertSee('Vous avez exploré tous les profils disponibles');
+        ->assertSee('Tu as exploré tous les profils disponibles');
 
     $this->assertDatabaseHas('swipes', [
         'actor_user_id' => $actor->id,
@@ -237,9 +237,9 @@ test('the top discovery card accepts keyboard and accessible decisions', functio
     $liked = discoveryMember('Chloé');
     $page->navigate('/discover')
         ->assertSee('Chloé');
-    $page->script("document.querySelector('[aria-label=\"Aimer ce profil\"]').click()");
+    $page->script("document.querySelector('[aria-label=\"Découvrir ce profil\"]').click()");
     $page
-        ->assertSee('Vous avez exploré tous les profils disponibles');
+        ->assertSee('Tu as exploré tous les profils disponibles');
 
     $this->assertDatabaseHas('swipes', [
         'actor_user_id' => $actor->id,
@@ -281,7 +281,7 @@ test('an accepted swipe refreshes only the updated discovery data', function () 
         document.querySelector('[aria-label="Passer ce profil"]').click()
     JS);
     $page
-        ->assertSee('Vous avez exploré tous les profils disponibles')
+        ->assertSee('Tu as exploré tous les profils disponibles')
         ->assertScript(
             "window.__swipePartialData.split(',').sort().join(',')",
             'match,suggestions',
@@ -306,7 +306,7 @@ test('pointer gestures follow the card and enforce the horizontal threshold', fu
     $this->assertDatabaseCount('swipes', 0);
 
     $page->script("{$card}.dispatchEvent(new PointerEvent('pointerdown', { pointerId: 2, clientX: 100, clientY: 100, bubbles: true })); {$card}.dispatchEvent(new PointerEvent('pointermove', { pointerId: 2, clientX: 172, clientY: 100, bubbles: true })); {$card}.dispatchEvent(new PointerEvent('pointerup', { pointerId: 2, clientX: 172, clientY: 100, bubbles: true }));");
-    $page->assertSee('Vous avez exploré tous les profils disponibles');
+    $page->assertSee('Tu as exploré tous les profils disponibles');
 
     $this->assertDatabaseHas('swipes', [
         'actor_user_id' => $actor->id,
@@ -362,7 +362,7 @@ test('a discovery card captures one pointer and ignores other pointer identifier
     $this->assertDatabaseCount('swipes', 0);
 
     $page->script("{$card}.dispatchEvent(new PointerEvent('pointerup', { pointerId: 7, clientX: 100, clientY: 100, bubbles: true }));");
-    $page->assertSee('Vous avez exploré tous les profils disponibles')
+    $page->assertSee('Tu as exploré tous les profils disponibles')
         ->assertScript('window.__releasedPointer', 7);
     $this->assertDatabaseHas('swipes', [
         'actor_user_id' => $actor->id,
@@ -383,12 +383,12 @@ test('a reciprocal like opens a dismissible match dialog only once', function ()
 
     $page = visit('/discover')
         ->assertSee('Basile');
-    $page->script("document.querySelector('[aria-label=\"Aimer ce profil\"]').click()");
-    $page->assertSee('C’est un match !')
-        ->assertSee('Basile a aussi aimé votre profil.')
+    $page->script("document.querySelector('[aria-label=\"Découvrir ce profil\"]').click()");
+    $page->assertSee('Vos univers se croisent')
+        ->assertSee('Basile souhaite aussi te découvrir.')
         ->assertPresent('[data-slot="dialog-title"]')
         ->assertPresent('[data-slot="dialog-description"]')
-        ->assertSeeLink('Ouvrir la conversation');
+        ->assertSeeLink('Commencer l’échange');
 
     $conversationId = MemberMatch::query()->firstOrFail()->conversation()->firstOrFail()->id;
     $page->assertAttribute(
@@ -396,7 +396,7 @@ test('a reciprocal like opens a dismissible match dialog only once', function ()
         'href',
         "/conversations/{$conversationId}",
     )
-        ->click('Continuer à découvrir')
+        ->click('Continuer à explorer')
         ->assertNotPresent('[data-slot="dialog-title"]');
 
     $page->navigate('/discover')
@@ -415,8 +415,8 @@ test('a member sends the first message immediately after opening a new match con
 
     $page = visit('/discover')
         ->assertSee('Basile')
-        ->click('[aria-label="Aimer ce profil"]')
-        ->assertSee('C’est un match !')
+        ->click('[aria-label="Découvrir ce profil"]')
+        ->assertSee('Vos univers se croisent')
         ->click('[data-test="open-match-conversation"]')
         ->assertPathBeginsWith('/conversations/');
 
@@ -479,7 +479,7 @@ test('a network failure keeps the original decision available for retry', functi
         true;
     JS);
 
-    $page->script("document.querySelector('[aria-label=\"Aimer ce profil\"]').click(); document.querySelector('[aria-label=\"Aimer ce profil\"]').click();");
+    $page->script("document.querySelector('[aria-label=\"Découvrir ce profil\"]').click(); document.querySelector('[aria-label=\"Découvrir ce profil\"]').click();");
     $page->assertPresent('[role="alert"]')
         ->assertSee('La connexion a échoué avant l’enregistrement de cette décision.')
         ->assertPresent('button[aria-label="Réessayer"]')
@@ -488,7 +488,7 @@ test('a network failure keeps the original decision available for retry', functi
     $this->assertDatabaseCount('swipes', 0);
 
     $page->click('Réessayer')
-        ->assertSee('Vous avez exploré tous les profils disponibles');
+        ->assertSee('Tu as exploré tous les profils disponibles');
 
     $this->assertDatabaseHas('swipes', [
         'actor_user_id' => $actor->id,
@@ -520,14 +520,14 @@ test('a validation response keeps the card and retries the same decision', funct
     $this->actingAs($actor);
 
     $page = visit('/discover')->assertSee('Basile');
-    $page->script("document.querySelector('[aria-label=\"Aimer ce profil\"]').click(); document.querySelector('[aria-label=\"Aimer ce profil\"]').click();");
+    $page->script("document.querySelector('[aria-label=\"Découvrir ce profil\"]').click(); document.querySelector('[aria-label=\"Découvrir ce profil\"]').click();");
     $page->assertPresent('[role="alert"]')
         ->assertSee('Ce profil n’est pas disponible.')
         ->assertSee('Basile');
     $this->assertDatabaseCount('swipes', 0);
 
     $page->click('Réessayer')
-        ->assertSee('Vous avez exploré tous les profils disponibles');
+        ->assertSee('Tu as exploré tous les profils disponibles');
     $this->assertDatabaseHas('swipes', [
         'actor_user_id' => $actor->id,
         'target_user_id' => $target->id,
@@ -562,7 +562,7 @@ test('a stale failed decision is cleared when a replacement suggestion arrives',
         };
         true;
     JS);
-    $page->script("document.querySelector('[aria-label=\"Aimer ce profil\"]').click()");
+    $page->script("document.querySelector('[aria-label=\"Découvrir ce profil\"]').click()");
     $page->assertPresent('[role="alert"]');
 
     Swipe::factory()->create([
