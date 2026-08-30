@@ -103,7 +103,7 @@ class FortifyServiceProvider extends ServiceProvider
                 ?? Str::lower((string) $request->input(Fortify::email()));
             $response = fn () => back()
                 ->withInput($request->only(Fortify::email()))
-                ->withErrors([Fortify::email() => __('mail.errors.rate_limited')]);
+                ->withErrors([Fortify::email() => 'mail.rate_limited']);
 
             return [
                 Limit::perMinute(3)

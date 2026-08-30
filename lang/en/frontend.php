@@ -13,6 +13,10 @@ return [
         'conversations' => 'Conversations',
         'back' => 'Back',
     ],
+    'mail' => [
+        'delivery_failed' => 'The email could not be sent. Please try again in a few moments.',
+        'rate_limited' => 'Too many requests have been made. Please wait one minute before trying again.',
+    ],
     'onboarding' => [
         'page_title' => 'Getting started',
         'initial_message' => 'Hi! What is your favorite place in the park?',

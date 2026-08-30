@@ -51,9 +51,11 @@ class PasswordResetTest extends TestCase
                 ->assertSessionHasNoErrors();
         }
 
-        $this->post(route('password.email'), ['email' => $user->email])
+        $this->withCookie('locale', 'fr')
+            ->withHeader('Accept-Language', 'en-US,en;q=0.9')
+            ->post(route('password.email'), ['email' => $user->email])
             ->assertSessionHasErrors([
-                'email' => 'Trop de demandes ont été effectuées. Veuillez patienter une minute avant de réessayer.',
+                'email' => 'mail.rate_limited',
             ]);
 
         Mail::assertSentCount(3);
@@ -85,7 +87,7 @@ class PasswordResetTest extends TestCase
 
         $this->post(route('password.email'), ['email' => $user->email])
             ->assertSessionHasErrors([
-                'email' => 'L’e-mail n’a pas pu être envoyé. Veuillez réessayer dans quelques instants.',
+                'email' => 'mail.delivery_failed',
             ]);
     }
 

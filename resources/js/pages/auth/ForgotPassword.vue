@@ -6,8 +6,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
+import { useTranslations } from '@/composables/useTranslations';
+import { localizeMailError } from '@/lib/mailError';
 import { login } from '@/routes';
 import { email } from '@/routes/password';
+
+const { t } = useTranslations();
 
 defineOptions({
     layout: {
@@ -44,7 +48,7 @@ defineProps<{
                     autofocus
                     placeholder="vous@exemple.fr"
                 />
-                <InputError :message="errors.email" />
+                <InputError :message="localizeMailError(errors.email, t)" />
             </div>
 
             <div class="my-6 flex items-center justify-start">

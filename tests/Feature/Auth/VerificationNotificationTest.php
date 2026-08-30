@@ -38,7 +38,7 @@ class VerificationNotificationTest extends TestCase
     {
         Mail::fake();
 
-        $user = User::factory()->unverified()->create();
+        $user = User::factory()->unverified()->create(['locale' => 'fr']);
 
         foreach (range(1, 3) as $_) {
             $this->actingAs($user)
@@ -47,9 +47,10 @@ class VerificationNotificationTest extends TestCase
         }
 
         $this->actingAs($user)
+            ->withHeader('Accept-Language', 'en-US,en;q=0.9')
             ->post(route('verification.send'))
             ->assertSessionHasErrors([
-                'email' => 'Trop de demandes ont été effectuées. Veuillez patienter une minute avant de réessayer.',
+                'email' => 'mail.rate_limited',
             ]);
 
         Mail::assertSentCount(3);
@@ -65,7 +66,7 @@ class VerificationNotificationTest extends TestCase
             ->withHeader('Accept-Language', 'en-US,en;q=0.9')
             ->post(route('verification.send'))
             ->assertSessionHasErrors([
-                'email' => 'The email could not be sent. Please try again in a few moments.',
+                'email' => 'mail.delivery_failed',
             ]);
     }
 

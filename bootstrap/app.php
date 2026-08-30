@@ -46,7 +46,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
             return back()
                 ->withInput($request->only('email'))
-                ->withErrors(['email' => __('mail.errors.delivery_failed')]);
+                ->withErrors(['email' => 'mail.delivery_failed']);
         });
 
         $exceptions->shouldRenderJsonWhen(

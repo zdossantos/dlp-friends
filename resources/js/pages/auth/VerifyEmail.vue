@@ -4,8 +4,12 @@ import InputError from '@/components/InputError.vue';
 import TextLink from '@/components/TextLink.vue';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
+import { useTranslations } from '@/composables/useTranslations';
+import { localizeMailError } from '@/lib/mailError';
 import { logout } from '@/routes';
 import { send } from '@/routes/verification';
+
+const { t } = useTranslations();
 
 defineOptions({
     layout: {
@@ -37,7 +41,7 @@ defineProps<{
         class="space-y-6 text-center"
         v-slot="{ errors, processing }"
     >
-        <InputError :message="errors.email" />
+        <InputError :message="localizeMailError(errors.email, t)" />
 
         <Button :disabled="processing" variant="secondary">
             <Spinner v-if="processing" />
