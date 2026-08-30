@@ -6,6 +6,7 @@ use App\Models\User;
 use Illuminate\Auth\Events\Verified;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\URL;
 use Laravel\Fortify\Features;
 use Tests\TestCase;
@@ -48,6 +49,28 @@ class EmailVerificationTest extends TestCase
 
         $this->assertTrue($user->fresh()->hasVerifiedEmail());
         $response->assertRedirect('/app?verified=1');
+    }
+
+    public function test_verification_link_is_not_blocked_after_many_email_requests(): void
+    {
+        Mail::fake();
+
+        $user = User::factory()->unverified()->create();
+        $verificationUrl = URL::temporarySignedRoute(
+            'verification.verify',
+            now()->addMinutes(60),
+            ['id' => $user->id, 'hash' => sha1($user->email)],
+        );
+
+        foreach (range(1, 6) as $_) {
+            $this->actingAs($user)->post(route('verification.send'));
+        }
+
+        $this->actingAs($user)
+            ->get($verificationUrl)
+            ->assertRedirect('/app?verified=1');
+
+        $this->assertTrue($user->fresh()->hasVerifiedEmail());
     }
 
     public function test_email_verification_ignores_an_intended_admin_url(): void

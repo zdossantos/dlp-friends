@@ -137,9 +137,13 @@ class FortifyServiceProvider extends ServiceProvider
         Route::getRoutes()->refreshNameLookups();
 
         foreach (['password.email', 'verification.send'] as $routeName) {
-            Route::getRoutes()
-                ->getByName($routeName)
-                ?->middleware(ThrottleRequests::using('mail'));
+            $route = Route::getRoutes()->getByName($routeName);
+
+            if ($routeName === 'verification.send') {
+                $route?->withoutMiddleware('throttle:6,1');
+            }
+
+            $route?->middleware(ThrottleRequests::using('mail'));
         }
     }
 }
