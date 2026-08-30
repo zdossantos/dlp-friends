@@ -403,6 +403,54 @@ test('a reciprocal like opens a dismissible match dialog only once', function ()
         ->assertNotPresent('[data-slot="dialog-title"]');
 });
 
+test('a member sends the first message immediately after opening a new match conversation', function () {
+    $actor = discoveryMember('Alice');
+    $target = discoveryMember('Basile');
+    Swipe::factory()->create([
+        'actor_user_id' => $target->id,
+        'target_user_id' => $actor->id,
+        'decision' => SwipeDecision::Like,
+    ]);
+    $this->actingAs($actor);
+
+    $page = visit('/discover')
+        ->assertSee('Basile')
+        ->click('[aria-label="Aimer ce profil"]')
+        ->assertSee('C’est un match !')
+        ->click('[data-test="open-match-conversation"]')
+        ->assertPathBeginsWith('/conversations/');
+
+    $page->script("document.querySelector('meta[name=csrf-token]').content = 'stale-token'; true;");
+    $page->script(<<<'JS'
+        window.__realFirstMessageFetch = window.fetch;
+        window.fetch = async (...args) => {
+            if (args[1]?.method === 'POST') {
+                await new Promise((resolve) => setTimeout(resolve, 100));
+            }
+
+            return window.__realFirstMessageFetch(...args);
+        };
+        true;
+    JS);
+
+    $page->fill('content', 'Bonjour Basile !');
+    $page->script("document.querySelector('[aria-label=\"Envoyer le message\"]').click(); document.querySelector('[aria-label=\"Envoyer le message\"]').click(); true;");
+    $page
+        ->assertSee('Bonjour Basile !')
+        ->assertValue('content', '')
+        ->assertScript("document.querySelectorAll('[data-message-id]').length", 1)
+        ->assertNoJavaScriptErrors();
+
+    $conversation = MemberMatch::query()->firstOrFail()->conversation()->firstOrFail();
+
+    $this->assertDatabaseHas('messages', [
+        'conversation_id' => $conversation->id,
+        'author_user_id' => $actor->id,
+        'content' => 'Bonjour Basile !',
+    ]);
+    $this->assertDatabaseCount('messages', 1);
+});
+
 test('a network failure keeps the original decision available for retry', function () {
     $actor = discoveryMember('Alice');
     $target = discoveryMember('Basile');

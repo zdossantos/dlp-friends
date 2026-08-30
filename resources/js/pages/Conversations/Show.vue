@@ -7,6 +7,7 @@ import MessageTimeline from '@/components/conversations/MessageTimeline.vue';
 import RealtimeStatus from '@/components/conversations/RealtimeStatus.vue';
 import { useConversationMessages } from '@/composables/useConversationMessages';
 import { useConversationRealtime } from '@/composables/useConversationRealtime';
+import { xsrfHeader } from '@/lib/csrf';
 import { index as conversationsIndex } from '@/routes/conversations';
 import { store as storeConversationRead } from '@/routes/conversations/read';
 import { show as showMember } from '@/routes/members';
@@ -28,18 +29,12 @@ const { visibleMessages, mergeMessage, markMessagesRead } =
     useConversationMessages(() => props.messages.data);
 
 async function markConversationAsRead(): Promise<void> {
-    const csrfToken = document
-        .querySelector<HTMLMetaElement>('meta[name="csrf-token"]')
-        ?.getAttribute('content');
-
     await fetch(storeConversationRead(props.conversation.id).url, {
         method: 'POST',
         credentials: 'same-origin',
         headers: {
             Accept: 'application/json',
-            ...(csrfToken === null || csrfToken === undefined
-                ? {}
-                : { 'X-CSRF-TOKEN': csrfToken }),
+            ...xsrfHeader(document.cookie),
         },
     });
 }
