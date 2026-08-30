@@ -2,6 +2,8 @@
 import { SendHorizontal } from '@lucide/vue';
 import { computed, nextTick, ref } from 'vue';
 import { Button } from '@/components/ui/button';
+import { useTranslations } from '@/composables/useTranslations';
+import { xsrfHeader } from '@/lib/csrf';
 import { store as storeMessage } from '@/routes/conversations/messages';
 import type { ConversationMessage } from '@/types';
 
@@ -16,6 +18,7 @@ const content = ref('');
 const error = ref('');
 const pending = ref(false);
 const textarea = ref<HTMLTextAreaElement | null>(null);
+const { t } = useTranslations();
 const disabled = computed(
     () => props.archived || pending.value || content.value.trim() === '',
 );
@@ -41,18 +44,13 @@ async function submit(): Promise<void> {
             throw new Error('A conversation id is required.');
         }
 
-        const csrfToken = document
-            .querySelector<HTMLMetaElement>('meta[name="csrf-token"]')
-            ?.getAttribute('content');
         const response = await fetch(storeMessage(props.conversationId).url, {
             method: 'POST',
             credentials: 'same-origin',
             headers: {
                 Accept: 'application/json',
                 'Content-Type': 'application/json',
-                ...(csrfToken === null || csrfToken === undefined
-                    ? {}
-                    : { 'X-CSRF-TOKEN': csrfToken }),
+                ...xsrfHeader(document.cookie),
             },
             body: JSON.stringify({ content: content.value }),
         });
@@ -65,8 +63,8 @@ async function submit(): Promise<void> {
             error.value =
                 response.status === 422
                     ? (payload.errors?.content?.[0] ??
-                      'Le message n’a pas pu être envoyé. Réessayez.')
-                    : 'Le message n’a pas pu être envoyé. Réessayez.';
+                      t('messaging.send_error'))
+                    : t('messaging.send_error');
 
             return;
         }
@@ -74,7 +72,7 @@ async function submit(): Promise<void> {
         props.onSent(payload.data);
         content.value = '';
     } catch {
-        error.value = 'Le message n’a pas pu être envoyé. Réessayez.';
+        error.value = t('messaging.send_error');
     } finally {
         pending.value = false;
         await nextTick();
@@ -95,11 +93,13 @@ function handleKeydown(event: KeyboardEvent): void {
 <template>
     <footer class="shrink-0 border-t bg-card/95 px-4 py-3 sm:px-6">
         <p v-if="archived" class="text-center text-sm text-muted-foreground">
-            Cet échange est archivé. L’envoi de nouveaux messages est désactivé.
+            {{ t('messaging.archived') }}
         </p>
         <form v-else class="flex items-end gap-2" @submit.prevent="submit">
             <div class="min-w-0 flex-1">
-                <label for="message-content" class="sr-only">Message</label>
+                <label for="message-content" class="sr-only">
+                    {{ t('messaging.label') }}
+                </label>
                 <textarea
                     id="message-content"
                     ref="textarea"
@@ -110,7 +110,7 @@ function handleKeydown(event: KeyboardEvent): void {
                     aria-describedby="message-character-count message-error"
                     :aria-invalid="error !== ''"
                     :disabled="pending"
-                    placeholder="Écrire un message…"
+                    :placeholder="t('messaging.placeholder')"
                     class="max-h-32 min-h-11 w-full resize-none rounded-2xl border bg-background px-4 py-2.5 text-base outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-60"
                     @keydown="handleKeydown"
                 />
@@ -133,7 +133,7 @@ function handleKeydown(event: KeyboardEvent): void {
                 type="submit"
                 size="icon"
                 class="size-11 shrink-0 rounded-2xl"
-                aria-label="Envoyer le message"
+                :aria-label="t('messaging.send')"
                 :disabled="disabled"
             >
                 <SendHorizontal class="size-5" aria-hidden="true" />

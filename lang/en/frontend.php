@@ -93,6 +93,13 @@ return [
         'open_conversation' => 'Open conversation',
         'continue' => 'Continue discovering',
     ],
+    'messaging' => [
+        'label' => 'Message',
+        'placeholder' => 'Write a message…',
+        'send' => 'Send message',
+        'send_error' => 'The message could not be sent. Please try again.',
+        'archived' => 'This conversation is archived. New messages are disabled.',
+    ],
     'blocking' => [
         'trigger' => 'Block this member',
         'title' => 'Block this member?',

@@ -93,6 +93,13 @@ return [
         'open_conversation' => 'Ouvrir la conversation',
         'continue' => 'Continuer à découvrir',
     ],
+    'messaging' => [
+        'label' => 'Message',
+        'placeholder' => 'Écrire un message…',
+        'send' => 'Envoyer le message',
+        'send_error' => 'Le message n’a pas pu être envoyé. Réessayez.',
+        'archived' => 'Cet échange est archivé. L’envoi de nouveaux messages est désactivé.',
+    ],
     'blocking' => [
         'trigger' => 'Bloquer ce membre',
         'title' => 'Bloquer ce membre ?',
