@@ -35,6 +35,11 @@ test('blocking from a profile returns to the previous page with the member name'
         ->click('@confirm-block-member')
         ->assertPathIs("/conversations/{$conversation->id}")
         ->assertSee('Basile bloqué.')
+        ->assertPresent('[data-sonner-toaster][data-y-position="top"]')
+        ->assertScript(
+            "(() => { const toast = document.querySelector('[data-sonner-toast]'); const box = toast.getBoundingClientRect(); return box.top >= 0 && box.left >= 0 && box.right <= window.innerWidth; })()",
+            true,
+        )
         ->assertNoJavaScriptErrors();
 
     $this->assertDatabaseHas('blocks', [

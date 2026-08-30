@@ -11,6 +11,13 @@ import ProfileFormStepper from '@/components/profile/ProfileFormStepper.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 import { Spinner } from '@/components/ui/spinner';
 import type {
     AvatarOption,
@@ -362,32 +369,30 @@ function showInvalidStep(errors: Record<string, string>): void {
 
             <div class="grid gap-3">
                 <Label for="visibility">Visible dans les suggestions</Label>
-                <div class="relative">
-                    <Eye
-                        class="pointer-events-none absolute top-1/2 left-4 size-5 -translate-y-1/2 text-primary"
-                        aria-hidden="true"
-                    />
-                    <select
+                <input type="hidden" name="visibility" :value="visibility" />
+                <Select v-model="visibility" required>
+                    <SelectTrigger
                         id="visibility"
-                        v-model="visibility"
-                        name="visibility"
-                        required
-                        class="min-h-14 w-full appearance-none rounded-2xl border border-input bg-background pr-10 pl-12 text-sm focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+                        class="h-14 w-full rounded-2xl bg-background px-4"
+                        aria-describedby="visibility-error"
+                        :aria-invalid="errors.visibility ? 'true' : undefined"
                     >
-                        <option
+                        <Eye class="size-5 text-primary" aria-hidden="true" />
+                        <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent position="popper">
+                        <SelectItem
                             v-for="option in visibilities"
                             :key="option.value"
                             :value="option.value"
                         >
                             {{ option.label }}
-                        </option>
-                    </select>
-                    <Check
-                        class="pointer-events-none absolute top-1/2 right-4 size-5 -translate-y-1/2 text-primary"
-                        aria-hidden="true"
-                    />
+                        </SelectItem>
+                    </SelectContent>
+                </Select>
+                <div id="visibility-error">
+                    <InputError :message="errors.visibility" />
                 </div>
-                <InputError :message="errors.visibility" />
             </div>
 
             <p

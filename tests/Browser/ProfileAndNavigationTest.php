@@ -5,6 +5,7 @@ use App\Http\Middleware\EnsureProfileIsComplete;
 use App\Models\Avatar;
 use App\Models\Interest;
 use App\Models\InterestSetting;
+use App\Models\ProductOnboardingSetting;
 use App\Models\User;
 use Illuminate\Support\Facades\Storage;
 
@@ -134,7 +135,9 @@ test('profile onboarding exposes the complete accessible contract', function () 
         ->assertAttribute('textarea[name="bio"]', 'maxlength', '500')
         ->assertPresent('input[type="radio"][name="visit_frequency"]')
         ->assertNotPresent('select[name="visit_frequency"]')
-        ->assertPresent('select[name="visibility"]')
+        ->assertNotPresent('select[name="visibility"]')
+        ->assertPresent('button#visibility[data-slot="select-trigger"]')
+        ->assertPresent('input[type="hidden"][name="visibility"]')
         ->assertSee('Continuer')
         ->assertPresent('[aria-label="Progression du profil"]')
         ->assertScript(
@@ -146,6 +149,62 @@ test('profile onboarding exposes the complete accessible contract', function () 
             true,
         )
         ->assertNoJavaScriptErrors();
+});
+
+test('profile visibility can be created and edited with the accessible select keyboard controls', function () {
+    Storage::fake('local');
+    $avatar = Avatar::factory()->create(['name' => 'Aurore']);
+    $demoAvatar = Avatar::factory()->create(['name' => 'Nova']);
+    ProductOnboardingSetting::query()->create([
+        'id' => ProductOnboardingSetting::SINGLETON_ID,
+        'pass_avatar_id' => $avatar->id,
+        'like_avatar_id' => $demoAvatar->id,
+    ]);
+    foreach ([$avatar, $demoAvatar] as $storedAvatar) {
+        Storage::disk('local')->put($storedAvatar->image_path, base64_decode(
+            'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScL8WQAAAABJRU5ErkJggg==',
+        ));
+    }
+    $user = User::factory()->create();
+    $this->actingAs($user);
+
+    visit('/profile/create')
+        ->on()->mobile()
+        ->click('Continuer')
+        ->fill('display_name', 'Aurore')
+        ->click('Continuer')
+        ->click('Souvent')
+        ->click('Continuer')
+        ->assertSee('Visible')
+        ->assertPresent('button#visibility[data-slot="select-trigger"]')
+        ->keys('#visibility', 'Enter')
+        ->keys('[data-slot="select-item"]:last-child', 'Enter')
+        ->assertValue('input[name="visibility"]', 'hidden')
+        ->click('Créer mon profil')
+        ->assertPathIs('/onboarding');
+
+    $profile = $user->fresh()->profile;
+
+    expect($profile?->visibility->value)->toBe('hidden');
+
+    $user->productOnboarding()->updateOrCreate([], [
+        'status' => ProductOnboardingStatus::Completed,
+        'step' => null,
+    ]);
+
+    visit('/profile/edit')
+        ->click('[data-test="avatar-carousel-item-'.$profile->avatar_id.'"]')
+        ->click('Continuer')
+        ->click('Continuer')
+        ->click('Continuer')
+        ->assertSee('Masqué')
+        ->keys('#visibility', 'Enter')
+        ->keys('[data-slot="select-item"]:first-child', 'Enter')
+        ->assertValue('input[name="visibility"]', 'visible')
+        ->click('Enregistrer')
+        ->assertPathIs('/profile');
+
+    expect($user->fresh()->profile?->visibility->value)->toBe('visible');
 });
 
 test('interest selection disables only unselected choices at the limit', function () {
