@@ -86,6 +86,7 @@ const { t } = useTranslations();
                 type="submit"
                 class="mt-4 w-full"
                 :disabled="processing"
+                :aria-busy="processing ? 'true' : undefined"
                 data-test="reset-password-button"
             >
                 <Spinner v-if="processing" />

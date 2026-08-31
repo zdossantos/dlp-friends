@@ -17,6 +17,7 @@ import {
     DialogTrigger,
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
+import { Spinner } from '@/components/ui/spinner';
 import { useTranslations } from '@/composables/useTranslations';
 
 const passwordInput = useTemplateRef('passwordInput');
@@ -99,8 +100,10 @@ const { t } = useTranslations();
                                 type="submit"
                                 variant="destructive"
                                 :disabled="processing"
+                                :aria-busy="processing ? 'true' : undefined"
                                 data-test="confirm-delete-user-button"
                             >
+                                <Spinner v-if="processing" />
                                 {{ t('account.deletion.submit') }}
                             </Button>
                         </DialogFooter>

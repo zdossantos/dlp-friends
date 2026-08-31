@@ -10,6 +10,7 @@ import ManageTwoFactor from '@/components/ManageTwoFactor.vue';
 import PasswordInput from '@/components/PasswordInput.vue';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
+import { Spinner } from '@/components/ui/spinner';
 import { useTranslations } from '@/composables/useTranslations';
 import { edit } from '@/routes/security';
 
@@ -99,8 +100,10 @@ setLayoutProps({
             <div class="flex items-center gap-4">
                 <Button
                     :disabled="processing"
+                    :aria-busy="processing ? 'true' : undefined"
                     data-test="update-password-button"
                 >
+                    <Spinner v-if="processing" />
                     {{ t('account.settings.save') }}
                 </Button>
             </div>

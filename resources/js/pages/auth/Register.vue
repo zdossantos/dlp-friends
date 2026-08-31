@@ -102,6 +102,7 @@ defineOptions({
                 class="mt-2 w-full"
                 tabindex="5"
                 :disabled="processing"
+                :aria-busy="processing ? 'true' : undefined"
                 data-test="register-user-button"
             >
                 <Spinner v-if="processing" />
