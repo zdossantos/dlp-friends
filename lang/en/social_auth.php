@@ -8,4 +8,7 @@ return [
     'email_unverified' => 'The provider did not verify your email address.',
     'email_conflict' => 'An account already uses this email address. Sign in with your usual method.',
     'inactive' => 'This account cannot be signed in.',
+    'expired' => 'This registration attempt has expired. Start again from the sign-in page.',
+    'identity_conflict' => 'This identity is already linked to an account. Sign in with this provider.',
+    'conflict' => 'The account could not be created because this identity is already in use.',
 ];

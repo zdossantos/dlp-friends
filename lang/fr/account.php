@@ -32,6 +32,12 @@ return [
         'existing_account' => 'Tu as déjà un compte ?',
         'login' => 'Se connecter',
     ],
+    'social_registration' => [
+        'title' => 'Finalise ton inscription',
+        'description' => 'Indique ta date de naissance pour confirmer que tu es majeur.',
+        'birth_date' => 'Date de naissance',
+        'submit' => 'Créer mon compte',
+    ],
     'fields' => [
         'email' => 'Adresse e-mail',
         'email_placeholder' => 'toi@exemple.fr',

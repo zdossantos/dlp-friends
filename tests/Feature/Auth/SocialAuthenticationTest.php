@@ -3,10 +3,14 @@
 namespace Tests\Feature\Auth;
 
 use App\Data\PendingSocialIdentity;
+use App\Enums\RoleName;
 use App\Enums\UserStatus;
 use App\Models\SocialAccount;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Hash;
+use Inertia\Testing\AssertableInertia as Assert;
 use Laravel\Socialite\Facades\Socialite;
 use Laravel\Socialite\Two\InvalidStateException;
 use Laravel\Socialite\Two\User as SocialiteUser;
@@ -16,6 +20,13 @@ use Tests\TestCase;
 class SocialAuthenticationTest extends TestCase
 {
     use RefreshDatabase;
+
+    protected function tearDown(): void
+    {
+        Carbon::setTestNow();
+
+        parent::tearDown();
+    }
 
     /** @return array<string, array{string}> */
     public static function providers(): array
@@ -181,6 +192,129 @@ class SocialAuthenticationTest extends TestCase
         $this->assertGuest();
     }
 
+    public function test_social_registration_form_requires_a_valid_pending_identity(): void
+    {
+        $this->get(route('social.registration.create'))
+            ->assertRedirect(route('login'))
+            ->assertSessionHasErrors('social_auth');
+
+        $this->withSession([PendingSocialIdentity::SESSION_KEY => ['provider' => 'google']])
+            ->get(route('social.registration.create'))
+            ->assertRedirect(route('login'))
+            ->assertSessionHasErrors('social_auth');
+    }
+
+    public function test_social_registration_form_does_not_expose_provider_identity(): void
+    {
+        $this->withSession([PendingSocialIdentity::SESSION_KEY => $this->pendingIdentity()])
+            ->get(route('social.registration.create'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('auth/CompleteSocialRegistration')
+                ->missing('provider')
+                ->missing('provider_user_id')
+                ->missing('email')
+                ->missing('token'));
+    }
+
+    public function test_social_registration_requires_an_adult_birth_date(): void
+    {
+        Carbon::setTestNow('2026-08-31');
+
+        $this->withSession([PendingSocialIdentity::SESSION_KEY => $this->pendingIdentity()])
+            ->from(route('social.registration.create'))
+            ->post(route('social.registration.store'))
+            ->assertRedirect(route('social.registration.create'))
+            ->assertSessionHasErrors('birth_date');
+
+        $this->withSession([PendingSocialIdentity::SESSION_KEY => $this->pendingIdentity()])
+            ->from(route('social.registration.create'))
+            ->post(route('social.registration.store'), ['birth_date' => '2008-09-01'])
+            ->assertRedirect(route('social.registration.create'))
+            ->assertSessionHasErrors([
+                'birth_date' => 'Tu dois être majeur pour t’inscrire.',
+            ]);
+
+        $this->assertDatabaseCount('users', 0);
+        $this->assertDatabaseCount('social_accounts', 0);
+    }
+
+    public function test_adult_can_complete_social_registration(): void
+    {
+        Carbon::setTestNow('2026-08-31 12:00:00');
+
+        $response = $this->withSession([
+            PendingSocialIdentity::SESSION_KEY => $this->pendingIdentity(),
+            'url.intended' => '/dashboard',
+        ])->post(route('social.registration.store'), ['birth_date' => '2008-08-31']);
+
+        $user = User::query()->where('email', 'new@example.com')->firstOrFail();
+        $account = $user->socialAccounts()->sole();
+
+        $response->assertRedirect(route('app'));
+        $response->assertSessionMissing(PendingSocialIdentity::SESSION_KEY);
+        $this->assertAuthenticatedAs($user);
+        $this->assertSame(UserStatus::Active, $user->status);
+        $this->assertNotNull($user->email_verified_at);
+        $this->assertFalse(Hash::needsRehash($user->getRawOriginal('password')));
+        $this->assertTrue($user->load('roles')->hasRole(RoleName::User));
+        $this->assertSame('google', $account->provider);
+        $this->assertSame('google-123', $account->provider_user_id);
+    }
+
+    public function test_completion_email_conflict_rolls_back_and_expires_the_flow(): void
+    {
+        User::factory()->create(['email' => 'new@example.com']);
+
+        $response = $this->withSession([PendingSocialIdentity::SESSION_KEY => $this->pendingIdentity()])
+            ->post(route('social.registration.store'), ['birth_date' => '2000-01-01']);
+
+        $response->assertRedirect(route('login'));
+        $response->assertSessionHasErrors('social_auth');
+        $response->assertSessionMissing(PendingSocialIdentity::SESSION_KEY);
+        $this->assertGuest();
+        $this->assertDatabaseCount('users', 1);
+        $this->assertDatabaseCount('social_accounts', 0);
+    }
+
+    public function test_completion_identity_conflict_rolls_back_without_an_orphan_user(): void
+    {
+        SocialAccount::factory()->create([
+            'provider' => 'google',
+            'provider_user_id' => 'google-123',
+        ]);
+
+        $response = $this->withSession([PendingSocialIdentity::SESSION_KEY => $this->pendingIdentity()])
+            ->post(route('social.registration.store'), ['birth_date' => '2000-01-01']);
+
+        $response->assertRedirect(route('login'));
+        $response->assertSessionHasErrors('social_auth');
+        $response->assertSessionMissing(PendingSocialIdentity::SESSION_KEY);
+        $this->assertGuest();
+        $this->assertDatabaseCount('users', 1);
+        $this->assertDatabaseCount('social_accounts', 1);
+    }
+
+    public function test_same_pending_identity_cannot_create_a_second_account(): void
+    {
+        $payload = $this->pendingIdentity();
+
+        $this->withSession([PendingSocialIdentity::SESSION_KEY => $payload])
+            ->post(route('social.registration.store'), ['birth_date' => '2000-01-01'])
+            ->assertRedirect(route('app'));
+
+        $this->post(route('logout'));
+
+        $this->withSession([PendingSocialIdentity::SESSION_KEY => $payload])
+            ->post(route('social.registration.store'), ['birth_date' => '2000-01-01'])
+            ->assertRedirect(route('login'))
+            ->assertSessionHasErrors('social_auth');
+
+        $this->assertGuest();
+        $this->assertDatabaseCount('users', 1);
+        $this->assertDatabaseCount('social_accounts', 1);
+    }
+
     private function performCallback(string $provider)
     {
         return $provider === 'apple'
@@ -202,5 +336,15 @@ class SocialAuthenticationTest extends TestCase
         return $user->setRaw($provider === 'google'
             ? ['verified_email' => $verified]
             : ['email_verified' => $verified ? 'true' : 'false']);
+    }
+
+    /** @return array{provider: string, provider_user_id: string, email: string} */
+    private function pendingIdentity(): array
+    {
+        return [
+            'provider' => 'google',
+            'provider_user_id' => 'google-123',
+            'email' => 'new@example.com',
+        ];
     }
 }

@@ -11,6 +11,7 @@ use App\Http\Controllers\Admin\InterestSettingController;
 use App\Http\Controllers\Admin\InterestStatusController;
 use App\Http\Controllers\Admin\ProductOnboardingController as AdminProductOnboardingController;
 use App\Http\Controllers\Auth\SocialAuthController;
+use App\Http\Controllers\Auth\SocialRegistrationController;
 use App\Http\Controllers\AvatarImageController;
 use App\Http\Controllers\BlockMemberController;
 use App\Http\Controllers\ConversationController;
@@ -43,8 +44,11 @@ Route::middleware('guest')->group(function (): void {
         ->defaults('provider', SocialProvider::Apple->value)
         ->middleware('throttle:10,1')
         ->name('social.callback.apple');
-    Route::inertia('register/social', 'auth/SocialRegistration')
+    Route::get('auth/social/complete', [SocialRegistrationController::class, 'create'])
         ->name('social.registration.create');
+    Route::post('auth/social/complete', [SocialRegistrationController::class, 'store'])
+        ->middleware('throttle:6,1')
+        ->name('social.registration.store');
 });
 
 Route::middleware(['auth', 'verified', 'social'])->group(function () {

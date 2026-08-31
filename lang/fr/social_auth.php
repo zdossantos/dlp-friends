@@ -8,4 +8,7 @@ return [
     'email_unverified' => 'Le fournisseur n’a pas confirmé votre adresse e-mail.',
     'email_conflict' => 'Un compte utilise déjà cette adresse e-mail. Connectez-vous avec votre méthode habituelle.',
     'inactive' => 'Ce compte ne peut pas être connecté.',
+    'expired' => 'Cette tentative d’inscription a expiré. Recommence depuis la page de connexion.',
+    'identity_conflict' => 'Cette identité est déjà liée à un compte. Connecte-toi avec ce fournisseur.',
+    'conflict' => 'Le compte n’a pas pu être créé, car cette identité est déjà utilisée.',
 ];
