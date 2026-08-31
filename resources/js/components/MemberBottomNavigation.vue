@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { Link } from '@inertiajs/vue3';
+import { Link, router } from '@inertiajs/vue3';
 import { MessageCircle, Sparkles, UserRound } from '@lucide/vue';
+import { onBeforeUnmount, ref } from 'vue';
 import { useCurrentUrl } from '@/composables/useCurrentUrl';
 import { useMemberNavigationVisibility } from '@/composables/useMemberNavigationVisibility';
 import { useTranslations } from '@/composables/useTranslations';
@@ -12,6 +13,7 @@ const { isCurrentOrParentUrl } = useCurrentUrl();
 const { t } = useTranslations();
 
 const shouldShow = useMemberNavigationVisibility();
+const pendingPath = ref<string | null>(null);
 
 const items = [
     { label: t('discovery.navigation'), href: discovery(), icon: Sparkles },
@@ -36,6 +38,22 @@ function isActive(item: (typeof items)[number]): boolean {
             true
     );
 }
+
+function itemPath(item: (typeof items)[number]): string {
+    return new URL(item.href.url, window.location.origin).pathname;
+}
+
+const stopStartListener = router.on('start', (event) => {
+    pendingPath.value = event.detail.visit.url.pathname;
+});
+const stopFinishListener = router.on('finish', () => {
+    pendingPath.value = null;
+});
+
+onBeforeUnmount(() => {
+    stopStartListener();
+    stopFinishListener();
+});
 </script>
 
 <template>
@@ -55,10 +73,17 @@ function isActive(item: (typeof items)[number]): boolean {
                 :href="item.href"
                 :aria-label="item.label"
                 :aria-current="isActive(item) ? 'page' : undefined"
-                class="grid size-12 place-items-center rounded-2xl text-muted-foreground transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
-                :class="
-                    isActive(item) ? 'bg-secondary text-primary' : undefined
+                :aria-busy="pendingPath === itemPath(item) ? 'true' : undefined"
+                :data-pending="
+                    pendingPath === itemPath(item) ? 'true' : undefined
                 "
+                class="grid size-12 place-items-center rounded-2xl text-muted-foreground transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+                :class="[
+                    isActive(item) ? 'bg-secondary text-primary' : undefined,
+                    pendingPath === itemPath(item)
+                        ? 'motion-navigation-pending bg-secondary/70 text-primary'
+                        : undefined,
+                ]"
             >
                 <component :is="item.icon" class="size-6" aria-hidden="true" />
             </Link>
