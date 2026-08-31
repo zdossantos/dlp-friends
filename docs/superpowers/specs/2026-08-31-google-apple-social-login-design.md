@@ -26,8 +26,11 @@ access token, ni refresh token.
 Chaque fournisseur autorisé, `google` ou `apple`, expose une route publique de
 redirection et une route publique de callback. Le fournisseur est résolu par
 une liste fermée ; toute autre valeur est rejetée avant tout appel à Socialite.
-Les callbacks utilisent la protection d'état OAuth de Socialite et sont limités
-en fréquence.
+Le callback Google utilise `GET`. Le callback Apple accepte uniquement `POST`,
+car Apple impose `response_mode=form_post` lorsque l'adresse e-mail est demandée.
+Cette seule URI Apple est exclue de la validation CSRF Laravel ; la protection
+d'état OAuth de Socialite reste obligatoire pour les deux fournisseurs. Les
+callbacks sont limités en fréquence.
 
 Les pages de connexion et d'inscription affichent les deux mêmes boutons. Leur
 contenu visible se limite au logo du fournisseur et à son nom, « Google » ou

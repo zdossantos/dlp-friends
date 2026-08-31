@@ -48,7 +48,6 @@
 - Modify: `composer.lock`
 - Modify: `config/services.php`
 - Modify: `.env.example`
-- Modify: `phpunit.xml`
 - Modify: `app/Providers/AppServiceProvider.php`
 - Test: `tests/Feature/Auth/SocialProviderConfigurationTest.php`
 
@@ -78,17 +77,8 @@ class SocialProviderConfigurationTest extends TestCase
         $this->assertNotNull($factory->driver('apple'));
     }
 
-    public function test_social_provider_configuration_comes_from_the_environment_contract(): void
-    {
-        $this->assertSame('google-client', config('services.google.client_id'));
-        $this->assertSame('https://example.test/auth/google/callback', config('services.google.redirect'));
-        $this->assertSame('apple-client', config('services.apple.client_id'));
-        $this->assertSame('https://example.test/auth/apple/callback', config('services.apple.redirect'));
-    }
 }
 ```
-
-Add non-secret test values for these four assertions to `phpunit.xml` beside the existing environment entries.
 
 - [ ] **Step 2: Run the test to verify it fails**
 
@@ -245,6 +235,7 @@ git commit -m "feat(auth): store unique social identities"
 - Create: `app/Data/PendingSocialIdentity.php`
 - Create: `app/Exceptions/SocialAuthenticationException.php`
 - Create: `app/Http/Controllers/Auth/SocialAuthController.php`
+- Modify: `bootstrap/app.php`
 - Modify: `routes/web.php`
 - Test: `tests/Feature/Auth/SocialAuthenticationTest.php`
 
@@ -267,7 +258,9 @@ Socialite::fake($provider, SocialiteUser::fake([
     : ['email_verified' => 'true']));
 ```
 
-Assert redirect routes invoke the matching fake driver. Assert callbacks for unknown identities redirect to `social.registration.create`, store exactly provider/provider ID/lowercase e-mail under `PendingSocialIdentity::SESSION_KEY`, and do not put `token`, `refreshToken`, or the raw user in the session.
+Assert redirect routes invoke the matching fake driver. Assert the Google callback accepts `GET`, the Apple callback accepts `POST`, and Apple callback `GET` is rejected. Assert callbacks for unknown identities redirect to `social.registration.create`, store exactly provider/provider ID/lowercase e-mail under `PendingSocialIdentity::SESSION_KEY`, and do not put `token`, `refreshToken`, or the raw user in the session.
+
+Add a focused HTTP test proving the Apple callback POST is not rejected by Laravel CSRF validation while another POST route remains protected. OAuth state validation must remain enabled in Socialite.
 
 Create a linked active user and assert its callback authenticates that same user, regenerates the session ID, and redirects to `route('app')`. Create a linked `pending_deletion` user and assert the callback leaves the visitor unauthenticated with localized `social_auth.inactive` feedback.
 
@@ -306,18 +299,25 @@ If the installed Socialite user exposes raw attributes through `user` rather tha
 
 - [ ] **Step 4: Implement redirect, callback, and reconnection**
 
-Add routes outside authenticated groups:
+Add routes outside authenticated groups. Keep the shared redirect route, but declare callbacks explicitly so their methods cannot drift:
 
 ```php
-Route::middleware('guest')->prefix('auth/{provider}')->group(function (): void {
-    Route::get('redirect', [SocialAuthController::class, 'redirect'])
+Route::middleware('guest')->group(function (): void {
+    Route::get('auth/{provider}/redirect', [SocialAuthController::class, 'redirect'])
+        ->whereIn('provider', array_column(SocialProvider::cases(), 'value'))
         ->middleware('throttle:10,1')->name('social.redirect');
-    Route::get('callback', [SocialAuthController::class, 'callback'])
-        ->middleware('throttle:10,1')->name('social.callback');
+    Route::get('auth/google/callback', [SocialAuthController::class, 'callback'])
+        ->defaults('provider', SocialProvider::Google->value)
+        ->middleware('throttle:10,1')->name('social.callback.google');
+    Route::post('auth/apple/callback', [SocialAuthController::class, 'callback'])
+        ->defaults('provider', SocialProvider::Apple->value)
+        ->middleware('throttle:10,1')->name('social.callback.apple');
 });
 ```
 
-Constrain `{provider}` with `whereIn('provider', array_column(SocialProvider::cases(), 'value'))` and type the controller argument as `SocialProvider` if Laravel enum binding works with this route shape; otherwise resolve it with `SocialProvider::from()` after the route constraint.
+In `bootstrap/app.php`, exclude exactly `auth/apple/callback` from Laravel CSRF validation with `validateCsrfTokens(except: ['auth/apple/callback'])`. Do not broaden this exception. Socialite's state verification remains enabled and is the callback's cross-site request protection.
+
+Type or resolve the provider through `SocialProvider`; never accept a provider outside the enum.
 
 `redirect()` returns `Socialite::driver($provider->value)->redirect()`.
 
