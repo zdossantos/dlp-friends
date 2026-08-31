@@ -27,3 +27,8 @@ test('the adult-only registration message is translated into the active locale',
     ['fr-FR,fr;q=0.9', 'Tu dois être majeur pour t’inscrire.'],
     ['en-US,en;q=0.9', 'You must be an adult to register.'],
 ]);
+
+test('social provider labels exist in every supported locale', function (string $locale) {
+    $this->assertSame('Google', trans('account.social.google', locale: $locale));
+    $this->assertSame('Apple', trans('account.social.apple', locale: $locale));
+})->with(['fr', 'en']);

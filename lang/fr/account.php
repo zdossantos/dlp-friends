@@ -38,6 +38,10 @@ return [
         'birth_date' => 'Date de naissance',
         'submit' => 'Créer mon compte',
     ],
+    'social' => [
+        'google' => 'Google',
+        'apple' => 'Apple',
+    ],
     'fields' => [
         'email' => 'Adresse e-mail',
         'email_placeholder' => 'toi@exemple.fr',
