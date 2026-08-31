@@ -61,6 +61,23 @@ actions d’archivage et de suppression les protègent également côté serveur
 L’écran admin calcule ses agrégats et sa liste paginée sur le même périmètre de
 membres adultes, actifs, vérifiés et disposant d’un profil complet.
 
+## Authentification sociale
+
+Laravel Socialite gère Google nativement et l'extension SocialiteProviders
+gère Apple. Les redirections conservent l'état OAuth. Google retourne sur un
+callback `GET`, tandis qu'Apple utilise un callback `POST` en mode `form_post` ;
+seul ce chemin Apple est exempté de CSRF, sans désactiver la validation de
+l'état OAuth par Socialite.
+
+Une identité déjà liée à un compte actif ouvre directement une session. Pour
+une nouvelle identité, seuls le fournisseur, son identifiant stable et
+l'adresse e-mail déclarée vérifiée sont placés temporairement dans la session
+serveur. La personne renseigne ensuite sa date de naissance et une action
+transactionnelle crée le compte adulte, lui attribue le rôle `user` et crée le
+lien social. Une adresse déjà utilisée n'est jamais liée automatiquement. Les
+jetons d'accès, jetons de renouvellement et réponses brutes des fournisseurs ne
+sont ni persistés ni journalisés.
+
 ## Services Docker
 
 | Service | Responsabilité |
