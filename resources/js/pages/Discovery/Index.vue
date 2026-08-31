@@ -125,7 +125,7 @@ function showExitingCard(
             (card) => card.id !== id,
         );
         exitingCardTimers.delete(timer);
-    }, 360);
+    }, 480);
     exitingCardTimers.add(timer);
 }
 
@@ -281,7 +281,7 @@ function retry(): void {
 
         <section
             v-else
-            class="relative min-h-0 w-full flex-1 pb-3"
+            class="relative min-h-0 w-full flex-1 overflow-x-clip pb-3"
             :aria-label="t('discovery.page.profiles_label')"
         >
             <div

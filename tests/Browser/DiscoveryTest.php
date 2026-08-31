@@ -405,7 +405,7 @@ test('pointer gestures follow the card and enforce the horizontal threshold', fu
     $page->script("{$card}.dispatchEvent(new PointerEvent('pointermove', { pointerId: 1, clientX: 171, clientY: 100, bubbles: true }));");
     $page->assertScript("{$card}.style.transform.includes('71px')", true)
         ->assertScript("Number(document.querySelector('[data-test=discovery-like-constellation]').style.opacity) > 0", true)
-        ->assertScript("Number(document.querySelector('[data-test=discovery-like-constellation]').style.opacity) <= 0.5", true)
+        ->assertScript("Number(document.querySelector('[data-test=discovery-like-constellation]').style.opacity) <= 0.7", true)
         ->assertScript("getComputedStyle(document.querySelector('[data-test=discovery-like-constellation]')).transitionDuration", '0s')
         ->assertScript("getComputedStyle({$actions}).transform", 'none');
     $page->script("{$card}.dispatchEvent(new PointerEvent('pointerup', { pointerId: 1, clientX: 171, clientY: 100, bubbles: true }));");
@@ -439,8 +439,11 @@ test('the pass button launches the card exit to the left', function () {
 
                 requestAnimationFrame(() => {
                     window.__passButtonSwipeFirstFrame = card.style.transform;
+                    window.__passButtonSwipeAnimation = getComputedStyle(card).animationName;
                     requestAnimationFrame(() => {
                         window.__passButtonSwipeFinalFrame = card.style.transform;
+                        window.__passButtonScrollWidth = document.documentElement.scrollWidth;
+                        window.__passButtonClientWidth = document.documentElement.clientWidth;
                         observer.disconnect();
                         resolve(true);
                     });
@@ -461,9 +464,10 @@ test('the pass button launches the card exit to the left', function () {
             true,
         )
         ->assertScript(
-            "window.__passButtonSwipeFinalFrame.includes('-120vw')",
+            "window.__passButtonSwipeAnimation.includes('motion-card-exit-left')",
             true,
         )
+        ->assertScript('window.__passButtonScrollWidth === window.__passButtonClientWidth', true)
         ->assertNoJavaScriptErrors();
 });
 
@@ -490,6 +494,16 @@ test('the discover button launches the sparkling card exit to the right', functi
                     window.__buttonSwipeStarOpacity = card
                         .querySelector('[data-test=discovery-like-constellation]')
                         .style.opacity;
+                    window.__buttonSwipeAnimation = getComputedStyle(card).animationName;
+                    window.__buttonSwipeStarCount = card.querySelectorAll(
+                        '[data-test=discovery-star]',
+                    ).length;
+                    const sheetTop = card
+                        .querySelector('[data-test=discovery-information-sheet]')
+                        .getBoundingClientRect().top;
+                    window.__buttonSwipeStarsReachSheet = Array.from(
+                        card.querySelectorAll('[data-test=discovery-star]'),
+                    ).some((star) => star.getBoundingClientRect().top > sheetTop);
                     observer.disconnect();
                     resolve(true);
                 });
@@ -510,13 +524,15 @@ test('the discover button launches the sparkling card exit to the right', functi
             true,
         )
         ->assertScript(
-            "window.__buttonSwipeFinalFrame.includes('120vw')",
+            "window.__buttonSwipeAnimation.includes('motion-card-exit-right')",
             true,
         )
         ->assertScript(
             'window.__buttonSwipeStarOpacity',
-            '0.5',
+            '0.7',
         )
+        ->assertScript('window.__buttonSwipeStarCount >= 32', true)
+        ->assertScript('window.__buttonSwipeStarsReachSheet', true)
         ->assertNoJavaScriptErrors();
 });
 
@@ -550,6 +566,21 @@ test('vertical and cancelled pointer gestures return the card to its centre', fu
     $page->assertScript("{$card}.style.transform.includes('0px')", true);
     $page->script("{$card}.dispatchEvent(new PointerEvent('pointerdown', { pointerId: 4, clientX: 100, clientY: 100, bubbles: true })); {$card}.dispatchEvent(new PointerEvent('pointermove', { pointerId: 4, clientX: 190, clientY: 100, bubbles: true })); {$card}.dispatchEvent(new PointerEvent('pointercancel', { pointerId: 4, clientX: 190, clientY: 100, bubbles: true }));");
     $page->assertScript("{$card}.style.transform.includes('0px')", true);
+    $this->assertDatabaseCount('swipes', 0);
+});
+
+test('a stale pointer capture event does not cancel the next drag', function () {
+    $actor = discoveryMember('Alice');
+    discoveryMember('Basile');
+    $this->actingAs($actor);
+
+    $page = visit('/discover');
+    $card = "document.querySelector('[data-test=\"discovery-card-stack-item\"] [tabindex=\"0\"]')";
+    $page->script("{$card}.setPointerCapture = () => {}; {$card}.hasPointerCapture = () => false; {$card}.releasePointerCapture = () => {};");
+    $page->script("{$card}.dispatchEvent(new PointerEvent('pointerdown', { pointerId: 31, isPrimary: true, clientX: 100, clientY: 100, bubbles: true })); {$card}.dispatchEvent(new PointerEvent('pointermove', { pointerId: 31, clientX: 140, clientY: 100, bubbles: true })); {$card}.dispatchEvent(new PointerEvent('pointerup', { pointerId: 31, clientX: 140, clientY: 100, bubbles: true }));");
+    $page->script("{$card}.dispatchEvent(new PointerEvent('pointerdown', { pointerId: 32, isPrimary: true, clientX: 100, clientY: 100, bubbles: true })); {$card}.dispatchEvent(new PointerEvent('lostpointercapture', { pointerId: 31, bubbles: true })); {$card}.dispatchEvent(new PointerEvent('pointermove', { pointerId: 32, clientX: 140, clientY: 100, bubbles: true }));");
+    $page->assertScript("{$card}.style.transform.includes('40px')", true)
+        ->assertNoJavaScriptErrors();
     $this->assertDatabaseCount('swipes', 0);
 });
 
@@ -595,12 +626,17 @@ test('a reciprocal like opens a dismissible match dialog only once', function ()
         ->assertSee('Basile souhaite aussi te découvrir.')
         ->assertPresent('[data-slot="dialog-title"]')
         ->assertPresent('[data-slot="dialog-description"]')
+        ->assertPresent('[data-test="match-celebration-layer"]')
         ->assertPresent('[data-test="match-magic"]')
         ->assertAttribute('[data-test="match-magic"]', 'aria-hidden', 'true')
         ->assertPresent('[data-test="match-firework-burst"]')
         ->assertScript(
             "getComputedStyle(document.querySelector('[data-test=match-firework-burst]')).animationDuration",
-            '2s',
+            '4s',
+        )
+        ->assertScript(
+            "Math.abs(document.querySelector('[data-test=match-celebration-layer]').getBoundingClientRect().width - window.innerWidth) < 1 && Math.abs(document.querySelector('[data-test=match-celebration-layer]').getBoundingClientRect().height - window.innerHeight) < 1",
+            true,
         )
         ->assertScript(
             "getComputedStyle(document.querySelectorAll('[data-test=match-magic] .motion-match-jewel')[17]).animationDelay",

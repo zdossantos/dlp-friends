@@ -37,15 +37,17 @@ function updateOpen(open: boolean): void {
 </script>
 
 <template>
-    <Dialog :open="open" @update:open="updateOpen">
-        <DialogContent
-            class="overflow-hidden border-secondary-foreground/25 bg-secondary"
-            :show-close-button="dismissible"
+    <Teleport to="body">
+        <div
+            v-if="open"
+            data-test="match-celebration-layer"
+            aria-hidden="true"
+            class="pointer-events-none fixed inset-0 z-[55] overflow-hidden"
         >
             <div
                 data-test="match-magic"
                 aria-hidden="true"
-                class="pointer-events-none absolute inset-0 overflow-hidden"
+                class="absolute inset-0"
             >
                 <span
                     class="motion-match-halo absolute top-1/2 left-1/2 size-48 -translate-x-1/2 -translate-y-1/2 rounded-full border border-amber-200/40"
@@ -86,6 +88,13 @@ function updateOpen(open: boolean): void {
                     }"
                 />
             </div>
+        </div>
+    </Teleport>
+    <Dialog :open="open" @update:open="updateOpen">
+        <DialogContent
+            class="z-[60] overflow-hidden border-secondary-foreground/25 bg-secondary"
+            :show-close-button="dismissible"
+        >
             <DialogHeader class="relative z-10">
                 <DialogTitle
                     data-test="match-heading"

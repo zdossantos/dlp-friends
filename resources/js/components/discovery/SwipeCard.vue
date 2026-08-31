@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Sparkles, Users, X } from '@lucide/vue';
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -48,9 +48,6 @@ const dragOffset = ref({ x: 0, y: 0 });
 const isDragging = ref(false);
 const suppressNextClick = ref(false);
 const exitDirection = ref<-1 | 0 | 1>(0);
-let forcedExitFrame: number | undefined;
-let forcedExitPaintFrame: number | undefined;
-
 const constellationStars = [
     { x: 10, y: 8, size: 3 },
     { x: 23, y: 13, size: 2 },
@@ -76,6 +73,14 @@ const constellationStars = [
     { x: 81, y: 76, size: 2 },
     { x: 92, y: 88, size: 3 },
     { x: 51, y: 93, size: 2 },
+    { x: 18, y: 91, size: 2 },
+    { x: 35, y: 65, size: 3 },
+    { x: 70, y: 68, size: 2 },
+    { x: 87, y: 43, size: 3 },
+    { x: 5, y: 84, size: 2 },
+    { x: 75, y: 95, size: 2 },
+    { x: 95, y: 5, size: 2 },
+    { x: 54, y: 40, size: 3 },
 ] as const;
 
 const likeProgress = computed(() => {
@@ -99,7 +104,7 @@ const constellationStyle = computed(() => {
     const progress = likeProgress.value;
 
     return {
-        opacity: (progress * 0.5).toFixed(3),
+        opacity: (progress * 0.7).toFixed(3),
         transform: `scale(${0.94 + progress * 0.06})`,
     };
 });
@@ -239,6 +244,14 @@ function openPublicProfile(event: MouseEvent) {
 }
 
 function forgetPointerStart(event?: PointerEvent) {
+    if (
+        event &&
+        pointerStart.value !== null &&
+        pointerStart.value.pointerId !== event.pointerId
+    ) {
+        return;
+    }
+
     const target = event?.currentTarget as HTMLElement | null;
 
     if (event && target?.hasPointerCapture?.(event.pointerId)) {
@@ -296,28 +309,6 @@ watch(
         }
     },
 );
-
-onMounted(() => {
-    if (!props.forcedDecision) {
-        return;
-    }
-
-    forcedExitPaintFrame = window.requestAnimationFrame(() => {
-        forcedExitFrame = window.requestAnimationFrame(() => {
-            exitDirection.value = props.forcedDecision === 'like' ? 1 : -1;
-        });
-    });
-});
-
-onBeforeUnmount(() => {
-    if (forcedExitFrame !== undefined) {
-        window.cancelAnimationFrame(forcedExitFrame);
-    }
-
-    if (forcedExitPaintFrame !== undefined) {
-        window.cancelAnimationFrame(forcedExitPaintFrame);
-    }
-});
 </script>
 
 <template>
@@ -337,8 +328,12 @@ onBeforeUnmount(() => {
                       ? 'left'
                       : undefined
             "
-            class="flex min-h-0 w-full flex-1 touch-pan-y flex-col gap-0 overflow-hidden rounded-[2rem] p-0 shadow-xl shadow-primary/10 transition-[transform,opacity] ease-[cubic-bezier(0.22,1,0.36,1)] will-change-transform outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 motion-reduce:duration-0"
-            :class="isDragging ? 'duration-0' : 'duration-[280ms]'"
+            class="relative flex min-h-0 w-full flex-1 touch-pan-y flex-col gap-0 overflow-hidden rounded-[2rem] p-0 shadow-xl shadow-primary/10 transition-[transform,opacity] ease-[cubic-bezier(0.22,1,0.36,1)] will-change-transform outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 motion-reduce:duration-0"
+            :class="[
+                isDragging ? 'duration-0' : 'duration-[280ms]',
+                forcedDecision === 'like' && 'motion-card-exit-right',
+                forcedDecision === 'pass' && 'motion-card-exit-left',
+            ]"
             :style="cardStyle"
             :tabindex="preview ? -1 : 0"
             :aria-label="

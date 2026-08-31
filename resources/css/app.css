@@ -82,7 +82,7 @@
     --motion-duration-instant: 0ms;
     --motion-duration-feedback: 160ms;
     --motion-duration-expressive: 480ms;
-    --motion-duration-celebration: 2000ms;
+    --motion-duration-celebration: 4000ms;
     --motion-ease-standard: cubic-bezier(0.2, 0, 0, 1);
     --motion-ease-expressive: cubic-bezier(0.16, 1, 0.3, 1);
     --background: hsl(32 40% 98%);
@@ -220,6 +220,34 @@
     }
 }
 
+@keyframes motion-card-exit-right {
+    from {
+        opacity: 1;
+        transform: translate3d(0, 0, 0) rotate(0deg);
+    }
+    38% {
+        opacity: 1;
+    }
+    to {
+        opacity: 0;
+        transform: translate3d(115vw, 0, 0) rotate(18deg);
+    }
+}
+
+@keyframes motion-card-exit-left {
+    from {
+        opacity: 1;
+        transform: translate3d(0, 0, 0) rotate(0deg);
+    }
+    38% {
+        opacity: 1;
+    }
+    to {
+        opacity: 0;
+        transform: translate3d(-115vw, 0, 0) rotate(-18deg);
+    }
+}
+
 @keyframes motion-navigation-pending {
     50% {
         transform: scale(0.92);
@@ -263,6 +291,16 @@
             var(--motion-ease-expressive) both;
     }
 
+    .motion-card-exit-right {
+        animation: motion-card-exit-right 420ms var(--motion-ease-expressive)
+            both;
+    }
+
+    .motion-card-exit-left {
+        animation: motion-card-exit-left 420ms var(--motion-ease-expressive)
+            both;
+    }
+
     .motion-navigation-pending {
         animation: motion-navigation-pending 700ms var(--motion-ease-standard)
             infinite;
@@ -294,6 +332,8 @@
     .motion-match-firework,
     .motion-match-ray,
     .motion-match-jewel,
+    .motion-card-exit-right,
+    .motion-card-exit-left,
     .motion-navigation-pending {
         animation: none;
         transition-duration: 0ms;
