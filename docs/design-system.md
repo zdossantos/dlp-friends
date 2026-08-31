@@ -147,6 +147,23 @@ compréhensible, pas seulement animé.
 - Éviter le défilement horizontal. Les contenus longs doivent se replier ou se
   tronquer avec une alternative accessible.
 
+## Mouvement et retours
+
+Le mouvement suit deux niveaux sémantiques. Les retours fonctionnels discrets
+durent 160 ms et accompagnent chargements, messages et navigation. Les moments
+forts expressifs peuvent durer jusqu’à 480 ms et restent réservés au like et au
+match. Aucune action métier n’attend la fin d’une animation.
+
+Les animations se limitent à `transform`, `opacity`, aux ombres et aux couches
+superposées afin de préserver la mise en page. Leurs durées et courbes utilisent
+les tokens `--motion-duration-*` et `--motion-ease-*` définis dans
+`resources/css/app.css`.
+
+Avec `prefers-reduced-motion: reduce`, les durées deviennent nulles et les
+particules, déplacements, rotations, halos animés et pulsations disparaissent.
+Les états statiques, verrouillages, erreurs, annonces accessibles et changements
+de focus restent identiques.
+
 ## Accessibilité
 
 - Toutes les actions sont atteignables au clavier et possèdent un focus visible

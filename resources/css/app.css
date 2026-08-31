@@ -79,6 +79,11 @@
 
 :root {
     color-scheme: light;
+    --motion-duration-instant: 0ms;
+    --motion-duration-feedback: 160ms;
+    --motion-duration-expressive: 480ms;
+    --motion-ease-standard: cubic-bezier(0.2, 0, 0, 1);
+    --motion-ease-expressive: cubic-bezier(0.16, 1, 0.3, 1);
     --background: hsl(32 40% 98%);
     --foreground: hsl(258 28% 14%);
     --card: hsl(30 50% 100%);
@@ -113,6 +118,67 @@
     --sidebar-border: hsl(28 22% 86%);
     --sidebar-ring: hsl(263 63% 46%);
     --sidebar: hsl(30 42% 96%);
+}
+
+@keyframes motion-feedback-enter {
+    from {
+        opacity: 0;
+        transform: translateY(0.35rem) scale(0.985);
+    }
+}
+
+@keyframes motion-message-enter {
+    from {
+        opacity: 0;
+        transform: translateY(0.4rem) scale(0.98);
+        filter: drop-shadow(0 0 0.75rem hsl(265 80% 72% / 0.45));
+    }
+}
+
+@keyframes motion-magic-particle {
+    from {
+        opacity: 0;
+        transform: translate3d(0, 0.75rem, 0) scale(0.4) rotate(0deg);
+    }
+    35% {
+        opacity: 1;
+    }
+    to {
+        opacity: 0;
+        transform: translate3d(var(--particle-x, 0), var(--particle-y, -2rem), 0)
+            scale(1) rotate(135deg);
+    }
+}
+
+@layer utilities {
+    .motion-feedback-enter {
+        animation: motion-feedback-enter var(--motion-duration-feedback)
+            var(--motion-ease-standard) both;
+    }
+
+    .motion-message-enter {
+        animation: motion-message-enter var(--motion-duration-expressive)
+            var(--motion-ease-expressive) both;
+    }
+
+    .motion-magic-particle {
+        animation: motion-magic-particle var(--motion-duration-expressive)
+            var(--motion-ease-expressive) both;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    :root {
+        --motion-duration-feedback: 0ms;
+        --motion-duration-expressive: 0ms;
+    }
+
+    .motion-feedback-enter,
+    .motion-message-enter,
+    .motion-magic-particle {
+        animation: none;
+        transition-duration: 0ms;
+    }
 }
 
 .dark {
