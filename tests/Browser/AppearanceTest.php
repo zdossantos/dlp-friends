@@ -192,7 +192,7 @@ test('appearance remains stable across repeated Inertia navigation', function ()
         ->assertNoJavaScriptErrors();
 });
 
-test('semantic colors keep gold secondary and neutral interaction accents in light and dark themes', function () {
+test('semantic colors keep turquoise secondary and neutral interaction accents in light and dark themes', function () {
     $user = User::factory()->withProfile()->create();
     $this->actingAs($user);
 
@@ -201,8 +201,8 @@ test('semantic colors keep gold secondary and neutral interaction accents in lig
     $page->navigate('/settings/appearance')
         ->assertScript(semanticHueIsBetweenScript('primary', 245, 290), true)
         ->assertScript(semanticHueIsBetweenScript('ring', 245, 290), true)
-        ->assertScript(semanticColorEqualsRgbScript('secondary', 218, 165, 32), true)
-        ->assertScript(semanticHueIsBetweenScript('secondary', 35, 50), true)
+        ->assertScript(semanticColorEqualsRgbScript('secondary', 79, 168, 168), true)
+        ->assertScript(semanticHueIsBetweenScript('secondary', 175, 190), true)
         ->assertScript(semanticHueIsBetweenScript('accent', 245, 275), true)
         ->assertScript(semanticHueIsBetweenScript('sidebar-accent', 245, 275), true)
         ->assertScript(semanticContrastScript('secondary', 'secondary-foreground'), true)
@@ -213,8 +213,8 @@ test('semantic colors keep gold secondary and neutral interaction accents in lig
     $page->navigate('/settings/appearance')
         ->assertScript(semanticHueIsBetweenScript('primary', 245, 290), true)
         ->assertScript(semanticHueIsBetweenScript('ring', 245, 290), true)
-        ->assertScript(semanticColorEqualsRgbScript('secondary', 218, 165, 32), true)
-        ->assertScript(semanticHueIsBetweenScript('secondary', 35, 50), true)
+        ->assertScript(semanticColorEqualsRgbScript('secondary', 79, 168, 168), true)
+        ->assertScript(semanticHueIsBetweenScript('secondary', 175, 190), true)
         ->assertScript(semanticHueIsBetweenScript('accent', 245, 275), true)
         ->assertScript(semanticHueIsBetweenScript('sidebar-accent', 245, 275), true)
         ->assertScript(semanticContrastScript('secondary', 'secondary-foreground'), true)

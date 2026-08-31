@@ -17,10 +17,9 @@ cible.
 - Une ambiance contemporaine, chaleureuse et légèrement magique, sans imiter
   l’identité officielle de Disney.
 - Des surfaces neutres chaudes qui laissent le violet porter les actions
-  principales et le doré les accents secondaires.
-- Le doré reste mesuré : il souligne une action secondaire, un match, un badge,
-  une sélection ou un état important et ne devient pas la couleur d’action
-  principale.
+  principales et le turquoise doux les actions secondaires.
+- Le doré reste rare : il souligne un match, un badge ou un état important et
+  ne devient pas une couleur d’action générale.
 - Une hiérarchie simple, des cartes généreusement arrondies et des ombres
   discrètes donnent de la profondeur sans surcharger les parcours.
 - La couleur ne constitue jamais le seul moyen de comprendre une action, une
@@ -37,7 +36,7 @@ Les valeurs de référence sont définies en HSL dans `resources/css/app.css`.
 | `foreground` | violet presque noir | neutre chaud très clair | Texte principal |
 | `card` / `popover` | blanc chaud | violet sombre | Surfaces élevées |
 | `primary` | violet `hsl(263 63% 46%)` | violet clair `hsl(265 80% 72%)` | Action et focus principaux |
-| `secondary` | doré `500`, `#DAA520` | doré `500`, `#DAA520` | Actions secondaires et mises en valeur significatives |
+| `secondary` | turquoise doux, `#4FA8A8` | turquoise doux, `#4FA8A8` | Actions secondaires et mises en valeur significatives |
 | `accent` | violet neutre très clair, `hsl(258 24% 94%)` | violet neutre sombre, `hsl(258 18% 19%)` | Survols, menus et interactions discrètes |
 | `muted` | neutre chaud | violet neutre | Surfaces et textes secondaires |
 | `destructive` | rouge soutenu | rouge clair | Action ou état destructif |
