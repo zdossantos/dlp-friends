@@ -37,14 +37,13 @@ function semanticHueIsBetweenScript(string $token, int $minimumHue, int $maximum
     JS;
 }
 
-function sharedPaletteHasPinkScript(): string
+function interactionPaletteHasPinkScript(): string
 {
     return <<<'JS'
         (() => {
             const tokens = [
                 '--primary',
                 '--ring',
-                '--secondary',
                 '--accent',
                 '--chart-1',
                 '--chart-2',
@@ -192,7 +191,7 @@ test('appearance remains stable across repeated Inertia navigation', function ()
         ->assertNoJavaScriptErrors();
 });
 
-test('semantic colors keep turquoise secondary and neutral interaction accents in light and dark themes', function () {
+test('semantic colors keep pastel pink secondary and neutral interaction accents in light and dark themes', function () {
     $user = User::factory()->withProfile()->create();
     $this->actingAs($user);
 
@@ -201,24 +200,24 @@ test('semantic colors keep turquoise secondary and neutral interaction accents i
     $page->navigate('/settings/appearance')
         ->assertScript(semanticHueIsBetweenScript('primary', 245, 290), true)
         ->assertScript(semanticHueIsBetweenScript('ring', 245, 290), true)
-        ->assertScript(semanticColorEqualsRgbScript('secondary', 125, 211, 199), true)
-        ->assertScript(semanticHueIsBetweenScript('secondary', 165, 185), true)
+        ->assertScript(semanticColorEqualsRgbScript('secondary', 243, 182, 207), true)
+        ->assertScript(semanticHueIsBetweenScript('secondary', 330, 355), true)
         ->assertScript(semanticHueIsBetweenScript('accent', 245, 275), true)
         ->assertScript(semanticHueIsBetweenScript('sidebar-accent', 245, 275), true)
         ->assertScript(semanticContrastScript('secondary', 'secondary-foreground'), true)
         ->assertScript(semanticContrastScript('accent', 'accent-foreground'), true)
-        ->assertScript(sharedPaletteHasPinkScript(), false);
+        ->assertScript(interactionPaletteHasPinkScript(), false);
 
     $page->script("localStorage.setItem('appearance', 'dark')");
     $page->navigate('/settings/appearance')
         ->assertScript(semanticHueIsBetweenScript('primary', 245, 290), true)
         ->assertScript(semanticHueIsBetweenScript('ring', 245, 290), true)
-        ->assertScript(semanticColorEqualsRgbScript('secondary', 103, 199, 193), true)
-        ->assertScript(semanticHueIsBetweenScript('secondary', 165, 185), true)
+        ->assertScript(semanticColorEqualsRgbScript('secondary', 213, 142, 170), true)
+        ->assertScript(semanticHueIsBetweenScript('secondary', 330, 355), true)
         ->assertScript(semanticHueIsBetweenScript('accent', 245, 275), true)
         ->assertScript(semanticHueIsBetweenScript('sidebar-accent', 245, 275), true)
         ->assertScript(semanticContrastScript('secondary', 'secondary-foreground'), true)
         ->assertScript(semanticContrastScript('accent', 'accent-foreground'), true)
-        ->assertScript(sharedPaletteHasPinkScript(), false)
+        ->assertScript(interactionPaletteHasPinkScript(), false)
         ->assertNoJavaScriptErrors();
 });
