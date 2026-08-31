@@ -452,7 +452,7 @@ watch(
             <div class="flex flex-col items-center gap-1">
                 <Button
                     type="button"
-                    class="size-12 rounded-full bg-gradient-to-br from-pink-500 to-primary shadow-sm focus-visible:ring-[3px]"
+                    class="size-12 rounded-full bg-gradient-to-br from-primary to-primary/75 shadow-sm focus-visible:ring-[3px]"
                     :disabled="locked || !canDecide('like')"
                     :aria-label="t('discovery.actions.discover_profile')"
                     :title="t('discovery.actions.discover_profile')"

@@ -65,6 +65,7 @@ defineProps<{
                             {{ displayName }}
                         </h1>
                         <Badge
+                            data-test="profile-age-badge"
                             class="rounded-full px-3 py-1"
                             variant="secondary"
                         >
@@ -113,6 +114,7 @@ defineProps<{
                     <Badge
                         v-for="interest in interests"
                         :key="interest.id"
+                        data-test="profile-interest-badge"
                         variant="secondary"
                         class="rounded-full px-3 py-1.5"
                     >

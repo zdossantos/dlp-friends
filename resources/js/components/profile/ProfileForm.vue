@@ -441,7 +441,7 @@ function showInvalidStep(errors: Record<string, string>): void {
                 v-if="currentStep < 4"
                 type="button"
                 :disabled="!canContinue"
-                class="ml-auto min-h-12 flex-1 rounded-full bg-gradient-to-r from-primary to-pink-500 sm:max-w-64"
+                class="ml-auto min-h-12 flex-1 rounded-full bg-gradient-to-r from-primary to-primary/75 sm:max-w-64"
                 @click="next"
             >
                 {{ t('profile.actions.next') }}
@@ -451,7 +451,7 @@ function showInvalidStep(errors: Record<string, string>): void {
                 v-else
                 type="submit"
                 :disabled="processing || avatars.length === 0"
-                class="ml-auto min-h-12 flex-1 rounded-full bg-gradient-to-r from-primary to-pink-500 sm:max-w-72"
+                class="ml-auto min-h-12 flex-1 rounded-full bg-gradient-to-r from-primary to-primary/75 sm:max-w-72"
             >
                 <Spinner v-if="processing" />
                 <Check v-else class="size-4" aria-hidden="true" />

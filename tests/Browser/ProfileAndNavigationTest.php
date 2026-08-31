@@ -334,7 +334,7 @@ test('a completed member sees their public profile and member actions', function
     ));
     $this->actingAs($user);
 
-    visit('/profile')
+    $page = visit('/profile')
         ->on()->mobile()
         ->assertSee('Aurore')
         ->assertSee('26 ans')
@@ -345,6 +345,10 @@ test('a completed member sees their public profile and member actions', function
         ->assertSeeLink('Modifier mon profil')
         ->assertPresent('[data-test="profile-avatar-hero"]')
         ->assertPresent('[data-test="profile-information-sheet"]')
+        ->assertScript(
+            "(() => { const badges = [...document.querySelectorAll('[data-test=profile-age-badge], [data-test=profile-visibility-badge], [data-test=profile-frequency-badge], [data-test=profile-interest-badge]')]; return badges.length >= 4 && badges.every((badge) => { const style = getComputedStyle(badge); return style.borderTopWidth === '1px' && style.borderTopStyle === 'solid' && style.borderTopColor !== 'rgba(0, 0, 0, 0)'; }); })()",
+            true,
+        )
         ->assertScript(
             "getComputedStyle(document.querySelector('[data-test=profile-information-sheet]')).overflowY === 'auto'",
             true,
@@ -380,6 +384,14 @@ test('a completed member sees their public profile and member actions', function
         ->assertPresent('[aria-label="Réglages"]')
         ->assertNotPresent('[aria-label="Administration"]')
         ->assertPresent('[aria-label="Se déconnecter"]');
+
+    $page->script("localStorage.setItem('appearance', 'dark')");
+    $page->navigate('/profile')
+        ->assertScript(
+            "(() => { const badges = [...document.querySelectorAll('[data-test=profile-age-badge], [data-test=profile-visibility-badge], [data-test=profile-frequency-badge], [data-test=profile-interest-badge]')]; return document.documentElement.classList.contains('dark') && badges.length >= 4 && badges.every((badge) => { const style = getComputedStyle(badge); return style.borderTopWidth === '1px' && style.borderTopStyle === 'solid' && style.borderTopColor !== 'rgba(0, 0, 0, 0)'; }); })()",
+            true,
+        )
+        ->assertNoJavaScriptErrors();
 });
 
 test('an administrator sees administration and member return navigation', function () {
