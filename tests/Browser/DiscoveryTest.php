@@ -399,9 +399,14 @@ test('pointer gestures follow the card and enforce the horizontal threshold', fu
     $actions = "document.querySelector('[data-test=\"discovery-card-stack-item\"] [data-test=\"discovery-actions\"]')";
 
     $page->script("{$card}.setPointerCapture = () => {}; {$card}.hasPointerCapture = () => false; {$card}.releasePointerCapture = () => {};");
-    $page->script("{$card}.dispatchEvent(new PointerEvent('pointerdown', { pointerId: 1, clientX: 100, clientY: 100, bubbles: true })); {$card}.dispatchEvent(new PointerEvent('pointermove', { pointerId: 1, clientX: 171, clientY: 100, bubbles: true }));");
+    $page->script("{$card}.dispatchEvent(new PointerEvent('pointerdown', { pointerId: 1, clientX: 100, clientY: 100, bubbles: true })); {$card}.dispatchEvent(new PointerEvent('pointermove', { pointerId: 1, clientX: 130, clientY: 100, bubbles: true }));");
+    $page->assertScript("Number(document.querySelector('[data-test=discovery-like-constellation]').style.opacity) === 0", true)
+        ->assertScript("document.querySelectorAll('[data-test=discovery-like-constellation] [data-test=discovery-star]').length >= 20", true);
+    $page->script("{$card}.dispatchEvent(new PointerEvent('pointermove', { pointerId: 1, clientX: 171, clientY: 100, bubbles: true }));");
     $page->assertScript("{$card}.style.transform.includes('71px')", true)
-        ->assertScript("document.querySelector('[data-test=discovery-like-constellation]').style.opacity", '0.986')
+        ->assertScript("Number(document.querySelector('[data-test=discovery-like-constellation]').style.opacity) > 0", true)
+        ->assertScript("Number(document.querySelector('[data-test=discovery-like-constellation]').style.opacity) <= 0.5", true)
+        ->assertScript("getComputedStyle(document.querySelector('[data-test=discovery-like-constellation]')).transitionDuration", '0s')
         ->assertScript("getComputedStyle({$actions}).transform", 'none');
     $page->script("{$card}.dispatchEvent(new PointerEvent('pointerup', { pointerId: 1, clientX: 171, clientY: 100, bubbles: true }));");
     $page->assertScript("{$card}.style.transform.includes('0px')", true);
@@ -423,7 +428,28 @@ test('the pass button launches the card exit to the left', function () {
     $this->actingAs($actor);
 
     $page = visit('/discover');
-    $page->script("document.querySelector('[aria-label=\"Passer ce profil\"]').click()");
+    $page->script(<<<'JS'
+        new Promise((resolve) => {
+            const observer = new MutationObserver(() => {
+                const card = document.querySelector('[data-test=discovery-exiting-card]');
+
+                if (!card) {
+                    return;
+                }
+
+                requestAnimationFrame(() => {
+                    window.__passButtonSwipeFirstFrame = card.style.transform;
+                    requestAnimationFrame(() => {
+                        window.__passButtonSwipeFinalFrame = card.style.transform;
+                        observer.disconnect();
+                        resolve(true);
+                    });
+                });
+            });
+            observer.observe(document.body, { childList: true, subtree: true });
+            document.querySelector('[aria-label="Passer ce profil"]').click();
+        });
+    JS);
     $page->assertPresent('[data-test="discovery-exiting-card"][data-decision="pass"]')
         ->assertAttribute(
             '[data-test="discovery-exiting-card"]',
@@ -431,7 +457,11 @@ test('the pass button launches the card exit to the left', function () {
             'left',
         )
         ->assertScript(
-            "document.querySelector('[data-test=discovery-exiting-card]').style.transform.includes('-120vw')",
+            "window.__passButtonSwipeFirstFrame.includes('translate3d(0px')",
+            true,
+        )
+        ->assertScript(
+            "window.__passButtonSwipeFinalFrame.includes('-120vw')",
             true,
         )
         ->assertNoJavaScriptErrors();
@@ -443,7 +473,32 @@ test('the discover button launches the sparkling card exit to the right', functi
     $this->actingAs($actor);
 
     $page = visit('/discover');
-    $page->script("document.querySelector('[aria-label=\"Découvrir ce profil\"]').click()");
+    $page->script(<<<'JS'
+        new Promise((resolve) => {
+        window.__buttonSwipeFirstFrame = null;
+        const observer = new MutationObserver(() => {
+            const card = document.querySelector('[data-test=discovery-exiting-card]');
+
+            if (!card || window.__buttonSwipeFirstFrame !== null) {
+                return;
+            }
+
+            requestAnimationFrame(() => {
+                window.__buttonSwipeFirstFrame = card.style.transform;
+                requestAnimationFrame(() => {
+                    window.__buttonSwipeFinalFrame = card.style.transform;
+                    window.__buttonSwipeStarOpacity = card
+                        .querySelector('[data-test=discovery-like-constellation]')
+                        .style.opacity;
+                    observer.disconnect();
+                    resolve(true);
+                });
+            });
+        });
+        observer.observe(document.body, { childList: true, subtree: true });
+        document.querySelector('[aria-label="Découvrir ce profil"]').click();
+        });
+    JS);
     $page->assertPresent('[data-test="discovery-exiting-card"][data-decision="like"]')
         ->assertAttribute(
             '[data-test="discovery-exiting-card"]',
@@ -451,8 +506,16 @@ test('the discover button launches the sparkling card exit to the right', functi
             'right',
         )
         ->assertScript(
-            "document.querySelector('[data-test=discovery-exiting-card] [data-test=discovery-like-constellation]').style.opacity",
-            '1',
+            "window.__buttonSwipeFirstFrame.includes('translate3d(0px')",
+            true,
+        )
+        ->assertScript(
+            "window.__buttonSwipeFinalFrame.includes('120vw')",
+            true,
+        )
+        ->assertScript(
+            'window.__buttonSwipeStarOpacity',
+            '0.5',
         )
         ->assertNoJavaScriptErrors();
 });

@@ -13,6 +13,7 @@ import type {
 
 const SWIPE_THRESHOLD_PX = 72;
 const TAP_SLOP_PX = 8;
+const CONSTELLATION_START_PROGRESS = 0.42;
 type AllowedDecision = SwipeDecision | 'both';
 
 const props = withDefaults(
@@ -48,22 +49,58 @@ const isDragging = ref(false);
 const suppressNextClick = ref(false);
 const exitDirection = ref<-1 | 0 | 1>(0);
 let forcedExitFrame: number | undefined;
+let forcedExitPaintFrame: number | undefined;
+
+const constellationStars = [
+    { x: 10, y: 8, size: 3 },
+    { x: 23, y: 13, size: 2 },
+    { x: 39, y: 7, size: 4 },
+    { x: 56, y: 16, size: 2 },
+    { x: 72, y: 9, size: 3 },
+    { x: 88, y: 19, size: 2 },
+    { x: 16, y: 27, size: 2 },
+    { x: 31, y: 34, size: 3 },
+    { x: 49, y: 28, size: 2 },
+    { x: 66, y: 37, size: 4 },
+    { x: 83, y: 31, size: 2 },
+    { x: 8, y: 48, size: 3 },
+    { x: 24, y: 56, size: 2 },
+    { x: 43, y: 47, size: 3 },
+    { x: 58, y: 59, size: 2 },
+    { x: 78, y: 51, size: 3 },
+    { x: 91, y: 62, size: 2 },
+    { x: 13, y: 72, size: 2 },
+    { x: 29, y: 81, size: 4 },
+    { x: 47, y: 70, size: 2 },
+    { x: 63, y: 84, size: 3 },
+    { x: 81, y: 76, size: 2 },
+    { x: 92, y: 88, size: 3 },
+    { x: 51, y: 93, size: 2 },
+] as const;
 
 const likeProgress = computed(() => {
     if (props.forcedDecision === 'like') {
         return 1;
     }
 
-    return Math.max(0, Math.min(1, dragOffset.value.x / SWIPE_THRESHOLD_PX));
+    const dragProgress = Math.max(
+        0,
+        Math.min(1, dragOffset.value.x / SWIPE_THRESHOLD_PX),
+    );
+
+    return Math.max(
+        0,
+        (dragProgress - CONSTELLATION_START_PROGRESS) /
+            (1 - CONSTELLATION_START_PROGRESS),
+    );
 });
 
 const constellationStyle = computed(() => {
     const progress = likeProgress.value;
 
     return {
-        opacity: progress.toFixed(3),
-        filter: `brightness(${0.7 + progress * 1.3}) drop-shadow(0 0 ${4 + progress * 18}px rgba(252, 211, 77, ${0.25 + progress * 0.65}))`,
-        transform: `scale(${0.82 + progress * 0.18})`,
+        opacity: (progress * 0.5).toFixed(3),
+        transform: `scale(${0.94 + progress * 0.06})`,
     };
 });
 
@@ -265,14 +302,20 @@ onMounted(() => {
         return;
     }
 
-    forcedExitFrame = window.requestAnimationFrame(() => {
-        exitDirection.value = props.forcedDecision === 'like' ? 1 : -1;
+    forcedExitPaintFrame = window.requestAnimationFrame(() => {
+        forcedExitFrame = window.requestAnimationFrame(() => {
+            exitDirection.value = props.forcedDecision === 'like' ? 1 : -1;
+        });
     });
 });
 
 onBeforeUnmount(() => {
     if (forcedExitFrame !== undefined) {
         window.cancelAnimationFrame(forcedExitFrame);
+    }
+
+    if (forcedExitPaintFrame !== undefined) {
+        window.cancelAnimationFrame(forcedExitPaintFrame);
     }
 });
 </script>
@@ -294,7 +337,8 @@ onBeforeUnmount(() => {
                       ? 'left'
                       : undefined
             "
-            class="flex min-h-0 w-full flex-1 touch-pan-y flex-col gap-0 overflow-hidden rounded-[2rem] p-0 shadow-xl shadow-primary/10 transition-[transform,opacity] duration-[280ms] ease-[cubic-bezier(0.22,1,0.36,1)] will-change-transform outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 motion-reduce:duration-0"
+            class="flex min-h-0 w-full flex-1 touch-pan-y flex-col gap-0 overflow-hidden rounded-[2rem] p-0 shadow-xl shadow-primary/10 transition-[transform,opacity] ease-[cubic-bezier(0.22,1,0.36,1)] will-change-transform outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 motion-reduce:duration-0"
+            :class="isDragging ? 'duration-0' : 'duration-[280ms]'"
             :style="cardStyle"
             :tabindex="preview ? -1 : 0"
             :aria-label="
@@ -314,32 +358,20 @@ onBeforeUnmount(() => {
             <div
                 data-test="discovery-like-constellation"
                 aria-hidden="true"
-                class="pointer-events-none absolute inset-0 z-30 overflow-hidden rounded-[2rem] transition-[opacity,filter,transform] duration-75 ease-out motion-reduce:hidden"
+                class="pointer-events-none absolute inset-0 z-30 overflow-hidden rounded-[2rem] motion-reduce:hidden"
                 :style="constellationStyle"
             >
-                <Sparkles
-                    class="absolute top-[9%] left-[12%] size-5 text-amber-200"
-                />
-                <Sparkles
-                    class="absolute top-[17%] right-[16%] size-8 text-amber-300"
-                />
-                <Sparkles
-                    class="absolute top-[35%] left-[8%] size-3 text-secondary-foreground"
-                />
-                <Sparkles
-                    class="absolute top-[43%] right-[7%] size-5 text-amber-200"
-                />
-                <Sparkles
-                    class="absolute right-[20%] bottom-[30%] size-4 text-secondary-foreground"
-                />
-                <Sparkles
-                    class="absolute bottom-[19%] left-[13%] size-7 text-amber-300"
-                />
                 <span
-                    class="absolute top-[28%] left-[32%] size-1.5 rounded-full bg-white shadow-[0_0_12px_4px_rgba(255,255,255,.9)]"
-                />
-                <span
-                    class="absolute right-[31%] bottom-[15%] size-1 rounded-full bg-amber-100 shadow-[0_0_10px_3px_rgba(252,211,77,.9)]"
+                    v-for="(star, index) in constellationStars"
+                    :key="index"
+                    data-test="discovery-star"
+                    class="absolute rotate-45 rounded-[1px] bg-amber-100 shadow-[0_0_5px_rgba(252,211,77,.55)]"
+                    :style="{
+                        left: `${star.x}%`,
+                        top: `${star.y}%`,
+                        width: `${star.size}px`,
+                        height: `${star.size}px`,
+                    }"
                 />
             </div>
             <div
