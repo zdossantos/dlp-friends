@@ -533,11 +533,21 @@ test('a member sends the first message immediately after opening a new match con
     JS);
 
     $page->fill('content', 'Bonjour Basile !');
-    $page->script("document.querySelector('[aria-label=\"Envoyer le message\"]').click(); document.querySelector('[aria-label=\"Envoyer le message\"]').click(); true;");
+    $page->script(<<<'JS'
+        const sendButton = document.querySelector('[aria-label="Envoyer le message"]');
+        sendButton.click();
+        sendButton.click();
+        new Promise((resolve) => requestAnimationFrame(() => {
+            window.__composerBusy = sendButton.getAttribute('aria-busy');
+            resolve(true);
+        }));
+    JS);
     $page
+        ->assertScript('window.__composerBusy', 'true')
         ->assertSee('Bonjour Basile !')
         ->assertValue('content', '')
         ->assertScript("document.querySelectorAll('[data-message-id]').length", 1)
+        ->assertPresent('[data-message-id].motion-message-enter')
         ->assertNoJavaScriptErrors();
 
     $conversation = MemberMatch::query()->firstOrFail()->conversation()->firstOrFail();

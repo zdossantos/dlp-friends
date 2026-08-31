@@ -13,6 +13,7 @@ const props = defineProps<{
 
 const scrollContainer = ref<HTMLElement | null>(null);
 const announcedMessage = ref('');
+const animatedMessageId = ref<number | null>(null);
 const latestMessage = computed<ConversationMessage | undefined>(() =>
     props.messages.data.at(-1),
 );
@@ -34,10 +35,12 @@ onMounted(() => nextTick(scrollToBottom));
 
 watch(
     () => latestMessage.value?.id,
-    async (messageId, previousMessageId) => {
-        if (messageId === undefined || previousMessageId === undefined) {
+    async (messageId) => {
+        if (messageId === undefined) {
             return;
         }
+
+        animatedMessageId.value = messageId;
 
         const container = scrollContainer.value;
         const wasNearBottom =
@@ -91,11 +94,14 @@ watch(
                 :key="message.id"
                 :data-message-id="message.id"
                 class="flex"
-                :class="
+                :class="[
                     message.author_user_id === currentUserId
                         ? 'justify-end'
-                        : 'justify-start'
-                "
+                        : 'justify-start',
+                    message.id === animatedMessageId
+                        ? 'motion-message-enter'
+                        : undefined,
+                ]"
             >
                 <div class="flex max-w-[85%] flex-col items-end sm:max-w-[70%]">
                     <article

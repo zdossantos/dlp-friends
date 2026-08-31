@@ -2,6 +2,7 @@
 import { SendHorizontal } from '@lucide/vue';
 import { computed, nextTick, ref } from 'vue';
 import { Button } from '@/components/ui/button';
+import { Spinner } from '@/components/ui/spinner';
 import { useTranslations } from '@/composables/useTranslations';
 import { xsrfHeader } from '@/lib/csrf';
 import { store as storeMessage } from '@/routes/conversations/messages';
@@ -134,9 +135,11 @@ function handleKeydown(event: KeyboardEvent): void {
                 size="icon"
                 class="size-11 shrink-0 rounded-2xl"
                 :aria-label="t('conversations.message.send')"
+                :aria-busy="pending ? 'true' : undefined"
                 :disabled="disabled"
             >
-                <SendHorizontal class="size-5" aria-hidden="true" />
+                <Spinner v-if="pending" class="size-5" />
+                <SendHorizontal v-else class="size-5" aria-hidden="true" />
             </Button>
         </form>
     </footer>
