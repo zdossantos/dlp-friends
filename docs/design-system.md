@@ -37,7 +37,7 @@ Les valeurs de référence sont définies en HSL dans `resources/css/app.css`.
 | `foreground` | violet presque noir | neutre chaud très clair | Texte principal |
 | `card` / `popover` | blanc chaud | violet sombre | Surfaces élevées |
 | `primary` | violet `hsl(263 63% 46%)` | violet clair `hsl(265 80% 72%)` | Action et focus principaux |
-| `secondary` | doré pâle, `hsl(43 74% 84%)` | doré sombre, `hsl(42 46% 25%)` | Actions secondaires et mises en valeur significatives |
+| `secondary` | doré `500`, `#DAA520` | doré `500`, `#DAA520` | Actions secondaires et mises en valeur significatives |
 | `accent` | violet neutre très clair, `hsl(258 24% 94%)` | violet neutre sombre, `hsl(258 18% 19%)` | Survols, menus et interactions discrètes |
 | `muted` | neutre chaud | violet neutre | Surfaces et textes secondaires |
 | `destructive` | rouge soutenu | rouge clair | Action ou état destructif |
