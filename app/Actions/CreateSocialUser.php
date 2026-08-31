@@ -11,7 +11,9 @@ use App\Models\SocialAccount;
 use App\Models\User;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 
 class CreateSocialUser
 {
@@ -19,6 +21,13 @@ class CreateSocialUser
     {
         try {
             return DB::transaction(function () use ($identity, $birthDate): User {
+                if (Validator::make(
+                    ['birth_date' => $birthDate],
+                    ['birth_date' => ['required', Rule::date()->beforeOrEqual(today()->subYears(18))]],
+                )->fails()) {
+                    throw new SocialAuthenticationException('social_auth.adult_required');
+                }
+
                 if (SocialAccount::query()
                     ->where('provider', $identity->provider->value)
                     ->where('provider_user_id', $identity->providerUserId)

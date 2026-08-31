@@ -16,6 +16,7 @@ use Illuminate\Support\Str;
 use Laravel\Socialite\Facades\Socialite;
 use Laravel\Socialite\Two\InvalidStateException;
 use Symfony\Component\HttpFoundation\RedirectResponse as SymfonyRedirectResponse;
+use Throwable;
 
 class SocialAuthController extends Controller
 {
@@ -28,6 +29,8 @@ class SocialAuthController extends Controller
     {
         try {
             if ($request->filled('error')) {
+                $this->validateErrorState($request);
+
                 throw new SocialAuthenticationException('social_auth.cancelled');
             }
 
@@ -78,6 +81,20 @@ class SocialAuthController extends Controller
             return $this->failure('social_auth.invalid_callback');
         } catch (SocialAuthenticationException $exception) {
             return $this->failure($exception->translationKey());
+        } catch (Throwable) {
+            return $this->failure('social_auth.unavailable');
+        }
+    }
+
+    private function validateErrorState(Request $request): void
+    {
+        $expectedState = $request->session()->pull('state');
+        $receivedState = (string) $request->input('state');
+
+        if (! is_string($expectedState)
+            || $expectedState === ''
+            || ! hash_equals($expectedState, $receivedState)) {
+            throw new InvalidStateException;
         }
     }
 

@@ -2,9 +2,12 @@
 
 namespace Tests\Feature\Auth;
 
+use App\Actions\CreateSocialUser;
 use App\Data\PendingSocialIdentity;
 use App\Enums\RoleName;
+use App\Enums\SocialProvider;
 use App\Enums\UserStatus;
+use App\Exceptions\SocialAuthenticationException;
 use App\Models\SocialAccount;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -183,13 +186,48 @@ class SocialAuthenticationTest extends TestCase
         Socialite::fake($provider, $this->socialiteUser($provider));
 
         $response = $provider === 'apple'
-            ? $this->post('/auth/apple/callback', ['error' => 'access_denied'])
-            : $this->get('/auth/google/callback?error=access_denied');
+            ? $this->withSession(['state' => 'expected'])->post('/auth/apple/callback', ['error' => 'access_denied', 'state' => 'expected'])
+            : $this->withSession(['state' => 'expected'])->get('/auth/google/callback?error=access_denied&state=expected');
 
         $response->assertRedirect(route('login'));
         $response->assertSessionHasErrors('social_auth');
         $response->assertSessionMissing(PendingSocialIdentity::SESSION_KEY);
+        $response->assertSessionMissing('state');
         $this->assertGuest();
+    }
+
+    #[DataProvider('providers')]
+    public function test_provider_cancellation_requires_a_valid_oauth_state(string $provider): void
+    {
+        Socialite::fake($provider, $this->socialiteUser($provider));
+
+        $response = $provider === 'apple'
+            ? $this->withSession(['state' => 'expected'])->post('/auth/apple/callback', ['error' => 'access_denied', 'state' => 'forged'])
+            : $this->withSession(['state' => 'expected'])->get('/auth/google/callback?error=access_denied&state=forged');
+
+        $response->assertRedirect(route('login'));
+        $response->assertSessionHasErrors([
+            'social_auth' => __('social_auth.invalid_callback'),
+        ]);
+        $response->assertSessionMissing('state');
+        $this->assertGuest();
+    }
+
+    #[DataProvider('providers')]
+    public function test_expected_provider_failures_are_reported_safely(string $provider): void
+    {
+        Socialite::fake($provider, fn () => throw new \RuntimeException('sensitive provider response'));
+
+        $response = $this->performCallback($provider);
+
+        $response->assertRedirect(route('login'));
+        $response->assertSessionHasErrors([
+            'social_auth' => __('social_auth.unavailable'),
+        ]);
+        $this->assertStringNotContainsString(
+            'sensitive provider response',
+            implode(' ', $response->getSession()->get('errors')->all()),
+        );
     }
 
     public function test_social_registration_form_requires_a_valid_pending_identity(): void
@@ -237,6 +275,26 @@ class SocialAuthenticationTest extends TestCase
 
         $this->assertDatabaseCount('users', 0);
         $this->assertDatabaseCount('social_accounts', 0);
+    }
+
+    public function test_social_user_action_enforces_adulthood_itself(): void
+    {
+        Carbon::setTestNow('2026-08-31');
+
+        $identity = new PendingSocialIdentity(
+            SocialProvider::Google,
+            'google-123',
+            'new@example.com',
+        );
+
+        try {
+            app(CreateSocialUser::class)->execute($identity, '2008-09-01');
+            $this->fail('An underage social account was created.');
+        } catch (SocialAuthenticationException $exception) {
+            $this->assertSame('social_auth.adult_required', $exception->translationKey());
+        }
+
+        $this->assertDatabaseCount('users', 0);
     }
 
     public function test_adult_can_complete_social_registration(): void
