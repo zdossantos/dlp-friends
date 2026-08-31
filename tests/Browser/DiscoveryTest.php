@@ -313,6 +313,72 @@ test('an accepted swipe refreshes only the updated discovery data', function () 
         );
 });
 
+test('a discovery decision optimistically reveals the next card before the request finishes', function () {
+    $actor = discoveryMember('Alice');
+    discoveryMember('Basile');
+    discoveryMember('Chloé');
+    $this->actingAs($actor);
+
+    $page = visit('/discover')->assertSee('Basile');
+    $page->assertScript(
+        "document.querySelectorAll('[data-test=discovery-card-stack-item]').length",
+        2,
+    );
+    $page->script(<<<'JS'
+        window.__swipeRequestCount = 0;
+        window.__initialActiveProfileId = document
+            .querySelector('[data-test=discovery-card-stack-item]:not([aria-hidden])')
+            .dataset.profileUserId;
+        window.__realOptimisticXhrOpen = XMLHttpRequest.prototype.open;
+        window.__realOptimisticXhrSend = XMLHttpRequest.prototype.send;
+        XMLHttpRequest.prototype.open = function (method, url, ...rest) {
+            this.__optimisticRequestUrl = String(url);
+
+            return window.__realOptimisticXhrOpen.call(this, method, url, ...rest);
+        };
+        XMLHttpRequest.prototype.send = function (body) {
+            if (this.__optimisticRequestUrl.includes('/swipe')) {
+                window.__swipeRequestCount += 1;
+                const request = this;
+                window.__releaseOptimisticSwipe = () => {
+                    window.__releaseOptimisticSwipe = undefined;
+                    window.__realOptimisticXhrSend.call(request, body);
+                };
+
+                return;
+            }
+
+            return window.__realOptimisticXhrSend.call(this, body);
+        };
+        true;
+    JS);
+
+    $page->script(<<<'JS'
+        document.querySelector('[aria-label="Découvrir ce profil"]:not([disabled])').click();
+        new Promise((resolve) => requestAnimationFrame(() => {
+            const activeCard = document.querySelector(
+                '[data-test=discovery-card-stack-item]:not([aria-hidden])',
+            );
+            window.__optimisticCardChanged =
+                activeCard.dataset.profileUserId !== window.__initialActiveProfileId;
+            window.__optimisticNextCardLocked = activeCard
+                .querySelector('[aria-label="Découvrir ce profil"]')
+                .disabled;
+            resolve(true);
+        }));
+    JS);
+    $page->assertScript('window.__swipeRequestCount', 1)
+        ->assertScript('window.__optimisticCardChanged', true)
+        ->assertScript('window.__optimisticNextCardLocked', true);
+
+    $page->script('window.__releaseOptimisticSwipe(); true;');
+    $page->assertScript(
+        "document.querySelector('[data-test=discovery-card-stack-item]:not([aria-hidden])').dataset.profileUserId !== window.__initialActiveProfileId",
+        true,
+    )
+        ->assertNoJavaScriptErrors();
+});
+
 test('pointer gestures follow the card and enforce the horizontal threshold', function () {
     $actor = discoveryMember('Alice');
     $target = discoveryMember('Basile');

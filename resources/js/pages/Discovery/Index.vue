@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, Link, router, setLayoutProps } from '@inertiajs/vue3';
-import { computed, ref, watch } from 'vue';
+import { computed, onBeforeUnmount, ref, watch } from 'vue';
 import MatchDialog from '@/components/discovery/MatchDialog.vue';
 import SwipeCard from '@/components/discovery/SwipeCard.vue';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -31,7 +31,16 @@ setLayoutProps({
     ],
 });
 
-const activeSuggestion = computed(() => props.suggestions?.[0]);
+const optimisticSuggestions = ref<DiscoveryProfile[]>([
+    ...(props.suggestions ?? []),
+]);
+const hiddenProfileId = ref<number | null>(null);
+const displayedSuggestions = computed(() =>
+    optimisticSuggestions.value.filter(
+        (suggestion) => suggestion.userId !== hiddenProfileId.value,
+    ),
+);
+const activeSuggestion = computed(() => displayedSuggestions.value[0]);
 
 const isSubmitting = ref(false);
 const errorMessage = ref<string | null>(null);
@@ -41,6 +50,9 @@ const retryAttempt = ref<{
 } | null>(null);
 const visibleMatchId = ref(props.match?.id ?? null);
 const matchDialogOpen = ref(props.match !== null);
+const pendingProfile = ref<DiscoveryProfile | null>(null);
+const decisionEffect = ref<SwipeDecision | null>(null);
+let decisionEffectTimer: number | undefined;
 
 watch(
     () => props.match?.id ?? null,
@@ -65,6 +77,12 @@ watch(
             return;
         }
 
+        if (isSubmitting.value) {
+            return;
+        }
+
+        optimisticSuggestions.value = [...suggestions];
+
         const targetUserId = suggestions[0]?.userId ?? null;
 
         if (
@@ -77,6 +95,30 @@ watch(
     },
 );
 
+function restorePendingProfile(): void {
+    const profile = pendingProfile.value;
+
+    if (
+        profile !== null &&
+        !optimisticSuggestions.value.some(
+            (suggestion) => suggestion.userId === profile.userId,
+        )
+    ) {
+        optimisticSuggestions.value.unshift(profile);
+    }
+
+    pendingProfile.value = null;
+    hiddenProfileId.value = null;
+}
+
+function showDecisionEffect(decision: SwipeDecision): void {
+    window.clearTimeout(decisionEffectTimer);
+    decisionEffect.value = decision;
+    decisionEffectTimer = window.setTimeout(() => {
+        decisionEffect.value = null;
+    }, 480);
+}
+
 function submit(decision: SwipeDecision, targetUserId?: number): void {
     const resolvedTargetUserId = targetUserId ?? activeSuggestion.value?.userId;
 
@@ -87,6 +129,15 @@ function submit(decision: SwipeDecision, targetUserId?: number): void {
     isSubmitting.value = true;
     retryAttempt.value = { targetUserId: resolvedTargetUserId, decision };
     errorMessage.value = null;
+    pendingProfile.value =
+        optimisticSuggestions.value.find(
+            (suggestion) => suggestion.userId === resolvedTargetUserId,
+        ) ?? null;
+    hiddenProfileId.value = resolvedTargetUserId;
+    optimisticSuggestions.value = optimisticSuggestions.value.filter(
+        (suggestion) => suggestion.userId !== resolvedTargetUserId,
+    );
+    showDecisionEffect(decision);
 
     router.post(
         swipe(resolvedTargetUserId).url,
@@ -97,9 +148,13 @@ function submit(decision: SwipeDecision, targetUserId?: number): void {
             preserveScroll: true,
             replace: true,
             onSuccess: () => {
+                optimisticSuggestions.value = [...(props.suggestions ?? [])];
+                hiddenProfileId.value = null;
                 retryAttempt.value = null;
+                pendingProfile.value = null;
             },
             onError: (errors) => {
+                restorePendingProfile();
                 errorMessage.value = String(
                     errors.decision ??
                         errors.target ??
@@ -107,11 +162,13 @@ function submit(decision: SwipeDecision, targetUserId?: number): void {
                 );
             },
             onHttpException: () => {
+                restorePendingProfile();
                 errorMessage.value = t('discovery.page.server_error');
 
                 return false;
             },
             onNetworkError: () => {
+                restorePendingProfile();
                 errorMessage.value = t('discovery.page.network_error');
 
                 return false;
@@ -122,6 +179,8 @@ function submit(decision: SwipeDecision, targetUserId?: number): void {
         },
     );
 }
+
+onBeforeUnmount(() => window.clearTimeout(decisionEffectTimer));
 
 function retry(): void {
     if (retryAttempt.value) {
@@ -180,7 +239,10 @@ function retry(): void {
             <Skeleton class="h-10 w-full" />
         </section>
 
-        <Card v-else-if="suggestions.length === 0" class="w-full rounded-3xl">
+        <Card
+            v-else-if="displayedSuggestions.length === 0"
+            class="w-full rounded-3xl"
+        >
             <CardHeader>
                 <CardTitle>
                     {{ t('discovery.page.empty_title') }}
@@ -204,13 +266,14 @@ function retry(): void {
             :aria-label="t('discovery.page.profiles_label')"
         >
             <div
-                v-for="(profile, index) in suggestions"
+                v-for="(profile, index) in displayedSuggestions"
                 :key="profile.userId"
                 data-test="discovery-card-stack-item"
+                :data-profile-user-id="profile.userId"
                 class="absolute inset-x-0 top-0 bottom-3 flex w-full justify-center transition-transform duration-300 ease-out"
                 :class="index === 0 ? undefined : 'pointer-events-none'"
                 :style="{
-                    zIndex: suggestions.length - index,
+                    zIndex: displayedSuggestions.length - index,
                     transform:
                         index === 0
                             ? undefined
@@ -224,12 +287,34 @@ function retry(): void {
                     :locked="isSubmitting || index > 0"
                     :preview="index > 0"
                     :public-profile-href="showMember(profile.userId).url"
-                    @like="index === 0 && submit('like')"
-                    @pass="index === 0 && submit('pass')"
+                    @like="index === 0 && submit('like', profile.userId)"
+                    @pass="index === 0 && submit('pass', profile.userId)"
                     @open="
                         index === 0 &&
                         router.visit(showMember(profile.userId).url)
                     "
+                />
+            </div>
+            <div
+                v-if="decisionEffect"
+                data-test="discovery-decision-effect"
+                aria-hidden="true"
+                class="pointer-events-none absolute inset-0 z-50 overflow-hidden rounded-3xl"
+            >
+                <span
+                    v-for="particle in 7"
+                    :key="`${decisionEffect}-${particle}`"
+                    class="motion-magic-particle absolute top-1/2 left-1/2 size-2 rounded-full"
+                    :class="
+                        decisionEffect === 'like'
+                            ? 'bg-amber-300 shadow-[0_0_18px_rgba(252,211,77,0.9)]'
+                            : 'bg-muted-foreground/35'
+                    "
+                    :style="{
+                        '--particle-x': `${(particle - 4) * 31}px`,
+                        '--particle-y': `${-42 - Math.abs(particle - 4) * 13}px`,
+                        animationDelay: `${particle * 24}ms`,
+                    }"
                 />
             </div>
         </section>

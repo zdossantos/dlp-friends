@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Sparkles, Users, X } from '@lucide/vue';
-import { computed, onBeforeUnmount, ref, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -13,7 +13,6 @@ import type {
 
 const SWIPE_THRESHOLD_PX = 72;
 const TAP_SLOP_PX = 8;
-const SWIPE_EXIT_DURATION_MS = 280;
 type AllowedDecision = SwipeDecision | 'both';
 
 const props = withDefaults(
@@ -47,7 +46,6 @@ const dragOffset = ref({ x: 0, y: 0 });
 const isDragging = ref(false);
 const suppressNextClick = ref(false);
 const exitDirection = ref<-1 | 0 | 1>(0);
-let exitTimer: number | undefined;
 
 const cardStyle = computed(() => {
     const rotation = Math.max(-14, Math.min(14, dragOffset.value.x / 20));
@@ -104,19 +102,11 @@ function animateDecision(decision: SwipeDecision) {
     isDragging.value = false;
     exitDirection.value = decision === 'like' ? 1 : -1;
 
-    const prefersReducedMotion =
-        window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ??
-        false;
-    exitTimer = window.setTimeout(
-        () => {
-            if (decision === 'like') {
-                emit('like');
-            } else {
-                emit('pass');
-            }
-        },
-        prefersReducedMotion ? 0 : SWIPE_EXIT_DURATION_MS,
-    );
+    if (decision === 'like') {
+        emit('like');
+    } else {
+        emit('pass');
+    }
 }
 
 function canDecide(decision: SwipeDecision): boolean {
@@ -240,8 +230,6 @@ function handlePointerEnd(event: PointerEvent) {
 
     dragOffset.value = { x: 0, y: 0 };
 }
-
-onBeforeUnmount(() => window.clearTimeout(exitTimer));
 
 watch(
     () => props.locked,

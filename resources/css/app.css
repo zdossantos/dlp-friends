@@ -145,7 +145,11 @@
     }
     to {
         opacity: 0;
-        transform: translate3d(var(--particle-x, 0), var(--particle-y, -2rem), 0)
+        transform: translate3d(
+                var(--particle-x, 0),
+                var(--particle-y, -2rem),
+                0
+            )
             scale(1) rotate(135deg);
     }
 }
