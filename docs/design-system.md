@@ -17,7 +17,7 @@ cible.
 - Une ambiance contemporaine, chaleureuse et légèrement magique, sans imiter
   l’identité officielle de Disney.
 - Des surfaces neutres chaudes qui laissent le violet porter les actions
-  principales et le turquoise doux les actions secondaires.
+  principales et le rose dragée pastel les actions secondaires.
 - Le doré reste rare : il souligne un match, un badge ou un état important et
   ne devient pas une couleur d’action générale.
 - Une hiérarchie simple, des cartes généreusement arrondies et des ombres
@@ -44,10 +44,10 @@ Les valeurs de référence sont définies en HSL dans `resources/css/app.css`.
 
 Les thèmes disponibles sont `light`, `dark` et `system`. La préférence est
 persistée, et la classe `.dark` active l’ensemble cohérent de tokens sombres.
-La palette d'interface partagée n'utilise pas de rose. Toute nouvelle couleur
-doit d’abord recevoir une fonction sémantique ; une valeur locale n’est
-acceptable que pour une illustration, une couleur d'avatar administrable ou un
-état métier réellement spécifique.
+Le rose pastel est réservé au token `secondary`, à ses badges et aux actions
+secondaires. Toute nouvelle couleur doit d’abord recevoir une fonction
+sémantique ; une valeur locale n’est acceptable que pour une illustration, une
+couleur d'avatar administrable ou un état métier réellement spécifique.
 
 ## Typographie, espacement, rayons et ombres
 
