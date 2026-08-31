@@ -22,6 +22,8 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        $middleware->validateCsrfTokens(except: ['auth/apple/callback']);
+
         $middleware->alias([
             'profile.complete' => EnsureProfileIsComplete::class,
             'onboarding.complete' => EnsureProductOnboardingIsComplete::class,
