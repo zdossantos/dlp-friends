@@ -9,15 +9,17 @@
     ],
     "license": "MIT",
     "require": {
-        "ext-gd": "*",
         "php": "^8.3",
+        "ext-gd": "*",
         "inertiajs/inertia-laravel": "^3.0",
         "laravel/chisel": "^0.1.0",
         "laravel/fortify": "^1.37.2",
         "laravel/framework": "^13.17",
         "laravel/reverb": "^1.0",
+        "laravel/socialite": "^5.30",
         "laravel/tinker": "^3.0",
-        "laravel/wayfinder": "^0.1.14"
+        "laravel/wayfinder": "^0.1.14",
+        "socialiteproviders/apple": "^5.10"
     },
     "require-dev": {
         "fakerphp/faker": "^1.24",
