@@ -34,15 +34,14 @@ setLayoutProps({
 const optimisticSuggestions = ref<DiscoveryProfile[]>([
     ...(props.suggestions ?? []),
 ]);
-const hiddenProfileId = ref<number | null>(null);
+const dismissedProfileIds = ref<Set<number>>(new Set());
 const displayedSuggestions = computed(() =>
     optimisticSuggestions.value.filter(
-        (suggestion) => suggestion.userId !== hiddenProfileId.value,
+        (suggestion) => !dismissedProfileIds.value.has(suggestion.userId),
     ),
 );
 const activeSuggestion = computed(() => displayedSuggestions.value[0]);
 
-const isSubmitting = ref(false);
 const errorMessage = ref<string | null>(null);
 const retryAttempt = ref<{
     targetUserId: number;
@@ -50,16 +49,21 @@ const retryAttempt = ref<{
 } | null>(null);
 const visibleMatchId = ref(props.match?.id ?? null);
 const matchDialogOpen = ref(props.match !== null);
-const pendingProfile = ref<DiscoveryProfile | null>(null);
-const decisionEffect = ref<SwipeDecision | null>(null);
-let decisionEffectTimer: number | undefined;
+const pendingProfiles = ref<Map<number, DiscoveryProfile>>(new Map());
+const exitingCards = ref<
+    Array<{
+        id: number;
+        profile: DiscoveryProfile;
+        decision: SwipeDecision;
+    }>
+>([]);
+let exitingCardSequence = 0;
+const exitingCardTimers = new Set<number>();
 
 watch(
     () => props.match?.id ?? null,
     (matchId) => {
         if (matchId === null) {
-            matchDialogOpen.value = false;
-
             return;
         }
 
@@ -77,10 +81,6 @@ watch(
             return;
         }
 
-        if (isSubmitting.value) {
-            return;
-        }
-
         optimisticSuggestions.value = [...suggestions];
 
         const targetUserId = suggestions[0]?.userId ?? null;
@@ -95,8 +95,8 @@ watch(
     },
 );
 
-function restorePendingProfile(): void {
-    const profile = pendingProfile.value;
+function restorePendingProfile(targetUserId: number): void {
+    const profile = pendingProfiles.value.get(targetUserId) ?? null;
 
     if (
         profile !== null &&
@@ -107,37 +107,52 @@ function restorePendingProfile(): void {
         optimisticSuggestions.value.unshift(profile);
     }
 
-    pendingProfile.value = null;
-    hiddenProfileId.value = null;
+    pendingProfiles.value.delete(targetUserId);
+    pendingProfiles.value = new Map(pendingProfiles.value);
+    const nextDismissed = new Set(dismissedProfileIds.value);
+    nextDismissed.delete(targetUserId);
+    dismissedProfileIds.value = nextDismissed;
 }
 
-function showDecisionEffect(decision: SwipeDecision): void {
-    window.clearTimeout(decisionEffectTimer);
-    decisionEffect.value = decision;
-    decisionEffectTimer = window.setTimeout(() => {
-        decisionEffect.value = null;
-    }, 480);
+function showExitingCard(
+    profile: DiscoveryProfile,
+    decision: SwipeDecision,
+): void {
+    const id = ++exitingCardSequence;
+    exitingCards.value.push({ id, profile, decision });
+    const timer = window.setTimeout(() => {
+        exitingCards.value = exitingCards.value.filter(
+            (card) => card.id !== id,
+        );
+        exitingCardTimers.delete(timer);
+    }, 360);
+    exitingCardTimers.add(timer);
 }
 
 function submit(decision: SwipeDecision, targetUserId?: number): void {
     const resolvedTargetUserId = targetUserId ?? activeSuggestion.value?.userId;
 
-    if (isSubmitting.value || resolvedTargetUserId === undefined) {
+    if (resolvedTargetUserId === undefined) {
         return;
     }
 
-    isSubmitting.value = true;
+    const profile = optimisticSuggestions.value.find(
+        (suggestion) => suggestion.userId === resolvedTargetUserId,
+    );
+
+    if (!profile || dismissedProfileIds.value.has(resolvedTargetUserId)) {
+        return;
+    }
+
     retryAttempt.value = { targetUserId: resolvedTargetUserId, decision };
     errorMessage.value = null;
-    pendingProfile.value =
-        optimisticSuggestions.value.find(
-            (suggestion) => suggestion.userId === resolvedTargetUserId,
-        ) ?? null;
-    hiddenProfileId.value = resolvedTargetUserId;
-    optimisticSuggestions.value = optimisticSuggestions.value.filter(
-        (suggestion) => suggestion.userId !== resolvedTargetUserId,
-    );
-    showDecisionEffect(decision);
+    pendingProfiles.value.set(resolvedTargetUserId, profile);
+    pendingProfiles.value = new Map(pendingProfiles.value);
+    dismissedProfileIds.value = new Set([
+        ...dismissedProfileIds.value,
+        resolvedTargetUserId,
+    ]);
+    showExitingCard(profile, decision);
 
     router.post(
         swipe(resolvedTargetUserId).url,
@@ -147,14 +162,18 @@ function submit(decision: SwipeDecision, targetUserId?: number): void {
             preserveState: true,
             preserveScroll: true,
             replace: true,
+            async: true,
+            showProgress: false,
             onSuccess: () => {
-                optimisticSuggestions.value = [...(props.suggestions ?? [])];
-                hiddenProfileId.value = null;
-                retryAttempt.value = null;
-                pendingProfile.value = null;
+                pendingProfiles.value.delete(resolvedTargetUserId);
+                pendingProfiles.value = new Map(pendingProfiles.value);
+
+                if (retryAttempt.value?.targetUserId === resolvedTargetUserId) {
+                    retryAttempt.value = null;
+                }
             },
             onError: (errors) => {
-                restorePendingProfile();
+                restorePendingProfile(resolvedTargetUserId);
                 errorMessage.value = String(
                     errors.decision ??
                         errors.target ??
@@ -162,25 +181,24 @@ function submit(decision: SwipeDecision, targetUserId?: number): void {
                 );
             },
             onHttpException: () => {
-                restorePendingProfile();
+                restorePendingProfile(resolvedTargetUserId);
                 errorMessage.value = t('discovery.page.server_error');
 
                 return false;
             },
             onNetworkError: () => {
-                restorePendingProfile();
+                restorePendingProfile(resolvedTargetUserId);
                 errorMessage.value = t('discovery.page.network_error');
 
                 return false;
-            },
-            onFinish: () => {
-                isSubmitting.value = false;
             },
         },
     );
 }
 
-onBeforeUnmount(() => window.clearTimeout(decisionEffectTimer));
+onBeforeUnmount(() => {
+    exitingCardTimers.forEach((timer) => window.clearTimeout(timer));
+});
 
 function retry(): void {
     if (retryAttempt.value) {
@@ -218,7 +236,6 @@ function retry(): void {
                     type="button"
                     variant="outline"
                     :aria-label="t('discovery.page.retry')"
-                    :disabled="isSubmitting"
                     @click="retry"
                 >
                     {{ t('discovery.page.retry') }}
@@ -240,7 +257,9 @@ function retry(): void {
         </section>
 
         <Card
-            v-else-if="displayedSuggestions.length === 0"
+            v-else-if="
+                displayedSuggestions.length === 0 && exitingCards.length === 0
+            "
             class="w-full rounded-3xl"
         >
             <CardHeader>
@@ -266,11 +285,24 @@ function retry(): void {
             :aria-label="t('discovery.page.profiles_label')"
         >
             <div
+                v-for="card in exitingCards"
+                :key="`exiting-${card.id}`"
+                class="pointer-events-none absolute inset-x-0 top-0 bottom-3 z-50 flex w-full justify-center"
+                aria-hidden="true"
+            >
+                <SwipeCard
+                    :profile="card.profile"
+                    :locked="false"
+                    preview
+                    :forced-decision="card.decision"
+                />
+            </div>
+            <div
                 v-for="(profile, index) in displayedSuggestions"
                 :key="profile.userId"
                 data-test="discovery-card-stack-item"
                 :data-profile-user-id="profile.userId"
-                class="absolute inset-x-0 top-0 bottom-3 flex w-full justify-center transition-transform duration-300 ease-out"
+                class="absolute inset-x-0 top-0 bottom-3 flex w-full justify-center transition-transform duration-300 ease-out motion-reduce:duration-0"
                 :class="index === 0 ? undefined : 'pointer-events-none'"
                 :style="{
                     zIndex: displayedSuggestions.length - index,
@@ -284,7 +316,7 @@ function retry(): void {
             >
                 <SwipeCard
                     :profile="profile"
-                    :locked="isSubmitting || index > 0"
+                    :locked="index > 0"
                     :preview="index > 0"
                     :public-profile-href="showMember(profile.userId).url"
                     @like="index === 0 && submit('like', profile.userId)"
@@ -293,28 +325,6 @@ function retry(): void {
                         index === 0 &&
                         router.visit(showMember(profile.userId).url)
                     "
-                />
-            </div>
-            <div
-                v-if="decisionEffect"
-                data-test="discovery-decision-effect"
-                aria-hidden="true"
-                class="pointer-events-none absolute inset-0 z-50 overflow-hidden rounded-3xl"
-            >
-                <span
-                    v-for="particle in 7"
-                    :key="`${decisionEffect}-${particle}`"
-                    class="motion-magic-particle absolute top-1/2 left-1/2 size-2 rounded-full"
-                    :class="
-                        decisionEffect === 'like'
-                            ? 'bg-amber-300 shadow-[0_0_18px_rgba(252,211,77,0.9)]'
-                            : 'bg-muted-foreground/35'
-                    "
-                    :style="{
-                        '--particle-x': `${(particle - 4) * 31}px`,
-                        '--particle-y': `${-42 - Math.abs(particle - 4) * 13}px`,
-                        animationDelay: `${particle * 24}ms`,
-                    }"
                 />
             </div>
         </section>

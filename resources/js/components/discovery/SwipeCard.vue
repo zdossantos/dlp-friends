@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Sparkles, Users, X } from '@lucide/vue';
-import { computed, ref, watch } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -23,6 +23,7 @@ const props = withDefaults(
         compact?: boolean;
         allowedDecision?: AllowedDecision;
         publicProfileHref?: string;
+        forcedDecision?: SwipeDecision;
     }>(),
     { allowedDecision: 'both', compact: false, preview: false },
 );
@@ -46,6 +47,25 @@ const dragOffset = ref({ x: 0, y: 0 });
 const isDragging = ref(false);
 const suppressNextClick = ref(false);
 const exitDirection = ref<-1 | 0 | 1>(0);
+let forcedExitFrame: number | undefined;
+
+const likeProgress = computed(() => {
+    if (props.forcedDecision === 'like') {
+        return 1;
+    }
+
+    return Math.max(0, Math.min(1, dragOffset.value.x / SWIPE_THRESHOLD_PX));
+});
+
+const constellationStyle = computed(() => {
+    const progress = likeProgress.value;
+
+    return {
+        opacity: progress.toFixed(3),
+        filter: `brightness(${0.7 + progress * 1.3}) drop-shadow(0 0 ${4 + progress * 18}px rgba(252, 211, 77, ${0.25 + progress * 0.65}))`,
+        transform: `scale(${0.82 + progress * 0.18})`,
+    };
+});
 
 const cardStyle = computed(() => {
     const rotation = Math.max(-14, Math.min(14, dragOffset.value.x / 20));
@@ -56,7 +76,6 @@ const cardStyle = computed(() => {
     return {
         opacity: exitDirection.value ? '0' : '1',
         transform,
-        transitionDuration: isDragging.value ? '0ms' : '280ms',
     };
 });
 
@@ -240,16 +259,42 @@ watch(
         }
     },
 );
+
+onMounted(() => {
+    if (!props.forcedDecision) {
+        return;
+    }
+
+    forcedExitFrame = window.requestAnimationFrame(() => {
+        exitDirection.value = props.forcedDecision === 'like' ? 1 : -1;
+    });
+});
+
+onBeforeUnmount(() => {
+    if (forcedExitFrame !== undefined) {
+        window.cancelAnimationFrame(forcedExitFrame);
+    }
+});
 </script>
 
 <template>
     <div
         data-test="discovery-swipe-surface"
-        class="flex h-full max-h-full w-full max-w-md flex-col gap-2"
+        class="flex h-full max-h-full w-full max-w-md flex-col gap-5"
     >
         <Card
-            data-test="discovery-card"
-            class="flex min-h-0 w-full flex-1 touch-pan-y flex-col gap-0 overflow-hidden rounded-[2rem] p-0 shadow-xl shadow-primary/10 transition-[transform,opacity] ease-[cubic-bezier(0.22,1,0.36,1)] will-change-transform outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 motion-reduce:duration-0"
+            :data-test="
+                forcedDecision ? 'discovery-exiting-card' : 'discovery-card'
+            "
+            :data-decision="forcedDecision"
+            :data-exit-direction="
+                forcedDecision === 'like'
+                    ? 'right'
+                    : forcedDecision === 'pass'
+                      ? 'left'
+                      : undefined
+            "
+            class="flex min-h-0 w-full flex-1 touch-pan-y flex-col gap-0 overflow-hidden rounded-[2rem] p-0 shadow-xl shadow-primary/10 transition-[transform,opacity] duration-[280ms] ease-[cubic-bezier(0.22,1,0.36,1)] will-change-transform outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 motion-reduce:duration-0"
             :style="cardStyle"
             :tabindex="preview ? -1 : 0"
             :aria-label="
@@ -266,6 +311,37 @@ watch(
             @lostpointercapture="forgetPointerStart"
             @click="openPublicProfile"
         >
+            <div
+                data-test="discovery-like-constellation"
+                aria-hidden="true"
+                class="pointer-events-none absolute inset-0 z-30 overflow-hidden rounded-[2rem] transition-[opacity,filter,transform] duration-75 ease-out motion-reduce:hidden"
+                :style="constellationStyle"
+            >
+                <Sparkles
+                    class="absolute top-[9%] left-[12%] size-5 text-amber-200"
+                />
+                <Sparkles
+                    class="absolute top-[17%] right-[16%] size-8 text-amber-300"
+                />
+                <Sparkles
+                    class="absolute top-[35%] left-[8%] size-3 text-secondary-foreground"
+                />
+                <Sparkles
+                    class="absolute top-[43%] right-[7%] size-5 text-amber-200"
+                />
+                <Sparkles
+                    class="absolute right-[20%] bottom-[30%] size-4 text-secondary-foreground"
+                />
+                <Sparkles
+                    class="absolute bottom-[19%] left-[13%] size-7 text-amber-300"
+                />
+                <span
+                    class="absolute top-[28%] left-[32%] size-1.5 rounded-full bg-white shadow-[0_0_12px_4px_rgba(255,255,255,.9)]"
+                />
+                <span
+                    class="absolute right-[31%] bottom-[15%] size-1 rounded-full bg-amber-100 shadow-[0_0_10px_3px_rgba(252,211,77,.9)]"
+                />
+            </div>
             <div
                 data-test="discovery-avatar-hero"
                 :class="[
@@ -411,7 +487,7 @@ watch(
         <div
             v-if="!preview"
             data-test="discovery-actions"
-            class="flex h-[4.5rem] shrink-0 items-start justify-center gap-10"
+            class="flex h-[4.75rem] shrink-0 items-start justify-center gap-10 pt-1"
             :aria-label="t('discovery.card.actions_label')"
             @pointerdown.stop
         >
@@ -461,7 +537,7 @@ watch(
         </div>
         <div
             v-else-if="!compact"
-            class="h-[4.5rem] shrink-0"
+            class="h-[4.75rem] shrink-0"
             aria-hidden="true"
         />
     </div>

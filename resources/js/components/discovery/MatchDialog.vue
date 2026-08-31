@@ -45,22 +45,44 @@ function updateOpen(open: boolean): void {
             <div
                 data-test="match-magic"
                 aria-hidden="true"
-                class="pointer-events-none absolute inset-0"
+                class="pointer-events-none absolute inset-0 overflow-hidden"
             >
                 <span
-                    class="motion-match-halo absolute top-1/2 left-1/2 size-44 -translate-x-1/2 -translate-y-1/2 rounded-full border border-secondary-foreground/20"
+                    class="motion-match-halo absolute top-1/2 left-1/2 size-48 -translate-x-1/2 -translate-y-1/2 rounded-full border border-amber-200/40"
                 />
                 <span
-                    class="motion-match-halo absolute top-1/2 left-1/2 size-64 -translate-x-1/2 -translate-y-1/2 rounded-full border border-secondary-foreground/10 [animation-delay:80ms]"
+                    class="motion-match-halo absolute top-1/2 left-1/2 size-72 -translate-x-1/2 -translate-y-1/2 rounded-full border border-primary/25 [animation-delay:180ms]"
                 />
+                <div
+                    v-for="burst in 3"
+                    :key="burst"
+                    data-test="match-firework-burst"
+                    class="motion-match-firework absolute size-2"
+                    :class="[
+                        burst === 1 && 'top-[58%] left-[18%]',
+                        burst === 2 && 'top-[24%] left-[70%]',
+                        burst === 3 && 'top-[72%] left-[78%]',
+                    ]"
+                    :style="{ animationDelay: `${(burst - 1) * 240}ms` }"
+                >
+                    <span
+                        v-for="ray in 12"
+                        :key="ray"
+                        class="motion-match-ray absolute bottom-0 left-1/2 h-20 w-px origin-bottom bg-gradient-to-t from-amber-200 via-amber-300/80 to-transparent"
+                        :style="{
+                            transform: `rotate(${ray * 30}deg)`,
+                            animationDelay: `${(burst - 1) * 240 + ray * 18}ms`,
+                        }"
+                    />
+                </div>
                 <span
-                    v-for="particle in 9"
+                    v-for="particle in 18"
                     :key="particle"
-                    class="motion-magic-particle absolute top-1/2 left-1/2 size-2 rounded-full bg-amber-300 shadow-[0_0_18px_rgba(252,211,77,0.85)]"
+                    class="motion-match-jewel absolute size-1.5 rotate-45 rounded-[1px] bg-amber-200 shadow-[0_0_14px_rgba(252,211,77,.9)]"
                     :style="{
-                        '--particle-x': `${(particle - 5) * 24}px`,
-                        '--particle-y': `${-52 - Math.abs(particle - 5) * 12}px`,
-                        animationDelay: `${particle * 32}ms`,
+                        left: `${8 + ((particle * 37) % 84)}%`,
+                        top: `${10 + ((particle * 23) % 78)}%`,
+                        animationDelay: `${160 + particle * 30}ms`,
                     }"
                 />
             </div>

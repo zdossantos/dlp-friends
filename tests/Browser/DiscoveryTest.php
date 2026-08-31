@@ -326,6 +326,7 @@ test('a discovery decision optimistically reveals the next card before the reque
     );
     $page->script(<<<'JS'
         window.__swipeRequestCount = 0;
+        window.__pendingOptimisticSwipes = [];
         window.__initialActiveProfileId = document
             .querySelector('[data-test=discovery-card-stack-item]:not([aria-hidden])')
             .dataset.profileUserId;
@@ -339,11 +340,7 @@ test('a discovery decision optimistically reveals the next card before the reque
         XMLHttpRequest.prototype.send = function (body) {
             if (this.__optimisticRequestUrl.includes('/swipe')) {
                 window.__swipeRequestCount += 1;
-                const request = this;
-                window.__releaseOptimisticSwipe = () => {
-                    window.__releaseOptimisticSwipe = undefined;
-                    window.__realOptimisticXhrSend.call(request, body);
-                };
+                window.__pendingOptimisticSwipes.push({ request: this, body });
 
                 return;
             }
@@ -364,17 +361,30 @@ test('a discovery decision optimistically reveals the next card before the reque
             window.__optimisticNextCardLocked = activeCard
                 .querySelector('[aria-label="Découvrir ce profil"]')
                 .disabled;
+            activeCard
+                .querySelector('[aria-label="Découvrir ce profil"]')
+                .click();
+            window.__likeExitCreated = Boolean(
+                document.querySelector(
+                    '[data-test="discovery-exiting-card"][data-decision="like"]',
+                ),
+            );
             resolve(true);
         }));
     JS);
-    $page->assertScript('window.__swipeRequestCount', 1)
+    $page->assertScript('window.__swipeRequestCount', 2)
         ->assertScript('window.__optimisticCardChanged', true)
-        ->assertScript('window.__optimisticNextCardLocked', true);
+        ->assertScript('window.__optimisticNextCardLocked', false)
+        ->assertScript('window.__likeExitCreated', true);
 
-    $page->script('window.__releaseOptimisticSwipe(); true;');
-    $page->assertScript(
-        "document.querySelector('[data-test=discovery-card-stack-item]:not([aria-hidden])').dataset.profileUserId !== window.__initialActiveProfileId",
-        true,
+    $page->script(<<<'JS'
+        window.__pendingOptimisticSwipes.forEach(({ request, body }) => {
+            window.__realOptimisticXhrSend.call(request, body);
+        });
+        true;
+    JS);
+    $page->assertNotPresent(
+        '[data-test=discovery-card-stack-item]:not([aria-hidden])',
     )
         ->assertNoJavaScriptErrors();
 });
@@ -391,6 +401,7 @@ test('pointer gestures follow the card and enforce the horizontal threshold', fu
     $page->script("{$card}.setPointerCapture = () => {}; {$card}.hasPointerCapture = () => false; {$card}.releasePointerCapture = () => {};");
     $page->script("{$card}.dispatchEvent(new PointerEvent('pointerdown', { pointerId: 1, clientX: 100, clientY: 100, bubbles: true })); {$card}.dispatchEvent(new PointerEvent('pointermove', { pointerId: 1, clientX: 171, clientY: 100, bubbles: true }));");
     $page->assertScript("{$card}.style.transform.includes('71px')", true)
+        ->assertScript("document.querySelector('[data-test=discovery-like-constellation]').style.opacity", '0.986')
         ->assertScript("getComputedStyle({$actions}).transform", 'none');
     $page->script("{$card}.dispatchEvent(new PointerEvent('pointerup', { pointerId: 1, clientX: 171, clientY: 100, bubbles: true }));");
     $page->assertScript("{$card}.style.transform.includes('0px')", true);
@@ -404,6 +415,46 @@ test('pointer gestures follow the card and enforce the horizontal threshold', fu
         'target_user_id' => $target->id,
         'decision' => SwipeDecision::Like->value,
     ]);
+});
+
+test('the pass button launches the card exit to the left', function () {
+    $actor = discoveryMember('Alice');
+    discoveryMember('Basile');
+    $this->actingAs($actor);
+
+    $page = visit('/discover');
+    $page->script("document.querySelector('[aria-label=\"Passer ce profil\"]').click()");
+    $page->assertPresent('[data-test="discovery-exiting-card"][data-decision="pass"]')
+        ->assertAttribute(
+            '[data-test="discovery-exiting-card"]',
+            'data-exit-direction',
+            'left',
+        )
+        ->assertScript(
+            "document.querySelector('[data-test=discovery-exiting-card]').style.transform.includes('-120vw')",
+            true,
+        )
+        ->assertNoJavaScriptErrors();
+});
+
+test('the discover button launches the sparkling card exit to the right', function () {
+    $actor = discoveryMember('Alice');
+    discoveryMember('Basile');
+    $this->actingAs($actor);
+
+    $page = visit('/discover');
+    $page->script("document.querySelector('[aria-label=\"Découvrir ce profil\"]').click()");
+    $page->assertPresent('[data-test="discovery-exiting-card"][data-decision="like"]')
+        ->assertAttribute(
+            '[data-test="discovery-exiting-card"]',
+            'data-exit-direction',
+            'right',
+        )
+        ->assertScript(
+            "document.querySelector('[data-test=discovery-exiting-card] [data-test=discovery-like-constellation]').style.opacity",
+            '1',
+        )
+        ->assertNoJavaScriptErrors();
 });
 
 test('a tap opens the profile while a horizontal drag keeps the swipe interaction', function () {
@@ -483,6 +534,19 @@ test('a reciprocal like opens a dismissible match dialog only once', function ()
         ->assertPresent('[data-slot="dialog-description"]')
         ->assertPresent('[data-test="match-magic"]')
         ->assertAttribute('[data-test="match-magic"]', 'aria-hidden', 'true')
+        ->assertPresent('[data-test="match-firework-burst"]')
+        ->assertScript(
+            "getComputedStyle(document.querySelector('[data-test=match-firework-burst]')).animationDuration",
+            '2s',
+        )
+        ->assertScript(
+            "getComputedStyle(document.querySelectorAll('[data-test=match-magic] .motion-match-jewel')[17]).animationDelay",
+            '0.7s',
+        )
+        ->assertScript(
+            "document.querySelector('[data-test=open-match-conversation]').matches(':disabled')",
+            false,
+        )
         ->assertScript(renderedContrastIsAtLeastScript(
             '[data-slot="dialog-content"]',
             '[data-slot="dialog-description"]',

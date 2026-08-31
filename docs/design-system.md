@@ -30,17 +30,17 @@ cible.
 Les composants utilisent les tokens sémantiques plutôt que des couleurs brutes.
 Les valeurs de référence sont définies en HSL dans `resources/css/app.css`.
 
-| Token | Thème clair | Thème sombre | Usage |
-| --- | --- | --- | --- |
-| `background` | neutre chaud très clair, `hsl(32 40% 98%)` | violet profond, `hsl(258 30% 8%)` | Fond global |
-| `foreground` | violet presque noir | neutre chaud très clair | Texte principal |
-| `card` / `popover` | blanc chaud | violet sombre | Surfaces élevées |
-| `primary` | violet `hsl(263 63% 46%)` | violet clair `hsl(265 80% 72%)` | Action et focus principaux |
-| `secondary` | rose dragée très clair, `#FCE6F1` | rose pastel lumineux, `#F3C8DE` | Actions secondaires et mises en valeur significatives |
-| `accent` | violet neutre très clair, `hsl(258 24% 94%)` | violet neutre sombre, `hsl(258 18% 19%)` | Survols, menus et interactions discrètes |
-| `muted` | neutre chaud | violet neutre | Surfaces et textes secondaires |
-| `destructive` | rouge soutenu | rouge clair | Action ou état destructif |
-| `border`, `input`, `ring` | variantes adaptées au thème | variantes adaptées au thème | Séparation, champs et focus |
+| Token                     | Thème clair                                  | Thème sombre                             | Usage                                                 |
+| ------------------------- | -------------------------------------------- | ---------------------------------------- | ----------------------------------------------------- |
+| `background`              | neutre chaud très clair, `hsl(32 40% 98%)`   | violet profond, `hsl(258 30% 8%)`        | Fond global                                           |
+| `foreground`              | violet presque noir                          | neutre chaud très clair                  | Texte principal                                       |
+| `card` / `popover`        | blanc chaud                                  | violet sombre                            | Surfaces élevées                                      |
+| `primary`                 | violet `hsl(263 63% 46%)`                    | violet clair `hsl(265 80% 72%)`          | Action et focus principaux                            |
+| `secondary`               | rose dragée très clair, `#FCE6F1`            | rose pastel lumineux, `#F3C8DE`          | Actions secondaires et mises en valeur significatives |
+| `accent`                  | violet neutre très clair, `hsl(258 24% 94%)` | violet neutre sombre, `hsl(258 18% 19%)` | Survols, menus et interactions discrètes              |
+| `muted`                   | neutre chaud                                 | violet neutre                            | Surfaces et textes secondaires                        |
+| `destructive`             | rouge soutenu                                | rouge clair                              | Action ou état destructif                             |
+| `border`, `input`, `ring` | variantes adaptées au thème                  | variantes adaptées au thème              | Séparation, champs et focus                           |
 
 Les thèmes disponibles sont `light`, `dark` et `system`. La préférence est
 persistée, et la classe `.dark` active l’ensemble cohérent de tokens sombres.
@@ -60,12 +60,12 @@ leur redistribution avec l’application. Leurs sous-ensembles latins couvrent
 les caractères, accents, apostrophes et ponctuations nécessaires au français
 et à l’anglais.
 
-| Combinaison évaluée | Qualités | Limites | Décision |
-| --- | --- | --- | --- |
-| Instrument Sans seule | Très lisible, sobre et économique | Identité peu différenciée sur les moments de marque | Écartée : elle ne répond pas au besoin d’accentuation |
-| Instrument Sans + Bricolage Grotesque | Chaleureuse, expressive et cohérente avec une interface contemporaine | Deux sans serif créent une distinction moins immédiate et Bricolage est plus agitée dans les grands titres | Écartée au profit d’un contraste plus calme |
-| Instrument Sans + Fraunces | Lecture fonctionnelle stable et serif douce adaptée aux grands titres | Expression trop éditoriale et insuffisamment distinctive pour la marque | Écartée au profit d’une accentuation plus décorative |
-| Instrument Sans + Cinzel Decorative | Lecture fonctionnelle stable, contraste marqué et identité forte sur les moments de marque | Les formes décoratives perdent en lisibilité dans les petites tailles et les contenus denses | Retenue avec un périmètre strict et une graisse forte |
+| Combinaison évaluée                   | Qualités                                                                                   | Limites                                                                                                    | Décision                                              |
+| ------------------------------------- | ------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------- | ----------------------------------------------------- |
+| Instrument Sans seule                 | Très lisible, sobre et économique                                                          | Identité peu différenciée sur les moments de marque                                                        | Écartée : elle ne répond pas au besoin d’accentuation |
+| Instrument Sans + Bricolage Grotesque | Chaleureuse, expressive et cohérente avec une interface contemporaine                      | Deux sans serif créent une distinction moins immédiate et Bricolage est plus agitée dans les grands titres | Écartée au profit d’un contraste plus calme           |
+| Instrument Sans + Fraunces            | Lecture fonctionnelle stable et serif douce adaptée aux grands titres                      | Expression trop éditoriale et insuffisamment distinctive pour la marque                                    | Écartée au profit d’une accentuation plus décorative  |
+| Instrument Sans + Cinzel Decorative   | Lecture fonctionnelle stable, contraste marqué et identité forte sur les moments de marque | Les formes décoratives perdent en lisibilité dans les petites tailles et les contenus denses               | Retenue avec un périmètre strict et une graisse forte |
 
 Références de licence et de couverture :
 [Instrument Sans](https://github.com/Instrument/instrument-sans),
@@ -76,10 +76,10 @@ et le texte OFL des deux familles distribuées sont conservés dans
 
 ### Tokens et règles d’usage
 
-| Token | Famille et replis | Graisses chargées | Usage |
-| --- | --- | --- | --- |
-| `font-sans` | Instrument Sans, repli sans serif métriquement ajusté, polices système | 400, 500, 600 | Corps, formulaires, navigation, messages, tableaux et majorité des titres |
-| `font-accent` | Cinzel Decorative, repli serif, Georgia, serif | 700 | Nom de marque dans les signatures visuelles et grand titre éditorial de l’accueil |
+| Token         | Famille et replis                                                      | Graisses chargées | Usage                                                                             |
+| ------------- | ---------------------------------------------------------------------- | ----------------- | --------------------------------------------------------------------------------- |
+| `font-sans`   | Instrument Sans, repli sans serif métriquement ajusté, polices système | 400, 500, 600     | Corps, formulaires, navigation, messages, tableaux et majorité des titres         |
+| `font-accent` | Cinzel Decorative, repli serif, Georgia, serif                         | 700               | Nom de marque dans les signatures visuelles et grand titre éditorial de l’accueil |
 
 - Le texte courant part de `1rem` avec une hauteur de ligne de `1.5`; les
   petites annotations restent au minimum à `0.75rem` avec une hauteur de ligne
@@ -150,9 +150,10 @@ compréhensible, pas seulement animé.
 ## Mouvement et retours
 
 Le mouvement suit deux niveaux sémantiques. Les retours fonctionnels discrets
-durent 160 ms et accompagnent chargements, messages et navigation. Les moments
-forts expressifs peuvent durer jusqu’à 480 ms et restent réservés au like et au
-match. Aucune action métier n’attend la fin d’une animation.
+durent 160 ms et accompagnent chargements, messages et navigation. Le like peut
+durer jusqu’à 480 ms ; la célébration exceptionnelle d’un nouveau match peut
+durer jusqu’à 2,7 secondes, délais compris. Aucune action métier n’attend la fin d’une animation
+et les contrôles restent utilisables pendant les effets visuels.
 
 Les animations se limitent à `transform`, `opacity`, aux ombres et aux couches
 superposées afin de préserver la mise en page. Leurs durées et courbes utilisent

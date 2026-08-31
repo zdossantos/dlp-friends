@@ -82,6 +82,7 @@
     --motion-duration-instant: 0ms;
     --motion-duration-feedback: 160ms;
     --motion-duration-expressive: 480ms;
+    --motion-duration-celebration: 2000ms;
     --motion-ease-standard: cubic-bezier(0.2, 0, 0, 1);
     --motion-ease-expressive: cubic-bezier(0.16, 1, 0.3, 1);
     --background: hsl(32 40% 98%);
@@ -168,6 +169,57 @@
     }
 }
 
+@keyframes motion-match-firework {
+    0%,
+    12% {
+        opacity: 0;
+        transform: scale(0.18) rotate(-5deg);
+    }
+    34%,
+    70% {
+        opacity: 1;
+        transform: scale(1) rotate(0deg);
+    }
+    100% {
+        opacity: 0;
+        transform: scale(1.12) rotate(3deg);
+    }
+}
+
+@keyframes motion-match-ray {
+    0%,
+    18% {
+        opacity: 0;
+        scale: 1 0.08;
+    }
+    42% {
+        opacity: 0.9;
+        scale: 1 1;
+    }
+    78%,
+    100% {
+        opacity: 0;
+        scale: 0.5 1.12;
+    }
+}
+
+@keyframes motion-match-jewel {
+    0%,
+    20% {
+        opacity: 0;
+        transform: scale(0.2) rotate(20deg);
+    }
+    42%,
+    66% {
+        opacity: 1;
+        transform: scale(1) rotate(45deg);
+    }
+    100% {
+        opacity: 0;
+        transform: scale(0.45) rotate(80deg);
+    }
+}
+
 @keyframes motion-navigation-pending {
     50% {
         transform: scale(0.92);
@@ -192,7 +244,22 @@
     }
 
     .motion-match-halo {
-        animation: motion-match-halo var(--motion-duration-expressive)
+        animation: motion-match-halo var(--motion-duration-celebration)
+            var(--motion-ease-expressive) both;
+    }
+
+    .motion-match-firework {
+        animation: motion-match-firework var(--motion-duration-celebration)
+            var(--motion-ease-expressive) both;
+    }
+
+    .motion-match-ray {
+        animation: motion-match-ray var(--motion-duration-celebration)
+            var(--motion-ease-expressive) both;
+    }
+
+    .motion-match-jewel {
+        animation: motion-match-jewel var(--motion-duration-celebration)
             var(--motion-ease-expressive) both;
     }
 
@@ -217,12 +284,16 @@
     :root {
         --motion-duration-feedback: 0ms;
         --motion-duration-expressive: 0ms;
+        --motion-duration-celebration: 0ms;
     }
 
     .motion-feedback-enter,
     .motion-message-enter,
     .motion-magic-particle,
     .motion-match-halo,
+    .motion-match-firework,
+    .motion-match-ray,
+    .motion-match-jewel,
     .motion-navigation-pending {
         animation: none;
         transition-duration: 0ms;
