@@ -124,7 +124,8 @@ function handleLogout(): void {
                 </template>
                 <template #badges>
                     <span
-                        class="inline-flex items-center gap-2 rounded-full bg-muted px-3 py-1.5 text-sm font-medium"
+                        data-test="profile-visibility-badge"
+                        class="inline-flex items-center gap-2 rounded-full border border-border/70 bg-muted px-3 py-1.5 text-sm font-medium"
                     >
                         <Eye
                             v-if="profile.visibility === 'visible'"
@@ -143,7 +144,8 @@ function handleLogout(): void {
                         }}
                     </span>
                     <span
-                        class="inline-flex items-center gap-2 rounded-full bg-secondary px-3 py-1.5 text-sm font-medium text-secondary-foreground"
+                        data-test="profile-frequency-badge"
+                        class="inline-flex items-center gap-2 rounded-full border border-secondary-foreground/15 bg-secondary px-3 py-1.5 text-sm font-medium text-secondary-foreground"
                     >
                         <Sparkles class="size-4" aria-hidden="true" />
                         {{ visitFrequency }}
