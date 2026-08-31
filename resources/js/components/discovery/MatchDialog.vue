@@ -39,18 +39,18 @@ function updateOpen(open: boolean): void {
 <template>
     <Dialog :open="open" @update:open="updateOpen">
         <DialogContent
-            class="border-amber-300 bg-amber-50 dark:border-amber-700 dark:bg-amber-950"
+            class="border-secondary-foreground/25 bg-secondary"
             :show-close-button="dismissible"
         >
             <DialogHeader>
                 <DialogTitle
                     data-test="match-heading"
-                    class="text-amber-900 outline-none dark:text-amber-100"
+                    class="text-secondary-foreground outline-none"
                     tabindex="-1"
                 >
                     {{ t('discovery.match.title') }}
                 </DialogTitle>
-                <DialogDescription>
+                <DialogDescription class="text-secondary-foreground">
                     {{
                         t('discovery.match.description', {
                             name: match.displayName,

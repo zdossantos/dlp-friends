@@ -17,9 +17,10 @@ cible.
 - Une ambiance contemporaine, chaleureuse et légèrement magique, sans imiter
   l’identité officielle de Disney.
 - Des surfaces neutres chaudes qui laissent le violet porter les actions
-  principales et le rose les accents secondaires.
-- Le doré reste rare : il souligne un match, un badge ou un état important et
-  ne devient pas une couleur d’action générale.
+  principales et le doré les accents secondaires.
+- Le doré reste mesuré : il souligne une action secondaire, un match, un badge,
+  une sélection ou un état important et ne devient pas la couleur d’action
+  principale.
 - Une hiérarchie simple, des cartes généreusement arrondies et des ombres
   discrètes donnent de la profondeur sans surcharger les parcours.
 - La couleur ne constitue jamais le seul moyen de comprendre une action, une
@@ -36,17 +37,18 @@ Les valeurs de référence sont définies en HSL dans `resources/css/app.css`.
 | `foreground` | violet presque noir | neutre chaud très clair | Texte principal |
 | `card` / `popover` | blanc chaud | violet sombre | Surfaces élevées |
 | `primary` | violet `hsl(263 63% 46%)` | violet clair `hsl(265 80% 72%)` | Action et focus principaux |
-| `secondary` | rose pâle | rose sombre | Accent secondaire |
-| `accent` | doré pâle | doré sombre | Mise en valeur limitée |
+| `secondary` | doré pâle, `hsl(43 74% 84%)` | doré sombre, `hsl(42 46% 25%)` | Actions secondaires et mises en valeur significatives |
+| `accent` | violet neutre très clair, `hsl(258 24% 94%)` | violet neutre sombre, `hsl(258 18% 19%)` | Survols, menus et interactions discrètes |
 | `muted` | neutre chaud | violet neutre | Surfaces et textes secondaires |
 | `destructive` | rouge soutenu | rouge clair | Action ou état destructif |
 | `border`, `input`, `ring` | variantes adaptées au thème | variantes adaptées au thème | Séparation, champs et focus |
 
 Les thèmes disponibles sont `light`, `dark` et `system`. La préférence est
 persistée, et la classe `.dark` active l’ensemble cohérent de tokens sombres.
-Toute nouvelle couleur doit d’abord recevoir une fonction sémantique ; une
-valeur locale n’est acceptable que pour une illustration ou un état métier
-réellement spécifique.
+La palette d'interface partagée n'utilise pas de rose. Toute nouvelle couleur
+doit d’abord recevoir une fonction sémantique ; une valeur locale n’est
+acceptable que pour une illustration, une couleur d'avatar administrable ou un
+état métier réellement spécifique.
 
 ## Typographie, espacement, rayons et ombres
 

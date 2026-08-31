@@ -20,6 +20,31 @@ function discoveryMember(string $displayName): User
     return $user;
 }
 
+function renderedContrastIsAtLeastScript(string $backgroundSelector, string $foregroundSelector): string
+{
+    return <<<JS
+        (() => {
+            const channels = (value) => value
+                .match(/\d+(?:\.\d+)?/g)
+                .slice(0, 3)
+                .map(Number);
+            const luminance = (value) => channels(value)
+                .map((channel) => channel / 255)
+                .map((channel) => channel <= 0.04045
+                    ? channel / 12.92
+                    : Math.pow((channel + 0.055) / 1.055, 2.4))
+                .reduce((sum, channel, index) =>
+                    sum + channel * [0.2126, 0.7152, 0.0722][index], 0);
+            const background = luminance(getComputedStyle(document.querySelector('{$backgroundSelector}')).backgroundColor);
+            const foreground = luminance(getComputedStyle(document.querySelector('{$foregroundSelector}')).color);
+            const lighter = Math.max(background, foreground);
+            const darker = Math.min(background, foreground);
+
+            return (lighter + 0.05) / (darker + 0.05) >= 4.5;
+        })()
+    JS;
+}
+
 beforeEach(fn () => Storage::fake('local'));
 
 test('discovery renders its deferred empty state and limits the stack to five profiles', function () {
@@ -381,13 +406,19 @@ test('a reciprocal like opens a dismissible match dialog only once', function ()
     ]);
     $this->actingAs($actor);
 
-    $page = visit('/discover')
+    $page = visit('/discover');
+    $page->script("localStorage.setItem('appearance', 'dark')");
+    $page->navigate('/discover')
         ->assertSee('Basile');
     $page->script("document.querySelector('[aria-label=\"Découvrir ce profil\"]').click()");
     $page->assertSee('Vos univers se croisent')
         ->assertSee('Basile souhaite aussi te découvrir.')
         ->assertPresent('[data-slot="dialog-title"]')
         ->assertPresent('[data-slot="dialog-description"]')
+        ->assertScript(renderedContrastIsAtLeastScript(
+            '[data-slot="dialog-content"]',
+            '[data-slot="dialog-description"]',
+        ), true)
         ->assertSeeLink('Commencer l’échange');
 
     $conversationId = MemberMatch::query()->firstOrFail()->conversation()->firstOrFail()->id;
