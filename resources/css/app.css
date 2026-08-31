@@ -154,6 +154,20 @@
     }
 }
 
+@keyframes motion-match-halo {
+    from {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0.55);
+    }
+    55% {
+        opacity: 1;
+    }
+    to {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(1.25);
+    }
+}
+
 @layer utilities {
     .motion-feedback-enter {
         animation: motion-feedback-enter var(--motion-duration-feedback)
@@ -169,6 +183,11 @@
         animation: motion-magic-particle var(--motion-duration-expressive)
             var(--motion-ease-expressive) both;
     }
+
+    .motion-match-halo {
+        animation: motion-match-halo var(--motion-duration-expressive)
+            var(--motion-ease-expressive) both;
+    }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -179,7 +198,8 @@
 
     .motion-feedback-enter,
     .motion-message-enter,
-    .motion-magic-particle {
+    .motion-magic-particle,
+    .motion-match-halo {
         animation: none;
         transition-duration: 0ms;
     }

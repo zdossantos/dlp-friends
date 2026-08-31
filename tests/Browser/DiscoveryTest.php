@@ -481,6 +481,8 @@ test('a reciprocal like opens a dismissible match dialog only once', function ()
         ->assertSee('Basile souhaite aussi te découvrir.')
         ->assertPresent('[data-slot="dialog-title"]')
         ->assertPresent('[data-slot="dialog-description"]')
+        ->assertPresent('[data-test="match-magic"]')
+        ->assertAttribute('[data-test="match-magic"]', 'aria-hidden', 'true')
         ->assertScript(renderedContrastIsAtLeastScript(
             '[data-slot="dialog-content"]',
             '[data-slot="dialog-description"]',
