@@ -6,11 +6,11 @@ test('a visitor changes locale from the public language selector', function () {
     visit('/')
         ->assertVisible('[data-test="locale-switcher"]')
         ->click('[data-test="locale-en"]')
-        ->assertSee('Friendships between adult fans, with a touch of magic')
+        ->assertSee('Enjoy the magic together')
         ->assertSee('Create my account')
         ->assertScript('document.documentElement.lang', 'en')
         ->click('[data-test="locale-fr"]')
-        ->assertSee('Des amitiés entre fans adultes, avec un peu de magie')
+        ->assertSee('Vis la magie à plusieurs')
         ->assertScript('document.documentElement.lang', 'fr')
         ->assertNoJavaScriptErrors();
 });
