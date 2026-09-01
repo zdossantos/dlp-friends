@@ -4,6 +4,19 @@ Ce document définit les exigences de sécurité et de confidentialité, qu’el
 soient déjà implémentées ou nécessaires avant la mise en production. Leur état
 de livraison est suivi dans le [`PRD.md`](PRD.md).
 
+## Publication légale
+
+Zacharie Dos Santos, entrepreneur individuel (SIREN 104 531 819), est l’éditeur
+et responsable du traitement. L’adresse publique de contact est fournie par
+`LEGAL_CONTACT_EMAIL`; elle est obligatoire en production. Les CGU version
+`2026-09-01` sont acceptées explicitement à l’inscription et la preuve conserve
+uniquement l’utilisateur, la version et l’heure serveur.
+
+La suppression retire immédiatement les données des systèmes actifs. Elles
+peuvent subsister dans les sauvegardes quotidiennes chiffrées MySQL et fichiers
+jusqu’à leur expiration automatique après 30 jours. Ce périmètre n’ajoute ni
+réacceptation des comptes existants, ni export automatisé, ni délai de purge.
+
 ## Majorité et accès
 
 - La date de naissance est obligatoire à l'inscription.

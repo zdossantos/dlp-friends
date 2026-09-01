@@ -10,6 +10,7 @@ return [
         'fr' => 'Français',
         'en' => 'English',
     ],
+    'legal' => ['terms' => 'Terms of Use', 'privacy' => 'Privacy Policy'],
     'welcome' => [
         'eyebrow' => 'Fans, together',
         'title' => 'Enjoy the magic together',

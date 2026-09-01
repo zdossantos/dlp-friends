@@ -13,7 +13,7 @@ class PreventSearchIndexing
     {
         $response = $next($request);
 
-        if (! $request->routeIs('landing.show', 'sitemap', 'robots')) {
+        if (! $request->routeIs('landing.show', 'legal.*', 'sitemap', 'robots')) {
             $response->headers->set('X-Robots-Tag', 'noindex, nofollow');
         }
 

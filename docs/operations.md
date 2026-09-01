@@ -4,6 +4,15 @@ Ce document porte les exigences et procédures opérateur. Les objectifs produit
 et l’état des capacités applicatives sont définis dans le
 [`PRD.md`](PRD.md).
 
+## Prérequis de publication légale
+
+- Définir `LEGAL_CONTACT_EMAIL` dans les secrets Coolify avant la production.
+- Faire relire professionnellement les CGU et la politique de confidentialité.
+- Confirmer la sauvegarde quotidienne chiffrée MySQL et MinIO, hors serveur,
+  avec une rétention de 30 jours.
+- Le VPS est hébergé chez IONOS. Mailpit reste local uniquement ; choisir et
+  documenter le transport SMTP de production avant son activation.
+
 ## Sauvegardes
 
 - Sauvegarde chiffrée quotidienne de MySQL, avec conservation de 30 jours et test mensuel de restauration.

@@ -47,6 +47,16 @@ function renderedContrastIsAtLeastScript(string $backgroundSelector, string $for
 
 beforeEach(fn () => Storage::fake('local'));
 
+test('member pages do not expose public legal navigation', function () {
+    $this->actingAs(discoveryMember('Alice'));
+
+    visit('/discover')
+        ->on()->mobile()
+        ->assertNotPresent('a[href="/fr/conditions-generales-utilisation"]')
+        ->assertNotPresent('a[href="/fr/politique-confidentialite"]')
+        ->assertNoJavaScriptErrors();
+});
+
 test('discovery renders its deferred empty state and limits the stack to five profiles', function () {
     $actor = discoveryMember('Alice');
     $this->actingAs($actor);

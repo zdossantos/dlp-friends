@@ -30,8 +30,11 @@ class CreateNewUser implements CreatesNewUsers
                 Rule::date()->beforeOrEqual(today()->subYears(18)),
             ],
             'password' => $this->passwordRules(),
+            'terms_accepted' => ['required', 'accepted'],
         ], [
             'birth_date.before_or_equal' => __('account.registration.adult_only'),
+            'terms_accepted.accepted' => __('account.registration.terms_required'),
+            'terms_accepted.required' => __('account.registration.terms_required'),
         ])->validate();
 
         return DB::transaction(function () use ($input): User {
@@ -43,6 +46,11 @@ class CreateNewUser implements CreatesNewUsers
 
             $role = Role::query()->where('name', RoleName::User)->firstOrFail();
             $user->roles()->attach($role);
+
+            $user->termsAcceptances()->create([
+                'terms_version' => config('legal.terms.version'),
+                'accepted_at' => now(),
+            ]);
 
             return $user;
         });

@@ -15,6 +15,8 @@ test('the landing page presents the adult friendship service to guests', functio
         ->assertSeeLink('Se connecter')
         ->assertAttribute('[data-test="landing-register"]', 'href', '/register')
         ->assertAttribute('[data-test="landing-login"]', 'href', '/login')
+        ->assertScript("document.querySelector('[data-test=legal-terms]').href.endsWith('/fr/conditions-generales-utilisation')", true)
+        ->assertScript("document.querySelector('[data-test=legal-privacy]').href.endsWith('/fr/politique-confidentialite')", true)
         ->assertScript("document.querySelector('link[rel=canonical]').href.endsWith('/fr')", true)
         ->assertNoAccessibilityIssues()
         ->assertNoJavaScriptErrors();
@@ -34,7 +36,36 @@ test('the registration form collects account data without a public name', functi
         ->assertPresent('input[name="birth_date"]')
         ->assertPresent('input[name="password"]')
         ->assertPresent('input[name="password_confirmation"]')
+        ->assertPresent('#terms_accepted')
+        ->assertAttribute('#terms_accepted', 'data-state', 'unchecked')
+        ->assertSeeLink('Conditions générales d’utilisation')
+        ->assertSeeLink('Politique de confidentialité')
         ->assertNotPresent('input[name="username"]');
+});
+
+test('registration submits an explicit terms choice', function () {
+    visit('/register', ['locale' => 'fr-FR'])
+        ->fill('email', 'browser-terms@example.com')
+        ->fill('birth_date', '2000-01-01')
+        ->fill('password', 'password')
+        ->fill('password_confirmation', 'password')
+        ->click('#terms_accepted')
+        ->click('[data-test="register-user-button"]')
+        ->assertPathIs('/email/verify');
+});
+
+test('localized legal pages are responsive and accessible', function () {
+    visit('/fr/conditions-generales-utilisation', ['locale' => 'fr-FR'])
+        ->assertSee('Conditions générales d’utilisation')
+        ->assertPresent('[data-test="app-logo-icon"]')
+        ->assertPresent('[data-test="legal-document-card"]')
+        ->assertNoAccessibilityIssues()
+        ->assertNoJavaScriptErrors();
+
+    visit('/en/privacy-policy', ['locale' => 'en-GB'])
+        ->assertSee('Privacy Policy')
+        ->assertNoAccessibilityIssues()
+        ->assertNoJavaScriptErrors();
 });
 
 test('public and authentication pages expose language without theme controls', function () {

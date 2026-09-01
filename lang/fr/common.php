@@ -10,6 +10,7 @@ return [
         'fr' => 'Français',
         'en' => 'English',
     ],
+    'legal' => ['terms' => 'Conditions générales d’utilisation', 'privacy' => 'Politique de confidentialité'],
     'welcome' => [
         'eyebrow' => 'Entre fans, tout simplement',
         'title' => 'Vis la magie à plusieurs',

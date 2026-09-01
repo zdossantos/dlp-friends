@@ -83,13 +83,17 @@ test('each landing locale exposes localized indexable seo metadata', function (s
     'English' => ['en', 'DLP Friends — Meet other Disneyland Paris fans', 'Meet other Disneyland Paris fans, discover the passions you share, and chat with ease.'],
 ]);
 
-test('the sitemap contains only localized public landing pages', function () {
+test('the sitemap contains localized public landing and legal pages', function () {
     config()->set('app.url', 'https://dlp-friends.example');
 
     $response = $this->get('/sitemap.xml')->assertOk();
 
     $response->assertSee('https://dlp-friends.example/fr', false)
         ->assertSee('https://dlp-friends.example/en', false)
+        ->assertSee('https://dlp-friends.example/fr/conditions-generales-utilisation', false)
+        ->assertSee('https://dlp-friends.example/en/terms-of-use', false)
+        ->assertSee('https://dlp-friends.example/fr/politique-confidentialite', false)
+        ->assertSee('https://dlp-friends.example/en/privacy-policy', false)
         ->assertDontSee('/login', false)
         ->assertDontSee('/register', false)
         ->assertDontSee('/discover', false)

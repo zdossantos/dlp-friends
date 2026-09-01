@@ -16,6 +16,7 @@ use App\Http\Controllers\ConversationIndexController;
 use App\Http\Controllers\ConversationReadController;
 use App\Http\Controllers\DiscoveryController;
 use App\Http\Controllers\LandingController;
+use App\Http\Controllers\LegalDocumentController;
 use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\MemberProfileController;
 use App\Http\Controllers\MessageController;
@@ -28,14 +29,19 @@ use App\Support\PublicUrls;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [PublicLandingController::class, 'redirect'])->name('home');
+Route::get('fr/conditions-generales-utilisation', [LegalDocumentController::class, 'terms'])->defaults('locale', 'fr')->name('legal.terms.fr');
+Route::get('en/terms-of-use', [LegalDocumentController::class, 'terms'])->defaults('locale', 'en')->name('legal.terms.en');
+Route::get('fr/politique-confidentialite', [LegalDocumentController::class, 'privacy'])->defaults('locale', 'fr')->name('legal.privacy.fr');
+Route::get('en/privacy-policy', [LegalDocumentController::class, 'privacy'])->defaults('locale', 'en')->name('legal.privacy.en');
 Route::get('{locale}', [PublicLandingController::class, 'show'])
     ->whereIn('locale', ['fr', 'en'])
     ->name('landing.show');
 Route::get('sitemap.xml', function () {
     return response()
-        ->view('sitemap', ['urls' => [
-            'fr' => PublicUrls::landing('fr'),
-            'en' => PublicUrls::landing('en'),
+        ->view('sitemap', ['groups' => [
+            ['fr' => PublicUrls::landing('fr'), 'en' => PublicUrls::landing('en')],
+            ['fr' => PublicUrls::terms('fr'), 'en' => PublicUrls::terms('en')],
+            ['fr' => PublicUrls::privacy('fr'), 'en' => PublicUrls::privacy('en')],
         ]])
         ->header('Content-Type', 'application/xml; charset=UTF-8');
 })->name('sitemap');
