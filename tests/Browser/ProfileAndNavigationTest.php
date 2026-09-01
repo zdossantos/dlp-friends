@@ -495,8 +495,9 @@ test('logging out removes access to the private profile', function () {
     $page = visit('/profile');
     $page->script("sessionStorage.setItem('historyKey', 'private'); localStorage.setItem('appearance', 'dark'); true;");
     $page->click('[aria-label="Se déconnecter"]')
-        ->assertPathIs('/')
+        ->assertPathIsNot('/profile')
         ->assertDontSee('Aurore privée')
+        ->assertScript("['/fr', '/en'].includes(window.location.pathname)", true)
         ->assertScript("sessionStorage.getItem('historyKey')", null)
         ->assertScript("localStorage.getItem('appearance')", 'dark');
 

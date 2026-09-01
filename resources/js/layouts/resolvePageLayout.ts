@@ -7,10 +7,6 @@ import SettingsLayout from '@/layouts/settings/Layout.vue';
 export function resolvePageLayout(
     name: string,
 ): Component | Component[] | null {
-    if (name === 'Welcome') {
-        return null;
-    }
-
     if (name.startsWith('auth/')) {
         return AuthLayout;
     }

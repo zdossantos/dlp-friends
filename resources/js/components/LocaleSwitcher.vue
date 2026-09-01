@@ -7,6 +7,9 @@ import { update } from '@/routes/locale';
 import type { Locale } from '@/types/i18n';
 
 const { locale, t } = useTranslations();
+const props = defineProps<{
+    localeUrls?: Partial<Record<Locale, string>>;
+}>();
 const status = ref('');
 const isChanging = ref(false);
 
@@ -24,7 +27,13 @@ function changeLocale(value: Locale): void {
             preserveScroll: true,
             onSuccess: () => {
                 status.value = t('common.locale.label');
-                window.location.reload();
+                const destination = props.localeUrls?.[value];
+
+                if (destination) {
+                    window.location.assign(destination);
+                } else {
+                    window.location.reload();
+                }
             },
             onFinish: () => {
                 isChanging.value = false;

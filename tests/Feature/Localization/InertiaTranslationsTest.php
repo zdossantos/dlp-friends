@@ -44,7 +44,7 @@ function featureTranslationKeys(string $locale): array
 
 test('Inertia shares the English frontend catalogue selected by the request', function () {
     $this->withHeader('Accept-Language', 'en-US,en;q=0.9')
-        ->get('/')
+        ->get('/login')
         ->assertInertia(fn (Assert $page) => $page
             ->where('i18n.locale', 'en')
             ->where('i18n.messages.common.locale.label', 'Language')
@@ -56,7 +56,7 @@ test('Inertia shares the English frontend catalogue selected by the request', fu
 
 test('Inertia shares translations grouped by business feature', function () {
     $this->withHeader('Accept-Language', 'en-US,en;q=0.9')
-        ->get('/')
+        ->get('/login')
         ->assertInertia(fn (Assert $page) => $page
             ->where('i18n.locale', 'en')
             ->where('i18n.messages.common.locale.label', 'Language')
@@ -70,7 +70,7 @@ test('French and English business feature catalogues expose identical leaf keys'
 });
 
 test('Inertia shares the French frontend catalogue by default', function () {
-    $this->withHeader('Accept-Language', 'de-DE,de;q=0.9')->get('/')
+    $this->withHeader('Accept-Language', 'de-DE,de;q=0.9')->get('/login')
         ->assertInertia(fn (Assert $page) => $page
             ->where('i18n.locale', 'fr')
             ->where('i18n.messages.common.locale.label', 'Langue')

@@ -5,6 +5,37 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="csrf-token" content="{{ csrf_token() }}">
 
+        @php($seo = $page['props']['seo'] ?? null)
+        @if ($seo)
+            <meta name="description" content="{{ $seo['description'] }}">
+            <link rel="canonical" href="{{ $seo['canonical'] }}">
+            @foreach ($seo['alternates'] as $alternateLocale => $alternateUrl)
+                <link rel="alternate" hreflang="{{ str_replace('_', '-', $alternateLocale) }}" href="{{ $alternateUrl }}">
+            @endforeach
+            <meta property="og:type" content="website">
+            <meta property="og:site_name" content="{{ config('app.name') }}">
+            <meta property="og:title" content="{{ $seo['title'] }}">
+            <meta property="og:description" content="{{ $seo['description'] }}">
+            <meta property="og:url" content="{{ $seo['canonical'] }}">
+            <meta property="og:locale" content="{{ $seo['locale'] === 'fr' ? 'fr_FR' : 'en_GB' }}">
+            <meta property="og:image" content="{{ $seo['image'] }}">
+            <meta name="twitter:card" content="summary">
+            <meta name="twitter:title" content="{{ $seo['title'] }}">
+            <meta name="twitter:description" content="{{ $seo['description'] }}">
+            <script type="application/ld+json">{!! json_encode([
+                '@context' => 'https://schema.org',
+                '@type' => 'WebApplication',
+                'name' => config('app.name'),
+                'url' => $seo['canonical'],
+                'description' => $seo['description'],
+                'applicationCategory' => 'SocialNetworkingApplication',
+                'inLanguage' => $seo['locale'],
+                'isAccessibleForFree' => true,
+            ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) !!}</script>
+        @else
+            <meta name="robots" content="noindex, nofollow">
+        @endif
+
         {{-- Inline script to detect system dark mode preference and apply it immediately --}}
         <script>
             (function() {
@@ -39,7 +70,7 @@
 
         @vite(['resources/css/app.css', 'resources/js/app.ts', "resources/js/pages/{$page['component']}.vue"])
         <x-inertia::head>
-            <title>{{ config('app.name') }}</title>
+            <title>{{ $seo['title'] ?? config('app.name') }}</title>
         </x-inertia::head>
     </head>
     <body class="font-sans antialiased">

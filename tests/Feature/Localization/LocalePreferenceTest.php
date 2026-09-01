@@ -25,7 +25,7 @@ test('a member choice is stored on the account and takes priority on another bro
     $this->actingAs($user->fresh())
         ->withHeader('Accept-Language', 'fr-FR,fr;q=0.9')
         ->get('/')
-        ->assertOk();
+        ->assertRedirect(route('app'));
 
     expect(app()->getLocale())->toBe('en');
 });
