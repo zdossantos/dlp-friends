@@ -9,6 +9,7 @@ import LocaleSwitcher from '@/components/LocaleSwitcher.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Spinner } from '@/components/ui/spinner';
 import { useTranslations } from '@/composables/useTranslations';
 import { edit } from '@/routes/account';
 import { send } from '@/routes/verification';
@@ -64,9 +65,12 @@ setLayoutProps({
                 </div>
                 <Button
                     :disabled="processing"
+                    :aria-busy="processing ? 'true' : undefined"
                     data-test="update-account-button"
-                    >{{ t('account.settings.save') }}</Button
                 >
+                    <Spinner v-if="processing" />
+                    {{ t('account.settings.save') }}
+                </Button>
             </Form>
         </div>
         <DeleteUser />

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Sparkles, Users, X } from '@lucide/vue';
-import { computed, onBeforeUnmount, ref, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -13,7 +13,7 @@ import type {
 
 const SWIPE_THRESHOLD_PX = 72;
 const TAP_SLOP_PX = 8;
-const SWIPE_EXIT_DURATION_MS = 280;
+const CONSTELLATION_START_PROGRESS = 0.42;
 type AllowedDecision = SwipeDecision | 'both';
 
 const props = withDefaults(
@@ -24,6 +24,7 @@ const props = withDefaults(
         compact?: boolean;
         allowedDecision?: AllowedDecision;
         publicProfileHref?: string;
+        forcedDecision?: SwipeDecision;
     }>(),
     { allowedDecision: 'both', compact: false, preview: false },
 );
@@ -47,7 +48,66 @@ const dragOffset = ref({ x: 0, y: 0 });
 const isDragging = ref(false);
 const suppressNextClick = ref(false);
 const exitDirection = ref<-1 | 0 | 1>(0);
-let exitTimer: number | undefined;
+const constellationStars = [
+    { x: 10, y: 8, size: 3 },
+    { x: 23, y: 13, size: 2 },
+    { x: 39, y: 7, size: 4 },
+    { x: 56, y: 16, size: 2 },
+    { x: 72, y: 9, size: 3 },
+    { x: 88, y: 19, size: 2 },
+    { x: 16, y: 27, size: 2 },
+    { x: 31, y: 34, size: 3 },
+    { x: 49, y: 28, size: 2 },
+    { x: 66, y: 37, size: 4 },
+    { x: 83, y: 31, size: 2 },
+    { x: 8, y: 48, size: 3 },
+    { x: 24, y: 56, size: 2 },
+    { x: 43, y: 47, size: 3 },
+    { x: 58, y: 59, size: 2 },
+    { x: 78, y: 51, size: 3 },
+    { x: 91, y: 62, size: 2 },
+    { x: 13, y: 72, size: 2 },
+    { x: 29, y: 81, size: 4 },
+    { x: 47, y: 70, size: 2 },
+    { x: 63, y: 84, size: 3 },
+    { x: 81, y: 76, size: 2 },
+    { x: 92, y: 88, size: 3 },
+    { x: 51, y: 93, size: 2 },
+    { x: 18, y: 91, size: 2 },
+    { x: 35, y: 65, size: 3 },
+    { x: 70, y: 68, size: 2 },
+    { x: 87, y: 43, size: 3 },
+    { x: 5, y: 84, size: 2 },
+    { x: 75, y: 95, size: 2 },
+    { x: 95, y: 5, size: 2 },
+    { x: 54, y: 40, size: 3 },
+] as const;
+
+const likeProgress = computed(() => {
+    if (props.forcedDecision === 'like') {
+        return 1;
+    }
+
+    const dragProgress = Math.max(
+        0,
+        Math.min(1, dragOffset.value.x / SWIPE_THRESHOLD_PX),
+    );
+
+    return Math.max(
+        0,
+        (dragProgress - CONSTELLATION_START_PROGRESS) /
+            (1 - CONSTELLATION_START_PROGRESS),
+    );
+});
+
+const constellationStyle = computed(() => {
+    const progress = likeProgress.value;
+
+    return {
+        opacity: (progress * 0.7).toFixed(3),
+        transform: `scale(${0.94 + progress * 0.06})`,
+    };
+});
 
 const cardStyle = computed(() => {
     const rotation = Math.max(-14, Math.min(14, dragOffset.value.x / 20));
@@ -58,7 +118,6 @@ const cardStyle = computed(() => {
     return {
         opacity: exitDirection.value ? '0' : '1',
         transform,
-        transitionDuration: isDragging.value ? '0ms' : '280ms',
     };
 });
 
@@ -104,19 +163,11 @@ function animateDecision(decision: SwipeDecision) {
     isDragging.value = false;
     exitDirection.value = decision === 'like' ? 1 : -1;
 
-    const prefersReducedMotion =
-        window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ??
-        false;
-    exitTimer = window.setTimeout(
-        () => {
-            if (decision === 'like') {
-                emit('like');
-            } else {
-                emit('pass');
-            }
-        },
-        prefersReducedMotion ? 0 : SWIPE_EXIT_DURATION_MS,
-    );
+    if (decision === 'like') {
+        emit('like');
+    } else {
+        emit('pass');
+    }
 }
 
 function canDecide(decision: SwipeDecision): boolean {
@@ -193,6 +244,14 @@ function openPublicProfile(event: MouseEvent) {
 }
 
 function forgetPointerStart(event?: PointerEvent) {
+    if (
+        event &&
+        pointerStart.value !== null &&
+        pointerStart.value.pointerId !== event.pointerId
+    ) {
+        return;
+    }
+
     const target = event?.currentTarget as HTMLElement | null;
 
     if (event && target?.hasPointerCapture?.(event.pointerId)) {
@@ -241,8 +300,6 @@ function handlePointerEnd(event: PointerEvent) {
     dragOffset.value = { x: 0, y: 0 };
 }
 
-onBeforeUnmount(() => window.clearTimeout(exitTimer));
-
 watch(
     () => props.locked,
     (locked, wasLocked) => {
@@ -257,11 +314,26 @@ watch(
 <template>
     <div
         data-test="discovery-swipe-surface"
-        class="flex h-full max-h-full w-full max-w-md flex-col gap-2"
+        class="flex h-full max-h-full w-full max-w-md flex-col gap-5"
     >
         <Card
-            data-test="discovery-card"
-            class="flex min-h-0 w-full flex-1 touch-pan-y flex-col gap-0 overflow-hidden rounded-[2rem] p-0 shadow-xl shadow-primary/10 transition-[transform,opacity] ease-[cubic-bezier(0.22,1,0.36,1)] will-change-transform outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 motion-reduce:duration-0"
+            :data-test="
+                forcedDecision ? 'discovery-exiting-card' : 'discovery-card'
+            "
+            :data-decision="forcedDecision"
+            :data-exit-direction="
+                forcedDecision === 'like'
+                    ? 'right'
+                    : forcedDecision === 'pass'
+                      ? 'left'
+                      : undefined
+            "
+            class="relative flex min-h-0 w-full flex-1 touch-pan-y flex-col gap-0 overflow-hidden rounded-[2rem] p-0 shadow-xl shadow-primary/10 transition-[transform,opacity] ease-[cubic-bezier(0.22,1,0.36,1)] will-change-transform outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 motion-reduce:duration-0"
+            :class="[
+                isDragging ? 'duration-0' : 'duration-[280ms]',
+                forcedDecision === 'like' && 'motion-card-exit-right',
+                forcedDecision === 'pass' && 'motion-card-exit-left',
+            ]"
             :style="cardStyle"
             :tabindex="preview ? -1 : 0"
             :aria-label="
@@ -278,6 +350,25 @@ watch(
             @lostpointercapture="forgetPointerStart"
             @click="openPublicProfile"
         >
+            <div
+                data-test="discovery-like-constellation"
+                aria-hidden="true"
+                class="pointer-events-none absolute inset-0 z-30 overflow-hidden rounded-[2rem] motion-reduce:hidden"
+                :style="constellationStyle"
+            >
+                <span
+                    v-for="(star, index) in constellationStars"
+                    :key="index"
+                    data-test="discovery-star"
+                    class="absolute rotate-45 rounded-[1px] bg-amber-100 shadow-[0_0_5px_rgba(252,211,77,.55)]"
+                    :style="{
+                        left: `${star.x}%`,
+                        top: `${star.y}%`,
+                        width: `${star.size}px`,
+                        height: `${star.size}px`,
+                    }"
+                />
+            </div>
             <div
                 data-test="discovery-avatar-hero"
                 :class="[
@@ -423,7 +514,7 @@ watch(
         <div
             v-if="!preview"
             data-test="discovery-actions"
-            class="flex h-[4.5rem] shrink-0 items-start justify-center gap-10"
+            class="flex h-[4.75rem] shrink-0 items-start justify-center gap-10 pt-1"
             :aria-label="t('discovery.card.actions_label')"
             @pointerdown.stop
         >
@@ -473,7 +564,7 @@ watch(
         </div>
         <div
             v-else-if="!compact"
-            class="h-[4.5rem] shrink-0"
+            class="h-[4.75rem] shrink-0"
             aria-hidden="true"
         />
     </div>

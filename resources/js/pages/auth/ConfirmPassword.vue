@@ -59,6 +59,7 @@ const { t } = useTranslations();
                 <Button
                     class="w-full"
                     :disabled="processing"
+                    :aria-busy="processing ? 'true' : undefined"
                     data-test="confirm-password-button"
                 >
                     <Spinner v-if="processing" />

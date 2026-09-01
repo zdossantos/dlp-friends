@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, Link, router, setLayoutProps } from '@inertiajs/vue3';
-import { computed, ref, watch } from 'vue';
+import { computed, onBeforeUnmount, ref, watch } from 'vue';
 import MatchDialog from '@/components/discovery/MatchDialog.vue';
 import SwipeCard from '@/components/discovery/SwipeCard.vue';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -31,9 +31,17 @@ setLayoutProps({
     ],
 });
 
-const activeSuggestion = computed(() => props.suggestions?.[0]);
+const optimisticSuggestions = ref<DiscoveryProfile[]>([
+    ...(props.suggestions ?? []),
+]);
+const dismissedProfileIds = ref<Set<number>>(new Set());
+const displayedSuggestions = computed(() =>
+    optimisticSuggestions.value.filter(
+        (suggestion) => !dismissedProfileIds.value.has(suggestion.userId),
+    ),
+);
+const activeSuggestion = computed(() => displayedSuggestions.value[0]);
 
-const isSubmitting = ref(false);
 const errorMessage = ref<string | null>(null);
 const retryAttempt = ref<{
     targetUserId: number;
@@ -41,13 +49,21 @@ const retryAttempt = ref<{
 } | null>(null);
 const visibleMatchId = ref(props.match?.id ?? null);
 const matchDialogOpen = ref(props.match !== null);
+const pendingProfiles = ref<Map<number, DiscoveryProfile>>(new Map());
+const exitingCards = ref<
+    Array<{
+        id: number;
+        profile: DiscoveryProfile;
+        decision: SwipeDecision;
+    }>
+>([]);
+let exitingCardSequence = 0;
+const exitingCardTimers = new Set<number>();
 
 watch(
     () => props.match?.id ?? null,
     (matchId) => {
         if (matchId === null) {
-            matchDialogOpen.value = false;
-
             return;
         }
 
@@ -65,6 +81,8 @@ watch(
             return;
         }
 
+        optimisticSuggestions.value = [...suggestions];
+
         const targetUserId = suggestions[0]?.userId ?? null;
 
         if (
@@ -77,16 +95,64 @@ watch(
     },
 );
 
+function restorePendingProfile(targetUserId: number): void {
+    const profile = pendingProfiles.value.get(targetUserId) ?? null;
+
+    if (
+        profile !== null &&
+        !optimisticSuggestions.value.some(
+            (suggestion) => suggestion.userId === profile.userId,
+        )
+    ) {
+        optimisticSuggestions.value.unshift(profile);
+    }
+
+    pendingProfiles.value.delete(targetUserId);
+    pendingProfiles.value = new Map(pendingProfiles.value);
+    const nextDismissed = new Set(dismissedProfileIds.value);
+    nextDismissed.delete(targetUserId);
+    dismissedProfileIds.value = nextDismissed;
+}
+
+function showExitingCard(
+    profile: DiscoveryProfile,
+    decision: SwipeDecision,
+): void {
+    const id = ++exitingCardSequence;
+    exitingCards.value.push({ id, profile, decision });
+    const timer = window.setTimeout(() => {
+        exitingCards.value = exitingCards.value.filter(
+            (card) => card.id !== id,
+        );
+        exitingCardTimers.delete(timer);
+    }, 480);
+    exitingCardTimers.add(timer);
+}
+
 function submit(decision: SwipeDecision, targetUserId?: number): void {
     const resolvedTargetUserId = targetUserId ?? activeSuggestion.value?.userId;
 
-    if (isSubmitting.value || resolvedTargetUserId === undefined) {
+    if (resolvedTargetUserId === undefined) {
         return;
     }
 
-    isSubmitting.value = true;
+    const profile = optimisticSuggestions.value.find(
+        (suggestion) => suggestion.userId === resolvedTargetUserId,
+    );
+
+    if (!profile || dismissedProfileIds.value.has(resolvedTargetUserId)) {
+        return;
+    }
+
     retryAttempt.value = { targetUserId: resolvedTargetUserId, decision };
     errorMessage.value = null;
+    pendingProfiles.value.set(resolvedTargetUserId, profile);
+    pendingProfiles.value = new Map(pendingProfiles.value);
+    dismissedProfileIds.value = new Set([
+        ...dismissedProfileIds.value,
+        resolvedTargetUserId,
+    ]);
+    showExitingCard(profile, decision);
 
     router.post(
         swipe(resolvedTargetUserId).url,
@@ -96,10 +162,18 @@ function submit(decision: SwipeDecision, targetUserId?: number): void {
             preserveState: true,
             preserveScroll: true,
             replace: true,
+            async: true,
+            showProgress: false,
             onSuccess: () => {
-                retryAttempt.value = null;
+                pendingProfiles.value.delete(resolvedTargetUserId);
+                pendingProfiles.value = new Map(pendingProfiles.value);
+
+                if (retryAttempt.value?.targetUserId === resolvedTargetUserId) {
+                    retryAttempt.value = null;
+                }
             },
             onError: (errors) => {
+                restorePendingProfile(resolvedTargetUserId);
                 errorMessage.value = String(
                     errors.decision ??
                         errors.target ??
@@ -107,21 +181,24 @@ function submit(decision: SwipeDecision, targetUserId?: number): void {
                 );
             },
             onHttpException: () => {
+                restorePendingProfile(resolvedTargetUserId);
                 errorMessage.value = t('discovery.page.server_error');
 
                 return false;
             },
             onNetworkError: () => {
+                restorePendingProfile(resolvedTargetUserId);
                 errorMessage.value = t('discovery.page.network_error');
 
                 return false;
             },
-            onFinish: () => {
-                isSubmitting.value = false;
-            },
         },
     );
 }
+
+onBeforeUnmount(() => {
+    exitingCardTimers.forEach((timer) => window.clearTimeout(timer));
+});
 
 function retry(): void {
     if (retryAttempt.value) {
@@ -159,7 +236,6 @@ function retry(): void {
                     type="button"
                     variant="outline"
                     :aria-label="t('discovery.page.retry')"
-                    :disabled="isSubmitting"
                     @click="retry"
                 >
                     {{ t('discovery.page.retry') }}
@@ -180,7 +256,12 @@ function retry(): void {
             <Skeleton class="h-10 w-full" />
         </section>
 
-        <Card v-else-if="suggestions.length === 0" class="w-full rounded-3xl">
+        <Card
+            v-else-if="
+                displayedSuggestions.length === 0 && exitingCards.length === 0
+            "
+            class="w-full rounded-3xl"
+        >
             <CardHeader>
                 <CardTitle>
                     {{ t('discovery.page.empty_title') }}
@@ -200,17 +281,31 @@ function retry(): void {
 
         <section
             v-else
-            class="relative min-h-0 w-full flex-1 pb-3"
+            class="relative min-h-0 w-full flex-1 overflow-x-clip pb-3"
             :aria-label="t('discovery.page.profiles_label')"
         >
             <div
-                v-for="(profile, index) in suggestions"
+                v-for="card in exitingCards"
+                :key="`exiting-${card.id}`"
+                class="pointer-events-none absolute inset-x-0 top-0 bottom-3 z-50 flex w-full justify-center"
+                aria-hidden="true"
+            >
+                <SwipeCard
+                    :profile="card.profile"
+                    :locked="false"
+                    preview
+                    :forced-decision="card.decision"
+                />
+            </div>
+            <div
+                v-for="(profile, index) in displayedSuggestions"
                 :key="profile.userId"
                 data-test="discovery-card-stack-item"
-                class="absolute inset-x-0 top-0 bottom-3 flex w-full justify-center transition-transform duration-300 ease-out"
+                :data-profile-user-id="profile.userId"
+                class="absolute inset-x-0 top-0 bottom-3 flex w-full justify-center transition-transform duration-300 ease-out motion-reduce:duration-0"
                 :class="index === 0 ? undefined : 'pointer-events-none'"
                 :style="{
-                    zIndex: suggestions.length - index,
+                    zIndex: displayedSuggestions.length - index,
                     transform:
                         index === 0
                             ? undefined
@@ -221,11 +316,11 @@ function retry(): void {
             >
                 <SwipeCard
                     :profile="profile"
-                    :locked="isSubmitting || index > 0"
+                    :locked="index > 0"
                     :preview="index > 0"
                     :public-profile-href="showMember(profile.userId).url"
-                    @like="index === 0 && submit('like')"
-                    @pass="index === 0 && submit('pass')"
+                    @like="index === 0 && submit('like', profile.userId)"
+                    @pass="index === 0 && submit('pass', profile.userId)"
                     @open="
                         index === 0 &&
                         router.visit(showMember(profile.userId).url)

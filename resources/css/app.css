@@ -79,6 +79,12 @@
 
 :root {
     color-scheme: light;
+    --motion-duration-instant: 0ms;
+    --motion-duration-feedback: 160ms;
+    --motion-duration-expressive: 480ms;
+    --motion-duration-celebration: 4000ms;
+    --motion-ease-standard: cubic-bezier(0.2, 0, 0, 1);
+    --motion-ease-expressive: cubic-bezier(0.16, 1, 0.3, 1);
     --background: hsl(32 40% 98%);
     --foreground: hsl(258 28% 14%);
     --card: hsl(30 50% 100%);
@@ -113,6 +119,225 @@
     --sidebar-border: hsl(28 22% 86%);
     --sidebar-ring: hsl(263 63% 46%);
     --sidebar: hsl(30 42% 96%);
+}
+
+@keyframes motion-feedback-enter {
+    from {
+        opacity: 0;
+        transform: translateY(0.35rem) scale(0.985);
+    }
+}
+
+@keyframes motion-message-enter {
+    from {
+        opacity: 0;
+        transform: translateY(0.4rem) scale(0.98);
+        filter: drop-shadow(0 0 0.75rem hsl(265 80% 72% / 0.45));
+    }
+}
+
+@keyframes motion-magic-particle {
+    from {
+        opacity: 0;
+        transform: translate3d(0, 0.75rem, 0) scale(0.4) rotate(0deg);
+    }
+    35% {
+        opacity: 1;
+    }
+    to {
+        opacity: 0;
+        transform: translate3d(
+                var(--particle-x, 0),
+                var(--particle-y, -2rem),
+                0
+            )
+            scale(1) rotate(135deg);
+    }
+}
+
+@keyframes motion-match-halo {
+    from {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0.55);
+    }
+    55% {
+        opacity: 1;
+    }
+    to {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(1.25);
+    }
+}
+
+@keyframes motion-match-firework {
+    0%,
+    12% {
+        opacity: 0;
+        transform: scale(0.18) rotate(-5deg);
+    }
+    34%,
+    70% {
+        opacity: 1;
+        transform: scale(1) rotate(0deg);
+    }
+    100% {
+        opacity: 0;
+        transform: scale(1.12) rotate(3deg);
+    }
+}
+
+@keyframes motion-match-ray {
+    0%,
+    18% {
+        opacity: 0;
+        scale: 1 0.08;
+    }
+    42% {
+        opacity: 0.9;
+        scale: 1 1;
+    }
+    78%,
+    100% {
+        opacity: 0;
+        scale: 0.5 1.12;
+    }
+}
+
+@keyframes motion-match-jewel {
+    0%,
+    20% {
+        opacity: 0;
+        transform: scale(0.2) rotate(20deg);
+    }
+    42%,
+    66% {
+        opacity: 1;
+        transform: scale(1) rotate(45deg);
+    }
+    100% {
+        opacity: 0;
+        transform: scale(0.45) rotate(80deg);
+    }
+}
+
+@keyframes motion-card-exit-right {
+    from {
+        opacity: 1;
+        transform: translate3d(0, 0, 0) rotate(0deg);
+    }
+    38% {
+        opacity: 1;
+    }
+    to {
+        opacity: 0;
+        transform: translate3d(115vw, 0, 0) rotate(18deg);
+    }
+}
+
+@keyframes motion-card-exit-left {
+    from {
+        opacity: 1;
+        transform: translate3d(0, 0, 0) rotate(0deg);
+    }
+    38% {
+        opacity: 1;
+    }
+    to {
+        opacity: 0;
+        transform: translate3d(-115vw, 0, 0) rotate(-18deg);
+    }
+}
+
+@keyframes motion-navigation-pending {
+    50% {
+        transform: scale(0.92);
+        opacity: 0.72;
+    }
+}
+
+@layer utilities {
+    .motion-feedback-enter {
+        animation: motion-feedback-enter var(--motion-duration-feedback)
+            var(--motion-ease-standard) both;
+    }
+
+    .motion-message-enter {
+        animation: motion-message-enter var(--motion-duration-expressive)
+            var(--motion-ease-expressive) both;
+    }
+
+    .motion-magic-particle {
+        animation: motion-magic-particle var(--motion-duration-expressive)
+            var(--motion-ease-expressive) both;
+    }
+
+    .motion-match-halo {
+        animation: motion-match-halo var(--motion-duration-celebration)
+            var(--motion-ease-expressive) both;
+    }
+
+    .motion-match-firework {
+        animation: motion-match-firework var(--motion-duration-celebration)
+            var(--motion-ease-expressive) both;
+    }
+
+    .motion-match-ray {
+        animation: motion-match-ray var(--motion-duration-celebration)
+            var(--motion-ease-expressive) both;
+    }
+
+    .motion-match-jewel {
+        animation: motion-match-jewel var(--motion-duration-celebration)
+            var(--motion-ease-expressive) both;
+    }
+
+    .motion-card-exit-right {
+        animation: motion-card-exit-right 420ms var(--motion-ease-expressive)
+            both;
+    }
+
+    .motion-card-exit-left {
+        animation: motion-card-exit-left 420ms var(--motion-ease-expressive)
+            both;
+    }
+
+    .motion-navigation-pending {
+        animation: motion-navigation-pending 700ms var(--motion-ease-standard)
+            infinite;
+    }
+}
+
+#nprogress .bar {
+    height: 3px;
+    box-shadow: 0 0 0.9rem hsl(265 80% 72% / 0.65);
+}
+
+#nprogress .peg {
+    box-shadow:
+        0 0 0.75rem hsl(265 80% 72% / 0.7),
+        0 0 0.3rem hsl(43 82% 56% / 0.8);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    :root {
+        --motion-duration-feedback: 0ms;
+        --motion-duration-expressive: 0ms;
+        --motion-duration-celebration: 0ms;
+    }
+
+    .motion-feedback-enter,
+    .motion-message-enter,
+    .motion-magic-particle,
+    .motion-match-halo,
+    .motion-match-firework,
+    .motion-match-ray,
+    .motion-match-jewel,
+    .motion-card-exit-right,
+    .motion-card-exit-left,
+    .motion-navigation-pending {
+        animation: none;
+        transition-duration: 0ms;
+    }
 }
 
 .dark {
