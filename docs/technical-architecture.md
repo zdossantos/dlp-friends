@@ -3,6 +3,14 @@
 Ce document décrit l'architecture actuelle. Les fonctions prévues mais non
 livrées restent décrites dans le [`PRD.md`](PRD.md).
 
+## Surface légale publique
+
+Les quatre routes légales localisées sont rendues en Blade sans JavaScript,
+avec canonical, hreflang et sitemap. `PublicUrls` fournit leurs URL aux pages
+publiques et aux layouts Inertia. `terms_acceptances` enregistre de façon
+immuable `user_id`, `terms_version` et `accepted_at` dans la transaction de
+création du compte ; la suppression du compte supprime aussi cette preuve.
+
 ## Stack applicative
 
 - Laravel 13 sur PHP 8.4 ;

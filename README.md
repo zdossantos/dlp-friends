@@ -1,5 +1,8 @@
 # DLP Friends
 
+Les pages légales publiques sont disponibles en français et en anglais. En
+production, définir `LEGAL_CONTACT_EMAIL` avant de les publier.
+
 DLP Friends est un projet d'application de rencontres amicales entre fans
 majeurs de Disneyland Paris. Son MVP vise à permettre de créer un profil,
 découvrir des membres ayant des passions communes et échanger après un match

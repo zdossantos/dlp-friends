@@ -1,9 +1,13 @@
 <script setup lang="ts">
+import { usePage } from '@inertiajs/vue3';
 import MemberBottomNavigation from '@/components/MemberBottomNavigation.vue';
 import { Toaster } from '@/components/ui/sonner';
 import { useMemberNavigationVisibility } from '@/composables/useMemberNavigationVisibility';
+import { useTranslations } from '@/composables/useTranslations';
 
 const reservesMemberNavigation = useMemberNavigationVisibility();
+const legal = usePage().props.legal;
+const { t } = useTranslations();
 </script>
 
 <template>
@@ -24,6 +28,20 @@ const reservesMemberNavigation = useMemberNavigationVisibility();
             "
         >
             <slot />
+            <footer
+                class="mt-auto flex justify-center gap-4 px-4 py-6 text-xs text-muted-foreground"
+            >
+                <a
+                    :href="legal.terms_url"
+                    class="underline underline-offset-4"
+                    >{{ t('common.legal.terms') }}</a
+                >
+                <a
+                    :href="legal.privacy_url"
+                    class="underline underline-offset-4"
+                    >{{ t('common.legal.privacy') }}</a
+                >
+            </footer>
         </div>
         <MemberBottomNavigation />
         <Toaster />

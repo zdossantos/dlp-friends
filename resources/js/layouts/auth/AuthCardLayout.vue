@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Link } from '@inertiajs/vue3';
+import { Link, usePage } from '@inertiajs/vue3';
 import AppLogoIcon from '@/components/AppLogoIcon.vue';
 import LocaleSwitcher from '@/components/LocaleSwitcher.vue';
 import {
@@ -16,6 +16,7 @@ defineProps<{
     description?: string;
 }>();
 const { t } = useTranslations();
+const legal = usePage().props.legal;
 </script>
 
 <template>
@@ -63,6 +64,20 @@ const { t } = useTranslations();
                     </CardContent>
                 </Card>
             </main>
+            <footer
+                class="flex justify-center gap-4 text-center text-xs text-muted-foreground"
+            >
+                <a
+                    :href="legal.terms_url"
+                    class="underline underline-offset-4"
+                    >{{ t('common.legal.terms') }}</a
+                >
+                <a
+                    :href="legal.privacy_url"
+                    class="underline underline-offset-4"
+                    >{{ t('common.legal.privacy') }}</a
+                >
+            </footer>
         </div>
     </div>
 </template>

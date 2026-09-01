@@ -21,6 +21,7 @@ declare module '@inertiajs/core' {
             auth: Auth;
             i18n: I18n;
             sidebarOpen: boolean;
+            legal: { terms_url: string; privacy_url: string };
             [key: string]: unknown;
         };
     }

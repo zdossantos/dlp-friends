@@ -45,6 +45,7 @@ class RegistrationTest extends TestCase
             'birth_date' => '2008-08-16',
             'password' => 'password',
             'password_confirmation' => 'password',
+            'terms_accepted' => true,
         ]);
 
         $this->assertAuthenticated();
@@ -68,9 +69,45 @@ class RegistrationTest extends TestCase
                 'birth_date' => '2000-01-01',
                 'password' => 'password',
                 'password_confirmation' => 'password',
+                'terms_accepted' => true,
             ]);
 
         $response->assertRedirect('/app');
+    }
+
+    public function test_terms_must_be_explicitly_accepted(): void
+    {
+        $this->post(route('register.store'), [
+            'email' => 'refused@example.com',
+            'birth_date' => '2000-01-01',
+            'password' => 'password',
+            'password_confirmation' => 'password',
+            'terms_accepted' => false,
+        ])->assertSessionHasErrors('terms_accepted');
+
+        $this->assertGuest();
+        $this->assertDatabaseMissing('users', ['email' => 'refused@example.com']);
+    }
+
+    public function test_registration_records_the_server_terms_version_and_time(): void
+    {
+        Carbon::setTestNow('2026-09-01 12:34:56');
+
+        $this->post(route('register.store'), [
+            'email' => 'accepted@example.com',
+            'birth_date' => '2000-01-01',
+            'password' => 'password',
+            'password_confirmation' => 'password',
+            'terms_accepted' => true,
+            'terms_version' => 'client-controlled',
+        ])->assertRedirect('/app');
+
+        $user = User::query()->where('email', 'accepted@example.com')->firstOrFail();
+        $this->assertDatabaseHas('terms_acceptances', [
+            'user_id' => $user->id,
+            'terms_version' => '2026-09-01',
+            'accepted_at' => '2026-09-01 12:34:56',
+        ]);
     }
 
     public function test_birth_date_is_required(): void
