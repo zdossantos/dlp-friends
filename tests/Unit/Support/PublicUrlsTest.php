@@ -17,3 +17,12 @@ test('legal public urls use stable localized slugs', function () {
         ->and(PublicUrls::privacyPath('fr'))->toBe('/fr/politique-confidentialite')
         ->and(PublicUrls::privacyPath('en'))->toBe('/en/privacy-policy');
 });
+
+test('matching public urls use stable localized paths', function () {
+    config()->set('app.url', 'https://dlp-friends.example');
+
+    expect(PublicUrls::matching('fr'))->toBe('https://dlp-friends.example/fr/matching')
+        ->and(PublicUrls::matching('en'))->toBe('https://dlp-friends.example/en/matching')
+        ->and(PublicUrls::matchingPath('fr'))->toBe('/fr/matching')
+        ->and(PublicUrls::matchingPath('en'))->toBe('/en/matching');
+});

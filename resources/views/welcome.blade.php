@@ -133,6 +133,7 @@
                             <div>
                                 <p class="leading-7 text-muted-foreground">{{ __('common.welcome.algorithm_description') }}</p>
                                 <p class="mt-4 rounded-2xl bg-secondary px-5 py-4 text-sm font-medium text-secondary-foreground">{{ __('common.welcome.algorithm_note') }}</p>
+                                <a href="{{ \App\Support\PublicUrls::matchingPath($seo['locale']) }}" data-test="landing-matching" class="mt-5 inline-flex min-h-12 items-center justify-center rounded-2xl bg-primary px-5 font-semibold text-primary-foreground shadow-lg shadow-primary/15 transition-transform hover:-translate-y-0.5 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none">{{ __('common.welcome.algorithm_action') }}</a>
                             </div>
                         </div>
                     </section>
