@@ -10,6 +10,7 @@ return [
         'fr' => 'Français',
         'en' => 'English',
     ],
+    'legal' => ['terms' => 'Conditions générales d’utilisation', 'privacy' => 'Politique de confidentialité'],
     'welcome' => [
         'eyebrow' => 'Entre fans, simplement',
         'title' => 'Des amitiés entre fans adultes, avec un peu de magie',

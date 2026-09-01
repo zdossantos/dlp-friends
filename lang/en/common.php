@@ -10,6 +10,7 @@ return [
         'fr' => 'Français',
         'en' => 'English',
     ],
+    'legal' => ['terms' => 'Terms of Use', 'privacy' => 'Privacy Policy'],
     'welcome' => [
         'eyebrow' => 'Simply among fans',
         'title' => 'Friendships between adult fans, with a touch of magic',

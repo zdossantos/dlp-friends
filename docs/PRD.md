@@ -212,3 +212,12 @@ modération.
 - [`quality-ci-cd.md`](quality-ci-cd.md) : qualité, CI et livraison ;
 - [`engineering-principles.md`](engineering-principles.md) : principes de
   développement.
+
+## Pages légales publiques livrées
+
+Les issues 42 et 43 sont implémentées par quatre documents SSR indexables :
+`/fr/conditions-generales-utilisation`, `/en/terms-of-use`,
+`/fr/politique-confidentialite` et `/en/privacy-policy`. L’inscription exige une
+case non précochée et conserve la version `2026-09-01` avec l’heure serveur.
+Cette livraison ne bloque pas les comptes existants et n’ajoute pas de parcours
+de réacceptation.

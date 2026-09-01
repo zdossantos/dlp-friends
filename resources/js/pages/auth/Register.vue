@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { Form, Head } from '@inertiajs/vue3';
+import { Form, Head, usePage } from '@inertiajs/vue3';
 import InputError from '@/components/InputError.vue';
 import PasswordInput from '@/components/PasswordInput.vue';
 import TextLink from '@/components/TextLink.vue';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
@@ -15,6 +16,7 @@ defineProps<{
     passwordRules: string;
 }>();
 const { t } = useTranslations();
+const legal = usePage().props.legal;
 
 defineOptions({
     layout: {
@@ -97,10 +99,35 @@ defineOptions({
                 <InputError :message="errors.password_confirmation" />
             </div>
 
+            <div class="grid gap-2">
+                <div class="flex items-start gap-3">
+                    <Checkbox
+                        id="terms_accepted"
+                        name="terms_accepted"
+                        value="1"
+                        :tabindex="5"
+                    />
+                    <Label
+                        for="terms_accepted"
+                        class="text-sm leading-5 font-normal"
+                    >
+                        {{ t('account.registration.terms_acceptance') }}
+                        <a :href="legal.terms_url" class="underline">{{
+                            t('common.legal.terms')
+                        }}</a>
+                        ·
+                        <a :href="legal.privacy_url" class="underline">{{
+                            t('common.legal.privacy')
+                        }}</a>
+                    </Label>
+                </div>
+                <InputError :message="errors.terms_accepted" />
+            </div>
+
             <Button
                 type="submit"
                 class="mt-2 w-full"
-                tabindex="5"
+                tabindex="6"
                 :disabled="processing"
                 :aria-busy="processing ? 'true' : undefined"
                 data-test="register-user-button"
@@ -115,7 +142,7 @@ defineOptions({
             <TextLink
                 :href="login()"
                 class="underline underline-offset-4"
-                :tabindex="6"
+                :tabindex="7"
                 >{{ t('account.registration.login') }}</TextLink
             >
         </div>
