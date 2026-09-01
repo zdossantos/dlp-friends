@@ -3,22 +3,27 @@
 use App\Models\User;
 
 test('the landing page presents the adult friendship service to guests', function () {
-    visit('/', ['locale' => 'fr-FR'])
+    visit('/fr', ['locale' => 'fr-FR'])
         ->assertSee('DLP Friends')
         ->assertPresent('[data-test="app-logo-icon"]')
         ->assertAttribute('[data-test="app-logo-icon"]', 'aria-hidden', 'true')
         ->assertSee('Des amitiés entre fans adultes, avec un peu de magie')
+        ->assertScript("document.body.innerText.includes('Tes univers communs passent en premier')", true)
+        ->assertScript("document.body.innerText.includes('Ton âge vérifie uniquement ta majorité.')", true)
         ->assertSeeLink('Créer mon compte')
         ->assertSeeLink('Se connecter')
+        ->assertAttribute('[data-test="landing-register"]', 'href', '/register')
+        ->assertAttribute('[data-test="landing-login"]', 'href', '/login')
+        ->assertScript("document.querySelector('link[rel=canonical]').href.endsWith('/fr')", true)
+        ->assertNoAccessibilityIssues()
         ->assertNoJavaScriptErrors();
 });
 
-test('the landing page offers the member space when signed in', function () {
+test('the landing page sends a signed-in member directly to discovery', function () {
     $this->actingAs(User::factory()->withProfile()->create());
 
     visit('/')
-        ->assertSeeLink('Ouvrir mon espace')
-        ->assertDontSeeLink('Créer mon compte');
+        ->assertPathIs('/discover');
 });
 
 test('the registration form collects account data without a public name', function () {
@@ -32,7 +37,7 @@ test('the registration form collects account data without a public name', functi
 });
 
 test('public and authentication pages expose language without theme controls', function () {
-    visit('/', ['locale' => 'fr-FR'])
+    visit('/fr', ['locale' => 'fr-FR'])
         ->assertPresent('[data-test="locale-switcher"]')
         ->assertNotPresent('[aria-label="Choisir le thème"]');
 
@@ -48,7 +53,7 @@ test('public and authentication pages expose language without theme controls', f
 });
 
 test('the landing header stacks on a mobile viewport', function () {
-    visit('/', ['locale' => 'fr-FR'])
+    visit('/fr', ['locale' => 'fr-FR'])
         ->on()->mobile()
         ->assertScript(
             "getComputedStyle(document.querySelector('header')).flexDirection",
@@ -57,7 +62,7 @@ test('the landing header stacks on a mobile viewport', function () {
 });
 
 test('the landing page uses a bold decorative typeface for editorial content', function () {
-    visit('/', ['locale' => 'fr-FR'])
+    visit('/fr', ['locale' => 'fr-FR'])
         ->assertScript(
             "getComputedStyle(document.querySelector('main h1')).fontFamily.includes('Cinzel Decorative')",
             true,

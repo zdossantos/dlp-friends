@@ -20,12 +20,35 @@ use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\MemberProfileController;
 use App\Http\Controllers\MessageController;
 use App\Http\Controllers\ProductOnboardingController;
+use App\Http\Controllers\PublicLandingController;
 use App\Http\Controllers\PublicMemberProfileController;
 use App\Http\Controllers\SwipeController;
 use App\Http\Controllers\UnblockMemberController;
+use App\Support\PublicUrls;
 use Illuminate\Support\Facades\Route;
 
-Route::inertia('/', 'Welcome')->name('home');
+Route::get('/', [PublicLandingController::class, 'redirect'])->name('home');
+Route::get('{locale}', [PublicLandingController::class, 'show'])
+    ->whereIn('locale', ['fr', 'en'])
+    ->name('landing.show');
+Route::get('sitemap.xml', function () {
+    return response()
+        ->view('sitemap', ['urls' => [
+            'fr' => PublicUrls::landing('fr'),
+            'en' => PublicUrls::landing('en'),
+        ]])
+        ->header('Content-Type', 'application/xml; charset=UTF-8');
+})->name('sitemap');
+Route::get('robots.txt', function () {
+    return response(implode("\n", [
+        'User-agent: *',
+        'Allow: /fr',
+        'Allow: /en',
+        'Disallow: /',
+        'Sitemap: '.PublicUrls::sitemap(),
+        '',
+    ]), 200, ['Content-Type' => 'text/plain; charset=UTF-8']);
+})->name('robots');
 Route::patch('locale', LocaleController::class)->name('locale.update');
 
 Route::middleware(['auth', 'verified', 'social'])->group(function () {

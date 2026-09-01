@@ -61,6 +61,24 @@ actions d’archivage et de suppression les protègent également côté serveur
 L’écran admin calcule ses agrégats et sa liste paginée sur le même périmètre de
 membres adultes, actifs, vérifiés et disposant d’un profil complet.
 
+## Accueil public et indexation
+
+La racine `/` sélectionne la langue du visiteur à partir de sa préférence puis
+de l’en-tête `Accept-Language`, et redirige vers une URL publique stable :
+`/fr` ou `/en`. Ces deux pages fournissent côté serveur un titre, une
+description, une URL canonique, des alternatives `hreflang`, les données Open
+Graph et un objet JSON-LD. Elles sont les seules URL applicatives présentes
+dans `sitemap.xml`. Leur contenu est rendu par une vue Blade autonome qui ne
+charge que la feuille de style de production : aucun runtime Vue/Inertia ni
+JavaScript applicatif n'est nécessaire pour afficher ou parcourir la landing.
+
+Les pages d’authentification et tous les parcours applicatifs renvoient
+`X-Robots-Tag: noindex, nofollow`. La politique `robots.txt` autorise les deux
+landing pages et indique le sitemap ; elle ne remplace pas l’en-tête de
+protection attaché aux réponses privées. Un membre connecté qui ouvre la
+racine ou une landing page rejoint immédiatement la route d’aiguillage de son
+espace membre.
+
 ## Services Docker
 
 | Service | Responsabilité |
