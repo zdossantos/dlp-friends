@@ -80,7 +80,44 @@
                     <section class="landing-reveal mx-auto mt-14 grid w-full max-w-5xl gap-4 sm:grid-cols-3">
                         @foreach ($benefits as $benefit)
                             <article class="rounded-3xl border border-border/70 bg-card/90 p-6 shadow-lg shadow-primary/5 backdrop-blur">
-                                <span aria-hidden="true" class="mb-4 grid size-11 place-items-center rounded-2xl bg-secondary text-xl text-primary">✦</span>
+                                <span data-test="landing-benefit-icon-{{ $benefit }}" class="mb-4 grid size-11 place-items-center rounded-2xl bg-secondary text-primary">
+                                    <svg
+                                        data-icon="{{ match ($benefit) {
+                                            'interests' => 'shapes',
+                                            'discovery' => 'handshake',
+                                            'conversations' => 'message-circle',
+                                        } }}"
+                                        aria-hidden="true"
+                                        focusable="false"
+                                        class="size-6"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        stroke-width="2"
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                    >
+                                        @switch($benefit)
+                                            @case('interests')
+                                                <path d="M8.3 10a.7.7 0 0 1-.626-1.079L11.4 3a.7.7 0 0 1 1.198-.043L16.3 8.9a.7.7 0 0 1-.572 1.1Z" />
+                                                <rect x="3" y="14" width="7" height="7" rx="1" />
+                                                <circle cx="17.5" cy="17.5" r="3.5" />
+                                                @break
+
+                                            @case('discovery')
+                                                <path d="m11 17 2 2a1 1 0 1 0 3-3" />
+                                                <path d="m14 14 2.5 2.5a1 1 0 1 0 3-3l-3.88-3.88a3 3 0 0 0-4.24 0l-.88.88a1 1 0 1 1-3-3l2.81-2.81a5.79 5.79 0 0 1 7.06-.87l.47.28a2 2 0 0 0 1.42.25L21 4" />
+                                                <path d="m21 3 1 11h-2" />
+                                                <path d="M3 3 2 14l6.5 6.5a1 1 0 1 0 3-3" />
+                                                <path d="M3 4h8" />
+                                                @break
+
+                                            @case('conversations')
+                                                <path d="M2.992 16.342a2 2 0 0 1 .094 1.167l-1.065 3.29a1 1 0 0 0 1.236 1.168l3.413-.998a2 2 0 0 1 1.099.092 10 10 0 1 0-4.777-4.719" />
+                                                @break
+                                        @endswitch
+                                    </svg>
+                                </span>
                                 <h2 class="font-semibold">{{ __("common.welcome.benefits.{$benefit}.title") }}</h2>
                                 <p class="mt-2 text-sm leading-6 text-muted-foreground">{{ __("common.welcome.benefits.{$benefit}.description") }}</p>
                             </article>

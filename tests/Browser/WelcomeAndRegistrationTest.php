@@ -7,9 +7,10 @@ test('the landing page presents the adult friendship service to guests', functio
         ->assertSee('DLP Friends')
         ->assertPresent('[data-test="app-logo-icon"]')
         ->assertAttribute('[data-test="app-logo-icon"]', 'aria-hidden', 'true')
-        ->assertSee('Des amitiés entre fans adultes, avec un peu de magie')
-        ->assertScript("document.body.innerText.includes('Tes univers communs passent en premier')", true)
-        ->assertScript("document.body.innerText.includes('Ton âge vérifie uniquement ta majorité.')", true)
+        ->assertSee('Vis la magie à plusieurs')
+        ->assertSee('Rencontre d’autres fans de Disneyland Paris, découvre vos passions communes et échange simplement.')
+        ->assertScript("document.body.innerText.includes('Vos passions communes passent en premier')", true)
+        ->assertScript("document.body.innerText.includes('Ton âge n’est jamais pris en compte par l’algorithme pour te proposer des profils.')", true)
         ->assertSeeLink('Créer mon compte')
         ->assertSeeLink('Se connecter')
         ->assertAttribute('[data-test="landing-register"]', 'href', '/register')
@@ -90,6 +91,16 @@ test('the landing header stacks on a mobile viewport', function () {
             "getComputedStyle(document.querySelector('header')).flexDirection",
             'column',
         );
+});
+
+test('the landing benefits use distinct decorative icons', function () {
+    visit('/fr', ['locale' => 'fr-FR'])
+        ->assertPresent('[data-test="landing-benefit-icon-interests"] svg[data-icon="shapes"]')
+        ->assertPresent('[data-test="landing-benefit-icon-discovery"] svg[data-icon="handshake"]')
+        ->assertPresent('[data-test="landing-benefit-icon-conversations"] svg[data-icon="message-circle"]')
+        ->assertAttribute('[data-test="landing-benefit-icon-interests"] svg', 'aria-hidden', 'true')
+        ->assertAttribute('[data-test="landing-benefit-icon-discovery"] svg', 'aria-hidden', 'true')
+        ->assertAttribute('[data-test="landing-benefit-icon-conversations"] svg', 'aria-hidden', 'true');
 });
 
 test('the landing page uses a bold decorative typeface for editorial content', function () {

@@ -53,7 +53,7 @@ test('the public landing is server rendered without application javascript', fun
         ->assertOk()
         ->assertViewIs('welcome')
         ->assertSee('<main', false)
-        ->assertSee('Des amitiés entre fans adultes, avec un peu de magie')
+        ->assertSee('Vis la magie à plusieurs')
         ->assertDontSee('type="module"', false);
 });
 
@@ -79,8 +79,8 @@ test('each landing locale exposes localized indexable seo metadata', function (s
         ->assertSee('<script type="application/ld+json">', false)
         ->assertSee('SocialNetworkingApplication', false);
 })->with([
-    'French' => ['fr', 'DLP Friends — Rencontres amicales entre fans de Disneyland Paris', 'Découvre des fans adultes de Disneyland Paris selon vos univers favoris, puis échange après une découverte réciproque.'],
-    'English' => ['en', 'DLP Friends — Friendships between Disneyland Paris fans', 'Discover adult Disneyland Paris fans through shared interests, then chat after a mutual discovery.'],
+    'French' => ['fr', 'DLP Friends — Rencontre d’autres fans de Disneyland Paris', 'Rencontre d’autres fans de Disneyland Paris, découvre vos passions communes et échange simplement.'],
+    'English' => ['en', 'DLP Friends — Meet other Disneyland Paris fans', 'Meet other Disneyland Paris fans, discover the passions you share, and chat with ease.'],
 ]);
 
 test('the sitemap contains localized public landing and legal pages', function () {
