@@ -53,6 +53,20 @@ test('registration submits an explicit terms choice', function () {
         ->assertPathIs('/email/verify');
 });
 
+test('localized legal pages are responsive and accessible', function () {
+    visit('/fr/conditions-generales-utilisation', ['locale' => 'fr-FR'])
+        ->assertSee('Conditions générales d’utilisation')
+        ->assertPresent('[data-test="app-logo-icon"]')
+        ->assertPresent('[data-test="legal-document-card"]')
+        ->assertNoAccessibilityIssues()
+        ->assertNoJavaScriptErrors();
+
+    visit('/en/privacy-policy', ['locale' => 'en-GB'])
+        ->assertSee('Privacy Policy')
+        ->assertNoAccessibilityIssues()
+        ->assertNoJavaScriptErrors();
+});
+
 test('public and authentication pages expose language without theme controls', function () {
     visit('/fr', ['locale' => 'fr-FR'])
         ->assertPresent('[data-test="locale-switcher"]')

@@ -26,11 +26,13 @@ class LegalDocumentController extends Controller
         }
 
         $url = $document === 'terms' ? PublicUrls::terms(...) : PublicUrls::privacy(...);
+        $path = $document === 'terms' ? PublicUrls::termsPath(...) : PublicUrls::privacyPath(...);
 
         return view('legal.show', [
             'document' => trans("legal.{$document}"), 'locale' => $locale,
             'contactEmail' => config('legal.contact_email'), 'canonical' => $url($locale),
             'alternates' => ['fr' => $url('fr'), 'en' => $url('en'), 'x-default' => $url('fr')],
+            'navigationAlternates' => ['fr' => $path('fr'), 'en' => $path('en')],
         ]);
     }
 }

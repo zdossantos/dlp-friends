@@ -125,8 +125,8 @@
 
                     <p class="mx-auto mt-10 max-w-2xl text-center text-xs leading-5 text-muted-foreground">{{ __('common.brand.disclaimer') }}</p>
                     <footer class="mt-6 flex justify-center gap-4 text-xs text-muted-foreground">
-                        <a data-test="legal-terms" class="underline underline-offset-4" href="{{ \App\Support\PublicUrls::terms($seo['locale']) }}">{{ __('common.legal.terms') }}</a>
-                        <a data-test="legal-privacy" class="underline underline-offset-4" href="{{ \App\Support\PublicUrls::privacy($seo['locale']) }}">{{ __('common.legal.privacy') }}</a>
+                        <a data-test="legal-terms" class="underline underline-offset-4" href="{{ \App\Support\PublicUrls::termsPath($seo['locale']) }}">{{ __('common.legal.terms') }}</a>
+                        <a data-test="legal-privacy" class="underline underline-offset-4" href="{{ \App\Support\PublicUrls::privacyPath($seo['locale']) }}">{{ __('common.legal.privacy') }}</a>
                     </footer>
                 </main>
             </div>

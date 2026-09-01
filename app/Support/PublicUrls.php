@@ -16,12 +16,22 @@ final class PublicUrls
 
     public static function terms(string $locale): string
     {
-        return self::absolute(route("legal.terms.{$locale}", absolute: false));
+        return self::absolute(self::termsPath($locale));
     }
 
     public static function privacy(string $locale): string
     {
-        return self::absolute(route("legal.privacy.{$locale}", absolute: false));
+        return self::absolute(self::privacyPath($locale));
+    }
+
+    public static function termsPath(string $locale): string
+    {
+        return route("legal.terms.{$locale}", absolute: false);
+    }
+
+    public static function privacyPath(string $locale): string
+    {
+        return route("legal.privacy.{$locale}", absolute: false);
     }
 
     private static function absolute(string $path): string

@@ -8,6 +8,7 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Schema;
+use Inertia\Testing\AssertableInertia as Assert;
 use Laravel\Fortify\Features;
 use Tests\TestCase;
 
@@ -33,7 +34,10 @@ class RegistrationTest extends TestCase
     {
         $response = $this->get(route('register'));
 
-        $response->assertOk();
+        $response->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('legal.terms_url', '/fr/conditions-generales-utilisation')
+                ->where('legal.privacy_url', '/fr/politique-confidentialite'));
     }
 
     public function test_new_users_can_register()

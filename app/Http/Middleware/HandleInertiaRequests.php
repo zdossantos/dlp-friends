@@ -46,8 +46,8 @@ class HandleInertiaRequests extends Middleware
                 'messages' => FrontendTranslations::messages(),
             ],
             'legal' => [
-                'terms_url' => PublicUrls::terms(app()->getLocale()),
-                'privacy_url' => PublicUrls::privacy(app()->getLocale()),
+                'terms_url' => PublicUrls::termsPath(app()->getLocale()),
+                'privacy_url' => PublicUrls::privacyPath(app()->getLocale()),
             ],
             'auth' => [
                 'user' => function () use ($request): ?array {
