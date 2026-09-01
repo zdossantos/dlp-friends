@@ -67,6 +67,11 @@ score = nombre d’intérêts communs
 
 Les résultats sont triés par score décroissant. Le bonus de fréquence ne peut donc jamais faire passer un profil avec moins d’intérêts communs devant un autre. À score égal, appliquer un tirage aléatoire contrôlé pour éviter de toujours favoriser les mêmes comptes. Les intérêts archivés sont exclus de ce score. Ce score ne crée jamais un match : il détermine seulement l'ordre des profils présentés.
 
+Les pages publiques `/fr/matching` et `/en/matching` traduisent ces règles en
+langage courant. Toute évolution de l’éligibilité, de l’ordre de classement, du
+bonus ou de la réciprocité doit mettre à jour ces pages et leurs tests dans le
+même changement.
+
 ## Décisions V1 explicites
 
 - Il n'y a ni limite quotidienne de swipes, ni annulation d'un swipe dans le MVP.

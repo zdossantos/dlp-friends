@@ -54,6 +54,8 @@ test('the public landing is server rendered without application javascript', fun
         ->assertViewIs('welcome')
         ->assertSee('<main', false)
         ->assertSee('Vis la magie à plusieurs')
+        ->assertSee('href="/fr/matching"', false)
+        ->assertSee('Comprendre nos suggestions')
         ->assertDontSee('type="module"', false);
 });
 
@@ -90,6 +92,8 @@ test('the sitemap contains localized public landing and legal pages', function (
 
     $response->assertSee('https://dlp-friends.example/fr', false)
         ->assertSee('https://dlp-friends.example/en', false)
+        ->assertSee('https://dlp-friends.example/fr/matching', false)
+        ->assertSee('https://dlp-friends.example/en/matching', false)
         ->assertSee('https://dlp-friends.example/fr/conditions-generales-utilisation', false)
         ->assertSee('https://dlp-friends.example/en/terms-of-use', false)
         ->assertSee('https://dlp-friends.example/fr/politique-confidentialite', false)

@@ -29,6 +29,7 @@ return [
         'algorithm_title' => 'Your shared passions come first',
         'algorithm_description' => 'Profiles with the most favourite worlds in common with you appear first. When tied, a shared visit frequency can make the difference if that option is enabled.',
         'algorithm_note' => 'Your age is never used by the algorithm to suggest profiles.',
+        'algorithm_action' => 'Understand our suggestions',
         'steps_title' => 'How does it work?',
         'steps' => [
             'profile' => ['title' => 'Create your profile', 'description' => 'Choose your avatar and the worlds you enjoy most.'],

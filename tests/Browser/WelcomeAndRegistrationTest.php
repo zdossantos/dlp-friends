@@ -15,9 +15,22 @@ test('the landing page presents the adult friendship service to guests', functio
         ->assertSeeLink('Se connecter')
         ->assertAttribute('[data-test="landing-register"]', 'href', '/register')
         ->assertAttribute('[data-test="landing-login"]', 'href', '/login')
+        ->assertSeeLink('Comprendre nos suggestions')
+        ->assertAttribute('[data-test="landing-matching"]', 'href', '/fr/matching')
         ->assertScript("document.querySelector('[data-test=legal-terms]').href.endsWith('/fr/conditions-generales-utilisation')", true)
         ->assertScript("document.querySelector('[data-test=legal-privacy]').href.endsWith('/fr/politique-confidentialite')", true)
         ->assertScript("document.querySelector('link[rel=canonical]').href.endsWith('/fr')", true)
+        ->assertNoAccessibilityIssues()
+        ->assertNoJavaScriptErrors();
+});
+
+test('the landing matching link opens an accessible localized explanation', function () {
+    visit('/fr', ['locale' => 'fr-FR'])
+        ->click('[data-test="landing-matching"]')
+        ->assertPathIs('/fr/matching')
+        ->assertSee('Comment fonctionnent les suggestions')
+        ->assertSee('Deux Découvertes créent un Univers croisé')
+        ->assertPresent('[data-test="matching-document-card"]')
         ->assertNoAccessibilityIssues()
         ->assertNoJavaScriptErrors();
 });

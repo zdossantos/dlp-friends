@@ -14,6 +14,16 @@ final class PublicUrls
         return self::absolute(route('sitemap', absolute: false));
     }
 
+    public static function matching(string $locale): string
+    {
+        return self::absolute(self::matchingPath($locale));
+    }
+
+    public static function matchingPath(string $locale): string
+    {
+        return route("matching.show.{$locale}", absolute: false);
+    }
+
     public static function terms(string $locale): string
     {
         return self::absolute(self::termsPath($locale));

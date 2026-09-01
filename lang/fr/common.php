@@ -29,6 +29,7 @@ return [
         'algorithm_title' => 'Vos passions communes passent en premier',
         'algorithm_description' => 'Les profils avec lesquels tu partages le plus d’univers favoris apparaissent d’abord. En cas d’égalité, une fréquence de visite commune peut faire la différence si cette option est activée.',
         'algorithm_note' => 'Ton âge n’est jamais pris en compte par l’algorithme pour te proposer des profils.',
+        'algorithm_action' => 'Comprendre nos suggestions',
         'steps_title' => 'Comment ça marche ?',
         'steps' => [
             'profile' => ['title' => 'Crée ton profil', 'description' => 'Choisis ton avatar et les univers que tu préfères.'],

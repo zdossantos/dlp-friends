@@ -22,6 +22,7 @@ use App\Http\Controllers\MemberProfileController;
 use App\Http\Controllers\MessageController;
 use App\Http\Controllers\ProductOnboardingController;
 use App\Http\Controllers\PublicLandingController;
+use App\Http\Controllers\PublicMatchingController;
 use App\Http\Controllers\PublicMemberProfileController;
 use App\Http\Controllers\SwipeController;
 use App\Http\Controllers\UnblockMemberController;
@@ -29,6 +30,9 @@ use App\Support\PublicUrls;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [PublicLandingController::class, 'redirect'])->name('home');
+Route::get('matching', [PublicMatchingController::class, 'redirect'])->name('matching.redirect');
+Route::get('fr/matching', [PublicMatchingController::class, 'show'])->defaults('locale', 'fr')->name('matching.show.fr');
+Route::get('en/matching', [PublicMatchingController::class, 'show'])->defaults('locale', 'en')->name('matching.show.en');
 Route::get('fr/conditions-generales-utilisation', [LegalDocumentController::class, 'terms'])->defaults('locale', 'fr')->name('legal.terms.fr');
 Route::get('en/terms-of-use', [LegalDocumentController::class, 'terms'])->defaults('locale', 'en')->name('legal.terms.en');
 Route::get('fr/politique-confidentialite', [LegalDocumentController::class, 'privacy'])->defaults('locale', 'fr')->name('legal.privacy.fr');
@@ -40,6 +44,7 @@ Route::get('sitemap.xml', function () {
     return response()
         ->view('sitemap', ['groups' => [
             ['fr' => PublicUrls::landing('fr'), 'en' => PublicUrls::landing('en')],
+            ['fr' => PublicUrls::matching('fr'), 'en' => PublicUrls::matching('en')],
             ['fr' => PublicUrls::terms('fr'), 'en' => PublicUrls::terms('en')],
             ['fr' => PublicUrls::privacy('fr'), 'en' => PublicUrls::privacy('en')],
         ]])

@@ -73,12 +73,14 @@ membres adultes, actifs, vérifiés et disposant d’un profil complet.
 
 La racine `/` sélectionne la langue du visiteur à partir de sa préférence puis
 de l’en-tête `Accept-Language`, et redirige vers une URL publique stable :
-`/fr` ou `/en`. Ces deux pages fournissent côté serveur un titre, une
-description, une URL canonique, des alternatives `hreflang`, les données Open
-Graph et un objet JSON-LD. Elles sont les seules URL applicatives présentes
-dans `sitemap.xml`. Leur contenu est rendu par une vue Blade autonome qui ne
-charge que la feuille de style de production : aucun runtime Vue/Inertia ni
-JavaScript applicatif n'est nécessaire pour afficher ou parcourir la landing.
+`/fr` ou `/en`. Les pages publiques indexables regroupent ces landing pages,
+les documents légaux localisés et l’explication du matching sous
+`/{locale}/matching`. Elles fournissent côté serveur un titre, une description,
+une URL canonique, des alternatives `hreflang`, les données Open Graph et un
+objet JSON-LD, et sont référencées dans `sitemap.xml`. Leur contenu est rendu
+par des vues Blade autonomes qui ne chargent que la feuille de style de
+production : aucun runtime Vue/Inertia ni JavaScript applicatif n'est
+nécessaire pour les afficher ou les parcourir.
 
 Les pages d’authentification et tous les parcours applicatifs renvoient
 `X-Robots-Tag: noindex, nofollow`. La politique `robots.txt` autorise les deux
