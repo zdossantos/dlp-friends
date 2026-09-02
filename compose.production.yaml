@@ -42,7 +42,7 @@ x-app: &app
     AWS_ENDPOINT: http://minio:9000
     AWS_USE_PATH_STYLE_ENDPOINT: "true"
     MAIL_MAILER: resend
-    RESEND_KEY: ${RESEND_KEY:?RESEND_KEY is required}
+    RESEND_API_KEY: ${RESEND_API_KEY:?RESEND_API_KEY is required}
     MAIL_FROM_ADDRESS: ${MAIL_FROM_ADDRESS:?MAIL_FROM_ADDRESS is required}
     MAIL_FROM_NAME: ${MAIL_FROM_NAME:-DLP Friends}
   networks:

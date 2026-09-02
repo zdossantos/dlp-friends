@@ -2,6 +2,7 @@
 
 use Illuminate\Process\ProcessResult;
 use Illuminate\Support\Facades\Process;
+use Illuminate\Mail\Transport\ResendTransport;
 
 function productionComposeEnvironment(array $overrides = []): array
 {
@@ -22,7 +23,7 @@ function productionComposeEnvironment(array $overrides = []): array
         'REVERB_APP_KEY' => 'reverb-public-key',
         'REVERB_APP_SECRET' => 'reverb-secret',
         'VITE_REVERB_HOST' => 'reverb.dlpfriends.example',
-        'RESEND_KEY' => 're_test_only',
+        'RESEND_API_KEY' => 're_test_only',
         'MAIL_FROM_ADDRESS' => 'noreply@dlpfriends.example',
     ], $overrides);
 }
@@ -91,7 +92,7 @@ it('configures healthchecks and Resend without automatic migrations', function (
 
     foreach (['web', 'worker', 'scheduler', 'reverb'] as $service) {
         expect($services[$service]['environment']['MAIL_MAILER'])->toBe('resend')
-            ->and($services[$service]['environment']['RESEND_KEY'])->toBe('re_test_only')
+            ->and($services[$service]['environment']['RESEND_API_KEY'])->toBe('re_test_only')
             ->and(implode(' ', $services[$service]['command']))->not->toContain('migrate');
     }
 });
@@ -105,5 +106,14 @@ it('rejects a production deployment when a critical variable is missing', functi
     'Laravel application key' => 'APP_KEY',
     'database password' => 'DB_PASSWORD',
     'Reverb secret' => 'REVERB_APP_SECRET',
-    'Resend key' => 'RESEND_KEY',
+    'Resend key' => 'RESEND_API_KEY',
 ]);
+
+it('builds the Laravel Resend transport used in production', function () {
+    config()->set('services.resend.key', 're_test_only');
+    app('mail.manager')->forgetMailers();
+
+    $transport = app('mail.manager')->mailer('resend')->getSymfonyTransport();
+
+    expect($transport)->toBeInstanceOf(ResendTransport::class);
+});
