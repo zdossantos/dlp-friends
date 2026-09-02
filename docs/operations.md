@@ -10,28 +10,89 @@ et l’état des capacités applicatives sont définis dans le
 - Faire relire professionnellement les CGU et la politique de confidentialité.
 - Confirmer la sauvegarde quotidienne chiffrée MySQL et MinIO, hors serveur,
   avec une rétention de 30 jours.
-- Le VPS est hébergé chez IONOS. Mailpit reste local uniquement ; choisir et
-  documenter le transport SMTP de production avant son activation.
+- Le VPS est hébergé chez IONOS. Mailpit reste local uniquement ; Resend est le
+  transport d’e-mails transactionnels de production.
+
+## Premier déploiement sur Coolify
+
+1. Créer une application Docker Compose depuis le dépôt GitHub, suivre la
+   branche `main` et sélectionner `compose.production.yaml`.
+2. Associer le domaine HTTPS public au service `web` sur son port interne `80`,
+   puis le domaine WebSocket au service `reverb` sur son port interne `8080`.
+3. Renseigner les variables obligatoires détectées par Coolify :
+   `APP_KEY`, `APP_URL`, `LEGAL_CONTACT_EMAIL`, `DB_DATABASE`, `DB_USERNAME`,
+   `DB_PASSWORD`, `MYSQL_ROOT_PASSWORD`, `MINIO_ROOT_USER`,
+   `MINIO_ROOT_PASSWORD`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`,
+   `AWS_BUCKET`, `REVERB_APP_ID`, `REVERB_APP_KEY`, `REVERB_APP_SECRET`,
+   `VITE_REVERB_HOST`, `RESEND_API_KEY` et `MAIL_FROM_ADDRESS`.
+4. Vérifier que `VITE_REVERB_HOST` contient uniquement le nom d’hôte public de
+   Reverb, sans protocole. Les valeurs par défaut utilisent le port `443` et le
+   schéma `https` ; les surcharger avec `VITE_REVERB_PORT` et
+   `VITE_REVERB_SCHEME` uniquement si l’infrastructure l’exige.
+5. Déployer la stack et attendre que `web`, `worker`, `scheduler`, `reverb`,
+   `mysql`, `redis` et `minio` soient sains.
+6. Créer le bucket privé nommé par `AWS_BUCKET` dans MinIO avant d’activer un
+   parcours qui écrit des objets. Utiliser pour l’application les identifiants
+   `AWS_ACCESS_KEY_ID` et `AWS_SECRET_ACCESS_KEY`, distincts des identifiants
+   racine MinIO lorsque la gestion des utilisateurs MinIO est disponible.
+7. Exécuter explicitement la migration dans le conteneur `web` :
+
+   ```sh
+   php artisan migrate --force
+   ```
+
+8. Redémarrer proprement les workers, puis contrôler la santé publique :
+
+   ```sh
+   php artisan queue:restart
+   curl --fail --silent https://<domaine-application>/up
+   ```
+
+Les migrations ne font partie ni de l’entrypoint ni de la commande de démarrage
+d’un service. Une modification de `VITE_REVERB_*` exige une nouvelle
+construction de l’image, car ces valeurs sont intégrées aux assets frontend.
+
+## Déploiements suivants
+
+Coolify surveille uniquement `main`. Après le merge d’une pull request et la
+réussite du déploiement automatique :
+
+1. lire les notes de migration de la version ;
+2. activer une fenêtre de maintenance si la migration l’exige ;
+3. exécuter `php artisan migrate --force` dans `web` ;
+4. exécuter `php artisan queue:restart` ;
+5. vérifier `/up`, la connexion WebSocket, les files et les journaux des sept
+   services.
 
 ## Sauvegardes
 
 - Sauvegarde chiffrée quotidienne de MySQL, avec conservation de 30 jours et test mensuel de restauration.
 - Sauvegarde quotidienne du bucket MinIO des images, avec la même politique de conservation.
 - Les sauvegardes sont stockées hors du serveur de production. Une copie sur le même volume Docker ne constitue pas une sauvegarde.
-- Documenter une procédure de restauration : base MySQL, objets MinIO, déploiement de la version applicative compatible et vérification de santé.
+- La restauration s’effectue sur une stack isolée : restaurer MySQL, restaurer
+  le bucket MinIO, déployer l’image applicative de la version compatible,
+  exécuter les migrations nécessaires, puis vérifier `/up`, Reverb, les files
+  et un objet privé avant de rediriger le trafic.
 
 ## Santé et alertes
 
 - La route `/up` vérifie que l'application répond; elle ne divulgue ni version sensible ni configuration.
-- Docker vérifie les services longs (`web`, `worker`, `scheduler`, `reverb`, `mysql`, `redis`, `minio`, `mailpit`) avec un healthcheck adapté.
+- Docker vérifie les services longs (`web`, `worker`, `scheduler`, `reverb`,
+  `mysql`, `redis`, `minio`) avec un healthcheck adapté en production. Mailpit
+  possède son propre healthcheck uniquement dans la stack locale.
 - Configurer Coolify pour notifier les échecs de déploiement, conteneurs arrêtés, sauvegardes en erreur et manque d'espace disque.
 - Les journaux applicatifs sont structurés, sans mot de passe, jeton OAuth, contenu de message privé ou données personnelles inutiles.
 
 ## Délivrabilité des e-mails
 
 - Mailpit est le seul service SMTP fourni par la stack locale et ne doit jamais recevoir de trafic public.
-- Le transport de production est différé. Avant sa mise en place, choisir le fournisseur ou le serveur, documenter ses sauvegardes et sa supervision, puis configurer SPF, DKIM et DMARC.
-- Conserver tous les identifiants SMTP de production uniquement dans Coolify et les référencer par variables d'environnement Laravel.
+- Resend est le transport de production via le mailer Laravel `resend`. La clé
+  `RESEND_API_KEY` reste uniquement dans Coolify.
+- Vérifier le domaine d’envoi dans Resend, définir `MAIL_FROM_ADDRESS` sur ce
+  domaine et configurer SPF, DKIM et DMARC avant tout envoi réel.
+- Après le premier déploiement, envoyer un e-mail transactionnel de contrôle et
+  vérifier sa remise sans afficher la clé API ni le contenu du message dans les
+  journaux.
 
 ## Tâches récurrentes
 

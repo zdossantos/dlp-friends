@@ -140,8 +140,9 @@ vise un score maximal en SEO et en accessibilité.
 
 Les quatre services applicatifs utilisent la même image Docker. MySQL, Redis,
 le worker et le scheduler ne publient aucun port sur l'hôte. `compose.yaml`
-décrit la stack locale complète, dont Mailpit ; une configuration de production
-doit exclure Mailpit et fournir un véritable transport SMTP.
+décrit la stack locale complète, dont Mailpit. `compose.production.yaml`
+décrit la stack Coolify, exclut Mailpit, garde MySQL, Redis et MinIO privés et
+expose seulement les ports internes de `web` et `reverb` au proxy Coolify.
 
 Le conteneur applicatif ne lance aucune migration au démarrage. Les migrations
 s'exécutent explicitement avec `php artisan migrate --force` et doivent rester
@@ -153,8 +154,8 @@ compatibles avec la version applicative précédente pendant un déploiement.
 | --- | --- | --- | --- |
 | Base de données | MySQL Docker | MySQL de service pour les suites Pest | MySQL privé |
 | Cache et files | Redis Docker | Stockages `array` et files synchrones | Redis privé |
-| Fichiers | Disque local par défaut | Disque local éphémère | Stockage S3-compatible prévu |
-| E-mails | Mailpit | Transport `array` | Transport à définir avant mise en ligne |
+| Fichiers | Disque local par défaut | Disque local éphémère | MinIO privé via le disque `s3` |
+| E-mails | Mailpit | Transport `array` | Resend via le mailer `resend` |
 
 Les secrets sont fournis par variables d'environnement et ne sont jamais
 intégrés à l'image ou au dépôt.
@@ -162,9 +163,12 @@ intégrés à l'image ou au dépôt.
 ## Déploiement
 
 `main` est l'unique branche de production. Après les contrôles de pull request,
-Coolify utilise l'image et la configuration Compose versionnée comme base de
-déploiement. La sélection des services de production et les secrets restent des
-réglages opérateur ; Mailpit doit en être exclu. GitHub Actions vérifie
+Coolify construit la cible `runtime` définie par `compose.production.yaml`, puis
+réutilise cette image pour `web`, `worker`, `scheduler` et `reverb`. Compose
+déclare les volumes persistants MySQL et MinIO ; l’opérateur configure leurs
+sauvegardes ainsi que les secrets et domaines HTTPS/WSS dans Coolify. Les
+variables critiques utilisent l’interpolation Compose obligatoire et bloquent
+une configuration incomplète avant le démarrage. GitHub Actions vérifie
 l'application et l'image Docker mais ne déclenche pas directement le
 déploiement.
 
