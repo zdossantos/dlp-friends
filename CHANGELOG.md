@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.2](https://github.com/zdossantos/dlp-friends/compare/v1.2.1...v1.2.2) (2026-09-02)
+
+
+### Fixes
+
+* replace favicon artwork ([#117](https://github.com/zdossantos/dlp-friends/issues/117)) ([1f9a08e](https://github.com/zdossantos/dlp-friends/commit/1f9a08e80f0071769d56d89362541f37f454cc1d))
+
 ## [1.2.1](https://github.com/zdossantos/dlp-friends/compare/v1.2.0...v1.2.1) (2026-09-02)
 
 
