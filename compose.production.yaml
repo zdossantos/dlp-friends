@@ -1,0 +1,209 @@
+x-app: &app
+  image: ${APP_IMAGE_NAME:-dlp-friends-app}:${SOURCE_COMMIT:-production}
+  environment: &app-environment
+    APP_NAME: DLP Friends
+    APP_ENV: production
+    APP_KEY: ${APP_KEY:?APP_KEY is required}
+    APP_DEBUG: "false"
+    APP_URL: ${APP_URL:?APP_URL is required}
+    LEGAL_CONTACT_EMAIL: ${LEGAL_CONTACT_EMAIL:?LEGAL_CONTACT_EMAIL is required}
+    APP_LOCALE: fr
+    APP_FALLBACK_LOCALE: fr
+    APP_MAINTENANCE_DRIVER: cache
+    LOG_CHANNEL: stack
+    LOG_STACK: single
+    LOG_LEVEL: ${LOG_LEVEL:-warning}
+    DB_CONNECTION: mysql
+    DB_HOST: mysql
+    DB_PORT: 3306
+    DB_DATABASE: ${DB_DATABASE:?DB_DATABASE is required}
+    DB_USERNAME: ${DB_USERNAME:?DB_USERNAME is required}
+    DB_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD is required}
+    SESSION_DRIVER: redis
+    SESSION_ENCRYPT: "true"
+    SESSION_SECURE_COOKIE: "true"
+    CACHE_STORE: redis
+    QUEUE_CONNECTION: redis
+    REDIS_CLIENT: phpredis
+    REDIS_HOST: redis
+    REDIS_PORT: 6379
+    BROADCAST_CONNECTION: reverb
+    REVERB_APP_ID: ${REVERB_APP_ID:?REVERB_APP_ID is required}
+    REVERB_APP_KEY: ${REVERB_APP_KEY:?REVERB_APP_KEY is required}
+    REVERB_APP_SECRET: ${REVERB_APP_SECRET:?REVERB_APP_SECRET is required}
+    REVERB_HOST: reverb
+    REVERB_PORT: 8080
+    REVERB_SCHEME: http
+    FILESYSTEM_DISK: s3
+    AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:?AWS_ACCESS_KEY_ID is required}
+    AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:?AWS_SECRET_ACCESS_KEY is required}
+    AWS_DEFAULT_REGION: ${AWS_DEFAULT_REGION:-us-east-1}
+    AWS_BUCKET: ${AWS_BUCKET:?AWS_BUCKET is required}
+    AWS_ENDPOINT: http://minio:9000
+    AWS_USE_PATH_STYLE_ENDPOINT: "true"
+    MAIL_MAILER: resend
+    RESEND_API_KEY: ${RESEND_API_KEY:?RESEND_API_KEY is required}
+    MAIL_FROM_ADDRESS: ${MAIL_FROM_ADDRESS:?MAIL_FROM_ADDRESS is required}
+    MAIL_FROM_NAME: ${MAIL_FROM_NAME:-DLP Friends}
+  networks:
+    - dlp-friends
+  restart: unless-stopped
+  depends_on:
+    mysql:
+      condition: service_healthy
+    redis:
+      condition: service_healthy
+    minio:
+      condition: service_healthy
+
+services:
+  web:
+    <<: *app
+    build:
+      context: .
+      target: runtime
+      args:
+        VITE_REVERB_APP_KEY: ${REVERB_APP_KEY:?REVERB_APP_KEY is required}
+        VITE_REVERB_HOST: ${VITE_REVERB_HOST:?VITE_REVERB_HOST is required}
+        VITE_REVERB_PORT: ${VITE_REVERB_PORT:-443}
+        VITE_REVERB_SCHEME: ${VITE_REVERB_SCHEME:-https}
+    command: web
+    expose:
+      - "80"
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "--silent", "http://127.0.0.1/up"]
+      interval: 10s
+      timeout: 5s
+      start_period: 30s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: "1.00"
+          memory: 512M
+
+  worker:
+    <<: *app
+    command: worker
+    healthcheck:
+      test: ["CMD-SHELL", "pgrep -f 'artisan queue:work' >/dev/null"]
+      interval: 15s
+      timeout: 5s
+      start_period: 20s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: "0.75"
+          memory: 384M
+
+  scheduler:
+    <<: *app
+    command: scheduler
+    healthcheck:
+      test: ["CMD-SHELL", "pgrep -f 'artisan schedule:work' >/dev/null"]
+      interval: 15s
+      timeout: 5s
+      start_period: 20s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: "0.25"
+          memory: 192M
+
+  reverb:
+    <<: *app
+    command: reverb
+    expose:
+      - "8080"
+    healthcheck:
+      test:
+        - CMD
+        - php
+        - -r
+        - '$$socket = @fsockopen("127.0.0.1", 8080); exit($$socket ? 0 : 1);'
+      interval: 10s
+      timeout: 5s
+      start_period: 20s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: "0.50"
+          memory: 256M
+
+  mysql:
+    image: mysql:8.4.10
+    environment:
+      MYSQL_DATABASE: ${DB_DATABASE:?DB_DATABASE is required}
+      MYSQL_USER: ${DB_USERNAME:?DB_USERNAME is required}
+      MYSQL_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD is required}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?MYSQL_ROOT_PASSWORD is required}
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+    volumes:
+      - mysql-data:/var/lib/mysql
+    networks:
+      - dlp-friends
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -p$$MYSQL_ROOT_PASSWORD --silent"]
+      interval: 10s
+      timeout: 5s
+      start_period: 30s
+      retries: 10
+    deploy:
+      resources:
+        limits:
+          cpus: "1.00"
+          memory: 768M
+
+  redis:
+    image: redis:7.4.10-alpine
+    command: ["redis-server", "--save", "", "--appendonly", "no"]
+    networks:
+      - dlp-friends
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: "0.50"
+          memory: 256M
+
+  minio:
+    image: quay.io/minio/minio:RELEASE.2025-09-07T16-13-09Z
+    command: server /data
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:?MINIO_ROOT_USER is required}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:?MINIO_ROOT_PASSWORD is required}
+    volumes:
+      - minio-data:/data
+    networks:
+      - dlp-friends
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://127.0.0.1:9000/minio/health/live"]
+      interval: 10s
+      timeout: 5s
+      start_period: 20s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: "0.75"
+          memory: 512M
+
+networks:
+  dlp-friends:
+    driver: bridge
+
+volumes:
+  mysql-data:
+  minio-data:
