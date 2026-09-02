@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.1](https://github.com/zdossantos/dlp-friends/compare/v1.2.0...v1.2.1) (2026-09-02)
+
+
+### Fixes
+
+* use POST for Coolify deployments ([#115](https://github.com/zdossantos/dlp-friends/issues/115)) ([532543b](https://github.com/zdossantos/dlp-friends/commit/532543b6086e6e53c91538ecc5214605b52d149e))
+
 ## [1.2.0](https://github.com/zdossantos/dlp-friends/compare/v1.1.0...v1.2.0) (2026-09-02)
 
 
