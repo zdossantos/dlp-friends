@@ -1,8 +1,10 @@
 <?php
 
+use Illuminate\Filesystem\AwsS3V3Adapter;
 use Illuminate\Mail\Transport\ResendTransport;
 use Illuminate\Process\ProcessResult;
 use Illuminate\Support\Facades\Process;
+use Illuminate\Support\Facades\Storage;
 
 function productionComposeEnvironment(array $overrides = []): array
 {
@@ -116,4 +118,28 @@ it('builds the Laravel Resend transport used in production', function () {
     $transport = app('mail.manager')->mailer('resend')->getSymfonyTransport();
 
     expect($transport)->toBeInstanceOf(ResendTransport::class);
+});
+
+it('builds the S3 filesystem used for production object storage', function () {
+    $disk = Storage::build([
+        'driver' => 's3',
+        'key' => 'dlp-friends',
+        'secret' => 'minio-application-password',
+        'region' => 'us-east-1',
+        'bucket' => 'dlp-friends',
+        'endpoint' => 'http://minio:9000',
+        'use_path_style_endpoint' => true,
+    ]);
+
+    expect($disk)->toBeInstanceOf(AwsS3V3Adapter::class);
+});
+
+it('honors the HTTPS scheme forwarded by the Coolify proxy', function () {
+    $this->withHeaders([
+        'X-Forwarded-For' => '203.0.113.10',
+        'X-Forwarded-Host' => 'dlp-friends.fr',
+        'X-Forwarded-Port' => '443',
+        'X-Forwarded-Proto' => 'https',
+    ])->get('/')
+        ->assertRedirect('https://dlp-friends.fr/fr');
 });
