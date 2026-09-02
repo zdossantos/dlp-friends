@@ -40,7 +40,6 @@ return [
     ],
     'social' => [
         'google' => 'Google',
-        'apple' => 'Apple',
     ],
     'fields' => [
         'email' => 'Adresse e-mail',

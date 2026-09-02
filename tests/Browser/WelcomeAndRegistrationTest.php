@@ -31,23 +31,18 @@ test('the registration form collects account data without a public name', functi
         ->assertNotPresent('input[name="username"]');
 });
 
-test('login and registration offer Google and Apple social authentication', function () {
+test('login and registration offer only Google social authentication', function () {
     foreach (['/login', '/register'] as $path) {
         visit($path, ['locale' => 'fr-FR'])
             ->assertCount('[data-test="social-google"]', 1)
-            ->assertCount('[data-test="social-apple"]', 1)
+            ->assertNotPresent('[data-test="social-apple"]')
             ->assertSeeLink('Google')
-            ->assertSeeLink('Apple')
+            ->assertDontSeeLink('Apple')
             ->assertScript(
                 "document.querySelector('[data-test=\"social-google\"]')?.getAttribute('href')?.endsWith('/auth/google/redirect')",
                 true,
             )
-            ->assertScript(
-                "document.querySelector('[data-test=\"social-apple\"]')?.getAttribute('href')?.endsWith('/auth/apple/redirect')",
-                true,
-            )
-            ->assertAttribute('[data-test="social-google"] svg', 'aria-hidden', 'true')
-            ->assertAttribute('[data-test="social-apple"] svg', 'aria-hidden', 'true');
+            ->assertAttribute('[data-test="social-google"] svg', 'aria-hidden', 'true');
     }
 });
 

@@ -8,7 +8,6 @@ use Laravel\Socialite\Contracts\User as SocialiteUser;
 enum SocialProvider: string
 {
     case Google = 'google';
-    case Apple = 'apple';
 
     public function hasVerifiedEmail(SocialiteUser $user): bool
     {
@@ -16,8 +15,6 @@ enum SocialProvider: string
             return false;
         }
 
-        $key = $this === self::Google ? 'verified_email' : 'email_verified';
-
-        return filter_var(data_get($user->getRaw(), $key), FILTER_VALIDATE_BOOL);
+        return filter_var(data_get($user->getRaw(), 'verified_email'), FILTER_VALIDATE_BOOL);
     }
 }

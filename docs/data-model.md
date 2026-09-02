@@ -8,7 +8,7 @@ et son état de livraison sont définis dans le [`PRD.md`](PRD.md).
 | Entité | Rôle |
 | --- | --- |
 | `users` | Identité, authentification, date de naissance et statut de compte |
-| `social_accounts` | Lien unique entre un utilisateur et Google ou Apple |
+| `social_accounts` | Lien unique entre un utilisateur et Google |
 | `profiles` | Données publiques : nom d'affichage, bio, fréquence de visite, image et visibilité |
 | `interest_categories` | Regroupement technique interne des intérêts ; non administrable dans le MVP |
 | `interests` | Entrées administrables du catalogue, actives ou archivées |

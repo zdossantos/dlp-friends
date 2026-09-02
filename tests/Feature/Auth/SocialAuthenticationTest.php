@@ -36,7 +36,6 @@ class SocialAuthenticationTest extends TestCase
     {
         return [
             'Google' => ['google'],
-            'Apple' => ['apple'],
         ];
     }
 
@@ -72,15 +71,15 @@ class SocialAuthenticationTest extends TestCase
         $this->assertDatabaseCount('social_accounts', 0);
     }
 
-    public function test_google_callback_accepts_get_and_apple_callback_accepts_only_post(): void
+    public function test_google_callback_accepts_only_get_and_apple_routes_are_unavailable(): void
     {
         Socialite::fake('google', $this->socialiteUser('google'));
         $this->get('/auth/google/callback')->assertRedirect(route('social.registration.create'));
 
-        Socialite::fake('apple', $this->socialiteUser('apple'));
-        $this->post('/auth/apple/callback')->assertRedirect(route('social.registration.create'));
-        $this->get('/auth/apple/callback')->assertMethodNotAllowed();
         $this->post('/auth/google/callback')->assertMethodNotAllowed();
+        $this->get('/auth/apple/redirect')->assertNotFound();
+        $this->get('/auth/apple/callback')->assertNotFound();
+        $this->post('/auth/apple/callback')->assertNotFound();
     }
 
     #[DataProvider('providers')]
@@ -185,9 +184,8 @@ class SocialAuthenticationTest extends TestCase
     {
         Socialite::fake($provider, $this->socialiteUser($provider));
 
-        $response = $provider === 'apple'
-            ? $this->withSession(['state' => 'expected'])->post('/auth/apple/callback', ['error' => 'access_denied', 'state' => 'expected'])
-            : $this->withSession(['state' => 'expected'])->get('/auth/google/callback?error=access_denied&state=expected');
+        $response = $this->withSession(['state' => 'expected'])
+            ->get('/auth/google/callback?error=access_denied&state=expected');
 
         $response->assertRedirect(route('login'));
         $response->assertSessionHasErrors('social_auth');
@@ -201,9 +199,8 @@ class SocialAuthenticationTest extends TestCase
     {
         Socialite::fake($provider, $this->socialiteUser($provider));
 
-        $response = $provider === 'apple'
-            ? $this->withSession(['state' => 'expected'])->post('/auth/apple/callback', ['error' => 'access_denied', 'state' => 'forged'])
-            : $this->withSession(['state' => 'expected'])->get('/auth/google/callback?error=access_denied&state=forged');
+        $response = $this->withSession(['state' => 'expected'])
+            ->get('/auth/google/callback?error=access_denied&state=forged');
 
         $response->assertRedirect(route('login'));
         $response->assertSessionHasErrors([
@@ -375,9 +372,7 @@ class SocialAuthenticationTest extends TestCase
 
     private function performCallback(string $provider)
     {
-        return $provider === 'apple'
-            ? $this->post('/auth/apple/callback')
-            : $this->get('/auth/google/callback');
+        return $this->get('/auth/google/callback');
     }
 
     private function socialiteUser(
@@ -391,9 +386,7 @@ class SocialAuthenticationTest extends TestCase
             'email' => $email,
         ]);
 
-        return $user->setRaw($provider === 'google'
-            ? ['verified_email' => $verified]
-            : ['email_verified' => $verified ? 'true' : 'false']);
+        return $user->setRaw(['verified_email' => $verified]);
     }
 
     /** @return array{provider: string, provider_user_id: string, email: string} */

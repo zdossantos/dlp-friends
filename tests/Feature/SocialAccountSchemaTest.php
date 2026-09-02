@@ -27,15 +27,10 @@ class SocialAccountSchemaTest extends TestCase
         $this->assertFalse(Schema::hasColumn('social_accounts', 'refresh_token'));
     }
 
-    public function test_provider_identity_is_unique_within_each_provider(): void
+    public function test_google_provider_identity_is_unique(): void
     {
         SocialAccount::factory()->create([
             'provider' => 'google',
-            'provider_user_id' => 'provider-123',
-        ]);
-
-        SocialAccount::factory()->create([
-            'provider' => 'apple',
             'provider_user_id' => 'provider-123',
         ]);
 

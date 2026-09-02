@@ -40,10 +40,6 @@ Route::middleware('guest')->group(function (): void {
         ->defaults('provider', SocialProvider::Google->value)
         ->middleware('throttle:10,1')
         ->name('social.callback.google');
-    Route::post('auth/apple/callback', [SocialAuthController::class, 'callback'])
-        ->defaults('provider', SocialProvider::Apple->value)
-        ->middleware('throttle:10,1')
-        ->name('social.callback.apple');
     Route::get('auth/social/complete', [SocialRegistrationController::class, 'create'])
         ->name('social.registration.create');
     Route::post('auth/social/complete', [SocialRegistrationController::class, 'store'])

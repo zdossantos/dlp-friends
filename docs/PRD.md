@@ -65,7 +65,7 @@ Paris.
   l’adresse, réinitialisation du mot de passe, protection contre les tentatives
   abusives et gestion des sessions.
 - Date de naissance obligatoire et refus de l’inscription avant 18 ans.
-- Connexion simplifiée via Google et Apple.
+- Connexion simplifiée via Google.
 - Après vérification, profil obligatoire puis tutoriel produit obligatoire
   avant l’accès à l’espace membre.
 - Le tutoriel enseigne successivement le refus d’une carte, le like, le match,
@@ -160,7 +160,7 @@ Paris.
 | Français et anglais | **Implémenté** | Résolution de locale et catalogues backend/frontend sont présents. |
 | Univers éditorial | **Implémenté** | Tutoiement, vocabulaire canonique et catalogues par feature sont contrôlés automatiquement. |
 | Thèmes clair, sombre et système | **Implémenté** | Préférence persistée et interface correspondante sont présentes. |
-| Connexion Google et Apple | **Implémenté** | Socialite fournit les deux parcours, avec liens uniques sans stockage de jetons, contrôle de majorité et tests automatisés. |
+| Connexion Google | **Implémenté** | Socialite fournit le parcours Google, avec liens uniques sans stockage de jetons, contrôle de majorité et tests automatisés. |
 | Photo personnelle facultative | **Planifié** | Aucun flux de téléversement membre n’existe. |
 | Export des données | **Planifié** | Aucun parcours d’export n’existe. |
 | Suppression différée sous 30 jours | **Partiel** | La suppression de compte existe, mais elle est immédiate et sans job de purge différée. |

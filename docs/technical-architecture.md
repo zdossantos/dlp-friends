@@ -63,11 +63,9 @@ membres adultes, actifs, vérifiés et disposant d’un profil complet.
 
 ## Authentification sociale
 
-Laravel Socialite gère Google nativement et l'extension SocialiteProviders
-gère Apple. Les redirections conservent l'état OAuth. Google retourne sur un
-callback `GET`, tandis qu'Apple utilise un callback `POST` en mode `form_post` ;
-seul ce chemin Apple est exempté de CSRF, sans désactiver la validation de
-l'état OAuth par Socialite.
+Laravel Socialite gère Google nativement. La redirection conserve l'état OAuth
+et Google retourne sur un callback `GET` ; la validation de l'état OAuth par
+Socialite reste active.
 
 Une identité déjà liée à un compte actif ouvre directement une session. Pour
 une nouvelle identité, seuls le fournisseur, son identifiant stable et

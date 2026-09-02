@@ -18,8 +18,7 @@
         "laravel/reverb": "^1.0",
         "laravel/socialite": "^5.30",
         "laravel/tinker": "^3.0",
-        "laravel/wayfinder": "^0.1.14",
-        "socialiteproviders/apple": "^5.10"
+        "laravel/wayfinder": "^0.1.14"
     },
     "require-dev": {
         "fakerphp/faker": "^1.24",

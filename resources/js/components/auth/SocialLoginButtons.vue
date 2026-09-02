@@ -8,7 +8,7 @@ const { t } = useTranslations();
 </script>
 
 <template>
-    <div class="grid grid-cols-2 gap-3">
+    <div>
         <Button variant="outline" as-child>
             <Link
                 :href="redirect('google')"
@@ -34,26 +34,6 @@ const { t } = useTranslations();
                     />
                 </svg>
                 {{ t('account.social.google') }}
-            </Link>
-        </Button>
-
-        <Button variant="outline" as-child>
-            <Link
-                :href="redirect('apple')"
-                data-test="social-apple"
-                class="w-full"
-            >
-                <svg
-                    viewBox="0 0 24 24"
-                    aria-hidden="true"
-                    focusable="false"
-                    fill="currentColor"
-                >
-                    <path
-                        d="M17.05 12.54c-.03-3.05 2.49-4.53 2.61-4.6a5.61 5.61 0 0 0-4.42-2.39c-1.86-.2-3.67 1.12-4.62 1.12-.97 0-2.43-1.1-4.01-1.07a5.84 5.84 0 0 0-4.92 3c-2.14 3.7-.54 9.14 1.5 12.13 1.02 1.46 2.2 3.08 3.78 3.02 1.54-.06 2.11-.97 3.97-.97 1.83 0 2.37.97 3.98.93 1.66-.02 2.7-1.47 3.68-2.95a12.1 12.1 0 0 0 1.68-3.42 5.27 5.27 0 0 1-3.23-4.8ZM14.03 3.58A5.36 5.36 0 0 0 15.26 0a5.46 5.46 0 0 0-3.53 1.7 5.1 5.1 0 0 0-1.27 3.44 4.5 4.5 0 0 0 3.57-1.56Z"
-                    />
-                </svg>
-                {{ t('account.social.apple') }}
             </Link>
         </Button>
     </div>

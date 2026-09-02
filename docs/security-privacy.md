@@ -8,7 +8,7 @@ de livraison est suivi dans le [`PRD.md`](PRD.md).
 
 - La date de naissance est obligatoire à l'inscription.
 - Refuser la création de compte si la personne a moins de 18 ans à cette date.
-- L'inscription par mot de passe exige le lien de vérification envoyé par l'application. Pour une nouvelle inscription Google ou Apple, l'adresse déclarée vérifiée par le fournisseur tient lieu de cette vérification ; une identité sociale déjà liée utilise ensuite ce lien enregistré.
+- L'inscription par mot de passe exige le lien de vérification envoyé par l'application. Pour une nouvelle inscription Google, l'adresse déclarée vérifiée par le fournisseur tient lieu de cette vérification ; une identité sociale déjà liée utilise ensuite ce lien enregistré.
 - Une adresse déjà associée à un compte n'est jamais reliée automatiquement à une nouvelle identité sociale.
 - Limiter les tentatives de connexion et protéger les formulaires contre les abus usuels.
 
@@ -36,8 +36,8 @@ de livraison est suivi dans le [`PRD.md`](PRD.md).
 - Les contrôleurs délèguent le contrôle d'accès aux Policies Laravel; ne jamais faire confiance à un identifiant de profil transmis par le navigateur.
 - Les contenus texte sont validés, échappés à l'affichage et protégés contre l'injection HTML.
 - Les cookies de session sont sécurisés en HTTPS et les protections CSRF natives de Laravel restent actives.
-- Le callback Apple `form_post` est la seule exception CSRF du parcours ; la validation de l'état OAuth reste obligatoire.
-- Aucun jeton d'accès, jeton de renouvellement ou contenu brut de réponse Google ou Apple n'est stocké ou journalisé. Seul l'identifiant stable nécessaire au lien de compte est conservé.
+- La validation de l'état OAuth par Socialite reste obligatoire sur le callback Google.
+- Aucun jeton d'accès, jeton de renouvellement ou contenu brut de réponse Google n'est stocké ou journalisé. Seul l'identifiant stable nécessaire au lien de compte est conservé.
 - Les canaux Reverb de conversation sont privés et leur autorisation vérifie l'appartenance au match ainsi que l'absence de blocage.
 
 ## Blocage

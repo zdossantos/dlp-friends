@@ -29,17 +29,10 @@ et l’état des capacités applicatives sont définis dans le
 Configurer les secrets uniquement dans l'environnement d'exécution ou dans
 Coolify, jamais dans le dépôt :
 
-- Google : `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` et `GOOGLE_REDIRECT_URI` ;
-- Apple : `APPLE_CLIENT_ID`, `APPLE_CLIENT_SECRET`, `APPLE_KEY_ID`,
-  `APPLE_TEAM_ID`, `APPLE_PRIVATE_KEY` et `APPLE_REDIRECT_URI`.
+- Google : `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` et `GOOGLE_REDIRECT_URI`.
 
-Les consoles des fournisseurs doivent déclarer exactement les callbacks de
-production : `GET /auth/google/callback` pour Google et
-`POST /auth/apple/callback` pour Apple. L'URL de retour Web Apple doit être en
-HTTPS. Le secret client Apple signé et la clé privée associée ont une durée de
-vie et une rotation à superviser : renouveler le secret avant son expiration,
-protéger la clé privée et documenter son remplacement avec les identifiants
-Apple correspondants.
+La console Google doit déclarer exactement le callback de production :
+`GET /auth/google/callback`.
 
 ## Tâches récurrentes
 
