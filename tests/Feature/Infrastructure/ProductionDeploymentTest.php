@@ -1,8 +1,8 @@
 <?php
 
+use Illuminate\Mail\Transport\ResendTransport;
 use Illuminate\Process\ProcessResult;
 use Illuminate\Support\Facades\Process;
-use Illuminate\Mail\Transport\ResendTransport;
 
 function productionComposeEnvironment(array $overrides = []): array
 {
