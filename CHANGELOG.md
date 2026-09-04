@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.2.5](https://github.com/zdossantos/dlp-friends/compare/v1.2.4...v1.2.5) (2026-09-04)
+
+
+### Fixes
+
+* **infra:** externalize production Redis ([#141](https://github.com/zdossantos/dlp-friends/issues/141)) ([8852988](https://github.com/zdossantos/dlp-friends/commit/8852988cdcb68b02d56bc891f3fe5ee4c8ff78cb))
+* **infra:** use Coolify-managed networking ([#143](https://github.com/zdossantos/dlp-friends/issues/143)) ([17a2066](https://github.com/zdossantos/dlp-friends/commit/17a20669d34d2379a83e40f5fcc4da7a79c43442))
+
 ## [1.2.4](https://github.com/zdossantos/dlp-friends/compare/v1.2.3...v1.2.4) (2026-09-04)
 
 
