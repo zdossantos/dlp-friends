@@ -171,8 +171,9 @@ intégrés à l'image ou au dépôt.
 Coolify construit la cible `runtime` définie par `compose.production.yaml`, puis
 réutilise cette image pour `web`, `worker`, `scheduler` et `reverb`. Compose
 déclare le volume persistant MinIO ; MySQL possède un volume dans sa ressource
-Coolify indépendante. Les quatre processus Laravel rejoignent un réseau externe
-privé nommé par `MYSQL_NETWORK` et utilisent `DB_HOST` et `DB_PORT` ; l’opérateur configure leurs
+Coolify indépendante. Coolify gère le réseau propre au stack et son raccordement
+à la destination prédéfinie ; le Compose ne déclare aucun réseau personnalisé.
+Les quatre processus Laravel utilisent `DB_HOST` et `DB_PORT` ; l’opérateur configure leurs
 sauvegardes ainsi que les secrets et domaines HTTPS/WSS dans Coolify. Les
 variables critiques utilisent l’interpolation Compose obligatoire et bloquent
 une configuration incomplète avant le démarrage. GitHub Actions vérifie

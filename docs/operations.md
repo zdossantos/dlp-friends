@@ -15,18 +15,19 @@ et l’état des capacités applicatives sont définis dans le
 
 ## MySQL indépendant
 
-Avant de déployer le Compose applicatif, préparer la ressource MySQL, son volume
-et son réseau externe selon [la procédure de séparation MySQL](mysql-externalization.md).
+Avant de déployer le Compose applicatif, préparer la ressource MySQL et son volume
+selon [la procédure de séparation MySQL](mysql-externalization.md).
 Pour une installation existante, terminer la répétition de restauration et suivre
 la fenêtre de bascule avant toute livraison de ce Compose.
 
 ## Redis indépendant
 
-Avant de déployer le Compose applicatif, préparer la ressource Redis et son réseau
-externe selon [la procédure de séparation Redis](redis-externalization.md).
-Configurer `REDIS_HOST`, `REDIS_PORT`, `REDIS_PASSWORD` et `REDIS_NETWORK` dans
-Coolify. Le mot de passe reste un secret d'exécution et aucun port Redis ne doit
-être publié sur Internet.
+Avant de déployer le Compose applicatif, préparer la ressource Redis selon
+[la procédure de séparation Redis](redis-externalization.md). Activer **Connect
+to Predefined Network** dans les paramètres avancés de l'application, puis
+configurer `REDIS_HOST`, `REDIS_PORT` et `REDIS_PASSWORD` dans Coolify. Le mot de
+passe reste un secret d'exécution et aucun port Redis ne doit être publié sur
+Internet.
 
 ## Premier déploiement sur Coolify
 
@@ -39,8 +40,7 @@ Coolify. Le mot de passe reste un secret d'exécution et aucun port Redis ne doi
    puis le domaine WebSocket au service `reverb` sur son port interne `8080`.
 3. Renseigner les variables obligatoires détectées par Coolify :
    `APP_IMAGE`, `APP_KEY`, `APP_URL`, `LEGAL_CONTACT_EMAIL`, `DB_DATABASE`, `DB_USERNAME`,
-   `DB_PASSWORD`, `DB_HOST`, `MYSQL_NETWORK`, `REDIS_HOST`, `REDIS_PASSWORD`,
-   `REDIS_NETWORK`, `MINIO_ROOT_USER`,
+   `DB_PASSWORD`, `DB_HOST`, `REDIS_HOST`, `REDIS_PASSWORD`, `MINIO_ROOT_USER`,
    `MINIO_ROOT_PASSWORD`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`,
    `AWS_BUCKET`, `REVERB_APP_ID`, `REVERB_APP_KEY`, `REVERB_APP_SECRET`,
    `RESEND_API_KEY` et `MAIL_FROM_ADDRESS`. `APP_IMAGE` est la référence GHCR

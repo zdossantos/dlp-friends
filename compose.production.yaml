@@ -34,7 +34,7 @@ x-app: &app
     REVERB_APP_ID: ${REVERB_APP_ID:?REVERB_APP_ID is required}
     REVERB_APP_KEY: ${REVERB_APP_KEY:?REVERB_APP_KEY is required}
     REVERB_APP_SECRET: ${REVERB_APP_SECRET:?REVERB_APP_SECRET is required}
-    REVERB_HOST: dlp-friends-reverb
+    REVERB_HOST: reverb
     REVERB_PORT: 8080
     REVERB_SCHEME: http
     FILESYSTEM_DISK: s3
@@ -42,16 +42,12 @@ x-app: &app
     AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:?AWS_SECRET_ACCESS_KEY is required}
     AWS_DEFAULT_REGION: ${AWS_DEFAULT_REGION:-us-east-1}
     AWS_BUCKET: ${AWS_BUCKET:?AWS_BUCKET is required}
-    AWS_ENDPOINT: http://dlp-friends-minio:9000
+    AWS_ENDPOINT: http://minio:9000
     AWS_USE_PATH_STYLE_ENDPOINT: "true"
     MAIL_MAILER: resend
     RESEND_API_KEY: ${RESEND_API_KEY:?RESEND_API_KEY is required}
     MAIL_FROM_ADDRESS: ${MAIL_FROM_ADDRESS:?MAIL_FROM_ADDRESS is required}
     MAIL_FROM_NAME: ${MAIL_FROM_NAME:-DLP Friends}
-  networks:
-    - dlp-friends
-    - mysql-private
-    - redis-private
   restart: unless-stopped
   depends_on:
     minio:
@@ -110,12 +106,6 @@ services:
     command: reverb
     expose:
       - "8080"
-    networks:
-      dlp-friends:
-        aliases:
-          - dlp-friends-reverb
-      mysql-private: {}
-      redis-private: {}
     healthcheck:
       test:
         - CMD
@@ -140,10 +130,6 @@ services:
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:?MINIO_ROOT_PASSWORD is required}
     volumes:
       - minio-data:/data
-    networks:
-      dlp-friends:
-        aliases:
-          - dlp-friends-minio
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "--fail", "http://127.0.0.1:9000/minio/health/live"]
@@ -156,16 +142,6 @@ services:
         limits:
           cpus: "0.75"
           memory: 512M
-
-networks:
-  mysql-private:
-    external: true
-    name: ${MYSQL_NETWORK:?MYSQL_NETWORK is required}
-  redis-private:
-    external: true
-    name: ${REDIS_NETWORK:?REDIS_NETWORK is required}
-  dlp-friends:
-    driver: bridge
 
 volumes:
   minio-data:

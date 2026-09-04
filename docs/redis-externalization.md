@@ -9,22 +9,23 @@ service Redis autonome pour le développement et les tests.
 
 La ressource observée porte l'identifiant Coolify
 `tvgg71qeadvxtzxez2o2agy5`, utilise Redis 7.2 et rejoint le réseau Docker privé
-`coolify`. Elle ne publie aucun port sur l'hôte. L'application utilise cet
-identifiant comme hôte réseau, le port interne `6379` et le mot de passe déjà
-géré par Coolify.
+`coolify`. Elle ne publie aucun port sur l'hôte. Dans les paramètres avancés de
+l'application Docker Compose, activer **Connect to Predefined Network** afin que
+Coolify la raccorde à sa destination. L'application utilise l'identifiant Redis
+comme hôte réseau, le port interne `6379` et le mot de passe déjà géré par
+Coolify.
 
 Définir dans l'application :
 
 | Variable | Valeur attendue |
 | --- | --- |
-| `REDIS_NETWORK` | Nom exact du réseau Docker externe |
 | `REDIS_HOST` | Identifiant ou alias unique de la ressource Redis |
 | `REDIS_PORT` | Port interne, `6379` par défaut |
 | `REDIS_PASSWORD` | Secret Redis conservé uniquement dans Coolify |
 
-Les services `web`, `worker`, `scheduler` et `reverb` rejoignent ce réseau. Le
-Compose de production ne crée plus Redis et ne déclare plus de dépendance vers
-un service Redis local.
+Le Compose ne déclare aucun réseau : Coolify crée le réseau propre au stack et
+le raccorde au réseau prédéfini. Il ne crée plus Redis et ne déclare plus de
+dépendance vers un service Redis local.
 
 ## Bascule et vérification
 
@@ -34,7 +35,8 @@ un service Redis local.
    contrôler les travaux en attente. Le Redis intégré n'utilise aucune
    persistance ; la bascule invalide donc les sessions et caches présents et les
    files doivent être vides ou explicitement abandonnées.
-3. Renseigner les quatre variables Redis dans Coolify et déployer le Compose qui
+3. Activer **Connect to Predefined Network**, renseigner les trois variables
+   Redis dans Coolify et déployer le Compose qui
    exclut Redis.
 4. Dans chacun des quatre processus Laravel, vérifier la configuration effective
    puis exécuter un `PING` via la connexion Redis de Laravel.
