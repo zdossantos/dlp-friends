@@ -133,15 +133,16 @@ vise un score maximal en SEO et en accessibilité.
 | `worker` | Exécution des files Laravel |
 | `scheduler` | Exécution des tâches planifiées |
 | `reverb` | Serveur WebSocket |
-| `mysql` | Base relationnelle persistante |
-| `redis` | Cache, sessions et files sur le réseau privé |
+| MySQL Coolify indépendant | Base relationnelle persistante sur un réseau privé externe |
+| Redis Coolify indépendant | Cache, sessions et files sur un réseau privé externe authentifié |
 | `minio` | Stockage objet compatible S3 |
 | `mailpit` | Capture locale des e-mails |
 
-Les quatre services applicatifs utilisent la même image Docker. MySQL, Redis,
-le worker et le scheduler ne publient aucun port sur l'hôte. `compose.yaml`
+Les quatre services applicatifs utilisent la même image Docker. MySQL et Redis
+sont des ressources Coolify indépendantes ; le worker et le scheduler ne publient
+aucun port sur l'hôte. `compose.yaml`
 décrit la stack locale complète, dont Mailpit. `compose.production.yaml`
-décrit la stack applicative Coolify, exclut Mailpit et MySQL, garde Redis et MinIO privés et
+décrit la stack applicative Coolify, exclut Mailpit, MySQL et Redis, garde MinIO privé et
 expose seulement les ports internes de `web` et `reverb` au proxy Coolify.
 
 Le conteneur applicatif ne lance aucune migration au démarrage. Les migrations

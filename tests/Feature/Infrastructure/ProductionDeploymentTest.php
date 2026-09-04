@@ -18,6 +18,9 @@ function productionComposeEnvironment(array $overrides = []): array
         'DB_PASSWORD' => 'database-password',
         'DB_HOST' => 'mysql-independent.internal',
         'MYSQL_NETWORK' => 'mysql-private-test',
+        'REDIS_HOST' => 'redis-independent.internal',
+        'REDIS_PASSWORD' => 'redis-application-password',
+        'REDIS_NETWORK' => 'redis-private-test',
         'MINIO_ROOT_USER' => 'dlp-friends',
         'MINIO_ROOT_PASSWORD' => 'minio-root-password',
         'AWS_ACCESS_KEY_ID' => 'dlp-friends',
@@ -47,7 +50,7 @@ it('resolves the production service topology without local-only services', funct
     $compose = json_decode($result->output(), true, flags: JSON_THROW_ON_ERROR);
 
     expect(array_keys($compose['services']))
-        ->toEqualCanonicalizing(['web', 'worker', 'scheduler', 'reverb', 'redis', 'minio']);
+        ->toEqualCanonicalizing(['web', 'worker', 'scheduler', 'reverb', 'minio']);
 });
 
 it('reuses one application image for every long-running Laravel process', function () {
@@ -78,7 +81,7 @@ it('keeps data services private and persists durable production data', function 
 
     $compose = json_decode($result->output(), true, flags: JSON_THROW_ON_ERROR);
 
-    foreach (['redis', 'minio'] as $service) {
+    foreach (['minio'] as $service) {
         expect($compose['services'][$service])->not->toHaveKey('ports');
     }
 
@@ -94,13 +97,12 @@ it('uses collision-resistant aliases for private production services', function 
     $services = json_decode($result->output(), true, flags: JSON_THROW_ON_ERROR)['services'];
 
     foreach (['web', 'worker', 'scheduler', 'reverb'] as $service) {
-        expect($services[$service]['environment']['REDIS_HOST'])->toBe('dlp-friends-redis')
+        expect($services[$service]['environment']['REDIS_HOST'])->toBe('redis-independent.internal')
             ->and($services[$service]['environment']['REVERB_HOST'])->toBe('dlp-friends-reverb')
             ->and($services[$service]['environment']['AWS_ENDPOINT'])->toBe('http://dlp-friends-minio:9000');
     }
 
-    expect($services['redis']['networks']['dlp-friends']['aliases'])->toContain('dlp-friends-redis')
-        ->and($services['reverb']['networks']['dlp-friends']['aliases'])->toContain('dlp-friends-reverb')
+    expect($services['reverb']['networks']['dlp-friends']['aliases'])->toContain('dlp-friends-reverb')
         ->and($services['minio']['networks']['dlp-friends']['aliases'])->toContain('dlp-friends-minio');
 });
 
@@ -133,6 +135,9 @@ it('rejects a production deployment when a critical variable is missing', functi
     'database password' => 'DB_PASSWORD',
     'external database host' => 'DB_HOST',
     'external database network' => 'MYSQL_NETWORK',
+    'external Redis host' => 'REDIS_HOST',
+    'external Redis password' => 'REDIS_PASSWORD',
+    'external Redis network' => 'REDIS_NETWORK',
     'Reverb secret' => 'REVERB_APP_SECRET',
     'Resend key' => 'RESEND_API_KEY',
 ]);
@@ -186,5 +191,24 @@ it('connects every Laravel process to configurable external MySQL without server
             ->and($compose['services'][$service]['environment'])->not->toHaveKey('MYSQL_ROOT_PASSWORD')
             ->and($compose['services'][$service]['depends_on'])->not->toHaveKey('mysql')
             ->and($compose['services'][$service]['networks'])->toHaveKey('mysql-private');
+    }
+});
+
+it('connects every Laravel process to configurable external Redis', function () {
+    $result = resolveProductionCompose(['REDIS_PORT' => '6380']);
+
+    expect($result->successful())->toBeTrue($result->errorOutput());
+
+    $compose = json_decode($result->output(), true, flags: JSON_THROW_ON_ERROR);
+
+    expect($compose['networks']['redis-private']['external'])->toBeTrue()
+        ->and($compose['networks']['redis-private']['name'])->toBe('redis-private-test');
+
+    foreach (['web', 'worker', 'scheduler', 'reverb'] as $service) {
+        expect($compose['services'][$service]['environment']['REDIS_HOST'])->toBe('redis-independent.internal')
+            ->and((string) $compose['services'][$service]['environment']['REDIS_PORT'])->toBe('6380')
+            ->and($compose['services'][$service]['environment']['REDIS_PASSWORD'])->toBe('redis-application-password')
+            ->and($compose['services'][$service]['depends_on'])->not->toHaveKey('redis')
+            ->and($compose['services'][$service]['networks'])->toHaveKey('redis-private');
     }
 });
