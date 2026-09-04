@@ -16,20 +16,26 @@ et l’état des capacités applicatives sont définis dans le
 ## Premier déploiement sur Coolify
 
 1. Créer une application Docker Compose depuis le dépôt GitHub, suivre la
-   branche `main` et sélectionner `compose.production.yaml`.
+   branche `main` et sélectionner `compose.production.yaml`. Désactiver **Auto
+   Deploy** et supprimer toute commande personnalisée de build. Configurer
+   l’accès GHCR privé et les variables GitHub comme indiqué dans
+   [`quality-ci-cd.md`](quality-ci-cd.md#configuration-et-droits).
 2. Associer le domaine HTTPS public au service `web` sur son port interne `80`,
    puis le domaine WebSocket au service `reverb` sur son port interne `8080`.
 3. Renseigner les variables obligatoires détectées par Coolify :
-   `APP_KEY`, `APP_URL`, `LEGAL_CONTACT_EMAIL`, `DB_DATABASE`, `DB_USERNAME`,
+   `APP_IMAGE`, `APP_KEY`, `APP_URL`, `LEGAL_CONTACT_EMAIL`, `DB_DATABASE`, `DB_USERNAME`,
    `DB_PASSWORD`, `MYSQL_ROOT_PASSWORD`, `MINIO_ROOT_USER`,
    `MINIO_ROOT_PASSWORD`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`,
    `AWS_BUCKET`, `REVERB_APP_ID`, `REVERB_APP_KEY`, `REVERB_APP_SECRET`,
-   `VITE_REVERB_HOST`, `RESEND_API_KEY` et `MAIL_FROM_ADDRESS`.
-4. Vérifier que `VITE_REVERB_HOST` contient uniquement le nom d’hôte public de
-   Reverb, sans protocole. Les valeurs par défaut utilisent le port `443` et le
-   schéma `https` ; les surcharger avec `VITE_REVERB_PORT` et
-   `VITE_REVERB_SCHEME` uniquement si l’infrastructure l’exige.
-5. Déployer la stack et attendre que `web`, `worker`, `scheduler`, `reverb`,
+   `RESEND_API_KEY` et `MAIL_FROM_ADDRESS`. `APP_IMAGE` est la référence GHCR
+   par digest issue du fichier `container-image.json` joint à la release ; le
+   workflow la renseignera ensuite à chaque livraison.
+4. Définir les quatre `VITE_REVERB_*` dans les variables **GitHub**, avec le
+   domaine public Reverb sans protocole, le port `443`, le schéma `https` et
+   une clé publique identique à `REVERB_APP_KEY` dans Coolify.
+5. Fusionner volontairement la Release PR une fois les contrôles réussis. Le
+   workflow publie l’image, teste son démarrage et demande son déploiement.
+   Attendre que `web`, `worker`, `scheduler`, `reverb`,
    `mysql`, `redis` et `minio` soient sains.
 6. Créer le bucket privé nommé par `AWS_BUCKET` dans MinIO avant d’activer un
    parcours qui écrit des objets. Utiliser pour l’application les identifiants
@@ -54,8 +60,10 @@ construction de l’image, car ces valeurs sont intégrées aux assets frontend.
 
 ## Déploiements suivants
 
-Coolify surveille uniquement `main`. Après le merge d’une pull request et la
-réussite du déploiement automatique :
+Un merge ordinaire dans `main` ne déploie rien. Après le merge volontaire de la
+Release PR, le workflow publie l’image du commit de release, fixe son digest
+pour les quatre services et fixe le commit utilisé pour le Compose. Après la
+réussite du déploiement dans Coolify :
 
 1. lire les notes de migration de la version ;
 2. activer une fenêtre de maintenance si la migration l’exige ;
@@ -63,6 +71,46 @@ réussite du déploiement automatique :
 4. exécuter `php artisan queue:restart` ;
 5. vérifier `/up`, la connexion WebSocket, les files et les journaux des sept
    services.
+
+## Bascule d’une installation existante
+
+Avant le merge de l’issue 132, désactiver Auto Deploy dans Coolify pour éviter
+qu’un Compose exigeant `APP_IMAGE` ne soit lancé avant la première publication.
+Préparer les variables GitHub, vérifier les droits write/deploy de
+`COOLIFY_TOKEN` et authentifier le VPS au registre GHCR privé. Le dépôt Git,
+les domaines et les volumes existants sont conservés.
+
+Après merge de la Release PR, le workflow fournit `APP_IMAGE` et
+`git_commit_sha` avant son premier appel de déploiement. Vérifier dans les logs
+Coolify le téléchargement de l’image et l’absence de compilation applicative.
+Le premier retour à une version antérieure à cette bascule nécessite le
+Compose et l’image locale de l’ancien déploiement ; il ne bénéficie pas encore
+d’un artefact GHCR. Conserver cette image locale jusqu’à validation de la
+première release GHCR et ne pas lancer de nettoyage Docker entre-temps.
+
+## Retour à une release GHCR précédente
+
+1. Suspendre toute nouvelle livraison et vérifier qu’aucun déploiement Coolify
+   n’est en attente ou en cours. Auto Deploy doit rester désactivé.
+2. Vérifier la compatibilité de la version précédente avec le schéma actuel,
+   les données, les variables serveur et les paramètres publics Reverb intégrés
+   à cette ancienne image. Ne pas exécuter de `migrate:rollback` automatique.
+3. Télécharger `container-image.json` depuis la GitHub Release choisie. Le
+   champ `image` contient le digest immuable et `commit` le SHA du Compose.
+   Vérifier que le VPS peut toujours télécharger ce digest ; conserver dans
+   GHCR les versions nécessaires aux retours arrière.
+4. Dans les variables de l’application Coolify, définir `APP_IMAGE` sur ce
+   digest (valeur littérale, disponible au build et à l’exécution dans Coolify). Dans **Git Source**,
+   définir le commit sur le champ `commit` du même fichier.
+5. Déployer depuis Coolify, sans reconstruction. Les quatre services récupèrent
+   la même image. Vérifier leur santé, `/up`, WebSocket et les files. Toute
+   migration supplémentaire reste une décision opérateur explicite.
+6. Consigner la version restaurée. La prochaine Release PR livrée remplacera
+   ces deux valeurs par sa propre référence.
+
+Ne pas choisir simplement un ancien commit de `main` : le couple image/Compose
+issu du manifeste de release est nécessaire. Aucun nouveau tag ni nouvelle
+release ne doit être créé manuellement pour revenir en arrière.
 
 ## Sauvegardes
 

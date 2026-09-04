@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Storage;
 function productionComposeEnvironment(array $overrides = []): array
 {
     return array_merge([
+        'APP_IMAGE' => 'ghcr.io/zdossantos/dlp-friends@sha256:'.str_repeat('a', 64),
         'APP_KEY' => 'base64:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=',
         'APP_URL' => 'https://dlpfriends.example',
         'LEGAL_CONTACT_EMAIL' => 'legal@dlpfriends.example',
@@ -58,11 +59,15 @@ it('reuses one application image for every long-running Laravel process', functi
     $images = array_map(fn (string $service): string => $services[$service]['image'], $applicationServices);
 
     expect(array_unique($images))->toHaveCount(1)
-        ->and($services['web'])->toHaveKey('build')
+        ->and($images[0])->toBe(productionComposeEnvironment()['APP_IMAGE'])
         ->and($services['web']['command'])->toBe(['web'])
         ->and($services['worker']['command'])->toBe(['worker'])
         ->and($services['scheduler']['command'])->toBe(['scheduler'])
         ->and($services['reverb']['command'])->toBe(['reverb']);
+
+    foreach ($applicationServices as $service) {
+        expect($services[$service])->not->toHaveKey('build');
+    }
 });
 
 it('keeps data services private and persists durable production data', function () {
@@ -105,6 +110,7 @@ it('rejects a production deployment when a critical variable is missing', functi
     expect($result->failed())->toBeTrue()
         ->and($result->errorOutput())->toContain($variable);
 })->with([
+    'published application image' => 'APP_IMAGE',
     'Laravel application key' => 'APP_KEY',
     'database password' => 'DB_PASSWORD',
     'Reverb secret' => 'REVERB_APP_SECRET',
