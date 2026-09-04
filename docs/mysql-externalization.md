@@ -22,8 +22,9 @@ la séparation ; elle ne prouve pas que la migration de production a été faite
   `ahw5wcmsjwkqgtx71jobz2zy`. Aucune destination S3 n’est configurée dans
   Coolify. L’opérateur a explicitement retenu une sauvegarde locale pour cette
   étape et reporté S3. La rétention locale est configurée à 30 jours.
-  Une exécution manuelle Coolify a réussi en deux secondes sur la cible encore
-  vide ; le job devra être revérifié après migration des données.
+  Le premier job a réussi sur la cible vide. Un second job a réussi en une
+  seconde après import des 26 tables de répétition sur la cible ; il devra être
+  revérifié après la copie finale des données.
 - Deux ressources Redis distinctes sont visibles : « DLP Friends - Redis »
   (`tvgg71qeadvxtzxez2o2agy5`) et « DLP Friends - Redis deploiement »
   (`vthrho8fsbu1hevbvmopq7ol`). Laravel utilise actuellement `redis`, résolu en
@@ -43,10 +44,13 @@ du dump et normalisation du seul `CHARACTER SET utf8mb4` rendu explicite devant
 les collations de colonnes par MySQL. Le conteneur de répétition est arrêté.
 Cette répétition ne remplace pas l’export final après arrêt des écritures.
 
-Aucune bascule applicative ni migration de données n’a été effectuée. Le volume
-source est conservé. Un conteneur temporaire sur `coolify` résout bien
+Aucune bascule applicative ni copie finale sous maintenance n’a été effectuée.
+La cible contient uniquement la copie de répétition et le volume source est
+conservé. Un conteneur temporaire sur `coolify` résout bien
 `usxpif17bqpgv4qmykcisz8w` : c’est la valeur prévue pour `DB_HOST`. Les quatre
 processus applicatifs devront encore confirmer leur connexion après déploiement.
+`DB_HOST` et `MYSQL_NETWORK` sont préparés dans les variables Coolify ; les
+identifiants applicatifs de la cible restent à renseigner avant la bascule.
 
 La production utilise encore l’image locale
 `dlp-friends-app:4b11e638660930836f73c5c84d3012b1dba82cc8`. Le `main` issu de
