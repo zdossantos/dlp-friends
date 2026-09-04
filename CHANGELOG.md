@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.3](https://github.com/zdossantos/dlp-friends/compare/v1.2.2...v1.2.3) (2026-09-04)
+
+
+### Fixes
+
+* **infra:** decouple production MySQL from application deployments ([#136](https://github.com/zdossantos/dlp-friends/issues/136)) ([87b9928](https://github.com/zdossantos/dlp-friends/commit/87b99285500603f4ae0de2a05368ade9a57293ba))
+
 ## [1.2.2](https://github.com/zdossantos/dlp-friends/compare/v1.2.1...v1.2.2) (2026-09-02)
 
 
