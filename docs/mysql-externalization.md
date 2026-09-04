@@ -44,8 +44,16 @@ les collations de colonnes par MySQL. Le conteneur de répétition est arrêté.
 Cette répétition ne remplace pas l’export final après arrêt des écritures.
 
 Aucune bascule applicative ni migration de données n’a été effectuée. Le volume
-source est conservé. Le nom du conteneur cible ne constitue pas encore un hôte
-DNS validé depuis l’application.
+source est conservé. Un conteneur temporaire sur `coolify` résout bien
+`usxpif17bqpgv4qmykcisz8w` : c’est la valeur prévue pour `DB_HOST`. Les quatre
+processus applicatifs devront encore confirmer leur connexion après déploiement.
+
+La production utilise encore l’image locale
+`dlp-friends-app:4b11e638660930836f73c5c84d3012b1dba82cc8`. Le `main` issu de
+l’issue 132 exige désormais `APP_IMAGE` publié sur GHCR. La dernière release
+observée, `v1.2.2`, ne possède pas encore d’artefact `container-image.json`.
+Coordonner la bascule avec la première publication de cette image par le flux
+Release Please ; ne pas lancer un déploiement sans référence d’image vérifiée.
 
 ## Préparer le service et le réseau
 
