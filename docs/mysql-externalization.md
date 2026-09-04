@@ -9,8 +9,8 @@ la séparation ; elle ne prouve pas que la migration de production a été faite
 - Projet `v07iwpqm3wftr6zfnxissd5z`, environnement production
   `qxua5l07049obkwetgfslwbb`, application `kma0dju8bamipey0sd1up9gs`.
 - Serveur `y5j0mvuo7rl64wa6z95m178j` : `docker inspect` confirme que la cible
-  rejoint `coolify`, réseau externe à utiliser pour `MYSQL_NETWORK`. L’application
-  actuelle rejoint ses réseaux propres et ne rejoint pas encore `coolify`.
+  rejoint la destination `coolify`. L'application Docker Compose doit utiliser
+  l'option Coolify **Connect to Predefined Network** pour la rejoindre.
 - Ressource créée « DLP Friends - MySQL », UUID `usxpif17bqpgv4qmykcisz8w`,
   image `mysql:8.4.10`, état `Running`, base `dlp_friends`, utilisateur initial
   non-root `mysql`. `SHOW GRANTS` confirme uniquement `USAGE` global et les
@@ -49,8 +49,8 @@ La cible contient uniquement la copie de répétition et le volume source est
 conservé. Un conteneur temporaire sur `coolify` résout bien
 `usxpif17bqpgv4qmykcisz8w` : c’est la valeur prévue pour `DB_HOST`. Les quatre
 processus applicatifs devront encore confirmer leur connexion après déploiement.
-`DB_HOST` et `MYSQL_NETWORK` sont préparés dans les variables Coolify ; les
-identifiants applicatifs de la cible restent à renseigner avant la bascule.
+`DB_HOST` est préparé dans les variables Coolify ; les identifiants applicatifs
+de la cible restent à renseigner avant la bascule.
 
 La production utilise encore l’image locale
 `dlp-friends-app:4b11e638660930836f73c5c84d3012b1dba82cc8`. Le `main` issu de
@@ -75,17 +75,15 @@ Conserver séparément les identifiants administrateur et sauvegarde dans Coolif
 Créer une base applicative et un utilisateur limité à cette base, sans privilège
 global ni `GRANT OPTION`. L’application n’utilise jamais le compte root.
 
-Créer ou choisir un réseau Docker privé durable partagé avec cette ressource.
-Le réseau doit exister avant le déploiement applicatif ; son cycle de vie ne doit
-pas dépendre de l’application. Ne publier aucun port MySQL sur l’hôte ou Internet.
-Configurer la connexion au réseau dans Coolify de façon persistante, pas avec
-un simple `docker network connect` perdu au prochain déploiement.
+Sélectionner la même destination Coolify pour les ressources, puis activer
+**Connect to Predefined Network** dans les paramètres avancés de l'application
+Docker Compose. Ne publier aucun port MySQL sur l'hôte ou Internet et ne pas
+déclarer de réseau personnalisé dans le Compose.
 
 Dans l’application, renseigner :
 
 | Variable | Valeur attendue |
 | --- | --- |
-| `MYSQL_NETWORK` | Nom Docker exact du réseau externe observé sur le serveur |
 | `DB_HOST` | Hôte ou alias unique du service MySQL résolu sur ce réseau |
 | `DB_PORT` | Port interne du serveur, `3306` par défaut |
 | `DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD` | Base et compte applicatif dédiés |

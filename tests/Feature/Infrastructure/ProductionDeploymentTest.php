@@ -17,10 +17,8 @@ function productionComposeEnvironment(array $overrides = []): array
         'DB_USERNAME' => 'dlp_friends',
         'DB_PASSWORD' => 'database-password',
         'DB_HOST' => 'mysql-independent.internal',
-        'MYSQL_NETWORK' => 'mysql-private-test',
         'REDIS_HOST' => 'redis-independent.internal',
         'REDIS_PASSWORD' => 'redis-application-password',
-        'REDIS_NETWORK' => 'redis-private-test',
         'MINIO_ROOT_USER' => 'dlp-friends',
         'MINIO_ROOT_PASSWORD' => 'minio-root-password',
         'AWS_ACCESS_KEY_ID' => 'dlp-friends',
@@ -89,7 +87,7 @@ it('keeps data services private and persists durable production data', function 
         ->and(array_keys($compose['volumes']))->toEqualCanonicalizing(['minio-data']);
 });
 
-it('uses collision-resistant aliases for private production services', function () {
+it('uses Compose service names for private services on the Coolify-managed stack network', function () {
     $result = resolveProductionCompose();
 
     expect($result->successful())->toBeTrue($result->errorOutput());
@@ -98,12 +96,23 @@ it('uses collision-resistant aliases for private production services', function 
 
     foreach (['web', 'worker', 'scheduler', 'reverb'] as $service) {
         expect($services[$service]['environment']['REDIS_HOST'])->toBe('redis-independent.internal')
-            ->and($services[$service]['environment']['REVERB_HOST'])->toBe('dlp-friends-reverb')
-            ->and($services[$service]['environment']['AWS_ENDPOINT'])->toBe('http://dlp-friends-minio:9000');
+            ->and($services[$service]['environment']['REVERB_HOST'])->toBe('reverb')
+            ->and($services[$service]['environment']['AWS_ENDPOINT'])->toBe('http://minio:9000');
     }
+});
 
-    expect($services['reverb']['networks']['dlp-friends']['aliases'])->toContain('dlp-friends-reverb')
-        ->and($services['minio']['networks']['dlp-friends']['aliases'])->toContain('dlp-friends-minio');
+it('declares no custom network and leaves the default network to Coolify', function () {
+    $result = resolveProductionCompose();
+
+    expect($result->successful())->toBeTrue($result->errorOutput());
+
+    $compose = json_decode($result->output(), true, flags: JSON_THROW_ON_ERROR);
+
+    expect(array_keys($compose['networks']))->toBe(['default']);
+
+    foreach ($compose['services'] as $service) {
+        expect(array_keys($service['networks']))->toBe(['default']);
+    }
 });
 
 it('configures healthchecks and Resend without automatic migrations', function () {
@@ -134,10 +143,8 @@ it('rejects a production deployment when a critical variable is missing', functi
     'Laravel application key' => 'APP_KEY',
     'database password' => 'DB_PASSWORD',
     'external database host' => 'DB_HOST',
-    'external database network' => 'MYSQL_NETWORK',
     'external Redis host' => 'REDIS_HOST',
     'external Redis password' => 'REDIS_PASSWORD',
-    'external Redis network' => 'REDIS_NETWORK',
     'Reverb secret' => 'REVERB_APP_SECRET',
     'Resend key' => 'RESEND_API_KEY',
 ]);
@@ -182,15 +189,12 @@ it('connects every Laravel process to configurable external MySQL without server
 
     $compose = json_decode($result->output(), true, flags: JSON_THROW_ON_ERROR);
 
-    expect($compose['networks']['mysql-private']['external'])->toBeTrue()
-        ->and($compose['networks']['mysql-private']['name'])->toBe('mysql-private-test');
-
     foreach (['web', 'worker', 'scheduler', 'reverb'] as $service) {
         expect($compose['services'][$service]['environment']['DB_HOST'])->toBe('mysql-independent.internal')
             ->and((string) $compose['services'][$service]['environment']['DB_PORT'])->toBe('3308')
             ->and($compose['services'][$service]['environment'])->not->toHaveKey('MYSQL_ROOT_PASSWORD')
             ->and($compose['services'][$service]['depends_on'])->not->toHaveKey('mysql')
-            ->and($compose['services'][$service]['networks'])->toHaveKey('mysql-private');
+            ->and(array_keys($compose['services'][$service]['networks']))->toBe(['default']);
     }
 });
 
@@ -201,14 +205,11 @@ it('connects every Laravel process to configurable external Redis', function () 
 
     $compose = json_decode($result->output(), true, flags: JSON_THROW_ON_ERROR);
 
-    expect($compose['networks']['redis-private']['external'])->toBeTrue()
-        ->and($compose['networks']['redis-private']['name'])->toBe('redis-private-test');
-
     foreach (['web', 'worker', 'scheduler', 'reverb'] as $service) {
         expect($compose['services'][$service]['environment']['REDIS_HOST'])->toBe('redis-independent.internal')
             ->and((string) $compose['services'][$service]['environment']['REDIS_PORT'])->toBe('6380')
             ->and($compose['services'][$service]['environment']['REDIS_PASSWORD'])->toBe('redis-application-password')
             ->and($compose['services'][$service]['depends_on'])->not->toHaveKey('redis')
-            ->and($compose['services'][$service]['networks'])->toHaveKey('redis-private');
+            ->and(array_keys($compose['services'][$service]['networks']))->toBe(['default']);
     }
 });
