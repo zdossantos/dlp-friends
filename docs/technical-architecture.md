@@ -141,12 +141,16 @@ vise un score maximal en SEO et en accessibilité.
 Les quatre services applicatifs utilisent la même image Docker. MySQL, Redis,
 le worker et le scheduler ne publient aucun port sur l'hôte. `compose.yaml`
 décrit la stack locale complète, dont Mailpit. `compose.production.yaml`
-décrit la stack Coolify, exclut Mailpit, garde MySQL, Redis et MinIO privés et
+décrit la stack applicative Coolify, exclut Mailpit et MySQL, garde Redis et MinIO privés et
 expose seulement les ports internes de `web` et `reverb` au proxy Coolify.
 
 Le conteneur applicatif ne lance aucune migration au démarrage. Les migrations
 s'exécutent explicitement avec `php artisan migrate --force` et doivent rester
 compatibles avec la version applicative précédente pendant un déploiement.
+
+La préparation et la validation de la bascule réelle sont décrites dans
+[`mysql-externalization.md`](mysql-externalization.md). Le Compose ne gère ni le
+cycle de vie de MySQL ni ses identifiants administrateur en production.
 
 ## Environnements
 
@@ -165,7 +169,9 @@ intégrés à l'image ou au dépôt.
 `main` est l'unique branche de production. Après les contrôles de pull request,
 Coolify construit la cible `runtime` définie par `compose.production.yaml`, puis
 réutilise cette image pour `web`, `worker`, `scheduler` et `reverb`. Compose
-déclare les volumes persistants MySQL et MinIO ; l’opérateur configure leurs
+déclare le volume persistant MinIO ; MySQL possède un volume dans sa ressource
+Coolify indépendante. Les quatre processus Laravel rejoignent un réseau externe
+privé nommé par `MYSQL_NETWORK` et utilisent `DB_HOST` et `DB_PORT` ; l’opérateur configure leurs
 sauvegardes ainsi que les secrets et domaines HTTPS/WSS dans Coolify. Les
 variables critiques utilisent l’interpolation Compose obligatoire et bloquent
 une configuration incomplète avant le démarrage. GitHub Actions vérifie

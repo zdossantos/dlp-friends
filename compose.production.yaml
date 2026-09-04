@@ -14,8 +14,10 @@ x-app: &app
     LOG_STACK: single
     LOG_LEVEL: ${LOG_LEVEL:-warning}
     DB_CONNECTION: mysql
-    DB_HOST: mysql
-    DB_PORT: 3306
+    DB_HOST: ${DB_HOST:?DB_HOST is required}
+    DB_PORT: ${DB_PORT:-3306}
+    DB_CHARSET: ${DB_CHARSET:-utf8mb4}
+    DB_COLLATION: ${DB_COLLATION:-utf8mb4_unicode_ci}
     DB_DATABASE: ${DB_DATABASE:?DB_DATABASE is required}
     DB_USERNAME: ${DB_USERNAME:?DB_USERNAME is required}
     DB_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD is required}
@@ -47,10 +49,9 @@ x-app: &app
     MAIL_FROM_NAME: ${MAIL_FROM_NAME:-DLP Friends}
   networks:
     - dlp-friends
+    - mysql-private
   restart: unless-stopped
   depends_on:
-    mysql:
-      condition: service_healthy
     redis:
       condition: service_healthy
     minio:
@@ -125,33 +126,6 @@ services:
           cpus: "0.50"
           memory: 256M
 
-  mysql:
-    image: mysql:8.4.10
-    environment:
-      MYSQL_DATABASE: ${DB_DATABASE:?DB_DATABASE is required}
-      MYSQL_USER: ${DB_USERNAME:?DB_USERNAME is required}
-      MYSQL_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD is required}
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?MYSQL_ROOT_PASSWORD is required}
-    command:
-      - --character-set-server=utf8mb4
-      - --collation-server=utf8mb4_unicode_ci
-    volumes:
-      - mysql-data:/var/lib/mysql
-    networks:
-      - dlp-friends
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -p$$MYSQL_ROOT_PASSWORD --silent"]
-      interval: 10s
-      timeout: 5s
-      start_period: 30s
-      retries: 10
-    deploy:
-      resources:
-        limits:
-          cpus: "1.00"
-          memory: 768M
-
   redis:
     image: redis:7.4.10-alpine
     command: ["redis-server", "--save", "", "--appendonly", "no"]
@@ -193,9 +167,11 @@ services:
           memory: 512M
 
 networks:
+  mysql-private:
+    external: true
+    name: ${MYSQL_NETWORK:?MYSQL_NETWORK is required}
   dlp-friends:
     driver: bridge
 
 volumes:
-  mysql-data:
   minio-data:

@@ -13,6 +13,13 @@ et l’état des capacités applicatives sont définis dans le
 - Le VPS est hébergé chez IONOS. Mailpit reste local uniquement ; Resend est le
   transport d’e-mails transactionnels de production.
 
+## MySQL indépendant
+
+Avant de déployer le Compose applicatif, préparer la ressource MySQL, son volume
+et son réseau externe selon [la procédure de séparation MySQL](mysql-externalization.md).
+Pour une installation existante, terminer la répétition de restauration et suivre
+la fenêtre de bascule avant toute livraison de ce Compose.
+
 ## Premier déploiement sur Coolify
 
 1. Créer une application Docker Compose depuis le dépôt GitHub, suivre la
@@ -24,7 +31,7 @@ et l’état des capacités applicatives sont définis dans le
    puis le domaine WebSocket au service `reverb` sur son port interne `8080`.
 3. Renseigner les variables obligatoires détectées par Coolify :
    `APP_IMAGE`, `APP_KEY`, `APP_URL`, `LEGAL_CONTACT_EMAIL`, `DB_DATABASE`, `DB_USERNAME`,
-   `DB_PASSWORD`, `MYSQL_ROOT_PASSWORD`, `MINIO_ROOT_USER`,
+   `DB_PASSWORD`, `DB_HOST`, `MYSQL_NETWORK`, `MINIO_ROOT_USER`,
    `MINIO_ROOT_PASSWORD`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`,
    `AWS_BUCKET`, `REVERB_APP_ID`, `REVERB_APP_KEY`, `REVERB_APP_SECRET`,
    `RESEND_API_KEY` et `MAIL_FROM_ADDRESS`. `APP_IMAGE` est la référence GHCR
@@ -69,8 +76,8 @@ réussite du déploiement dans Coolify :
 2. activer une fenêtre de maintenance si la migration l’exige ;
 3. exécuter `php artisan migrate --force` dans `web` ;
 4. exécuter `php artisan queue:restart` ;
-5. vérifier `/up`, la connexion WebSocket, les files et les journaux des sept
-   services.
+5. vérifier `/up`, la connexion WebSocket, les files et les journaux des six
+   services applicatifs et du service MySQL indépendant.
 
 ## Bascule d’une installation existante
 
