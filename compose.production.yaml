@@ -27,13 +27,13 @@ x-app: &app
     CACHE_STORE: redis
     QUEUE_CONNECTION: redis
     REDIS_CLIENT: phpredis
-    REDIS_HOST: redis
+    REDIS_HOST: dlp-friends-redis
     REDIS_PORT: 6379
     BROADCAST_CONNECTION: reverb
     REVERB_APP_ID: ${REVERB_APP_ID:?REVERB_APP_ID is required}
     REVERB_APP_KEY: ${REVERB_APP_KEY:?REVERB_APP_KEY is required}
     REVERB_APP_SECRET: ${REVERB_APP_SECRET:?REVERB_APP_SECRET is required}
-    REVERB_HOST: reverb
+    REVERB_HOST: dlp-friends-reverb
     REVERB_PORT: 8080
     REVERB_SCHEME: http
     FILESYSTEM_DISK: s3
@@ -41,7 +41,7 @@ x-app: &app
     AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:?AWS_SECRET_ACCESS_KEY is required}
     AWS_DEFAULT_REGION: ${AWS_DEFAULT_REGION:-us-east-1}
     AWS_BUCKET: ${AWS_BUCKET:?AWS_BUCKET is required}
-    AWS_ENDPOINT: http://minio:9000
+    AWS_ENDPOINT: http://dlp-friends-minio:9000
     AWS_USE_PATH_STYLE_ENDPOINT: "true"
     MAIL_MAILER: resend
     RESEND_API_KEY: ${RESEND_API_KEY:?RESEND_API_KEY is required}
@@ -110,6 +110,11 @@ services:
     command: reverb
     expose:
       - "8080"
+    networks:
+      dlp-friends:
+        aliases:
+          - dlp-friends-reverb
+      mysql-private: {}
     healthcheck:
       test:
         - CMD
@@ -130,7 +135,9 @@ services:
     image: redis:7.4.10-alpine
     command: ["redis-server", "--save", "", "--appendonly", "no"]
     networks:
-      - dlp-friends
+      dlp-friends:
+        aliases:
+          - dlp-friends-redis
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
@@ -152,7 +159,9 @@ services:
     volumes:
       - minio-data:/data
     networks:
-      - dlp-friends
+      dlp-friends:
+        aliases:
+          - dlp-friends-minio
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "--fail", "http://127.0.0.1:9000/minio/health/live"]
