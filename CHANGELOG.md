@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.4](https://github.com/zdossantos/dlp-friends/compare/v1.2.3...v1.2.4) (2026-09-04)
+
+
+### Fixes
+
+* **infra:** isolate internal service aliases ([#138](https://github.com/zdossantos/dlp-friends/issues/138)) ([20f0789](https://github.com/zdossantos/dlp-friends/commit/20f0789d68f6ce985e5a2578ac4e81ae3c5ff38f))
+
 ## [1.2.3](https://github.com/zdossantos/dlp-friends/compare/v1.2.2...v1.2.3) (2026-09-04)
 
 
