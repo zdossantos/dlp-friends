@@ -86,6 +86,24 @@ it('keeps data services private and persists durable production data', function 
         ->and(array_keys($compose['volumes']))->toEqualCanonicalizing(['minio-data']);
 });
 
+it('uses collision-resistant aliases for private production services', function () {
+    $result = resolveProductionCompose();
+
+    expect($result->successful())->toBeTrue($result->errorOutput());
+
+    $services = json_decode($result->output(), true, flags: JSON_THROW_ON_ERROR)['services'];
+
+    foreach (['web', 'worker', 'scheduler', 'reverb'] as $service) {
+        expect($services[$service]['environment']['REDIS_HOST'])->toBe('dlp-friends-redis')
+            ->and($services[$service]['environment']['REVERB_HOST'])->toBe('dlp-friends-reverb')
+            ->and($services[$service]['environment']['AWS_ENDPOINT'])->toBe('http://dlp-friends-minio:9000');
+    }
+
+    expect($services['redis']['networks']['dlp-friends']['aliases'])->toContain('dlp-friends-redis')
+        ->and($services['reverb']['networks']['dlp-friends']['aliases'])->toContain('dlp-friends-reverb')
+        ->and($services['minio']['networks']['dlp-friends']['aliases'])->toContain('dlp-friends-minio');
+});
+
 it('configures healthchecks and Resend without automatic migrations', function () {
     $result = resolveProductionCompose();
 
