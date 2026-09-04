@@ -16,7 +16,8 @@ function productionComposeEnvironment(array $overrides = []): array
         'DB_DATABASE' => 'dlp_friends',
         'DB_USERNAME' => 'dlp_friends',
         'DB_PASSWORD' => 'database-password',
-        'MYSQL_ROOT_PASSWORD' => 'root-password',
+        'DB_HOST' => 'mysql-independent.internal',
+        'MYSQL_NETWORK' => 'mysql-private-test',
         'MINIO_ROOT_USER' => 'dlp-friends',
         'MINIO_ROOT_PASSWORD' => 'minio-root-password',
         'AWS_ACCESS_KEY_ID' => 'dlp-friends',
@@ -46,7 +47,7 @@ it('resolves the production service topology without local-only services', funct
     $compose = json_decode($result->output(), true, flags: JSON_THROW_ON_ERROR);
 
     expect(array_keys($compose['services']))
-        ->toEqualCanonicalizing(['web', 'worker', 'scheduler', 'reverb', 'mysql', 'redis', 'minio']);
+        ->toEqualCanonicalizing(['web', 'worker', 'scheduler', 'reverb', 'redis', 'minio']);
 });
 
 it('reuses one application image for every long-running Laravel process', function () {
@@ -77,13 +78,12 @@ it('keeps data services private and persists durable production data', function 
 
     $compose = json_decode($result->output(), true, flags: JSON_THROW_ON_ERROR);
 
-    foreach (['mysql', 'redis', 'minio'] as $service) {
+    foreach (['redis', 'minio'] as $service) {
         expect($compose['services'][$service])->not->toHaveKey('ports');
     }
 
-    expect($compose['services']['mysql']['volumes'][0]['target'])->toBe('/var/lib/mysql')
-        ->and($compose['services']['minio']['volumes'][0]['target'])->toBe('/data')
-        ->and(array_keys($compose['volumes']))->toEqualCanonicalizing(['mysql-data', 'minio-data']);
+    expect($compose['services']['minio']['volumes'][0]['target'])->toBe('/data')
+        ->and(array_keys($compose['volumes']))->toEqualCanonicalizing(['minio-data']);
 });
 
 it('configures healthchecks and Resend without automatic migrations', function () {
@@ -113,6 +113,8 @@ it('rejects a production deployment when a critical variable is missing', functi
     'published application image' => 'APP_IMAGE',
     'Laravel application key' => 'APP_KEY',
     'database password' => 'DB_PASSWORD',
+    'external database host' => 'DB_HOST',
+    'external database network' => 'MYSQL_NETWORK',
     'Reverb secret' => 'REVERB_APP_SECRET',
     'Resend key' => 'RESEND_API_KEY',
 ]);
@@ -148,4 +150,23 @@ it('honors the HTTPS scheme forwarded by the Coolify proxy', function () {
         'X-Forwarded-Proto' => 'https',
     ])->get('/')
         ->assertRedirect('https://dlp-friends.fr/fr');
+});
+
+it('connects every Laravel process to configurable external MySQL without server credentials', function () {
+    $result = resolveProductionCompose(['DB_PORT' => '3308', 'MYSQL_ROOT_PASSWORD' => '']);
+
+    expect($result->successful())->toBeTrue($result->errorOutput());
+
+    $compose = json_decode($result->output(), true, flags: JSON_THROW_ON_ERROR);
+
+    expect($compose['networks']['mysql-private']['external'])->toBeTrue()
+        ->and($compose['networks']['mysql-private']['name'])->toBe('mysql-private-test');
+
+    foreach (['web', 'worker', 'scheduler', 'reverb'] as $service) {
+        expect($compose['services'][$service]['environment']['DB_HOST'])->toBe('mysql-independent.internal')
+            ->and((string) $compose['services'][$service]['environment']['DB_PORT'])->toBe('3308')
+            ->and($compose['services'][$service]['environment'])->not->toHaveKey('MYSQL_ROOT_PASSWORD')
+            ->and($compose['services'][$service]['depends_on'])->not->toHaveKey('mysql')
+            ->and($compose['services'][$service]['networks'])->toHaveKey('mysql-private');
+    }
 });
