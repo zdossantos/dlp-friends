@@ -20,6 +20,14 @@ et son réseau externe selon [la procédure de séparation MySQL](mysql-external
 Pour une installation existante, terminer la répétition de restauration et suivre
 la fenêtre de bascule avant toute livraison de ce Compose.
 
+## Redis indépendant
+
+Avant de déployer le Compose applicatif, préparer la ressource Redis et son réseau
+externe selon [la procédure de séparation Redis](redis-externalization.md).
+Configurer `REDIS_HOST`, `REDIS_PORT`, `REDIS_PASSWORD` et `REDIS_NETWORK` dans
+Coolify. Le mot de passe reste un secret d'exécution et aucun port Redis ne doit
+être publié sur Internet.
+
 ## Premier déploiement sur Coolify
 
 1. Créer une application Docker Compose depuis le dépôt GitHub, suivre la
@@ -31,7 +39,8 @@ la fenêtre de bascule avant toute livraison de ce Compose.
    puis le domaine WebSocket au service `reverb` sur son port interne `8080`.
 3. Renseigner les variables obligatoires détectées par Coolify :
    `APP_IMAGE`, `APP_KEY`, `APP_URL`, `LEGAL_CONTACT_EMAIL`, `DB_DATABASE`, `DB_USERNAME`,
-   `DB_PASSWORD`, `DB_HOST`, `MYSQL_NETWORK`, `MINIO_ROOT_USER`,
+   `DB_PASSWORD`, `DB_HOST`, `MYSQL_NETWORK`, `REDIS_HOST`, `REDIS_PASSWORD`,
+   `REDIS_NETWORK`, `MINIO_ROOT_USER`,
    `MINIO_ROOT_PASSWORD`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`,
    `AWS_BUCKET`, `REVERB_APP_ID`, `REVERB_APP_KEY`, `REVERB_APP_SECRET`,
    `RESEND_API_KEY` et `MAIL_FROM_ADDRESS`. `APP_IMAGE` est la référence GHCR
@@ -43,7 +52,7 @@ la fenêtre de bascule avant toute livraison de ce Compose.
 5. Fusionner volontairement la Release PR une fois les contrôles réussis. Le
    workflow publie l’image, teste son démarrage et demande son déploiement.
    Attendre que `web`, `worker`, `scheduler`, `reverb`,
-   `mysql`, `redis` et `minio` soient sains.
+   `minio` et les ressources MySQL et Redis indépendantes soient sains.
 6. Créer le bucket privé nommé par `AWS_BUCKET` dans MinIO avant d’activer un
    parcours qui écrit des objets. Utiliser pour l’application les identifiants
    `AWS_ACCESS_KEY_ID` et `AWS_SECRET_ACCESS_KEY`, distincts des identifiants
@@ -133,7 +142,8 @@ release ne doit être créé manuellement pour revenir en arrière.
 
 - La route `/up` vérifie que l'application répond; elle ne divulgue ni version sensible ni configuration.
 - Docker vérifie les services longs (`web`, `worker`, `scheduler`, `reverb`,
-  `mysql`, `redis`, `minio`) avec un healthcheck adapté en production. Mailpit
+  `minio`) avec un healthcheck adapté en production. Coolify supervise séparément
+  les ressources MySQL et Redis indépendantes. Mailpit
   possède son propre healthcheck uniquement dans la stack locale.
 - Configurer Coolify pour notifier les échecs de déploiement, conteneurs arrêtés, sauvegardes en erreur et manque d'espace disque.
 - Les journaux applicatifs sont structurés, sans mot de passe, jeton OAuth, contenu de message privé ou données personnelles inutiles.

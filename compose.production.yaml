@@ -27,8 +27,9 @@ x-app: &app
     CACHE_STORE: redis
     QUEUE_CONNECTION: redis
     REDIS_CLIENT: phpredis
-    REDIS_HOST: dlp-friends-redis
-    REDIS_PORT: 6379
+    REDIS_HOST: ${REDIS_HOST:?REDIS_HOST is required}
+    REDIS_PASSWORD: ${REDIS_PASSWORD:?REDIS_PASSWORD is required}
+    REDIS_PORT: ${REDIS_PORT:-6379}
     BROADCAST_CONNECTION: reverb
     REVERB_APP_ID: ${REVERB_APP_ID:?REVERB_APP_ID is required}
     REVERB_APP_KEY: ${REVERB_APP_KEY:?REVERB_APP_KEY is required}
@@ -50,10 +51,9 @@ x-app: &app
   networks:
     - dlp-friends
     - mysql-private
+    - redis-private
   restart: unless-stopped
   depends_on:
-    redis:
-      condition: service_healthy
     minio:
       condition: service_healthy
 
@@ -115,6 +115,7 @@ services:
         aliases:
           - dlp-friends-reverb
       mysql-private: {}
+      redis-private: {}
     healthcheck:
       test:
         - CMD
@@ -124,25 +125,6 @@ services:
       interval: 10s
       timeout: 5s
       start_period: 20s
-      retries: 5
-    deploy:
-      resources:
-        limits:
-          cpus: "0.50"
-          memory: 256M
-
-  redis:
-    image: redis:7.4.10-alpine
-    command: ["redis-server", "--save", "", "--appendonly", "no"]
-    networks:
-      dlp-friends:
-        aliases:
-          - dlp-friends-redis
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 10s
-      timeout: 5s
       retries: 5
     deploy:
       resources:
@@ -179,6 +161,9 @@ networks:
   mysql-private:
     external: true
     name: ${MYSQL_NETWORK:?MYSQL_NETWORK is required}
+  redis-private:
+    external: true
+    name: ${REDIS_NETWORK:?REDIS_NETWORK is required}
   dlp-friends:
     driver: bridge
 
