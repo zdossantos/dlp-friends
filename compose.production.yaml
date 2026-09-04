@@ -1,5 +1,5 @@
 x-app: &app
-  image: ${APP_IMAGE_NAME:-dlp-friends-app}:${SOURCE_COMMIT:-production}
+  image: ${APP_IMAGE:?APP_IMAGE must be a published image digest}
   environment: &app-environment
     APP_NAME: DLP Friends
     APP_ENV: production
@@ -59,14 +59,6 @@ x-app: &app
 services:
   web:
     <<: *app
-    build:
-      context: .
-      target: runtime
-      args:
-        VITE_REVERB_APP_KEY: ${REVERB_APP_KEY:?REVERB_APP_KEY is required}
-        VITE_REVERB_HOST: ${VITE_REVERB_HOST:?VITE_REVERB_HOST is required}
-        VITE_REVERB_PORT: ${VITE_REVERB_PORT:-443}
-        VITE_REVERB_SCHEME: ${VITE_REVERB_SCHEME:-https}
     command: web
     expose:
       - "80"
