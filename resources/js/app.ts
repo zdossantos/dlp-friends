@@ -4,6 +4,7 @@ import { initializeTheme } from '@/composables/useAppearance';
 import { resolvePageLayout } from '@/layouts/resolvePageLayout';
 import { initializeAnalytics } from '@/lib/analytics';
 import { initializeFlashToast } from '@/lib/flashToast';
+import { resolvePageTitle } from '@/lib/pageTitle';
 import { resolveReverbHost } from '@/lib/reverbHost';
 
 const configuredReverbHost = import.meta.env.VITE_REVERB_HOST;
@@ -25,7 +26,7 @@ configureEcho(
 const appName = import.meta.env.VITE_APP_NAME;
 
 const inertiaReady = createInertiaApp({
-    title: (title) => (title ? `${title} - ${appName}` : appName),
+    title: (title) => resolvePageTitle(title, appName),
     layout: resolvePageLayout,
     progress: {
         color: '#7138B6',
