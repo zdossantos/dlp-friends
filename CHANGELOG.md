@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.7.0](https://github.com/zdossantos/dlp-friends/compare/v1.6.0...v1.7.0) (2026-09-05)
+
+
+### Features
+
+* **auth:** add Google social login ([#106](https://github.com/zdossantos/dlp-friends/issues/106)) ([5ca273a](https://github.com/zdossantos/dlp-friends/commit/5ca273a7dc7fb2ae67282fbed972a89bf929b1c2))
+
 ## [1.6.0](https://github.com/zdossantos/dlp-friends/compare/v1.5.3...v1.6.0) (2026-09-05)
 
 
