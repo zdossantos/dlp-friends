@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\ProfileVisibility;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
@@ -31,6 +32,21 @@ class Conversation extends Model
         $query->whereHas('memberMatch', fn (Builder $match) => $match
             ->where('user_low_id', $user->id)
             ->orWhere('user_high_id', $user->id));
+    }
+
+    /** @param Builder<Conversation> $query */
+    public function scopeWithVisibleParticipant(Builder $query, User $user): void
+    {
+        $query->whereHas('memberMatch', fn (Builder $match) => $match
+            ->where(fn (Builder $participants) => $participants
+                ->where(fn (Builder $memberIsLow) => $memberIsLow
+                    ->where('user_low_id', $user->id)
+                    ->whereHas('highUser.profile', fn (Builder $profile) => $profile
+                        ->where('visibility', ProfileVisibility::Visible)))
+                ->orWhere(fn (Builder $memberIsHigh) => $memberIsHigh
+                    ->where('user_high_id', $user->id)
+                    ->whereHas('lowUser.profile', fn (Builder $profile) => $profile
+                        ->where('visibility', ProfileVisibility::Visible)))));
     }
 
     /** @return BelongsTo<MemberMatch, $this> */

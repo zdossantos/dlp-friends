@@ -1,7 +1,7 @@
 <x-mail::layout>
     <x-slot:header>
         <x-mail::header :url="config('app.url')">
-            {{ __('common.brand.name') }} — {{ __('common.mail.tagline') }}
+            {{ __('common.brand.name') }} — {{ __('common.welcome.description') }}
         </x-mail::header>
     </x-slot:header>
 

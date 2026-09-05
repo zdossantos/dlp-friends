@@ -37,7 +37,12 @@ réacceptation des comptes existants, ni export automatisé, ni délai de purge.
 
 - Réglages : édition des données visibles et des intérêts actifs, dans la limite configurée.
 - Un intérêt archivé est retiré des sélections visibles et du matching. La sélection historique est conservée comme suspendue et ne consomme plus de capacité ; elle ne peut être restaurée à la réactivation que si le profil a alors une capacité disponible.
-- Masquage : suspend les nouvelles suggestions sans supprimer le compte.
+- Masquage : suspend les nouvelles suggestions et retire les conversations du
+  profil masqué des listes et de leurs compteurs chez les autres membres, sans
+  supprimer le compte. Il ne révoque pas l’accès direct, l’envoi de messages ou
+  les notifications d’une conversation existante ; ces échanges réapparaissent
+  dans les listes lorsque le profil redevient visible. Le blocage reste le
+  mécanisme qui interdit réellement l’accès et la messagerie.
 - Suppression cible : après confirmation explicite, le compte devient immédiatement inaccessible et invisible. Un job asynchrone doit supprimer les images, liens de comptes sociaux, profil, swipes, matches, conversations et messages dans un délai maximal de 30 jours ; les sessions sont révoquées immédiatement. Le code actuel supprime directement le compte et ne livre pas encore cette purge différée.
 - Documenter, avant mise en production, les durées de conservation et la politique de confidentialité applicable.
 - Prévoir l'export des données de profil, intérêts, matches et messages dans les réglages. Cet export attendu au MVP n’est pas encore implémenté.

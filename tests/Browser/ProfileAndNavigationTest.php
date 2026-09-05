@@ -388,6 +388,10 @@ test('a completed member sees their public profile and member actions', function
     $page->script("localStorage.setItem('appearance', 'dark')");
     $page->navigate('/profile')
         ->assertScript(
+            "(() => { const foreground = getComputedStyle(document.body).color; const icons = [...document.querySelectorAll('[data-test=profile-hero-action] svg')]; return icons.length === 2 && icons.every((icon) => getComputedStyle(icon).color === foreground); })()",
+            true,
+        )
+        ->assertScript(
             "(() => { const badges = [...document.querySelectorAll('[data-test=profile-age-badge], [data-test=profile-visibility-badge], [data-test=profile-frequency-badge], [data-test=profile-interest-badge]')]; return document.documentElement.classList.contains('dark') && badges.length >= 4 && badges.every((badge) => { const style = getComputedStyle(badge); return style.borderTopWidth === '1px' && style.borderTopStyle === 'solid' && style.borderTopColor !== 'rgba(0, 0, 0, 0)'; }); })()",
             true,
         )
@@ -401,6 +405,7 @@ test('an administrator sees administration and member return navigation', functi
 
     visit('/profile')
         ->assertPresent('[aria-label="Administration"]')
+        ->assertCount('[data-test="profile-hero-action"]', 3)
         ->assertPresent('[data-test="admin-profile-badge"]')
         ->assertSee('Administrateur')
         ->assertScript(

@@ -19,6 +19,7 @@ final class ConversationIndexController extends Controller
 
         $conversations = Conversation::query()
             ->forMember($member)
+            ->withVisibleParticipant($member)
             ->with([
                 'memberMatch.lowUser.profile.avatar',
                 'memberMatch.highUser.profile.avatar',
