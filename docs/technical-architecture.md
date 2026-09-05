@@ -135,14 +135,14 @@ vise un score maximal en SEO et en accessibilité.
 | `reverb` | Serveur WebSocket |
 | MySQL Coolify indépendant | Base relationnelle persistante sur un réseau privé externe |
 | Redis Coolify indépendant | Cache, sessions et files sur un réseau privé externe authentifié |
-| `minio` | Stockage objet compatible S3 |
+| Garage Coolify indépendant | Stockage objet privé compatible S3 |
 | `mailpit` | Capture locale des e-mails |
 
 Les quatre services applicatifs utilisent la même image Docker. MySQL et Redis
 sont des ressources Coolify indépendantes ; le worker et le scheduler ne publient
 aucun port sur l'hôte. `compose.yaml`
 décrit la stack locale complète, dont Mailpit. `compose.production.yaml`
-décrit la stack applicative Coolify, exclut Mailpit, MySQL et Redis, garde MinIO privé et
+décrit la stack applicative Coolify, exclut Mailpit, MySQL, Redis et Garage, et
 expose seulement les ports internes de `web` et `reverb` au proxy Coolify.
 
 Le conteneur applicatif ne lance aucune migration au démarrage. Les migrations
@@ -159,7 +159,7 @@ cycle de vie de MySQL ni ses identifiants administrateur en production.
 | --- | --- | --- | --- |
 | Base de données | MySQL Docker | MySQL de service pour les suites Pest | MySQL privé |
 | Cache et files | Redis Docker | Stockages `array` et files synchrones | Redis privé |
-| Fichiers | Disque local par défaut | Disque local éphémère | MinIO privé via le disque `s3` |
+| Fichiers | MinIO via le disque `s3` | Disque local éphémère | Garage privé via le disque `s3` |
 | E-mails | Mailpit | Transport `array` | Resend via le mailer `resend` |
 
 Les secrets sont fournis par variables d'environnement et ne sont jamais
@@ -169,9 +169,9 @@ intégrés à l'image ou au dépôt.
 
 `main` est l'unique branche de production. Après les contrôles de pull request,
 Coolify construit la cible `runtime` définie par `compose.production.yaml`, puis
-réutilise cette image pour `web`, `worker`, `scheduler` et `reverb`. Compose
-déclare le volume persistant MinIO ; MySQL possède un volume dans sa ressource
-Coolify indépendante. Coolify gère le réseau propre au stack et son raccordement
+réutilise cette image pour `web`, `worker`, `scheduler` et `reverb`. MySQL,
+Redis et Garage possèdent leurs volumes dans des ressources Coolify indépendantes.
+Coolify gère le réseau propre au stack et son raccordement
 à la destination prédéfinie ; le Compose ne déclare aucun réseau personnalisé.
 Les quatre processus Laravel utilisent `DB_HOST` et `DB_PORT` ; l’opérateur configure leurs
 sauvegardes ainsi que les secrets et domaines HTTPS/WSS dans Coolify. Les
