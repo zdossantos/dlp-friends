@@ -8,8 +8,11 @@ use App\Models\MemberMatch;
 use App\Models\Message;
 use App\Models\Swipe;
 use App\Models\User;
+use App\Mail\MemberDeletedByAdminMail;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
@@ -92,6 +95,40 @@ class ManageMembersTest extends TestCase
                         && $row['is_admin'] === true
                         && $row['can_delete'] === false
                         && $row['can_start_conversation'] === false)));
+    }
+
+    public function test_admin_deletes_an_ordinary_member_immediately_and_queues_a_localized_mail(): void
+    {
+        Mail::fake();
+        $admin = User::factory()->withProfile()->admin()->create();
+        $member = User::factory()->withProfile()->create(['email' => 'deleted@example.com', 'locale' => 'en']);
+        $displayName = $member->profile?->display_name;
+        DB::table('sessions')->insert(['id' => 'member-session', 'user_id' => $member->id, 'payload' => '', 'last_activity' => now()->timestamp]);
+
+        $this->actingAs($admin)
+            ->delete(route('admin.members.destroy', $member))
+            ->assertRedirect(route('admin.members.index'));
+
+        $this->assertDatabaseMissing('users', ['id' => $member->id]);
+        $this->assertDatabaseMissing('sessions', ['user_id' => $member->id]);
+        Mail::assertQueued(MemberDeletedByAdminMail::class, fn (MemberDeletedByAdminMail $mail): bool =>
+            $mail->hasTo('deleted@example.com')
+            && $mail->displayName === $displayName
+            && $mail->locale === 'en');
+    }
+
+    public function test_admin_cannot_delete_another_admin(): void
+    {
+        Mail::fake();
+        $admin = User::factory()->withProfile()->admin()->create();
+        $otherAdmin = User::factory()->withProfile()->admin()->create();
+
+        $this->actingAs($admin)
+            ->delete(route('admin.members.destroy', $otherAdmin))
+            ->assertForbidden();
+
+        $this->assertDatabaseHas('users', ['id' => $otherAdmin->id]);
+        Mail::assertNothingQueued();
     }
 
     private function createMatch(User $first, User $second): MemberMatch

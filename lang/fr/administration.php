@@ -72,4 +72,13 @@ return [
         'discover_demo' => 'Carte à découvrir', 'crossed_worlds_demo' => 'Univers croisés', 'conversation_demo' => 'Échange',
         'empty' => 'Aucun membre éligible pour le moment.', 'pagination' => 'Pagination des membres',
     ],
+    'members' => [
+        'deleted' => 'Le compte a été supprimé.',
+        'mail' => [
+            'subject' => 'Ton compte DLP Friends a été supprimé',
+            'heading' => 'Bonjour :name',
+            'body' => 'Ton compte DLP Friends a été supprimé par l’administration. Tu ne peux plus accéder au service et tes données ont été retirées des systèmes actifs.',
+            'contact' => 'Si tu penses qu’il s’agit d’une erreur, contacte-nous à :email.',
+        ],
+    ],
 ];

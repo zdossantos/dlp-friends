@@ -69,4 +69,13 @@ return [
         'discover_demo' => 'Card to discover', 'crossed_worlds_demo' => 'Crossed worlds', 'conversation_demo' => 'Chat',
         'empty' => 'No eligible members yet.', 'pagination' => 'Member pagination',
     ],
+    'members' => [
+        'deleted' => 'The account has been deleted.',
+        'mail' => [
+            'subject' => 'Your DLP Friends account has been deleted',
+            'heading' => 'Hello :name',
+            'body' => 'Your DLP Friends account was deleted by the administration. You can no longer access the service and your data has been removed from active systems.',
+            'contact' => 'If you believe this was a mistake, contact us at :email.',
+        ],
+    ],
 ];

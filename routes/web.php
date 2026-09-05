@@ -135,6 +135,8 @@ Route::middleware(['auth', 'verified', 'social'])->group(function () {
             Route::prefix('admin')->name('admin.')->middleware('role:admin')->group(function (): void {
                 Route::get('members', [AdminMemberController::class, 'index'])
                     ->name('members.index');
+                Route::delete('members/{member}', [AdminMemberController::class, 'destroy'])
+                    ->name('members.destroy');
                 Route::resource('interests', InterestController::class)
                     ->only(['index', 'store', 'update', 'destroy']);
                 Route::patch('interests/{interest}/status', InterestStatusController::class)

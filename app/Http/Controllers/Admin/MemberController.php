@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Actions\DeleteMember;
 use App\Enums\SwipeDecision;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
@@ -75,5 +77,19 @@ final class MemberController extends Controller
             'members' => $members,
             'createdMatch' => $request->session()->pull('admin.members.created_match'),
         ]);
+    }
+
+    public function destroy(Request $request, User $member, DeleteMember $deleteMember): RedirectResponse
+    {
+        $member->load(['profile', 'roles']);
+        Gate::authorize('delete', $member);
+
+        $deleteMember->handle($member);
+        Inertia::flash('toast', [
+            'type' => 'success',
+            'message' => __('administration.members.deleted'),
+        ]);
+
+        return redirect()->route('admin.members.index');
     }
 }
