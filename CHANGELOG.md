@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.5.2](https://github.com/zdossantos/dlp-friends/compare/v1.5.1...v1.5.2) (2026-09-05)
+
+
+### Fixes
+
+* **seo:** unblock crawling and stabilize page titles ([#157](https://github.com/zdossantos/dlp-friends/issues/157)) ([af58815](https://github.com/zdossantos/dlp-friends/commit/af5881533b2ae130479e1b9f044647d9af73017b)), closes [#152](https://github.com/zdossantos/dlp-friends/issues/152)
+
 ## [1.5.1](https://github.com/zdossantos/dlp-friends/compare/v1.5.0...v1.5.1) (2026-09-05)
 
 
