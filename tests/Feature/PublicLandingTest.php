@@ -118,12 +118,12 @@ test('robots policy points to the sitemap and restricts crawling to public landi
 
     $this->get('/robots.txt')
         ->assertOk()
-        ->assertSee("Allow: /$\n", false)
-        ->assertSee("Allow: /sitemap.xml\n", false)
-        ->assertSee("Allow: /fr\n", false)
-        ->assertSee("Allow: /en\n", false)
-        ->assertSee("Disallow: /\n", false)
-        ->assertSee('Sitemap: https://dlp-friends.example/sitemap.xml', false);
+        ->assertContent(implode("\n", [
+            'User-agent: *',
+            'Allow: /',
+            'Sitemap: https://dlp-friends.example/sitemap.xml',
+            '',
+        ]));
 });
 
 test('google analytics and search console verification are disabled without configuration', function () {

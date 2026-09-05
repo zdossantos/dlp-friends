@@ -55,11 +55,7 @@ Route::get('sitemap.xml', function () {
 Route::get('robots.txt', function () {
     return response(implode("\n", [
         'User-agent: *',
-        'Allow: /$',
-        'Allow: /sitemap.xml',
-        'Allow: /fr',
-        'Allow: /en',
-        'Disallow: /',
+        'Allow: /',
         'Sitemap: '.PublicUrls::sitemap(),
         '',
     ]), 200, ['Content-Type' => 'text/plain; charset=UTF-8']);

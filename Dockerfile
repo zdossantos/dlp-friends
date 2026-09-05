@@ -25,6 +25,7 @@ COPY --from=composer:2.8 /usr/bin/composer /usr/local/bin/composer
 COPY --from=bun /usr/local/bin/bun /usr/local/bin/bun
 COPY . .
 
+ARG VITE_APP_NAME="DLP Friends"
 ARG VITE_REVERB_APP_KEY
 ARG VITE_REVERB_HOST
 ARG VITE_REVERB_PORT

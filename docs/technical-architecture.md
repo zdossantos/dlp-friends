@@ -92,10 +92,11 @@ nécessaire pour les afficher ou les parcourir.
 
 Les pages d’authentification et tous les parcours applicatifs renvoient
 `X-Robots-Tag: noindex, nofollow`. La redirection publique de la racine n’envoie
-pas cet en-tête. La politique `robots.txt` autorise exactement `/`, les deux
-landing pages et le sitemap ; elle ne remplace pas l’en-tête de protection
-attaché aux réponses privées. Un membre connecté qui ouvre la racine ou une
-landing page rejoint immédiatement la route d’aiguillage de son espace membre.
+pas cet en-tête. La politique `robots.txt` autorise l’exploration afin que les
+robots puissent lire ces directives `noindex` ; elle ne remplace pas l’en-tête
+de protection attaché aux réponses privées. Un membre connecté qui ouvre la
+racine ou une landing page rejoint immédiatement la route d’aiguillage de son
+espace membre.
 
 ### Standard des pages publiques indexables
 
