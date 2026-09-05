@@ -11,6 +11,7 @@ return [
     'navigation' => [
         'label' => 'Administration',
         'dashboard' => 'Dashboard',
+        'members' => 'Members',
         'interests' => 'Favorite worlds',
         'avatars' => 'Avatars',
         'onboarding' => 'Tutorial',
@@ -70,6 +71,17 @@ return [
         'empty' => 'No eligible members yet.', 'pagination' => 'Member pagination',
     ],
     'members' => [
+        'title' => 'Members', 'description' => 'Review accounts, their statistics, and available actions.',
+        'count' => ':count accounts', 'search' => 'Search', 'search_placeholder' => 'Name or email address',
+        'member' => 'Member', 'account' => 'Account', 'likes' => 'Likes', 'passes' => 'Passes',
+        'matches' => 'Matches', 'messages' => 'Messages', 'blocks' => 'Blocks', 'actions' => 'Actions',
+        'sent_received' => ':sent sent · :received received', 'block_stats' => ':blocked people blocked · blocked :received times',
+        'registered' => 'Registered :date', 'verified' => 'Verified :date', 'not_verified' => 'Not verified',
+        'incomplete_profile' => 'Incomplete profile', 'status_active' => 'Active', 'status_pending_deletion' => 'Pending deletion',
+        'visibility_visible' => 'Visible', 'visibility_hidden' => 'Hidden', 'pagination' => 'Member pagination',
+        'conversation' => 'Chat', 'delete' => 'Delete', 'delete_title' => 'Delete this account?',
+        'delete_description' => ':name’s account and active data will be deleted immediately. This action is permanent.',
+        'confirm_delete' => 'Delete permanently', 'deleting' => 'Deleting…',
         'deleted' => 'The account has been deleted.',
         'conversation_unavailable' => 'This conversation cannot be created.',
         'mail' => [

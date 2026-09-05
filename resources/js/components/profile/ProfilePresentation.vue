@@ -5,23 +5,26 @@ import { useTranslations } from '@/composables/useTranslations';
 
 const { t } = useTranslations();
 
-withDefaults(defineProps<{
-    avatar: {
-        name: string;
-        image_url: string;
-        primary_color: string;
-        secondary_color: string;
-    };
-    displayName: string;
-    ageLabel: string;
-    bio: string;
-    visitFrequency: string;
-    interests: Array<{ id: number; name: string }>;
-    aboutLabel: string;
-    interestsLabel: string;
-    visitFrequencyLabel: string;
-    isAdmin?: boolean;
-}>(), { isAdmin: false });
+withDefaults(
+    defineProps<{
+        avatar: {
+            name: string;
+            image_url: string;
+            primary_color: string;
+            secondary_color: string;
+        };
+        displayName: string;
+        ageLabel: string;
+        bio: string;
+        visitFrequency: string;
+        interests: Array<{ id: number; name: string }>;
+        aboutLabel: string;
+        interestsLabel: string;
+        visitFrequencyLabel: string;
+        isAdmin?: boolean;
+    }>(),
+    { isAdmin: false },
+);
 </script>
 
 <template>

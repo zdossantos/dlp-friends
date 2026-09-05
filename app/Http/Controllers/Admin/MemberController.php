@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Actions\DeleteMember;
 use App\Enums\SwipeDecision;
 use App\Http\Controllers\Controller;
+use App\Models\Conversation;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
@@ -21,6 +22,13 @@ final class MemberController extends Controller
         Gate::authorize('viewAny', User::class);
 
         $search = trim($request->string('search')->toString());
+        $createdConversation = Conversation::query()
+            ->with(['memberMatch.lowUser.profile', 'memberMatch.highUser.profile'])
+            ->forMember($request->user())
+            ->find($request->integer('created_conversation'));
+        $createdCounterpart = $createdConversation?->memberMatch->lowUser->is($request->user())
+            ? $createdConversation->memberMatch->highUser
+            : $createdConversation?->memberMatch->lowUser;
 
         /** @var LengthAwarePaginator<int, User> $members */
         $members = User::query()
@@ -75,7 +83,10 @@ final class MemberController extends Controller
         return Inertia::render('Admin/Members/Index', [
             'filters' => ['search' => $search],
             'members' => $members,
-            'createdMatch' => $request->session()->pull('admin.members.created_match'),
+            'createdMatch' => $createdConversation === null || $createdCounterpart === null ? null : [
+                'displayName' => $createdCounterpart->profile?->display_name,
+                'conversationHref' => route('conversations.show', $createdConversation, absolute: false),
+            ],
         ]);
     }
 

@@ -24,17 +24,17 @@ class OpenMemberConversationTest extends TestCase
         $admin = User::factory()->withProfile()->admin()->create();
         $member = User::factory()->withProfile()->create();
 
-        $this->actingAs($admin)
-            ->post(route('admin.members.conversation.store', $member))
-            ->assertRedirect(route('admin.members.index'));
+        $response = $this->actingAs($admin)
+            ->post(route('admin.members.conversation.store', $member));
 
         $match = MemberMatch::query()->firstOrFail();
         $conversation = Conversation::query()->firstOrFail();
+        $response->assertRedirect(route('admin.members.index', ['created_conversation' => $conversation->id]));
         expect([$match->user_low_id, $match->user_high_id])->toBe(collect([$admin->id, $member->id])->sort()->values()->all());
         expect($conversation->match_id)->toBe($match->id);
         $this->assertDatabaseCount('swipes', 0);
-
-        $this->actingAs($admin)->get(route('admin.members.index'))
+        $this->actingAs($admin)
+            ->get(route('admin.members.index', ['created_conversation' => $conversation->id]))
             ->assertInertia(fn (Assert $page) => $page
                 ->where('createdMatch.displayName', $member->profile?->display_name)
                 ->where('createdMatch.conversationHref', route('conversations.show', $conversation, absolute: false)));

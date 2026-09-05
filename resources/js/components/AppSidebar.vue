@@ -6,6 +6,7 @@ import {
     LayoutDashboard,
     Tags,
     UserRound,
+    Users,
 } from '@lucide/vue';
 import AppLogo from '@/components/AppLogo.vue';
 import NavMain from '@/components/NavMain.vue';
@@ -23,6 +24,7 @@ import { useTranslations } from '@/composables/useTranslations';
 import { dashboard } from '@/routes';
 import { index as avatarIndex } from '@/routes/admin/avatars';
 import { index as interestIndex } from '@/routes/admin/interests';
+import { index as memberIndex } from '@/routes/admin/members';
 import { index as onboardingIndex } from '@/routes/admin/onboarding';
 import { show as showProfile } from '@/routes/member-profile';
 import type { NavItem } from '@/types';
@@ -34,6 +36,11 @@ const mainNavItems: NavItem[] = [
         title: t('administration.navigation.dashboard'),
         href: dashboard(),
         icon: LayoutDashboard,
+    },
+    {
+        title: t('administration.navigation.members'),
+        href: memberIndex(),
+        icon: Users,
     },
     {
         title: t('administration.navigation.interests'),

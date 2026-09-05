@@ -11,6 +11,7 @@ return [
     'navigation' => [
         'label' => 'Administration',
         'dashboard' => 'Tableau de bord',
+        'members' => 'Membres',
         'interests' => 'Univers favoris',
         'avatars' => 'Avatars',
         'onboarding' => 'Tutoriel',
@@ -73,6 +74,17 @@ return [
         'empty' => 'Aucun membre éligible pour le moment.', 'pagination' => 'Pagination des membres',
     ],
     'members' => [
+        'title' => 'Membres', 'description' => 'Consulte les comptes, leurs statistiques et les actions disponibles.',
+        'count' => ':count comptes', 'search' => 'Rechercher', 'search_placeholder' => 'Nom ou adresse e-mail',
+        'member' => 'Membre', 'account' => 'Compte', 'likes' => 'Likes', 'passes' => 'Passes',
+        'matches' => 'Matchs', 'messages' => 'Messages', 'blocks' => 'Blocages', 'actions' => 'Actions',
+        'sent_received' => ':sent envoyés · :received reçus', 'block_stats' => ':blocked personnes bloquées · bloqué :received fois',
+        'registered' => 'Inscrit le :date', 'verified' => 'Vérifié le :date', 'not_verified' => 'Non vérifié',
+        'incomplete_profile' => 'Profil incomplet', 'status_active' => 'Actif', 'status_pending_deletion' => 'Suppression en attente',
+        'visibility_visible' => 'Visible', 'visibility_hidden' => 'Masqué', 'pagination' => 'Pagination des membres',
+        'conversation' => 'Discuter', 'delete' => 'Supprimer', 'delete_title' => 'Supprimer ce compte ?',
+        'delete_description' => 'Le compte de :name et ses données actives seront supprimés immédiatement. Cette action est définitive.',
+        'confirm_delete' => 'Supprimer définitivement', 'deleting' => 'Suppression…',
         'deleted' => 'Le compte a été supprimé.',
         'conversation_unavailable' => 'Cette conversation ne peut pas être créée.',
         'mail' => [

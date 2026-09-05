@@ -2,6 +2,7 @@
 
 use App\Enums\ProductOnboardingStatus;
 use App\Enums\ProductOnboardingStep;
+use App\Mail\MemberDeletedByAdminMail;
 use App\Models\Avatar;
 use App\Models\Interest;
 use App\Models\InterestCategory;
@@ -12,6 +13,7 @@ use App\Models\User;
 use Illuminate\Contracts\Debug\ExceptionHandler as ExceptionHandlerContract;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Mail;
 
 test('admin configures tutorial avatars and sees member progress', function () {
     [$passAvatar, $likeAvatar] = Avatar::factory()->count(2)->create();
@@ -90,6 +92,52 @@ test('the admin dashboard renders account statistics and recent registrations', 
         ->assertSee('recent@example.test')
         ->assertSee('Profil à compléter')
         ->assertNoJavaScriptErrors();
+});
+
+test('the member catalog exposes statistics and confirms immediate deletion', function () {
+    Mail::fake();
+    $member = User::factory()->withProfile()->create(['email' => 'member-to-delete@example.test']);
+    $admin = User::factory()->withProfile()->admin()->create();
+    $this->actingAs($admin);
+
+    $page = visit('/admin/members')
+        ->assertSee('Membres')
+        ->assertSee('member-to-delete@example.test')
+        ->assertSee('personnes bloquées')
+        ->assertCount('[data-test="delete-member-trigger"]', 1)
+        ->assertCount('[data-test="start-member-conversation"]', 1)
+        ->assertNoJavaScriptErrors();
+
+    $page->click('[data-test="delete-member-trigger"]')
+        ->assertSee('Supprimer ce compte ?')
+        ->assertSee('supprimés immédiatement')
+        ->assertSee('Annuler');
+
+    $page->click('[data-test="confirm-delete-member"]')
+        ->assertSee('Le compte a été supprimé.')
+        ->assertDontSee('member-to-delete@example.test');
+
+    $this->assertDatabaseMissing('users', ['id' => $member->id]);
+    Mail::assertQueued(MemberDeletedByAdminMail::class);
+});
+
+test('an admin starts a classic private conversation and sees the match dialog', function () {
+    $member = User::factory()->withProfile()->create(['email' => 'conversation@example.test']);
+    $admin = User::factory()->withProfile()->admin()->create();
+    $this->actingAs($admin);
+
+    visit('/admin/members')
+        ->click('[data-test="start-member-conversation"]')
+        ->assertPresent('[data-test="match-celebration-layer"]')
+        ->assertPresent('[data-test="open-match-conversation"]')
+        ->assertNoJavaScriptErrors();
+
+    $this->assertDatabaseHas('matches', [
+        'user_low_id' => min($admin->id, $member->id),
+        'user_high_id' => max($admin->id, $member->id),
+    ]);
+    $this->assertDatabaseCount('conversations', 1);
+    $this->assertDatabaseCount('swipes', 0);
 });
 
 test('the catalog shows state history limit ordering and deletion boundaries', function () {

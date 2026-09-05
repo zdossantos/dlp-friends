@@ -22,11 +22,8 @@ final class MemberConversationController extends Controller
             return redirect()->route('conversations.show', $result->conversation);
         }
 
-        $request->session()->flash('admin.members.created_match', [
-            'displayName' => $member->profile?->display_name,
-            'conversationHref' => route('conversations.show', $result->conversation, absolute: false),
+        return redirect()->route('admin.members.index', [
+            'created_conversation' => $result->conversation->id,
         ]);
-
-        return redirect()->route('admin.members.index');
     }
 }
