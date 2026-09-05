@@ -70,4 +70,23 @@ class PublicMemberProfileTest extends TestCase
             ->assertInertia(fn (Assert $page) => $page
                 ->where('backHref', route('conversations.show', $conversation, absolute: false)));
     }
+
+    public function test_an_admin_profile_is_identified_and_cannot_be_blocked(): void
+    {
+        config()->set('inertia.testing.ensure_pages_exist', false);
+        $viewer = User::factory()->withProfile()->create();
+        $admin = User::factory()->withProfile()->admin()->create();
+
+        $this->actingAs($viewer)->get(route('members.show', $admin))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('member.is_admin', true)
+                ->where('canBlock', false)
+                ->where('canUnblock', false));
+
+        $this->actingAs($viewer)
+            ->post(route('members.block', $admin))
+            ->assertNotFound();
+        $this->assertDatabaseCount('blocks', 0);
+    }
 }
