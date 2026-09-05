@@ -49,6 +49,13 @@ réacceptation des comptes existants, ni export automatisé, ni délai de purge.
 - Les contenus texte sont validés, échappés à l'affichage et protégés contre l'injection HTML.
 - Les cookies de session sont sécurisés en HTTPS et les protections CSRF natives de Laravel restent actives.
 - Les canaux Reverb de conversation sont privés et leur autorisation vérifie l'appartenance au match ainsi que l'absence de blocage.
+- La gestion des membres est réservée au rôle `admin`. Ses statistiques ne
+  contiennent aucun corps de message. La suppression d’un membre révoque ses
+  sessions, supprime immédiatement ses données actives en cascade, puis met en
+  file un e-mail localisé construit à partir d’un instantané minimal ; une
+  panne d’envoi ne restaure pas le compte.
+- Un administrateur ne peut ni supprimer un autre administrateur ni ouvrir un
+  échange d’assistance avec lui.
 
 ## Mesure d’audience
 
@@ -69,6 +76,8 @@ rester cohérente avec la configuration réellement déployée.
 - Le blocage doit être disponible depuis un profil et une conversation.
 - Il a effet immédiat sur suggestions, match et messagerie pour les deux membres; la conversation est archivée et aucun nouveau message n'est accepté.
 - Ne pas informer l'autre membre de manière explicite qu'il a été bloqué.
+- Refuser côté serveur tout blocage visant un administrateur et masquer le
+  contrôle correspondant dans l’interface.
 
 ## Différé
 

@@ -52,8 +52,9 @@ et son état de livraison sont définis dans le [`PRD.md`](PRD.md).
 - Réactiver un intérêt restaure ses sélections historiques dans l’ordre des profils uniquement lorsque la capacité est disponible au regard de la limite courante ; les sélections sans capacité restent suspendues.
 - Un intérêt actif ayant déjà été utilisé ne peut pas être supprimé. Après archivage, sa suppression est autorisée et retire en cascade toutes ses associations historiques.
 - Un utilisateur ne peut pas swiper son propre profil.
-- Une paire de profils n'a qu'un swipe par sens, un match et une conversation au maximum.
+- Une paire de profils n'a qu'un swipe par sens, un match et une conversation au maximum. L’échange d’assistance initié par un administrateur réutilise cette même paire et peut créer directement le match et la conversation sans swipe artificiel.
 - Un blocage est prioritaire sur un match ou une conversation existante.
+- Un administrateur ne peut pas être la cible d’un blocage.
 - La suppression de compte doit anonymiser ou supprimer les données conformément à la politique de conservation définie dans [`security-privacy.md`](security-privacy.md).
 
 ## Score de proposition V1
@@ -79,4 +80,4 @@ même changement.
 - La messagerie accepte uniquement du texte brut, limité à 2 000 caractères. Les pièces jointes, GIF, réactions, édition et suppression de message sont hors V1.
 - Un membre ne peut lire ou envoyer un message que dans une conversation liée à son match et non affectée par un blocage.
 - Chaque compte reçoit le rôle `user`; `admin` est un rôle additionnel attribué explicitement.
-- Le rôle `admin` donne accès au dashboard et à la gestion des catalogues d’intérêts et d’avatars. La gestion des avatars reste accessible avant la complétion du profil afin de permettre l’ajout initial au catalogue. Ce rôle ne donne pas de droit de lecture des messages privés dans le MVP. Les catégories d’intérêts restent techniques et ne sont pas gérées dans cette interface.
+- Le rôle `admin` donne accès au dashboard, à la gestion des membres et aux catalogues d’intérêts et d’avatars. La gestion des membres agrège des compteurs directionnels sans charger le contenu des messages. Elle permet la suppression immédiate d’un membre et la création d’un échange privé avec lui, mais jamais ces actions sur un autre administrateur. La gestion des avatars reste accessible avant la complétion du profil afin de permettre l’ajout initial au catalogue. Ce rôle ne donne pas de droit de lecture des messages privés dans le MVP. Les catégories d’intérêts restent techniques et ne sont pas gérées dans cette interface.
