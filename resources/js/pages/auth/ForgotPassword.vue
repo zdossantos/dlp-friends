@@ -55,6 +55,7 @@ defineProps<{
                 <Button
                     class="w-full"
                     :disabled="processing"
+                    :aria-busy="processing ? 'true' : undefined"
                     data-test="email-password-reset-link-button"
                 >
                     <Spinner v-if="processing" />

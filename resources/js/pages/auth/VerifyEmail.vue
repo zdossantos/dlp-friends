@@ -41,7 +41,11 @@ defineProps<{
     >
         <InputError :message="localizeMailError(errors.email, t)" />
 
-        <Button :disabled="processing" variant="secondary">
+        <Button
+            :disabled="processing"
+            :aria-busy="processing ? 'true' : undefined"
+            variant="secondary"
+        >
             <Spinner v-if="processing" />
             {{ t('account.verification.resend') }}
         </Button>

@@ -2,6 +2,7 @@ import type { AvatarOption, VisitFrequency } from './auth';
 
 export type PublicMember = {
     id: number;
+    is_admin: boolean;
     display_name: string;
     age: number;
     avatar: AvatarOption;

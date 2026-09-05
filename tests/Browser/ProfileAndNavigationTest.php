@@ -399,7 +399,14 @@ test('an administrator sees administration and member return navigation', functi
     $admin->profile?->update(['display_name' => 'Admin Aurore']);
     $this->actingAs($admin);
 
-    visit('/profile')->assertPresent('[aria-label="Administration"]');
+    visit('/profile')
+        ->assertPresent('[aria-label="Administration"]')
+        ->assertPresent('[data-test="admin-profile-badge"]')
+        ->assertSee('Administrateur')
+        ->assertScript(
+            "document.querySelector('[data-test=profile-presentation]').classList.contains('border-amber-400') && getComputedStyle(document.querySelector('[data-test=profile-presentation]')).borderTopWidth === '2px'",
+            true,
+        );
 
     visit('/dashboard')
         ->assertPresent('[data-test="app-logo-icon"]')
@@ -495,8 +502,9 @@ test('logging out removes access to the private profile', function () {
     $page = visit('/profile');
     $page->script("sessionStorage.setItem('historyKey', 'private'); localStorage.setItem('appearance', 'dark'); true;");
     $page->click('[aria-label="Se déconnecter"]')
-        ->assertPathIs('/')
+        ->assertPathIsNot('/profile')
         ->assertDontSee('Aurore privée')
+        ->assertScript("['/fr', '/en'].includes(window.location.pathname)", true)
         ->assertScript("sessionStorage.getItem('historyKey')", null)
         ->assertScript("localStorage.getItem('appearance')", 'dark');
 

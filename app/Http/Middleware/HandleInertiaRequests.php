@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use App\Models\Role;
 use App\Support\FrontendTranslations;
+use App\Support\PublicUrls;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -43,6 +44,10 @@ class HandleInertiaRequests extends Middleware
             'i18n' => [
                 'locale' => app()->getLocale(),
                 'messages' => FrontendTranslations::messages(),
+            ],
+            'legal' => [
+                'terms_url' => PublicUrls::termsPath(app()->getLocale()),
+                'privacy_url' => PublicUrls::privacyPath(app()->getLocale()),
             ],
             'auth' => [
                 'user' => function () use ($request): ?array {

@@ -31,6 +31,8 @@ return [
         'submit' => 'Create my account',
         'existing_account' => 'Already have an account?',
         'login' => 'Log in',
+        'terms_acceptance' => 'I accept the following documents:',
+        'terms_required' => 'You must accept the Terms of Use to create your account.',
     ],
     'social_registration' => [
         'title' => 'Complete your registration',

@@ -66,6 +66,7 @@ function handleLogout(): void {
                 :about-label="t('profile.details.about')"
                 :interests-label="t('profile.details.interests')"
                 :visit-frequency-label="t('profile.details.visit_frequency')"
+                :is-admin="isAdmin"
                 class="h-full"
             >
                 <template #hero-actions>

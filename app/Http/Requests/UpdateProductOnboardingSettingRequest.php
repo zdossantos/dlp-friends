@@ -22,6 +22,14 @@ class UpdateProductOnboardingSettingRequest extends FormRequest
                 'different:pass_avatar_id',
                 Rule::exists('avatars', 'id')->where('is_active', true),
             ],
+            'pass_display_name' => ['required', 'string', 'max:80'],
+            'pass_display_name_en' => ['nullable', 'string', 'max:80'],
+            'pass_bio' => ['required', 'string', 'max:500'],
+            'pass_bio_en' => ['nullable', 'string', 'max:500'],
+            'like_display_name' => ['required', 'string', 'max:80'],
+            'like_display_name_en' => ['nullable', 'string', 'max:80'],
+            'like_bio' => ['required', 'string', 'max:500'],
+            'like_bio_en' => ['nullable', 'string', 'max:500'],
         ];
     }
 }

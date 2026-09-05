@@ -4,6 +4,19 @@ Ce document définit les exigences de sécurité et de confidentialité, qu’el
 soient déjà implémentées ou nécessaires avant la mise en production. Leur état
 de livraison est suivi dans le [`PRD.md`](PRD.md).
 
+## Publication légale
+
+Zacharie Dos Santos, entrepreneur individuel (SIREN 104 531 819), est l’éditeur
+et responsable du traitement. L’adresse publique de contact est fournie par
+`LEGAL_CONTACT_EMAIL`; elle est obligatoire en production. Les CGU version
+`2026-09-01` sont acceptées explicitement à l’inscription et la preuve conserve
+uniquement l’utilisateur, la version et l’heure serveur.
+
+La suppression retire immédiatement les données des systèmes actifs. Elles
+peuvent subsister dans les sauvegardes quotidiennes chiffrées MySQL et fichiers
+jusqu’à leur expiration automatique après 30 jours. Ce périmètre n’ajoute ni
+réacceptation des comptes existants, ni export automatisé, ni délai de purge.
+
 ## Majorité et accès
 
 - La date de naissance est obligatoire à l'inscription.
@@ -39,12 +52,35 @@ de livraison est suivi dans le [`PRD.md`](PRD.md).
 - La validation de l'état OAuth par Socialite reste obligatoire sur le callback Google.
 - Aucun jeton d'accès, jeton de renouvellement ou contenu brut de réponse Google n'est stocké ou journalisé. Seul l'identifiant stable nécessaire au lien de compte est conservé.
 - Les canaux Reverb de conversation sont privés et leur autorisation vérifie l'appartenance au match ainsi que l'absence de blocage.
+- La gestion des membres est réservée au rôle `admin`. Ses statistiques ne
+  contiennent aucun corps de message. La suppression d’un membre révoque ses
+  sessions, supprime immédiatement ses données actives en cascade, puis met en
+  file un e-mail localisé construit à partir d’un instantané minimal ; une
+  panne d’envoi ne restaure pas le compte.
+- Un administrateur ne peut ni supprimer un autre administrateur ni ouvrir un
+  échange d’assistance avec lui.
+
+## Mesure d’audience
+
+Lorsque `GOOGLE_ANALYTICS_ID` est défini, Google Analytics 4 mesure les pages
+vues sur les surfaces publiques et privées. Les chemins dynamiques sont
+normalisés avant envoi et les paramètres de requête sont supprimés. Ne jamais
+envoyer à GA4 un nom, une adresse e-mail, un identifiant de membre, une bio, un
+message ou toute autre donnée permettant d’identifier directement une
+personne.
+
+La version actuelle active cette mesure sans recueil préalable du consentement.
+La mise en conformité du consentement, du refus et du retrait est une dette
+produit explicitement reportée en V2 ; la politique de confidentialité doit
+rester cohérente avec la configuration réellement déployée.
 
 ## Blocage
 
 - Le blocage doit être disponible depuis un profil et une conversation.
 - Il a effet immédiat sur suggestions, match et messagerie pour les deux membres; la conversation est archivée et aucun nouveau message n'est accepté.
 - Ne pas informer l'autre membre de manière explicite qu'il a été bloqué.
+- Refuser côté serveur tout blocage visant un administrateur et masquer le
+  contrôle correspondant dans l’interface.
 
 ## Différé
 

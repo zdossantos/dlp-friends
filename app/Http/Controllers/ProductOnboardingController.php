@@ -30,8 +30,8 @@ class ProductOnboardingController extends Controller
             'status' => $progress->status->value,
             'step' => $progress->step?->value,
             'demoProfiles' => [
-                $this->demoProfile($settings->passAvatar, 'pass'),
-                $this->demoProfile($settings->likeAvatar, 'like'),
+                $this->demoProfile($settings, $settings->passAvatar, 'pass'),
+                $this->demoProfile($settings, $settings->likeAvatar, 'like'),
             ],
         ]);
     }
@@ -59,14 +59,23 @@ class ProductOnboardingController extends Controller
     }
 
     /** @return array{displayName: string, bio: string, interests: array<int, string>, avatar: array{name: string, imageUrl: string, primaryColor: string, secondaryColor: string}} */
-    private function demoProfile(Avatar $avatar, string $kind): array
+    private function demoProfile(ProductOnboardingSetting $settings, Avatar $avatar, string $kind): array
     {
-        /** @var array{display_name: string, bio: string, interests: array<int, string>} $copy */
+        /** @var array{interests: array<int, string>} $copy */
         $copy = trans("onboarding.demo_profiles.{$kind}");
+        $displayName = $kind === 'pass' ? $settings->pass_display_name : $settings->like_display_name;
+        $bio = $kind === 'pass' ? $settings->pass_bio : $settings->like_bio;
+
+        if (app()->getLocale() === 'en') {
+            $displayName = ($kind === 'pass' ? $settings->pass_display_name_en : $settings->like_display_name_en)
+                ?: $displayName;
+            $bio = ($kind === 'pass' ? $settings->pass_bio_en : $settings->like_bio_en)
+                ?: $bio;
+        }
 
         return [
-            'displayName' => $copy['display_name'],
-            'bio' => $copy['bio'],
+            'displayName' => $displayName,
+            'bio' => $bio,
             'interests' => $copy['interests'],
             'avatar' => [
                 'name' => $avatar->name,

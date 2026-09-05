@@ -240,7 +240,16 @@ jobs:
         with:
           context: .
           target: runtime
+          platforms: linux/amd64
           push: false
+          load: true
           tags: dlp-friends:ci
+          build-args: |
+            VITE_REVERB_APP_KEY=ci-public-key
+            VITE_REVERB_HOST=reverb.example.test
+            VITE_REVERB_PORT=443
+            VITE_REVERB_SCHEME=https
           cache-from: type=gha,scope=runtime-image
           cache-to: type=gha,mode=max,scope=runtime-image
+      - name: Smoke test runtime image
+        run: bash .github/scripts/smoke-image.sh dlp-friends:ci

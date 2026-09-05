@@ -3,22 +3,43 @@
 use App\Models\User;
 
 test('the landing page presents the adult friendship service to guests', function () {
-    visit('/', ['locale' => 'fr-FR'])
+    visit('/fr', ['locale' => 'fr-FR'])
         ->assertSee('DLP Friends')
         ->assertPresent('[data-test="app-logo-icon"]')
         ->assertAttribute('[data-test="app-logo-icon"]', 'aria-hidden', 'true')
-        ->assertSee('Des amitiés entre fans adultes, avec un peu de magie')
+        ->assertSee('Vis la magie à plusieurs')
+        ->assertSee('Rencontre d’autres fans de Disneyland Paris, découvre vos passions communes et échange simplement.')
+        ->assertScript("document.body.innerText.includes('Vos passions communes passent en premier')", true)
+        ->assertScript("document.body.innerText.includes('Ton âge n’est jamais pris en compte par l’algorithme pour te proposer des profils.')", true)
         ->assertSeeLink('Créer mon compte')
         ->assertSeeLink('Se connecter')
+        ->assertAttribute('[data-test="landing-register"]', 'href', '/register')
+        ->assertAttribute('[data-test="landing-login"]', 'href', '/login')
+        ->assertSeeLink('Comprendre nos suggestions')
+        ->assertAttribute('[data-test="landing-matching"]', 'href', '/fr/matching')
+        ->assertScript("document.querySelector('[data-test=legal-terms]').href.endsWith('/fr/conditions-generales-utilisation')", true)
+        ->assertScript("document.querySelector('[data-test=legal-privacy]').href.endsWith('/fr/politique-confidentialite')", true)
+        ->assertScript("document.querySelector('link[rel=canonical]').href.endsWith('/fr')", true)
+        ->assertNoAccessibilityIssues()
         ->assertNoJavaScriptErrors();
 });
 
-test('the landing page offers the member space when signed in', function () {
+test('the landing matching link opens an accessible localized explanation', function () {
+    visit('/fr', ['locale' => 'fr-FR'])
+        ->click('[data-test="landing-matching"]')
+        ->assertPathIs('/fr/matching')
+        ->assertSee('Comment fonctionnent les suggestions')
+        ->assertSee('Deux Découvertes créent un Univers croisé')
+        ->assertPresent('[data-test="matching-document-card"]')
+        ->assertNoAccessibilityIssues()
+        ->assertNoJavaScriptErrors();
+});
+
+test('the landing page sends a signed-in member directly to discovery', function () {
     $this->actingAs(User::factory()->withProfile()->create());
 
     visit('/')
-        ->assertSeeLink('Ouvrir mon espace')
-        ->assertDontSeeLink('Créer mon compte');
+        ->assertPathIs('/discover');
 });
 
 test('the registration form collects account data without a public name', function () {
@@ -28,6 +49,10 @@ test('the registration form collects account data without a public name', functi
         ->assertPresent('input[name="birth_date"]')
         ->assertPresent('input[name="password"]')
         ->assertPresent('input[name="password_confirmation"]')
+        ->assertPresent('#terms_accepted')
+        ->assertAttribute('#terms_accepted', 'data-state', 'unchecked')
+        ->assertSeeLink('Conditions générales d’utilisation')
+        ->assertSeeLink('Politique de confidentialité')
         ->assertNotPresent('input[name="username"]');
 });
 
@@ -46,8 +71,33 @@ test('login and registration offer only Google social authentication', function 
     }
 });
 
+test('registration submits an explicit terms choice', function () {
+    visit('/register', ['locale' => 'fr-FR'])
+        ->fill('email', 'browser-terms@example.com')
+        ->fill('birth_date', '2000-01-01')
+        ->fill('password', 'password')
+        ->fill('password_confirmation', 'password')
+        ->click('#terms_accepted')
+        ->click('[data-test="register-user-button"]')
+        ->assertPathIs('/email/verify');
+});
+
+test('localized legal pages are responsive and accessible', function () {
+    visit('/fr/conditions-generales-utilisation', ['locale' => 'fr-FR'])
+        ->assertSee('Conditions générales d’utilisation')
+        ->assertPresent('[data-test="app-logo-icon"]')
+        ->assertPresent('[data-test="legal-document-card"]')
+        ->assertNoAccessibilityIssues()
+        ->assertNoJavaScriptErrors();
+
+    visit('/en/privacy-policy', ['locale' => 'en-GB'])
+        ->assertSee('Privacy Policy')
+        ->assertNoAccessibilityIssues()
+        ->assertNoJavaScriptErrors();
+});
+
 test('public and authentication pages expose language without theme controls', function () {
-    visit('/', ['locale' => 'fr-FR'])
+    visit('/fr', ['locale' => 'fr-FR'])
         ->assertPresent('[data-test="locale-switcher"]')
         ->assertNotPresent('[aria-label="Choisir le thème"]');
 
@@ -63,7 +113,7 @@ test('public and authentication pages expose language without theme controls', f
 });
 
 test('the landing header stacks on a mobile viewport', function () {
-    visit('/', ['locale' => 'fr-FR'])
+    visit('/fr', ['locale' => 'fr-FR'])
         ->on()->mobile()
         ->assertScript(
             "getComputedStyle(document.querySelector('header')).flexDirection",
@@ -71,8 +121,18 @@ test('the landing header stacks on a mobile viewport', function () {
         );
 });
 
+test('the landing benefits use distinct decorative icons', function () {
+    visit('/fr', ['locale' => 'fr-FR'])
+        ->assertPresent('[data-test="landing-benefit-icon-interests"] svg[data-icon="shapes"]')
+        ->assertPresent('[data-test="landing-benefit-icon-discovery"] svg[data-icon="handshake"]')
+        ->assertPresent('[data-test="landing-benefit-icon-conversations"] svg[data-icon="message-circle"]')
+        ->assertAttribute('[data-test="landing-benefit-icon-interests"] svg', 'aria-hidden', 'true')
+        ->assertAttribute('[data-test="landing-benefit-icon-discovery"] svg', 'aria-hidden', 'true')
+        ->assertAttribute('[data-test="landing-benefit-icon-conversations"] svg', 'aria-hidden', 'true');
+});
+
 test('the landing page uses a bold decorative typeface for editorial content', function () {
-    visit('/', ['locale' => 'fr-FR'])
+    visit('/fr', ['locale' => 'fr-FR'])
         ->assertScript(
             "getComputedStyle(document.querySelector('main h1')).fontFamily.includes('Cinzel Decorative')",
             true,

@@ -1,5 +1,132 @@
 # Changelog
 
+## [1.6.0](https://github.com/zdossantos/dlp-friends/compare/v1.5.3...v1.6.0) (2026-09-05)
+
+
+### Features
+
+* **onboarding:** configure tutorial profile copy ([#161](https://github.com/zdossantos/dlp-friends/issues/161)) ([ffc8026](https://github.com/zdossantos/dlp-friends/commit/ffc8026452579bc18586136a324dd5f3005cfe82))
+
+## [1.5.3](https://github.com/zdossantos/dlp-friends/compare/v1.5.2...v1.5.3) (2026-09-05)
+
+
+### Fixes
+
+* **seo:** make favicon compatible with Google Search ([#159](https://github.com/zdossantos/dlp-friends/issues/159)) ([f8f69cf](https://github.com/zdossantos/dlp-friends/commit/f8f69cf0063e0aadc763cc30dfcf3bb43c37c961))
+
+## [1.5.2](https://github.com/zdossantos/dlp-friends/compare/v1.5.1...v1.5.2) (2026-09-05)
+
+
+### Fixes
+
+* **seo:** unblock crawling and stabilize page titles ([#157](https://github.com/zdossantos/dlp-friends/issues/157)) ([af58815](https://github.com/zdossantos/dlp-friends/commit/af5881533b2ae130479e1b9f044647d9af73017b)), closes [#152](https://github.com/zdossantos/dlp-friends/issues/152)
+
+## [1.5.1](https://github.com/zdossantos/dlp-friends/compare/v1.5.0...v1.5.1) (2026-09-05)
+
+
+### Fixes
+
+* **analytics:** correct root indexing and GA4 tracking ([#155](https://github.com/zdossantos/dlp-friends/issues/155)) ([5f9760c](https://github.com/zdossantos/dlp-friends/commit/5f9760cc3705228f64cc6762db1e7e7bbc19cf8e))
+
+## [1.5.0](https://github.com/zdossantos/dlp-friends/compare/v1.4.0...v1.5.0) (2026-09-05)
+
+
+### Features
+
+* manage members from administration ([#153](https://github.com/zdossantos/dlp-friends/issues/153)) ([2239b39](https://github.com/zdossantos/dlp-friends/commit/2239b39d000577eeacf23d0ec38b675456758b68))
+
+## [1.4.0](https://github.com/zdossantos/dlp-friends/compare/v1.3.1...v1.4.0) (2026-09-05)
+
+
+### Features
+
+* **analytics:** integrate GA4 and Search Console ([#149](https://github.com/zdossantos/dlp-friends/issues/149)) ([0f2bf76](https://github.com/zdossantos/dlp-friends/commit/0f2bf7620649c075507555ba14562db27d80dd7b)), closes [#51](https://github.com/zdossantos/dlp-friends/issues/51)
+
+## [1.3.1](https://github.com/zdossantos/dlp-friends/compare/v1.3.0...v1.3.1) (2026-09-05)
+
+
+### Fixes
+
+* **infra:** rely on Coolify native Garage service ([#146](https://github.com/zdossantos/dlp-friends/issues/146)) ([ea010c6](https://github.com/zdossantos/dlp-friends/commit/ea010c696b00357803ddb968fd2c1422854a4dee))
+
+## [1.3.0](https://github.com/zdossantos/dlp-friends/compare/v1.2.5...v1.3.0) (2026-09-05)
+
+
+### Features
+
+* **infra:** externalize production object storage ([#144](https://github.com/zdossantos/dlp-friends/issues/144)) ([6ec8cc1](https://github.com/zdossantos/dlp-friends/commit/6ec8cc18c6995675a338400ac269fa56dbcc45ec))
+
+## [1.2.5](https://github.com/zdossantos/dlp-friends/compare/v1.2.4...v1.2.5) (2026-09-04)
+
+
+### Fixes
+
+* **infra:** externalize production Redis ([#141](https://github.com/zdossantos/dlp-friends/issues/141)) ([8852988](https://github.com/zdossantos/dlp-friends/commit/8852988cdcb68b02d56bc891f3fe5ee4c8ff78cb))
+* **infra:** use Coolify-managed networking ([#143](https://github.com/zdossantos/dlp-friends/issues/143)) ([17a2066](https://github.com/zdossantos/dlp-friends/commit/17a20669d34d2379a83e40f5fcc4da7a79c43442))
+
+## [1.2.4](https://github.com/zdossantos/dlp-friends/compare/v1.2.3...v1.2.4) (2026-09-04)
+
+
+### Fixes
+
+* **infra:** isolate internal service aliases ([#138](https://github.com/zdossantos/dlp-friends/issues/138)) ([20f0789](https://github.com/zdossantos/dlp-friends/commit/20f0789d68f6ce985e5a2578ac4e81ae3c5ff38f))
+
+## [1.2.3](https://github.com/zdossantos/dlp-friends/compare/v1.2.2...v1.2.3) (2026-09-04)
+
+
+### Fixes
+
+* **infra:** decouple production MySQL from application deployments ([#136](https://github.com/zdossantos/dlp-friends/issues/136)) ([87b9928](https://github.com/zdossantos/dlp-friends/commit/87b99285500603f4ae0de2a05368ade9a57293ba))
+
+## [1.2.2](https://github.com/zdossantos/dlp-friends/compare/v1.2.1...v1.2.2) (2026-09-02)
+
+
+### Fixes
+
+* replace favicon artwork ([#117](https://github.com/zdossantos/dlp-friends/issues/117)) ([1f9a08e](https://github.com/zdossantos/dlp-friends/commit/1f9a08e80f0071769d56d89362541f37f454cc1d))
+
+## [1.2.1](https://github.com/zdossantos/dlp-friends/compare/v1.2.0...v1.2.1) (2026-09-02)
+
+
+### Fixes
+
+* use POST for Coolify deployments ([#115](https://github.com/zdossantos/dlp-friends/issues/115)) ([532543b](https://github.com/zdossantos/dlp-friends/commit/532543b6086e6e53c91538ecc5214605b52d149e))
+
+## [1.2.0](https://github.com/zdossantos/dlp-friends/compare/v1.1.0...v1.2.0) (2026-09-02)
+
+
+### Features
+
+* add immediate member blocking ([#80](https://github.com/zdossantos/dlp-friends/issues/80)) ([402cfad](https://github.com/zdossantos/dlp-friends/commit/402cfadb95bbfdc1af97b691b6d64a1b6872099a))
+* add interactive product onboarding ([#79](https://github.com/zdossantos/dlp-friends/issues/79)) ([8008e77](https://github.com/zdossantos/dlp-friends/commit/8008e775dde28a276dc9805cffceaecf38aa105b))
+* add localized public landing page ([#108](https://github.com/zdossantos/dlp-friends/issues/108)) ([846a220](https://github.com/zdossantos/dlp-friends/commit/846a2207a08573b6c900eb3e7eb59901e85199ba))
+* add messaging interface ([#77](https://github.com/zdossantos/dlp-friends/issues/77)) ([dd3b295](https://github.com/zdossantos/dlp-friends/commit/dd3b295c2edcd97fb9783705248b75ea5092394b))
+* add private match conversations ([#74](https://github.com/zdossantos/dlp-friends/issues/74)) ([480db81](https://github.com/zdossantos/dlp-friends/commit/480db8199182fd710da57d2b17182b1c9ecab7b2))
+* add required avatar catalog ([#71](https://github.com/zdossantos/dlp-friends/issues/71)) ([66a060d](https://github.com/zdossantos/dlp-friends/commit/66a060d4b38a83954e27a5012edc913935a3408a))
+* align browser icons with brand identity ([#103](https://github.com/zdossantos/dlp-friends/issues/103)) ([2a97034](https://github.com/zdossantos/dlp-friends/commit/2a970342e6cd7c19f1b15b385d582208346a2f72))
+* **brand:** integrate validated DLP Friends logo ([#85](https://github.com/zdossantos/dlp-friends/issues/85)) ([efc5566](https://github.com/zdossantos/dlp-friends/commit/efc55664e2d45dabb82bdc126a14fde77cfc79f7))
+* **copy:** harmonize the editorial universe ([#101](https://github.com/zdossantos/dlp-friends/issues/101)) ([057bff4](https://github.com/zdossantos/dlp-friends/commit/057bff4c73c5bf5d8d30234a39f3e4d861c3814e))
+* **design:** integrate brand typography ([#93](https://github.com/zdossantos/dlp-friends/issues/93)) ([0bbbcf0](https://github.com/zdossantos/dlp-friends/commit/0bbbcf07162e3cc5aab059ece064df7d296effa2)), closes [#90](https://github.com/zdossantos/dlp-friends/issues/90)
+* **design:** refine semantic color palette ([#104](https://github.com/zdossantos/dlp-friends/issues/104)) ([3977cc5](https://github.com/zdossantos/dlp-friends/commit/3977cc59b5aa1c6a634d07875d58c3a91c14f166))
+* **design:** use Cinzel Decorative for accents ([#98](https://github.com/zdossantos/dlp-friends/issues/98)) ([86a84a8](https://github.com/zdossantos/dlp-friends/commit/86a84a86e018cf310641fc01570bcf3ad433ec2f))
+* **discovery:** refine swipe card layout and actions ([#91](https://github.com/zdossantos/dlp-friends/issues/91)) ([fb6d9d0](https://github.com/zdossantos/dlp-friends/commit/fb6d9d04819af70c269eceaac9280bd081603819))
+* explain matching on a public page ([#111](https://github.com/zdossantos/dlp-friends/issues/111)) ([c09c4e5](https://github.com/zdossantos/dlp-friends/commit/c09c4e5cb76983a81027733a3d4d6bf9fc425540))
+* gérer le catalogue des intérêts ([#64](https://github.com/zdossantos/dlp-friends/issues/64)) ([bed2e37](https://github.com/zdossantos/dlp-friends/commit/bed2e37c8a33107b05c58e6f9347cea9475b122d))
+* internationaliser l’interface en français et anglais ([#73](https://github.com/zdossantos/dlp-friends/issues/73)) ([9f55115](https://github.com/zdossantos/dlp-friends/commit/9f551159956ec0bcc1b6af7df1dade21c78e3921))
+* localize and redesign authentication emails ([#96](https://github.com/zdossantos/dlp-friends/issues/96)) ([1f9c46b](https://github.com/zdossantos/dlp-friends/commit/1f9c46ba7327bc6e049aece692b0395e65ac86f1))
+* prepare Coolify production compose stack ([#112](https://github.com/zdossantos/dlp-friends/issues/112)) ([7622270](https://github.com/zdossantos/dlp-friends/commit/76222707113768c2092dd689f2bd1a4215c91339))
+* publish legal pages and record terms consent ([#109](https://github.com/zdossantos/dlp-friends/issues/109)) ([d0d5a4b](https://github.com/zdossantos/dlp-friends/commit/d0d5a4b803899a28e173c0ab51fb76ef848b6f3b))
+* refresh landing page copy and icons ([#110](https://github.com/zdossantos/dlp-friends/issues/110)) ([e1b4fa7](https://github.com/zdossantos/dlp-friends/commit/e1b4fa7267389da1f3bc75b759aa6acca9bb5d69))
+* send and broadcast realtime messages ([#75](https://github.com/zdossantos/dlp-friends/issues/75)) ([c842f82](https://github.com/zdossantos/dlp-friends/commit/c842f82f8a1fae920a00852d955718c97650b77d))
+* **ui:** add expressive interaction feedback ([#105](https://github.com/zdossantos/dlp-friends/issues/105)) ([31fd041](https://github.com/zdossantos/dlp-friends/commit/31fd04178b5d3d915452e609bbdb4b1d6207ffce))
+
+
+### Fixes
+
+* **messaging:** send first message without reload ([#94](https://github.com/zdossantos/dlp-friends/issues/94)) ([0509585](https://github.com/zdossantos/dlp-friends/commit/0509585e3c12ddc8a5ea805929e277ad40f2ed42))
+* restore production storage and assets ([#113](https://github.com/zdossantos/dlp-friends/issues/113)) ([1c5c05d](https://github.com/zdossantos/dlp-friends/commit/1c5c05d3414a0c2e1d7c02ee40ca01512f07bdac))
+* **ui:** improve profile select and mobile toasts ([#95](https://github.com/zdossantos/dlp-friends/issues/95)) ([9ee9be5](https://github.com/zdossantos/dlp-friends/commit/9ee9be5c8fe009f7d815c076b443226044be6670))
+
 ## [1.1.0](https://github.com/zdossantos/dlp-friends/compare/v1.0.0...v1.1.0) (2026-08-23)
 
 

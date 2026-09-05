@@ -92,6 +92,7 @@ const previewProfile = computed<DiscoveryProfile | null>(() => {
         userId: 0,
         profileId: 0,
         displayName: displayName.value || t('profile.form.preview_name'),
+        isAdmin: false,
         avatar: selectedAvatar.value,
         age: props.age,
         bio: bio.value || null,
@@ -451,6 +452,7 @@ function showInvalidStep(errors: Record<string, string>): void {
                 v-else
                 type="submit"
                 :disabled="processing || avatars.length === 0"
+                :aria-busy="processing ? 'true' : undefined"
                 class="ml-auto min-h-12 flex-1 rounded-full bg-gradient-to-r from-primary to-primary/75 sm:max-w-72"
             >
                 <Spinner v-if="processing" />

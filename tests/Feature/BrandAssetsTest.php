@@ -33,18 +33,25 @@ class BrandAssetsTest extends TestCase
         ]);
     }
 
-    public function test_svg_favicon_uses_the_canonical_brand_mark_in_a_square_canvas(): void
+    public function test_svg_favicon_uses_the_black_brand_mark_without_a_background(): void
     {
-        $canonical = $this->loadSvg(public_path('brand/dlp-friends-logo.svg'));
         $favicon = $this->loadSvg(public_path('favicon.svg'));
-        $canonicalPaths = $this->pathData($canonical, '//*[local-name()="path"]');
-        $faviconPaths = $this->pathData($favicon, '//*[@data-brand-mark]//*[local-name()="path"]');
-        $background = (new DOMXPath($favicon))->query('/*[local-name()="svg"]/*[local-name()="rect"]')?->item(0);
+        $xpath = new DOMXPath($favicon);
+        $paths = $xpath->query('//*[local-name()="path"]');
+        $backgrounds = $xpath->query('//*[local-name()="rect"]');
 
+        $this->assertSame('512', $favicon->documentElement->getAttribute('width'));
+        $this->assertSame('512', $favicon->documentElement->getAttribute('height'));
         $this->assertSame('0 0 512 512', $favicon->documentElement->getAttribute('viewBox'));
-        $this->assertSame('#4C1D95', $background?->attributes?->getNamedItem('fill')?->nodeValue);
-        $this->assertNotEmpty($canonicalPaths);
-        $this->assertSame($canonicalPaths, $faviconPaths);
+        $this->assertCount(11, $paths);
+        $this->assertCount(0, $backgrounds);
+
+        foreach ($paths as $path) {
+            $fill = $path->attributes?->getNamedItem('fill')?->nodeValue;
+            $stroke = $path->attributes?->getNamedItem('stroke')?->nodeValue;
+
+            $this->assertContains('black', [$fill, $stroke]);
+        }
     }
 
     public function test_apple_touch_icon_is_an_intact_180_pixel_png(): void
@@ -61,7 +68,7 @@ class BrandAssetsTest extends TestCase
 
         $this->assertNotFalse($png);
         $corner = imagecolorsforindex($png, imagecolorat($png, 0, 0));
-        $this->assertSame(['red' => 76, 'green' => 29, 'blue' => 149, 'alpha' => 0], $corner);
+        $this->assertSame(127, $corner['alpha']);
     }
 
     public function test_ico_contains_intact_png_variants_for_common_browser_sizes(): void

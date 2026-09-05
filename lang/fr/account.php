@@ -31,6 +31,8 @@ return [
         'submit' => 'Créer mon compte',
         'existing_account' => 'Tu as déjà un compte ?',
         'login' => 'Se connecter',
+        'terms_acceptance' => 'J’accepte les documents suivants :',
+        'terms_required' => 'Tu dois accepter les Conditions générales d’utilisation pour créer ton compte.',
     ],
     'social_registration' => [
         'title' => 'Finalise ton inscription',

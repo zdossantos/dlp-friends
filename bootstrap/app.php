@@ -6,6 +6,7 @@ use App\Http\Middleware\EnsureUserCanAccessSocialFeatures;
 use App\Http\Middleware\EnsureUserHasRole;
 use App\Http\Middleware\HandleAppearance;
 use App\Http\Middleware\HandleInertiaRequests;
+use App\Http\Middleware\PreventSearchIndexing;
 use App\Http\Middleware\SetLocale;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -22,6 +23,8 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        $middleware->trustProxies(at: '*');
+
         $middleware->alias([
             'profile.complete' => EnsureProfileIsComplete::class,
             'onboarding.complete' => EnsureProductOnboardingIsComplete::class,
@@ -37,6 +40,8 @@ return Application::configure(basePath: dirname(__DIR__))
             HandleInertiaRequests::class,
             AddLinkHeadersForPreloadedAssets::class,
         ]);
+
+        $middleware->append(PreventSearchIndexing::class);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->render(function (TransportExceptionInterface $exception, Request $request) {

@@ -75,6 +75,14 @@ class ProductOnboardingController extends Controller
             'setting' => [
                 'pass_avatar_id' => $setting?->pass_avatar_id,
                 'like_avatar_id' => $setting?->like_avatar_id,
+                'pass_display_name' => $setting?->pass_display_name,
+                'pass_display_name_en' => $setting?->pass_display_name_en,
+                'pass_bio' => $setting?->pass_bio,
+                'pass_bio_en' => $setting?->pass_bio_en,
+                'like_display_name' => $setting?->like_display_name,
+                'like_display_name_en' => $setting?->like_display_name_en,
+                'like_bio' => $setting?->like_bio,
+                'like_bio_en' => $setting?->like_bio_en,
             ],
             'stats' => [
                 ...$counts,

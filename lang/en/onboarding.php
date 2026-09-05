@@ -25,7 +25,7 @@ return [
     ],
     'message_history' => 'Message history',
     'demo_profiles' => [
-        'pass' => ['display_name' => 'Camille', 'bio' => 'Enjoys discovering park details and watching the shows.', 'interests' => ['Shows', 'Photography']],
-        'like' => ['display_name' => 'Alex', 'bio' => 'Always happy to share a park day with fellow fans.', 'interests' => ['Attractions', 'Restaurants']],
+        'pass' => ['interests' => ['Shows', 'Photography']],
+        'like' => ['interests' => ['Attractions', 'Restaurants']],
     ],
 ];

@@ -3,6 +3,14 @@
 Ce document décrit l'architecture actuelle. Les fonctions prévues mais non
 livrées restent décrites dans le [`PRD.md`](PRD.md).
 
+## Surface légale publique
+
+Les quatre routes légales localisées sont rendues en Blade sans JavaScript,
+avec canonical, hreflang et sitemap. `PublicUrls` fournit leurs URL aux pages
+publiques et aux layouts Inertia. `terms_acceptances` enregistre de façon
+immuable `user_id`, `terms_version` et `accepted_at` dans la transaction de
+création du compte ; la suppression du compte supprime aussi cette preuve.
+
 ## Stack applicative
 
 - Laravel 13 sur PHP 8.4 ;
@@ -56,8 +64,11 @@ conversation et son message restent des données locales et ne créent
 aucun swipe, match, conversation, message ni diffusion temps réel.
 
 La table singleton `product_onboarding_settings` référence les deux avatars de
-tutoriel. Les validations imposent des avatars actifs et distincts ; les
-actions d’archivage et de suppression les protègent également côté serveur.
+tutoriel et stocke séparément leurs noms et biographies en français et en
+anglais. Le français est obligatoire ; une traduction anglaise absente se
+replie explicitement sur le français. Les validations imposent aussi des
+avatars actifs et distincts ; les actions d’archivage et de suppression les
+protègent également côté serveur.
 L’écran admin calcule ses agrégats et sa liste paginée sur le même périmètre de
 membres adultes, actifs, vérifiés et disposant d’un profil complet.
 
@@ -76,6 +87,86 @@ lien social. Une adresse déjà utilisée n'est jamais liée automatiquement. Le
 jetons d'accès, jetons de renouvellement et réponses brutes des fournisseurs ne
 sont ni persistés ni journalisés.
 
+La gestion des membres est servie par une Policy dédiée et une requête paginée
+de 20 comptes qui calcule uniquement des compteurs. La suppression passe par
+une Action transactionnelle, révoque les sessions puis met en file la
+notification après la suppression. L’ouverture d’un échange admin/membre
+verrouille la paire canonique, réutilise son match et sa conversation s’ils
+existent, ou les crée sans ajouter de swipe. Les Policies de profil et l’Action
+de blocage interdisent toutes deux de cibler un administrateur.
+
+## Accueil public et indexation
+
+La racine `/` sélectionne la langue du visiteur à partir de sa préférence puis
+de l’en-tête `Accept-Language`, et redirige vers une URL publique stable :
+`/fr` ou `/en`. Les pages publiques indexables regroupent ces landing pages,
+les documents légaux localisés et l’explication du matching sous
+`/{locale}/matching`. Elles fournissent côté serveur un titre, une description,
+une URL canonique, des alternatives `hreflang`, les données Open Graph et un
+objet JSON-LD, et sont référencées dans `sitemap.xml`. Leur contenu est rendu
+par des vues Blade autonomes qui ne chargent que la feuille de style de
+production : aucun runtime Vue/Inertia ni JavaScript applicatif n'est
+nécessaire pour les afficher ou les parcourir.
+
+Les pages d’authentification et tous les parcours applicatifs renvoient
+`X-Robots-Tag: noindex, nofollow`. La redirection publique de la racine n’envoie
+pas cet en-tête. La politique `robots.txt` autorise l’exploration afin que les
+robots puissent lire ces directives `noindex` ; elle ne remplace pas l’en-tête
+de protection attaché aux réponses privées. Un membre connecté qui ouvre la
+racine ou une landing page rejoint immédiatement la route d’aiguillage de son
+espace membre.
+
+### Standard des pages publiques indexables
+
+Toute nouvelle page publique destinée au référencement suit par défaut le
+modèle de la landing : Laravel rend un document HTML complet dans une vue Blade
+autonome et ne charge que les ressources nécessaires à son affichage. Le
+runtime Vue/Inertia et le JavaScript applicatif ne sont ajoutés que si une
+interaction riche le justifie réellement ; cette exception doit conserver un
+contenu principal lisible dans la réponse initiale et faire l’objet d’une
+vérification de performance.
+
+Chaque page publique indexable doit respecter le contrat suivant :
+
+- une URL stable et distincte par langue, avec un contenu visible, un attribut
+  `lang`, un titre et une description cohérents dans cette langue ;
+- une URL canonique, des alternatives `hreflang` réciproques, les métadonnées
+  sociales utiles et, lorsqu’elles décrivent fidèlement le contenu visible,
+  des données structurées adaptées ;
+- un lien HTML crawlable depuis une autre page publique et une entrée dans le
+  sitemap ; la détection de la langue à la racine ne remplace jamais ces URL
+  localisées explicites ;
+- du HTML sémantique, accessible au clavier, responsive et utilisable avec
+  `prefers-reduced-motion` ;
+- aucun accès à des données privées et aucune inclusion accidentelle d’une
+  route d’authentification ou applicative dans le sitemap.
+
+Une navigation Inertia qui aboutit sur l’une de ces vues Blade doit demander
+un rechargement complet avec une réponse `Inertia::location`. Sans cette
+frontière explicite, Inertia reçoit un document non-Inertia qu’il ne peut pas
+remplacer correctement, notamment après la déconnexion.
+
+Les tests vérifient au minimum les variantes française et anglaise, le HTML
+rendu côté serveur, les métadonnées, les liens localisés, le sitemap et les
+protections `noindex`. Un audit Lighthouse est exécuté sur chaque langue avant
+livraison ; le changement ne doit pas dégrader sensiblement les performances et
+vise un score maximal en SEO et en accessibilité.
+
+## Mesure d’audience et Search Console
+
+Le composant Blade `google-tags` charge Google Analytics 4 sur les documents
+publics et dans le shell Inertia uniquement lorsque `GOOGLE_ANALYTICS_ID` est
+configuré. Les pages Blade laissent GA4 enregistrer la page initiale. Le shell
+Inertia désactive cet envoi automatique et émet une page vue au chargement puis
+à chaque navigation cliente, avec la page précédente comme référent, afin
+d’éviter les doublons. Le suivi GA4 des changements fondés sur l’historique du
+navigateur doit rester désactivé puisque l’application les mesure elle-même.
+
+Avant l’envoi, les paramètres de requête, fragments et segments numériques ou
+UUID des URL sont retirés ou remplacés par `{id}`. Aucun événement applicatif
+ne doit contenir de nom, d’e-mail, d’identifiant de membre, de texte de profil
+ou de message. `GOOGLE_SITE_VERIFICATION` ajoute, lorsqu’elle est configurée,
+la balise de validation Search Console aux documents HTML.
 ## Services Docker
 
 | Service | Responsabilité |
@@ -84,19 +175,25 @@ sont ni persistés ni journalisés.
 | `worker` | Exécution des files Laravel |
 | `scheduler` | Exécution des tâches planifiées |
 | `reverb` | Serveur WebSocket |
-| `mysql` | Base relationnelle persistante |
-| `redis` | Cache, sessions et files sur le réseau privé |
-| `minio` | Stockage objet compatible S3 |
+| MySQL Coolify indépendant | Base relationnelle persistante sur un réseau privé externe |
+| Redis Coolify indépendant | Cache, sessions et files sur un réseau privé externe authentifié |
+| Garage Coolify indépendant | Stockage objet privé compatible S3 |
 | `mailpit` | Capture locale des e-mails |
 
-Les quatre services applicatifs utilisent la même image Docker. MySQL, Redis,
-le worker et le scheduler ne publient aucun port sur l'hôte. `compose.yaml`
-décrit la stack locale complète, dont Mailpit ; une configuration de production
-doit exclure Mailpit et fournir un véritable transport SMTP.
+Les quatre services applicatifs utilisent la même image Docker. MySQL et Redis
+sont des ressources Coolify indépendantes ; le worker et le scheduler ne publient
+aucun port sur l'hôte. `compose.yaml`
+décrit la stack locale complète, dont Mailpit. `compose.production.yaml`
+décrit la stack applicative Coolify, exclut Mailpit, MySQL, Redis et Garage, et
+expose seulement les ports internes de `web` et `reverb` au proxy Coolify.
 
 Le conteneur applicatif ne lance aucune migration au démarrage. Les migrations
 s'exécutent explicitement avec `php artisan migrate --force` et doivent rester
 compatibles avec la version applicative précédente pendant un déploiement.
+
+La préparation et la validation de la bascule réelle sont décrites dans
+[`mysql-externalization.md`](mysql-externalization.md). Le Compose ne gère ni le
+cycle de vie de MySQL ni ses identifiants administrateur en production.
 
 ## Environnements
 
@@ -104,8 +201,8 @@ compatibles avec la version applicative précédente pendant un déploiement.
 | --- | --- | --- | --- |
 | Base de données | MySQL Docker | MySQL de service pour les suites Pest | MySQL privé |
 | Cache et files | Redis Docker | Stockages `array` et files synchrones | Redis privé |
-| Fichiers | Disque local par défaut | Disque local éphémère | Stockage S3-compatible prévu |
-| E-mails | Mailpit | Transport `array` | Transport à définir avant mise en ligne |
+| Fichiers | MinIO via le disque `s3` | Disque local éphémère | Garage privé via le disque `s3` |
+| E-mails | Mailpit | Transport `array` | Resend via le mailer `resend` |
 
 Les secrets sont fournis par variables d'environnement et ne sont jamais
 intégrés à l'image ou au dépôt.
@@ -113,9 +210,15 @@ intégrés à l'image ou au dépôt.
 ## Déploiement
 
 `main` est l'unique branche de production. Après les contrôles de pull request,
-Coolify utilise l'image et la configuration Compose versionnée comme base de
-déploiement. La sélection des services de production et les secrets restent des
-réglages opérateur ; Mailpit doit en être exclu. GitHub Actions vérifie
+Coolify construit la cible `runtime` définie par `compose.production.yaml`, puis
+réutilise cette image pour `web`, `worker`, `scheduler` et `reverb`. MySQL,
+Redis et Garage possèdent leurs volumes dans des ressources Coolify indépendantes.
+Coolify gère le réseau propre au stack et son raccordement
+à la destination prédéfinie ; le Compose ne déclare aucun réseau personnalisé.
+Les quatre processus Laravel utilisent `DB_HOST` et `DB_PORT` ; l’opérateur configure leurs
+sauvegardes ainsi que les secrets et domaines HTTPS/WSS dans Coolify. Les
+variables critiques utilisent l’interpolation Compose obligatoire et bloquent
+une configuration incomplète avant le démarrage. GitHub Actions vérifie
 l'application et l'image Docker mais ne déclenche pas directement le
 déploiement.
 

@@ -42,6 +42,10 @@ class ProductOnboardingTest extends TestCase
                 ->where('status', ProductOnboardingStatus::InProgress->value)
                 ->where('step', ProductOnboardingStep::PassDemo->value)
                 ->has('demoProfiles', 2)
+                ->where('demoProfiles.0.displayName', 'Camille')
+                ->where('demoProfiles.0.bio', 'Aime découvrir les détails du parc et profiter des spectacles.')
+                ->where('demoProfiles.1.displayName', 'Alex')
+                ->where('demoProfiles.1.bio', 'Toujours partant pour partager une journée conviviale entre fans.')
                 ->where('demoProfiles.0.avatar', [
                     'name' => $passAvatar->name,
                     'imageUrl' => route('avatars.image', $passAvatar),
@@ -57,6 +61,59 @@ class ProductOnboardingTest extends TestCase
                 ->missing('userId')
                 ->missing('matchId')
                 ->missing('conversationId'));
+    }
+
+    public function test_product_onboarding_uses_configured_copy_for_the_active_locale(): void
+    {
+        config()->set('inertia.testing.ensure_pages_exist', false);
+        $this->configureDemoAvatars();
+        ProductOnboardingSetting::query()->whereKey(ProductOnboardingSetting::SINGLETON_ID)->update([
+            'pass_display_name' => 'Camille FR',
+            'pass_display_name_en' => 'Camille EN',
+            'pass_bio' => 'Biographie française à passer.',
+            'pass_bio_en' => 'English biography to pass.',
+            'like_display_name' => 'Alex FR',
+            'like_display_name_en' => 'Alex EN',
+            'like_bio' => 'Biographie française à découvrir.',
+            'like_bio_en' => 'English biography to discover.',
+        ]);
+        $this->assertDatabaseHas('product_onboarding_settings', [
+            'id' => ProductOnboardingSetting::SINGLETON_ID,
+            'pass_display_name' => 'Camille FR',
+            'like_bio_en' => 'English biography to discover.',
+        ]);
+        $user = User::factory()->withProfile(false)->create(['locale' => 'en']);
+
+        $this->actingAs($user)->get(route('onboarding.show'))
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('demoProfiles.0.displayName', 'Camille EN')
+                ->where('demoProfiles.0.bio', 'English biography to pass.')
+                ->where('demoProfiles.1.displayName', 'Alex EN')
+                ->where('demoProfiles.1.bio', 'English biography to discover.'));
+    }
+
+    public function test_english_tutorial_copy_falls_back_to_french(): void
+    {
+        config()->set('inertia.testing.ensure_pages_exist', false);
+        $this->configureDemoAvatars();
+        ProductOnboardingSetting::query()->whereKey(ProductOnboardingSetting::SINGLETON_ID)->update([
+            'pass_display_name' => 'Camille de repli',
+            'pass_display_name_en' => null,
+            'pass_bio' => 'Biographie française de repli.',
+            'pass_bio_en' => null,
+            'like_display_name' => 'Alex de repli',
+            'like_display_name_en' => null,
+            'like_bio' => 'Autre biographie française de repli.',
+            'like_bio_en' => null,
+        ]);
+        $user = User::factory()->withProfile(false)->create(['locale' => 'en']);
+
+        $this->actingAs($user)->get(route('onboarding.show'))
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('demoProfiles.0.displayName', 'Camille de repli')
+                ->where('demoProfiles.0.bio', 'Biographie française de repli.')
+                ->where('demoProfiles.1.displayName', 'Alex de repli')
+                ->where('demoProfiles.1.bio', 'Autre biographie française de repli.'));
     }
 
     public function test_completed_tutorial_does_not_auto_launch(): void

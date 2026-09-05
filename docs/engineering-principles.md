@@ -16,6 +16,7 @@ Le code de DLP Friends doit être le plus simple, lisible et maintenable possibl
 - **Conventions avant abstractions** : utiliser les conventions Laravel, Eloquent, Inertia et Vue avant de créer une couche maison.
 - **Une responsabilité claire** : chaque classe, composant et fonction doit avoir un rôle compréhensible sans lire tout le projet.
 - **Tests ciblés** : tester les règles métier et les cas limites qui comptent, sans tester les détails d'implémentation ou la bibliothèque elle-même.
+- **Pages publiques légères** : rendre côté serveur les pages indexables et ne charger Vue/Inertia ou du JavaScript que lorsqu’une interaction utile le nécessite.
 
 ## Règles d'abstraction
 
@@ -35,5 +36,7 @@ Avant toute fusion, vérifier :
 3. Chaque nouveau fichier a-t-il une responsabilité nécessaire et explicite ?
 4. Les tests couvrent-ils le comportement utile, sans sur-spécifier l'implémentation ?
 5. La modification reste-t-elle strictement dans le périmètre documenté ?
+6. Une nouvelle page publique fournit-elle son contenu dans le HTML initial, ses variantes localisées et ses métadonnées sans charger de bundle applicatif inutile ?
+7. Les performances, l’accessibilité et le SEO de chaque langue ont-ils été vérifiés sans régression significative ?
 
 Si une réponse est non, simplifier avant de fusionner.

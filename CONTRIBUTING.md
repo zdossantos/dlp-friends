@@ -78,6 +78,8 @@ prépare `CHANGELOG.md` ainsi que la prochaine version SemVer.
 
 La publication est volontaire : merger la Release PR avec **Squash & Merge**
 finalise le changelog, crée le tag `vX.Y.Z` et la GitHub Release correspondante.
-Aucun package npm ou Composer n'est publié. La politique détaillée de qualité,
-de CI et de livraison est définie dans
+GitHub Actions publie ensuite l’image AMD64 sur GHCR, vérifie son démarrage
+et transmet son digest à Coolify. Un merge ordinaire dans `main` ne déploie
+pas l’application. Aucun package npm ou Composer n’est publié. La politique
+détaillée de qualité, de CI et de livraison est définie dans
 [`docs/quality-ci-cd.md`](docs/quality-ci-cd.md).

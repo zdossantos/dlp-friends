@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Contracts\DiscoveryTieBreaker;
 use App\Data\DiscoveryProfileData;
 use App\Enums\ProfileVisibility;
+use App\Enums\RoleName;
 use App\Enums\UserStatus;
 use App\Models\Avatar;
 use App\Models\Interest;
@@ -56,7 +57,7 @@ final readonly class DiscoveryService
             })
             ->with([
                 'avatar',
-                'user',
+                'user.roles',
                 'interests' => $this->activeInterests(...),
             ])
             ->get();
@@ -88,6 +89,7 @@ final readonly class DiscoveryService
                     userId: $profile->user->id,
                     profileId: $profile->id,
                     displayName: $profile->display_name,
+                    isAdmin: $profile->user->hasRole(RoleName::Admin),
                     avatar: [
                         'id' => $avatar->id,
                         'name' => $avatar->name,

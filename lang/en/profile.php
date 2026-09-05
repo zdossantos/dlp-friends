@@ -20,6 +20,7 @@ return [
         'frequency_rarely' => 'Rarely', 'frequency_sometimes' => 'Sometimes', 'frequency_often' => 'Often',
         'frequency_very_often' => 'Very often', 'frequency_unknown' => 'Not provided',
         'visible' => 'Visible', 'hidden' => 'Hidden',
+        'administrator' => 'Administrator',
     ],
     'avatar' => [
         'image_alt' => ':name avatar', 'carousel_role' => 'carousel', 'selected_avatar' => 'Selected avatar: :name',

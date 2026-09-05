@@ -2,6 +2,7 @@
 
 namespace App\Actions;
 
+use App\Enums\RoleName;
 use App\Models\Block;
 use App\Models\MemberMatch;
 use App\Models\User;
@@ -12,7 +13,7 @@ final class BlockUser
 {
     public function handle(User $blocker, User $blocked): Block
     {
-        if ($blocker->is($blocked)) {
+        if ($blocker->is($blocked) || $blocked->loadMissing('roles')->hasRole(RoleName::Admin)) {
             throw ValidationException::withMessages([
                 'member' => __('blocking.unavailable'),
             ]);
@@ -23,11 +24,19 @@ final class BlockUser
                 ? [$blocker->id, $blocked->id]
                 : [$blocked->id, $blocker->id];
 
-            User::query()
+            $lockedBlocked = User::query()
                 ->whereKey([$lowId, $highId])
                 ->orderBy('id')
                 ->lockForUpdate()
-                ->get();
+                ->get()
+                ->firstWhere('id', $blocked->id);
+
+            if (! $lockedBlocked instanceof User
+                || $lockedBlocked->load('roles')->hasRole(RoleName::Admin)) {
+                throw ValidationException::withMessages([
+                    'member' => __('blocking.unavailable'),
+                ]);
+            }
 
             $block = Block::query()->firstOrCreate([
                 'blocker_user_id' => $blocker->id,

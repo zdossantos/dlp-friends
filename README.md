@@ -1,5 +1,8 @@
 # DLP Friends
 
+Les pages légales publiques sont disponibles en français et en anglais. En
+production, définir `LEGAL_CONTACT_EMAIL` avant de les publier.
+
 DLP Friends est un projet d'application de rencontres amicales entre fans
 majeurs de Disneyland Paris. Son MVP vise à permettre de créer un profil,
 découvrir des membres ayant des passions communes et échanger après un match
@@ -15,7 +18,7 @@ Le projet est indépendant et n'est affilié ni à Disney ni à Disneyland Paris
 - Tailwind CSS et Reka UI ;
 - MySQL, Redis et Laravel Reverb ;
 - Bun 1.3.14 pour les dépendances et commandes frontend ;
-- Docker Compose pour l'environnement local.
+- Docker Compose pour l'environnement local et la production Coolify.
 
 ## Prérequis
 
@@ -88,6 +91,17 @@ docker compose --profile test rm -f mysql-test
 
 Les contrôles individuels sont décrits dans
 [`CONTRIBUTING.md`](CONTRIBUTING.md).
+
+## Production
+
+[`compose.production.yaml`](compose.production.yaml) décrit la stack déployée
+par Coolify depuis `main`. Elle exclut Mailpit, rejoint un service MySQL indépendant
+sur un réseau privé externe et conserve Redis et MinIO dans la stack. Elle utilise
+Resend pour les e-mails transactionnels. Les secrets
+et domaines ne sont jamais versionnés : ils sont renseignés dans Coolify.
+
+La procédure complète de premier déploiement, migration, santé, sauvegarde et
+restauration se trouve dans [`docs/operations.md`](docs/operations.md).
 
 ## Documentation
 

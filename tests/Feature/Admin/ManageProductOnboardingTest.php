@@ -26,12 +26,28 @@ class ManageProductOnboardingTest extends TestCase
         $this->actingAs($admin)->patch(route('admin.onboarding.update'), [
             'pass_avatar_id' => $passAvatar->id,
             'like_avatar_id' => $likeAvatar->id,
+            'pass_display_name' => 'Camille configurée',
+            'pass_display_name_en' => 'Configured Camille',
+            'pass_bio' => 'Bio française du profil à passer.',
+            'pass_bio_en' => 'English bio for the profile to pass.',
+            'like_display_name' => 'Alex configuré',
+            'like_display_name_en' => 'Configured Alex',
+            'like_bio' => 'Bio française du profil à découvrir.',
+            'like_bio_en' => 'English bio for the profile to discover.',
         ])->assertRedirect();
 
         $this->assertDatabaseHas('product_onboarding_settings', [
             'id' => ProductOnboardingSetting::SINGLETON_ID,
             'pass_avatar_id' => $passAvatar->id,
             'like_avatar_id' => $likeAvatar->id,
+            'pass_display_name' => 'Camille configurée',
+            'pass_display_name_en' => 'Configured Camille',
+            'pass_bio' => 'Bio française du profil à passer.',
+            'pass_bio_en' => 'English bio for the profile to pass.',
+            'like_display_name' => 'Alex configuré',
+            'like_display_name_en' => 'Configured Alex',
+            'like_bio' => 'Bio française du profil à découvrir.',
+            'like_bio_en' => 'English bio for the profile to discover.',
         ]);
 
         $this->actingAs($admin)->patch(route('admin.onboarding.update'), [
@@ -43,6 +59,35 @@ class ManageProductOnboardingTest extends TestCase
             'pass_avatar_id' => $inactive->id,
             'like_avatar_id' => $likeAvatar->id,
         ])->assertSessionHasErrors('pass_avatar_id');
+    }
+
+    public function test_profile_copy_is_validated_server_side(): void
+    {
+        $admin = User::factory()->withProfile()->admin()->create();
+        [$passAvatar, $likeAvatar] = Avatar::factory()->count(2)->create();
+
+        $this->actingAs($admin)->patch(route('admin.onboarding.update'), [
+            'pass_avatar_id' => $passAvatar->id,
+            'like_avatar_id' => $likeAvatar->id,
+            'pass_display_name' => '',
+            'pass_display_name_en' => str_repeat('a', 81),
+            'pass_bio' => '',
+            'pass_bio_en' => str_repeat('a', 501),
+            'like_display_name' => str_repeat('a', 81),
+            'like_display_name_en' => null,
+            'like_bio' => str_repeat('a', 501),
+            'like_bio_en' => null,
+        ])->assertSessionHasErrors([
+            'pass_display_name',
+            'pass_display_name_en',
+            'pass_bio',
+            'pass_bio_en',
+            'like_display_name',
+            'like_bio',
+        ])->assertSessionDoesntHaveErrors([
+            'like_display_name_en',
+            'like_bio_en',
+        ]);
     }
 
     public function test_non_admin_cannot_manage_product_onboarding(): void

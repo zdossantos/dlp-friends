@@ -47,6 +47,16 @@ function renderedContrastIsAtLeastScript(string $backgroundSelector, string $for
 
 beforeEach(fn () => Storage::fake('local'));
 
+test('member pages do not expose public legal navigation', function () {
+    $this->actingAs(discoveryMember('Alice'));
+
+    visit('/discover')
+        ->on()->mobile()
+        ->assertNotPresent('a[href="/fr/conditions-generales-utilisation"]')
+        ->assertNotPresent('a[href="/fr/politique-confidentialite"]')
+        ->assertNoJavaScriptErrors();
+});
+
 test('discovery renders its deferred empty state and limits the stack to five profiles', function () {
     $actor = discoveryMember('Alice');
     $this->actingAs($actor);
@@ -134,6 +144,24 @@ test('discovery decisions are icon controls below the card with accessible touch
         )
         ->assertScript(
             "[...document.querySelectorAll('[data-test=discovery-actions] button')].every((button) => button.getBoundingClientRect().width >= 44 && button.getBoundingClientRect().height >= 44)",
+            true,
+        )
+        ->assertNoJavaScriptErrors();
+});
+
+test('an administrator is identified on discovery cards with a golden border', function () {
+    $actor = discoveryMember('Alice');
+    $admin = User::factory()->withProfile()->admin()->create();
+    Storage::disk('local')->put($admin->profile->avatar->image_path, base64_decode(
+        'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScL8WQAAAABJRU5ErkJggg==',
+    ));
+    $this->actingAs($actor);
+
+    visit('/discover')
+        ->assertPresent('[data-test="admin-discovery-badge"]')
+        ->assertSee('Administrateur')
+        ->assertScript(
+            "document.querySelector('[data-test=discovery-card]').classList.contains('border-amber-400') && getComputedStyle(document.querySelector('[data-test=discovery-card]')).borderTopWidth === '2px'",
             true,
         )
         ->assertNoJavaScriptErrors();
@@ -313,6 +341,82 @@ test('an accepted swipe refreshes only the updated discovery data', function () 
         );
 });
 
+test('a discovery decision optimistically reveals the next card before the request finishes', function () {
+    $actor = discoveryMember('Alice');
+    discoveryMember('Basile');
+    discoveryMember('Chloé');
+    $this->actingAs($actor);
+
+    $page = visit('/discover')->assertSee('Basile');
+    $page->assertScript(
+        "document.querySelectorAll('[data-test=discovery-card-stack-item]').length",
+        2,
+    );
+    $page->script(<<<'JS'
+        window.__swipeRequestCount = 0;
+        window.__pendingOptimisticSwipes = [];
+        window.__initialActiveProfileId = document
+            .querySelector('[data-test=discovery-card-stack-item]:not([aria-hidden])')
+            .dataset.profileUserId;
+        window.__realOptimisticXhrOpen = XMLHttpRequest.prototype.open;
+        window.__realOptimisticXhrSend = XMLHttpRequest.prototype.send;
+        XMLHttpRequest.prototype.open = function (method, url, ...rest) {
+            this.__optimisticRequestUrl = String(url);
+
+            return window.__realOptimisticXhrOpen.call(this, method, url, ...rest);
+        };
+        XMLHttpRequest.prototype.send = function (body) {
+            if (this.__optimisticRequestUrl.includes('/swipe')) {
+                window.__swipeRequestCount += 1;
+                window.__pendingOptimisticSwipes.push({ request: this, body });
+
+                return;
+            }
+
+            return window.__realOptimisticXhrSend.call(this, body);
+        };
+        true;
+    JS);
+
+    $page->script(<<<'JS'
+        document.querySelector('[aria-label="Découvrir ce profil"]:not([disabled])').click();
+        new Promise((resolve) => requestAnimationFrame(() => {
+            const activeCard = document.querySelector(
+                '[data-test=discovery-card-stack-item]:not([aria-hidden])',
+            );
+            window.__optimisticCardChanged =
+                activeCard.dataset.profileUserId !== window.__initialActiveProfileId;
+            window.__optimisticNextCardLocked = activeCard
+                .querySelector('[aria-label="Découvrir ce profil"]')
+                .disabled;
+            activeCard
+                .querySelector('[aria-label="Découvrir ce profil"]')
+                .click();
+            window.__likeExitCreated = Boolean(
+                document.querySelector(
+                    '[data-test="discovery-exiting-card"][data-decision="like"]',
+                ),
+            );
+            resolve(true);
+        }));
+    JS);
+    $page->assertScript('window.__swipeRequestCount', 2)
+        ->assertScript('window.__optimisticCardChanged', true)
+        ->assertScript('window.__optimisticNextCardLocked', false)
+        ->assertScript('window.__likeExitCreated', true);
+
+    $page->script(<<<'JS'
+        window.__pendingOptimisticSwipes.forEach(({ request, body }) => {
+            window.__realOptimisticXhrSend.call(request, body);
+        });
+        true;
+    JS);
+    $page->assertNotPresent(
+        '[data-test=discovery-card-stack-item]:not([aria-hidden])',
+    )
+        ->assertNoJavaScriptErrors();
+});
+
 test('pointer gestures follow the card and enforce the horizontal threshold', function () {
     $actor = discoveryMember('Alice');
     $target = discoveryMember('Basile');
@@ -323,8 +427,14 @@ test('pointer gestures follow the card and enforce the horizontal threshold', fu
     $actions = "document.querySelector('[data-test=\"discovery-card-stack-item\"] [data-test=\"discovery-actions\"]')";
 
     $page->script("{$card}.setPointerCapture = () => {}; {$card}.hasPointerCapture = () => false; {$card}.releasePointerCapture = () => {};");
-    $page->script("{$card}.dispatchEvent(new PointerEvent('pointerdown', { pointerId: 1, clientX: 100, clientY: 100, bubbles: true })); {$card}.dispatchEvent(new PointerEvent('pointermove', { pointerId: 1, clientX: 171, clientY: 100, bubbles: true }));");
+    $page->script("{$card}.dispatchEvent(new PointerEvent('pointerdown', { pointerId: 1, clientX: 100, clientY: 100, bubbles: true })); {$card}.dispatchEvent(new PointerEvent('pointermove', { pointerId: 1, clientX: 130, clientY: 100, bubbles: true }));");
+    $page->assertScript("Number(document.querySelector('[data-test=discovery-like-constellation]').style.opacity) === 0", true)
+        ->assertScript("document.querySelectorAll('[data-test=discovery-like-constellation] [data-test=discovery-star]').length >= 20", true);
+    $page->script("{$card}.dispatchEvent(new PointerEvent('pointermove', { pointerId: 1, clientX: 171, clientY: 100, bubbles: true }));");
     $page->assertScript("{$card}.style.transform.includes('71px')", true)
+        ->assertScript("Number(document.querySelector('[data-test=discovery-like-constellation]').style.opacity) > 0", true)
+        ->assertScript("Number(document.querySelector('[data-test=discovery-like-constellation]').style.opacity) <= 0.7", true)
+        ->assertScript("getComputedStyle(document.querySelector('[data-test=discovery-like-constellation]')).transitionDuration", '0s')
         ->assertScript("getComputedStyle({$actions}).transform", 'none');
     $page->script("{$card}.dispatchEvent(new PointerEvent('pointerup', { pointerId: 1, clientX: 171, clientY: 100, bubbles: true }));");
     $page->assertScript("{$card}.style.transform.includes('0px')", true);
@@ -338,6 +448,120 @@ test('pointer gestures follow the card and enforce the horizontal threshold', fu
         'target_user_id' => $target->id,
         'decision' => SwipeDecision::Like->value,
     ]);
+});
+
+test('the pass button launches the card exit to the left', function () {
+    $actor = discoveryMember('Alice');
+    discoveryMember('Basile');
+    $this->actingAs($actor);
+
+    $page = visit('/discover');
+    $page->script(<<<'JS'
+        new Promise((resolve) => {
+            const observer = new MutationObserver(() => {
+                const card = document.querySelector('[data-test=discovery-exiting-card]');
+
+                if (!card) {
+                    return;
+                }
+
+                requestAnimationFrame(() => {
+                    window.__passButtonSwipeFirstFrame = card.style.transform;
+                    window.__passButtonSwipeAnimation = getComputedStyle(card).animationName;
+                    requestAnimationFrame(() => {
+                        window.__passButtonSwipeFinalFrame = card.style.transform;
+                        window.__passButtonScrollWidth = document.documentElement.scrollWidth;
+                        window.__passButtonClientWidth = document.documentElement.clientWidth;
+                        observer.disconnect();
+                        resolve(true);
+                    });
+                });
+            });
+            observer.observe(document.body, { childList: true, subtree: true });
+            document.querySelector('[aria-label="Passer ce profil"]').click();
+        });
+    JS);
+    $page->assertPresent('[data-test="discovery-exiting-card"][data-decision="pass"]')
+        ->assertAttribute(
+            '[data-test="discovery-exiting-card"]',
+            'data-exit-direction',
+            'left',
+        )
+        ->assertScript(
+            "window.__passButtonSwipeFirstFrame.includes('translate3d(0px')",
+            true,
+        )
+        ->assertScript(
+            "window.__passButtonSwipeAnimation.includes('motion-card-exit-left')",
+            true,
+        )
+        ->assertScript('window.__passButtonScrollWidth === window.__passButtonClientWidth', true)
+        ->assertNoJavaScriptErrors();
+});
+
+test('the discover button launches the sparkling card exit to the right', function () {
+    $actor = discoveryMember('Alice');
+    discoveryMember('Basile');
+    $this->actingAs($actor);
+
+    $page = visit('/discover');
+    $page->script(<<<'JS'
+        new Promise((resolve) => {
+        window.__buttonSwipeFirstFrame = null;
+        const observer = new MutationObserver(() => {
+            const card = document.querySelector('[data-test=discovery-exiting-card]');
+
+            if (!card || window.__buttonSwipeFirstFrame !== null) {
+                return;
+            }
+
+            requestAnimationFrame(() => {
+                window.__buttonSwipeFirstFrame = card.style.transform;
+                requestAnimationFrame(() => {
+                    window.__buttonSwipeFinalFrame = card.style.transform;
+                    window.__buttonSwipeStarOpacity = card
+                        .querySelector('[data-test=discovery-like-constellation]')
+                        .style.opacity;
+                    window.__buttonSwipeAnimation = getComputedStyle(card).animationName;
+                    window.__buttonSwipeStarCount = card.querySelectorAll(
+                        '[data-test=discovery-star]',
+                    ).length;
+                    const sheetTop = card
+                        .querySelector('[data-test=discovery-information-sheet]')
+                        .getBoundingClientRect().top;
+                    window.__buttonSwipeStarsReachSheet = Array.from(
+                        card.querySelectorAll('[data-test=discovery-star]'),
+                    ).some((star) => star.getBoundingClientRect().top > sheetTop);
+                    observer.disconnect();
+                    resolve(true);
+                });
+            });
+        });
+        observer.observe(document.body, { childList: true, subtree: true });
+        document.querySelector('[aria-label="Découvrir ce profil"]').click();
+        });
+    JS);
+    $page->assertPresent('[data-test="discovery-exiting-card"][data-decision="like"]')
+        ->assertAttribute(
+            '[data-test="discovery-exiting-card"]',
+            'data-exit-direction',
+            'right',
+        )
+        ->assertScript(
+            "window.__buttonSwipeFirstFrame.includes('translate3d(0px')",
+            true,
+        )
+        ->assertScript(
+            "window.__buttonSwipeAnimation.includes('motion-card-exit-right')",
+            true,
+        )
+        ->assertScript(
+            'window.__buttonSwipeStarOpacity',
+            '0.7',
+        )
+        ->assertScript('window.__buttonSwipeStarCount >= 32', true)
+        ->assertScript('window.__buttonSwipeStarsReachSheet', true)
+        ->assertNoJavaScriptErrors();
 });
 
 test('a tap opens the profile while a horizontal drag keeps the swipe interaction', function () {
@@ -370,6 +594,21 @@ test('vertical and cancelled pointer gestures return the card to its centre', fu
     $page->assertScript("{$card}.style.transform.includes('0px')", true);
     $page->script("{$card}.dispatchEvent(new PointerEvent('pointerdown', { pointerId: 4, clientX: 100, clientY: 100, bubbles: true })); {$card}.dispatchEvent(new PointerEvent('pointermove', { pointerId: 4, clientX: 190, clientY: 100, bubbles: true })); {$card}.dispatchEvent(new PointerEvent('pointercancel', { pointerId: 4, clientX: 190, clientY: 100, bubbles: true }));");
     $page->assertScript("{$card}.style.transform.includes('0px')", true);
+    $this->assertDatabaseCount('swipes', 0);
+});
+
+test('a stale pointer capture event does not cancel the next drag', function () {
+    $actor = discoveryMember('Alice');
+    discoveryMember('Basile');
+    $this->actingAs($actor);
+
+    $page = visit('/discover');
+    $card = "document.querySelector('[data-test=\"discovery-card-stack-item\"] [tabindex=\"0\"]')";
+    $page->script("{$card}.setPointerCapture = () => {}; {$card}.hasPointerCapture = () => false; {$card}.releasePointerCapture = () => {};");
+    $page->script("{$card}.dispatchEvent(new PointerEvent('pointerdown', { pointerId: 31, isPrimary: true, clientX: 100, clientY: 100, bubbles: true })); {$card}.dispatchEvent(new PointerEvent('pointermove', { pointerId: 31, clientX: 140, clientY: 100, bubbles: true })); {$card}.dispatchEvent(new PointerEvent('pointerup', { pointerId: 31, clientX: 140, clientY: 100, bubbles: true }));");
+    $page->script("{$card}.dispatchEvent(new PointerEvent('pointerdown', { pointerId: 32, isPrimary: true, clientX: 100, clientY: 100, bubbles: true })); {$card}.dispatchEvent(new PointerEvent('lostpointercapture', { pointerId: 31, bubbles: true })); {$card}.dispatchEvent(new PointerEvent('pointermove', { pointerId: 32, clientX: 140, clientY: 100, bubbles: true }));");
+    $page->assertScript("{$card}.style.transform.includes('40px')", true)
+        ->assertNoJavaScriptErrors();
     $this->assertDatabaseCount('swipes', 0);
 });
 
@@ -415,6 +654,26 @@ test('a reciprocal like opens a dismissible match dialog only once', function ()
         ->assertSee('Basile souhaite aussi te découvrir.')
         ->assertPresent('[data-slot="dialog-title"]')
         ->assertPresent('[data-slot="dialog-description"]')
+        ->assertPresent('[data-test="match-celebration-layer"]')
+        ->assertPresent('[data-test="match-magic"]')
+        ->assertAttribute('[data-test="match-magic"]', 'aria-hidden', 'true')
+        ->assertPresent('[data-test="match-firework-burst"]')
+        ->assertScript(
+            "getComputedStyle(document.querySelector('[data-test=match-firework-burst]')).animationDuration",
+            '4s',
+        )
+        ->assertScript(
+            "Math.abs(document.querySelector('[data-test=match-celebration-layer]').getBoundingClientRect().width - window.innerWidth) < 1 && Math.abs(document.querySelector('[data-test=match-celebration-layer]').getBoundingClientRect().height - window.innerHeight) < 1",
+            true,
+        )
+        ->assertScript(
+            "getComputedStyle(document.querySelectorAll('[data-test=match-magic] .motion-match-jewel')[17]).animationDelay",
+            '0.7s',
+        )
+        ->assertScript(
+            "document.querySelector('[data-test=open-match-conversation]').matches(':disabled')",
+            false,
+        )
         ->assertScript(renderedContrastIsAtLeastScript(
             '[data-slot="dialog-content"]',
             '[data-slot="dialog-description"]',
@@ -465,11 +724,21 @@ test('a member sends the first message immediately after opening a new match con
     JS);
 
     $page->fill('content', 'Bonjour Basile !');
-    $page->script("document.querySelector('[aria-label=\"Envoyer le message\"]').click(); document.querySelector('[aria-label=\"Envoyer le message\"]').click(); true;");
+    $page->script(<<<'JS'
+        const sendButton = document.querySelector('[aria-label="Envoyer le message"]');
+        sendButton.click();
+        sendButton.click();
+        new Promise((resolve) => requestAnimationFrame(() => {
+            window.__composerBusy = sendButton.getAttribute('aria-busy');
+            resolve(true);
+        }));
+    JS);
     $page
+        ->assertScript('window.__composerBusy', 'true')
         ->assertSee('Bonjour Basile !')
         ->assertValue('content', '')
         ->assertScript("document.querySelectorAll('[data-message-id]').length", 1)
+        ->assertPresent('[data-message-id].motion-message-enter')
         ->assertNoJavaScriptErrors();
 
     $conversation = MemberMatch::query()->firstOrFail()->conversation()->firstOrFail();

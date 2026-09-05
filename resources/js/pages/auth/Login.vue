@@ -100,6 +100,7 @@ defineProps<{
                 type="submit"
                 class="mt-4 w-full"
                 :disabled="processing"
+                :aria-busy="processing ? 'true' : undefined"
                 data-test="login-button"
             >
                 <Spinner v-if="processing" />

@@ -10,6 +10,7 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useTranslations } from '@/composables/useTranslations';
 import { update } from '@/routes/admin/onboarding';
@@ -40,6 +41,14 @@ const props = defineProps<{
     setting: {
         pass_avatar_id: number | null;
         like_avatar_id: number | null;
+        pass_display_name: string | null;
+        pass_display_name_en: string | null;
+        pass_bio: string | null;
+        pass_bio_en: string | null;
+        like_display_name: string | null;
+        like_display_name_en: string | null;
+        like_bio: string | null;
+        like_bio_en: string | null;
     };
     stats: {
         not_started: number;
@@ -147,71 +156,205 @@ function formatDate(value: string): string {
                     class="grid gap-5 lg:grid-cols-2"
                     v-slot="{ errors, processing }"
                 >
-                    <div class="grid gap-2">
-                        <Label for="pass_avatar_id">{{
-                            t('administration.onboarding.pass_avatar')
-                        }}</Label>
-                        <select
-                            id="pass_avatar_id"
-                            name="pass_avatar_id"
-                            required
-                            :value="setting.pass_avatar_id ?? ''"
-                            class="h-10 rounded-md border bg-background px-3 text-sm"
-                        >
-                            <option value="" disabled>
-                                {{
-                                    t('administration.onboarding.choose_avatar')
-                                }}
-                            </option>
-                            <option
-                                v-for="avatar in avatars"
-                                :key="avatar.id"
-                                :value="avatar.id"
+                    <fieldset class="grid gap-4 rounded-xl border p-4">
+                        <legend class="px-1 font-medium">
+                            {{ t('administration.onboarding.pass_profile') }}
+                        </legend>
+                        <div class="grid gap-2">
+                            <Label for="pass_avatar_id">{{
+                                t('administration.onboarding.pass_avatar')
+                            }}</Label>
+                            <select
+                                id="pass_avatar_id"
+                                name="pass_avatar_id"
+                                required
+                                :value="setting.pass_avatar_id ?? ''"
+                                class="h-10 rounded-md border bg-background px-3 text-sm"
                             >
-                                {{ avatar.name }}
-                            </option>
-                        </select>
-                        <InputError :message="errors.pass_avatar_id" />
-                        <img
-                            v-if="avatarById(setting.pass_avatar_id)"
-                            :src="avatarById(setting.pass_avatar_id)!.image_url"
-                            :alt="avatarById(setting.pass_avatar_id)!.name"
-                            class="mt-2 size-24 rounded-2xl object-cover"
-                        />
-                    </div>
+                                <option value="" disabled>
+                                    {{
+                                        t(
+                                            'administration.onboarding.choose_avatar',
+                                        )
+                                    }}
+                                </option>
+                                <option
+                                    v-for="avatar in avatars"
+                                    :key="avatar.id"
+                                    :value="avatar.id"
+                                >
+                                    {{ avatar.name }}
+                                </option>
+                            </select>
+                            <InputError :message="errors.pass_avatar_id" />
+                            <img
+                                v-if="avatarById(setting.pass_avatar_id)"
+                                :src="
+                                    avatarById(setting.pass_avatar_id)!
+                                        .image_url
+                                "
+                                :alt="avatarById(setting.pass_avatar_id)!.name"
+                                class="mt-2 size-24 rounded-2xl object-cover"
+                            />
+                        </div>
+                        <div class="grid gap-2">
+                            <Label for="pass_display_name">{{
+                                t('administration.onboarding.display_name_fr')
+                            }}</Label>
+                            <Input
+                                id="pass_display_name"
+                                name="pass_display_name"
+                                required
+                                maxlength="80"
+                                :default-value="setting.pass_display_name ?? ''"
+                            />
+                            <InputError :message="errors.pass_display_name" />
+                        </div>
+                        <div class="grid gap-2">
+                            <Label for="pass_bio">{{
+                                t('administration.onboarding.bio_fr')
+                            }}</Label>
+                            <textarea
+                                id="pass_bio"
+                                name="pass_bio"
+                                required
+                                maxlength="500"
+                                :value="setting.pass_bio ?? ''"
+                                class="min-h-24 rounded-md border bg-background px-3 py-2 text-sm"
+                            />
+                            <InputError :message="errors.pass_bio" />
+                        </div>
+                        <div class="grid gap-2">
+                            <Label for="pass_display_name_en">{{
+                                t('administration.onboarding.display_name_en')
+                            }}</Label>
+                            <Input
+                                id="pass_display_name_en"
+                                name="pass_display_name_en"
+                                maxlength="80"
+                                :default-value="
+                                    setting.pass_display_name_en ?? ''
+                                "
+                            />
+                            <InputError
+                                :message="errors.pass_display_name_en"
+                            />
+                        </div>
+                        <div class="grid gap-2">
+                            <Label for="pass_bio_en">{{
+                                t('administration.onboarding.bio_en')
+                            }}</Label>
+                            <textarea
+                                id="pass_bio_en"
+                                name="pass_bio_en"
+                                maxlength="500"
+                                :value="setting.pass_bio_en ?? ''"
+                                class="min-h-24 rounded-md border bg-background px-3 py-2 text-sm"
+                            />
+                            <InputError :message="errors.pass_bio_en" />
+                        </div>
+                    </fieldset>
 
-                    <div class="grid gap-2">
-                        <Label for="like_avatar_id">{{
-                            t('administration.onboarding.discover_avatar')
-                        }}</Label>
-                        <select
-                            id="like_avatar_id"
-                            name="like_avatar_id"
-                            required
-                            :value="setting.like_avatar_id ?? ''"
-                            class="h-10 rounded-md border bg-background px-3 text-sm"
-                        >
-                            <option value="" disabled>
-                                {{
-                                    t('administration.onboarding.choose_avatar')
-                                }}
-                            </option>
-                            <option
-                                v-for="avatar in avatars"
-                                :key="avatar.id"
-                                :value="avatar.id"
+                    <fieldset class="grid gap-4 rounded-xl border p-4">
+                        <legend class="px-1 font-medium">
+                            {{
+                                t('administration.onboarding.discover_profile')
+                            }}
+                        </legend>
+                        <div class="grid gap-2">
+                            <Label for="like_avatar_id">{{
+                                t('administration.onboarding.discover_avatar')
+                            }}</Label>
+                            <select
+                                id="like_avatar_id"
+                                name="like_avatar_id"
+                                required
+                                :value="setting.like_avatar_id ?? ''"
+                                class="h-10 rounded-md border bg-background px-3 text-sm"
                             >
-                                {{ avatar.name }}
-                            </option>
-                        </select>
-                        <InputError :message="errors.like_avatar_id" />
-                        <img
-                            v-if="avatarById(setting.like_avatar_id)"
-                            :src="avatarById(setting.like_avatar_id)!.image_url"
-                            :alt="avatarById(setting.like_avatar_id)!.name"
-                            class="mt-2 size-24 rounded-2xl object-cover"
-                        />
-                    </div>
+                                <option value="" disabled>
+                                    {{
+                                        t(
+                                            'administration.onboarding.choose_avatar',
+                                        )
+                                    }}
+                                </option>
+                                <option
+                                    v-for="avatar in avatars"
+                                    :key="avatar.id"
+                                    :value="avatar.id"
+                                >
+                                    {{ avatar.name }}
+                                </option>
+                            </select>
+                            <InputError :message="errors.like_avatar_id" />
+                            <img
+                                v-if="avatarById(setting.like_avatar_id)"
+                                :src="
+                                    avatarById(setting.like_avatar_id)!
+                                        .image_url
+                                "
+                                :alt="avatarById(setting.like_avatar_id)!.name"
+                                class="mt-2 size-24 rounded-2xl object-cover"
+                            />
+                        </div>
+                        <div class="grid gap-2">
+                            <Label for="like_display_name">{{
+                                t('administration.onboarding.display_name_fr')
+                            }}</Label>
+                            <Input
+                                id="like_display_name"
+                                name="like_display_name"
+                                required
+                                maxlength="80"
+                                :default-value="setting.like_display_name ?? ''"
+                            />
+                            <InputError :message="errors.like_display_name" />
+                        </div>
+                        <div class="grid gap-2">
+                            <Label for="like_bio">{{
+                                t('administration.onboarding.bio_fr')
+                            }}</Label>
+                            <textarea
+                                id="like_bio"
+                                name="like_bio"
+                                required
+                                maxlength="500"
+                                :value="setting.like_bio ?? ''"
+                                class="min-h-24 rounded-md border bg-background px-3 py-2 text-sm"
+                            />
+                            <InputError :message="errors.like_bio" />
+                        </div>
+                        <div class="grid gap-2">
+                            <Label for="like_display_name_en">{{
+                                t('administration.onboarding.display_name_en')
+                            }}</Label>
+                            <Input
+                                id="like_display_name_en"
+                                name="like_display_name_en"
+                                maxlength="80"
+                                :default-value="
+                                    setting.like_display_name_en ?? ''
+                                "
+                            />
+                            <InputError
+                                :message="errors.like_display_name_en"
+                            />
+                        </div>
+                        <div class="grid gap-2">
+                            <Label for="like_bio_en">{{
+                                t('administration.onboarding.bio_en')
+                            }}</Label>
+                            <textarea
+                                id="like_bio_en"
+                                name="like_bio_en"
+                                maxlength="500"
+                                :value="setting.like_bio_en ?? ''"
+                                class="min-h-24 rounded-md border bg-background px-3 py-2 text-sm"
+                            />
+                            <InputError :message="errors.like_bio_en" />
+                        </div>
+                    </fieldset>
 
                     <Button
                         type="submit"

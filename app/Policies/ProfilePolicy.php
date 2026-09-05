@@ -3,6 +3,7 @@
 namespace App\Policies;
 
 use App\Enums\ProfileVisibility;
+use App\Enums\RoleName;
 use App\Enums\UserStatus;
 use App\Models\Profile;
 use App\Models\User;
@@ -21,7 +22,8 @@ class ProfilePolicy
 
     public function block(User $user, Profile $profile): bool
     {
-        return $this->isPublicTarget($user, $profile);
+        return $this->isPublicTarget($user, $profile)
+            && ! $profile->user->loadMissing('roles')->hasRole(RoleName::Admin);
     }
 
     private function isPublicTarget(User $user, Profile $profile): bool

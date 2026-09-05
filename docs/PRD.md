@@ -33,7 +33,8 @@ Paris.
   filtrer ou à classer les suggestions.
 - Le swipe est une interaction de découverte amicale, jamais une mécanique de
   rencontre romantique.
-- Un match exige toujours deux likes réciproques.
+- Un match exige deux likes réciproques, à l’exception explicite d’un échange
+  d’assistance initié par un administrateur depuis la gestion des membres.
 - La vie privée prime : aucune ville ou région n’est demandée, la photo
   personnelle n’est pas obligatoire et le membre garde le contrôle de son
   profil et de son compte.
@@ -111,6 +112,7 @@ Paris.
   suggestions, interdit les nouveaux contacts et rend la conversation
   inaccessible aux deux membres, sans notifier explicitement la personne
   bloquée.
+- Un administrateur ne peut pas être bloqué.
 - Le signalement et les outils de modération ne font pas partie du MVP.
 
 ### Administration
@@ -124,6 +126,18 @@ Paris.
   archivage et suppression selon les contraintes de sélection.
 - L’administration choisit deux avatars actifs et distincts pour le tutoriel,
   puis consulte ses statistiques et la progression des membres éligibles.
+- La gestion des membres recherche par nom d’affichage ou e-mail et présente,
+  par compte, les likes et refus envoyés/reçus, matches, messages envoyés,
+  personnes bloquées et blocages reçus. Elle n’expose jamais le contenu des
+  messages privés.
+- Un administrateur peut supprimer immédiatement un compte membre après une
+  confirmation explicite. Il ne peut jamais supprimer un autre administrateur.
+- Un administrateur peut créer ou rouvrir un échange privé classique avec un
+  membre. La paire reste unique, limitée à ces deux participants et ne crée
+  aucun swipe artificiel. Le dialogue existant « Vos univers se croisent » est
+  présenté lors de la première création.
+- Les profils administrateurs sont identifiés dans l’application par le badge
+  « Administrateur » et une bordure dorée sur leurs cartes et pages profil.
 
 ### Contrôle des données
 
@@ -157,9 +171,14 @@ Paris.
 | Conversations, messages temps réel et état de lecture | **Implémenté** | Stockage, diffusion privée, interfaces et tests sont présents. |
 | Blocage et déblocage | **Implémenté** | Effet immédiat sur découverte et conversation. |
 | Tutoriel produit obligatoire | **Implémenté** | Progression persistée et statistiques admin sont livrées. |
+| Gestion administrative des membres | **Implémenté** | Recherche et compteurs, suppression confirmée, échange privé admin/membre et identification visuelle des admins sont livrés sans accès au contenu des messages. |
 | Français et anglais | **Implémenté** | Résolution de locale et catalogues backend/frontend sont présents. |
 | Univers éditorial | **Implémenté** | Tutoiement, vocabulaire canonique et catalogues par feature sont contrôlés automatiquement. |
 | Thèmes clair, sombre et système | **Implémenté** | Préférence persistée et interface correspondante sont présentes. |
+| Accueil public et référencement bilingue | **Implémenté** | Landing pages françaises et anglaises, métadonnées SEO, données structurées, sitemap public et exclusion des parcours privés sont livrés. |
+| Explication publique du classement et du matching | **Implémenté** | Pages françaises et anglaises indexables, liées depuis l’accueil, décrivant l’éligibilité, les priorités, le bonus de fréquence, le départage et la réciprocité. |
+| Mesure d’audience et suivi d’indexation | **Implémenté** | GA4 conditionnel couvre les pages publiques et les navigations Inertia avec chemins normalisés ; Search Console s’appuie sur une validation configurable, le sitemap et robots.txt. |
+| Retours d’interaction et mouvement accessible | **Implémenté** | Décisions de carte optimistes avec rollback, célébration de match, états occupés, feedback de messagerie, navigation et réduction des animations sont couverts. |
 | Connexion Google | **Implémenté** | Socialite fournit le parcours Google, avec liens uniques sans stockage de jetons, contrôle de majorité et tests automatisés. |
 | Photo personnelle facultative | **Planifié** | Aucun flux de téléversement membre n’existe. |
 | Export des données | **Planifié** | Aucun parcours d’export n’existe. |
@@ -210,3 +229,12 @@ modération.
 - [`quality-ci-cd.md`](quality-ci-cd.md) : qualité, CI et livraison ;
 - [`engineering-principles.md`](engineering-principles.md) : principes de
   développement.
+
+## Pages légales publiques livrées
+
+Les issues 42 et 43 sont implémentées par quatre documents SSR indexables :
+`/fr/conditions-generales-utilisation`, `/en/terms-of-use`,
+`/fr/politique-confidentialite` et `/en/privacy-policy`. L’inscription exige une
+case non précochée et conserve la version `2026-09-01` avec l’heure serveur.
+Cette livraison ne bloque pas les comptes existants et n’ajoute pas de parcours
+de réacceptation.

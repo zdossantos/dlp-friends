@@ -4,6 +4,7 @@ export type DiscoveryProfile = {
     userId: number;
     profileId: number;
     displayName: string;
+    isAdmin: boolean;
     avatar: AvatarOption;
     age: number;
     bio: string | null;

@@ -37,6 +37,39 @@ test('onboarding continues the registration stepper at the persisted tutorial st
         ->assertNoJavaScriptErrors();
 });
 
+test('onboarding displays the configured fictional profile copy', function () {
+    [$passAvatar, $likeAvatar] = Avatar::factory()->count(2)->create();
+    ProductOnboardingSetting::query()->create([
+        'id' => ProductOnboardingSetting::SINGLETON_ID,
+        'pass_avatar_id' => $passAvatar->id,
+        'like_avatar_id' => $likeAvatar->id,
+        'pass_display_name' => 'Camille personnalisée',
+        'pass_bio' => 'Une biographie personnalisée pour passer.',
+        'like_display_name' => 'Alex personnalisé',
+        'like_bio' => 'Une biographie personnalisée pour découvrir.',
+    ]);
+    foreach ([$passAvatar, $likeAvatar] as $avatar) {
+        Storage::disk('local')->put($avatar->image_path, base64_decode(
+            'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScL8WQAAAABJRU5ErkJggg==',
+        ));
+    }
+    $member = User::factory()->withProfile(false)->create();
+    $this->actingAs($member);
+
+    visit('/onboarding')
+        ->assertSee('Camille personnalisée')
+        ->assertSee('Une biographie personnalisée pour passer.')
+        ->click('[aria-label="Passer ce profil"]')
+        ->assertSee('Alex personnalisé')
+        ->assertSee('Une biographie personnalisée pour découvrir.')
+        ->click('[aria-label="Découvrir ce profil"]')
+        ->assertSee('Alex personnalisé souhaite aussi te découvrir.')
+        ->click('[data-test="open-match-conversation"]')
+        ->assertSee('Alex personnalisé')
+        ->assertSee('Échange privé')
+        ->assertNoJavaScriptErrors();
+});
+
 test('each swipe step disables and blocks the opposite decision', function () {
     [$passAvatar, $likeAvatar] = Avatar::factory()->count(2)->create();
     ProductOnboardingSetting::query()->create([

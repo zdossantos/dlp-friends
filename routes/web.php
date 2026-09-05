@@ -9,6 +9,8 @@ use App\Http\Controllers\Admin\InterestController;
 use App\Http\Controllers\Admin\InterestOrderController;
 use App\Http\Controllers\Admin\InterestSettingController;
 use App\Http\Controllers\Admin\InterestStatusController;
+use App\Http\Controllers\Admin\MemberController as AdminMemberController;
+use App\Http\Controllers\Admin\MemberConversationController;
 use App\Http\Controllers\Admin\ProductOnboardingController as AdminProductOnboardingController;
 use App\Http\Controllers\Auth\SocialAuthController;
 use App\Http\Controllers\Auth\SocialRegistrationController;
@@ -19,16 +21,48 @@ use App\Http\Controllers\ConversationIndexController;
 use App\Http\Controllers\ConversationReadController;
 use App\Http\Controllers\DiscoveryController;
 use App\Http\Controllers\LandingController;
+use App\Http\Controllers\LegalDocumentController;
 use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\MemberProfileController;
 use App\Http\Controllers\MessageController;
 use App\Http\Controllers\ProductOnboardingController;
+use App\Http\Controllers\PublicLandingController;
+use App\Http\Controllers\PublicMatchingController;
 use App\Http\Controllers\PublicMemberProfileController;
 use App\Http\Controllers\SwipeController;
 use App\Http\Controllers\UnblockMemberController;
+use App\Support\PublicUrls;
 use Illuminate\Support\Facades\Route;
 
-Route::inertia('/', 'Welcome')->name('home');
+Route::get('/', [PublicLandingController::class, 'redirect'])->name('home');
+Route::get('matching', [PublicMatchingController::class, 'redirect'])->name('matching.redirect');
+Route::get('fr/matching', [PublicMatchingController::class, 'show'])->defaults('locale', 'fr')->name('matching.show.fr');
+Route::get('en/matching', [PublicMatchingController::class, 'show'])->defaults('locale', 'en')->name('matching.show.en');
+Route::get('fr/conditions-generales-utilisation', [LegalDocumentController::class, 'terms'])->defaults('locale', 'fr')->name('legal.terms.fr');
+Route::get('en/terms-of-use', [LegalDocumentController::class, 'terms'])->defaults('locale', 'en')->name('legal.terms.en');
+Route::get('fr/politique-confidentialite', [LegalDocumentController::class, 'privacy'])->defaults('locale', 'fr')->name('legal.privacy.fr');
+Route::get('en/privacy-policy', [LegalDocumentController::class, 'privacy'])->defaults('locale', 'en')->name('legal.privacy.en');
+Route::get('{locale}', [PublicLandingController::class, 'show'])
+    ->whereIn('locale', ['fr', 'en'])
+    ->name('landing.show');
+Route::get('sitemap.xml', function () {
+    return response()
+        ->view('sitemap', ['groups' => [
+            ['fr' => PublicUrls::landing('fr'), 'en' => PublicUrls::landing('en')],
+            ['fr' => PublicUrls::matching('fr'), 'en' => PublicUrls::matching('en')],
+            ['fr' => PublicUrls::terms('fr'), 'en' => PublicUrls::terms('en')],
+            ['fr' => PublicUrls::privacy('fr'), 'en' => PublicUrls::privacy('en')],
+        ]])
+        ->header('Content-Type', 'application/xml; charset=UTF-8');
+})->name('sitemap');
+Route::get('robots.txt', function () {
+    return response(implode("\n", [
+        'User-agent: *',
+        'Allow: /',
+        'Sitemap: '.PublicUrls::sitemap(),
+        '',
+    ]), 200, ['Content-Type' => 'text/plain; charset=UTF-8']);
+})->name('robots');
 Route::patch('locale', LocaleController::class)->name('locale.update');
 
 Route::middleware('guest')->group(function (): void {
@@ -116,6 +150,12 @@ Route::middleware(['auth', 'verified', 'social'])->group(function () {
                 ->name('dashboard');
 
             Route::prefix('admin')->name('admin.')->middleware('role:admin')->group(function (): void {
+                Route::get('members', [AdminMemberController::class, 'index'])
+                    ->name('members.index');
+                Route::delete('members/{member}', [AdminMemberController::class, 'destroy'])
+                    ->name('members.destroy');
+                Route::post('members/{member}/conversation', MemberConversationController::class)
+                    ->name('members.conversation.store');
                 Route::resource('interests', InterestController::class)
                     ->only(['index', 'store', 'update', 'destroy']);
                 Route::patch('interests/{interest}/status', InterestStatusController::class)
