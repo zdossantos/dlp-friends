@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.0](https://github.com/zdossantos/dlp-friends/compare/v1.3.1...v1.4.0) (2026-09-05)
+
+
+### Features
+
+* **analytics:** integrate GA4 and Search Console ([#149](https://github.com/zdossantos/dlp-friends/issues/149)) ([0f2bf76](https://github.com/zdossantos/dlp-friends/commit/0f2bf7620649c075507555ba14562db27d80dd7b)), closes [#51](https://github.com/zdossantos/dlp-friends/issues/51)
+
 ## [1.3.1](https://github.com/zdossantos/dlp-friends/compare/v1.3.0...v1.3.1) (2026-09-05)
 
 
