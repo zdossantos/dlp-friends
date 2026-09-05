@@ -2,6 +2,7 @@ import { createInertiaApp } from '@inertiajs/vue3';
 import { configureEcho } from '@laravel/echo-vue';
 import { initializeTheme } from '@/composables/useAppearance';
 import { resolvePageLayout } from '@/layouts/resolvePageLayout';
+import { initializeAnalytics } from '@/lib/analytics';
 import { initializeFlashToast } from '@/lib/flashToast';
 import { resolveReverbHost } from '@/lib/reverbHost';
 
@@ -30,6 +31,8 @@ createInertiaApp({
         color: '#7138B6',
     },
 });
+
+initializeAnalytics();
 
 // This will set light / dark mode on page load...
 initializeTheme();

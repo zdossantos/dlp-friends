@@ -33,6 +33,20 @@ test('privacy pages disclose hosting and backup retention', function () {
         ->assertSee('30 jours');
 });
 
+test('privacy pages disclose google analytics audience measurement', function () {
+    config()->set('legal.contact_email', 'legal@dlp-friends.example');
+
+    $this->get('/fr/politique-confidentialite')
+        ->assertOk()
+        ->assertSee('Google Analytics 4')
+        ->assertSee('mesure d’audience');
+
+    $this->get('/en/privacy-policy')
+        ->assertOk()
+        ->assertSee('Google Analytics 4')
+        ->assertSee('audience measurement');
+});
+
 test('legal navigation keeps the current browser host', function () {
     config()->set('app.url', 'http://localhost');
     config()->set('legal.contact_email', 'legal@dlp-friends.example');

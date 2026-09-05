@@ -50,6 +50,20 @@ réacceptation des comptes existants, ni export automatisé, ni délai de purge.
 - Les cookies de session sont sécurisés en HTTPS et les protections CSRF natives de Laravel restent actives.
 - Les canaux Reverb de conversation sont privés et leur autorisation vérifie l'appartenance au match ainsi que l'absence de blocage.
 
+## Mesure d’audience
+
+Lorsque `GOOGLE_ANALYTICS_ID` est défini, Google Analytics 4 mesure les pages
+vues sur les surfaces publiques et privées. Les chemins dynamiques sont
+normalisés avant envoi et les paramètres de requête sont supprimés. Ne jamais
+envoyer à GA4 un nom, une adresse e-mail, un identifiant de membre, une bio, un
+message ou toute autre donnée permettant d’identifier directement une
+personne.
+
+La version actuelle active cette mesure sans recueil préalable du consentement.
+La mise en conformité du consentement, du refus et du retrait est une dette
+produit explicitement reportée en V2 ; la politique de confidentialité doit
+rester cohérente avec la configuration réellement déployée.
+
 ## Blocage
 
 - Le blocage doit être disponible depuis un profil et une conversation.

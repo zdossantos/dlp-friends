@@ -22,6 +22,11 @@ return [
         'key' => env('RESEND_API_KEY'),
     ],
 
+    'google' => [
+        'analytics_id' => env('GOOGLE_ANALYTICS_ID'),
+        'site_verification' => env('GOOGLE_SITE_VERIFICATION'),
+    ],
+
     'ses' => [
         'key' => env('AWS_ACCESS_KEY_ID'),
         'secret' => env('AWS_SECRET_ACCESS_KEY'),

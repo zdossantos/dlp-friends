@@ -125,6 +125,20 @@ protections `noindex`. Un audit Lighthouse est exécuté sur chaque langue avant
 livraison ; le changement ne doit pas dégrader sensiblement les performances et
 vise un score maximal en SEO et en accessibilité.
 
+## Mesure d’audience et Search Console
+
+Le composant Blade `google-tags` charge Google Analytics 4 sur les documents
+publics et dans le shell Inertia uniquement lorsque `GOOGLE_ANALYTICS_ID` est
+configuré. Les pages Blade laissent GA4 enregistrer la page initiale. Le shell
+Inertia désactive cet envoi automatique et émet une page vue au chargement puis
+à chaque navigation cliente, afin d’éviter les doublons.
+
+Avant l’envoi, les paramètres de requête, fragments et segments numériques ou
+UUID des URL sont retirés ou remplacés par `{id}`. Aucun événement applicatif
+ne doit contenir de nom, d’e-mail, d’identifiant de membre, de texte de profil
+ou de message. `GOOGLE_SITE_VERIFICATION` ajoute, lorsqu’elle est configurée,
+la balise de validation Search Console aux documents HTML.
+
 ## Services Docker
 
 | Service | Responsabilité |

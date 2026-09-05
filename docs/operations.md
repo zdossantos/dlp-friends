@@ -51,7 +51,9 @@ supprimer définitivement le conteneur et le volume MinIO de production.
    `DB_PASSWORD`, `DB_HOST`, `REDIS_HOST`, `REDIS_PASSWORD`, `AWS_ENDPOINT`,
    `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_BUCKET`,
    `REVERB_APP_ID`, `REVERB_APP_KEY`, `REVERB_APP_SECRET`,
-   `RESEND_API_KEY` et `MAIL_FROM_ADDRESS`. `APP_IMAGE` est la référence GHCR
+   `RESEND_API_KEY` et `MAIL_FROM_ADDRESS`. Ajouter `GOOGLE_ANALYTICS_ID` pour
+   activer GA4 et, si la validation HTML Search Console est utilisée,
+   `GOOGLE_SITE_VERIFICATION`. `APP_IMAGE` est la référence GHCR
    par digest issue du fichier `container-image.json` joint à la release ; le
    workflow la renseignera ensuite à chaque livraison.
 4. Définir les quatre `VITE_REVERB_*` dans les variables **GitHub**, avec le
@@ -79,6 +81,30 @@ supprimer définitivement le conteneur et le volume MinIO de production.
 Les migrations ne font partie ni de l’entrypoint ni de la commande de démarrage
 d’un service. Une modification de `VITE_REVERB_*` exige une nouvelle
 construction de l’image, car ces valeurs sont intégrées aux assets frontend.
+
+## Google Analytics 4 et Search Console
+
+1. Dans Google Analytics, créer une propriété GA4 et un flux Web pour le domaine
+   HTTPS de production. Copier l’identifiant de mesure `G-…` dans
+   `GOOGLE_ANALYTICS_ID` dans Coolify, puis redéployer. La variable est lue à
+   l’exécution et ne doit pas être ajoutée aux variables `VITE_*`.
+2. Dans le rapport Temps réel de GA4, ouvrir successivement une page publique
+   et une page Inertia. Vérifier deux chemins distincts et confirmer qu’aucun
+   identifiant réel ni paramètre de requête n’apparaît.
+3. Dans Search Console, créer de préférence une propriété de type Domaine et
+   publier l’enregistrement TXT fourni dans le DNS. La variable
+   `GOOGLE_SITE_VERIFICATION` reste disponible pour une propriété de type
+   Préfixe d’URL validée par balise HTML.
+4. Après validation, soumettre `https://<domaine>/sitemap.xml`. Contrôler que
+   `/fr`, `/en`, les pages de matching et les documents légaux sont détectés,
+   tandis que les routes d’authentification et membres restent exclues.
+5. Demander l’indexation des pages principales avec l’inspection d’URL. Une
+   soumission ne garantit ni l’indexation immédiate ni une position dans les
+   résultats ; surveiller les rapports Pages et Sitemaps après exploration.
+
+L’absence de `GOOGLE_ANALYTICS_ID` désactive entièrement le script GA4.
+L’absence de `GOOGLE_SITE_VERIFICATION` retire uniquement la balise de
+validation et n’affecte ni le sitemap ni l’indexation.
 
 ## Déploiements suivants
 
