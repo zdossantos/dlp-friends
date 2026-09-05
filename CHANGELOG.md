@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.5.0](https://github.com/zdossantos/dlp-friends/compare/v1.4.0...v1.5.0) (2026-09-05)
+
+
+### Features
+
+* manage members from administration ([#153](https://github.com/zdossantos/dlp-friends/issues/153)) ([2239b39](https://github.com/zdossantos/dlp-friends/commit/2239b39d000577eeacf23d0ec38b675456758b68))
+
 ## [1.4.0](https://github.com/zdossantos/dlp-friends/compare/v1.3.1...v1.4.0) (2026-09-05)
 
 
