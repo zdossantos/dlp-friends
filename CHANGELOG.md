@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.7.1](https://github.com/zdossantos/dlp-friends/compare/v1.7.0...v1.7.1) (2026-09-05)
+
+
+### Fixes
+
+* **admin:** bootstrap internal interest category ([#164](https://github.com/zdossantos/dlp-friends/issues/164)) ([977a47b](https://github.com/zdossantos/dlp-friends/commit/977a47bbce174d32d80cf92f1a7692c6e1eef4ef))
+
 ## [1.7.0](https://github.com/zdossantos/dlp-friends/compare/v1.6.0...v1.7.0) (2026-09-05)
 
 
