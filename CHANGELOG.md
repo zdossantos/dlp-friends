@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.6.0](https://github.com/zdossantos/dlp-friends/compare/v1.5.3...v1.6.0) (2026-09-05)
+
+
+### Features
+
+* **onboarding:** configure tutorial profile copy ([#161](https://github.com/zdossantos/dlp-friends/issues/161)) ([ffc8026](https://github.com/zdossantos/dlp-friends/commit/ffc8026452579bc18586136a324dd5f3005cfe82))
+
 ## [1.5.3](https://github.com/zdossantos/dlp-friends/compare/v1.5.2...v1.5.3) (2026-09-05)
 
 
