@@ -64,8 +64,11 @@ conversation et son message restent des données locales et ne créent
 aucun swipe, match, conversation, message ni diffusion temps réel.
 
 La table singleton `product_onboarding_settings` référence les deux avatars de
-tutoriel. Les validations imposent des avatars actifs et distincts ; les
-actions d’archivage et de suppression les protègent également côté serveur.
+tutoriel et stocke séparément leurs noms et biographies en français et en
+anglais. Le français est obligatoire ; une traduction anglaise absente se
+replie explicitement sur le français. Les validations imposent aussi des
+avatars actifs et distincts ; les actions d’archivage et de suppression les
+protègent également côté serveur.
 L’écran admin calcule ses agrégats et sa liste paginée sur le même périmètre de
 membres adultes, actifs, vérifiés et disposant d’un profil complet.
 
