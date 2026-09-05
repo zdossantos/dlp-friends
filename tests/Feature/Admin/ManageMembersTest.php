@@ -131,6 +131,19 @@ class ManageMembersTest extends TestCase
         Mail::assertNothingQueued();
     }
 
+    public function test_mail_queue_failure_does_not_restore_the_deleted_member(): void
+    {
+        $admin = User::factory()->withProfile()->admin()->create();
+        $member = User::factory()->withProfile()->create();
+        Mail::shouldReceive('to')->once()->andThrow(new \RuntimeException('mail unavailable'));
+
+        $this->actingAs($admin)
+            ->delete(route('admin.members.destroy', $member))
+            ->assertRedirect(route('admin.members.index'));
+
+        $this->assertDatabaseMissing('users', ['id' => $member->id]);
+    }
+
     private function createMatch(User $first, User $second): MemberMatch
     {
         [$lowId, $highId] = collect([$first->id, $second->id])->sort()->values()->all();
