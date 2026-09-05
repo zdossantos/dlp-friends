@@ -34,6 +34,15 @@ return [
         'terms_acceptance' => 'J’accepte les documents suivants :',
         'terms_required' => 'Tu dois accepter les Conditions générales d’utilisation pour créer ton compte.',
     ],
+    'social_registration' => [
+        'title' => 'Finalise ton inscription',
+        'description' => 'Indique ta date de naissance pour confirmer que tu es majeur.',
+        'birth_date' => 'Date de naissance',
+        'submit' => 'Créer mon compte',
+    ],
+    'social' => [
+        'google' => 'Google',
+    ],
     'fields' => [
         'email' => 'Adresse e-mail',
         'email_placeholder' => 'toi@exemple.fr',

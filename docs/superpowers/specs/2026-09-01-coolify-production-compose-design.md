@@ -56,4 +56,3 @@ restauration.
 
 La stack n’ajoute ni migrations automatiques, ni serveur SMTP, ni haute
 disponibilité, ni Kubernetes, ni déclenchement Coolify depuis GitHub Actions.
-

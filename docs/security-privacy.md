@@ -21,7 +21,8 @@ réacceptation des comptes existants, ni export automatisé, ni délai de purge.
 
 - La date de naissance est obligatoire à l'inscription.
 - Refuser la création de compte si la personne a moins de 18 ans à cette date.
-- La vérification d'e-mail est requise avant l'accès aux fonctionnalités sociales.
+- L'inscription par mot de passe exige le lien de vérification envoyé par l'application. Pour une nouvelle inscription Google, l'adresse déclarée vérifiée par le fournisseur tient lieu de cette vérification ; une identité sociale déjà liée utilise ensuite ce lien enregistré.
+- Une adresse déjà associée à un compte n'est jamais reliée automatiquement à une nouvelle identité sociale.
 - Limiter les tentatives de connexion et protéger les formulaires contre les abus usuels.
 
 ## Images
@@ -37,7 +38,7 @@ réacceptation des comptes existants, ni export automatisé, ni délai de purge.
 - Réglages : édition des données visibles et des intérêts actifs, dans la limite configurée.
 - Un intérêt archivé est retiré des sélections visibles et du matching. La sélection historique est conservée comme suspendue et ne consomme plus de capacité ; elle ne peut être restaurée à la réactivation que si le profil a alors une capacité disponible.
 - Masquage : suspend les nouvelles suggestions sans supprimer le compte.
-- Suppression cible : après confirmation explicite, le compte devient immédiatement inaccessible et invisible. Un job asynchrone doit supprimer les images, tokens sociaux, profil, swipes, matches, conversations et messages dans un délai maximal de 30 jours ; les sessions sont révoquées immédiatement. Le code actuel supprime directement le compte et ne livre pas encore cette purge différée.
+- Suppression cible : après confirmation explicite, le compte devient immédiatement inaccessible et invisible. Un job asynchrone doit supprimer les images, liens de comptes sociaux, profil, swipes, matches, conversations et messages dans un délai maximal de 30 jours ; les sessions sont révoquées immédiatement. Le code actuel supprime directement le compte et ne livre pas encore cette purge différée.
 - Documenter, avant mise en production, les durées de conservation et la politique de confidentialité applicable.
 - Prévoir l'export des données de profil, intérêts, matches et messages dans les réglages. Cet export attendu au MVP n’est pas encore implémenté.
 - Les sauvegardes ne sont pas modifiées rétroactivement lors d'une suppression ; leur durée de rétention doit être documentée et limitée.
@@ -48,6 +49,8 @@ réacceptation des comptes existants, ni export automatisé, ni délai de purge.
 - Les contrôleurs délèguent le contrôle d'accès aux Policies Laravel; ne jamais faire confiance à un identifiant de profil transmis par le navigateur.
 - Les contenus texte sont validés, échappés à l'affichage et protégés contre l'injection HTML.
 - Les cookies de session sont sécurisés en HTTPS et les protections CSRF natives de Laravel restent actives.
+- La validation de l'état OAuth par Socialite reste obligatoire sur le callback Google.
+- Aucun jeton d'accès, jeton de renouvellement ou contenu brut de réponse Google n'est stocké ou journalisé. Seul l'identifiant stable nécessaire au lien de compte est conservé.
 - Les canaux Reverb de conversation sont privés et leur autorisation vérifie l'appartenance au match ainsi que l'absence de blocage.
 - La gestion des membres est réservée au rôle `admin`. Ses statistiques ne
   contiennent aucun corps de message. La suppression d’un membre révoque ses

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Form, Head, usePage } from '@inertiajs/vue3';
+import SocialLoginButtons from '@/components/auth/SocialLoginButtons.vue';
 import InputError from '@/components/InputError.vue';
 import PasswordInput from '@/components/PasswordInput.vue';
 import TextLink from '@/components/TextLink.vue';
@@ -28,6 +29,8 @@ defineOptions({
 
 <template>
     <Head :title="t('account.registration.title')" />
+
+    <SocialLoginButtons />
 
     <Form
         v-bind="store.form()"

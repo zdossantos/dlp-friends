@@ -5,6 +5,7 @@ namespace Tests\Unit\Models;
 use App\Enums\RoleName;
 use App\Enums\UserStatus;
 use App\Models\Role;
+use App\Models\SocialAccount;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
@@ -53,5 +54,17 @@ class UserTest extends TestCase
 
         $this->assertTrue($user->fresh('roles')->hasRole(RoleName::Admin));
         $this->assertTrue($user->hasRole(RoleName::User));
+    }
+
+    public function test_user_and_social_account_have_inverse_relationships(): void
+    {
+        $user = User::factory()->create();
+        $account = SocialAccount::factory()->for($user)->create([
+            'provider' => 'google',
+            'provider_user_id' => 'google-123',
+        ]);
+
+        $this->assertTrue($account->user->is($user));
+        $this->assertTrue($user->socialAccounts()->sole()->is($account));
     }
 }

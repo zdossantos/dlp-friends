@@ -66,7 +66,7 @@ Paris.
   l’adresse, réinitialisation du mot de passe, protection contre les tentatives
   abusives et gestion des sessions.
 - Date de naissance obligatoire et refus de l’inscription avant 18 ans.
-- Connexion simplifiée via Google et Apple.
+- Connexion simplifiée via Google.
 - Après vérification, profil obligatoire puis tutoriel produit obligatoire
   avant l’accès à l’espace membre.
 - Le tutoriel enseigne successivement le refus d’une carte, le like, le match,
@@ -179,7 +179,7 @@ Paris.
 | Explication publique du classement et du matching | **Implémenté** | Pages françaises et anglaises indexables, liées depuis l’accueil, décrivant l’éligibilité, les priorités, le bonus de fréquence, le départage et la réciprocité. |
 | Mesure d’audience et suivi d’indexation | **Implémenté** | GA4 conditionnel couvre les pages publiques et les navigations Inertia avec chemins normalisés ; Search Console s’appuie sur une validation configurable, le sitemap et robots.txt. |
 | Retours d’interaction et mouvement accessible | **Implémenté** | Décisions de carte optimistes avec rollback, célébration de match, états occupés, feedback de messagerie, navigation et réduction des animations sont couverts. |
-| Connexion Google et Apple | **Planifié** | Aucun flux OAuth ou stockage de compte social n’existe. |
+| Connexion Google | **Implémenté** | Socialite fournit le parcours Google, avec liens uniques sans stockage de jetons, contrôle de majorité et tests automatisés. |
 | Photo personnelle facultative | **Planifié** | Aucun flux de téléversement membre n’existe. |
 | Export des données | **Planifié** | Aucun parcours d’export n’existe. |
 | Suppression différée sous 30 jours | **Partiel** | La suppression de compte existe, mais elle est immédiate et sans job de purge différée. |

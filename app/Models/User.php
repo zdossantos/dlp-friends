@@ -52,6 +52,7 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
  * @property-read Collection<int, Block> $blocksCreated
  * @property-read Collection<int, Block> $blocksReceived
  * @property-read Collection<int, Message> $authoredMessages
+ * @property-read Collection<int, SocialAccount> $socialAccounts
  * @property-read Collection<int, TermsAcceptance> $termsAcceptances
  */
 #[Fillable(['email', 'locale', 'birth_date', 'password'])]
@@ -119,6 +120,12 @@ class User extends Authenticatable implements HasLocalePreference, MustVerifyEma
     public function authoredMessages(): HasMany
     {
         return $this->hasMany(Message::class, 'author_user_id');
+    }
+
+    /** @return HasMany<SocialAccount, $this> */
+    public function socialAccounts(): HasMany
+    {
+        return $this->hasMany(SocialAccount::class);
     }
 
     /** @return HasMany<TermsAcceptance, $this> */

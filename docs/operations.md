@@ -51,9 +51,12 @@ supprimer définitivement le conteneur et le volume MinIO de production.
    `DB_PASSWORD`, `DB_HOST`, `REDIS_HOST`, `REDIS_PASSWORD`, `AWS_ENDPOINT`,
    `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_BUCKET`,
    `REVERB_APP_ID`, `REVERB_APP_KEY`, `REVERB_APP_SECRET`,
-   `RESEND_API_KEY` et `MAIL_FROM_ADDRESS`. Ajouter `GOOGLE_ANALYTICS_ID` pour
-   activer GA4 et, si la validation HTML Search Console est utilisée,
-   `GOOGLE_SITE_VERIFICATION`. `APP_IMAGE` est la référence GHCR
+   `RESEND_API_KEY`, `MAIL_FROM_ADDRESS`, `GOOGLE_CLIENT_ID`,
+   `GOOGLE_CLIENT_SECRET` et `GOOGLE_REDIRECT_URI`. En production,
+   `GOOGLE_REDIRECT_URI` doit valoir
+   `https://dlp-friends.fr/auth/google/callback`. Ajouter
+   `GOOGLE_ANALYTICS_ID` pour activer GA4 et, si la validation HTML Search
+   Console est utilisée, `GOOGLE_SITE_VERIFICATION`. `APP_IMAGE` est la référence GHCR
    par digest issue du fichier `container-image.json` joint à la release ; le
    workflow la renseignera ensuite à chaque livraison.
 4. Définir les quatre `VITE_REVERB_*` dans les variables **GitHub**, avec le
@@ -212,6 +215,16 @@ release ne doit être créé manuellement pour revenir en arrière.
 - Après le premier déploiement, envoyer un e-mail transactionnel de contrôle et
   vérifier sa remise sans afficher la clé API ni le contenu du message dans les
   journaux.
+
+## Fournisseurs de connexion sociale
+
+Configurer les secrets uniquement dans l'environnement d'exécution ou dans
+Coolify, jamais dans le dépôt :
+
+- Google : `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` et `GOOGLE_REDIRECT_URI`.
+
+La console Google doit déclarer exactement le callback de production :
+`GET /auth/google/callback`.
 
 ## Tâches récurrentes
 

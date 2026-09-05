@@ -34,6 +34,15 @@ return [
         'terms_acceptance' => 'I accept the following documents:',
         'terms_required' => 'You must accept the Terms of Use to create your account.',
     ],
+    'social_registration' => [
+        'title' => 'Complete your registration',
+        'description' => 'Enter your birth date to confirm that you are an adult.',
+        'birth_date' => 'Date of birth',
+        'submit' => 'Create my account',
+    ],
+    'social' => [
+        'google' => 'Google',
+    ],
     'fields' => [
         'email' => 'Email address', 'email_placeholder' => 'you@example.com', 'password' => 'Password',
         'current_password' => 'Current password', 'new_password' => 'New password', 'password_confirmation' => 'Confirm password',

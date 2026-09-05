@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\SocialProvider;
 use App\Http\Controllers\Admin\AvatarController;
 use App\Http\Controllers\Admin\AvatarOrderController;
 use App\Http\Controllers\Admin\AvatarStatusController;
@@ -11,6 +12,8 @@ use App\Http\Controllers\Admin\InterestStatusController;
 use App\Http\Controllers\Admin\MemberController as AdminMemberController;
 use App\Http\Controllers\Admin\MemberConversationController;
 use App\Http\Controllers\Admin\ProductOnboardingController as AdminProductOnboardingController;
+use App\Http\Controllers\Auth\SocialAuthController;
+use App\Http\Controllers\Auth\SocialRegistrationController;
 use App\Http\Controllers\AvatarImageController;
 use App\Http\Controllers\BlockMemberController;
 use App\Http\Controllers\ConversationController;
@@ -61,6 +64,22 @@ Route::get('robots.txt', function () {
     ]), 200, ['Content-Type' => 'text/plain; charset=UTF-8']);
 })->name('robots');
 Route::patch('locale', LocaleController::class)->name('locale.update');
+
+Route::middleware('guest')->group(function (): void {
+    Route::get('auth/{provider}/redirect', [SocialAuthController::class, 'redirect'])
+        ->whereIn('provider', array_column(SocialProvider::cases(), 'value'))
+        ->middleware('throttle:10,1')
+        ->name('social.redirect');
+    Route::get('auth/google/callback', [SocialAuthController::class, 'callback'])
+        ->defaults('provider', SocialProvider::Google->value)
+        ->middleware('throttle:10,1')
+        ->name('social.callback.google');
+    Route::get('auth/social/complete', [SocialRegistrationController::class, 'create'])
+        ->name('social.registration.create');
+    Route::post('auth/social/complete', [SocialRegistrationController::class, 'store'])
+        ->middleware('throttle:6,1')
+        ->name('social.registration.store');
+});
 
 Route::middleware(['auth', 'verified', 'social'])->group(function () {
     Route::get('avatars/{avatar}/image', AvatarImageController::class)
