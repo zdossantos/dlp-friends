@@ -42,16 +42,13 @@ x-app: &app
     AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:?AWS_SECRET_ACCESS_KEY is required}
     AWS_DEFAULT_REGION: ${AWS_DEFAULT_REGION:-us-east-1}
     AWS_BUCKET: ${AWS_BUCKET:?AWS_BUCKET is required}
-    AWS_ENDPOINT: http://minio:9000
+    AWS_ENDPOINT: ${AWS_ENDPOINT:?AWS_ENDPOINT is required}
     AWS_USE_PATH_STYLE_ENDPOINT: "true"
     MAIL_MAILER: resend
     RESEND_API_KEY: ${RESEND_API_KEY:?RESEND_API_KEY is required}
     MAIL_FROM_ADDRESS: ${MAIL_FROM_ADDRESS:?MAIL_FROM_ADDRESS is required}
     MAIL_FROM_NAME: ${MAIL_FROM_NAME:-DLP Friends}
   restart: unless-stopped
-  depends_on:
-    minio:
-      condition: service_healthy
 
 services:
   web:
@@ -121,27 +118,3 @@ services:
         limits:
           cpus: "0.50"
           memory: 256M
-
-  minio:
-    image: quay.io/minio/minio:RELEASE.2025-09-07T16-13-09Z
-    command: server /data
-    environment:
-      MINIO_ROOT_USER: ${MINIO_ROOT_USER:?MINIO_ROOT_USER is required}
-      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:?MINIO_ROOT_PASSWORD is required}
-    volumes:
-      - minio-data:/data
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "curl", "--fail", "http://127.0.0.1:9000/minio/health/live"]
-      interval: 10s
-      timeout: 5s
-      start_period: 20s
-      retries: 5
-    deploy:
-      resources:
-        limits:
-          cpus: "0.75"
-          memory: 512M
-
-volumes:
-  minio-data:

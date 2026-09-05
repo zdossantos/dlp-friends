@@ -29,6 +29,13 @@ configurer `REDIS_HOST`, `REDIS_PORT` et `REDIS_PASSWORD` dans Coolify. Le mot d
 passe reste un secret d'exécution et aucun port Redis ne doit être publié sur
 Internet.
 
+## Garage indépendant
+
+Avant de retirer MinIO du Compose applicatif, préparer Garage et migrer les
+objets selon [la procédure Garage](garage-externalization.md). Le service utilise
+deux volumes persistants, un bucket privé et une clé applicative limitée. MinIO
+et son volume d'origine restent conservés jusqu'à validation explicite.
+
 ## Premier déploiement sur Coolify
 
 1. Créer une application Docker Compose depuis le dépôt GitHub, suivre la
@@ -40,9 +47,9 @@ Internet.
    puis le domaine WebSocket au service `reverb` sur son port interne `8080`.
 3. Renseigner les variables obligatoires détectées par Coolify :
    `APP_IMAGE`, `APP_KEY`, `APP_URL`, `LEGAL_CONTACT_EMAIL`, `DB_DATABASE`, `DB_USERNAME`,
-   `DB_PASSWORD`, `DB_HOST`, `REDIS_HOST`, `REDIS_PASSWORD`, `MINIO_ROOT_USER`,
-   `MINIO_ROOT_PASSWORD`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`,
-   `AWS_BUCKET`, `REVERB_APP_ID`, `REVERB_APP_KEY`, `REVERB_APP_SECRET`,
+   `DB_PASSWORD`, `DB_HOST`, `REDIS_HOST`, `REDIS_PASSWORD`, `AWS_ENDPOINT`,
+   `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_BUCKET`,
+   `REVERB_APP_ID`, `REVERB_APP_KEY`, `REVERB_APP_SECRET`,
    `RESEND_API_KEY` et `MAIL_FROM_ADDRESS`. `APP_IMAGE` est la référence GHCR
    par digest issue du fichier `container-image.json` joint à la release ; le
    workflow la renseignera ensuite à chaque livraison.
@@ -52,11 +59,9 @@ Internet.
 5. Fusionner volontairement la Release PR une fois les contrôles réussis. Le
    workflow publie l’image, teste son démarrage et demande son déploiement.
    Attendre que `web`, `worker`, `scheduler`, `reverb`,
-   `minio` et les ressources MySQL et Redis indépendantes soient sains.
-6. Créer le bucket privé nommé par `AWS_BUCKET` dans MinIO avant d’activer un
-   parcours qui écrit des objets. Utiliser pour l’application les identifiants
-   `AWS_ACCESS_KEY_ID` et `AWS_SECRET_ACCESS_KEY`, distincts des identifiants
-   racine MinIO lorsque la gestion des utilisateurs MinIO est disponible.
+   et les ressources MySQL, Redis et Garage indépendantes soient sains.
+6. Créer le bucket privé nommé par `AWS_BUCKET` dans Garage avant d’activer un
+   parcours qui écrit des objets. Limiter la clé applicative à ce bucket.
 7. Exécuter explicitement la migration dans le conteneur `web` :
 
    ```sh
@@ -131,19 +136,20 @@ release ne doit être créé manuellement pour revenir en arrière.
 ## Sauvegardes
 
 - Sauvegarde chiffrée quotidienne de MySQL, avec conservation de 30 jours et test mensuel de restauration.
-- Sauvegarde quotidienne du bucket MinIO des images, avec la même politique de conservation.
+- Sauvegarde quotidienne cohérente des volumes de métadonnées et de données
+  Garage, avec la même politique de conservation.
 - Les sauvegardes sont stockées hors du serveur de production. Une copie sur le même volume Docker ne constitue pas une sauvegarde.
 - La restauration s’effectue sur une stack isolée : restaurer MySQL, restaurer
-  le bucket MinIO, déployer l’image applicative de la version compatible,
+  les deux volumes Garage, déployer l'image applicative de la version compatible,
   exécuter les migrations nécessaires, puis vérifier `/up`, Reverb, les files
   et un objet privé avant de rediriger le trafic.
 
 ## Santé et alertes
 
 - La route `/up` vérifie que l'application répond; elle ne divulgue ni version sensible ni configuration.
-- Docker vérifie les services longs (`web`, `worker`, `scheduler`, `reverb`,
-  `minio`) avec un healthcheck adapté en production. Coolify supervise séparément
-  les ressources MySQL et Redis indépendantes. Mailpit
+- Docker vérifie les services longs (`web`, `worker`, `scheduler`, `reverb`)
+  avec un healthcheck adapté en production. Coolify supervise séparément les
+  ressources MySQL, Redis et Garage indépendantes. Mailpit
   possède son propre healthcheck uniquement dans la stack locale.
 - Configurer Coolify pour notifier les échecs de déploiement, conteneurs arrêtés, sauvegardes en erreur et manque d'espace disque.
 - Les journaux applicatifs sont structurés, sans mot de passe, jeton OAuth, contenu de message privé ou données personnelles inutiles.

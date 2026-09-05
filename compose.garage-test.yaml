@@ -1,0 +1,21 @@
+services:
+  garage:
+    image: dxflrs/garage:v2.3.0
+    command: /garage server
+    environment:
+      GARAGE_RPC_SECRET: ${GARAGE_TEST_RPC_SECRET:?GARAGE_TEST_RPC_SECRET is required}
+      GARAGE_ADMIN_TOKEN: ${GARAGE_TEST_ADMIN_TOKEN:?GARAGE_TEST_ADMIN_TOKEN is required}
+      GARAGE_METRICS_TOKEN: ${GARAGE_TEST_METRICS_TOKEN:?GARAGE_TEST_METRICS_TOKEN is required}
+    volumes:
+      - ./docker/garage/garage.toml:/etc/garage.toml:ro
+    tmpfs:
+      - /var/lib/garage/meta
+      - /var/lib/garage/data
+    ports:
+      - "127.0.0.1:3900:3900"
+    healthcheck:
+      test: ["CMD", "/garage", "status"]
+      interval: 2s
+      timeout: 2s
+      start_period: 5s
+      retries: 15

@@ -19,11 +19,10 @@ function productionComposeEnvironment(array $overrides = []): array
         'DB_HOST' => 'mysql-independent.internal',
         'REDIS_HOST' => 'redis-independent.internal',
         'REDIS_PASSWORD' => 'redis-application-password',
-        'MINIO_ROOT_USER' => 'dlp-friends',
-        'MINIO_ROOT_PASSWORD' => 'minio-root-password',
         'AWS_ACCESS_KEY_ID' => 'dlp-friends',
-        'AWS_SECRET_ACCESS_KEY' => 'minio-application-password',
+        'AWS_SECRET_ACCESS_KEY' => 'garage-application-password',
         'AWS_BUCKET' => 'dlp-friends',
+        'AWS_ENDPOINT' => 'http://garage-independent.internal:3900',
         'REVERB_APP_ID' => 'dlp-friends-production',
         'REVERB_APP_KEY' => 'reverb-public-key',
         'REVERB_APP_SECRET' => 'reverb-secret',
@@ -48,7 +47,7 @@ it('resolves the production service topology without local-only services', funct
     $compose = json_decode($result->output(), true, flags: JSON_THROW_ON_ERROR);
 
     expect(array_keys($compose['services']))
-        ->toEqualCanonicalizing(['web', 'worker', 'scheduler', 'reverb', 'minio']);
+        ->toEqualCanonicalizing(['web', 'worker', 'scheduler', 'reverb']);
 });
 
 it('reuses one application image for every long-running Laravel process', function () {
@@ -72,19 +71,15 @@ it('reuses one application image for every long-running Laravel process', functi
     }
 });
 
-it('keeps data services private and persists durable production data', function () {
+it('keeps object storage outside the application stack', function () {
     $result = resolveProductionCompose();
 
     expect($result->successful())->toBeTrue($result->errorOutput());
 
     $compose = json_decode($result->output(), true, flags: JSON_THROW_ON_ERROR);
 
-    foreach (['minio'] as $service) {
-        expect($compose['services'][$service])->not->toHaveKey('ports');
-    }
-
-    expect($compose['services']['minio']['volumes'][0]['target'])->toBe('/data')
-        ->and(array_keys($compose['volumes']))->toEqualCanonicalizing(['minio-data']);
+    expect($compose['services'])->not->toHaveKey('minio')
+        ->and($compose)->not->toHaveKey('volumes');
 });
 
 it('uses Compose service names for private services on the Coolify-managed stack network', function () {
@@ -97,7 +92,8 @@ it('uses Compose service names for private services on the Coolify-managed stack
     foreach (['web', 'worker', 'scheduler', 'reverb'] as $service) {
         expect($services[$service]['environment']['REDIS_HOST'])->toBe('redis-independent.internal')
             ->and($services[$service]['environment']['REVERB_HOST'])->toBe('reverb')
-            ->and($services[$service]['environment']['AWS_ENDPOINT'])->toBe('http://minio:9000');
+            ->and($services[$service]['environment']['AWS_ENDPOINT'])->toBe('http://garage-independent.internal:3900')
+            ->and($services[$service]['depends_on'] ?? [])->not->toHaveKey('minio');
     }
 });
 
@@ -145,6 +141,7 @@ it('rejects a production deployment when a critical variable is missing', functi
     'external database host' => 'DB_HOST',
     'external Redis host' => 'REDIS_HOST',
     'external Redis password' => 'REDIS_PASSWORD',
+    'external S3 endpoint' => 'AWS_ENDPOINT',
     'Reverb secret' => 'REVERB_APP_SECRET',
     'Resend key' => 'RESEND_API_KEY',
 ]);
@@ -162,10 +159,10 @@ it('builds the S3 filesystem used for production object storage', function () {
     $disk = Storage::build([
         'driver' => 's3',
         'key' => 'dlp-friends',
-        'secret' => 'minio-application-password',
+        'secret' => 'garage-application-password',
         'region' => 'us-east-1',
         'bucket' => 'dlp-friends',
-        'endpoint' => 'http://minio:9000',
+        'endpoint' => 'http://garage-independent.internal:3900',
         'use_path_style_endpoint' => true,
     ]);
 
@@ -193,7 +190,7 @@ it('connects every Laravel process to configurable external MySQL without server
         expect($compose['services'][$service]['environment']['DB_HOST'])->toBe('mysql-independent.internal')
             ->and((string) $compose['services'][$service]['environment']['DB_PORT'])->toBe('3308')
             ->and($compose['services'][$service]['environment'])->not->toHaveKey('MYSQL_ROOT_PASSWORD')
-            ->and($compose['services'][$service]['depends_on'])->not->toHaveKey('mysql')
+            ->and($compose['services'][$service]['depends_on'] ?? [])->not->toHaveKey('mysql')
             ->and(array_keys($compose['services'][$service]['networks']))->toBe(['default']);
     }
 });
@@ -209,7 +206,22 @@ it('connects every Laravel process to configurable external Redis', function () 
         expect($compose['services'][$service]['environment']['REDIS_HOST'])->toBe('redis-independent.internal')
             ->and((string) $compose['services'][$service]['environment']['REDIS_PORT'])->toBe('6380')
             ->and($compose['services'][$service]['environment']['REDIS_PASSWORD'])->toBe('redis-application-password')
-            ->and($compose['services'][$service]['depends_on'])->not->toHaveKey('redis')
+            ->and($compose['services'][$service]['depends_on'] ?? [])->not->toHaveKey('redis')
             ->and(array_keys($compose['services'][$service]['networks']))->toBe(['default']);
     }
+});
+
+it('documents the independent Garage lifecycle and safe MinIO cutover', function () {
+    $guide = file_get_contents(base_path('docs/garage-externalization.md'));
+
+    expect($guide)->toContain('dxflrs/garage:v2.3.0')
+        ->toContain('/var/lib/garage/meta')
+        ->toContain('/var/lib/garage/data')
+        ->toContain('/health')
+        ->toContain('lecture, écriture, téléchargement et suppression')
+        ->toContain('nombre total d’objets')
+        ->toContain('somme des tailles')
+        ->toContain('retour arrière')
+        ->toContain('restauration isolée')
+        ->toContain('conserver MinIO');
 });
