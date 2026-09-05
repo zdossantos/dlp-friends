@@ -1,37 +1,29 @@
 # Stockage objet Garage indépendant
 
 Cette procédure remplace uniquement le MinIO de production. Le développement
-local conserve MinIO dans `compose.yaml`. La ressource Garage vit séparément de
-l'application : un redéploiement applicatif ne la recrée pas et ne touche pas à
-ses volumes.
+local conserve MinIO dans `compose.yaml`. En production, Garage est une
+ressource Coolify indépendante : un redéploiement applicatif ne la recrée pas
+et ne touche pas à ses volumes.
 
-## Topologie retenue
+## Création avec le service natif Coolify
 
-- image épinglée `dxflrs/garage:v2.3.0` ;
-- un nœud et un facteur de réplication de 1, adaptés au VPS actuel ;
-- métadonnées persistantes dans `/var/lib/garage/meta` ;
-- objets persistants dans `/var/lib/garage/data` ;
-- API S3 privée sur le port interne 3900 ;
-- API d'administration privée sur le port interne 3903 ;
-- contrôle de santé Garage sur `/health` et healthcheck CLI `/garage status` ;
-- aucun port publié sur Internet ;
-- raccordement par **Connect to Predefined Network** dans Coolify.
+Dans le projet et l'environnement de production Coolify :
 
-Le facteur 1 protège le cycle de vie du service mais ne rend pas les données
-tolérantes à la perte du VPS. Une sauvegarde hors serveur reste obligatoire.
+1. ouvrir **New Resource**, puis **Services** ;
+2. sélectionner le service natif **Garage** fourni par Coolify ;
+3. nommer la ressource et activer **Connect to Predefined Network** ;
+4. conserver l'API S3 et l'administration privées, sans domaine public ;
+5. démarrer la ressource et vérifier qu'elle est saine.
 
-## Création dans Coolify
-
-Créer une application Docker Compose distincte depuis le même dépôt, sur
-`compose.garage.yaml`. Générer séparément trois valeurs aléatoires fortes pour
-`GARAGE_RPC_SECRET` (64 caractères hexadécimaux), `GARAGE_ADMIN_TOKEN` et
-`GARAGE_METRICS_TOKEN`. Les conserver uniquement dans les secrets Coolify.
+La version de Garage, sa configuration, ses volumes persistants et ses secrets
+de service sont gérés par le modèle natif Coolify. Aucun Compose Garage, fichier
+de configuration Garage ou secret Garage n'est conservé dans ce dépôt.
 
 Après le premier démarrage, ouvrir le terminal du conteneur Garage :
 
 ```sh
 /garage node id
-/garage layout assign -z production -c 20G <identifiant-du-noeud>
+/garage layout assign -z dc1 -c 10G <identifiant-du-noeud>
 /garage layout apply --version 1
 /garage bucket create dlp-friends
 /garage key create dlp-friends-app
@@ -39,11 +31,10 @@ Après le premier démarrage, ouvrir le terminal du conteneur Garage :
 ```
 
 La capacité doit rester inférieure à l'espace réellement disponible. La clé
-applicative n'est autorisée que sur `dlp-friends`. Ne pas activer l'accès Web du
-bucket : le téléchargement passe par `AvatarImageController` après les contrôles
-Laravel.
+applicative est autorisée uniquement sur `dlp-friends`. Le bucket reste privé :
+les téléchargements passent par Laravel après ses contrôles d'autorisation.
 
-Dans l'application Coolify, définir les secrets d'exécution suivants :
+Dans l'application Coolify, définir les variables d'exécution suivantes :
 
 ```dotenv
 FILESYSTEM_DISK=s3
@@ -56,16 +47,14 @@ AWS_USE_PATH_STYLE_ENDPOINT=true
 ```
 
 Garage ne fournit pas `GetObjectAcl`. DLP Friends n'utilise ni ACL objet ni URL
-S3 temporaire : le bucket privé, les droits limités de la clé et la réponse
-streamée par Laravel couvrent les opérations présentes. Le test d'intégration
-vérifie lecture, écriture, téléchargement et suppression contre Garage.
+S3 temporaire. Le test d'intégration vérifie lecture, écriture, téléchargement et suppression contre une ressource Garage préparée.
 
 ## Migration depuis MinIO
 
 Ne modifier aucune clé d'objet. Avant la copie, placer les écritures d'avatars
 en maintenance et relever côté MinIO le nombre total d’objets et la somme des
 tailles. Configurer deux remotes S3 privés dans `rclone`, avec adressage
-path-style, puis effectuer d'abord une simulation :
+path-style, puis copier et contrôler les données :
 
 ```sh
 rclone copy minio:dlp-friends garage:dlp-friends --dry-run --metadata
@@ -76,35 +65,20 @@ rclone check minio:dlp-friends garage:dlp-friends --size-only --one-way
 ```
 
 Les deux inventaires doivent avoir le même nombre total d’objets et la même
-somme des tailles. `rclone check --size-only` évite de traiter un ETag multipart
-comme un MD5 universel. Pour un échantillon incluant au moins un objet de chaque
-extension, comparer aussi un SHA-256 calculé après téléchargement depuis chaque
-source. Les fichiers migrés doivent conserver leur clé et leur type de contenu.
+somme des tailles. Pour un échantillon incluant chaque extension, comparer aussi
+un SHA-256 après téléchargement depuis chaque source.
 
-Avec les variables Garage injectées dans un conteneur `web` isolé, exécuter le
-test d'intégration puis lire un avatar existant.
+## Bascule et suppression de MinIO
 
-## Bascule et validation
-
-1. Conserver l'application en maintenance après la copie finale.
-2. Remplacer les cinq variables `AWS_*` par celles de Garage et redéployer.
-3. Vérifier `/up`, puis une lecture, une écriture et une suppression via Laravel.
-4. Afficher un avatar préexistant depuis un compte non administrateur.
-5. Sortir de maintenance et surveiller `web`, `worker` et les journaux Garage.
-6. Arrêter MinIO sans supprimer son conteneur historique ni son volume.
-
-Pour un retour arrière, remettre les anciennes variables MinIO, redéployer,
-vérifier un avatar puis rouvrir le trafic. Si des écritures ont eu lieu après la
-bascule, recopier auparavant les nouvelles clés de Garage vers MinIO. Toujours
-conserver MinIO et son volume jusqu'à une validation explicite de la migration.
+1. Remplacer les variables `AWS_*` par celles de Garage et redéployer.
+2. Vérifier `/up`, puis une lecture, une écriture et une suppression via Laravel.
+3. Vérifier le nombre d'objets et afficher un avatar préexistant.
+4. Sortir de maintenance et surveiller l'application et Garage.
+5. Supprimer définitivement le conteneur et le volume MinIO de production.
 
 ## Sauvegarde et restauration
 
-Sauvegarder quotidiennement les deux volumes Garage hors du serveur pendant une
-fenêtre cohérente, ainsi qu'un inventaire du bucket. La copie des seuls blocs de
-données sans les métadonnées n'est pas restaurable.
-
-Éprouver mensuellement une restauration isolée : restaurer les deux volumes sur
-une ressource Garage sans trafic, démarrer la même version, vérifier `/health`,
-comparer l'inventaire et télécharger un échantillon d'objets. Ne raccorder
-l'application qu'après ces contrôles.
+Sauvegarder quotidiennement les volumes Garage hors du serveur pendant une
+fenêtre cohérente, avec un inventaire du bucket. Éprouver mensuellement une
+restauration isolée, vérifier la santé du service, comparer l'inventaire et
+télécharger un échantillon avant de raccorder une application.
