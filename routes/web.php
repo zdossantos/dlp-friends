@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\InterestController;
 use App\Http\Controllers\Admin\InterestOrderController;
 use App\Http\Controllers\Admin\InterestSettingController;
 use App\Http\Controllers\Admin\InterestStatusController;
+use App\Http\Controllers\Admin\MemberController as AdminMemberController;
 use App\Http\Controllers\Admin\ProductOnboardingController as AdminProductOnboardingController;
 use App\Http\Controllers\AvatarImageController;
 use App\Http\Controllers\BlockMemberController;
@@ -132,6 +133,8 @@ Route::middleware(['auth', 'verified', 'social'])->group(function () {
                 ->name('dashboard');
 
             Route::prefix('admin')->name('admin.')->middleware('role:admin')->group(function (): void {
+                Route::get('members', [AdminMemberController::class, 'index'])
+                    ->name('members.index');
                 Route::resource('interests', InterestController::class)
                     ->only(['index', 'store', 'update', 'destroy']);
                 Route::patch('interests/{interest}/status', InterestStatusController::class)
