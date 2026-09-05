@@ -47,9 +47,10 @@ class InterestController extends Controller
     {
         try {
             DB::transaction(function () use ($request): void {
-                $category = InterestCategory::query()
-                    ->where('name', 'Général')
-                    ->firstOrFail();
+                $category = InterestCategory::query()->firstOrCreate(
+                    ['name' => 'Général'],
+                    ['sort_order' => 0],
+                );
                 $lockedInterests = Interest::query()
                     ->orderBy('id')
                     ->lockForUpdate()
