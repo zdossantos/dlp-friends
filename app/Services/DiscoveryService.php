@@ -87,9 +87,9 @@ final readonly class DiscoveryService
 
                 return new DiscoveryProfileData(
                     userId: $profile->user->id,
-                profileId: $profile->id,
-                displayName: $profile->display_name,
-                isAdmin: $profile->user->hasRole(RoleName::Admin),
+                    profileId: $profile->id,
+                    displayName: $profile->display_name,
+                    isAdmin: $profile->user->hasRole(RoleName::Admin),
                     avatar: [
                         'id' => $avatar->id,
                         'name' => $avatar->name,

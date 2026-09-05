@@ -12,8 +12,8 @@ use App\Models\ProductOnboardingSetting;
 use App\Models\User;
 use Illuminate\Contracts\Debug\ExceptionHandler as ExceptionHandlerContract;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Storage;
 
 test('admin configures tutorial avatars and sees member progress', function () {
     [$passAvatar, $likeAvatar] = Avatar::factory()->count(2)->create();

@@ -3,12 +3,12 @@
 namespace Tests\Feature\Admin;
 
 use App\Enums\SwipeDecision;
+use App\Mail\MemberDeletedByAdminMail;
 use App\Models\Block;
 use App\Models\MemberMatch;
 use App\Models\Message;
 use App\Models\Swipe;
 use App\Models\User;
-use App\Mail\MemberDeletedByAdminMail;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -111,8 +111,7 @@ class ManageMembersTest extends TestCase
 
         $this->assertDatabaseMissing('users', ['id' => $member->id]);
         $this->assertDatabaseMissing('sessions', ['user_id' => $member->id]);
-        Mail::assertQueued(MemberDeletedByAdminMail::class, fn (MemberDeletedByAdminMail $mail): bool =>
-            $mail->hasTo('deleted@example.com')
+        Mail::assertQueued(MemberDeletedByAdminMail::class, fn (MemberDeletedByAdminMail $mail): bool => $mail->hasTo('deleted@example.com')
             && $mail->displayName === $displayName
             && $mail->locale === 'en');
     }

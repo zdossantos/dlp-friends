@@ -14,7 +14,7 @@ final class DeleteMember
     {
         $email = $member->email;
         $locale = $member->preferredLocale();
-        $displayName = $member->profile?->display_name ?? $email;
+        $displayName = $member->profile->display_name ?? $email;
 
         DB::transaction(function () use ($member): void {
             DB::table('sessions')->where('user_id', $member->id)->delete();
