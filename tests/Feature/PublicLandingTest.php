@@ -120,3 +120,33 @@ test('robots policy points to the sitemap and restricts crawling to public landi
         ->assertSee("Disallow: /\n", false)
         ->assertSee('Sitemap: https://dlp-friends.example/sitemap.xml', false);
 });
+
+test('google analytics and search console verification are disabled without configuration', function () {
+    config()->set('services.google.analytics_id');
+    config()->set('services.google.site_verification');
+
+    $this->get('/fr')
+        ->assertOk()
+        ->assertDontSee('googletagmanager.com/gtag/js', false)
+        ->assertDontSee('google-site-verification', false);
+});
+
+test('google analytics and search console verification are rendered when configured', function () {
+    config()->set('services.google.analytics_id', 'G-TEST123456');
+    config()->set('services.google.site_verification', 'search-console-token');
+
+    $this->get('/fr')
+        ->assertOk()
+        ->assertSee('https://www.googletagmanager.com/gtag/js?id=G-TEST123456', false)
+        ->assertSee("gtag('config', 'G-TEST123456')", false)
+        ->assertSee('<meta name="google-site-verification" content="search-console-token">', false);
+});
+
+test('google analytics is available on private application pages when configured', function () {
+    config()->set('services.google.analytics_id', 'G-TEST123456');
+
+    $this->get('/login')
+        ->assertOk()
+        ->assertSee('https://www.googletagmanager.com/gtag/js?id=G-TEST123456', false)
+        ->assertSee("gtag('config', 'G-TEST123456', { send_page_view: false })", false);
+});

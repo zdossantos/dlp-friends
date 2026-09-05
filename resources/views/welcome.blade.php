@@ -3,6 +3,7 @@
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
+        <x-google-tags />
         <title>{{ $seo['title'] }}</title>
         <meta name="description" content="{{ $seo['description'] }}">
         <link rel="canonical" href="{{ $seo['canonical'] }}">
