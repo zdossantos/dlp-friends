@@ -144,6 +144,7 @@ class DiscoveryServiceTest extends TestCase
             'userId' => $target->id,
             'profileId' => $target->profile->id,
             'displayName' => 'Target',
+            'isAdmin' => false,
             'avatar' => [
                 'id' => $target->profile->avatar->id,
                 'name' => $target->profile->avatar->name,
@@ -224,7 +225,7 @@ class DiscoveryServiceTest extends TestCase
 
         (new DiscoveryService($this->ascendingTieBreaker()))->for($actor);
 
-        expect(count($queries))->toBeLessThanOrEqual(6);
+        expect(count($queries))->toBeLessThanOrEqual(7);
     }
 
     /** @return list<Interest> */

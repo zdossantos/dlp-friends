@@ -92,6 +92,7 @@ const previewProfile = computed<DiscoveryProfile | null>(() => {
         userId: 0,
         profileId: 0,
         displayName: displayName.value || t('profile.form.preview_name'),
+        isAdmin: false,
         avatar: selectedAvatar.value,
         age: props.age,
         bio: bio.value || null,

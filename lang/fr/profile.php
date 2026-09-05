@@ -40,6 +40,7 @@ return [
         'frequency_unknown' => 'Non renseignée',
         'visible' => 'Visible',
         'hidden' => 'Masqué',
+        'administrator' => 'Administrateur',
     ],
     'avatar' => [
         'image_alt' => 'Avatar :name',
