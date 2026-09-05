@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.5.3](https://github.com/zdossantos/dlp-friends/compare/v1.5.2...v1.5.3) (2026-09-05)
+
+
+### Fixes
+
+* **seo:** make favicon compatible with Google Search ([#159](https://github.com/zdossantos/dlp-friends/issues/159)) ([f8f69cf](https://github.com/zdossantos/dlp-friends/commit/f8f69cf0063e0aadc763cc30dfcf3bb43c37c961))
+
 ## [1.5.2](https://github.com/zdossantos/dlp-friends/compare/v1.5.1...v1.5.2) (2026-09-05)
 
 
