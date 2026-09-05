@@ -71,6 +71,7 @@ return [
     ],
     'members' => [
         'deleted' => 'The account has been deleted.',
+        'conversation_unavailable' => 'This conversation cannot be created.',
         'mail' => [
             'subject' => 'Your DLP Friends account has been deleted',
             'heading' => 'Hello :name',

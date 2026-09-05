@@ -74,6 +74,7 @@ return [
     ],
     'members' => [
         'deleted' => 'Le compte a été supprimé.',
+        'conversation_unavailable' => 'Cette conversation ne peut pas être créée.',
         'mail' => [
             'subject' => 'Ton compte DLP Friends a été supprimé',
             'heading' => 'Bonjour :name',
