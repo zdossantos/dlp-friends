@@ -115,6 +115,7 @@ test('robots policy points to the sitemap and restricts crawling to public landi
 
     $this->get('/robots.txt')
         ->assertOk()
+        ->assertSee("Allow: /sitemap.xml\n", false)
         ->assertSee("Allow: /fr\n", false)
         ->assertSee("Allow: /en\n", false)
         ->assertSee("Disallow: /\n", false)
