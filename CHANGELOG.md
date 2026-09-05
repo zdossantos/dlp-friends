@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.1](https://github.com/zdossantos/dlp-friends/compare/v1.3.0...v1.3.1) (2026-09-05)
+
+
+### Fixes
+
+* **infra:** rely on Coolify native Garage service ([#146](https://github.com/zdossantos/dlp-friends/issues/146)) ([ea010c6](https://github.com/zdossantos/dlp-friends/commit/ea010c696b00357803ddb968fd2c1422854a4dee))
+
 ## [1.3.0](https://github.com/zdossantos/dlp-friends/compare/v1.2.5...v1.3.0) (2026-09-05)
 
 
