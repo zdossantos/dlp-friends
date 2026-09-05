@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.0](https://github.com/zdossantos/dlp-friends/compare/v1.2.5...v1.3.0) (2026-09-05)
+
+
+### Features
+
+* **infra:** externalize production object storage ([#144](https://github.com/zdossantos/dlp-friends/issues/144)) ([6ec8cc1](https://github.com/zdossantos/dlp-friends/commit/6ec8cc18c6995675a338400ac269fa56dbcc45ec))
+
 ## [1.2.5](https://github.com/zdossantos/dlp-friends/compare/v1.2.4...v1.2.5) (2026-09-04)
 
 
