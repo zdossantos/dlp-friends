@@ -91,11 +91,11 @@ production : aucun runtime Vue/Inertia ni JavaScript applicatif n'est
 nécessaire pour les afficher ou les parcourir.
 
 Les pages d’authentification et tous les parcours applicatifs renvoient
-`X-Robots-Tag: noindex, nofollow`. La politique `robots.txt` autorise les deux
-landing pages et indique le sitemap ; elle ne remplace pas l’en-tête de
-protection attaché aux réponses privées. Un membre connecté qui ouvre la
-racine ou une landing page rejoint immédiatement la route d’aiguillage de son
-espace membre.
+`X-Robots-Tag: noindex, nofollow`. La redirection publique de la racine n’envoie
+pas cet en-tête. La politique `robots.txt` autorise exactement `/`, les deux
+landing pages et le sitemap ; elle ne remplace pas l’en-tête de protection
+attaché aux réponses privées. Un membre connecté qui ouvre la racine ou une
+landing page rejoint immédiatement la route d’aiguillage de son espace membre.
 
 ### Standard des pages publiques indexables
 
@@ -139,7 +139,9 @@ Le composant Blade `google-tags` charge Google Analytics 4 sur les documents
 publics et dans le shell Inertia uniquement lorsque `GOOGLE_ANALYTICS_ID` est
 configuré. Les pages Blade laissent GA4 enregistrer la page initiale. Le shell
 Inertia désactive cet envoi automatique et émet une page vue au chargement puis
-à chaque navigation cliente, afin d’éviter les doublons.
+à chaque navigation cliente, avec la page précédente comme référent, afin
+d’éviter les doublons. Le suivi GA4 des changements fondés sur l’historique du
+navigateur doit rester désactivé puisque l’application les mesure elle-même.
 
 Avant l’envoi, les paramètres de requête, fragments et segments numériques ou
 UUID des URL sont retirés ou remplacés par `{id}`. Aucun événement applicatif
