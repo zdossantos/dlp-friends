@@ -1,32 +1,39 @@
 <script setup lang="ts">
-import { CalendarDays, Sparkles } from '@lucide/vue';
+import { CalendarDays, ShieldCheck, Sparkles } from '@lucide/vue';
 import { Badge } from '@/components/ui/badge';
 import { useTranslations } from '@/composables/useTranslations';
 
 const { t } = useTranslations();
 
-defineProps<{
-    avatar: {
-        name: string;
-        image_url: string;
-        primary_color: string;
-        secondary_color: string;
-    };
-    displayName: string;
-    ageLabel: string;
-    bio: string;
-    visitFrequency: string;
-    interests: Array<{ id: number; name: string }>;
-    aboutLabel: string;
-    interestsLabel: string;
-    visitFrequencyLabel: string;
-}>();
+withDefaults(
+    defineProps<{
+        avatar: {
+            name: string;
+            image_url: string;
+            primary_color: string;
+            secondary_color: string;
+        };
+        displayName: string;
+        ageLabel: string;
+        bio: string;
+        visitFrequency: string;
+        interests: Array<{ id: number; name: string }>;
+        aboutLabel: string;
+        interestsLabel: string;
+        visitFrequencyLabel: string;
+        isAdmin?: boolean;
+    }>(),
+    { isAdmin: false },
+);
 </script>
 
 <template>
     <section
         data-test="profile-presentation"
-        class="flex max-h-full w-full flex-col overflow-hidden rounded-[2rem] border border-border/70 bg-card shadow-xl shadow-primary/10"
+        :class="[
+            'flex max-h-full w-full flex-col overflow-hidden rounded-[2rem] border bg-card shadow-xl shadow-primary/10',
+            isAdmin ? 'border-2 border-amber-400' : 'border-border/70',
+        ]"
     >
         <div
             data-test="profile-presentation-hero"
@@ -50,6 +57,15 @@ defineProps<{
                 />
             </div>
             <div class="absolute top-3 right-3 z-30 flex gap-2">
+                <Badge
+                    v-if="isAdmin"
+                    data-test="admin-profile-badge"
+                    class="gap-1 border-amber-400 bg-amber-50 text-amber-950 shadow-md"
+                    variant="outline"
+                >
+                    <ShieldCheck class="size-4" aria-hidden="true" />
+                    {{ t('profile.details.administrator') }}
+                </Badge>
                 <slot name="hero-actions" />
             </div>
         </div>

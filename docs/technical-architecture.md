@@ -69,6 +69,14 @@ actions d’archivage et de suppression les protègent également côté serveur
 L’écran admin calcule ses agrégats et sa liste paginée sur le même périmètre de
 membres adultes, actifs, vérifiés et disposant d’un profil complet.
 
+La gestion des membres est servie par une Policy dédiée et une requête paginée
+de 20 comptes qui calcule uniquement des compteurs. La suppression passe par
+une Action transactionnelle, révoque les sessions puis met en file la
+notification après la suppression. L’ouverture d’un échange admin/membre
+verrouille la paire canonique, réutilise son match et sa conversation s’ils
+existent, ou les crée sans ajouter de swipe. Les Policies de profil et l’Action
+de blocage interdisent toutes deux de cibler un administrateur.
+
 ## Accueil public et indexation
 
 La racine `/` sélectionne la langue du visiteur à partir de sa préférence puis

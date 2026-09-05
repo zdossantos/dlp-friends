@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Sparkles, Users, X } from '@lucide/vue';
+import { ShieldCheck, Sparkles, Users, X } from '@lucide/vue';
 import { computed, ref, watch } from 'vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -333,6 +333,9 @@ watch(
                 isDragging ? 'duration-0' : 'duration-[280ms]',
                 forcedDecision === 'like' && 'motion-card-exit-right',
                 forcedDecision === 'pass' && 'motion-card-exit-left',
+                profile.isAdmin
+                    ? 'border-2 border-amber-400'
+                    : 'border-border/70',
             ]"
             :style="cardStyle"
             :tabindex="preview ? -1 : 0"
@@ -350,6 +353,15 @@ watch(
             @lostpointercapture="forgetPointerStart"
             @click="openPublicProfile"
         >
+            <Badge
+                v-if="profile.isAdmin"
+                data-test="admin-discovery-badge"
+                class="absolute top-3 right-3 z-40 gap-1 border-amber-400 bg-amber-50 text-amber-950 shadow-md"
+                variant="outline"
+            >
+                <ShieldCheck class="size-4" aria-hidden="true" />
+                {{ t('profile.details.administrator') }}
+            </Badge>
             <div
                 data-test="discovery-like-constellation"
                 aria-hidden="true"

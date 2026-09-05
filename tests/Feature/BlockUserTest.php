@@ -71,6 +71,19 @@ class BlockUserTest extends TestCase
         app(BlockUser::class)->handle($member, $member);
     }
 
+    public function test_an_administrator_cannot_be_blocked(): void
+    {
+        $member = User::factory()->create();
+        $admin = User::factory()->admin()->create();
+
+        try {
+            app(BlockUser::class)->handle($member, $admin);
+            $this->fail('The administrator block should be rejected.');
+        } catch (ValidationException) {
+            $this->assertDatabaseCount('blocks', 0);
+        }
+    }
+
     /** @return array{User, User, Conversation} */
     private function conversationMembers(): array
     {

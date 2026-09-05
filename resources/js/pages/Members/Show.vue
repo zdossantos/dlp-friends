@@ -12,6 +12,7 @@ import type { PublicMember, VisitFrequency } from '@/types';
 const props = defineProps<{
     member: PublicMember;
     backHref: string;
+    canBlock: boolean;
     canUnblock: boolean;
 }>();
 const { t } = useTranslations();
@@ -69,6 +70,7 @@ function goBack(): void {
             :about-label="t('profile.details.about')"
             :interests-label="t('profile.details.interests')"
             :visit-frequency-label="t('profile.details.visit_frequency')"
+            :is-admin="member.is_admin"
         >
             <template #summary-actions>
                 <UnblockMemberButton
@@ -77,7 +79,7 @@ function goBack(): void {
                     :return-href="backHref"
                 />
                 <BlockMemberDialog
-                    v-else
+                    v-else-if="canBlock"
                     :member-id="member.id"
                     :return-href="backHref"
                 />

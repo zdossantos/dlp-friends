@@ -15,21 +15,26 @@ final class PublicMemberProfileController extends Controller
 {
     public function __invoke(Request $request, User $member): Response
     {
-        $member->load(['profile.avatar', 'profile.interests']);
+        $member->load(['profile.avatar', 'profile.interests', 'roles']);
         $profile = $member->profile;
 
         abort_if($profile === null || ! Gate::forUser($request->user())->allows('viewPublic', $profile), 404);
         $avatar = $profile->avatar;
         abort_if($avatar === null, 404);
 
+        $isAdmin = $member->hasRole('admin');
+        $canUnblock = ! $isAdmin && Block::query()
+            ->where('blocker_user_id', $request->user()->id)
+            ->where('blocked_user_id', $member->id)
+            ->exists();
+
         return Inertia::render('Members/Show', [
             'backHref' => $this->backHref($request, $member),
-            'canUnblock' => Block::query()
-                ->where('blocker_user_id', $request->user()->id)
-                ->where('blocked_user_id', $member->id)
-                ->exists(),
+            'canBlock' => ! $isAdmin && ! $canUnblock,
+            'canUnblock' => $canUnblock,
             'member' => [
                 'id' => $member->id,
+                'is_admin' => $isAdmin,
                 'display_name' => $profile->display_name,
                 'age' => $member->age,
                 'avatar' => [

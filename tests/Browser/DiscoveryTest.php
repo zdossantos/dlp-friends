@@ -149,6 +149,24 @@ test('discovery decisions are icon controls below the card with accessible touch
         ->assertNoJavaScriptErrors();
 });
 
+test('an administrator is identified on discovery cards with a golden border', function () {
+    $actor = discoveryMember('Alice');
+    $admin = User::factory()->withProfile()->admin()->create();
+    Storage::disk('local')->put($admin->profile->avatar->image_path, base64_decode(
+        'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScL8WQAAAABJRU5ErkJggg==',
+    ));
+    $this->actingAs($actor);
+
+    visit('/discover')
+        ->assertPresent('[data-test="admin-discovery-badge"]')
+        ->assertSee('Administrateur')
+        ->assertScript(
+            "document.querySelector('[data-test=discovery-card]').classList.contains('border-amber-400') && getComputedStyle(document.querySelector('[data-test=discovery-card]')).borderTopWidth === '2px'",
+            true,
+        )
+        ->assertNoJavaScriptErrors();
+});
+
 test('discovery renders its loading state while suggestions are deferred', function () {
     $actor = discoveryMember('Alice');
     discoveryMember('Basile');

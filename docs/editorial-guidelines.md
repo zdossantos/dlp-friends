@@ -20,9 +20,13 @@ service est rappelée aux moments utiles, sans répéter mécaniquement « amica
 | Conversation privée | Échange |
 | Profil d’un membre | Profil |
 | Centres d’intérêt | Univers favoris |
+| Rôle d’administration visible | Administrateur |
 
 Le dialogue de réciprocité suit ce modèle : « Vos univers se croisent », puis
 « :name souhaite aussi te découvrir. Tu peux maintenant commencer l’échange. »
+Ce même composant est réutilisé lors de la création initiale d’un échange
+d’assistance administrateur/membre, sans présenter cette exception comme un
+like réciproque réel.
 
 ## Lexique recommandé
 

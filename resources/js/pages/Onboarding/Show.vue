@@ -91,6 +91,7 @@ function toSwipeProfile(
 ): DiscoveryCardProfile {
     return {
         displayName: profile.displayName,
+        isAdmin: false,
         age,
         bio: profile.bio,
         visitFrequency: null,
