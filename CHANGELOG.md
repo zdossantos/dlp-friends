@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.5.1](https://github.com/zdossantos/dlp-friends/compare/v1.5.0...v1.5.1) (2026-09-05)
+
+
+### Fixes
+
+* **analytics:** correct root indexing and GA4 tracking ([#155](https://github.com/zdossantos/dlp-friends/issues/155)) ([5f9760c](https://github.com/zdossantos/dlp-friends/commit/5f9760cc3705228f64cc6762db1e7e7bbc19cf8e))
+
 ## [1.5.0](https://github.com/zdossantos/dlp-friends/compare/v1.4.0...v1.5.0) (2026-09-05)
 
 
