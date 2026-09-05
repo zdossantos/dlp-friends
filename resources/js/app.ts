@@ -24,7 +24,7 @@ configureEcho(
 
 const appName = import.meta.env.VITE_APP_NAME;
 
-createInertiaApp({
+const inertiaReady = createInertiaApp({
     title: (title) => (title ? `${title} - ${appName}` : appName),
     layout: resolvePageLayout,
     progress: {
@@ -32,7 +32,7 @@ createInertiaApp({
     },
 });
 
-initializeAnalytics();
+void initializeAnalytics(inertiaReady);
 
 // This will set light / dark mode on page load...
 initializeTheme();

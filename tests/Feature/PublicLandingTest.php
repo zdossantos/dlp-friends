@@ -11,7 +11,8 @@ uses(RefreshDatabase::class);
 test('the public entry point redirects to the browser language landing page', function (string $language, string $path) {
     $this->withHeader('Accept-Language', $language)
         ->get('/')
-        ->assertRedirect($path);
+        ->assertRedirect($path)
+        ->assertHeaderMissing('X-Robots-Tag');
 })->with([
     'French' => ['fr-FR,fr;q=0.9,en;q=0.8', '/fr'],
     'English' => ['en-GB,en;q=0.9,fr;q=0.8', '/en'],
@@ -107,7 +108,9 @@ test('the sitemap contains localized public landing and legal pages', function (
 test('authentication and private pages instruct search engines not to index them', function () {
     $this->get('/login')->assertHeader('X-Robots-Tag', 'noindex, nofollow');
     $this->get('/register')->assertHeader('X-Robots-Tag', 'noindex, nofollow');
+    $this->get('/admin/members')->assertHeader('X-Robots-Tag', 'noindex, nofollow');
     $this->get('/discover')->assertHeader('X-Robots-Tag', 'noindex, nofollow');
+    $this->get('/members/42')->assertHeader('X-Robots-Tag', 'noindex, nofollow');
 });
 
 test('robots policy points to the sitemap and restricts crawling to public landings', function () {
@@ -115,6 +118,7 @@ test('robots policy points to the sitemap and restricts crawling to public landi
 
     $this->get('/robots.txt')
         ->assertOk()
+        ->assertSee("Allow: /$\n", false)
         ->assertSee("Allow: /sitemap.xml\n", false)
         ->assertSee("Allow: /fr\n", false)
         ->assertSee("Allow: /en\n", false)
