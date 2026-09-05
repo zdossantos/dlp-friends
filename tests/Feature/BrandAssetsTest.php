@@ -37,12 +37,12 @@ class BrandAssetsTest extends TestCase
     {
         $favicon = $this->loadSvg(public_path('favicon.svg'));
         $xpath = new DOMXPath($favicon);
-        $paths = $xpath->query('/*[local-name()="svg"]/*[local-name()="path"]');
-        $backgrounds = $xpath->query('/*[local-name()="svg"]/*[local-name()="rect"]');
+        $paths = $xpath->query('//*[local-name()="path"]');
+        $backgrounds = $xpath->query('//*[local-name()="rect"]');
 
         $this->assertSame('512', $favicon->documentElement->getAttribute('width'));
-        $this->assertSame('419', $favicon->documentElement->getAttribute('height'));
-        $this->assertSame('0 0 512 419', $favicon->documentElement->getAttribute('viewBox'));
+        $this->assertSame('512', $favicon->documentElement->getAttribute('height'));
+        $this->assertSame('0 0 512 512', $favicon->documentElement->getAttribute('viewBox'));
         $this->assertCount(11, $paths);
         $this->assertCount(0, $backgrounds);
 
