@@ -8,7 +8,7 @@ et l’état des capacités applicatives sont définis dans le
 
 - Définir `LEGAL_CONTACT_EMAIL` dans les secrets Coolify avant la production.
 - Faire relire professionnellement les CGU et la politique de confidentialité.
-- Confirmer la sauvegarde quotidienne chiffrée MySQL et MinIO, hors serveur,
+- Confirmer la sauvegarde quotidienne chiffrée MySQL et Garage, hors serveur,
   avec une rétention de 30 jours.
 - Le VPS est hébergé chez IONOS. Mailpit reste local uniquement ; Resend est le
   transport d’e-mails transactionnels de production.
@@ -32,9 +32,10 @@ Internet.
 ## Garage indépendant
 
 Avant de retirer MinIO du Compose applicatif, préparer Garage et migrer les
-objets selon [la procédure Garage](garage-externalization.md). Le service utilise
-deux volumes persistants, un bucket privé et une clé applicative limitée. MinIO
-et son volume d'origine restent conservés jusqu'à validation explicite.
+objets selon [la procédure Garage](garage-externalization.md). Créer la ressource
+avec le service Garage natif de Coolify, puis utiliser son stockage persistant,
+un bucket privé et une clé applicative limitée. Après validation de la migration,
+supprimer définitivement le conteneur et le volume MinIO de production.
 
 ## Premier déploiement sur Coolify
 

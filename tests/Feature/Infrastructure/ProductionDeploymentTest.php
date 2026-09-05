@@ -211,17 +211,20 @@ it('connects every Laravel process to configurable external Redis', function () 
     }
 });
 
-it('documents the independent Garage lifecycle and safe MinIO cutover', function () {
+it('documents Garage as a native Coolify service without repository Compose files', function () {
     $guide = file_get_contents(base_path('docs/garage-externalization.md'));
 
-    expect($guide)->toContain('dxflrs/garage:v2.3.0')
-        ->toContain('/var/lib/garage/meta')
-        ->toContain('/var/lib/garage/data')
-        ->toContain('/health')
+    expect(base_path('compose.garage.yaml'))->not->toBeFile()
+        ->and(base_path('compose.garage-test.yaml'))->not->toBeFile()
+        ->and(base_path('docker/garage'))->not->toBeDirectory()
+        ->and($guide)->toContain('service natif **Garage**')
+        ->toContain('Services')
+        ->toContain('Connect to Predefined Network')
         ->toContain('lecture, écriture, téléchargement et suppression')
         ->toContain('nombre total d’objets')
         ->toContain('somme des tailles')
-        ->toContain('retour arrière')
         ->toContain('restauration isolée')
-        ->toContain('conserver MinIO');
+        ->not->toContain('compose.garage')
+        ->not->toContain('retour arrière')
+        ->not->toContain('conserver MinIO');
 });
