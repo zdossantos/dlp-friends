@@ -51,7 +51,45 @@ class ProductOnboardingSchemaTest extends TestCase
             'id', 'user_id', 'status', 'step', 'created_at', 'updated_at',
         ]))->toBeTrue()->and(Schema::hasColumns('product_onboarding_settings', [
             'id', 'pass_avatar_id', 'like_avatar_id', 'created_at', 'updated_at',
+            'pass_display_name', 'pass_display_name_en', 'pass_bio', 'pass_bio_en',
+            'like_display_name', 'like_display_name_en', 'like_bio', 'like_bio_en',
         ]))->toBeTrue();
+    }
+
+    public function test_existing_settings_receive_usable_localized_copy_defaults(): void
+    {
+        [$passAvatar, $likeAvatar] = Avatar::factory()->count(2)->create();
+        $migration = require database_path(
+            'migrations/2026_09_05_000000_add_localized_copy_to_product_onboarding_settings.php',
+        );
+
+        $migration->down();
+
+        try {
+            DB::table('product_onboarding_settings')->insert([
+                'id' => ProductOnboardingSetting::SINGLETON_ID,
+                'pass_avatar_id' => $passAvatar->id,
+                'like_avatar_id' => $likeAvatar->id,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+
+            $migration->up();
+
+            expect(DB::table('product_onboarding_settings')->first())
+                ->pass_display_name->toBe('Camille')
+                ->pass_bio->toBe('Aime découvrir les détails du parc et profiter des spectacles.')
+                ->pass_display_name_en->toBe('Camille')
+                ->pass_bio_en->toBe('Enjoys discovering park details and watching the shows.')
+                ->like_display_name->toBe('Alex')
+                ->like_bio->toBe('Toujours partant pour partager une journée conviviale entre fans.')
+                ->like_display_name_en->toBe('Alex')
+                ->like_bio_en->toBe('Always happy to share a park day with fellow fans.');
+        } finally {
+            if (! Schema::hasColumn('product_onboarding_settings', 'pass_display_name')) {
+                $migration->up();
+            }
+        }
     }
 
     public function test_skipped_progress_is_normalized_to_the_mandatory_first_step(): void

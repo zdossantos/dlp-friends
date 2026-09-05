@@ -16,7 +16,13 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 
 test('admin configures tutorial avatars and sees member progress', function () {
+    Storage::fake('local');
     [$passAvatar, $likeAvatar] = Avatar::factory()->count(2)->create();
+    foreach ([$passAvatar, $likeAvatar] as $avatar) {
+        Storage::disk('local')->put($avatar->image_path, base64_decode(
+            'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScL8WQAAAABJRU5ErkJggg==',
+        ));
+    }
     ProductOnboardingSetting::query()->create([
         'id' => ProductOnboardingSetting::SINGLETON_ID,
         'pass_avatar_id' => $passAvatar->id,
@@ -37,7 +43,27 @@ test('admin configures tutorial avatars and sees member progress', function () {
         ->assertSee('Carte à découvrir')
         ->assertValue('#pass_avatar_id', (string) $passAvatar->id)
         ->assertValue('#like_avatar_id', (string) $likeAvatar->id)
+        ->assertValue('#pass_display_name', 'Camille')
+        ->assertValue('#like_display_name', 'Alex')
+        ->type('#pass_display_name', 'Camille navigateur')
+        ->type('#pass_bio', 'Biographie du profil passé depuis le navigateur.')
+        ->type('#pass_display_name_en', 'Browser Camille')
+        ->type('#pass_bio_en', 'Browser biography for the passed profile.')
+        ->type('#like_display_name', 'Alex navigateur')
+        ->type('#like_bio', 'Biographie du profil découvert depuis le navigateur.')
+        ->type('#like_display_name_en', 'Browser Alex')
+        ->type('#like_bio_en', 'Browser biography for the discovered profile.')
+        ->press('Enregistrer la configuration')
+        ->assertSee('Configuration du tutoriel enregistrée.')
         ->assertNoJavaScriptErrors();
+
+    $this->assertDatabaseHas('product_onboarding_settings', [
+        'id' => ProductOnboardingSetting::SINGLETON_ID,
+        'pass_display_name' => 'Camille navigateur',
+        'pass_display_name_en' => 'Browser Camille',
+        'like_display_name' => 'Alex navigateur',
+        'like_display_name_en' => 'Browser Alex',
+    ]);
 
     visit('/admin/avatars')
         ->assertDisabled("[aria-label=\"Archiver {$passAvatar->name}\"]")
