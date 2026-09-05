@@ -100,6 +100,26 @@ class ManageInterestCatalogTest extends TestCase
         ]);
     }
 
+    public function test_creating_the_first_interest_bootstraps_the_internal_category(): void
+    {
+        $admin = User::factory()->withProfile()->admin()->create();
+
+        $this->actingAs($admin)->post(route('admin.interests.store'), [
+            'name' => 'Attractions à sensations',
+            'name_en' => 'Thrill rides',
+        ])->assertRedirect();
+
+        $category = InterestCategory::query()
+            ->where('name', 'Général')
+            ->firstOrFail();
+
+        $this->assertDatabaseHas('interests', [
+            'interest_category_id' => $category->id,
+            'name' => 'Attractions à sensations',
+            'name_en' => 'Thrill rides',
+        ]);
+    }
+
     public function test_create_rejects_a_semantic_duplicate_surrounded_by_unicode_whitespace(): void
     {
         $this->withoutMiddleware(TrimStrings::class);
