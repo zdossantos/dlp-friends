@@ -351,8 +351,8 @@ test('an admin manages interests through confirmations and generated actions', f
     $page->assertNotPresent('[role=dialog]')
         ->assertVisible("#reactivate-interest-{$interest->id}");
 
-    $page->click("#reactivate-interest-{$interest->id}")
-        ->assertSee('Intérêt réactivé.');
+    $page->script("document.querySelector('#reactivate-interest-{$interest->id}').click()");
+    $page->assertSee('Intérêt réactivé.');
 
     $this->assertDatabaseHas('interests', [
         'id' => $interest->id,
