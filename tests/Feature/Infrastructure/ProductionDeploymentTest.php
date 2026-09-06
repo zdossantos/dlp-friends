@@ -199,15 +199,6 @@ it('honors the HTTPS scheme forwarded by the Coolify proxy', function () {
         ->assertRedirect('https://dlp-friends.fr/fr');
 });
 
-it('proxies same-origin websocket connections to Reverb', function () {
-    $nginx = file_get_contents(base_path('docker/nginx/default.conf'));
-
-    expect($nginx)->toContain('location /app/')
-        ->and($nginx)->toContain('proxy_pass http://reverb:8080')
-        ->and($nginx)->toContain('proxy_set_header Upgrade $http_upgrade')
-        ->and($nginx)->toContain('proxy_set_header Connection "upgrade"');
-});
-
 it('connects every Laravel process to configurable external MySQL without server credentials', function () {
     $result = resolveProductionCompose(['DB_PORT' => '3308', 'MYSQL_ROOT_PASSWORD' => '']);
 

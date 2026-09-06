@@ -188,8 +188,7 @@ sont des ressources Coolify indépendantes ; le worker et le scheduler ne publie
 aucun port sur l'hôte. `compose.yaml`
 décrit la stack locale complète, dont Mailpit. `compose.production.yaml`
 décrit la stack applicative Coolify, exclut Mailpit, MySQL, Redis et Garage, et
-expose `web` au proxy Coolify. Nginx relaie les connexions `/app/` vers le port
-interne du service `reverb`, qui reste sur le réseau privé de la stack.
+expose seulement les ports internes de `web` et `reverb` au proxy Coolify.
 
 Le conteneur applicatif ne lance aucune migration au démarrage. Les migrations
 s'exécutent explicitement avec `php artisan migrate --force` et doivent rester
