@@ -348,6 +348,9 @@ test('an admin manages interests through confirmations and generated actions', f
         'is_active' => false,
     ]);
 
+    $page->assertNotPresent('[role=dialog]')
+        ->assertVisible("#reactivate-interest-{$interest->id}");
+
     $page->click("#reactivate-interest-{$interest->id}")
         ->assertSee('Intérêt réactivé.');
 
