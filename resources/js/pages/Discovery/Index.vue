@@ -332,7 +332,7 @@ function retry(): void {
         <MatchDialog
             v-if="match"
             v-model:open="matchDialogOpen"
-            :match="match"
+            :match="match.member"
             :conversation-href="showConversation(match.conversationId).url"
         />
     </main>

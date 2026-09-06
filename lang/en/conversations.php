@@ -13,6 +13,10 @@ return [
         'current_user_prefix' => 'You: ',
         'unread_message' => ':count unread message',
         'unread_messages' => ':count unread messages',
+        'search_label' => 'Search chats by member name',
+        'search_placeholder' => 'Search for a member…',
+        'search_clear' => 'Clear',
+        'search_empty' => 'No chat matches this name.',
     ],
     'header' => [
         'back' => 'Back to chats',
@@ -34,5 +38,8 @@ return [
         'unavailable' => 'Live updates are unavailable. Your messages remain visible.',
         'retry' => 'Try again',
         'connecting' => 'Connecting to live updates…',
+    ],
+    'notification' => [
+        'open' => 'Open',
     ],
 ];
