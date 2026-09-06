@@ -81,6 +81,13 @@ test('login and registration offer only Google social authentication', function 
         );
 });
 
+test('login visibly reports a failed social authentication', function () {
+    visit('/auth/google/callback?error=access_denied&state=invalid', ['locale' => 'fr-FR'])
+        ->assertPathIs('/login')
+        ->assertSee('La connexion avec le fournisseur a expiré ou est invalide. Veuillez réessayer.')
+        ->assertVisible('[data-test="social-auth-error"]');
+});
+
 test('registration submits an explicit terms choice', function () {
     visit('/register', ['locale' => 'fr-FR'])
         ->fill('email', 'browser-terms@example.com')

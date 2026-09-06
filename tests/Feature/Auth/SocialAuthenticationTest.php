@@ -111,7 +111,9 @@ class SocialAuthenticationTest extends TestCase
         $response = $this->performCallback($provider);
 
         $response->assertRedirect(route('login'));
-        $response->assertSessionHasErrors('social_auth');
+        $response->assertSessionHasErrors([
+            'social_auth' => __('social_auth.email_conflict'),
+        ]);
         $this->assertGuest();
         $this->assertDatabaseCount('social_accounts', 0);
     }
