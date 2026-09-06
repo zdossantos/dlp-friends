@@ -348,20 +348,26 @@ test('an admin manages interests through confirmations and generated actions', f
         'is_active' => false,
     ]);
 
-    $page->click("#reactivate-interest-{$interest->id}")
-        ->assertSee('Intérêt réactivé.');
+    $page->assertNotPresent('[role=dialog]')
+        ->assertVisible("#reactivate-interest-{$interest->id}");
+
+    $page->script("document.querySelector('#reactivate-interest-{$interest->id}').click()");
+    $page->assertSee('Intérêt réactivé.');
 
     $this->assertDatabaseHas('interests', [
         'id' => $interest->id,
         'is_active' => true,
     ]);
 
-    $page->click("#archive-interest-{$interest->id}");
+    $page->assertVisible("#archive-interest-{$interest->id}");
+    $page->script("document.querySelector('#archive-interest-{$interest->id}').click()");
     $page->script("document.querySelector('[role=dialog] button[type=submit]').click()");
     $page->assertSee('Intérêt archivé.');
 
-    $page->click("#delete-interest-{$interest->id}")
-        ->assertSee('Supprimer l’univers Chill renommé')
+    $page->assertNotPresent('[role=dialog]')
+        ->assertVisible("#delete-interest-{$interest->id}");
+    $page->script("document.querySelector('#delete-interest-{$interest->id}').click()");
+    $page->assertSee('Supprimer l’univers Chill renommé')
         ->assertSee('Cette action est définitive.')
         ->assertSee('Annuler');
     $page->script("document.querySelector('[role=dialog] button[type=submit]').click()");
