@@ -44,8 +44,10 @@ supprimer définitivement le conteneur et le volume MinIO de production.
    Deploy** et supprimer toute commande personnalisée de build. Configurer
    l’accès GHCR privé et les variables GitHub comme indiqué dans
    [`quality-ci-cd.md`](quality-ci-cd.md#configuration-et-droits).
-2. Associer le domaine HTTPS public au service `web` sur son port interne `80`,
-   puis le domaine WebSocket au service `reverb` sur son port interne `8080`.
+2. Associer le domaine HTTPS public au service `web` sur son port interne `80`.
+   Nginx transmet les connexions WebSocket reçues sous `/app/` au service
+   `reverb` sur son port interne `8080` ; aucun second domaine public n’est
+   nécessaire.
 3. Renseigner les variables obligatoires détectées par Coolify :
    `APP_IMAGE`, `APP_KEY`, `APP_URL`, `LEGAL_CONTACT_EMAIL`, `DB_DATABASE`, `DB_USERNAME`,
    `DB_PASSWORD`, `DB_HOST`, `REDIS_HOST`, `REDIS_PASSWORD`, `AWS_ENDPOINT`,
@@ -60,8 +62,10 @@ supprimer définitivement le conteneur et le volume MinIO de production.
    par digest issue du fichier `container-image.json` joint à la release ; le
    workflow la renseignera ensuite à chaque livraison.
 4. Définir les quatre `VITE_REVERB_*` dans les variables **GitHub**, avec le
-   domaine public Reverb sans protocole, le port `443`, le schéma `https` et
-   une clé publique identique à `REVERB_APP_KEY` dans Coolify.
+   domaine public de l’application sans protocole, le port `443`, le schéma
+   `https` et une clé publique identique à `REVERB_APP_KEY` dans Coolify. Le
+   client utilise toujours l’hôte de la page afin de conserver une connexion
+   WebSocket de même origine.
 5. Fusionner volontairement la Release PR une fois les contrôles réussis. Le
    workflow publie l’image, teste son démarrage et demande son déploiement.
    Attendre que `web`, `worker`, `scheduler`, `reverb`,

@@ -137,7 +137,7 @@ Dans GitHub, **Settings → Secrets and variables → Actions → Variables** :
 | Variable | Valeur |
 | --- | --- |
 | `VITE_REVERB_APP_KEY` | Clé publique, identique à `REVERB_APP_KEY` dans Coolify. |
-| `VITE_REVERB_HOST` | Hôte WebSocket public, sans protocole ni chemin. |
+| `VITE_REVERB_HOST` | Domaine public de l’application, sans protocole ni chemin. |
 | `VITE_REVERB_PORT` | `443` en production. |
 | `VITE_REVERB_SCHEME` | `https` en production. |
 | `COOLIFY_API_URL` | `https://coolify.zdossantos.fr/api/v1`. |

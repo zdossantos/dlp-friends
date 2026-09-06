@@ -7,16 +7,13 @@ import { initializeFlashToast } from '@/lib/flashToast';
 import { resolvePageTitle } from '@/lib/pageTitle';
 import { resolveReverbHost } from '@/lib/reverbHost';
 
-const configuredReverbHost = import.meta.env.VITE_REVERB_HOST;
-
 configureEcho(
     import.meta.env.VITE_REVERB_APP_KEY
         ? {
               broadcaster: 'reverb',
               wsHost: resolveReverbHost(
-                  configuredReverbHost,
                   typeof window === 'undefined'
-                      ? configuredReverbHost
+                      ? import.meta.env.VITE_REVERB_HOST
                       : window.location.hostname,
               ),
           }
