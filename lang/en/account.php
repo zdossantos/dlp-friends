@@ -90,7 +90,7 @@ return [
         'name_help' => 'This name will help you recognise this key later.', 'saving' => 'Saving…', 'save' => 'Save passkey', 'added' => 'Added :date',
         'last_used' => 'Last used :date', 'delete_title' => 'Delete passkey', 'delete_description' => 'Do you really want to delete “:name”? It can no longer be used to log in.',
         'deleting' => 'Deleting…', 'delete' => 'Delete passkey', 'verify' => 'Log in with a passkey', 'verifying' => 'Authenticating…',
-        'separator' => 'Or continue with your email address',
+        'cancelled' => 'The passkey operation was cancelled.', 'separator' => 'Or continue with your email address',
     ],
     'two_factor' => [
         'title' => 'Two-factor authentication', 'description' => 'Strengthen your account security.',

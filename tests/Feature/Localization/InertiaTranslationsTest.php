@@ -75,6 +75,7 @@ test('Inertia shares the French frontend catalogue by default', function () {
             ->where('i18n.locale', 'fr')
             ->where('i18n.messages.common.locale.label', 'Langue')
             ->where('i18n.messages.account.email_delivery.rate_limited', 'Trop de demandes ont été effectuées. Patiente une minute avant de réessayer.')
+            ->where('i18n.messages.account.passkeys.cancelled', 'L’opération avec la clé d’accès a été annulée.')
             ->where('i18n.messages.onboarding.page_title', 'Prise en main')
             ->where('i18n.messages.onboarding.instructions.reject', 'Passe ce profil pour continuer.')
             ->where('i18n.messages.administration.onboarding.page_title', 'Tutoriel produit'));

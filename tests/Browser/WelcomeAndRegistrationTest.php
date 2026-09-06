@@ -67,6 +67,10 @@ test('login and registration offer only Google social authentication', function 
                 "document.querySelector('[data-test=\"social-google\"]')?.getAttribute('href')?.endsWith('/auth/google/redirect')",
                 true,
             )
+            ->assertScript(
+                "!Object.getOwnPropertySymbols(document.querySelector('[data-test=\"social-google\"]')).some((symbol) => symbol.description === '_vei')",
+                true,
+            )
             ->assertAttribute('[data-test="social-google"] svg', 'aria-hidden', 'true');
     }
 

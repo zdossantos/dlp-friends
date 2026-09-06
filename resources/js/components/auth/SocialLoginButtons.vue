@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { Link } from '@inertiajs/vue3';
 import { Button } from '@/components/ui/button';
 import { useTranslations } from '@/composables/useTranslations';
 import { redirect } from '@/routes/social';
@@ -12,8 +11,8 @@ const { t } = useTranslations();
 <template>
     <div v-bind="$attrs">
         <Button variant="outline" as-child>
-            <Link
-                :href="redirect('google')"
+            <a
+                :href="redirect.url('google')"
                 data-test="social-google"
                 class="w-full"
             >
@@ -36,7 +35,7 @@ const { t } = useTranslations();
                     />
                 </svg>
                 {{ t('account.social.google') }}
-            </Link>
+            </a>
         </Button>
     </div>
 </template>
