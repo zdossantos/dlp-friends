@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.7.2](https://github.com/zdossantos/dlp-friends/compare/v1.7.1...v1.7.2) (2026-09-06)
+
+
+### Fixes
+
+* **auth:** configure Google SSO in production ([#167](https://github.com/zdossantos/dlp-friends/issues/167)) ([f737812](https://github.com/zdossantos/dlp-friends/commit/f737812c13208487c80d95b10426a06331a53970))
+* complete issue 119 corrections ([#166](https://github.com/zdossantos/dlp-friends/issues/166)) ([25b82a7](https://github.com/zdossantos/dlp-friends/commit/25b82a7cbc288222b85f78d71072e230ea058d80))
+
 ## [1.7.1](https://github.com/zdossantos/dlp-friends/compare/v1.7.0...v1.7.1) (2026-09-05)
 
 
