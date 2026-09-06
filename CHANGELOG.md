@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.7.3](https://github.com/zdossantos/dlp-friends/compare/v1.7.2...v1.7.3) (2026-09-06)
+
+
+### Fixes
+
+* **auth:** use native Google OAuth navigation ([#169](https://github.com/zdossantos/dlp-friends/issues/169)) ([4894a84](https://github.com/zdossantos/dlp-friends/commit/4894a84bcb91b3ecba485ce48849528a4c9d05b5))
+
 ## [1.7.2](https://github.com/zdossantos/dlp-friends/compare/v1.7.1...v1.7.2) (2026-09-06)
 
 
