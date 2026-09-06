@@ -41,7 +41,7 @@ defineProps<{
         {{ status }}
     </div>
 
-    <SocialLoginButtons />
+    <SocialLoginButtons class="mb-3" data-test="social-login" />
 
     <PasskeyVerify />
 

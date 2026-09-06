@@ -29,6 +29,9 @@ function productionComposeEnvironment(array $overrides = []): array
         'VITE_REVERB_HOST' => 'reverb.dlpfriends.example',
         'RESEND_API_KEY' => 're_test_only',
         'MAIL_FROM_ADDRESS' => 'noreply@dlpfriends.example',
+        'GOOGLE_CLIENT_ID' => 'google-client-id',
+        'GOOGLE_CLIENT_SECRET' => 'google-client-secret',
+        'GOOGLE_REDIRECT_URI' => 'https://dlpfriends.example/auth/google/callback',
     ], $overrides);
 }
 
@@ -129,6 +132,20 @@ it('configures healthchecks and Resend without automatic migrations', function (
     }
 });
 
+it('provides Google OAuth credentials to every Laravel process', function () {
+    $result = resolveProductionCompose();
+
+    expect($result->successful())->toBeTrue($result->errorOutput());
+
+    $services = json_decode($result->output(), true, flags: JSON_THROW_ON_ERROR)['services'];
+
+    foreach (['web', 'worker', 'scheduler', 'reverb'] as $service) {
+        expect($services[$service]['environment']['GOOGLE_CLIENT_ID'])->toBe('google-client-id')
+            ->and($services[$service]['environment']['GOOGLE_CLIENT_SECRET'])->toBe('google-client-secret')
+            ->and($services[$service]['environment']['GOOGLE_REDIRECT_URI'])->toBe('https://dlpfriends.example/auth/google/callback');
+    }
+});
+
 it('rejects a production deployment when a critical variable is missing', function (string $variable) {
     $result = resolveProductionCompose([$variable => '']);
 
@@ -144,6 +161,9 @@ it('rejects a production deployment when a critical variable is missing', functi
     'external S3 endpoint' => 'AWS_ENDPOINT',
     'Reverb secret' => 'REVERB_APP_SECRET',
     'Resend key' => 'RESEND_API_KEY',
+    'Google client ID' => 'GOOGLE_CLIENT_ID',
+    'Google client secret' => 'GOOGLE_CLIENT_SECRET',
+    'Google redirect URI' => 'GOOGLE_REDIRECT_URI',
 ]);
 
 it('builds the Laravel Resend transport used in production', function () {
