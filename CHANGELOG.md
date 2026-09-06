@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.8.0](https://github.com/zdossantos/dlp-friends/compare/v1.7.4...v1.8.0) (2026-09-06)
+
+
+### Features
+
+* diffuser les notifications membres en temps réel ([#174](https://github.com/zdossantos/dlp-friends/issues/174)) ([ab02d3c](https://github.com/zdossantos/dlp-friends/commit/ab02d3c8e3b5aa223258e52e09e11fc615181623))
+
 ## [1.7.4](https://github.com/zdossantos/dlp-friends/compare/v1.7.3...v1.7.4) (2026-09-06)
 
 
