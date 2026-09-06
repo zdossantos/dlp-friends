@@ -31,14 +31,25 @@ class SwipeController extends Controller
 
         if ($match !== null) {
             $match->loadMissing('conversation');
-            $targetUser->loadMissing('profile');
+            $targetUser->loadMissing('profile.avatar');
             $profile = $targetUser->profile;
 
-            if ($profile instanceof Profile && $match->conversation !== null) {
+            if ($profile instanceof Profile && $profile->avatar !== null && $match->conversation !== null) {
+                $avatar = $profile->avatar;
                 $request->session()->flash('discovery.match', [
                     'id' => $match->id,
                     'conversationId' => $match->conversation->id,
-                    'displayName' => $profile->display_name,
+                    'member' => [
+                        'id' => $targetUser->id,
+                        'displayName' => $profile->display_name,
+                        'avatar' => [
+                            'id' => $avatar->id,
+                            'name' => $avatar->name,
+                            'image_url' => route('avatars.image', $avatar),
+                            'primary_color' => $avatar->primary_color,
+                            'secondary_color' => $avatar->secondary_color,
+                        ],
+                    ],
                 ]);
             }
         }

@@ -171,8 +171,18 @@ class DiscoveryPageTest extends TestCase
                 ->component('Discovery/Index')
                 ->where('match.id', $matchId)
                 ->where('match.conversationId', fn (int $conversationId): bool => $conversationId > 0)
-                ->where('match.displayName', $target->profile?->display_name)
-                ->missing('match.email'));
+                ->where('match.member', [
+                    'id' => $target->id,
+                    'displayName' => $target->profile?->display_name,
+                    'avatar' => [
+                        'id' => $target->profile?->avatar?->id,
+                        'name' => $target->profile?->avatar?->name,
+                        'image_url' => route('avatars.image', $target->profile?->avatar),
+                        'primary_color' => $target->profile?->avatar?->primary_color,
+                        'secondary_color' => $target->profile?->avatar?->secondary_color,
+                    ],
+                ])
+                ->missing('match.member.email'));
 
         $this->actingAs($actor)
             ->get(route('discovery.index'))

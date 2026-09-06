@@ -9,6 +9,7 @@ use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Contracts\Events\ShouldDispatchAfterCommit;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
+use LogicException;
 
 final class MessageSent implements ShouldBroadcast, ShouldDispatchAfterCommit
 {
@@ -35,14 +36,22 @@ final class MessageSent implements ShouldBroadcast, ShouldDispatchAfterCommit
         return 'message.sent';
     }
 
-    /** @return array<string, int|string|null> */
+    /** @return array<string, int|string|array{id: int, display_name: string}|null> */
     public function broadcastWith(): array
     {
+        $this->message->loadMissing('author.profile');
+        $profile = $this->message->author->profile
+            ?? throw new LogicException('A message notification requires an author profile.');
+
         return [
             'id' => $this->message->id,
             'conversation_id' => $this->message->conversation_id,
             'author_user_id' => $this->message->author_user_id,
             'content' => $this->message->content,
+            'author' => [
+                'id' => $this->message->author->id,
+                'display_name' => $profile->display_name,
+            ],
             'read_at' => $this->message->read_at?->toISOString(),
             'created_at' => $this->message->created_at?->toISOString(),
             'updated_at' => $this->message->updated_at?->toISOString(),

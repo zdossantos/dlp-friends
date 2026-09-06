@@ -23,7 +23,7 @@ final class MemberController extends Controller
 
         $search = trim($request->string('search')->toString());
         $createdConversation = Conversation::query()
-            ->with(['memberMatch.lowUser.profile', 'memberMatch.highUser.profile'])
+            ->with(['memberMatch.lowUser.profile.avatar', 'memberMatch.highUser.profile.avatar'])
             ->forMember($request->user())
             ->find($request->integer('created_conversation'));
         $createdCounterpart = $createdConversation?->memberMatch->lowUser->is($request->user())
@@ -84,7 +84,17 @@ final class MemberController extends Controller
             'filters' => ['search' => $search],
             'members' => $members,
             'createdMatch' => $createdConversation === null || $createdCounterpart === null ? null : [
-                'displayName' => $createdCounterpart->profile?->display_name,
+                'member' => [
+                    'id' => $createdCounterpart->id,
+                    'displayName' => $createdCounterpart->profile?->display_name,
+                    'avatar' => [
+                        'id' => $createdCounterpart->profile?->avatar?->id,
+                        'name' => $createdCounterpart->profile?->avatar?->name,
+                        'image_url' => route('avatars.image', $createdCounterpart->profile?->avatar),
+                        'primary_color' => $createdCounterpart->profile?->avatar?->primary_color,
+                        'secondary_color' => $createdCounterpart->profile?->avatar?->secondary_color,
+                    ],
+                ],
                 'conversationHref' => route('conversations.show', $createdConversation, absolute: false),
             ],
         ]);

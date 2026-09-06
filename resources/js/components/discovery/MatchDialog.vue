@@ -10,11 +10,12 @@ import {
     DialogTitle,
 } from '@/components/ui/dialog';
 import { useTranslations } from '@/composables/useTranslations';
+import type { MemberIdentity } from '@/types';
 
 const props = withDefaults(
     defineProps<{
         open: boolean;
-        match: { displayName: string };
+        match: MemberIdentity;
         conversationHref?: string;
         showContinue?: boolean;
         dismissible?: boolean;
