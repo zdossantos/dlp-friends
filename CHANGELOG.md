@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.7.4](https://github.com/zdossantos/dlp-friends/compare/v1.7.3...v1.7.4) (2026-09-06)
+
+
+### Fixes
+
+* **auth:** display social login errors ([#171](https://github.com/zdossantos/dlp-friends/issues/171)) ([80c37a9](https://github.com/zdossantos/dlp-friends/commit/80c37a9fd4685758135b35aa21edb7d55371f72c))
+
 ## [1.7.3](https://github.com/zdossantos/dlp-friends/compare/v1.7.2...v1.7.3) (2026-09-06)
 
 
