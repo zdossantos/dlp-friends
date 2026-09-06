@@ -3,11 +3,13 @@ import type { UrlMethodPair } from '@inertiajs/core';
 import { router } from '@inertiajs/vue3';
 import { usePasskeyVerify } from '@laravel/passkeys/vue';
 import { KeyRound } from '@lucide/vue';
+import { computed } from 'vue';
 import InputError from '@/components/InputError.vue';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Spinner } from '@/components/ui/spinner';
 import { useTranslations } from '@/composables/useTranslations';
+import { localizePasskeyError } from '@/lib/passkeyError';
 
 type Props = {
     routes?: {
@@ -22,19 +24,24 @@ type Props = {
 const props = defineProps<Props>();
 const { t } = useTranslations();
 
-const { verify, isLoading, error, isSupported } = usePasskeyVerify({
-    ...(props.routes
-        ? {
-              routes: {
-                  options: props.routes.options.url,
-                  submit: props.routes.submit.url,
-              },
-          }
-        : {}),
-    onSuccess: (response) => {
-        router.visit(response.redirect ?? '/app');
-    },
-});
+const { verify, isLoading, error, errorInstance, isSupported } =
+    usePasskeyVerify({
+        ...(props.routes
+            ? {
+                  routes: {
+                      options: props.routes.options.url,
+                      submit: props.routes.submit.url,
+                  },
+              }
+            : {}),
+        onSuccess: (response) => {
+            router.visit(response.redirect ?? '/app');
+        },
+    });
+
+const errorMessage = computed(() =>
+    localizePasskeyError(errorInstance.value, error.value, t),
+);
 </script>
 
 <template>
@@ -57,8 +64,8 @@ const { verify, isLoading, error, isSupported } = usePasskeyVerify({
                 }}
             </Button>
 
-            <div v-if="error" class="text-center">
-                <InputError :message="error" />
+            <div v-if="errorMessage" class="text-center">
+                <InputError :message="errorMessage" />
             </div>
         </div>
 

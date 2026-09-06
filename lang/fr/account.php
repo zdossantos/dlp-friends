@@ -134,7 +134,8 @@ return [
         'added' => 'Ajoutée :date', 'last_used' => 'Dernière utilisation :date', 'delete_title' => 'Supprimer la clé d’accès',
         'delete_description' => 'Veux-tu vraiment supprimer « :name » ? Elle ne pourra plus servir à te connecter.',
         'deleting' => 'Suppression…', 'delete' => 'Supprimer la clé', 'verify' => 'Se connecter avec une clé d’accès',
-        'verifying' => 'Authentification…', 'separator' => 'Ou continuer avec l’adresse e-mail',
+        'verifying' => 'Authentification…', 'cancelled' => 'L’opération avec la clé d’accès a été annulée.',
+        'separator' => 'Ou continuer avec l’adresse e-mail',
     ],
     'two_factor' => [
         'title' => 'Authentification à deux facteurs', 'description' => 'Renforce la sécurité de ton compte.',
