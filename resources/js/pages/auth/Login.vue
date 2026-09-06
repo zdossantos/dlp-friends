@@ -42,6 +42,11 @@ defineProps<{
     </div>
 
     <SocialLoginButtons class="mb-3" data-test="social-login" />
+    <InputError
+        :message="$page.props.errors.social_auth"
+        class="mb-3 text-center"
+        data-test="social-auth-error"
+    />
 
     <PasskeyVerify />
 
