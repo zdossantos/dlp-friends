@@ -51,8 +51,7 @@ final class MatchCreated implements ShouldBroadcast, ShouldDispatchAfterCommit
 
         return [
             'match_id' => $this->memberMatch->id,
-            'conversation_id' => $this->memberMatch->conversation?->id
-                ?? throw new LogicException('A match notification requires a conversation.'),
+            'conversation_id' => $this->memberMatch->conversation->id,
             'member' => [
                 'id' => $member->id,
                 'displayName' => $profile->display_name,

@@ -72,8 +72,8 @@ class SendMessageTest extends TestCase
     /** @return array{User, User, Conversation} */
     private function conversationMembers(): array
     {
-        $first = User::factory()->create();
-        $second = User::factory()->create();
+        $first = User::factory()->withProfile()->create();
+        $second = User::factory()->withProfile()->create();
         [$lowUser, $highUser] = $first->id < $second->id
             ? [$first, $second]
             : [$second, $first];
