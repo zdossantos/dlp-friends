@@ -52,7 +52,6 @@ return [
         'toggle_sidebar' => 'Toggle sidebar', 'loading' => 'Loading', 'search' => 'Search',
     ],
     'mail' => [
-        'tagline' => 'Friendships between adult fans, with a touch of magic.',
         'disclaimer' => 'DLP Friends is an independent service and not affiliated with Disney or Disneyland Paris.',
         'fallback_link' => 'Copy and paste this link into your browser if the button does not work:',
         'copyright' => '© :year DLP Friends',

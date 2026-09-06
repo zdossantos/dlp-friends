@@ -1,10 +1,12 @@
 <?php
 
+use App\Enums\ProfileVisibility;
 use App\Models\Conversation;
 use App\Models\MemberMatch;
 use App\Models\Message;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Gate;
 use Inertia\Testing\AssertableInertia as Assert;
 
 uses(RefreshDatabase::class);
@@ -66,6 +68,43 @@ test('the conversation list exposes an empty collection', function () {
         ->assertInertia(fn (Assert $page) => $page
             ->component('Conversations/Index')
             ->where('conversations', []));
+});
+
+test('a conversation is excluded while the other member profile is hidden and returns when visible', function () {
+    $member = User::factory()->withProfile()->create();
+    $hiddenPeer = User::factory()->withProfile()->create();
+    $visiblePeer = User::factory()->withProfile()->create();
+    $hiddenConversation = conversationBetween($member, $hiddenPeer);
+    $visibleConversation = conversationBetween($member, $visiblePeer);
+
+    $member->profile->update(['visibility' => ProfileVisibility::Hidden]);
+    $hiddenPeer->profile->update(['visibility' => ProfileVisibility::Hidden]);
+    Message::factory()->for($hiddenConversation)->for($hiddenPeer, 'author')->create([
+        'created_at' => now(),
+    ]);
+    Message::factory()->for($visibleConversation)->for($visiblePeer, 'author')->create([
+        'created_at' => now()->subMinute(),
+    ]);
+
+    $this->actingAs($member)->get('/conversations')
+        ->assertInertia(fn (Assert $page) => $page
+            ->has('conversations', 1)
+            ->where('conversations.0.id', $visibleConversation->id)
+            ->where('conversations.0.unread_count', 1));
+
+    $hiddenPeer->profile->update(['visibility' => ProfileVisibility::Visible]);
+
+    $this->actingAs($member)->get('/conversations')
+        ->assertInertia(fn (Assert $page) => $page
+            ->has('conversations', 2)
+            ->where('conversations.0.id', $hiddenConversation->id)
+            ->where('conversations.0.unread_count', 1));
+
+    $hiddenPeer->profile->update(['visibility' => ProfileVisibility::Hidden]);
+
+    expect(Gate::forUser($member)->allows('view', $hiddenConversation))->toBeTrue()
+        ->and(Gate::forUser($member)->allows('send', $hiddenConversation))->toBeTrue();
+    $this->actingAs($member)->get("/conversations/{$hiddenConversation->id}")->assertOk();
 });
 
 function conversationBetween(User $first, User $second): Conversation

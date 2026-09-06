@@ -2,10 +2,13 @@
 
 namespace Tests\Feature;
 
+use App\Enums\ProfileVisibility;
+use App\Events\MessageSent;
 use App\Models\Conversation;
 use App\Models\MemberMatch;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Event;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 
@@ -39,6 +42,29 @@ class StoreMessageTest extends TestCase
         }
 
         $this->assertDatabaseCount('messages', 2);
+    }
+
+    public function test_a_message_is_persisted_and_broadcast_when_the_recipient_profile_is_hidden(): void
+    {
+        [$author, $recipient, $conversation] = $this->conversationMembers();
+        $recipient->profile?->update(['visibility' => ProfileVisibility::Hidden]);
+        Event::fake([MessageSent::class]);
+
+        $this->actingAs($author)
+            ->postJson(route('conversations.messages.store', $conversation), [
+                'content' => 'Toujours joignable',
+            ])
+            ->assertCreated();
+
+        $this->assertDatabaseHas('messages', [
+            'conversation_id' => $conversation->id,
+            'author_user_id' => $author->id,
+            'content' => 'Toujours joignable',
+        ]);
+        Event::assertDispatched(MessageSent::class, function (MessageSent $event) use ($recipient): bool {
+            return collect($event->broadcastOn())
+                ->contains(fn ($channel): bool => $channel->name === "private-App.Models.User.{$recipient->id}");
+        });
     }
 
     #[DataProvider('invalidContentProvider')]

@@ -2,7 +2,7 @@
 <div class="message-brand">
 <a href="{{ config('app.url') }}">
 <span class="brand-name">{{ __('common.brand.name') }}</span>
-<span class="brand-tagline">{{ __('common.mail.tagline') }}</span>
+<span class="brand-tagline">{{ __('common.welcome.description') }}</span>
 </a>
 </div>
 

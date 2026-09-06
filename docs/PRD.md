@@ -89,6 +89,10 @@ Paris.
 - Un intérêt archivé disparaît des sélecteurs, profils publics et calculs
   d’affinité. Son historique est suspendu sans consommer de capacité ; une
   réactivation ne restaure que les sélections disposant encore de capacité.
+- Masquer son profil le retire des nouvelles suggestions et des listes de
+  conversations des autres membres. Les conversations existantes restent
+  accessibles par leur URL directe, continuent d’accepter les messages et
+  réapparaissent dans les listes dès que le profil redevient visible.
 
 ### Découverte et matching
 
@@ -108,6 +112,9 @@ Paris.
 - Les messages sont limités à 2 000 caractères. Pièces jointes, GIF, réactions,
   édition et suppression de message sont hors MVP.
 - Seuls les deux membres du match peuvent lire et envoyer des messages.
+- Les compteurs associés à une liste de conversations ignorent les échanges
+  dont l’autre profil est masqué. Le masquage ne désactive ni l’accès direct,
+  ni l’envoi, ni les notifications d’une conversation existante.
 - Le blocage est disponible depuis un profil ou une conversation. Il retire les
   suggestions, interdit les nouveaux contacts et rend la conversation
   inaccessible aux deux membres, sans notifier explicitement la personne

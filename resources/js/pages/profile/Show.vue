@@ -78,13 +78,17 @@ function handleLogout(): void {
                             as-child
                             variant="secondary"
                             size="icon"
-                            class="size-10 rounded-full border border-white/50 bg-background/90 shadow-lg backdrop-blur"
+                            data-test="profile-hero-action"
+                            class="size-10 rounded-full border border-white/50 bg-background/90 text-foreground shadow-lg backdrop-blur"
                         >
                             <Link
                                 :href="editAccount()"
                                 :aria-label="t('profile.actions.settings')"
                             >
-                                <Settings class="size-5" aria-hidden="true" />
+                                <Settings
+                                    class="size-5 text-foreground"
+                                    aria-hidden="true"
+                                />
                             </Link>
                         </Button>
                         <Button
@@ -92,7 +96,8 @@ function handleLogout(): void {
                             as-child
                             variant="secondary"
                             size="icon"
-                            class="size-10 rounded-full border border-white/50 bg-background/90 shadow-lg backdrop-blur"
+                            data-test="profile-hero-action"
+                            class="size-10 rounded-full border border-white/50 bg-background/90 text-foreground shadow-lg backdrop-blur"
                         >
                             <Link
                                 :href="dashboard()"
@@ -101,7 +106,7 @@ function handleLogout(): void {
                                 "
                             >
                                 <LayoutDashboard
-                                    class="size-5"
+                                    class="size-5 text-foreground"
                                     aria-hidden="true"
                                 />
                             </Link>
@@ -110,7 +115,8 @@ function handleLogout(): void {
                             as-child
                             variant="secondary"
                             size="icon"
-                            class="size-10 rounded-full border border-white/50 bg-background/90 shadow-lg backdrop-blur"
+                            data-test="profile-hero-action"
+                            class="size-10 rounded-full border border-white/50 bg-background/90 text-foreground shadow-lg backdrop-blur"
                         >
                             <Link
                                 :href="logout()"
@@ -118,7 +124,10 @@ function handleLogout(): void {
                                 :aria-label="t('profile.actions.logout')"
                                 @click="handleLogout"
                             >
-                                <LogOut class="size-5" aria-hidden="true" />
+                                <LogOut
+                                    class="size-5 text-foreground"
+                                    aria-hidden="true"
+                                />
                             </Link>
                         </Button>
                     </div>

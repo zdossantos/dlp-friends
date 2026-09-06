@@ -10,6 +10,7 @@ test('the verification email renders the french content and accessible fallback 
     $mail->assertHasSubject('Vérifie ton adresse e-mail');
     foreach ([
         'DLP Friends',
+        'Rencontre d’autres fans de Disneyland Paris, découvre vos passions communes et échange simplement.',
         'Bienvenue dans la communauté',
         'Vérifier mon adresse e-mail',
         'Copie et colle ce lien dans ton navigateur',
@@ -37,6 +38,7 @@ test('the verification email renders the english content', function () {
     $mail->assertHasSubject('Verify your email address');
     foreach ([
         'Welcome to the community',
+        'Meet other Disneyland Paris fans, discover the passions you share, and chat with ease.',
         'Verify my email address',
         'Copy and paste this link into your browser',
         'is an independent service and not affiliated with Disney or Disneyland Paris',
@@ -59,6 +61,7 @@ test('the password reset email renders the french content and expiry', function 
     $mail->assertHasSubject('Réinitialise ton mot de passe');
     foreach ([
         'Réinitialisation du mot de passe',
+        'Rencontre d’autres fans de Disneyland Paris, découvre vos passions communes et échange simplement.',
         'Réinitialiser mon mot de passe',
         'Ce lien expirera dans 60 minutes.',
         'Copie et colle ce lien dans ton navigateur',
@@ -89,6 +92,7 @@ test('the password reset email renders the english content and expiry', function
     $mail->assertHasSubject('Reset your password');
     foreach ([
         'Password reset',
+        'Meet other Disneyland Paris fans, discover the passions you share, and chat with ease.',
         'Reset my password',
         'This link will expire in 60 minutes.',
         'Copy and paste this link into your browser',

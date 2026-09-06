@@ -65,7 +65,6 @@ return [
         'search' => 'Rechercher',
     ],
     'mail' => [
-        'tagline' => 'Des amitiés entre fans adultes, avec un peu de magie.',
         'disclaimer' => 'DLP Friends est un service indépendant et non affilié à Disney ou Disneyland Paris.',
         'fallback_link' => 'Copie et colle ce lien dans ton navigateur si le bouton ne fonctionne pas :',
         'copyright' => '© :year DLP Friends',
