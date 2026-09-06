@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Link } from '@inertiajs/vue3';
+import AvatarPortrait from '@/components/profile/AvatarPortrait.vue';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -104,6 +105,19 @@ function updateOpen(open: boolean): void {
                 >
                     {{ t('discovery.match.title') }}
                 </DialogTitle>
+                <div class="flex items-center gap-3 py-2">
+                    <AvatarPortrait
+                        data-test="match-member-avatar"
+                        :avatar="match.avatar"
+                        class="size-12 shrink-0 rounded-xl"
+                    />
+                    <p
+                        data-test="match-member-name"
+                        class="font-semibold text-secondary-foreground"
+                    >
+                        {{ match.displayName }}
+                    </p>
+                </div>
                 <DialogDescription class="text-secondary-foreground">
                     {{
                         t('discovery.match.description', {
