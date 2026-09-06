@@ -1,13 +1,15 @@
 <script setup lang="ts">
 import { Head, Link } from '@inertiajs/vue3';
-import { ref, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 import AvatarPortrait from '@/components/profile/AvatarPortrait.vue';
-import { useConversationListRealtime } from '@/composables/useConversationListRealtime';
+import { Input } from '@/components/ui/input';
+import { useMemberRealtimeContext } from '@/composables/useMemberRealtimeNotifications';
 import { useTranslations } from '@/composables/useTranslations';
 import {
     applyConversationMessage,
     conversationPreview,
 } from '@/lib/conversationState';
+import { normalizeSearchText } from '@/lib/textSearch';
 import { show as showConversation } from '@/routes/conversations';
 import type { ConversationSummary } from '@/types';
 
@@ -17,6 +19,20 @@ const props = defineProps<{
 }>();
 const visibleConversations = ref(props.conversations);
 const { t } = useTranslations();
+const { latestMessage } = useMemberRealtimeContext();
+const search = ref('');
+const normalizedSearch = computed(() => normalizeSearchText(search.value));
+const filteredConversations = computed(() => {
+    if (normalizedSearch.value === '') {
+        return visibleConversations.value;
+    }
+
+    return visibleConversations.value.filter((conversation) =>
+        normalizeSearchText(conversation.participant.display_name).includes(
+            normalizedSearch.value,
+        ),
+    );
+});
 
 function unreadLabel(count: number): string {
     return t(
@@ -35,12 +51,14 @@ watch(
     { deep: true },
 );
 
-useConversationListRealtime(props.currentUserId, (message) => {
-    visibleConversations.value = applyConversationMessage(
-        visibleConversations.value,
-        message,
-        props.currentUserId,
-    );
+watch(latestMessage, (message) => {
+    if (message) {
+        visibleConversations.value = applyConversationMessage(
+            visibleConversations.value,
+            message,
+            props.currentUserId,
+        );
+    }
 });
 </script>
 
@@ -59,6 +77,16 @@ useConversationListRealtime(props.currentUserId, (message) => {
             </p>
         </header>
 
+        <div v-if="visibleConversations.length > 0" class="relative">
+            <Input
+                v-model="search"
+                data-test="conversation-search"
+                type="search"
+                :placeholder="t('conversations.page.search_placeholder')"
+                :aria-label="t('conversations.page.search_label')"
+            />
+        </div>
+
         <section
             v-if="visibleConversations.length === 0"
             class="rounded-3xl border bg-card p-6 text-center shadow-sm"
@@ -72,13 +100,30 @@ useConversationListRealtime(props.currentUserId, (message) => {
         </section>
 
         <section
+            v-else-if="filteredConversations.length === 0"
+            class="rounded-3xl border bg-card p-6 text-center shadow-sm"
+        >
+            <p class="font-semibold">
+                {{ t('conversations.page.search_empty') }}
+            </p>
+            <button
+                type="button"
+                data-test="clear-conversation-search"
+                class="mt-3 text-sm font-medium text-primary underline-offset-4 hover:underline"
+                @click="search = ''"
+            >
+                {{ t('conversations.page.search_clear') }}
+            </button>
+        </section>
+
+        <section
             v-else
             :aria-label="t('conversations.page.list_label')"
             class="overflow-hidden rounded-3xl border bg-card shadow-sm"
         >
             <ul role="list" class="divide-y">
                 <li
-                    v-for="conversation in visibleConversations"
+                    v-for="conversation in filteredConversations"
                     :key="conversation.id"
                 >
                     <Link

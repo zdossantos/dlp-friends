@@ -76,6 +76,35 @@ test('the conversation list prefixes the member latest message with vous', funct
         ->assertNoJavaScriptErrors();
 });
 
+test('a member filters conversations locally by member name only', function () {
+    $member = conversationBrowserMember('Alice');
+    $elodie = conversationBrowserMember('Élodie');
+    $basile = conversationBrowserMember('Basile');
+
+    foreach ([$elodie, $basile] as $peer) {
+        $match = MemberMatch::factory()->create([
+            'user_low_id' => min($member->id, $peer->id),
+            'user_high_id' => max($member->id, $peer->id),
+        ]);
+        $conversation = $match->conversation()->create();
+        Message::factory()->for($conversation)->for($peer, 'author')->create([
+            'content' => $peer->is($basile) ? 'ELODIE dans le message' : 'Bonjour',
+        ]);
+    }
+    $this->actingAs($member);
+
+    visit('/conversations')->on()->mobile()
+        ->type('[data-test="conversation-search"]', 'ELODIE')
+        ->assertSee('Élodie')
+        ->assertDontSee('Basile')
+        ->fill('[data-test="conversation-search"]', 'inconnu')
+        ->assertSee('Aucun échange ne correspond à ce nom.')
+        ->click('[data-test="clear-conversation-search"]')
+        ->assertSee('Élodie')
+        ->assertSee('Basile')
+        ->assertNoJavaScriptErrors();
+});
+
 test('the conversation list updates and reorders its preview in realtime', function () {
     if (! filter_var(env('REALTIME_BROWSER_TESTS', false), FILTER_VALIDATE_BOOL)) {
         $this->markTestSkipped('Set REALTIME_BROWSER_TESTS=true and start Reverb to run this integration test.');

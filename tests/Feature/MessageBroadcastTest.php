@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Actions\SendMessage;
+use App\Events\MatchCreated;
 use App\Events\MessageSent;
 use App\Events\MessagesRead;
 use App\Models\Conversation;
@@ -62,10 +63,46 @@ class MessageBroadcastTest extends TestCase
                 'conversation_id' => $conversation->id,
                 'author_user_id' => $author->id,
                 'content' => '<b>texte brut</b>',
+                'author' => [
+                    'id' => $author->id,
+                    'display_name' => $author->profile?->display_name,
+                ],
                 'read_at' => null,
                 'created_at' => $message->created_at?->toISOString(),
                 'updated_at' => $message->updated_at?->toISOString(),
             ]);
+    }
+
+    public function test_the_match_event_identifies_the_other_member_for_each_recipient(): void
+    {
+        [$lowUser, $highUser, $conversation] = $this->conversationMembers();
+        $match = $conversation->memberMatch;
+
+        foreach ([[$lowUser, $highUser], [$highUser, $lowUser]] as [$recipient, $counterpart]) {
+            $event = new MatchCreated($match, $recipient);
+            $channel = $event->broadcastOn();
+
+            expect($event)->toBeInstanceOf(ShouldBroadcast::class)
+                ->and($event)->toBeInstanceOf(ShouldDispatchAfterCommit::class)
+                ->and($channel)->toBeInstanceOf(PrivateChannel::class)
+                ->and($channel->name)->toBe("private-App.Models.User.{$recipient->id}")
+                ->and($event->broadcastAs())->toBe('match.created')
+                ->and($event->broadcastWith())->toBe([
+                    'match_id' => $match->id,
+                    'conversation_id' => $conversation->id,
+                    'member' => [
+                        'id' => $counterpart->id,
+                        'displayName' => $counterpart->profile?->display_name,
+                        'avatar' => [
+                            'id' => $counterpart->profile?->avatar?->id,
+                            'name' => $counterpart->profile?->avatar?->name,
+                            'image_url' => route('avatars.image', $counterpart->profile?->avatar),
+                            'primary_color' => $counterpart->profile?->avatar?->primary_color,
+                            'secondary_color' => $counterpart->profile?->avatar?->secondary_color,
+                        ],
+                    ],
+                ]);
+        }
     }
 
     public function test_the_read_receipt_has_a_minimal_conversation_broadcast_contract(): void

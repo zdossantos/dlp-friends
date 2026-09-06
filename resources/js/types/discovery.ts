@@ -28,8 +28,14 @@ export type DiscoveryCardProfile = Omit<
 
 export type SwipeDecision = 'like' | 'pass';
 
+export type MemberIdentity = {
+    id: number;
+    displayName: string;
+    avatar: AvatarOption;
+};
+
 export type DiscoveryMatch = {
     id: number;
     conversationId: number;
-    displayName: string;
+    member: MemberIdentity;
 };

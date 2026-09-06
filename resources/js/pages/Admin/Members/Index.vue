@@ -11,6 +11,7 @@ import { Input } from '@/components/ui/input';
 import { useTranslations } from '@/composables/useTranslations';
 import { index } from '@/routes/admin/members';
 import { store as openConversation } from '@/routes/admin/members/conversation';
+import type { MemberIdentity } from '@/types';
 
 type Member = {
     id: number;
@@ -33,7 +34,7 @@ type Member = {
     can_start_conversation: boolean;
 };
 type PageLink = { url: string | null; label: string; active: boolean };
-type CreatedMatch = { displayName: string; conversationHref: string };
+type CreatedMatch = { member: MemberIdentity; conversationHref: string };
 const props = defineProps<{
     filters: { search: string };
     members: { data: Member[]; total: number; links: PageLink[] };
@@ -295,7 +296,7 @@ function date(value: string | null): string {
         <MatchDialog
             v-if="visibleCreatedMatch"
             v-model:open="matchDialogOpen"
-            :match="{ displayName: visibleCreatedMatch.displayName }"
+            :match="visibleCreatedMatch.member"
             :conversation-href="visibleCreatedMatch.conversationHref"
         />
     </main>

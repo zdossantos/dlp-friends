@@ -9,6 +9,13 @@ export type ConversationMessage = {
     created_at: string | null;
 };
 
+export type RealtimeConversationMessage = ConversationMessage & {
+    author: {
+        id: number;
+        display_name: string;
+    };
+};
+
 export type MessagesReadReceipt = {
     conversation_id: number;
     reader_user_id: number;

@@ -20,6 +20,9 @@ création du compte ; la suppression du compte supprime aussi cette preuve.
 - MySQL 8.4 pour les données relationnelles ;
 - Redis pour le cache, les sessions et les files ;
 - Laravel Reverb et Echo pour le temps réel ;
+- le canal privé personnel diffuse les nouveaux univers croisés et les aperçus
+  de messages dans tout l’espace membre, tandis que le canal de conversation
+  conserve la synchronisation du fil et des états de lecture ;
 - Pest, Pest Browser, Playwright, PHPStan/Larastan, Pint, ESLint et Prettier
   pour la qualité.
 
