@@ -6,6 +6,7 @@ use App\Actions\CreateSwipe;
 use App\Enums\ProfileVisibility;
 use App\Enums\SwipeDecision;
 use App\Enums\UserStatus;
+use App\Events\MatchCreated;
 use App\Models\Block;
 use App\Models\MemberMatch;
 use App\Models\Profile;
@@ -14,6 +15,7 @@ use App\Models\User;
 use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Validation\ValidationException;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
@@ -228,6 +230,31 @@ class CreateSwipeTest extends TestCase
             'match_id' => $match?->id,
             'archived_at' => null,
         ]);
+    }
+
+    public function test_a_new_match_is_announced_to_both_members_after_its_conversation_exists(): void
+    {
+        Event::fake([MatchCreated::class]);
+        request()->headers->set('X-Socket-ID', '1234.5678');
+        [$lowUser, $highUser] = $this->memberPair();
+        $action = app(CreateSwipe::class);
+
+        $action->handle($lowUser, $highUser, SwipeDecision::Like);
+
+        Event::assertNotDispatched(MatchCreated::class);
+
+        $match = $action->handle($highUser, $lowUser, SwipeDecision::Like);
+
+        Event::assertDispatchedTimes(MatchCreated::class, 2);
+        foreach ([$lowUser, $highUser] as $recipient) {
+            Event::assertDispatched(
+                MatchCreated::class,
+                fn (MatchCreated $event): bool => $event->memberMatch->is($match)
+                    && $event->recipient->is($recipient)
+                    && $event->memberMatch->conversation !== null
+                    && $event->socket === '1234.5678',
+            );
+        }
     }
 
     public function test_additional_attempts_leave_two_swipes_and_one_match(): void

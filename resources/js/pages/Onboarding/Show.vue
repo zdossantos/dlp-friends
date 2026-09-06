@@ -239,7 +239,11 @@ function completeWithMessage(content: string): Promise<ConversationMessage> {
         <MatchDialog
             v-else-if="step === 'match_demo'"
             :open="true"
-            :match="{ displayName: demoProfiles[1].displayName }"
+            :match="{
+                id: tutorialParticipant.id,
+                displayName: tutorialParticipant.display_name,
+                avatar: tutorialParticipant.avatar,
+            }"
             :dismissible="false"
             :show-continue="false"
             :locked="busy"

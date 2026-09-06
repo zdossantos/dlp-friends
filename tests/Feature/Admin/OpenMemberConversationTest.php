@@ -36,7 +36,17 @@ class OpenMemberConversationTest extends TestCase
         $this->actingAs($admin)
             ->get(route('admin.members.index', ['created_conversation' => $conversation->id]))
             ->assertInertia(fn (Assert $page) => $page
-                ->where('createdMatch.displayName', $member->profile?->display_name)
+                ->where('createdMatch.member', [
+                    'id' => $member->id,
+                    'displayName' => $member->profile?->display_name,
+                    'avatar' => [
+                        'id' => $member->profile?->avatar?->id,
+                        'name' => $member->profile?->avatar?->name,
+                        'image_url' => route('avatars.image', $member->profile?->avatar),
+                        'primary_color' => $member->profile?->avatar?->primary_color,
+                        'secondary_color' => $member->profile?->avatar?->secondary_color,
+                    ],
+                ])
                 ->where('createdMatch.conversationHref', route('conversations.show', $conversation, absolute: false)));
     }
 

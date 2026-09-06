@@ -13,6 +13,10 @@ return [
         'current_user_prefix' => 'Toi : ',
         'unread_message' => ':count message non lu',
         'unread_messages' => ':count messages non lus',
+        'search_label' => 'Rechercher un échange par nom',
+        'search_placeholder' => 'Rechercher un membre…',
+        'search_clear' => 'Effacer',
+        'search_empty' => 'Aucun échange ne correspond à ce nom.',
     ],
     'header' => [
         'back' => 'Retour aux échanges',
@@ -34,5 +38,8 @@ return [
         'unavailable' => 'Le temps réel est indisponible. Tes messages restent affichés.',
         'retry' => 'Réessayer',
         'connecting' => 'Connexion au temps réel…',
+    ],
+    'notification' => [
+        'open' => 'Ouvrir',
     ],
 ];
