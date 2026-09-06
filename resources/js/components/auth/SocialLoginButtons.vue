@@ -4,11 +4,13 @@ import { Button } from '@/components/ui/button';
 import { useTranslations } from '@/composables/useTranslations';
 import { redirect } from '@/routes/social';
 
+defineOptions({ inheritAttrs: false });
+
 const { t } = useTranslations();
 </script>
 
 <template>
-    <div>
+    <div v-bind="$attrs">
         <Button variant="outline" as-child>
             <Link
                 :href="redirect('google')"
