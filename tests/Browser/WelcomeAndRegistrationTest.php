@@ -69,6 +69,12 @@ test('login and registration offer only Google social authentication', function 
             )
             ->assertAttribute('[data-test="social-google"] svg', 'aria-hidden', 'true');
     }
+
+    visit('/login', ['locale' => 'fr-FR'])
+        ->assertScript(
+            "parseFloat(getComputedStyle(document.querySelector('[data-test=\"social-login\"]')).marginBottom) >= 12",
+            true,
+        );
 });
 
 test('registration submits an explicit terms choice', function () {
