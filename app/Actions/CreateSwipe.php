@@ -89,8 +89,11 @@ class CreateSwipe
 
                 if ($matchCreated === 1) {
                     $match->load('conversation');
-                    MatchCreated::dispatch($match, $lockedActor);
-                    MatchCreated::dispatch($match, $lockedTarget);
+                    foreach ([$lockedActor, $lockedTarget] as $recipient) {
+                        $event = new MatchCreated($match, $recipient);
+                        $event->dontBroadcastToCurrentUser();
+                        event($event);
+                    }
                 }
 
                 return $match;

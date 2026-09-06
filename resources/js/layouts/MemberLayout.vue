@@ -1,9 +1,19 @@
 <script setup lang="ts">
+import { usePage } from '@inertiajs/vue3';
+import MatchDialog from '@/components/discovery/MatchDialog.vue';
 import MemberBottomNavigation from '@/components/MemberBottomNavigation.vue';
 import { Toaster } from '@/components/ui/sonner';
 import { useMemberNavigationVisibility } from '@/composables/useMemberNavigationVisibility';
+import {
+    provideMemberRealtimeContext,
+    useMemberRealtimeNotifications,
+} from '@/composables/useMemberRealtimeNotifications';
+import { show as showConversation } from '@/routes/conversations';
 
 const reservesMemberNavigation = useMemberNavigationVisibility();
+const page = usePage();
+const realtime = useMemberRealtimeNotifications(page.props.auth.user.id);
+provideMemberRealtimeContext(realtime);
 </script>
 
 <template>
@@ -26,6 +36,15 @@ const reservesMemberNavigation = useMemberNavigationVisibility();
             <slot />
         </div>
         <MemberBottomNavigation />
+        <MatchDialog
+            v-if="realtime.activeMatch.value"
+            :open="true"
+            :match="realtime.activeMatch.value.member"
+            :conversation-href="
+                showConversation(realtime.activeMatch.value.conversation_id).url
+            "
+            @update:open="realtime.dismissMatch"
+        />
         <Toaster />
     </div>
 </template>

@@ -70,6 +70,6 @@ const mobileOffset = computed(
 
 <style>
 [data-sonner-toast] {
-    pointer-events: none;
+    pointer-events: auto;
 }
 </style>

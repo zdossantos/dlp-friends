@@ -235,6 +235,7 @@ class CreateSwipeTest extends TestCase
     public function test_a_new_match_is_announced_to_both_members_after_its_conversation_exists(): void
     {
         Event::fake([MatchCreated::class]);
+        request()->headers->set('X-Socket-ID', '1234.5678');
         [$lowUser, $highUser] = $this->memberPair();
         $action = app(CreateSwipe::class);
 
@@ -250,7 +251,8 @@ class CreateSwipeTest extends TestCase
                 MatchCreated::class,
                 fn (MatchCreated $event): bool => $event->memberMatch->is($match)
                     && $event->recipient->is($recipient)
-                    && $event->memberMatch->conversation !== null,
+                    && $event->memberMatch->conversation !== null
+                    && $event->socket === '1234.5678',
             );
         }
     }
