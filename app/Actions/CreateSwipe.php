@@ -5,6 +5,7 @@ namespace App\Actions;
 use App\Enums\ProfileVisibility;
 use App\Enums\SwipeDecision;
 use App\Enums\UserStatus;
+use App\Events\MatchCreated;
 use App\Models\Block;
 use App\Models\MemberMatch;
 use App\Models\Profile;
@@ -68,7 +69,7 @@ class CreateSwipe
                     return null;
                 }
 
-                MemberMatch::query()->insertOrIgnore([
+                $matchCreated = MemberMatch::query()->insertOrIgnore([
                     'user_low_id' => $lowId,
                     'user_high_id' => $highId,
                     'created_at' => now(),
@@ -85,6 +86,12 @@ class CreateSwipe
                     'created_at' => now(),
                     'updated_at' => now(),
                 ]);
+
+                if ($matchCreated === 1) {
+                    $match->load('conversation');
+                    MatchCreated::dispatch($match, $lockedActor);
+                    MatchCreated::dispatch($match, $lockedTarget);
+                }
 
                 return $match;
             });
