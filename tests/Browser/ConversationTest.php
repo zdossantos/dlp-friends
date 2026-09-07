@@ -76,6 +76,51 @@ test('the conversation list prefixes the member latest message with vous', funct
         ->assertNoJavaScriptErrors();
 });
 
+test('the conversation list scrolls independently and clamps message previews to two lines', function () {
+    $member = conversationBrowserMember('Alice');
+
+    foreach (range(1, 12) as $index) {
+        $peer = conversationBrowserMember("Membre {$index}");
+        $match = MemberMatch::factory()->create([
+            'user_low_id' => min($member->id, $peer->id),
+            'user_high_id' => max($member->id, $peer->id),
+        ]);
+        $conversation = $match->conversation()->create();
+        Message::factory()->for($conversation)->for($peer, 'author')->create([
+            'content' => str_repeat("Long aperçu {$index} ", 20),
+        ]);
+    }
+    $this->actingAs($member);
+
+    visit('/conversations')->on()->mobile()
+        ->assertScript(<<<'JS'
+            (() => {
+                const list = document.querySelector('[aria-label="Échanges"]');
+
+                return getComputedStyle(list).overflowY === 'auto'
+                    && list.scrollHeight > list.clientHeight;
+            })()
+        JS, true)
+        ->assertScript(<<<'JS'
+            (() => {
+                const list = document.querySelector('[aria-label="Échanges"]');
+                list.scrollTop = list.scrollHeight;
+
+                return list.scrollTop > 0;
+            })()
+        JS, true)
+        ->assertScript(<<<'JS'
+            (() => {
+                const preview = document.querySelector('[data-test="conversation-preview"]');
+                const style = getComputedStyle(preview);
+
+                return style.webkitLineClamp === '2'
+                    && preview.clientHeight <= (parseFloat(style.lineHeight) * 2) + 1;
+            })()
+        JS, true)
+        ->assertNoJavaScriptErrors();
+});
+
 test('a member filters conversations locally by member name only', function () {
     $member = conversationBrowserMember('Alice');
     $elodie = conversationBrowserMember('Élodie');

@@ -66,7 +66,7 @@ watch(latestMessage, (message) => {
     <Head :title="t('conversations.page.title')" />
 
     <main
-        class="mx-auto flex min-h-full w-full max-w-2xl flex-col gap-6 px-4 pt-[max(1rem,env(safe-area-inset-top))] sm:px-6 sm:pt-8"
+        class="mx-auto flex h-full min-h-0 w-full max-w-2xl flex-col gap-6 overflow-hidden px-4 pt-[max(1rem,env(safe-area-inset-top))] sm:px-6 sm:pt-8"
     >
         <header class="space-y-1">
             <h1 class="text-2xl font-semibold tracking-tight sm:text-3xl">
@@ -119,7 +119,7 @@ watch(latestMessage, (message) => {
         <section
             v-else
             :aria-label="t('conversations.page.list_label')"
-            class="overflow-hidden rounded-3xl border bg-card shadow-sm"
+            class="min-h-0 flex-1 overflow-y-auto overscroll-contain rounded-3xl border bg-card shadow-sm"
         >
             <ul role="list" class="divide-y">
                 <li
@@ -169,7 +169,8 @@ watch(latestMessage, (message) => {
                                 </span>
                             </span>
                             <span
-                                class="mt-1 line-clamp-1 block text-sm text-muted-foreground"
+                                data-test="conversation-preview"
+                                class="mt-1 line-clamp-2 text-sm text-muted-foreground"
                             >
                                 {{
                                     conversationPreview(
