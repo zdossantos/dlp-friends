@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.8.1](https://github.com/zdossantos/dlp-friends/compare/v1.8.0...v1.8.1) (2026-09-07)
+
+
+### Fixes
+
+* **conversations:** make conversation list scrollable ([#187](https://github.com/zdossantos/dlp-friends/issues/187)) ([ca0c1ce](https://github.com/zdossantos/dlp-friends/commit/ca0c1cedcdd7381d540541897a59c2f61705eb2e))
+
 ## [1.8.0](https://github.com/zdossantos/dlp-friends/compare/v1.7.4...v1.8.0) (2026-09-06)
 
 
