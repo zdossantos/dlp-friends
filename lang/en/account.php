@@ -90,9 +90,9 @@ return [
         'download' => 'Download my export',
     ],
     'deletion' => [
-        'title' => 'Delete your account', 'description' => 'Permanently delete your account and its data.', 'warning' => 'Warning',
-        'irreversible' => 'This action is permanent and cannot be undone.', 'question' => 'Do you really want to delete your account?',
-        'confirmation' => 'All your data will be permanently deleted. Enter your password to confirm.', 'submit' => 'Delete my account',
+        'title' => 'Delete your account', 'description' => 'Request permanent deletion of your account and its data.', 'warning' => 'Warning',
+        'irreversible' => 'Access to your account will end immediately. Your active data will be deleted within 30 days, with no restoration available.', 'question' => 'Do you really want to delete your account?',
+        'confirmation' => 'This request is irreversible: access ends immediately and the purge will happen within 30 days. Enter your password to confirm.', 'submit' => 'Delete my account',
     ],
     'passkeys' => [
         'title' => 'Passkeys', 'description' => 'Manage passwordless login.', 'empty' => 'No passkeys', 'empty_description' => 'Add one to log in without a password.',

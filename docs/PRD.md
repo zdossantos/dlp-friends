@@ -151,8 +151,8 @@ Paris.
 - Le membre peut modifier son profil et ses intérêts actifs.
 - Il peut masquer temporairement son profil des suggestions.
 - Il peut demander la suppression définitive de son compte. L’accès et la
-  visibilité cessent immédiatement ; la cible prévoit la purge asynchrone des
-  données associées sous 30 jours.
+  visibilité cessent immédiatement ; une purge asynchrone idempotente supprime
+  les données associées 30 jours après la demande.
 - Il peut exporter ses données de profil, intérêts, matches et messages.
 - Les exigences détaillées de suppression, conservation et sauvegarde sont
   définies dans [`security-privacy.md`](security-privacy.md).
@@ -188,8 +188,8 @@ Paris.
 | Retours d’interaction et mouvement accessible | **Implémenté** | Décisions de carte optimistes avec rollback, célébration de match, états occupés, feedback de messagerie, navigation et réduction des animations sont couverts. |
 | Connexion Google | **Implémenté** | Socialite fournit le parcours Google, avec liens uniques sans stockage de jetons, contrôle de majorité et tests automatisés. |
 | Photo personnelle facultative | **Planifié** | Aucun flux de téléversement membre n’existe. |
-| Export des données | **Planifié** | Aucun parcours d’export n’existe. |
-| Suppression différée sous 30 jours | **Partiel** | La suppression de compte existe, mais elle est immédiate et sans job de purge différée. |
+| Export des données | **Implémenté** | Les réglages préparent un export JSON asynchrone privé, téléchargeable par un lien signé temporaire et nettoyé à expiration. |
+| Suppression différée sous 30 jours | **Implémenté** | L’accès, les sessions et les liens sociaux sont révoqués immédiatement ; un job gardé purge les données après 30 jours et le scheduler récupère les échéances manquées. |
 | Signalement et console de modération | **Planifié après le MVP** | Le blocage existe ; aucun signalement ou workflow de modération n’est livré. |
 
 Les preuves détaillées de cet instantané sont consignées dans

@@ -12,10 +12,10 @@ et responsable du traitement. L’adresse publique de contact est fournie par
 `2026-09-01` sont acceptées explicitement à l’inscription et la preuve conserve
 uniquement l’utilisateur, la version et l’heure serveur.
 
-La suppression retire immédiatement les données des systèmes actifs. Elles
-peuvent subsister dans les sauvegardes quotidiennes chiffrées MySQL et fichiers
-jusqu’à leur expiration automatique après 30 jours. Ce périmètre n’ajoute ni
-réacceptation des comptes existants, ni export automatisé, ni délai de purge.
+La demande de suppression révoque immédiatement l’accès, puis retire les
+données des systèmes actifs après 30 jours. Elles peuvent ensuite subsister
+dans les sauvegardes quotidiennes chiffrées MySQL et fichiers jusqu’à leur
+expiration automatique, au plus 30 jours après leur création.
 
 ## Majorité et accès
 
@@ -43,10 +43,10 @@ réacceptation des comptes existants, ni export automatisé, ni délai de purge.
   les notifications d’une conversation existante ; ces échanges réapparaissent
   dans les listes lorsque le profil redevient visible. Le blocage reste le
   mécanisme qui interdit réellement l’accès et la messagerie.
-- Suppression cible : après confirmation explicite, le compte devient immédiatement inaccessible et invisible. Un job asynchrone doit supprimer les images, liens de comptes sociaux, profil, swipes, matches, conversations et messages dans un délai maximal de 30 jours ; les sessions sont révoquées immédiatement. Le code actuel supprime directement le compte et ne livre pas encore cette purge différée.
+- Suppression : après confirmation explicite, le compte devient immédiatement inaccessible et invisible. Les sessions, liens sociaux et exports temporaires sont révoqués immédiatement. Un job asynchrone gardé par le statut et l’horodatage supprime le profil, les intérêts, swipes, matches, conversations, messages et autres données liées 30 jours après la demande. Une tâche horaire redispatche les purges échues manquées ; les reprises sont idempotentes. Aucun parcours de restauration n’est proposé.
 - Documenter, avant mise en production, les durées de conservation et la politique de confidentialité applicable.
-- Prévoir l'export des données de profil, intérêts, matches et messages dans les réglages. Cet export attendu au MVP n’est pas encore implémenté.
-- Les sauvegardes ne sont pas modifiées rétroactivement lors d'une suppression ; leur durée de rétention doit être documentée et limitée.
+- L’export JSON des données de compte, profil, intérêts, matches et messages est préparé en file, stocké sur un disque privé, servi uniquement au propriétaire par un lien signé temporaire, puis supprimé à expiration. Il exclut mots de passe, secrets, jetons et données inutiles sur les autres membres.
+- Les sauvegardes ne sont pas modifiées rétroactivement lors d'une suppression ; leur rotation automatique est limitée à 30 jours.
 
 ## Autorisation et protection applicative
 

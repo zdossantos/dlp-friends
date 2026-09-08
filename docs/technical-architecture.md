@@ -229,6 +229,21 @@ La route `/up` sert de contrôle de santé sans exposer de configuration. Les
 services longs possèdent également un healthcheck Docker et des limites de
 ressources.
 
+## Contrôle des données personnelles
+
+Les exports sont produits par `ExportUserData` sur le disque privé `exports`.
+Seul leur propriétaire peut les télécharger via une route authentifiée et un
+lien signé à durée courte ; `data-exports:cleanup` retire fichiers et traces
+expirés.
+
+Une suppression confirmée inscrit `pending_deletion` et
+`deletion_requested_at`, puis révoque sessions, liens sociaux et exports avant
+la déconnexion. `PurgeDeletedUser` vérifie l’identité, le statut, l’horodatage
+immuable et l’échéance de 30 jours avant de supprimer l’utilisateur ; les clés
+étrangères en cascade retirent ses données relationnelles. La commande horaire
+`accounts:dispatch-due-purges` rend le traitement récupérable après une perte de
+job, tandis que ces gardes rendent les doublons sans effet.
+
 ## Principes de conception
 
 La séparation en modèles, Policies, Form Requests, Actions et composants sert

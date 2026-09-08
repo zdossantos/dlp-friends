@@ -477,6 +477,22 @@ test('member navigation appears on discovery conversations profile and settings 
         ->assertPresent('[aria-label="Profil"][aria-current="page"]');
 });
 
+test('account deletion explains immediate access loss and the purge deadline in both locales', function () {
+    $french = User::factory()->withProfile()->create(['locale' => 'fr']);
+    $this->actingAs($french);
+
+    visit('/settings/account')
+        ->assertSee('L’accès à ton compte cessera immédiatement')
+        ->assertSee('sous 30 jours');
+
+    $english = User::factory()->withProfile()->create(['locale' => 'en']);
+    $this->actingAs($english);
+
+    visit('/settings/account')
+        ->assertSee('Access to your account will end immediately')
+        ->assertSee('within 30 days');
+});
+
 test('member layout fixes navigation above reserved content space', function () {
     $user = User::factory()->withProfile()->create();
     $this->actingAs($user);
