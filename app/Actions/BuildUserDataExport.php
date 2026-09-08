@@ -25,7 +25,10 @@ final class BuildUserDataExport
 
         $conversations = Conversation::query()
             ->forMember($user)
-            ->with(['messages' => fn ($query) => $query->orderBy('id')])
+            ->withVisibleParticipant($user)
+            ->with(['messages' => fn ($query) => $query
+                ->where('author_user_id', $user->id)
+                ->orderBy('id')])
             ->orderBy('id')
             ->get();
 

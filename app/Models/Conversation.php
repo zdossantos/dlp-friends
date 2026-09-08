@@ -42,11 +42,19 @@ class Conversation extends Model
                 ->where(fn (Builder $memberIsLow) => $memberIsLow
                     ->where('user_low_id', $user->id)
                     ->whereHas('highUser.profile', fn (Builder $profile) => $profile
-                        ->where('visibility', ProfileVisibility::Visible)))
+                        ->where('visibility', ProfileVisibility::Visible))
+                    ->whereDoesntHave('highUser.blocksCreated', fn (Builder $blocks) => $blocks
+                        ->where('blocked_user_id', $user->id))
+                    ->whereDoesntHave('highUser.blocksReceived', fn (Builder $blocks) => $blocks
+                        ->where('blocker_user_id', $user->id)))
                 ->orWhere(fn (Builder $memberIsHigh) => $memberIsHigh
                     ->where('user_high_id', $user->id)
                     ->whereHas('lowUser.profile', fn (Builder $profile) => $profile
-                        ->where('visibility', ProfileVisibility::Visible)))));
+                        ->where('visibility', ProfileVisibility::Visible))
+                    ->whereDoesntHave('lowUser.blocksCreated', fn (Builder $blocks) => $blocks
+                        ->where('blocked_user_id', $user->id))
+                    ->whereDoesntHave('lowUser.blocksReceived', fn (Builder $blocks) => $blocks
+                        ->where('blocker_user_id', $user->id)))));
     }
 
     /** @return BelongsTo<MemberMatch, $this> */
