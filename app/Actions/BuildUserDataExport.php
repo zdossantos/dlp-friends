@@ -3,6 +3,7 @@
 namespace App\Actions;
 
 use App\Models\Conversation;
+use App\Models\Interest;
 use App\Models\MemberMatch;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
@@ -27,6 +28,20 @@ final class BuildUserDataExport
             ->with(['messages' => fn ($query) => $query->orderBy('id')])
             ->orderBy('id')
             ->get();
+
+        $messages = [];
+        foreach ($conversations as $conversation) {
+            foreach ($conversation->messages as $message) {
+                $messages[] = [
+                    'conversation_id' => $conversation->id,
+                    'author' => $message->author_user_id === $user->id ? 'self' : 'other',
+                    'content' => $message->content,
+                    'read_at' => $message->read_at?->toIso8601String(),
+                    'created_at' => $message->created_at?->toIso8601String(),
+                    'updated_at' => $message->updated_at?->toIso8601String(),
+                ];
+            }
+        }
 
         return [
             'format_version' => 1,
@@ -54,12 +69,12 @@ final class BuildUserDataExport
             'interests' => $user->profile?->interestHistory
                 ->sortBy('id')
                 ->values()
-                ->map(fn ($interest): array => [
+                ->map(fn (Interest $interest): array => [
                     'id' => $interest->id,
                     'name_fr' => $interest->name,
                     'name_en' => $interest->name_en,
                     'is_active' => $interest->is_active,
-                    'is_selected' => (bool) $interest->pivot->is_selected,
+                    'is_selected' => (bool) data_get($interest, 'pivot.is_selected'),
                 ])->all() ?? [],
             'matches' => $matches->map(function (MemberMatch $match) use ($user): array {
                 $other = $match->user_low_id === $user->id ? $match->highUser : $match->lowUser;
@@ -74,15 +89,7 @@ final class BuildUserDataExport
                     'updated_at' => $match->updated_at?->toIso8601String(),
                 ];
             })->all(),
-            'messages' => $conversations->flatMap(fn (Conversation $conversation) => $conversation->messages
-                ->map(fn ($message): array => [
-                    'conversation_id' => $conversation->id,
-                    'author' => $message->author_user_id === $user->id ? 'self' : 'other',
-                    'content' => $message->content,
-                    'read_at' => $message->read_at?->toIso8601String(),
-                    'created_at' => $message->created_at?->toIso8601String(),
-                    'updated_at' => $message->updated_at?->toIso8601String(),
-                ]))->values()->all(),
+            'messages' => $messages,
         ];
     }
 }

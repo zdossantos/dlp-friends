@@ -5,8 +5,8 @@ namespace Tests\Feature\Settings;
 use App\Enums\UserDataExportStatus;
 use App\Models\User;
 use App\Models\UserDataExport;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Carbon\CarbonInterface;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 class UserDataExportSchemaTest extends TestCase

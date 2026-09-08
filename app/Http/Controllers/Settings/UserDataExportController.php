@@ -10,7 +10,6 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
-use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 final class UserDataExportController extends Controller
@@ -22,7 +21,7 @@ final class UserDataExportController extends Controller
         return to_route('account.edit');
     }
 
-    public function download(Request $request, UserDataExport $export): StreamedResponse|BinaryFileResponse
+    public function download(Request $request, UserDataExport $export): StreamedResponse
     {
         abort_if($export->user_id !== $request->user()->id, 404);
         Gate::authorize('download', $export);
