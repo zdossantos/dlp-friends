@@ -7,12 +7,10 @@ use App\Enums\UserStatus;
 use App\Jobs\PurgeDeletedUser;
 use App\Models\SocialAccount;
 use App\Models\User;
-use App\Models\UserDataExport;
 use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Queue;
-use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class AccountDeletionTest extends TestCase
@@ -35,8 +33,6 @@ class AccountDeletionTest extends TestCase
     {
         CarbonImmutable::setTestNow('2026-09-08 12:00:00');
         Queue::fake();
-        Storage::fake('exports');
-        config()->set('data-control.exports.disk', 'exports');
         $user = User::factory()->withProfile()->create();
         $other = User::factory()->create();
         DB::table('sessions')->insert([
@@ -44,9 +40,6 @@ class AccountDeletionTest extends TestCase
             ['id' => 'other-session', 'user_id' => $other->id, 'ip_address' => null, 'user_agent' => null, 'payload' => '', 'last_activity' => now()->timestamp],
         ]);
         SocialAccount::factory()->for($user)->create();
-        $path = "user-data-exports/{$user->id}/ready.json";
-        Storage::disk('exports')->put($path, '{}');
-        UserDataExport::factory()->for($user)->create(['path' => $path]);
 
         $this->actingAs($user)
             ->delete(route('account.destroy'), ['password' => 'password'])
@@ -60,8 +53,6 @@ class AccountDeletionTest extends TestCase
         $this->assertFalse(DB::table('sessions')->where('user_id', $user->id)->exists());
         $this->assertTrue(DB::table('sessions')->where('user_id', $other->id)->exists());
         $this->assertFalse($user->socialAccounts()->exists());
-        $this->assertFalse($user->dataExports()->exists());
-        Storage::disk('exports')->assertMissing($path);
         Queue::assertPushed(PurgeDeletedUser::class, fn (PurgeDeletedUser $job): bool => $job->delay?->equalTo(now()->addDays(30)) === true);
     }
 

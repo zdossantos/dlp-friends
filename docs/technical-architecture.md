@@ -231,13 +231,12 @@ ressources.
 
 ## Contrôle des données personnelles
 
-Les exports sont produits par `ExportUserData` sur le disque privé `exports`.
-Seul leur propriétaire peut les télécharger via une route authentifiée et un
-lien signé à durée courte ; `data-exports:cleanup` retire fichiers et traces
-expirés.
+Les exports JSON sont construits à la demande par `BuildUserDataExport` et
+renvoyés directement au membre authentifié. Aucun fichier d’export ni état de
+préparation n’est conservé côté serveur.
 
 Une suppression confirmée inscrit `pending_deletion` et
-`deletion_requested_at`, puis révoque sessions, liens sociaux et exports avant
+`deletion_requested_at`, puis révoque sessions et liens sociaux avant
 la déconnexion. `PurgeDeletedUser` vérifie l’identité, le statut, l’horodatage
 immuable et l’échéance de 30 jours avant de supprimer l’utilisateur ; les clés
 étrangères en cascade retirent ses données relationnelles. La commande horaire

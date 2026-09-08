@@ -15,9 +15,6 @@ Route::middleware(['auth', 'verified', 'social', 'profile.complete', 'onboarding
     Route::post('settings/data-export', [UserDataExportController::class, 'store'])
         ->middleware('throttle:3,60')
         ->name('data-export.store');
-    Route::get('settings/data-export/{export}', [UserDataExportController::class, 'download'])
-        ->middleware('signed')
-        ->name('data-export.download');
 
     Route::get('settings/security', [SecurityController::class, 'edit'])
         ->middleware(RequirePassword::class)

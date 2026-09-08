@@ -19,8 +19,6 @@ x-app: &app
 services:
   web:
     <<: *app
-    volumes:
-      - data-exports:/var/www/html/storage/app/private/data-exports
     build:
       context: .
       target: runtime
@@ -46,8 +44,6 @@ services:
 
   worker:
     <<: *app
-    volumes:
-      - data-exports:/var/www/html/storage/app/private/data-exports
     command: worker
     healthcheck:
       test: ["CMD-SHELL", "pgrep -f 'artisan queue:work' >/dev/null"]
@@ -63,8 +59,6 @@ services:
 
   scheduler:
     <<: *app
-    volumes:
-      - data-exports:/var/www/html/storage/app/private/data-exports
     command: scheduler
     healthcheck:
       test: ["CMD-SHELL", "pgrep -f 'artisan schedule:work' >/dev/null"]
@@ -220,4 +214,3 @@ networks:
 volumes:
   mysql-data:
   minio-data:
-  data-exports:

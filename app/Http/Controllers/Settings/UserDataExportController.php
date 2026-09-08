@@ -2,40 +2,21 @@
 
 namespace App\Http\Controllers\Settings;
 
-use App\Actions\RequestUserDataExport;
-use App\Enums\UserDataExportStatus;
+use App\Actions\BuildUserDataExport;
 use App\Http\Controllers\Controller;
-use App\Models\UserDataExport;
-use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Gate;
-use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 final class UserDataExportController extends Controller
 {
-    public function store(Request $request, RequestUserDataExport $requestExport): RedirectResponse
+    public function store(Request $request, BuildUserDataExport $builder): StreamedResponse
     {
-        $requestExport->handle($request->user());
+        $payload = $builder->handle($request->user());
+        $filename = 'dlp-friends-data-'.now()->toDateString().'.json';
 
-        return to_route('account.edit');
-    }
-
-    public function download(Request $request, UserDataExport $export): StreamedResponse
-    {
-        abort_if($export->user_id !== $request->user()->id, 404);
-        Gate::authorize('download', $export);
-        abort_unless(
-            $export->status === UserDataExportStatus::Ready
-                && $export->path !== null
-                && $export->expires_at?->isFuture()
-                && Storage::disk((string) config('data-control.exports.disk'))->exists($export->path),
-            404,
-        );
-
-        return Storage::disk((string) config('data-control.exports.disk'))->download(
-            $export->path,
-            "dlp-friends-data-{$export->id}.json",
+        return response()->streamDownload(
+            static fn () => print json_encode($payload, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR),
+            $filename,
             ['Content-Type' => 'application/json; charset=UTF-8'],
         );
     }

@@ -7,11 +7,9 @@ use App\Jobs\PurgeDeletedUser;
 use App\Models\MemberMatch;
 use App\Models\Message;
 use App\Models\User;
-use App\Models\UserDataExport;
 use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class PurgeDeletedUserTest extends TestCase
@@ -21,8 +19,6 @@ class PurgeDeletedUserTest extends TestCase
     public function test_due_pending_account_and_linked_private_data_are_purged_idempotently(): void
     {
         CarbonImmutable::setTestNow('2026-09-08 12:00:00');
-        Storage::fake('exports');
-        config()->set('data-control.exports.disk', 'exports');
         $requestedAt = CarbonImmutable::now()->subDays(30);
         $user = User::factory()->withProfile()->create([
             'status' => UserStatus::PendingDeletion,
@@ -33,9 +29,6 @@ class PurgeDeletedUserTest extends TestCase
         $match = MemberMatch::factory()->create(['user_low_id' => $low, 'user_high_id' => $high]);
         $conversation = $match->conversation()->create();
         Message::factory()->create(['conversation_id' => $conversation->id, 'author_user_id' => $user->id]);
-        $path = "user-data-exports/{$user->id}/ready.json";
-        Storage::disk('exports')->put($path, '{}');
-        UserDataExport::factory()->for($user)->create(['path' => $path]);
         $job = new PurgeDeletedUser($user->id, $requestedAt->toISOString());
 
         $job->handle();
@@ -44,7 +37,6 @@ class PurgeDeletedUserTest extends TestCase
         $this->assertNull(User::find($user->id));
         $this->assertNotNull(User::find($other->id));
         $this->assertFalse(DB::table('messages')->where('conversation_id', $conversation->id)->exists());
-        Storage::disk('exports')->assertMissing($path);
     }
 
     public function test_purge_guards_reject_early_active_and_mismatched_requests(): void

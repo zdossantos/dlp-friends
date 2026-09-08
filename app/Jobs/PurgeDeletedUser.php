@@ -8,8 +8,6 @@ use Carbon\CarbonImmutable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
-use RuntimeException;
 
 class PurgeDeletedUser implements ShouldQueue
 {
@@ -32,13 +30,6 @@ class PurgeDeletedUser implements ShouldQueue
                 || ! $user->deletion_requested_at->equalTo($requestedAt)
                 || $user->deletion_requested_at->isAfter(now()->subDays((int) config('data-control.deletion.purge_days', 30)))) {
                 return;
-            }
-
-            $disk = Storage::disk((string) config('data-control.exports.disk', 'exports'));
-            foreach ($user->dataExports as $export) {
-                if ($export->path !== null && $disk->exists($export->path) && ! $disk->delete($export->path)) {
-                    throw new RuntimeException('Personal data export could not be purged.');
-                }
             }
 
             $user->delete();

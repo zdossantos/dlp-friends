@@ -14,11 +14,9 @@ import UserDataExport from '@/components/UserDataExport.vue';
 import { useTranslations } from '@/composables/useTranslations';
 import { edit } from '@/routes/account';
 import { send } from '@/routes/verification';
-import type { UserDataExportState } from '@/types';
 
 const page = usePage<{
     mustVerifyEmail: boolean;
-    dataExport: UserDataExportState;
 }>();
 const user = computed(() => page.props.auth.user);
 const { t } = useTranslations();
@@ -78,7 +76,7 @@ setLayoutProps({
                 </Button>
             </Form>
         </div>
-        <UserDataExport :export-state="page.props.dataExport" />
+        <UserDataExport />
         <DeleteUser />
     </div>
 </template>

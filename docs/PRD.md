@@ -188,7 +188,7 @@ Paris.
 | Retours d’interaction et mouvement accessible | **Implémenté** | Décisions de carte optimistes avec rollback, célébration de match, états occupés, feedback de messagerie, navigation et réduction des animations sont couverts. |
 | Connexion Google | **Implémenté** | Socialite fournit le parcours Google, avec liens uniques sans stockage de jetons, contrôle de majorité et tests automatisés. |
 | Photo personnelle facultative | **Planifié** | Aucun flux de téléversement membre n’existe. |
-| Export des données | **Implémenté** | Les réglages préparent un export JSON asynchrone privé, téléchargeable par un lien signé temporaire et nettoyé à expiration. |
+| Export des données | **Implémenté** | Les réglages génèrent à la demande un export JSON authentifié, téléchargé directement sans fichier conservé côté serveur. |
 | Suppression différée sous 30 jours | **Implémenté** | L’accès, les sessions et les liens sociaux sont révoqués immédiatement ; un job gardé purge les données après 30 jours et le scheduler récupère les échéances manquées. |
 | Signalement et console de modération | **Planifié après le MVP** | Le blocage existe ; aucun signalement ou workflow de modération n’est livré. |
 

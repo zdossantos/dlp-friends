@@ -1,16 +1,22 @@
-import type { UserDataExportState } from '@/types';
+export type UserDataExportDownload = {
+    blob: Blob;
+    filename: string;
+};
 
-type UserDataExportStatus = NonNullable<UserDataExportState>['status'];
+export async function userDataExportDownload(
+    request: () => Promise<Response>,
+): Promise<UserDataExportDownload> {
+    const response = await request();
 
-export function isUserDataExportPreparing(
-    status: UserDataExportStatus | undefined,
-): boolean {
-    return status === 'pending' || status === 'processing';
-}
+    if (!response.ok) {
+        throw new Error('Personal data export failed');
+    }
 
-export function userDataExportBecameReady(
-    previousStatus: UserDataExportStatus | undefined,
-    status: UserDataExportStatus | undefined,
-): boolean {
-    return isUserDataExportPreparing(previousStatus) && status === 'ready';
+    const disposition = response.headers.get('Content-Disposition') ?? '';
+    const filename = disposition.match(/filename="?([^";]+)"?/i)?.[1];
+
+    return {
+        blob: await response.blob(),
+        filename: filename ?? 'dlp-friends-data.json',
+    };
 }

@@ -229,8 +229,7 @@ La console Google doit déclarer exactement le callback de production :
 ## Tâches récurrentes
 
 - Le scheduler exécute chaque heure `accounts:dispatch-due-purges` pour remettre
-  en file toute suppression échue, et `data-exports:cleanup` pour retirer les
-  exports temporaires expirés. Les commandes utilisent un verrou anti-chevauchement.
+  en file toute suppression échue. La commande utilise un verrou anti-chevauchement.
 - Le worker est supervisé : un job en échec est journalisé et rejoué selon une politique explicite; après le dernier essai, il rejoint la table des jobs échoués.
 - Après un déploiement, redémarrer proprement les workers pour qu'ils consomment le nouveau code.
 

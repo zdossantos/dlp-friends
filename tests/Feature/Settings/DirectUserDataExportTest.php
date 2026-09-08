@@ -1,28 +1,21 @@
 <?php
 
-namespace Tests\Feature\Jobs;
+namespace Tests\Feature\Settings;
 
-use App\Enums\UserDataExportStatus;
-use App\Jobs\ExportUserData;
 use App\Models\Interest;
 use App\Models\MemberMatch;
 use App\Models\Message;
 use App\Models\User;
-use App\Models\UserDataExport;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
-class ExportUserDataTest extends TestCase
+class DirectUserDataExportTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_job_exports_only_the_members_portable_data(): void
+    public function test_download_contains_only_the_members_portable_data(): void
     {
-        Storage::fake('exports');
-        config()->set('data-control.exports.disk', 'exports');
-
         $user = User::factory()->withProfile()->create([
             'email' => 'self@example.com',
             'locale' => 'fr',
@@ -68,14 +61,9 @@ class ExportUserDataTest extends TestCase
             'content' => 'Sa réponse exportée',
         ]);
 
-        $export = UserDataExport::factory()->for($user)->create();
-
-        (new ExportUserData($export->id))->handle();
-
-        $export->refresh();
-        Storage::disk('exports')->assertExists($export->path);
+        $response = $this->actingAs($user)->post(route('data-export.store'))->assertOk();
         $payload = json_decode(
-            Storage::disk('exports')->get($export->path),
+            $response->streamedContent(),
             true,
             flags: JSON_THROW_ON_ERROR,
         );
@@ -89,26 +77,10 @@ class ExportUserDataTest extends TestCase
         $this->assertSame($other->profile->display_name, $payload['matches'][0]['other_member']['display_name']);
         $this->assertSame(['self', 'other'], array_column($payload['messages'], 'author'));
         $this->assertSame(['Mon message exporté', 'Sa réponse exportée'], array_column($payload['messages'], 'content'));
-        $this->assertSame(UserDataExportStatus::Ready, $export->status);
-        $this->assertNotNull($export->expires_at);
-
         $json = json_encode($payload, JSON_THROW_ON_ERROR);
         $this->assertStringNotContainsString('two-factor-sentinel', $json);
         $this->assertStringNotContainsString('remember-token-sentinel', $json);
         $this->assertStringNotContainsString('other-private@example.com', $json);
         $this->assertStringNotContainsString('1985-02-03', $json);
-    }
-
-    public function test_job_stops_when_the_owner_no_longer_exists(): void
-    {
-        Storage::fake('exports');
-        $user = User::factory()->create();
-        $export = UserDataExport::factory()->for($user)->create();
-        $exportId = $export->id;
-        $user->delete();
-
-        (new ExportUserData($exportId))->handle();
-
-        Storage::disk('exports')->assertDirectoryEmpty('/');
     }
 }

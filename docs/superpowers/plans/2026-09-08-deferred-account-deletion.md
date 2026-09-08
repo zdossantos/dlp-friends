@@ -223,7 +223,7 @@ git commit -m "docs: document deferred account deletion"
 
 - [ ] **Step 1: Generate frontend routes and run all targeted tests**
 
-Run: `php artisan wayfinder:generate --with-form && php artisan test tests/Feature/Settings tests/Feature/Jobs tests/Unit/Jobs tests/Feature/Console/CleanupExpiredUserDataExportsTest.php tests/Feature/Console/DispatchDueAccountPurgesTest.php tests/Feature/Admin/ManageMembersTest.php`
+Run: `php artisan wayfinder:generate --with-form && php artisan test tests/Feature/Settings tests/Feature/Jobs tests/Unit/Jobs tests/Feature/Console/DispatchDueAccountPurgesTest.php tests/Feature/Admin/ManageMembersTest.php`
 Expected: PASS with zero failures.
 
 - [ ] **Step 2: Run backend quality checks**

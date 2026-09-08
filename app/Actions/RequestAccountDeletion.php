@@ -7,7 +7,6 @@ use App\Jobs\PurgeDeletedUser;
 use App\Models\User;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
 
 final class RequestAccountDeletion
 {
@@ -28,14 +27,6 @@ final class RequestAccountDeletion
 
             DB::table('sessions')->where('user_id', $lockedUser->id)->delete();
             $lockedUser->socialAccounts()->delete();
-
-            $disk = Storage::disk((string) config('data-control.exports.disk', 'exports'));
-            foreach ($lockedUser->dataExports as $export) {
-                if ($export->path !== null) {
-                    $disk->delete($export->path);
-                }
-            }
-            $lockedUser->dataExports()->delete();
 
             DB::afterCommit(function () use ($lockedUser, $requestedAt): void {
                 PurgeDeletedUser::dispatch($lockedUser->id, $requestedAt->toISOString())

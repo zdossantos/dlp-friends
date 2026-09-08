@@ -56,7 +56,6 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
  * @property-read Collection<int, Message> $authoredMessages
  * @property-read Collection<int, SocialAccount> $socialAccounts
  * @property-read Collection<int, TermsAcceptance> $termsAcceptances
- * @property-read Collection<int, UserDataExport> $dataExports
  */
 #[Fillable(['email', 'locale', 'birth_date', 'password'])]
 #[Hidden(['password', 'two_factor_secret', 'two_factor_recovery_codes', 'remember_token'])]
@@ -135,12 +134,6 @@ class User extends Authenticatable implements HasLocalePreference, MustVerifyEma
     public function termsAcceptances(): HasMany
     {
         return $this->hasMany(TermsAcceptance::class);
-    }
-
-    /** @return HasMany<UserDataExport, $this> */
-    public function dataExports(): HasMany
-    {
-        return $this->hasMany(UserDataExport::class);
     }
 
     public function hasBlockedRelationshipWith(User $other): bool

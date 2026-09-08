@@ -1,23 +1,25 @@
 import { describe, expect, test } from 'bun:test';
-import {
-    isUserDataExportPreparing,
-    userDataExportBecameReady,
-} from '../../resources/js/lib/userDataExport';
+import { userDataExportDownload } from '../../resources/js/lib/userDataExport';
 
-describe('personal data export state', () => {
-    test('keeps the request disabled while preparation is active', () => {
-        expect(isUserDataExportPreparing('pending')).toBe(true);
-        expect(isUserDataExportPreparing('processing')).toBe(true);
-        expect(isUserDataExportPreparing('ready')).toBe(false);
-        expect(isUserDataExportPreparing('failed')).toBe(false);
-        expect(isUserDataExportPreparing(undefined)).toBe(false);
+describe('personal data export download', () => {
+    test('returns the generated blob and server filename', async () => {
+        const blob = new Blob(['{"account":{}}'], { type: 'application/json' });
+        const result = await userDataExportDownload(async () =>
+            new Response(blob, {
+                headers: {
+                    'Content-Disposition':
+                        'attachment; filename=dlp-friends-data-2026-09-08.json',
+                },
+            }),
+        );
+
+        expect(await result.blob.text()).toBe('{"account":{}}');
+        expect(result.filename).toBe('dlp-friends-data-2026-09-08.json');
     });
 
-    test('announces only a transition from preparation to ready', () => {
-        expect(userDataExportBecameReady('processing', 'ready')).toBe(true);
-        expect(userDataExportBecameReady('pending', 'ready')).toBe(true);
-        expect(userDataExportBecameReady('ready', 'ready')).toBe(false);
-        expect(userDataExportBecameReady(undefined, 'ready')).toBe(false);
-        expect(userDataExportBecameReady('processing', 'failed')).toBe(false);
+    test('rejects a failed generation', async () => {
+        expect(
+            userDataExportDownload(async () => new Response(null, { status: 500 })),
+        ).rejects.toThrow('Personal data export failed');
     });
 });
