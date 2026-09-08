@@ -131,6 +131,7 @@ function updateOpen(open: boolean): void {
                     <Link
                         :href="conversationHref"
                         data-test="open-match-conversation"
+                        @click.capture="updateOpen(false)"
                     >
                         {{ t('discovery.match.open_conversation') }}
                     </Link>

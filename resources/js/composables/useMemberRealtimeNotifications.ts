@@ -4,7 +4,11 @@ import { inject, provide, ref, shallowRef } from 'vue';
 import type { InjectionKey, Ref, ShallowRef } from 'vue';
 import { toast } from 'vue-sonner';
 import { useTranslations } from '@/composables/useTranslations';
-import { shouldShowMessageToast } from '@/lib/memberNotifications';
+import {
+    activeConversationId,
+    selectMatchNotification,
+    shouldShowMessageToast,
+} from '@/lib/memberNotifications';
 import { show as showConversation } from '@/routes/conversations';
 import type { MemberIdentity, RealtimeConversationMessage } from '@/types';
 
@@ -17,6 +21,7 @@ export type MemberMatchNotification = {
 type MemberRealtimeContext = {
     activeMatch: Ref<MemberMatchNotification | null>;
     latestMessage: ShallowRef<RealtimeConversationMessage | null>;
+    presentMatch: (match: MemberMatchNotification) => void;
     dismissMatch: () => void;
 };
 
@@ -34,6 +39,15 @@ export function useMemberRealtimeNotifications(
     const seenMatchIds = new Set<number>();
     const seenMessageIds = new Set<number>();
 
+    const presentMatch = (match: MemberMatchNotification): void => {
+        if (seenMatchIds.has(match.match_id)) {
+            return;
+        }
+
+        seenMatchIds.add(match.match_id);
+        activeMatch.value = selectMatchNotification(activeMatch.value, match);
+    };
+
     useEcho<MemberMatchNotification | RealtimeConversationMessage>(
         `App.Models.User.${currentUserId}`,
         ['.match.created', '.message.sent'],
@@ -47,13 +61,14 @@ export function useMemberRealtimeNotifications(
 
                 if (
                     seenMatchIds.has(notification.match_id) ||
-                    pageMatch?.id === notification.match_id
+                    pageMatch?.id === notification.match_id ||
+                    activeConversationId(page.url) ===
+                        notification.conversation_id
                 ) {
                     return;
                 }
 
-                seenMatchIds.add(notification.match_id);
-                activeMatch.value = notification;
+                presentMatch(notification);
 
                 return;
             }
@@ -89,6 +104,7 @@ export function useMemberRealtimeNotifications(
     return {
         activeMatch,
         latestMessage,
+        presentMatch,
         dismissMatch: () => {
             activeMatch.value = null;
         },
