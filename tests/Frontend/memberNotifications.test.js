@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'bun:test';
 import {
     activeConversationId,
+    selectMatchNotification,
     shouldShowMessageToast,
 } from '../../resources/js/lib/memberNotifications';
 
@@ -21,8 +22,25 @@ describe('member realtime notifications', () => {
 
         expect(shouldShowMessageToast(incoming, 7, '/discover')).toBe(true);
         expect(shouldShowMessageToast(incoming, 8, '/discover')).toBe(false);
-        expect(
-            shouldShowMessageToast(incoming, 7, '/conversations/42'),
-        ).toBe(false);
+        expect(shouldShowMessageToast(incoming, 7, '/conversations/42')).toBe(
+            false,
+        );
+    });
+
+    test('keeps one presentation when the page and realtime announce the same match', () => {
+        const realtimeMatch = {
+            match_id: 12,
+            conversation_id: 34,
+            member: { id: 56 },
+        };
+        const pageMatch = {
+            match_id: 12,
+            conversation_id: 34,
+            member: { id: 56 },
+        };
+
+        expect(selectMatchNotification(realtimeMatch, pageMatch)).toBe(
+            realtimeMatch,
+        );
     });
 });

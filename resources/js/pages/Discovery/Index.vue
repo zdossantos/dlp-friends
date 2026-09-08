@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { Head, Link, router, setLayoutProps } from '@inertiajs/vue3';
 import { computed, onBeforeUnmount, ref, watch } from 'vue';
-import MatchDialog from '@/components/discovery/MatchDialog.vue';
 import SwipeCard from '@/components/discovery/SwipeCard.vue';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
@@ -13,8 +12,8 @@ import {
     CardTitle,
 } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useMemberRealtimeContext } from '@/composables/useMemberRealtimeNotifications';
 import { useTranslations } from '@/composables/useTranslations';
-import { show as showConversation } from '@/routes/conversations';
 import { swipe } from '@/routes/discovery';
 import { show as showProfile } from '@/routes/member-profile';
 import { show as showMember } from '@/routes/members';
@@ -25,6 +24,7 @@ const props = defineProps<{
     match: DiscoveryMatch | null;
 }>();
 const { t } = useTranslations();
+const { presentMatch } = useMemberRealtimeContext();
 setLayoutProps({
     breadcrumbs: [
         { title: t('discovery.navigation'), href: { url: '/discover' } },
@@ -47,8 +47,6 @@ const retryAttempt = ref<{
     targetUserId: number;
     decision: SwipeDecision;
 } | null>(null);
-const visibleMatchId = ref(props.match?.id ?? null);
-const matchDialogOpen = ref(props.match !== null);
 const pendingProfiles = ref<Map<number, DiscoveryProfile>>(new Map());
 const exitingCards = ref<
     Array<{
@@ -61,17 +59,19 @@ let exitingCardSequence = 0;
 const exitingCardTimers = new Set<number>();
 
 watch(
-    () => props.match?.id ?? null,
-    (matchId) => {
-        if (matchId === null) {
+    () => props.match,
+    (match) => {
+        if (match === null) {
             return;
         }
 
-        if (matchId !== visibleMatchId.value) {
-            visibleMatchId.value = matchId;
-            matchDialogOpen.value = true;
-        }
+        presentMatch({
+            match_id: match.id,
+            conversation_id: match.conversationId,
+            member: match.member,
+        });
     },
+    { immediate: true },
 );
 
 watch(
@@ -328,12 +328,5 @@ function retry(): void {
                 />
             </div>
         </section>
-
-        <MatchDialog
-            v-if="match"
-            v-model:open="matchDialogOpen"
-            :match="match.member"
-            :conversation-href="showConversation(match.conversationId).url"
-        />
     </main>
 </template>
