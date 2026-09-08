@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Settings;
 
+use App\Actions\RequestAccountDeletion;
 use App\Enums\UserDataExportStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Settings\AccountUpdateRequest;
@@ -55,12 +56,12 @@ class AccountController extends Controller
             : to_route('account.edit');
     }
 
-    public function destroy(ProfileDeleteRequest $request): RedirectResponse
+    public function destroy(ProfileDeleteRequest $request, RequestAccountDeletion $requestDeletion): RedirectResponse
     {
         $user = $request->user();
 
+        $requestDeletion->handle($user);
         Auth::logout();
-        $user->delete();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
