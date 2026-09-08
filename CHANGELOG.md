@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.8.2](https://github.com/zdossantos/dlp-friends/compare/v1.8.1...v1.8.2) (2026-09-08)
+
+
+### Fixes
+
+* **discovery:** prevent duplicate match dialogs ([#193](https://github.com/zdossantos/dlp-friends/issues/193)) ([e8052ce](https://github.com/zdossantos/dlp-friends/commit/e8052cea3e7db9652e42bde18ca4bd92f1ea5c5e))
+
 ## [1.8.1](https://github.com/zdossantos/dlp-friends/compare/v1.8.0...v1.8.1) (2026-09-07)
 
 
