@@ -10,11 +10,28 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\URL;
+use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
 class UserDataExportTest extends TestCase
 {
     use RefreshDatabase;
+
+    public function test_account_settings_exposes_the_latest_export_state_and_temporary_url(): void
+    {
+        config()->set('inertia.testing.ensure_pages_exist', false);
+        $user = User::factory()->withProfile()->create();
+        UserDataExport::factory()->for($user)->create([
+            'status' => UserDataExportStatus::Ready,
+            'path' => 'ready.json',
+            'expires_at' => now()->addHour(),
+        ]);
+
+        $this->actingAs($user)->get(route('account.edit'))->assertInertia(fn (Assert $page) => $page
+            ->where('dataExport.status', 'ready')
+            ->where('dataExport.expires_at', fn ($value) => is_string($value))
+            ->where('dataExport.download_url', fn ($value) => is_string($value) && str_contains($value, '/settings/data-export/')));
+    }
 
     public function test_member_can_request_one_asynchronous_export_during_the_cooldown(): void
     {

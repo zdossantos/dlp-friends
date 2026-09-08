@@ -79,6 +79,16 @@ return [
         'password_title' => 'Change password', 'password_description' => 'Use a long, unique password to protect your account.',
     ],
     'appearance' => ['label' => 'Choose theme', 'light' => 'Light', 'dark' => 'Dark', 'system' => 'System'],
+    'export' => [
+        'title' => 'Export your data',
+        'description' => 'Download a JSON copy of your account, profile, interests, connections, and messages.',
+        'request' => 'Prepare my export',
+        'pending' => 'Your export is waiting to be prepared.',
+        'processing' => 'Your export is being prepared.',
+        'ready' => 'Your export is ready. The link is temporary.',
+        'failed' => 'Preparation failed. You can try again.',
+        'download' => 'Download my export',
+    ],
     'deletion' => [
         'title' => 'Delete your account', 'description' => 'Permanently delete your account and its data.', 'warning' => 'Warning',
         'irreversible' => 'This action is permanent and cannot be undone.', 'question' => 'Do you really want to delete your account?',

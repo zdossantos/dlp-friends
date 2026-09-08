@@ -119,6 +119,16 @@ return [
     'appearance' => [
         'label' => 'Choisir le thème', 'light' => 'Clair', 'dark' => 'Sombre', 'system' => 'Système',
     ],
+    'export' => [
+        'title' => 'Exporter tes données',
+        'description' => 'Télécharge une copie JSON de ton compte, de ton profil, de tes centres d’intérêt, de tes mises en relation et de tes messages.',
+        'request' => 'Préparer mon export',
+        'pending' => 'Ton export est en attente de préparation.',
+        'processing' => 'Ton export est en cours de préparation.',
+        'ready' => 'Ton export est prêt. Le lien est temporaire.',
+        'failed' => 'La préparation a échoué. Tu peux réessayer.',
+        'download' => 'Télécharger mon export',
+    ],
     'deletion' => [
         'title' => 'Supprimer ton compte', 'description' => 'Supprime définitivement ton compte et ses données.',
         'warning' => 'Attention', 'irreversible' => 'Cette action est définitive et ne peut pas être annulée.',

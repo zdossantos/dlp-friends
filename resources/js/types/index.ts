@@ -1,5 +1,6 @@
 export * from './auth';
 export * from './conversation';
+export * from './data-control';
 export * from './discovery';
 export * from './interest';
 export * from './i18n';

@@ -6,6 +6,7 @@ import DeleteUser from '@/components/DeleteUser.vue';
 import Heading from '@/components/Heading.vue';
 import InputError from '@/components/InputError.vue';
 import LocaleSwitcher from '@/components/LocaleSwitcher.vue';
+import UserDataExport from '@/components/UserDataExport.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -13,8 +14,12 @@ import { Spinner } from '@/components/ui/spinner';
 import { useTranslations } from '@/composables/useTranslations';
 import { edit } from '@/routes/account';
 import { send } from '@/routes/verification';
+import type { UserDataExportState } from '@/types';
 
-const page = usePage();
+const page = usePage<{
+    mustVerifyEmail: boolean;
+    dataExport: UserDataExportState;
+}>();
 const user = computed(() => page.props.auth.user);
 const { t } = useTranslations();
 setLayoutProps({
@@ -73,6 +78,7 @@ setLayoutProps({
                 </Button>
             </Form>
         </div>
+        <UserDataExport :export-state="page.props.dataExport" />
         <DeleteUser />
     </div>
 </template>
