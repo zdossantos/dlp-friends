@@ -83,11 +83,13 @@ return [
         'title' => 'Export your data',
         'description' => 'Download a JSON copy of your account, profile, interests, connections, and messages.',
         'request' => 'Prepare my export',
+        'preparing' => 'Preparing export…',
         'pending' => 'Your export is waiting to be prepared.',
         'processing' => 'Your export is being prepared.',
         'ready' => 'Your export is ready. The link is temporary.',
         'failed' => 'Preparation failed. You can try again.',
         'download' => 'Download my export',
+        'ready_toast' => 'Your export is ready to download.',
     ],
     'deletion' => [
         'title' => 'Delete your account', 'description' => 'Request permanent deletion of your account and its data.', 'warning' => 'Warning',

@@ -20,7 +20,9 @@ class UserDataExportTest extends TestCase
     public function test_account_settings_exposes_the_latest_export_state_and_temporary_url(): void
     {
         config()->set('inertia.testing.ensure_pages_exist', false);
+        Storage::fake('exports');
         $user = User::factory()->withProfile()->create();
+        Storage::disk('exports')->put('ready.json', '{}');
         UserDataExport::factory()->for($user)->create([
             'status' => UserDataExportStatus::Ready,
             'path' => 'ready.json',
@@ -31,6 +33,22 @@ class UserDataExportTest extends TestCase
             ->where('dataExport.status', 'ready')
             ->where('dataExport.expires_at', fn ($value) => is_string($value))
             ->where('dataExport.download_url', fn ($value) => is_string($value) && str_contains($value, '/settings/data-export/')));
+    }
+
+    public function test_account_settings_does_not_offer_a_missing_export_file(): void
+    {
+        config()->set('inertia.testing.ensure_pages_exist', false);
+        Storage::fake('exports');
+        $user = User::factory()->withProfile()->create();
+        UserDataExport::factory()->for($user)->create([
+            'status' => UserDataExportStatus::Ready,
+            'path' => 'missing.json',
+            'expires_at' => now()->addHour(),
+        ]);
+
+        $this->actingAs($user)->get(route('account.edit'))->assertInertia(fn (Assert $page) => $page
+            ->where('dataExport.status', 'ready')
+            ->where('dataExport.download_url', null));
     }
 
     public function test_member_can_request_one_asynchronous_export_during_the_cooldown(): void
@@ -47,6 +65,26 @@ class UserDataExportTest extends TestCase
 
         $this->assertSame(1, $user->dataExports()->count());
         Queue::assertPushed(ExportUserData::class, 1);
+    }
+
+    public function test_member_can_regenerate_a_recent_export_whose_file_is_missing(): void
+    {
+        Queue::fake();
+        Storage::fake('exports');
+        $user = User::factory()->withProfile()->create();
+        $export = UserDataExport::factory()->for($user)->create([
+            'status' => UserDataExportStatus::Ready,
+            'path' => 'missing.json',
+            'expires_at' => now()->addHour(),
+        ]);
+
+        $this->actingAs($user)
+            ->post(route('data-export.store'))
+            ->assertRedirect(route('account.edit'));
+
+        $this->assertSame(1, $user->dataExports()->count());
+        $this->assertSame(UserDataExportStatus::Pending, $export->fresh()->status);
+        Queue::assertPushed(ExportUserData::class, fn (ExportUserData $job) => $job->exportId === $export->id);
     }
 
     public function test_guest_cannot_request_or_download_an_export(): void

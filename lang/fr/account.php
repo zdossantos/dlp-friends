@@ -123,11 +123,13 @@ return [
         'title' => 'Exporter tes données',
         'description' => 'Télécharge une copie JSON de ton compte, de ton profil, de tes centres d’intérêt, de tes mises en relation et de tes messages.',
         'request' => 'Préparer mon export',
+        'preparing' => 'Préparation en cours…',
         'pending' => 'Ton export est en attente de préparation.',
         'processing' => 'Ton export est en cours de préparation.',
         'ready' => 'Ton export est prêt. Le lien est temporaire.',
         'failed' => 'La préparation a échoué. Tu peux réessayer.',
         'download' => 'Télécharger mon export',
+        'ready_toast' => 'Ton export est prêt à être téléchargé.',
     ],
     'deletion' => [
         'title' => 'Supprimer ton compte', 'description' => 'Demande la suppression définitive de ton compte et de ses données.',
