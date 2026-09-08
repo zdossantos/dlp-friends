@@ -23,7 +23,10 @@ const { t } = useTranslations();
             {{ t(`account.export.${exportState.status}`) }}
         </p>
         <Button v-if="exportState?.download_url" as-child>
-            <a :href="exportState.download_url" data-test="download-data-export">
+            <a
+                :href="exportState.download_url"
+                data-test="download-data-export"
+            >
                 {{ t('account.export.download') }}
             </a>
         </Button>
