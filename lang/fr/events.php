@@ -18,6 +18,7 @@ return [
     'statuses' => ['pending' => 'En attente', 'accepted' => 'Acceptée', 'refused' => 'Refusée', 'withdrawn' => 'Désistée', 'removed' => 'Retirée', 'blocked' => 'Bloquée'],
     'actions' => ['create' => 'Créer', 'mine' => 'Mes événements', 'view' => 'Voir', 'edit' => 'Modifier', 'cancel' => 'Annuler l’événement', 'register' => 'Participer', 'withdraw' => 'Se désinscrire', 'accept' => 'Accepter', 'refuse' => 'Refuser', 'remove' => 'Retirer', 'confirm' => 'Confirmer', 'close' => 'Fermer', 'back' => 'Retour'],
     'roles' => ['organizer' => 'Organisateur', 'participant' => 'Participant'],
+    'participants' => ['open' => 'Voir les :count participants'],
     'panels' => [
         'detail' => ['title' => 'Détails de l’événement', 'description' => 'Toutes les informations utiles sans quitter ta liste.'],
         'create' => ['title' => 'Créer un événement', 'description' => 'Propose un rendez-vous amical aux autres membres.'],

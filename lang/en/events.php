@@ -18,6 +18,7 @@ return [
     'statuses' => ['pending' => 'Pending', 'accepted' => 'Accepted', 'refused' => 'Refused', 'withdrawn' => 'Withdrawn', 'removed' => 'Removed', 'blocked' => 'Blocked'],
     'actions' => ['create' => 'Create', 'mine' => 'My events', 'view' => 'View', 'edit' => 'Edit', 'cancel' => 'Cancel event', 'register' => 'Join', 'withdraw' => 'Withdraw', 'accept' => 'Accept', 'refuse' => 'Refuse', 'remove' => 'Remove', 'confirm' => 'Confirm', 'close' => 'Close', 'back' => 'Back'],
     'roles' => ['organizer' => 'Organizer', 'participant' => 'Participant'],
+    'participants' => ['open' => 'View all :count participants'],
     'panels' => [
         'detail' => ['title' => 'Event details', 'description' => 'All useful information without leaving your list.'],
         'create' => ['title' => 'Create an event', 'description' => 'Suggest a friendly meetup to other members.'],

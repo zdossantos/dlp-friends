@@ -104,6 +104,43 @@ test('my events separates roles and keeps event details legible in dark theme', 
         ->assertNoJavaScriptErrors();
 });
 
+test('participant avatar stack opens the list and profiles inside the event panel', function () {
+    $organizer = eventBrowserMember('Alice');
+    $viewer = eventBrowserMember('Basile');
+    $second = eventBrowserMember('Camille');
+    $third = eventBrowserMember('Dorian');
+    $event = Event::factory()->for($organizer, 'organizer')->create([
+        'title' => 'Sortie à quatre',
+        'capacity' => 6,
+    ]);
+
+    foreach ([$viewer, $second, $third] as $participant) {
+        EventRegistration::factory()
+            ->for($event)
+            ->for($participant)
+            ->accepted()
+            ->create();
+    }
+
+    $this->actingAs($viewer);
+
+    visit("/events/{$event->id}?origin=mine")
+        ->assertCount('[data-test="participant-stack-avatar"]', 3)
+        ->assertSee('+1')
+        ->click('[data-test="participant-stack-trigger"]')
+        ->assertPathIs("/events/{$event->id}/participants")
+        ->assertPresent('[data-test="event-panel"]')
+        ->assertCount('[data-test="participant-row"]', 4)
+        ->click("[data-test=\"participant-link-{$organizer->id}\"]")
+        ->assertPresent('[data-test="event-panel"]')
+        ->assertPresent('[data-test="event-participant-profile"]')
+        ->assertPresent('[data-test="profile-presentation"]')
+        ->assertPresent('[data-test="like-member"]')
+        ->click('[data-test="participant-profile-back"]')
+        ->assertCount('[data-test="participant-row"]', 4)
+        ->assertNoJavaScriptErrors();
+});
+
 test('an organizer creates an automatic event and a member joins then withdraws', function () {
     $organizer = eventBrowserMember('Alice');
     $member = eventBrowserMember('Basile');

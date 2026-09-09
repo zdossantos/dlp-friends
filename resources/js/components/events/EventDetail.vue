@@ -1,12 +1,14 @@
 <script setup lang="ts">
 import { Link, router } from '@inertiajs/vue3';
 import { CalendarDays, MapPin, Users } from '@lucide/vue';
+import EventParticipantStack from '@/components/events/EventParticipantStack.vue';
 import EventRegistrationActions from '@/components/events/EventRegistrationActions.vue';
 import OrganizerRegistrations from '@/components/events/OrganizerRegistrations.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useTranslations } from '@/composables/useTranslations';
 import { cancel, edit } from '@/routes/events';
+import { index as participantsIndex } from '@/routes/events/participants';
 import type { EventDetail, EventWorkspaceContext } from '@/types/event';
 
 const props = defineProps<{
@@ -102,16 +104,10 @@ function cancelEvent(): void {
             <h3 class="text-lg font-semibold">
                 {{ t('events.show.participants') }}
             </h3>
-            <ul class="flex flex-wrap gap-2">
-                <li
-                    v-for="participant in event.participants"
-                    :key="participant.id"
-                >
-                    <Badge variant="secondary">{{
-                        participant.displayName
-                    }}</Badge>
-                </li>
-            </ul>
+            <EventParticipantStack
+                :participants="event.participants"
+                :href="participantsIndex(event.id, { query: origin }).url"
+            />
         </section>
         <section v-if="event.registrations" class="space-y-3">
             <h3 class="text-lg font-semibold">
