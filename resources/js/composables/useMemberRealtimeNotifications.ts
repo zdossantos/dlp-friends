@@ -152,6 +152,7 @@ export function useMemberRealtimeNotifications(
     );
 
     let heartbeatTimer: ReturnType<typeof setInterval> | undefined;
+    let initialHeartbeatTimer: ReturnType<typeof setTimeout> | undefined;
     const heartbeat = (): void => {
         if (document.visibilityState !== 'visible') {
             return;
@@ -167,11 +168,15 @@ export function useMemberRealtimeNotifications(
         }).catch(() => undefined);
     };
     onMounted(() => {
-        heartbeat();
+        initialHeartbeatTimer = setTimeout(heartbeat, 5_000);
         heartbeatTimer = setInterval(heartbeat, 20_000);
         document.addEventListener('visibilitychange', heartbeat);
     });
     onBeforeUnmount(() => {
+        if (initialHeartbeatTimer) {
+            clearTimeout(initialHeartbeatTimer);
+        }
+
         if (heartbeatTimer) {
             clearInterval(heartbeatTimer);
         }
