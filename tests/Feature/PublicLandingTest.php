@@ -136,22 +136,26 @@ test('google analytics and search console verification are disabled without conf
         ->assertDontSee('google-site-verification', false);
 });
 
-test('google analytics and search console verification are rendered when configured', function () {
+test('google analytics waits for consent when configured', function () {
     config()->set('services.google.analytics_id', 'G-TEST123456');
     config()->set('services.google.site_verification', 'search-console-token');
 
     $this->get('/fr')
         ->assertOk()
-        ->assertSee('https://www.googletagmanager.com/gtag/js?id=G-TEST123456', false)
-        ->assertSee("gtag('config', 'G-TEST123456')", false)
+        ->assertDontSee('googletagmanager.com/gtag/js', false)
+        ->assertSee('data-analytics-measurement-id="G-TEST123456"', false)
+        ->assertSee('data-test="analytics-consent-dialog"', false)
+        ->assertSee('Accepter la mesure d’audience')
+        ->assertSee('Refuser la mesure d’audience')
         ->assertSee('<meta name="google-site-verification" content="search-console-token">', false);
 });
 
-test('google analytics is available on private application pages when configured', function () {
+test('analytics consent controls are available on private application pages', function () {
     config()->set('services.google.analytics_id', 'G-TEST123456');
 
     $this->get('/login')
         ->assertOk()
-        ->assertSee('https://www.googletagmanager.com/gtag/js?id=G-TEST123456', false)
-        ->assertSee("gtag('config', 'G-TEST123456', { send_page_view: false })", false);
+        ->assertDontSee('googletagmanager.com/gtag/js', false)
+        ->assertSee('data-analytics-spa="true"', false)
+        ->assertSee('data-test="analytics-consent-settings"', false);
 });

@@ -184,7 +184,7 @@ Paris.
 | Thèmes clair, sombre et système | **Implémenté** | Préférence persistée et interface correspondante sont présentes. |
 | Accueil public et référencement bilingue | **Implémenté** | Landing pages françaises et anglaises, métadonnées SEO, données structurées, sitemap public et exclusion des parcours privés sont livrés. |
 | Explication publique du classement et du matching | **Implémenté** | Pages françaises et anglaises indexables, liées depuis l’accueil, décrivant l’éligibilité, les priorités, le bonus de fréquence, le départage et la réciprocité. |
-| Mesure d’audience et suivi d’indexation | **Implémenté** | GA4 conditionnel couvre les pages publiques et les navigations Inertia avec chemins normalisés ; Search Console s’appuie sur une validation configurable, le sitemap et robots.txt. |
+| Mesure d’audience et suivi d’indexation | **Implémenté** | GA4 ne charge qu’après consentement explicite, avec refus et retrait accessibles, choix conservé six mois, Consent Mode basic et chemins normalisés ; Search Console s’appuie sur une validation configurable, le sitemap et robots.txt. |
 | Retours d’interaction et mouvement accessible | **Implémenté** | Décisions de carte optimistes avec rollback, célébration de match, états occupés, feedback de messagerie, navigation et réduction des animations sont couverts. |
 | Connexion Google | **Implémenté** | Socialite fournit le parcours Google, avec liens uniques sans stockage de jetons, contrôle de majorité et tests automatisés. |
 | Photo personnelle facultative | **Planifié** | Aucun flux de téléversement membre n’existe. |

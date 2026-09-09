@@ -12,6 +12,7 @@ interface AnalyticsRuntime {
     gtag: Gtag | undefined;
     initialReferrer: string;
     initialUrl: string;
+    onAnalyticsReady?: (listener: () => void) => void;
     onNavigate: (listener: (url: string) => void) => void;
     origin: string;
 }
@@ -57,42 +58,57 @@ export async function initializeAnalytics(
     }
 
     const activeRuntime = runtime ?? {
-        gtag: window.gtag,
+        get gtag() {
+            return window.gtag;
+        },
         initialReferrer: window.document.referrer,
         initialUrl: window.location.pathname,
+        onAnalyticsReady: (listener: () => void) => {
+            window.addEventListener('analytics:ready', listener, {
+                once: true,
+            });
+        },
         onNavigate: (listener: (url: string) => void) => {
             router.on('navigate', (event) => listener(event.detail.page.url));
         },
         origin: window.location.origin,
     };
 
-    if (!activeRuntime.gtag) {
-        return;
-    }
+    const startTracking = () => {
+        if (!activeRuntime.gtag) {
+            return;
+        }
 
-    let previousLocation = analyticsLocation(
-        activeRuntime.origin,
-        activeRuntime.initialUrl,
-    );
-    const initialReferrer = normalizeAnalyticsReferrer(
-        activeRuntime.initialReferrer,
-    );
+        let previousLocation = analyticsLocation(
+            activeRuntime.origin,
+            activeRuntime.initialUrl,
+        );
+        const initialReferrer = normalizeAnalyticsReferrer(
+            activeRuntime.initialReferrer,
+        );
 
-    activeRuntime.gtag('event', 'page_view', {
-        page_location: previousLocation,
-        page_path: normalizeAnalyticsPath(activeRuntime.initialUrl),
-        ...(initialReferrer ? { page_referrer: initialReferrer } : {}),
-    });
-
-    activeRuntime.onNavigate((url) => {
-        const pageLocation = analyticsLocation(activeRuntime.origin, url);
-
-        activeRuntime.gtag?.('event', 'page_view', {
-            page_location: pageLocation,
-            page_path: normalizeAnalyticsPath(url),
-            page_referrer: previousLocation,
+        activeRuntime.gtag('event', 'page_view', {
+            page_location: previousLocation,
+            page_path: normalizeAnalyticsPath(activeRuntime.initialUrl),
+            ...(initialReferrer ? { page_referrer: initialReferrer } : {}),
         });
 
-        previousLocation = pageLocation;
-    });
+        activeRuntime.onNavigate((url) => {
+            const pageLocation = analyticsLocation(activeRuntime.origin, url);
+
+            activeRuntime.gtag?.('event', 'page_view', {
+                page_location: pageLocation,
+                page_path: normalizeAnalyticsPath(url),
+                page_referrer: previousLocation,
+            });
+
+            previousLocation = pageLocation;
+        });
+    };
+
+    if (activeRuntime.gtag) {
+        startTracking();
+    } else {
+        activeRuntime.onAnalyticsReady?.(startTracking);
+    }
 }

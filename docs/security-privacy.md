@@ -74,10 +74,17 @@ envoyer à GA4 un nom, une adresse e-mail, un identifiant de membre, une bio, un
 message ou toute autre donnée permettant d’identifier directement une
 personne.
 
-La version actuelle active cette mesure sans recueil préalable du consentement.
-La mise en conformité du consentement, du refus et du retrait est une dette
-produit explicitement reportée en V2 ; la politique de confidentialité doit
-rester cohérente avec la configuration réellement déployée.
+Le tag Google reste totalement bloqué avant acceptation : aucun appel, ping ou
+événement n’est envoyé à Google en l’absence d’accord. L’acceptation et le refus
+sont proposés au même niveau, puis mémorisés six mois dans le cookie fonctionnel
+`analytics_consent`. Un refus ne modifie aucune fonction essentielle.
+
+Le bouton « Gérer les cookies » reste disponible sur chaque page. Il permet de
+modifier le choix ou de retirer l’accord ; le retrait remplace le choix par un
+refus, supprime les cookies GA4 accessibles au site et recharge le document afin
+d’arrêter toute mesure suivante. Le Consent Mode v2 est utilisé en mode basic :
+`analytics_storage` n’est accordé qu’après consentement et les finalités
+publicitaires restent refusées.
 
 ## Blocage
 

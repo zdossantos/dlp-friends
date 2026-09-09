@@ -157,13 +157,15 @@ vise un score maximal en SEO et en accessibilité.
 
 ## Mesure d’audience et Search Console
 
-Le composant Blade `google-tags` charge Google Analytics 4 sur les documents
-publics et dans le shell Inertia uniquement lorsque `GOOGLE_ANALYTICS_ID` est
-configuré. Les pages Blade laissent GA4 enregistrer la page initiale. Le shell
-Inertia désactive cet envoi automatique et émet une page vue au chargement puis
-à chaque navigation cliente, avec la page précédente comme référent, afin
-d’éviter les doublons. Le suivi GA4 des changements fondés sur l’historique du
-navigateur doit rester désactivé puisque l’application les mesure elle-même.
+Le composant Blade `analytics-consent` expose la même interface bilingue sur les
+documents publics et le shell Inertia lorsque `GOOGLE_ANALYTICS_ID` est
+configuré. Avant acceptation, aucun script Google n’est créé. Après acceptation,
+le module `analyticsConsent.ts` initialise le Consent Mode v2 basic, charge GA4
+et conserve le choix six mois. Les pages Blade laissent alors GA4 enregistrer
+la page initiale. Le shell Inertia désactive cet envoi automatique et émet une
+page vue au chargement puis à chaque navigation cliente, avec la page précédente
+comme référent, afin d’éviter les doublons. Il sait aussi démarrer ce suivi si le
+consentement est donné après le montage de l’application.
 
 Avant l’envoi, les paramètres de requête, fragments et segments numériques ou
 UUID des URL sont retirés ou remplacés par `{id}`. Aucun événement applicatif

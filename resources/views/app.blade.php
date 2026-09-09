@@ -4,7 +4,7 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="csrf-token" content="{{ csrf_token() }}">
-        <x-google-tags :spa="true" />
+        <x-google-tags />
 
         @php($seo = $page['props']['seo'] ?? null)
         @if ($seo)
@@ -76,5 +76,6 @@
     </head>
     <body class="font-sans antialiased">
         <x-inertia::app />
+        <x-analytics-consent :spa="true" />
     </body>
 </html>

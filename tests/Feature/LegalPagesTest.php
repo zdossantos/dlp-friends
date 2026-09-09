@@ -39,12 +39,16 @@ test('privacy pages disclose google analytics audience measurement', function ()
     $this->get('/fr/politique-confidentialite')
         ->assertOk()
         ->assertSee('Google Analytics 4')
-        ->assertSee('mesure d’audience');
+        ->assertSee('mesure d’audience')
+        ->assertSee('six mois')
+        ->assertSee('Gérer les cookies');
 
     $this->get('/en/privacy-policy')
         ->assertOk()
         ->assertSee('Google Analytics 4')
-        ->assertSee('audience measurement');
+        ->assertSee('audience measurement')
+        ->assertSee('six months')
+        ->assertSee('Manage cookies');
 });
 
 test('legal navigation keeps the current browser host', function () {
