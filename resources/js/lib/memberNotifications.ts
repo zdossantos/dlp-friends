@@ -3,6 +3,17 @@ type MessageNotice = {
     author_user_id: number;
 };
 
+type MatchNotice = {
+    match_id: number;
+};
+
+export function selectMatchNotification<T extends MatchNotice>(
+    current: T | null,
+    incoming: T,
+): T {
+    return current?.match_id === incoming.match_id ? current : incoming;
+}
+
 export function activeConversationId(url: string): number | null {
     const path = url.split(/[?#]/, 1)[0];
     const match = path.match(/^\/conversations\/(\d+)\/?$/);

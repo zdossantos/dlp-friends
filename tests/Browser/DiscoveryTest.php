@@ -652,6 +652,7 @@ test('a reciprocal like opens a dismissible match dialog only once', function ()
     $page->script("document.querySelector('[aria-label=\"Découvrir ce profil\"]').click()");
     $page->assertSee('Vos univers se croisent')
         ->assertSee('Basile souhaite aussi te découvrir.')
+        ->assertCount('[data-slot="dialog-title"]', 1)
         ->assertSeeIn('[data-test="match-member-name"]', 'Basile')
         ->assertPresent('[data-test="match-member-avatar"] img')
         ->assertPresent('[data-slot="dialog-title"]')
