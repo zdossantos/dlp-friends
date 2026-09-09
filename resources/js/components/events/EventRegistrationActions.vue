@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { router } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
+import EventConfirmationDialog from '@/components/events/EventConfirmationDialog.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useTranslations } from '@/composables/useTranslations';
@@ -32,10 +33,6 @@ function register(): void {
     );
 }
 function withdraw(): void {
-    if (!window.confirm(t('events.confirmations.withdraw_title'))) {
-        return;
-    }
-
     busy.value = true;
     router.delete(destroy(props.event.id, { query: origin }).url, {
         preserveScroll: true,
@@ -59,13 +56,22 @@ function withdraw(): void {
             @click="register"
             >{{ t('events.actions.register') }}</Button
         >
-        <Button
+        <EventConfirmationDialog
             v-if="actions.includes('withdraw')"
-            variant="outline"
-            :disabled="busy"
-            data-test="event-withdraw"
-            @click="withdraw"
-            >{{ t('events.actions.withdraw') }}</Button
+            :title="t('events.confirmations.withdraw_title')"
+            :description="t('events.confirmations.withdraw_description')"
+            :confirm-label="t('events.actions.withdraw')"
+            :busy="busy"
+            destructive
+            @confirm="withdraw"
         >
+            <Button
+                variant="outline"
+                :disabled="busy"
+                data-test="event-withdraw"
+            >
+                {{ t('events.actions.withdraw') }}
+            </Button>
+        </EventConfirmationDialog>
     </div>
 </template>

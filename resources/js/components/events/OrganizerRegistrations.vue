@@ -1,23 +1,41 @@
 <script setup lang="ts">
 import { router } from '@inertiajs/vue3';
+import { ref } from 'vue';
+import EventConfirmationDialog from '@/components/events/EventConfirmationDialog.vue';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { useTranslations } from '@/composables/useTranslations';
 import { decision, remove } from '@/routes/events/registrations';
-import type { OrganizerRegistration } from '@/types/event';
+import type {
+    EventWorkspaceContext,
+    OrganizerRegistration,
+} from '@/types/event';
 
-defineProps<{ registrations: OrganizerRegistration[] }>();
+const props = defineProps<{
+    registrations: OrganizerRegistration[];
+    context: EventWorkspaceContext;
+}>();
 const { t } = useTranslations();
-function decide(id: number, accept: boolean): void {
-    if (!accept && !window.confirm(t('events.confirmations.refuse_title'))) {
-        return;
-    }
+const busyRegistrationId = ref<number | null>(null);
+const origin = props.context === 'mine' ? { origin: 'mine' } : {};
 
-    router.patch(decision(id).url, { accept }, { preserveScroll: true });
+function decide(id: number, accept: boolean): void {
+    busyRegistrationId.value = id;
+    router.patch(
+        decision(id, { query: origin }).url,
+        { accept },
+        {
+            preserveScroll: true,
+            onFinish: () => (busyRegistrationId.value = null),
+        },
+    );
 }
 function removeMember(id: number): void {
-    if (window.confirm(t('events.confirmations.remove_title'))) {
-        router.delete(remove(id).url, { preserveScroll: true });
-    }
+    busyRegistrationId.value = id;
+    router.delete(remove(id, { query: origin }).url, {
+        preserveScroll: true,
+        onFinish: () => (busyRegistrationId.value = null),
+    });
 }
 </script>
 
@@ -28,32 +46,75 @@ function removeMember(id: number): void {
             :key="registration.registrationId"
             class="flex items-center justify-between gap-3 p-4"
         >
-            <div>
-                <p class="font-medium">{{ registration.displayName }}</p>
-                <p class="text-sm text-muted-foreground">
-                    {{ t(`events.statuses.${registration.status}`) }}
-                </p>
+            <div class="flex min-w-0 items-center gap-3">
+                <Avatar class="size-10 shrink-0">
+                    <AvatarImage
+                        v-if="registration.avatar"
+                        :src="registration.avatar.image_url"
+                        :alt="
+                            registration.displayName ?? registration.avatar.name
+                        "
+                    />
+                    <AvatarFallback>
+                        {{
+                            registration.displayName
+                                ?.slice(0, 1)
+                                .toUpperCase() ?? '?'
+                        }}
+                    </AvatarFallback>
+                </Avatar>
+                <div class="min-w-0">
+                    <p class="font-medium">{{ registration.displayName }}</p>
+                    <p class="text-sm text-muted-foreground">
+                        {{ t(`events.statuses.${registration.status}`) }}
+                    </p>
+                </div>
             </div>
-            <div class="flex gap-2">
+            <div class="flex shrink-0 gap-2">
                 <template v-if="registration.status === 'pending'"
                     ><Button
                         size="sm"
+                        :disabled="busyRegistrationId !== null"
                         @click="decide(registration.registrationId, true)"
                         >{{ t('events.actions.accept') }}</Button
-                    ><Button
-                        size="sm"
-                        variant="outline"
-                        @click="decide(registration.registrationId, false)"
-                        >{{ t('events.actions.refuse') }}</Button
-                    ></template
+                    ><EventConfirmationDialog
+                        :title="t('events.confirmations.refuse_title')"
+                        :description="
+                            t('events.confirmations.refuse_description')
+                        "
+                        :confirm-label="t('events.actions.refuse')"
+                        :busy="
+                            busyRegistrationId === registration.registrationId
+                        "
+                        destructive
+                        @confirm="decide(registration.registrationId, false)"
+                    >
+                        <Button
+                            size="sm"
+                            variant="outline"
+                            :disabled="busyRegistrationId !== null"
+                        >
+                            {{ t('events.actions.refuse') }}
+                        </Button>
+                    </EventConfirmationDialog></template
                 >
-                <Button
+                <EventConfirmationDialog
                     v-if="registration.status === 'accepted'"
-                    size="sm"
-                    variant="destructive"
-                    @click="removeMember(registration.registrationId)"
-                    >{{ t('events.actions.remove') }}</Button
+                    :title="t('events.confirmations.remove_title')"
+                    :description="t('events.confirmations.remove_description')"
+                    :confirm-label="t('events.actions.remove')"
+                    :busy="busyRegistrationId === registration.registrationId"
+                    destructive
+                    @confirm="removeMember(registration.registrationId)"
                 >
+                    <Button
+                        size="sm"
+                        variant="destructive"
+                        :disabled="busyRegistrationId !== null"
+                    >
+                        {{ t('events.actions.remove') }}
+                    </Button>
+                </EventConfirmationDialog>
             </div>
         </li>
     </ul>

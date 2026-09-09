@@ -54,8 +54,10 @@ const origin = props.context === 'mine' ? { origin: 'mine' } : {};
             "
         />
     </section>
-    <OrganizerRegistrations
-        v-else-if="panel.kind === 'registrations'"
-        :registrations="panel.event.registrations ?? []"
-    />
+    <section v-else-if="panel.kind === 'registrations'" class="space-y-4 pt-2">
+        <OrganizerRegistrations
+            :registrations="panel.event.registrations ?? []"
+            :context="context"
+        />
+    </section>
 </template>

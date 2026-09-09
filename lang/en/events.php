@@ -16,7 +16,7 @@ return [
     'fields' => ['title' => 'Title', 'description' => 'Description', 'general_location' => 'General location', 'detailed_location' => 'Exact location', 'starts_at' => 'Date and time', 'capacity' => 'Number of places', 'registration_mode' => 'Registration mode'],
     'modes' => ['automatic' => 'Automatic acceptance', 'manual' => 'Organizer approval'],
     'statuses' => ['pending' => 'Pending', 'accepted' => 'Accepted', 'refused' => 'Refused', 'withdrawn' => 'Withdrawn', 'removed' => 'Removed', 'blocked' => 'Blocked'],
-    'actions' => ['create' => 'Create', 'mine' => 'My events', 'view' => 'View', 'edit' => 'Edit', 'cancel' => 'Cancel event', 'register' => 'Join', 'withdraw' => 'Withdraw', 'accept' => 'Accept', 'refuse' => 'Refuse', 'remove' => 'Remove', 'confirm' => 'Confirm', 'close' => 'Close', 'back' => 'Back'],
+    'actions' => ['create' => 'Create', 'mine' => 'My events', 'view' => 'View', 'edit' => 'Edit', 'cancel' => 'Cancel event', 'register' => 'Join', 'withdraw' => 'Withdraw', 'accept' => 'Accept', 'refuse' => 'Refuse', 'remove' => 'Remove', 'manage_requests' => 'Manage requests (:count)', 'confirm' => 'Confirm', 'close' => 'Close', 'back' => 'Back'],
     'roles' => ['organizer' => 'Organizer', 'participant' => 'Participant'],
     'participants' => ['open' => 'View all :count participants'],
     'panels' => [
@@ -27,7 +27,7 @@ return [
         'participant-profile' => ['title' => 'Participant profile', 'description' => 'Meet this member without leaving the event.'],
         'registrations' => ['title' => 'Registration requests', 'description' => 'Manage requests and participants for this event.'],
     ],
-    'confirmations' => ['cancel_title' => 'Cancel this event?', 'cancel_description' => 'Registered members will be notified.', 'withdraw_title' => 'Withdraw from this event?', 'refuse_title' => 'Refuse this request?', 'remove_title' => 'Remove this person?'],
+    'confirmations' => ['cancel_title' => 'Cancel this event?', 'cancel_description' => 'Registered members will be notified.', 'withdraw_title' => 'Withdraw from this event?', 'withdraw_description' => 'Your registration will no longer be active and your place may be offered to another member.', 'refuse_title' => 'Refuse this request?', 'refuse_description' => 'This decision is final: the request cannot be accepted later.', 'remove_title' => 'Remove this person?', 'remove_description' => 'This person will immediately lose access to the exact location and participant list.'],
     'capacity' => ':occupied/:capacity places occupied',
     'cancelled' => 'Cancelled',
     'errors' => [

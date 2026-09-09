@@ -174,8 +174,17 @@ test('an organizer creates an automatic event and a member joins then withdraws'
         ->assertCount('[data-test="participant-stack-avatar"]', 2)
         ->assertPresent('[data-test="event-withdraw"]');
 
-    $page->script('window.confirm = () => true');
     $page->click('[data-test="event-withdraw"]')
+        ->assertPresent('[data-test="event-confirm-dialog"]')
+        ->assertSee('Ton inscription ne sera plus active')
+        ->click('[data-test="event-confirm-cancel"]')
+        ->assertPresent('[data-test="event-withdraw"]');
+
+    expect($event->registrations()->whereBelongsTo($member)->value('status'))
+        ->toBe(EventRegistrationStatus::Accepted);
+
+    $page->click('[data-test="event-withdraw"]')
+        ->click('[data-test="event-confirm-submit"]')
         ->assertDontSee('Sous l’horloge de Main Street')
         ->assertNoJavaScriptErrors();
 
@@ -203,18 +212,32 @@ test('manual registration protects private data and lets the organizer accept re
 
     $this->actingAs($organizer);
     $page = visit("/events/{$event->id}")
+        ->click('[data-test="event-registrations"]')
+        ->assertPresent('[data-test="event-panel"]')
         ->assertSee('Basile')
         ->assertSee('Camille')
         ->click('Accepter');
-    $page->script('window.confirm = () => true');
-    $page->click('Refuser')->assertNoJavaScriptErrors();
+    $page->click('Refuser')
+        ->assertSee('Cette décision est définitive')
+        ->click('[data-test="event-confirm-cancel"]')
+        ->assertSee('Camille');
+
+    expect($event->registrations()->whereBelongsTo($refused)->value('status'))
+        ->toBe(EventRegistrationStatus::Pending);
+
+    $page->click('Refuser')
+        ->click('[data-test="event-confirm-submit"]')
+        ->assertNoJavaScriptErrors();
 
     expect($event->registrations()->whereBelongsTo($accepted)->value('status'))
         ->toBe(EventRegistrationStatus::Accepted)
         ->and($event->registrations()->whereBelongsTo($refused)->value('status'))
         ->toBe(EventRegistrationStatus::Refused);
 
-    $page->click('Retirer')->assertDontSee('Retirer');
+    $page->click('Retirer')
+        ->assertSee('La personne perdra immédiatement l’accès')
+        ->click('[data-test="event-confirm-submit"]')
+        ->assertDontSee('Retirer');
     expect($event->registrations()->whereBelongsTo($accepted)->value('status'))
         ->toBe(EventRegistrationStatus::Removed);
 });
@@ -270,8 +293,10 @@ test('date and location changes notify a member and cancellation remains in hist
 
     $this->actingAs($organizer);
     $page = visit("/events/{$event->id}");
-    $page->script('window.confirm = () => true');
-    $page->click('Annuler l’événement')->assertSee('Annulé');
+    $page->click('Annuler l’événement')
+        ->assertSee('Les membres inscrits seront prévenus')
+        ->click('[data-test="event-confirm-submit"]')
+        ->assertSee('Annulé');
 
     visit('/events/mine')
         ->assertSee('Rencontre du soir')

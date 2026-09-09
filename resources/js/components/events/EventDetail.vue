@@ -1,14 +1,16 @@
 <script setup lang="ts">
 import { Link, router } from '@inertiajs/vue3';
 import { CalendarDays, MapPin, Users } from '@lucide/vue';
+import { ref } from 'vue';
+import EventConfirmationDialog from '@/components/events/EventConfirmationDialog.vue';
 import EventParticipantStack from '@/components/events/EventParticipantStack.vue';
 import EventRegistrationActions from '@/components/events/EventRegistrationActions.vue';
-import OrganizerRegistrations from '@/components/events/OrganizerRegistrations.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useTranslations } from '@/composables/useTranslations';
 import { cancel, edit } from '@/routes/events';
 import { index as participantsIndex } from '@/routes/events/participants';
+import { index as registrationsIndex } from '@/routes/events/registrations';
 import type { EventDetail, EventWorkspaceContext } from '@/types/event';
 
 const props = defineProps<{
@@ -17,15 +19,17 @@ const props = defineProps<{
 }>();
 const { t, formatDate } = useTranslations();
 const origin = props.context === 'mine' ? { origin: 'mine' } : {};
+const cancelling = ref(false);
 
 function cancelEvent(): void {
-    if (
-        window.confirm(
-            `${t('events.confirmations.cancel_title')} ${t('events.confirmations.cancel_description')}`,
-        )
-    ) {
-        router.patch(cancel(props.event.id, { query: origin }).url);
-    }
+    cancelling.value = true;
+    router.patch(
+        cancel(props.event.id, { query: origin }).url,
+        {},
+        {
+            onFinish: () => (cancelling.value = false),
+        },
+    );
 }
 </script>
 
@@ -99,9 +103,30 @@ function cancelEvent(): void {
                     {{ t('events.actions.edit') }}
                 </Link>
             </Button>
-            <Button variant="destructive" @click="cancelEvent">
-                {{ t('events.actions.cancel') }}
+            <Button v-if="event.registrations" as-child variant="outline">
+                <Link
+                    :href="registrationsIndex(event.id, { query: origin })"
+                    data-test="event-registrations"
+                >
+                    {{
+                        t('events.actions.manage_requests', {
+                            count: event.registrations.length,
+                        })
+                    }}
+                </Link>
             </Button>
+            <EventConfirmationDialog
+                :title="t('events.confirmations.cancel_title')"
+                :description="t('events.confirmations.cancel_description')"
+                :confirm-label="t('events.actions.cancel')"
+                :busy="cancelling"
+                destructive
+                @confirm="cancelEvent"
+            >
+                <Button variant="destructive" :disabled="cancelling">
+                    {{ t('events.actions.cancel') }}
+                </Button>
+            </EventConfirmationDialog>
         </div>
         <section v-if="event.participants" class="space-y-3">
             <h3 class="text-lg font-semibold">
@@ -111,12 +136,6 @@ function cancelEvent(): void {
                 :participants="event.participants"
                 :href="participantsIndex(event.id, { query: origin }).url"
             />
-        </section>
-        <section v-if="event.registrations" class="space-y-3">
-            <h3 class="text-lg font-semibold">
-                {{ t('events.show.requests') }}
-            </h3>
-            <OrganizerRegistrations :registrations="event.registrations" />
         </section>
     </article>
 </template>

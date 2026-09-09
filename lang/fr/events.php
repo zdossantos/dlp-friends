@@ -16,7 +16,7 @@ return [
     'fields' => ['title' => 'Titre', 'description' => 'Description', 'general_location' => 'Lieu général', 'detailed_location' => 'Lieu précis', 'starts_at' => 'Date et heure', 'capacity' => 'Nombre de places', 'registration_mode' => 'Mode d’inscription'],
     'modes' => ['automatic' => 'Acceptation automatique', 'manual' => 'Validation par l’organisateur'],
     'statuses' => ['pending' => 'En attente', 'accepted' => 'Acceptée', 'refused' => 'Refusée', 'withdrawn' => 'Désistée', 'removed' => 'Retirée', 'blocked' => 'Bloquée'],
-    'actions' => ['create' => 'Créer', 'mine' => 'Mes événements', 'view' => 'Voir', 'edit' => 'Modifier', 'cancel' => 'Annuler l’événement', 'register' => 'Participer', 'withdraw' => 'Se désinscrire', 'accept' => 'Accepter', 'refuse' => 'Refuser', 'remove' => 'Retirer', 'confirm' => 'Confirmer', 'close' => 'Fermer', 'back' => 'Retour'],
+    'actions' => ['create' => 'Créer', 'mine' => 'Mes événements', 'view' => 'Voir', 'edit' => 'Modifier', 'cancel' => 'Annuler l’événement', 'register' => 'Participer', 'withdraw' => 'Se désinscrire', 'accept' => 'Accepter', 'refuse' => 'Refuser', 'remove' => 'Retirer', 'manage_requests' => 'Gérer les demandes (:count)', 'confirm' => 'Confirmer', 'close' => 'Fermer', 'back' => 'Retour'],
     'roles' => ['organizer' => 'Organisateur', 'participant' => 'Participant'],
     'participants' => ['open' => 'Voir les :count participants'],
     'panels' => [
@@ -27,7 +27,7 @@ return [
         'participant-profile' => ['title' => 'Profil du participant', 'description' => 'Découvre ce membre sans quitter l’événement.'],
         'registrations' => ['title' => 'Demandes d’inscription', 'description' => 'Gère les demandes et les participants à cet événement.'],
     ],
-    'confirmations' => ['cancel_title' => 'Annuler cet événement ?', 'cancel_description' => 'Les membres inscrits seront prévenus.', 'withdraw_title' => 'Te désinscrire ?', 'refuse_title' => 'Refuser cette demande ?', 'remove_title' => 'Retirer cette personne ?'],
+    'confirmations' => ['cancel_title' => 'Annuler cet événement ?', 'cancel_description' => 'Les membres inscrits seront prévenus.', 'withdraw_title' => 'Te désinscrire ?', 'withdraw_description' => 'Ton inscription ne sera plus active et ta place pourra être proposée à un autre membre.', 'refuse_title' => 'Refuser cette demande ?', 'refuse_description' => 'Cette décision est définitive : la demande ne pourra pas être acceptée plus tard.', 'remove_title' => 'Retirer cette personne ?', 'remove_description' => 'La personne perdra immédiatement l’accès au lieu précis et à la liste des participants.'],
     'capacity' => ':occupied/:capacity places occupées',
     'cancelled' => 'Annulé',
     'errors' => [
