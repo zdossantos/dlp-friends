@@ -26,6 +26,7 @@ const origin = props.context === 'mine' ? { origin: 'mine' } : {};
         >
             <Link
                 :href="show([eventId, participant.id], { query: origin })"
+                preserve-scroll
                 :data-test="`participant-link-${participant.id}`"
                 class="flex min-h-16 items-center gap-3 px-4 py-3 text-card-foreground transition-colors hover:bg-muted focus-visible:bg-muted focus-visible:outline-none"
             >

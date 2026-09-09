@@ -57,6 +57,37 @@ class LikeMemberControllerTest extends TestCase
         expect(MemberMatch::query()->first()?->conversation)->not->toBeNull();
     }
 
+    public function test_a_reciprocal_like_can_return_to_a_safe_event_workspace_path(): void
+    {
+        [$viewer, $member] = $this->members();
+        Swipe::factory()->create([
+            'actor_user_id' => $member->id,
+            'target_user_id' => $viewer->id,
+            'decision' => SwipeDecision::Like,
+        ]);
+
+        $returnTo = '/events/12/participants/34?origin=mine';
+
+        $this->actingAs($viewer)
+            ->post(route('members.like', $member), ['return_to' => $returnTo])
+            ->assertRedirect($returnTo)
+            ->assertSessionHas('discovery.match');
+    }
+
+    public function test_a_profile_like_rejects_an_external_return_target(): void
+    {
+        [$viewer, $member] = $this->members();
+        Swipe::factory()->create([
+            'actor_user_id' => $member->id,
+            'target_user_id' => $viewer->id,
+            'decision' => SwipeDecision::Like,
+        ]);
+
+        $this->actingAs($viewer)
+            ->post(route('members.like', $member), ['return_to' => '//example.com'])
+            ->assertRedirect(route('discovery.index'));
+    }
+
     public function test_a_blocked_pair_cannot_like_from_a_profile(): void
     {
         [$viewer, $member] = $this->members();

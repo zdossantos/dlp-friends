@@ -5,6 +5,7 @@ export function availableEventActions(state: {
     status: string | null;
     started: boolean;
     cancelled: boolean;
+    full?: boolean;
 }): EventAction[] {
     if (state.started || state.cancelled) {
         return [];
@@ -18,7 +19,10 @@ export function availableEventActions(state: {
         return ['withdraw'];
     }
 
-    if (state.status === null || state.status === 'withdrawn') {
+    if (
+        (state.status === null || state.status === 'withdrawn') &&
+        !state.full
+    ) {
         return ['register'];
     }
 

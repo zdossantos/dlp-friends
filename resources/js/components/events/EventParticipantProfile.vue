@@ -44,6 +44,7 @@ const visitFrequency = computed(() =>
             >
                 <Link
                     :href="backHref"
+                    preserve-scroll
                     data-test="participant-profile-back"
                     :aria-label="t('events.actions.back')"
                 >
@@ -67,6 +68,7 @@ const visitFrequency = computed(() =>
                 <LikeMemberButton
                     v-if="profile.canLike"
                     :member-id="profile.member.id"
+                    :return-href="$page.url"
                 />
                 <UnblockMemberButton
                     v-if="profile.canUnblock"

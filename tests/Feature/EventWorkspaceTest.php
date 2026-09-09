@@ -95,4 +95,17 @@ class EventWorkspaceTest extends TestCase
                 'origin' => 'mine',
             ], absolute: false));
     }
+
+    public function test_cancelling_an_event_keeps_the_current_workspace_and_detail_panel(): void
+    {
+        $organizer = User::factory()->withProfile()->create();
+        $event = Event::factory()->for($organizer, 'organizer')->create();
+
+        $this->actingAs($organizer)
+            ->patch(route('events.cancel', ['event' => $event, 'origin' => 'mine']))
+            ->assertRedirect(route('events.show', [
+                'event' => $event,
+                'origin' => 'mine',
+            ], absolute: false));
+    }
 }

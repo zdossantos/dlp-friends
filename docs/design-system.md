@@ -147,6 +147,29 @@ compréhensible, pas seulement animé.
 - Éviter le défilement horizontal. Les contenus longs doivent se replier ou se
   tronquer avec une alternative accessible.
 
+### Panneaux adaptatifs et événements
+
+- Un parcours secondaire qui conserve un écran principal comme contexte
+  réutilise le même contenu dans une feuille remontant du bas sous `sm` et dans
+  un dialogue centré à partir de `sm`. Il ne possède pas une variante métier
+  différente selon le format.
+- Découvrir et Mes événements sont les deux seules surfaces plein écran du
+  domaine événements. Détail, création, modification, participants, profil,
+  demandes et confirmations restent dans des panneaux superposés et
+  adressables par URL.
+- Un lien direct ou issu d’une notification doit reconstruire exactement la
+  surface principale et le panneau correspondants. Chaque transition ajoute
+  une entrée cohérente à l’historique ; Retour remonte profil, liste et détail
+  avant de fermer le panneau, sans perdre le contexte de la liste.
+- Une pile de participants affiche au plus trois avatars chevauchants puis un
+  compteur `+N`. L’ensemble forme une seule cible accessible nommée ; la liste
+  complète présente avatar et nom dans des lignes tactiles d’au moins 44 px.
+- Les rôles ne reposent pas uniquement sur la couleur : Mes événements sépare
+  les sections organisées et rejointes et répète le rôle dans un badge textuel.
+  Les surfaces de détail emploient exclusivement les tokens `card`,
+  `foreground`, `muted`, `secondary` et leurs couleurs de premier plan afin de
+  conserver le contraste en thème sombre.
+
 ## Mouvement et retours
 
 Le mouvement suit deux niveaux sémantiques. Les retours fonctionnels discrets

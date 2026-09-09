@@ -34,6 +34,7 @@ const isMobile = useMediaQuery('(max-width: 639px)');
         <SheetContent
             side="bottom"
             data-test="event-panel"
+            data-panel-mode="sheet"
             class="max-h-[92svh] rounded-t-3xl border-border bg-card px-0 pb-[max(1rem,env(safe-area-inset-bottom))] text-card-foreground"
         >
             <SheetHeader class="shrink-0 px-5 pr-14 text-left">
@@ -49,6 +50,7 @@ const isMobile = useMediaQuery('(max-width: 639px)');
     <Dialog v-else :open="open" @update:open="emit('update:open', $event)">
         <DialogContent
             data-test="event-panel"
+            data-panel-mode="dialog"
             class="max-h-[min(90svh,52rem)] overflow-hidden border-border bg-card p-0 text-card-foreground sm:max-w-2xl"
         >
             <DialogHeader class="shrink-0 px-6 pt-6 pr-14">

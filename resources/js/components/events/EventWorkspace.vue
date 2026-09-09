@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Link, router } from '@inertiajs/vue3';
-import { computed } from 'vue';
+import { computed, nextTick } from 'vue';
 import AdaptiveEventPanel from '@/components/events/AdaptiveEventPanel.vue';
 import EventCard from '@/components/events/EventCard.vue';
 import EventPanelContent from '@/components/events/EventPanelContent.vue';
@@ -32,9 +32,25 @@ const createHref = computed(
             .url,
 );
 
+function rememberCreateOpener(): void {
+    sessionStorage.setItem('event-panel-opener', 'event-create');
+}
+
 function updatePanel(open: boolean): void {
     if (!open) {
-        router.visit(props.closeHref, { preserveScroll: true });
+        router.visit(props.closeHref, {
+            preserveScroll: true,
+            onSuccess: () => {
+                const opener = sessionStorage.getItem('event-panel-opener');
+                if (!opener) return;
+                nextTick(() => {
+                    document
+                        .querySelector<HTMLElement>(`[data-test="${opener}"]`)
+                        ?.focus({ preventScroll: true });
+                    sessionStorage.removeItem('event-panel-opener');
+                });
+            },
+        });
     }
 }
 </script>
@@ -78,9 +94,13 @@ function updatePanel(open: boolean): void {
                     </Link>
                 </Button>
                 <Button as-child>
-                    <Link :href="createHref" data-test="event-create">{{
-                        t('events.actions.create')
-                    }}</Link>
+                    <Link
+                        :href="createHref"
+                        preserve-scroll
+                        data-test="event-create"
+                        @click="rememberCreateOpener"
+                        >{{ t('events.actions.create') }}</Link
+                    >
                 </Button>
             </div>
         </header>

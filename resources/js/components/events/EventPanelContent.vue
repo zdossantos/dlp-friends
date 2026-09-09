@@ -68,6 +68,7 @@ const origin = props.context === 'mine' ? { origin: 'mine' } : {};
             >
                 <Link
                     :href="show(panel.event.id, { query: origin })"
+                    preserve-scroll
                     data-test="event-registrations-back"
                     :aria-label="t('events.actions.back')"
                 >

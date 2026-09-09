@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { router } from '@inertiajs/vue3';
-import { ref } from 'vue';
+import { router, usePage } from '@inertiajs/vue3';
+import { computed, ref } from 'vue';
 import EventConfirmationDialog from '@/components/events/EventConfirmationDialog.vue';
+import InputError from '@/components/InputError.vue';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { useTranslations } from '@/composables/useTranslations';
@@ -16,7 +17,12 @@ const props = defineProps<{
     context: EventWorkspaceContext;
 }>();
 const { t } = useTranslations();
+const page = usePage();
 const busyRegistrationId = ref<number | null>(null);
+const registrationError = computed(() => {
+    const errors = page.props.errors as Record<string, string> | undefined;
+    return errors?.registration;
+});
 const origin = props.context === 'mine' ? { origin: 'mine' } : {};
 
 function decide(id: number, accept: boolean): void {
@@ -40,6 +46,10 @@ function removeMember(id: number): void {
 </script>
 
 <template>
+    <InputError
+        :message="registrationError"
+        data-test="organizer-registration-error"
+    />
     <ul class="divide-y rounded-2xl border" role="list">
         <li
             v-for="registration in registrations"

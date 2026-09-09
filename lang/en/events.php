@@ -30,6 +30,7 @@ return [
     'confirmations' => ['cancel_title' => 'Cancel this event?', 'cancel_description' => 'Registered members will be notified.', 'withdraw_title' => 'Withdraw from this event?', 'withdraw_description' => 'Your registration will no longer be active and your place may be offered to another member.', 'refuse_title' => 'Refuse this request?', 'refuse_description' => 'This decision is final: the request cannot be accepted later.', 'remove_title' => 'Remove this person?', 'remove_description' => 'This person will immediately lose access to the exact location and participant list.'],
     'capacity' => ':occupied/:capacity places occupied',
     'cancelled' => 'Cancelled',
+    'past' => 'Past',
     'errors' => [
         'organizer_registration' => 'You already organize this event.',
         'event_unavailable' => 'This event is no longer available.',
@@ -43,5 +44,6 @@ return [
         'mode_locked' => 'The registration mode cannot be changed after the first request.',
         'capacity_below_occupied' => 'Capacity cannot be lower than the number of occupied places.',
         'cancellation_unavailable' => 'This event can no longer be cancelled.',
+        'participant_profile_unavailable' => 'This profile is no longer available. The participant list remains open.',
     ],
 ];

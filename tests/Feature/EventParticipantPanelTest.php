@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Enums\ProfileVisibility;
 use App\Models\Event;
 use App\Models\EventRegistration;
 use App\Models\User;
@@ -99,6 +100,28 @@ class EventParticipantPanelTest extends TestCase
         $this->actingAs($event->organizer)
             ->get(route('events.participants.show', [$event, $unrelated]))
             ->assertNotFound();
+    }
+
+    public function test_an_unavailable_participant_profile_returns_to_the_participant_list(): void
+    {
+        $event = Event::factory()->create();
+        $accepted = User::factory()->withProfile()->create();
+        EventRegistration::factory()->accepted()->create([
+            'event_id' => $event->id,
+            'user_id' => $accepted->id,
+        ]);
+        $event->organizer->profile?->update(['visibility' => ProfileVisibility::Hidden]);
+
+        $this->actingAs($accepted)
+            ->get(route('events.participants.show', [
+                'event' => $event,
+                'member' => $event->organizer,
+                'origin' => 'mine',
+            ]))
+            ->assertRedirect(route('events.participants.index', [
+                'event' => $event,
+                'origin' => 'mine',
+            ], absolute: false));
     }
 
     public function test_only_the_organizer_can_open_registration_management(): void

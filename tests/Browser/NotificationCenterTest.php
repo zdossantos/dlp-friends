@@ -1,7 +1,7 @@
 <?php
 
-use App\Models\MemberMatch;
 use App\Models\Event;
+use App\Models\MemberMatch;
 use App\Models\User;
 use Illuminate\Notifications\DatabaseNotification;
 use Illuminate\Support\Facades\Storage;

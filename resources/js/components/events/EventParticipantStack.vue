@@ -14,6 +14,7 @@ const remaining = computed(() => Math.max(0, props.participants.length - 3));
 <template>
     <Link
         :href="href"
+        preserve-scroll
         data-test="participant-stack-trigger"
         class="inline-flex min-h-11 items-center rounded-full pr-2 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none"
         :aria-label="

@@ -6,14 +6,14 @@ import { Button } from '@/components/ui/button';
 import { useTranslations } from '@/composables/useTranslations';
 import { like as likeMember } from '@/routes/members';
 
-const props = defineProps<{ memberId: number }>();
+const props = defineProps<{ memberId: number; returnHref?: string }>();
 const { t } = useTranslations();
 const submitting = ref(false);
 
 function submit(): void {
     router.post(
         likeMember(props.memberId).url,
-        {},
+        props.returnHref ? { return_to: props.returnHref } : {},
         {
             preserveScroll: true,
             onStart: () => (submitting.value = true),

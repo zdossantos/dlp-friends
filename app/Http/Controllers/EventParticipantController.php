@@ -8,8 +8,10 @@ use App\Data\PublicMemberData;
 use App\Enums\EventRegistrationStatus;
 use App\Models\Event;
 use App\Models\User;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
+use Inertia\Inertia;
 use Inertia\Response;
 
 final class EventParticipantController extends Controller
@@ -19,6 +21,7 @@ final class EventParticipantController extends Controller
     public function index(Request $request, Event $event): Response
     {
         $viewer = $this->viewer($request);
+        Gate::forUser($viewer)->authorize('view', $event);
         Gate::forUser($viewer)->authorize('viewPrivateDetails', $event);
 
         return $this->workspace->render($viewer, $this->workspace->context($request), [
@@ -27,9 +30,10 @@ final class EventParticipantController extends Controller
         ]);
     }
 
-    public function show(Request $request, Event $event, User $member): Response
+    public function show(Request $request, Event $event, User $member): Response|RedirectResponse
     {
         $viewer = $this->viewer($request);
+        Gate::forUser($viewer)->authorize('view', $event);
         Gate::forUser($viewer)->authorize('viewPrivateDetails', $event);
 
         $isParticipant = $event->organizer_user_id === $member->id
@@ -41,7 +45,19 @@ final class EventParticipantController extends Controller
 
         $member->load(['profile.avatar', 'profile.interests', 'roles']);
         if (! $viewer->is($member)) {
-            abort_if($member->profile === null || ! Gate::forUser($viewer)->allows('viewPublic', $member->profile), 404);
+            if ($member->profile === null || ! Gate::forUser($viewer)->allows('viewPublic', $member->profile)) {
+                Inertia::flash('toast', [
+                    'type' => 'error',
+                    'message' => __('events.errors.participant_profile_unavailable'),
+                ]);
+
+                $parameters = ['event' => $event];
+                if ($this->workspace->context($request) === 'mine') {
+                    $parameters['origin'] = 'mine';
+                }
+
+                return redirect()->to(route('events.participants.index', $parameters, absolute: false));
+            }
         }
 
         return $this->workspace->render($viewer, $this->workspace->context($request), [

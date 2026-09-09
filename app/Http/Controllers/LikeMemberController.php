@@ -25,7 +25,7 @@ final class LikeMemberController extends Controller
         if ($match !== null) {
             $matchFlash->put($request->session(), $match, $member);
 
-            return to_route('discovery.index');
+            return redirect($this->returnTo($request));
         }
 
         Inertia::flash('toast', [
@@ -34,5 +34,14 @@ final class LikeMemberController extends Controller
         ]);
 
         return back();
+    }
+
+    private function returnTo(Request $request): string
+    {
+        $returnTo = $request->string('return_to')->toString();
+
+        return str_starts_with($returnTo, '/') && ! str_starts_with($returnTo, '//')
+            ? $returnTo
+            : route('discovery.index');
     }
 }

@@ -129,6 +129,18 @@ Paris.
   l’organisateur.
 - L’organisateur occupe une place. Le lieu précis et l’identité des
   participants restent privés jusqu’à l’acceptation.
+- L’espace événements ne comporte que deux écrans principaux : Découvrir et
+  Mes événements. Les événements complets disparaissent de Découvrir mais
+  restent accessibles à leur organisateur et aux membres acceptés depuis Mes
+  événements, où les rôles d’organisateur et de participant sont séparés.
+- Les détails, la création, la modification, les participants, leur profil et
+  les demandes d’inscription s’ouvrent dans un drawer sur mobile et une modale
+  sur ordinateur. Les URL directes et les notifications reconstruisent le même
+  écran principal et le même panneau que la navigation manuelle.
+- La liste privée des participants utilise leurs avatars ; un profil peut être
+  consulté et liké dans le panneau sans quitter l’événement. Les refus,
+  retraits, désinscriptions et annulations décrivent leur conséquence dans une
+  confirmation explicite.
 - La date, les lieux et la capacité peuvent être modifiés jusqu’à 24 heures
   avant le début ; la capacité ne peut jamais passer sous les places occupées.
   Le mode est verrouillé dès la première demande.
@@ -194,7 +206,7 @@ Paris.
 | Découverte, swipes et match réciproque | **Implémenté** | Service de classement, actions et tests sont présents. |
 | Conversations, messages temps réel, saisie, présence et état de lecture | **Implémenté** | Stockage, diffusion privée, annonces globales, indicateur de saisie éphémère, présence confidentielle avec dernière activité relative, recherche locale et tests sont présents. |
 | Blocage et déblocage | **Implémenté** | Effet immédiat sur découverte et conversation. |
-| Événements amicaux et inscriptions | **Implémenté** | Création, découverte, deux modes d’inscription, confidentialité, cycle de vie et notifications sont couverts. |
+| Événements amicaux et inscriptions | **Implémenté** | Deux écrans principaux, panneaux adaptatifs pour tous les parcours secondaires, événements complets filtrés, rôles distincts, participants avec avatars et profils intégrés, deux modes d’inscription, confidentialité, cycle de vie et notifications sont couverts. |
 | Centre de notifications persistant | **Implémenté** | Matches, messages et événements sont regroupés, filtrables et ouvrent leur élément cible. |
 | Tutoriel produit obligatoire | **Implémenté** | Progression persistée et statistiques admin sont livrées. |
 | Gestion administrative des membres | **Implémenté** | Recherche et compteurs, suppression confirmée, échange privé admin/membre et identification visuelle des admins sont livrés sans accès au contenu des messages. |

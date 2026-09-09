@@ -104,6 +104,7 @@ function cancelEvent(): void {
             <Button as-child variant="outline">
                 <Link
                     :href="edit(event.id, { query: origin })"
+                    preserve-scroll
                     data-test="event-edit"
                 >
                     {{ t('events.actions.edit') }}
@@ -112,6 +113,7 @@ function cancelEvent(): void {
             <Button v-if="event.registrations" as-child variant="outline">
                 <Link
                     :href="registrationsIndex(event.id, { query: origin })"
+                    preserve-scroll
                     data-test="event-registrations"
                 >
                     {{

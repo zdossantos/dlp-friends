@@ -30,6 +30,15 @@ test('event actions follow role, registration and lifecycle state', () => {
             cancelled: false,
         }),
     ).toEqual(['edit', 'cancel']);
+    expect(
+        availableEventActions({
+            role: 'member',
+            status: null,
+            started: false,
+            cancelled: false,
+            full: true,
+        }),
+    ).toEqual([]);
 });
 
 test('capacity labels and Paris-local form values are deterministic', () => {

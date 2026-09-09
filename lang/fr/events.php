@@ -30,6 +30,7 @@ return [
     'confirmations' => ['cancel_title' => 'Annuler cet événement ?', 'cancel_description' => 'Les membres inscrits seront prévenus.', 'withdraw_title' => 'Te désinscrire ?', 'withdraw_description' => 'Ton inscription ne sera plus active et ta place pourra être proposée à un autre membre.', 'refuse_title' => 'Refuser cette demande ?', 'refuse_description' => 'Cette décision est définitive : la demande ne pourra pas être acceptée plus tard.', 'remove_title' => 'Retirer cette personne ?', 'remove_description' => 'La personne perdra immédiatement l’accès au lieu précis et à la liste des participants.'],
     'capacity' => ':occupied/:capacity places occupées',
     'cancelled' => 'Annulé',
+    'past' => 'Passé',
     'errors' => [
         'organizer_registration' => 'Vous organisez déjà cet événement.',
         'event_unavailable' => 'Cet événement n’est plus disponible.',
@@ -43,5 +44,6 @@ return [
         'mode_locked' => 'Le mode d’inscription ne peut plus être modifié après la première demande.',
         'capacity_below_occupied' => 'La capacité ne peut pas être inférieure au nombre de places occupées.',
         'cancellation_unavailable' => 'Cet événement ne peut plus être annulé.',
+        'participant_profile_unavailable' => 'Ce profil n’est plus disponible. La liste des participants reste ouverte.',
     ],
 ];
