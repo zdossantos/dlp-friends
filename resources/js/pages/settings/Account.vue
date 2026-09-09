@@ -66,6 +66,25 @@ setLayoutProps({
                         {{ t('account.settings.resend_verification') }}
                     </Link>
                 </div>
+                <div class="rounded-2xl border p-4">
+                    <p class="font-medium">
+                        {{ t('account.settings.presence_title') }}
+                    </p>
+                    <p class="mt-1 text-sm text-muted-foreground">
+                        {{ t('account.settings.presence_description') }}
+                    </p>
+                    <label class="mt-4 flex items-start gap-3 text-sm">
+                        <input type="hidden" name="show_presence" value="0" />
+                        <input
+                            type="checkbox"
+                            name="show_presence"
+                            value="1"
+                            :checked="user.show_presence"
+                            class="mt-0.5 size-4 rounded border-input"
+                        />
+                        <span>{{ t('account.settings.presence_label') }}</span>
+                    </label>
+                </div>
                 <Button
                     :disabled="processing"
                     :aria-busy="processing ? 'true' : undefined"

@@ -6,13 +6,14 @@ use App\Models\Avatar;
 use App\Models\Conversation;
 use App\Models\Message;
 use App\Models\User;
+use App\Support\MemberPresence;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
 final class ConversationIndexController extends Controller
 {
-    public function __invoke(Request $request): Response
+    public function __invoke(Request $request, MemberPresence $presence): Response
     {
         /** @var User $member */
         $member = $request->user();
@@ -32,7 +33,7 @@ final class ConversationIndexController extends Controller
             ->orderByDesc('messages_max_created_at')
             ->orderByDesc('created_at')
             ->get()
-            ->map(function (Conversation $conversation) use ($member): array {
+            ->map(function (Conversation $conversation) use ($member, $presence): array {
                 $participant = $conversation->memberMatch->lowUser->is($member)
                     ? $conversation->memberMatch->highUser
                     : $conversation->memberMatch->lowUser;
@@ -48,7 +49,10 @@ final class ConversationIndexController extends Controller
 
                 return [
                     'id' => $conversation->id,
-                    'participant' => $this->participantData($participant),
+                    'participant' => [
+                        ...$this->participantData($participant),
+                        'presence' => $presence->forViewer($participant),
+                    ],
                     'archived_at' => $conversation->archived_at?->toISOString(),
                     'latest_message' => $this->messageData($latestMessage),
                     'unread_count' => $conversation->unread_count,

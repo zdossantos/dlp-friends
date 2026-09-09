@@ -32,10 +32,12 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
  * @property int $id
  * @property string $email
  * @property string|null $locale
+ * @property bool $show_presence
  * @property Carbon|null $email_verified_at
  * @property Carbon|null $birth_date
  * @property UserStatus $status
  * @property CarbonImmutable|null $deletion_requested_at
+ * @property Carbon|null $last_active_at
  * @property-read int|null $age
  * @property string $password
  * @property string|null $two_factor_secret
@@ -57,7 +59,7 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
  * @property-read Collection<int, SocialAccount> $socialAccounts
  * @property-read Collection<int, TermsAcceptance> $termsAcceptances
  */
-#[Fillable(['email', 'locale', 'birth_date', 'password'])]
+#[Fillable(['email', 'locale', 'birth_date', 'password', 'show_presence'])]
 #[Hidden(['password', 'two_factor_secret', 'two_factor_recovery_codes', 'remember_token'])]
 class User extends Authenticatable implements HasLocalePreference, MustVerifyEmail, PasskeyUser
 {
@@ -216,6 +218,8 @@ class User extends Authenticatable implements HasLocalePreference, MustVerifyEma
             'birth_date' => 'date',
             'status' => UserStatus::class,
             'deletion_requested_at' => 'immutable_datetime',
+            'last_active_at' => 'datetime',
+            'show_presence' => 'boolean',
             'password' => 'hashed',
             'two_factor_confirmed_at' => 'datetime',
         ];

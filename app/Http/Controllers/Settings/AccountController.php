@@ -3,9 +3,11 @@
 namespace App\Http\Controllers\Settings;
 
 use App\Actions\RequestAccountDeletion;
+use App\Events\PresenceChanged;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Settings\AccountUpdateRequest;
 use App\Http\Requests\Settings\ProfileDeleteRequest;
+use App\Support\MemberPresence;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -23,7 +25,7 @@ class AccountController extends Controller
         ]);
     }
 
-    public function update(AccountUpdateRequest $request): RedirectResponse
+    public function update(AccountUpdateRequest $request, MemberPresence $presence): RedirectResponse
     {
         $request->user()->fill($request->validated());
 
@@ -32,6 +34,11 @@ class AccountController extends Controller
         }
 
         $request->user()->save();
+
+        if (! $request->user()->show_presence) {
+            $presence->forget($request->user());
+            PresenceChanged::dispatch($request->user(), false);
+        }
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Compte mis à jour.')]);
 

@@ -175,7 +175,7 @@ Paris.
 | Majorité, compte actif et contrôle d’accès social | **Implémenté** | Stockage, middlewares et tests sont présents. |
 | Profil, avatar obligatoire et intérêts | **Implémenté** | Parcours membre et catalogues administrables sont livrés. |
 | Découverte, swipes et match réciproque | **Implémenté** | Service de classement, actions et tests sont présents. |
-| Conversations, messages temps réel et état de lecture | **Implémenté** | Stockage, diffusion privée, annonces globales de match et de message, recherche locale par nom, interfaces et tests sont présents. |
+| Conversations, messages temps réel, saisie, présence et état de lecture | **Implémenté** | Stockage, diffusion privée, annonces globales, indicateur de saisie éphémère, présence confidentielle avec dernière activité relative, recherche locale et tests sont présents. |
 | Blocage et déblocage | **Implémenté** | Effet immédiat sur découverte et conversation. |
 | Tutoriel produit obligatoire | **Implémenté** | Progression persistée et statistiques admin sont livrées. |
 | Gestion administrative des membres | **Implémenté** | Recherche et compteurs, suppression confirmée, échange privé admin/membre et identification visuelle des admins sont livrés sans accès au contenu des messages. |

@@ -57,6 +57,11 @@ expiration automatique, au plus 30 jours après leur création.
 - La validation de l'état OAuth par Socialite reste obligatoire sur le callback Google.
 - Aucun jeton d'accès, jeton de renouvellement ou contenu brut de réponse Google n'est stocké ou journalisé. Seul l'identifiant stable nécessaire au lien de compte est conservé.
 - Les canaux Reverb de conversation sont privés et leur autorisation vérifie l'appartenance au match ainsi que l'absence de blocage.
+- La présence est facultative et visible uniquement par les interlocuteurs
+  encore autorisés. Redis conserve seulement un état temporaire avec expiration,
+  `last_active_at` est limité en fréquence et seule une activité relative est
+  affichée. Les signaux de saisie ne contiennent jamais le brouillon et ne sont
+  ni persistés ni journalisés.
 - La gestion des membres est réservée au rôle `admin`. Ses statistiques ne
   contiennent aucun corps de message. La suppression d’un membre révoque ses
   sessions, supprime immédiatement ses données actives en cascade, puis met en
