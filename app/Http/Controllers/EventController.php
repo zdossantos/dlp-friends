@@ -3,9 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Actions\CreateEvent;
+use App\Actions\UpdateEvent;
 use App\Data\EventDetailData;
 use App\Data\EventSummaryData;
 use App\Http\Requests\StoreEventRequest;
+use App\Http\Requests\UpdateEventRequest;
 use App\Models\Block;
 use App\Models\Event;
 use App\Models\User;
@@ -61,6 +63,22 @@ class EventController extends Controller
         return Inertia::render('Events/Show', [
             'event' => EventDetailData::from($event, $user),
         ]);
+    }
+
+    public function edit(Request $request, Event $event): Response
+    {
+        Gate::authorize('view', $event);
+
+        return Inertia::render('Events/Edit', [
+            'event' => EventDetailData::from($event->load('organizer.profile'), $this->user($request)),
+        ]);
+    }
+
+    public function update(UpdateEventRequest $request, Event $event, UpdateEvent $updateEvent): RedirectResponse
+    {
+        $updateEvent->handle($this->user($request), $event, $request->validated());
+
+        return to_route('events.show', $event);
     }
 
     private function user(Request $request): User

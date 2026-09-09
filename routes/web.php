@@ -20,6 +20,7 @@ use App\Http\Controllers\ConversationController;
 use App\Http\Controllers\ConversationIndexController;
 use App\Http\Controllers\ConversationReadController;
 use App\Http\Controllers\DiscoveryController;
+use App\Http\Controllers\EventCancellationController;
 use App\Http\Controllers\EventController;
 use App\Http\Controllers\EventRegistrationController;
 use App\Http\Controllers\EventRegistrationDecisionController;
@@ -154,7 +155,9 @@ Route::middleware(['auth', 'verified', 'social'])->group(function () {
 
             Route::get('events/mine', MyEventController::class)->name('events.mine');
             Route::resource('events', EventController::class)
-                ->only(['index', 'create', 'store', 'show']);
+                ->only(['index', 'create', 'store', 'show', 'edit', 'update']);
+            Route::patch('events/{event}/cancel', EventCancellationController::class)
+                ->name('events.cancel');
             Route::post('events/{event}/registrations', [EventRegistrationController::class, 'store'])
                 ->name('events.registrations.store');
             Route::delete('events/{event}/registrations', [EventRegistrationController::class, 'destroy'])

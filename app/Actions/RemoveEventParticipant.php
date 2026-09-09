@@ -2,10 +2,12 @@
 
 namespace App\Actions;
 
+use App\Enums\EventNotificationType;
 use App\Enums\EventRegistrationStatus;
 use App\Models\Event;
 use App\Models\EventRegistration;
 use App\Models\User;
+use App\Notifications\EventLifecycleNotification;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -13,7 +15,7 @@ final class RemoveEventParticipant
 {
     public function handle(User $organizer, EventRegistration $registration): EventRegistration
     {
-        return DB::transaction(function () use ($organizer, $registration): EventRegistration {
+        $removedRegistration = DB::transaction(function () use ($organizer, $registration): EventRegistration {
             $event = Event::query()->lockForUpdate()->findOrFail($registration->event_id);
             $lockedRegistration = EventRegistration::query()->lockForUpdate()->findOrFail($registration->id);
 
@@ -32,6 +34,13 @@ final class RemoveEventParticipant
 
             return $lockedRegistration->refresh();
         });
+
+        $removedRegistration->user->notify(new EventLifecycleNotification(
+            $removedRegistration->event,
+            EventNotificationType::Removed,
+        ));
+
+        return $removedRegistration;
     }
 
     private function fail(string $key): never
