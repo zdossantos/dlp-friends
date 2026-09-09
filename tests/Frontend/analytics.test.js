@@ -7,11 +7,15 @@ import {
 describe('normalizeAnalyticsPath', () => {
     test('keeps public and static application paths unchanged', () => {
         expect(normalizeAnalyticsPath('/fr/matching')).toBe('/fr/matching');
-        expect(normalizeAnalyticsPath('/settings/profile')).toBe('/settings/profile');
+        expect(normalizeAnalyticsPath('/settings/profile')).toBe(
+            '/settings/profile',
+        );
     });
 
     test('removes identifiers from analytics paths', () => {
-        expect(normalizeAnalyticsPath('/conversations/42')).toBe('/conversations/{id}');
+        expect(normalizeAnalyticsPath('/conversations/42')).toBe(
+            '/conversations/{id}',
+        );
         expect(
             normalizeAnalyticsPath(
                 '/profiles/0198f30e-7b67-7260-9c7d-4f15d4da0d31',
@@ -153,5 +157,33 @@ describe('initializeAnalytics', () => {
         });
 
         expect(subscribed).toBe(false);
+    });
+
+    test('starts tracking when consent activates GA4 after Inertia is ready', async () => {
+        const calls = [];
+        let analyticsReady;
+        let navigate;
+        const runtime = {
+            gtag: undefined,
+            initialReferrer: '',
+            initialUrl: '/login',
+            onAnalyticsReady: (listener) => {
+                analyticsReady = listener;
+            },
+            onNavigate: (listener) => {
+                navigate = listener;
+            },
+            origin: 'https://dlp-friends.example',
+        };
+
+        await initializeAnalytics(Promise.resolve(), runtime);
+
+        expect(calls).toEqual([]);
+
+        runtime.gtag = (...args) => calls.push(args);
+        analyticsReady();
+        navigate('/register');
+
+        expect(calls.map((call) => call[0])).toEqual(['event', 'event']);
     });
 });

@@ -170,5 +170,6 @@
                 </main>
             </div>
         </div>
+        <x-analytics-consent />
     </body>
 </html>

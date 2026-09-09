@@ -113,6 +113,42 @@ test('localized legal pages are responsive and accessible', function () {
         ->assertNoJavaScriptErrors();
 });
 
+test('analytics consent can be refused accepted and withdrawn without favouring a choice', function () {
+    config()->set('services.google.analytics_id', 'G-TEST123456');
+
+    $page = visit('/fr', ['locale' => 'fr-FR'])
+        ->assertVisible('[data-test="analytics-consent-dialog"]')
+        ->assertNotPresent('script[src*="googletagmanager.com/gtag/js"]')
+        ->assertScript(
+            "getComputedStyle(document.querySelector('[data-analytics-accept]')).backgroundColor === getComputedStyle(document.querySelector('[data-analytics-refuse]')).backgroundColor",
+            true,
+        )
+        ->click('[data-analytics-refuse]')
+        ->assertScript("document.querySelector('[data-test=analytics-consent-dialog]').hidden", true)
+        ->assertScript("document.cookie.includes('analytics_consent=denied')", true)
+        ->assertNotPresent('script[src*="googletagmanager.com/gtag/js"]')
+        ->click('[data-analytics-settings]')
+        ->assertVisible('[data-test="analytics-consent-dialog"]')
+        ->click('[data-analytics-accept]')
+        ->assertScript("document.cookie.includes('analytics_consent=granted')", true)
+        ->assertPresent('script[src="https://www.googletagmanager.com/gtag/js?id=G-TEST123456"]')
+        ->assertNoAccessibilityIssues()
+        ->assertNoJavaScriptErrors();
+
+    $page->script("document.cookie = '_ga=browser-test; Path=/; SameSite=Lax'");
+
+    $page->click('[data-analytics-settings]')
+        ->click('[data-analytics-refuse]')
+        ->assertScript("document.cookie.includes('analytics_consent=denied')", true)
+        ->assertScript("!document.cookie.includes('_ga=browser-test')", true)
+        ->assertNotPresent('script[src*="googletagmanager.com/gtag/js"]');
+
+    visit('/en', ['locale' => 'en-GB'])
+        ->click('[data-analytics-settings]')
+        ->assertSee('Accept audience measurement')
+        ->assertSee('Refuse audience measurement');
+});
+
 test('public and authentication pages expose language without theme controls', function () {
     visit('/fr', ['locale' => 'fr-FR'])
         ->assertPresent('[data-test="locale-switcher"]')

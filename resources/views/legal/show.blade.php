@@ -98,5 +98,6 @@
                 <footer data-print-hidden class="border-t border-border/70 py-6 text-center text-xs leading-5 text-muted-foreground">{{ $document['footer'] }}</footer>
             </div>
         </div>
+        <x-analytics-consent />
     </body>
 </html>

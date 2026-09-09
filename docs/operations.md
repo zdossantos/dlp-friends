@@ -91,38 +91,43 @@ construction de l’image, car ces valeurs sont intégrées aux assets frontend.
    HTTPS de production. Copier l’identifiant de mesure `G-…` dans
    `GOOGLE_ANALYTICS_ID` dans Coolify, puis redéployer. La variable est lue à
    l’exécution et ne doit pas être ajoutée aux variables `VITE_*`.
-2. Dans **Flux de données > Web > Mesure améliorée > Pages vues > Paramètres
+2. Avant acceptation, vérifier dans l’onglet Réseau du navigateur qu’aucune
+   requête vers `googletagmanager.com` ou `google-analytics.com` n’est émise.
+   Le refus doit conserver ce comportement. L’acceptation charge le tag avec
+   `analytics_storage=granted`, tandis que les trois consentements publicitaires
+   restent `denied`. Le choix est conservé six mois.
+3. Dans **Flux de données > Web > Mesure améliorée > Pages vues > Paramètres
    avancés**, conserver les pages vues au chargement mais désactiver les
    changements de page fondés sur les événements d’historique. Les navigations
    Inertia envoient déjà leurs propres événements ; activer les deux mécanismes
    créerait des doublons.
-3. Activer le mode debug du tag, puis ouvrir une page Inertia et effectuer une
+4. Activer le mode debug du tag, puis ouvrir une page Inertia et effectuer une
    navigation cliente. Dans DebugView, vérifier exactement une page vue
    initiale puis une page vue supplémentaire. Contrôler `page_location` et
    `page_referrer` : leurs chemins sont normalisés et ne contiennent ni
    identifiant réel, ni paramètre de requête, ni fragment.
-4. Ouvrir ensuite `/fr` et `/en` dans deux chargements complets et vérifier une
+5. Ouvrir ensuite `/fr` et `/en` dans deux chargements complets et vérifier une
    seule page vue pour chaque URL. Le préfixe de langue reste dans le chemin et
    permet de comparer les deux versions au sein du même flux Web.
-5. Dans **Flux de données > Web > Masquage des données**, activer le masquage
+6. Dans **Flux de données > Web > Masquage des données**, activer le masquage
    des adresses e-mail et déclarer les paramètres d’URL susceptibles de
    contenir des données personnelles. Cette défense complète la normalisation
    applicative sans la remplacer.
-6. Dans Search Console, créer de préférence une propriété de type Domaine et
+7. Dans Search Console, créer de préférence une propriété de type Domaine et
    publier l’enregistrement TXT fourni dans le DNS. La variable
    `GOOGLE_SITE_VERIFICATION` reste disponible pour une propriété de type
    Préfixe d’URL validée par balise HTML.
    Une propriété Domaine couvre `/fr` et `/en`; des propriétés de préfixe
    séparées ne sont utiles que si des rapports autonomes par langue sont
    nécessaires.
-7. Après validation, soumettre `https://<domaine>/sitemap.xml`. Contrôler que
+8. Après validation, soumettre `https://<domaine>/sitemap.xml`. Contrôler que
    `/fr`, `/en`, les pages de matching et les documents légaux sont détectés,
    tandis que les routes d’authentification et membres restent exclues.
-8. Avec l’inspection d’URL, lancer un test en direct de `/` et vérifier que
+9. Avec l’inspection d’URL, lancer un test en direct de `/` et vérifier que
    Google peut suivre la redirection vers la landing localisée. Tester aussi
    une URL canonique française et anglaise et contrôler leurs annotations
    `hreflang` réciproques.
-9. Demander l’indexation des pages principales avec l’inspection d’URL. Une
+10. Demander l’indexation des pages principales avec l’inspection d’URL. Une
    soumission ne garantit ni l’indexation immédiate ni une position dans les
    résultats ; surveiller les rapports Pages et Sitemaps après exploration.
 
