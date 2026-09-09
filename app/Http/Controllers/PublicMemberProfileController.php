@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Block;
 use App\Models\Conversation;
 use App\Models\Interest;
+use App\Models\Swipe;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -27,10 +28,19 @@ final class PublicMemberProfileController extends Controller
             ->where('blocker_user_id', $request->user()->id)
             ->where('blocked_user_id', $member->id)
             ->exists();
+        $isBlockedPair = Block::query()
+            ->whereIn('blocker_user_id', [$request->user()->id, $member->id])
+            ->whereIn('blocked_user_id', [$request->user()->id, $member->id])
+            ->exists();
+        $hasOutgoingDecision = Swipe::query()
+            ->where('actor_user_id', $request->user()->id)
+            ->where('target_user_id', $member->id)
+            ->exists();
 
         return Inertia::render('Members/Show', [
             'backHref' => $this->backHref($request, $member),
             'canBlock' => ! $isAdmin && ! $canUnblock,
+            'canLike' => ! $isBlockedPair && ! $hasOutgoingDecision,
             'canUnblock' => $canUnblock,
             'member' => [
                 'id' => $member->id,

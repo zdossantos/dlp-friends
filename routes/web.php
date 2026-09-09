@@ -22,6 +22,7 @@ use App\Http\Controllers\ConversationReadController;
 use App\Http\Controllers\DiscoveryController;
 use App\Http\Controllers\LandingController;
 use App\Http\Controllers\LegalDocumentController;
+use App\Http\Controllers\LikeMemberController;
 use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\MemberProfileController;
 use App\Http\Controllers\MessageController;
@@ -134,6 +135,8 @@ Route::middleware(['auth', 'verified', 'social'])->group(function () {
 
             Route::get('members/{member}', PublicMemberProfileController::class)
                 ->name('members.show');
+            Route::post('members/{member}/like', LikeMemberController::class)
+                ->name('members.like');
             Route::post('members/{member}/block', BlockMemberController::class)
                 ->name('members.block');
             Route::delete('members/{member}/block', UnblockMemberController::class)

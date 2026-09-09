@@ -2,6 +2,7 @@
 
 return [
     'navigation' => 'Explorer',
+    'profile_like' => ['success' => 'Ce membre a été ajouté à tes découvertes.'],
     'actions' => [
         'pass' => 'Passer',
         'discover' => 'Découvrir',
