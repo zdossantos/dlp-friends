@@ -30,14 +30,20 @@ function cancelEvent(): void {
 <template>
     <article data-test="event-detail" class="space-y-6 pt-2">
         <header class="flex items-start justify-between gap-4">
-            <h2 class="text-2xl font-semibold text-foreground">
+            <h2
+                data-test="event-detail-title"
+                class="text-2xl font-semibold text-foreground"
+            >
                 {{ event.title }}
             </h2>
             <Badge v-if="event.isCancelled" variant="destructive">
                 {{ t('events.cancelled') }}
             </Badge>
         </header>
-        <p class="whitespace-pre-line text-muted-foreground">
+        <p
+            data-test="event-detail-description"
+            class="whitespace-pre-line text-muted-foreground"
+        >
             {{ event.description }}
         </p>
         <div class="grid gap-3 text-sm sm:grid-cols-2">

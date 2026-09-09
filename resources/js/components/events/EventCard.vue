@@ -27,16 +27,28 @@ const origin = props.context === 'mine' ? { origin: 'mine' } : {};
     <Card data-test="event-card" class="overflow-hidden">
         <CardHeader class="gap-2">
             <div class="flex items-start justify-between gap-3">
-                <CardTitle>{{ event.title }}</CardTitle>
-                <Badge v-if="role" variant="outline">
-                    {{ t(`events.roles.${role}`) }}
-                </Badge>
-                <Badge v-else-if="event.isCancelled" variant="destructive">{{
-                    t('events.cancelled')
-                }}</Badge>
-                <Badge v-else-if="event.registrationStatus" variant="secondary">
-                    {{ t(`events.statuses.${event.registrationStatus}`) }}
-                </Badge>
+                <CardTitle class="text-card-foreground">{{
+                    event.title
+                }}</CardTitle>
+                <div class="flex flex-wrap justify-end gap-2">
+                    <Badge
+                        v-if="role"
+                        :data-test="`event-role-${role}`"
+                        variant="outline"
+                        class="border-border bg-background text-foreground"
+                    >
+                        {{ t(`events.roles.${role}`) }}
+                    </Badge>
+                    <Badge v-if="event.isCancelled" variant="destructive">
+                        {{ t('events.cancelled') }}
+                    </Badge>
+                    <Badge
+                        v-else-if="event.registrationStatus"
+                        variant="secondary"
+                    >
+                        {{ t(`events.statuses.${event.registrationStatus}`) }}
+                    </Badge>
+                </div>
             </div>
         </CardHeader>
         <CardContent class="space-y-3 text-sm">

@@ -39,6 +39,71 @@ test('manual and direct links open the same event panel over their workspace', f
         ->assertNoJavaScriptErrors();
 });
 
+test('my events separates roles and keeps event details legible in dark theme', function () {
+    $member = eventBrowserMember('Alice');
+    $otherOrganizer = eventBrowserMember('Basile');
+    $organized = Event::factory()->for($member, 'organizer')->create([
+        'title' => 'Événement organisé',
+    ]);
+    $participating = Event::factory()->for($otherOrganizer, 'organizer')->create([
+        'title' => 'Événement rejoint',
+    ]);
+    EventRegistration::factory()
+        ->for($participating)
+        ->for($member)
+        ->accepted()
+        ->create();
+    $this->actingAs($member);
+
+    $page = visit('/events/mine')
+        ->assertPresent('[data-test="organized-events"]')
+        ->assertPresent('[data-test="participating-events"]')
+        ->assertPresent('[data-test="event-role-organizer"]')
+        ->assertPresent('[data-test="event-role-participant"]')
+        ->assertSee('J’organise')
+        ->assertSee('Je participe');
+
+    $page->script("localStorage.setItem('appearance', 'dark')");
+    $page->navigate("/events/{$organized->id}?origin=mine")
+        ->assertScript("document.documentElement.classList.contains('dark')", true)
+        ->assertPresent('[data-test="event-detail-title"]')
+        ->assertPresent('[data-test="event-detail-description"]')
+        ->assertPresent('[data-test="event-private-location"]')
+        ->assertScript(<<<'JS'
+            (() => {
+                const selectors = [
+                    '[data-test="event-detail-title"]',
+                    '[data-test="event-detail-description"]',
+                    '[data-test="event-private-location"]',
+                ];
+                const channel = (value) => {
+                    value /= 255;
+                    return value <= 0.03928 ? value / 12.92 : Math.pow((value + 0.055) / 1.055, 2.4);
+                };
+                const luminance = (color) => {
+                    const values = color.match(/[\d.]+/g).slice(0, 3).map(Number);
+                    return 0.2126 * channel(values[0]) + 0.7152 * channel(values[1]) + 0.0722 * channel(values[2]);
+                };
+                return selectors.every((selector) => {
+                    const element = document.querySelector(selector);
+                    const style = getComputedStyle(element);
+                    const foreground = luminance(style.color);
+                    let backgroundElement = element;
+                    let background = style.backgroundColor;
+                    while (backgroundElement.parentElement && background === 'rgba(0, 0, 0, 0)') {
+                        backgroundElement = backgroundElement.parentElement;
+                        background = getComputedStyle(backgroundElement).backgroundColor;
+                    }
+                    const backgroundLuminance = luminance(background);
+                    const lighter = Math.max(foreground, backgroundLuminance);
+                    const darker = Math.min(foreground, backgroundLuminance);
+                    return (lighter + 0.05) / (darker + 0.05) >= 4.5;
+                });
+            })()
+            JS, true)
+        ->assertNoJavaScriptErrors();
+});
+
 test('an organizer creates an automatic event and a member joins then withdraws', function () {
     $organizer = eventBrowserMember('Alice');
     $member = eventBrowserMember('Basile');
