@@ -1,3 +1,6 @@
+import type { AvatarOption } from './auth';
+import type { PublicMember } from './member';
+
 export type EventRegistrationStatus =
     'pending' | 'accepted' | 'refused' | 'withdrawn' | 'removed' | 'blocked';
 
@@ -16,7 +19,11 @@ export type EventSummary = {
     registrationStatus: EventRegistrationStatus | null;
 };
 
-export type EventParticipant = { id: number; displayName: string | null };
+export type EventParticipant = {
+    id: number;
+    displayName: string | null;
+    avatar: AvatarOption | null;
+};
 export type OrganizerRegistration = EventParticipant & {
     registrationId: number;
     status: EventRegistrationStatus;
@@ -30,10 +37,24 @@ export type EventDetail = EventSummary & {
 
 export type EventWorkspaceContext = 'discover' | 'mine';
 
+export type EmbeddedMemberProfile = {
+    member: PublicMember;
+    canBlock: boolean;
+    canLike: boolean;
+    canUnblock: boolean;
+};
+
 export type EventPanel =
     | { kind: 'detail'; event: EventDetail }
     | { kind: 'create' }
-    | { kind: 'edit'; event: EventDetail };
+    | { kind: 'edit'; event: EventDetail }
+    | { kind: 'participants'; event: EventDetail }
+    | {
+          kind: 'participant-profile';
+          event: EventDetail;
+          profile: EmbeddedMemberProfile;
+      }
+    | { kind: 'registrations'; event: EventDetail };
 
 export type EventWorkspaceProps = {
     context: EventWorkspaceContext;

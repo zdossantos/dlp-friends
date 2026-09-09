@@ -24,7 +24,9 @@ use App\Http\Controllers\EventCancellationController;
 use App\Http\Controllers\EventController;
 use App\Http\Controllers\EventRegistrationController;
 use App\Http\Controllers\EventRegistrationDecisionController;
+use App\Http\Controllers\EventRegistrationIndexController;
 use App\Http\Controllers\EventRegistrationRemovalController;
+use App\Http\Controllers\EventParticipantController;
 use App\Http\Controllers\LandingController;
 use App\Http\Controllers\LegalDocumentController;
 use App\Http\Controllers\LikeMemberController;
@@ -156,6 +158,12 @@ Route::middleware(['auth', 'verified', 'social'])->group(function () {
             Route::get('events/mine', MyEventController::class)->name('events.mine');
             Route::resource('events', EventController::class)
                 ->only(['index', 'create', 'store', 'show', 'edit', 'update']);
+            Route::get('events/{event}/participants', [EventParticipantController::class, 'index'])
+                ->name('events.participants.index');
+            Route::get('events/{event}/participants/{member}', [EventParticipantController::class, 'show'])
+                ->name('events.participants.show');
+            Route::get('events/{event}/requests', EventRegistrationIndexController::class)
+                ->name('events.registrations.index');
             Route::patch('events/{event}/cancel', EventCancellationController::class)
                 ->name('events.cancel');
             Route::post('events/{event}/registrations', [EventRegistrationController::class, 'store'])
