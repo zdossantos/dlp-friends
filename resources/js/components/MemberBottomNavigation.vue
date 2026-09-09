@@ -1,6 +1,12 @@
 <script setup lang="ts">
 import { Link, router } from '@inertiajs/vue3';
-import { Bell, MessageCircle, Sparkles, UserRound } from '@lucide/vue';
+import {
+    Bell,
+    CalendarDays,
+    MessageCircle,
+    Sparkles,
+    UserRound,
+} from '@lucide/vue';
 import { computed, onBeforeUnmount, ref } from 'vue';
 import { useCurrentUrl } from '@/composables/useCurrentUrl';
 import { useMemberNavigationVisibility } from '@/composables/useMemberNavigationVisibility';
@@ -8,6 +14,7 @@ import { useMemberRealtimeContext } from '@/composables/useMemberRealtimeNotific
 import { useTranslations } from '@/composables/useTranslations';
 import { index as conversations } from '@/routes/conversations';
 import { index as discovery } from '@/routes/discovery';
+import { index as events } from '@/routes/events';
 import { show as showProfile } from '@/routes/member-profile';
 import { index as notifications } from '@/routes/notifications';
 
@@ -20,6 +27,12 @@ const pendingPath = ref<string | null>(null);
 
 const items = computed(() => [
     { label: t('discovery.navigation'), href: discovery(), icon: Sparkles },
+    {
+        label: t('events.navigation'),
+        href: events(),
+        icon: CalendarDays,
+        activeParents: ['/events'],
+    },
     {
         label: t('conversations.navigation'),
         href: conversations(),

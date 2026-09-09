@@ -4,11 +4,12 @@ import { computed } from 'vue';
 
 const memberNavigationPaths = new Set([
     '/discover',
+    '/events',
     '/conversations',
     '/notifications',
     '/profile',
 ]);
-const memberNavigationPrefixes = ['/settings/'];
+const memberNavigationPrefixes = ['/events/', '/settings/'];
 
 export function useMemberNavigationVisibility(): ComputedRef<boolean> {
     const page = usePage();

@@ -27,12 +27,27 @@ final readonly class EventDetailData
                 'displayName' => $registration->user->profile?->display_name,
             ]);
 
-        return $data + [
+        $privateData = [
             'detailedLocation' => $event->detailed_location,
             'participants' => collect([[
                 'id' => $event->organizer->id,
                 'displayName' => $event->organizer->profile?->display_name,
             ]])->concat($accepted)->values()->all(),
         ];
+
+        if ($event->organizer_user_id === $viewer->id) {
+            $privateData['registrations'] = $event->registrations()
+                ->with('user.profile')
+                ->orderBy('created_at')
+                ->get()
+                ->map(fn ($registration): array => [
+                    'registrationId' => $registration->id,
+                    'id' => $registration->user->id,
+                    'displayName' => $registration->user->profile?->display_name,
+                    'status' => $registration->status->value,
+                ])->all();
+        }
+
+        return $data + $privateData;
     }
 }

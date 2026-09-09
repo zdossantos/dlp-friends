@@ -67,7 +67,7 @@ class EventController extends Controller
 
     public function edit(Request $request, Event $event): Response
     {
-        Gate::authorize('view', $event);
+        Gate::authorize('update', $event);
 
         return Inertia::render('Events/Edit', [
             'event' => EventDetailData::from($event->load('organizer.profile'), $this->user($request)),

@@ -22,4 +22,9 @@ final class EventPolicy
                 ->where('status', EventRegistrationStatus::Accepted)
                 ->exists();
     }
+
+    public function update(User $user, Event $event): bool
+    {
+        return $event->organizer_user_id === $user->id;
+    }
 }

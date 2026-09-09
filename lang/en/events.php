@@ -1,6 +1,24 @@
 <?php
 
 return [
+    'navigation' => 'Events',
+    'index' => [
+        'title' => 'Friendly events',
+        'description' => 'Meet other members for a day or a moment in the parks.',
+        'empty_title' => 'No upcoming events',
+        'empty_description' => 'Suggest the first friendly meetup.',
+    ],
+    'mine' => ['title' => 'My events', 'description' => 'Events you organize or joined, past and upcoming.', 'empty' => 'You do not have any events yet.'],
+    'create' => ['title' => 'Create an event', 'submit' => 'Create event'],
+    'edit' => ['title' => 'Edit event', 'submit' => 'Save changes'],
+    'show' => ['participants' => 'Participants', 'requests' => 'Registration requests', 'private_location' => 'Exact meeting point', 'privacy' => 'The exact location and participants are only visible after acceptance.'],
+    'fields' => ['title' => 'Title', 'description' => 'Description', 'general_location' => 'General location', 'detailed_location' => 'Exact location', 'starts_at' => 'Date and time', 'capacity' => 'Number of places', 'registration_mode' => 'Registration mode'],
+    'modes' => ['automatic' => 'Automatic acceptance', 'manual' => 'Organizer approval'],
+    'statuses' => ['pending' => 'Pending', 'accepted' => 'Accepted', 'refused' => 'Refused', 'withdrawn' => 'Withdrawn', 'removed' => 'Removed', 'blocked' => 'Blocked'],
+    'actions' => ['create' => 'Create', 'mine' => 'My events', 'view' => 'View', 'edit' => 'Edit', 'cancel' => 'Cancel event', 'register' => 'Join', 'withdraw' => 'Withdraw', 'accept' => 'Accept', 'refuse' => 'Refuse', 'remove' => 'Remove', 'confirm' => 'Confirm', 'close' => 'Close'],
+    'confirmations' => ['cancel_title' => 'Cancel this event?', 'cancel_description' => 'Registered members will be notified.', 'withdraw_title' => 'Withdraw from this event?', 'refuse_title' => 'Refuse this request?', 'remove_title' => 'Remove this person?'],
+    'capacity' => ':occupied/:capacity places occupied',
+    'cancelled' => 'Cancelled',
     'errors' => [
         'organizer_registration' => 'You already organize this event.',
         'event_unavailable' => 'This event is no longer available.',

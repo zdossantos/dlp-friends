@@ -1,6 +1,24 @@
 <?php
 
 return [
+    'navigation' => 'Événements',
+    'index' => [
+        'title' => 'Événements amicaux',
+        'description' => 'Retrouve des membres pour partager une journée ou un moment dans les parcs.',
+        'empty_title' => 'Aucun événement à venir',
+        'empty_description' => 'Propose le premier rendez-vous amical.',
+    ],
+    'mine' => ['title' => 'Mes événements', 'description' => 'Tes organisations et inscriptions, passées ou à venir.', 'empty' => 'Tu n’as encore aucun événement.'],
+    'create' => ['title' => 'Créer un événement', 'submit' => 'Créer l’événement'],
+    'edit' => ['title' => 'Modifier l’événement', 'submit' => 'Enregistrer les modifications'],
+    'show' => ['participants' => 'Participants', 'requests' => 'Demandes d’inscription', 'private_location' => 'Lieu de rendez-vous précis', 'privacy' => 'Le lieu précis et les participants sont visibles uniquement après acceptation.'],
+    'fields' => ['title' => 'Titre', 'description' => 'Description', 'general_location' => 'Lieu général', 'detailed_location' => 'Lieu précis', 'starts_at' => 'Date et heure', 'capacity' => 'Nombre de places', 'registration_mode' => 'Mode d’inscription'],
+    'modes' => ['automatic' => 'Acceptation automatique', 'manual' => 'Validation par l’organisateur'],
+    'statuses' => ['pending' => 'En attente', 'accepted' => 'Acceptée', 'refused' => 'Refusée', 'withdrawn' => 'Désistée', 'removed' => 'Retirée', 'blocked' => 'Bloquée'],
+    'actions' => ['create' => 'Créer', 'mine' => 'Mes événements', 'view' => 'Voir', 'edit' => 'Modifier', 'cancel' => 'Annuler l’événement', 'register' => 'Participer', 'withdraw' => 'Se désinscrire', 'accept' => 'Accepter', 'refuse' => 'Refuser', 'remove' => 'Retirer', 'confirm' => 'Confirmer', 'close' => 'Fermer'],
+    'confirmations' => ['cancel_title' => 'Annuler cet événement ?', 'cancel_description' => 'Les membres inscrits seront prévenus.', 'withdraw_title' => 'Te désinscrire ?', 'refuse_title' => 'Refuser cette demande ?', 'remove_title' => 'Retirer cette personne ?'],
+    'capacity' => ':occupied/:capacity places occupées',
+    'cancelled' => 'Annulé',
     'errors' => [
         'organizer_registration' => 'Vous organisez déjà cet événement.',
         'event_unavailable' => 'Cet événement n’est plus disponible.',

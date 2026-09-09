@@ -20,7 +20,11 @@ final readonly class EventSummaryData
             'occupiedPlaces' => $event->occupiedPlaces(),
             'registrationMode' => $event->registration_mode->value,
             'isCancelled' => $event->cancelled_at !== null,
+            'isStarted' => $event->hasStarted(),
             'isOrganizer' => $event->organizer_user_id === $viewer->id,
+            'registrationStatus' => $event->registrations()
+                ->where('user_id', $viewer->id)
+                ->first()?->status->value,
         ];
     }
 }
