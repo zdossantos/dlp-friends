@@ -7,9 +7,48 @@ use App\Models\Block;
 use App\Models\Event;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\Request;
+use Inertia\Inertia;
+use Inertia\Response;
 
 final readonly class EventWorkspaceData
 {
+    public function context(Request $request): string
+    {
+        return $request->query('origin') === 'mine' ? 'mine' : 'discover';
+    }
+
+    /** @param array<string, mixed>|null $panel */
+    public function render(User $viewer, string $context, ?array $panel): Response
+    {
+        if ($context === 'mine') {
+            return Inertia::render('Events/Mine', [
+                ...$this->mine($viewer),
+                'context' => 'mine',
+                'panel' => $panel,
+                'closeHref' => route('events.mine', absolute: false),
+            ]);
+        }
+
+        return Inertia::render('Events/Index', [
+            'events' => $this->discovery($viewer),
+            'context' => 'discover',
+            'panel' => $panel,
+            'closeHref' => route('events.index', absolute: false),
+        ]);
+    }
+
+    public function detailUrl(Event $event, string $context): string
+    {
+        $parameters = ['event' => $event];
+
+        if ($context === 'mine') {
+            $parameters['origin'] = 'mine';
+        }
+
+        return route('events.show', $parameters, absolute: false);
+    }
+
     /** @return array<int, array<string, mixed>> */
     public function discovery(User $viewer): array
     {

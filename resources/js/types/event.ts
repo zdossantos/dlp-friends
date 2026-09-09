@@ -27,3 +27,19 @@ export type EventDetail = EventSummary & {
     participants?: EventParticipant[];
     registrations?: OrganizerRegistration[];
 };
+
+export type EventWorkspaceContext = 'discover' | 'mine';
+
+export type EventPanel =
+    | { kind: 'detail'; event: EventDetail }
+    | { kind: 'create' }
+    | { kind: 'edit'; event: EventDetail };
+
+export type EventWorkspaceProps = {
+    context: EventWorkspaceContext;
+    events?: EventSummary[];
+    organized?: EventSummary[];
+    participating?: EventSummary[];
+    panel: EventPanel | null;
+    closeHref: string;
+};

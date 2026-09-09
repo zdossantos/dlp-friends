@@ -61,15 +61,15 @@ class EventVisibilityTest extends TestCase
             $this->actingAs($authorized)->get(route('events.show', $event))
                 ->assertOk()
                 ->assertInertia(fn (Assert $page) => $page
-                    ->where('event.detailedLocation', $event->detailed_location)
-                    ->has('event.participants', 2));
+                    ->where('panel.event.detailedLocation', $event->detailed_location)
+                    ->has('panel.event.participants', 2));
         }
 
         $this->actingAs($pending)->get(route('events.show', $event))
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
-                ->missing('event.detailedLocation')
-                ->missing('event.participants'));
+                ->missing('panel.event.detailedLocation')
+                ->missing('panel.event.participants'));
     }
 
     public function test_my_events_separates_organized_and_current_participating_events(): void

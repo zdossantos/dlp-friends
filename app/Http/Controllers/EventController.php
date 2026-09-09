@@ -13,7 +13,6 @@ use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
-use Inertia\Inertia;
 use Inertia\Response;
 
 class EventController extends Controller
@@ -24,19 +23,26 @@ class EventController extends Controller
     {
         $user = $this->user($request);
 
-        return Inertia::render('Events/Index', ['events' => $this->workspace->discovery($user)]);
+        return $this->workspace->render($user, 'discover', null);
     }
 
-    public function create(): Response
+    public function create(Request $request): Response
     {
-        return Inertia::render('Events/Create');
+        return $this->workspace->render(
+            $this->user($request),
+            $this->workspace->context($request),
+            ['kind' => 'create'],
+        );
     }
 
     public function store(StoreEventRequest $request, CreateEvent $createEvent): RedirectResponse
     {
         $event = $createEvent->handle($this->user($request), $request->validated());
 
-        return to_route('events.show', $event);
+        return redirect()->to($this->workspace->detailUrl(
+            $event,
+            $this->workspace->context($request),
+        ));
     }
 
     public function show(Request $request, Event $event): Response
@@ -45,7 +51,8 @@ class EventController extends Controller
         $user = $this->user($request);
         $event->load('organizer.profile');
 
-        return Inertia::render('Events/Show', [
+        return $this->workspace->render($user, $this->workspace->context($request), [
+            'kind' => 'detail',
             'event' => EventDetailData::from($event, $user),
         ]);
     }
@@ -54,8 +61,11 @@ class EventController extends Controller
     {
         Gate::authorize('update', $event);
 
-        return Inertia::render('Events/Edit', [
-            'event' => EventDetailData::from($event->load('organizer.profile'), $this->user($request)),
+        $user = $this->user($request);
+
+        return $this->workspace->render($user, $this->workspace->context($request), [
+            'kind' => 'edit',
+            'event' => EventDetailData::from($event->load('organizer.profile'), $user),
         ]);
     }
 
@@ -63,7 +73,10 @@ class EventController extends Controller
     {
         $updateEvent->handle($this->user($request), $event, $request->validated());
 
-        return to_route('events.show', $event);
+        return redirect()->to($this->workspace->detailUrl(
+            $event,
+            $this->workspace->context($request),
+        ));
     }
 
     private function user(Request $request): User
