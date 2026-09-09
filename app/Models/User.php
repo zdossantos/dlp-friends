@@ -58,6 +58,9 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
  * @property-read Collection<int, Message> $authoredMessages
  * @property-read Collection<int, SocialAccount> $socialAccounts
  * @property-read Collection<int, TermsAcceptance> $termsAcceptances
+ * @property-read Collection<int, \Illuminate\Notifications\DatabaseNotification> $notifications
+ * @property-read Collection<int, \Illuminate\Notifications\DatabaseNotification> $readNotifications
+ * @property-read Collection<int, \Illuminate\Notifications\DatabaseNotification> $unreadNotifications
  */
 #[Fillable(['email', 'locale', 'birth_date', 'password', 'show_presence'])]
 #[Hidden(['password', 'two_factor_secret', 'two_factor_recovery_codes', 'remember_token'])]
