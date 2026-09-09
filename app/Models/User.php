@@ -20,6 +20,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\DatabaseNotification;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Mail;
@@ -58,9 +59,9 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
  * @property-read Collection<int, Message> $authoredMessages
  * @property-read Collection<int, SocialAccount> $socialAccounts
  * @property-read Collection<int, TermsAcceptance> $termsAcceptances
- * @property-read Collection<int, \Illuminate\Notifications\DatabaseNotification> $notifications
- * @property-read Collection<int, \Illuminate\Notifications\DatabaseNotification> $readNotifications
- * @property-read Collection<int, \Illuminate\Notifications\DatabaseNotification> $unreadNotifications
+ * @property-read Collection<int, DatabaseNotification> $notifications
+ * @property-read Collection<int, DatabaseNotification> $readNotifications
+ * @property-read Collection<int, DatabaseNotification> $unreadNotifications
  */
 #[Fillable(['email', 'locale', 'birth_date', 'password', 'show_presence'])]
 #[Hidden(['password', 'two_factor_secret', 'two_factor_recovery_codes', 'remember_token'])]

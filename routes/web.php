@@ -25,6 +25,9 @@ use App\Http\Controllers\LegalDocumentController;
 use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\MemberProfileController;
 use App\Http\Controllers\MessageController;
+use App\Http\Controllers\NotificationIndexController;
+use App\Http\Controllers\NotificationReadAllController;
+use App\Http\Controllers\NotificationReadController;
 use App\Http\Controllers\PresenceHeartbeatController;
 use App\Http\Controllers\ProductOnboardingController;
 use App\Http\Controllers\PublicLandingController;
@@ -149,6 +152,12 @@ Route::middleware(['auth', 'verified', 'social'])->group(function () {
                 ->name('conversations.messages.store');
             Route::post('conversations/{conversation}/read', ConversationReadController::class)
                 ->name('conversations.read.store');
+            Route::get('notifications', NotificationIndexController::class)
+                ->name('notifications.index');
+            Route::patch('notifications/read-all', NotificationReadAllController::class)
+                ->name('notifications.read-all');
+            Route::patch('notifications/{notification}/read', NotificationReadController::class)
+                ->name('notifications.read');
             Route::get('dashboard', DashboardController::class)
                 ->middleware('role:admin')
                 ->name('dashboard');
