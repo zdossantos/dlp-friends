@@ -11,6 +11,7 @@ use App\Models\MemberMatch;
 use App\Models\Profile;
 use App\Models\Swipe;
 use App\Models\User;
+use App\Notifications\NewMatchNotification;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
@@ -93,6 +94,11 @@ class CreateSwipe
                         $event = new MatchCreated($match, $recipient);
                         $event->dontBroadcastToCurrentUser();
                         event($event);
+
+                        $otherMember = $recipient->id === $lockedActor->id
+                            ? $lockedTarget
+                            : $lockedActor;
+                        $recipient->notify(new NewMatchNotification($match, $otherMember));
                     }
                 }
 

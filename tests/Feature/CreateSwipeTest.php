@@ -12,10 +12,12 @@ use App\Models\MemberMatch;
 use App\Models\Profile;
 use App\Models\Swipe;
 use App\Models\User;
+use App\Notifications\NewMatchNotification;
 use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Validation\ValidationException;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
@@ -255,6 +257,22 @@ class CreateSwipeTest extends TestCase
                     && $event->socket === '1234.5678',
             );
         }
+    }
+
+    public function test_a_new_match_creates_one_durable_notification_for_each_member(): void
+    {
+        Notification::fake();
+        [$lowUser, $highUser] = $this->memberPair();
+        $action = app(CreateSwipe::class);
+
+        $action->handle($lowUser, $highUser, SwipeDecision::Like);
+
+        Notification::assertNothingSent();
+
+        $action->handle($highUser, $lowUser, SwipeDecision::Like);
+
+        Notification::assertSentToTimes($lowUser, NewMatchNotification::class, 1);
+        Notification::assertSentToTimes($highUser, NewMatchNotification::class, 1);
     }
 
     public function test_additional_attempts_leave_two_swipes_and_one_match(): void
