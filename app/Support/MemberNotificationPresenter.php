@@ -3,6 +3,7 @@
 namespace App\Support;
 
 use App\Models\Conversation;
+use App\Models\Event;
 use App\Models\User;
 use Illuminate\Notifications\DatabaseNotification;
 use Illuminate\Support\Facades\Route;
@@ -41,7 +42,11 @@ final class MemberNotificationPresenter
         if (($data['target_type'] ?? null) === 'event'
             && $targetId !== false
             && Route::has('events.show')) {
-            return route('events.show', $targetId, absolute: false);
+            $event = Event::query()->with('organizer')->find($targetId);
+
+            if ($event !== null && $viewer->can('view', $event)) {
+                return route('events.show', $event, absolute: false);
+            }
         }
 
         return route('notifications.index', absolute: false);

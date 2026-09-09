@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\MemberMatch;
+use App\Models\Event;
 use App\Models\User;
 use Illuminate\Notifications\DatabaseNotification;
 use Illuminate\Support\Facades\Storage;
@@ -48,6 +49,33 @@ test('a member filters notifications and opens the related conversation', functi
         ->assertNoJavaScriptErrors();
 
     expect($conversationNotification->fresh()?->read_at)->not->toBeNull();
+});
+
+test('an event notification opens its detail over the discover workspace', function () {
+    $member = notificationBrowserMember('Alice');
+    $event = Event::factory()->create(['title' => 'Balade du soir']);
+    $notification = $member->notifications()->create([
+        'id' => (string) Str::uuid(),
+        'type' => 'test',
+        'data' => [
+            'category' => 'events',
+            'translation_key' => 'notifications.items.event_changed',
+            'parameters' => ['event' => $event->title],
+            'target_type' => 'event',
+            'target_id' => $event->id,
+        ],
+    ]);
+    $this->actingAs($member);
+
+    visit('/notifications')
+        ->click('[data-test="notification-'.$notification->id.'"]')
+        ->assertPathIs("/events/{$event->id}")
+        ->assertPresent('[data-test="discover-events"]')
+        ->assertPresent('[data-test="event-panel"]')
+        ->assertPresent('[data-test="event-detail"]')
+        ->assertNoJavaScriptErrors();
+
+    expect($notification->fresh()?->read_at)->not->toBeNull();
 });
 
 function notificationBrowserMember(string $displayName): User

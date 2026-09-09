@@ -124,7 +124,8 @@ test('participant avatar stack opens the list and profiles inside the event pane
 
     $this->actingAs($viewer);
 
-    visit("/events/{$event->id}?origin=mine")
+    $page = visit('/events/mine')
+        ->click("[data-test=\"event-link-{$event->id}\"]")
         ->assertCount('[data-test="participant-stack-avatar"]', 3)
         ->assertSee('+1')
         ->click('[data-test="participant-stack-trigger"]')
@@ -135,9 +136,56 @@ test('participant avatar stack opens the list and profiles inside the event pane
         ->assertPresent('[data-test="event-panel"]')
         ->assertPresent('[data-test="event-participant-profile"]')
         ->assertPresent('[data-test="profile-presentation"]')
-        ->assertPresent('[data-test="like-member"]')
-        ->click('[data-test="participant-profile-back"]')
-        ->assertCount('[data-test="participant-row"]', 4)
+        ->assertPresent('[data-test="like-member"]');
+
+    $page->script('history.back(); true;');
+    $page->assertCount('[data-test="participant-row"]', 4);
+    $page->script('history.back(); true;');
+    $page->assertPresent('[data-test="event-detail"]');
+    $page->script('history.back(); true;');
+    $page->assertPathIs('/events/mine')
+        ->assertPresent('[data-test="mine-events"]')
+        ->assertMissing('[data-test="event-panel"]')
+        ->assertNoJavaScriptErrors();
+});
+
+test('a full event stays private in discovery but available to its organizer and accepted member', function () {
+    $organizer = eventBrowserMember('Alice');
+    $accepted = eventBrowserMember('Basile');
+    $pending = eventBrowserMember('Camille');
+    $outsider = eventBrowserMember('Dorian');
+    $event = Event::factory()->for($organizer, 'organizer')->create([
+        'title' => 'Complet entre amis',
+        'capacity' => 2,
+    ]);
+    EventRegistration::factory()
+        ->for($event)
+        ->for($accepted)
+        ->accepted()
+        ->create();
+    EventRegistration::factory()->for($event)->for($pending)->create();
+
+    $this->actingAs($outsider);
+    visit('/events')
+        ->assertDontSee('Complet entre amis')
+        ->assertNoJavaScriptErrors();
+
+    $this->actingAs($organizer);
+    visit('/events/mine')
+        ->assertSee('Complet entre amis')
+        ->click("[data-test=\"event-link-{$event->id}\"]")
+        ->assertPresent('[data-test="event-private-location"]');
+
+    $this->actingAs($accepted);
+    visit('/events/mine')
+        ->assertSee('Complet entre amis')
+        ->click("[data-test=\"event-link-{$event->id}\"]")
+        ->assertPresent('[data-test="participant-stack-trigger"]');
+
+    $this->actingAs($pending);
+    visit("/events/{$event->id}")
+        ->assertSee('Le lieu précis et les participants sont visibles uniquement après acceptation.')
+        ->assertMissing('[data-test="participant-stack-trigger"]')
         ->assertNoJavaScriptErrors();
 });
 
@@ -216,6 +264,9 @@ test('manual registration protects private data and lets the organizer accept re
         ->assertPresent('[data-test="event-panel"]')
         ->assertSee('Basile')
         ->assertSee('Camille')
+        ->click('[data-test="event-registrations-back"]')
+        ->assertPresent('[data-test="event-detail"]')
+        ->click('[data-test="event-registrations"]')
         ->click('Accepter');
     $page->click('Refuser')
         ->assertSee('Cette décision est définitive')

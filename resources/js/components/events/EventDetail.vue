@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Link, router } from '@inertiajs/vue3';
 import { CalendarDays, MapPin, Users } from '@lucide/vue';
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import EventConfirmationDialog from '@/components/events/EventConfirmationDialog.vue';
 import EventParticipantStack from '@/components/events/EventParticipantStack.vue';
 import EventRegistrationActions from '@/components/events/EventRegistrationActions.vue';
@@ -20,6 +20,12 @@ const props = defineProps<{
 const { t, formatDate } = useTranslations();
 const origin = props.context === 'mine' ? { origin: 'mine' } : {};
 const cancelling = ref(false);
+const pendingCount = computed(
+    () =>
+        props.event.registrations?.filter(
+            (registration) => registration.status === 'pending',
+        ).length ?? 0,
+);
 
 function cancelEvent(): void {
     cancelling.value = true;
@@ -110,7 +116,7 @@ function cancelEvent(): void {
                 >
                     {{
                         t('events.actions.manage_requests', {
-                            count: event.registrations.length,
+                            count: pendingCount,
                         })
                     }}
                 </Link>
