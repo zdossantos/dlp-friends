@@ -11,6 +11,7 @@ export type TranslationMessages = {
     onboarding: TranslationTree;
     discovery: TranslationTree;
     conversations: TranslationTree;
+    notifications: TranslationTree;
     blocking: TranslationTree;
     administration: TranslationTree;
 };

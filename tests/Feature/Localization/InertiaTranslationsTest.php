@@ -12,6 +12,7 @@ function featureTranslationKeys(string $locale): array
         'onboarding',
         'discovery',
         'conversations',
+        'notifications',
         'blocking',
         'administration',
     ];
@@ -62,6 +63,7 @@ test('Inertia shares translations grouped by business feature', function () {
             ->where('i18n.messages.common.locale.label', 'Language')
             ->where('i18n.messages.discovery.actions.discover', 'Discover')
             ->where('i18n.messages.discovery.match.title', 'Your worlds cross paths')
+            ->where('i18n.messages.notifications.page.title', 'Notifications')
             ->where('i18n.messages.profile.interests.title', 'Favorite worlds'));
 });
 
@@ -84,6 +86,6 @@ test('Inertia shares the French frontend catalogue by default', function () {
 test('only business feature catalogues are shared with the frontend', function () {
     expect(array_keys(FrontendTranslations::messages()))->toBe([
         'common', 'account', 'profile', 'onboarding', 'discovery',
-        'conversations', 'blocking', 'administration',
+        'conversations', 'notifications', 'blocking', 'administration',
     ]);
 });

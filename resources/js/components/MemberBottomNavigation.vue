@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { Link, router } from '@inertiajs/vue3';
-import { MessageCircle, Sparkles, UserRound } from '@lucide/vue';
+import { Link, router, usePage } from '@inertiajs/vue3';
+import { Bell, MessageCircle, Sparkles, UserRound } from '@lucide/vue';
 import { onBeforeUnmount, ref } from 'vue';
 import { useCurrentUrl } from '@/composables/useCurrentUrl';
 import { useMemberNavigationVisibility } from '@/composables/useMemberNavigationVisibility';
@@ -8,9 +8,11 @@ import { useTranslations } from '@/composables/useTranslations';
 import { index as conversations } from '@/routes/conversations';
 import { index as discovery } from '@/routes/discovery';
 import { show as showProfile } from '@/routes/member-profile';
+import { index as notifications } from '@/routes/notifications';
 
 const { isCurrentOrParentUrl } = useCurrentUrl();
 const { t } = useTranslations();
+const page = usePage();
 
 const shouldShow = useMemberNavigationVisibility();
 const pendingPath = ref<string | null>(null);
@@ -22,6 +24,13 @@ const items = [
         href: conversations(),
         icon: MessageCircle,
         activeParents: ['/conversations'],
+    },
+    {
+        label: t('notifications.navigation'),
+        href: notifications(),
+        icon: Bell,
+        activeParents: ['/notifications'],
+        unreadCount: page.props.auth.unread_notifications_count,
     },
     {
         label: t('profile.navigation'),
@@ -77,7 +86,7 @@ onBeforeUnmount(() => {
                 :data-pending="
                     pendingPath === itemPath(item) ? 'true' : undefined
                 "
-                class="grid size-12 place-items-center rounded-2xl text-muted-foreground transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+                class="relative grid size-12 place-items-center rounded-2xl text-muted-foreground transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
                 :class="[
                     isActive(item) ? 'bg-secondary text-primary' : undefined,
                     pendingPath === itemPath(item)
@@ -86,6 +95,17 @@ onBeforeUnmount(() => {
                 ]"
             >
                 <component :is="item.icon" class="size-6" aria-hidden="true" />
+                <span
+                    v-if="item.unreadCount && item.unreadCount > 0"
+                    class="absolute -top-1 -right-1 grid min-w-5 place-items-center rounded-full bg-destructive px-1 text-[0.65rem] leading-5 font-bold text-destructive-foreground"
+                    :aria-label="
+                        t('notifications.accessibility.unread_count', {
+                            count: item.unreadCount,
+                        })
+                    "
+                >
+                    {{ item.unreadCount > 99 ? '99+' : item.unreadCount }}
+                </span>
             </Link>
         </nav>
     </div>

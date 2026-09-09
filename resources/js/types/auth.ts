@@ -37,6 +37,7 @@ export type Profile = {
 
 export type Auth = {
     user: User;
+    unread_notifications_count: number;
 };
 
 export type Passkey = {
