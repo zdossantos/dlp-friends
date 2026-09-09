@@ -1,9 +1,17 @@
 import { router, usePage } from '@inertiajs/vue3';
 import { useEcho } from '@laravel/echo-vue';
-import { inject, provide, ref, shallowRef } from 'vue';
+import {
+    inject,
+    onBeforeUnmount,
+    onMounted,
+    provide,
+    ref,
+    shallowRef,
+} from 'vue';
 import type { InjectionKey, Ref, ShallowRef } from 'vue';
 import { toast } from 'vue-sonner';
 import { useTranslations } from '@/composables/useTranslations';
+import { xsrfHeader } from '@/lib/csrf';
 import {
     activeConversationId,
     selectMatchNotification,
@@ -21,8 +29,16 @@ export type MemberMatchNotification = {
 type MemberRealtimeContext = {
     activeMatch: Ref<MemberMatchNotification | null>;
     latestMessage: ShallowRef<RealtimeConversationMessage | null>;
+    presenceChanged: ShallowRef<MemberPresenceChanged | null>;
     presentMatch: (match: MemberMatchNotification) => void;
     dismissMatch: () => void;
+};
+
+export type MemberPresenceChanged = {
+    user_id: number;
+    online: boolean;
+    last_active_at: string | null;
+    expires_at: string | null;
 };
 
 const memberRealtimeKey: InjectionKey<MemberRealtimeContext> = Symbol(
@@ -36,8 +52,10 @@ export function useMemberRealtimeNotifications(
     const { t } = useTranslations();
     const activeMatch = ref<MemberMatchNotification | null>(null);
     const latestMessage = shallowRef<RealtimeConversationMessage | null>(null);
+    const presenceChanged = shallowRef<MemberPresenceChanged | null>(null);
     const seenMatchIds = new Set<number>();
     const seenMessageIds = new Set<number>();
+    const presenceTimers = new Map<number, ReturnType<typeof setTimeout>>();
 
     const presentMatch = (match: MemberMatchNotification): void => {
         if (seenMatchIds.has(match.match_id)) {
@@ -48,10 +66,42 @@ export function useMemberRealtimeNotifications(
         activeMatch.value = selectMatchNotification(activeMatch.value, match);
     };
 
-    useEcho<MemberMatchNotification | RealtimeConversationMessage>(
+    useEcho<
+        | MemberMatchNotification
+        | RealtimeConversationMessage
+        | MemberPresenceChanged
+    >(
         `App.Models.User.${currentUserId}`,
-        ['.match.created', '.message.sent'],
+        ['.match.created', '.message.sent', '.presence.changed'],
         (notification) => {
+            if ('online' in notification) {
+                presenceChanged.value = notification;
+                const existingTimer = presenceTimers.get(notification.user_id);
+
+                if (existingTimer) {
+                    clearTimeout(existingTimer);
+                }
+
+                if (notification.online && notification.expires_at) {
+                    const delay = Math.max(
+                        0,
+                        Date.parse(notification.expires_at) - Date.now(),
+                    );
+                    presenceTimers.set(
+                        notification.user_id,
+                        setTimeout(() => {
+                            presenceChanged.value = {
+                                ...notification,
+                                online: false,
+                                expires_at: null,
+                            };
+                        }, delay),
+                    );
+                }
+
+                return;
+            }
+
             if ('match_id' in notification) {
                 const pageMatch = (
                     page.props as typeof page.props & {
@@ -101,9 +151,44 @@ export function useMemberRealtimeNotifications(
         },
     );
 
+    let heartbeatTimer: ReturnType<typeof setInterval> | undefined;
+    let initialHeartbeatTimer: ReturnType<typeof setTimeout> | undefined;
+    const heartbeat = (): void => {
+        if (document.visibilityState !== 'visible') {
+            return;
+        }
+
+        void fetch('/presence/heartbeat', {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: {
+                Accept: 'application/json',
+                ...xsrfHeader(document.cookie),
+            },
+        }).catch(() => undefined);
+    };
+    onMounted(() => {
+        initialHeartbeatTimer = setTimeout(heartbeat, 5_000);
+        heartbeatTimer = setInterval(heartbeat, 20_000);
+        document.addEventListener('visibilitychange', heartbeat);
+    });
+    onBeforeUnmount(() => {
+        if (initialHeartbeatTimer) {
+            clearTimeout(initialHeartbeatTimer);
+        }
+
+        if (heartbeatTimer) {
+            clearInterval(heartbeatTimer);
+        }
+
+        document.removeEventListener('visibilitychange', heartbeat);
+        presenceTimers.forEach(clearTimeout);
+    });
+
     return {
         activeMatch,
         latestMessage,
+        presenceChanged,
         presentMatch,
         dismissMatch: () => {
             activeMatch.value = null;

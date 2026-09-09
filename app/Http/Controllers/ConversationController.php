@@ -7,6 +7,7 @@ use App\Models\Avatar;
 use App\Models\Conversation;
 use App\Models\Message;
 use App\Models\User;
+use App\Support\MemberPresence;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Gate;
@@ -19,6 +20,7 @@ final class ConversationController extends Controller
         Request $request,
         Conversation $conversation,
         MarkConversationRead $markConversationRead,
+        MemberPresence $presence,
     ): Response {
         Gate::authorize('view', $conversation);
 
@@ -90,6 +92,7 @@ final class ConversationController extends Controller
                     'primary_color' => $avatar->primary_color,
                     'secondary_color' => $avatar->secondary_color,
                 ],
+                'presence' => $presence->forViewer($participant),
             ],
             'currentUserId' => $member->id,
             'messages' => Inertia::scroll($messages),

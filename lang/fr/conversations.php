@@ -23,6 +23,11 @@ return [
         'profile_link' => 'Voir le profil de :name',
         'private_exchange' => 'Échange privé',
     ],
+    'presence' => [
+        'online' => 'En ligne',
+        'last_active' => 'Actif :time',
+        'typing' => 'est en train d’écrire…',
+    ],
     'message' => [
         'label' => 'Message',
         'placeholder' => 'Écris un message…',

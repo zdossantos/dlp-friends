@@ -23,6 +23,10 @@ création du compte ; la suppression du compte supprime aussi cette preuve.
 - le canal privé personnel diffuse les nouveaux univers croisés et les aperçus
   de messages dans tout l’espace membre, tandis que le canal de conversation
   conserve la synchronisation du fil et des états de lecture ;
+- les heartbeats de présence maintiennent une clé Redis expirant après 45
+  secondes et limitent la mise à jour de `last_active_at` à une fois par minute ;
+  les changements sont diffusés uniquement aux interlocuteurs de conversations
+  actives, tandis que la saisie utilise un événement client privé sans contenu ;
 - Pest, Pest Browser, Playwright, PHPStan/Larastan, Pint, ESLint et Prettier
   pour la qualité.
 

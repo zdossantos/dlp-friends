@@ -1,12 +1,14 @@
 <script setup lang="ts">
 import { Head, router } from '@inertiajs/vue3';
-import { computed } from 'vue';
+import { computed, ref, watch } from 'vue';
 import ConversationHeader from '@/components/conversations/ConversationHeader.vue';
 import MessageComposer from '@/components/conversations/MessageComposer.vue';
 import MessageTimeline from '@/components/conversations/MessageTimeline.vue';
 import RealtimeStatus from '@/components/conversations/RealtimeStatus.vue';
 import { useConversationMessages } from '@/composables/useConversationMessages';
 import { useConversationRealtime } from '@/composables/useConversationRealtime';
+import { useMemberRealtimeContext } from '@/composables/useMemberRealtimeNotifications';
+import { useConversationTyping } from '@/composables/useTypingSignals';
 import { xsrfHeader } from '@/lib/csrf';
 import { index as conversationsIndex } from '@/routes/conversations';
 import { store as storeConversationRead } from '@/routes/conversations/read';
@@ -24,9 +26,28 @@ const props = defineProps<{
     currentUserId: number;
     messages: PaginatedMessages;
 }>();
+const { presenceChanged } = useMemberRealtimeContext();
+const participantPresence = ref(props.participant.presence);
+watch(presenceChanged, (event) => {
+    if (event?.user_id === props.participant.id) {
+        participantPresence.value = {
+            online: event.online,
+            last_active_at: event.last_active_at,
+        };
+    }
+});
+const displayedParticipant = computed(() => ({
+    ...props.participant,
+    presence: participantPresence.value,
+}));
 
 const { visibleMessages, mergeMessage, markMessagesRead } =
     useConversationMessages(() => props.messages.data);
+const {
+    peerTyping,
+    signalInput,
+    stop: stopTyping,
+} = useConversationTyping(props.conversation.id, props.currentUserId);
 
 async function markConversationAsRead(): Promise<void> {
     await fetch(storeConversationRead(props.conversation.id).url, {
@@ -70,13 +91,14 @@ const timelineMessages = computed<PaginatedMessages>(() => ({
         class="flex min-h-0 w-full flex-1 flex-col"
     >
         <ConversationHeader
-            :participant="participant"
+            :participant="displayedParticipant"
             :back-href="conversationsIndex().url"
             :profile-href="
                 showMember(participant.id, {
                     query: { conversation: conversation.id },
                 }).url
             "
+            :typing="peerTyping"
         />
 
         <RealtimeStatus
@@ -93,6 +115,8 @@ const timelineMessages = computed<PaginatedMessages>(() => ({
             :conversation-id="conversation.id"
             :archived="conversation.archived_at !== null"
             :on-sent="mergeMessage"
+            :on-typing="signalInput"
+            :on-typing-stopped="stopTyping"
         />
     </main>
 </template>

@@ -27,6 +27,7 @@ export type ConversationParticipant = {
     id: number;
     display_name: string;
     avatar: AvatarOption;
+    presence?: { online: boolean; last_active_at: string | null } | null;
 };
 
 export type ConversationSummary = {

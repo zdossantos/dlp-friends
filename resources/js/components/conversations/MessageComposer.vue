@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { SendHorizontal } from '@lucide/vue';
-import { computed, nextTick, ref } from 'vue';
+import { computed, nextTick, ref, watch } from 'vue';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
 import { useTranslations } from '@/composables/useTranslations';
@@ -13,6 +13,8 @@ const props = defineProps<{
     archived: boolean;
     onSent: (message: ConversationMessage) => void;
     submitMessage?: (content: string) => Promise<ConversationMessage>;
+    onTyping?: (content: string) => void;
+    onTypingStopped?: () => void;
 }>();
 
 const content = ref('');
@@ -23,6 +25,7 @@ const { t } = useTranslations();
 const disabled = computed(
     () => props.archived || pending.value || content.value.trim() === '',
 );
+watch(content, (value) => props.onTyping?.(value));
 
 async function submit(): Promise<void> {
     if (disabled.value) {
@@ -72,6 +75,7 @@ async function submit(): Promise<void> {
 
         props.onSent(payload.data);
         content.value = '';
+        props.onTypingStopped?.();
     } catch {
         error.value = t('conversations.message.send_error');
     } finally {

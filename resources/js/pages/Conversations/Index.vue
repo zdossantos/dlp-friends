@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import { Head, Link } from '@inertiajs/vue3';
 import { computed, ref, watch } from 'vue';
+import ActivityStatus from '@/components/conversations/ActivityStatus.vue';
 import AvatarPortrait from '@/components/profile/AvatarPortrait.vue';
 import { Input } from '@/components/ui/input';
 import { useMemberRealtimeContext } from '@/composables/useMemberRealtimeNotifications';
 import { useTranslations } from '@/composables/useTranslations';
+import { useConversationListTyping } from '@/composables/useTypingSignals';
 import {
     applyConversationMessage,
     conversationPreview,
@@ -19,7 +21,10 @@ const props = defineProps<{
 }>();
 const visibleConversations = ref(props.conversations);
 const { t } = useTranslations();
-const { latestMessage } = useMemberRealtimeContext();
+const { latestMessage, presenceChanged } = useMemberRealtimeContext();
+const typingIds = useConversationListTyping(
+    props.conversations.filter((conversation) => !conversation.archived_at),
+);
 const search = ref('');
 const normalizedSearch = computed(() => normalizeSearchText(search.value));
 const filteredConversations = computed(() => {
@@ -59,6 +64,27 @@ watch(latestMessage, (message) => {
             props.currentUserId,
         );
     }
+});
+watch(presenceChanged, (event) => {
+    if (!event) {
+        return;
+    }
+
+    visibleConversations.value = visibleConversations.value.map(
+        (conversation) =>
+            conversation.participant.id === event.user_id
+                ? {
+                      ...conversation,
+                      participant: {
+                          ...conversation.participant,
+                          presence: {
+                              online: event.online,
+                              last_active_at: event.last_active_at,
+                          },
+                      },
+                  }
+                : conversation,
+    );
 });
 </script>
 
@@ -134,10 +160,17 @@ watch(latestMessage, (message) => {
                             conversation.unread_count > 0 ? 'bg-primary/8' : ''
                         "
                     >
-                        <AvatarPortrait
-                            :avatar="conversation.participant.avatar"
-                            class="size-12 shrink-0 rounded-2xl"
-                        />
+                        <span class="relative shrink-0">
+                            <AvatarPortrait
+                                :avatar="conversation.participant.avatar"
+                                class="size-12 rounded-2xl"
+                            />
+                            <span
+                                v-if="conversation.participant.presence?.online"
+                                class="absolute -right-1 -bottom-1 size-3.5 rounded-full border-2 border-card bg-emerald-500"
+                                aria-hidden="true"
+                            />
+                        </span>
                         <span class="min-w-0 flex-1">
                             <span
                                 class="flex items-center justify-between gap-2"
@@ -168,7 +201,16 @@ watch(latestMessage, (message) => {
                                     {{ t('conversations.page.archived') }}
                                 </span>
                             </span>
+                            <ActivityStatus
+                                v-if="
+                                    typingIds.has(conversation.id) ||
+                                    conversation.participant.presence
+                                "
+                                :presence="conversation.participant.presence"
+                                :typing="typingIds.has(conversation.id)"
+                            />
                             <span
+                                v-if="!typingIds.has(conversation.id)"
                                 data-test="conversation-preview"
                                 class="mt-1 line-clamp-2 text-sm text-muted-foreground"
                             >

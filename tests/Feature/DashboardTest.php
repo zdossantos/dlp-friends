@@ -64,6 +64,7 @@ class DashboardTest extends TestCase
                         'locale',
                         'profile',
                         'roles',
+                        'show_presence',
                         'two_factor_enabled',
                     ], array_keys($user));
                     $this->assertEqualsCanonicalizing([

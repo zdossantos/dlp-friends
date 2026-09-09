@@ -61,6 +61,7 @@ class HandleInertiaRequests extends Middleware
                         'id' => $user->id,
                         'email' => $user->email,
                         'locale' => $user->locale,
+                        'show_presence' => $user->show_presence,
                         'email_verified_at' => $user->email_verified_at?->toIso8601String(),
                         'profile' => $user->profile === null ? null : [
                             'display_name' => $user->profile->display_name,

@@ -25,6 +25,7 @@ use App\Http\Controllers\LegalDocumentController;
 use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\MemberProfileController;
 use App\Http\Controllers\MessageController;
+use App\Http\Controllers\PresenceHeartbeatController;
 use App\Http\Controllers\ProductOnboardingController;
 use App\Http\Controllers\PublicLandingController;
 use App\Http\Controllers\PublicMatchingController;
@@ -87,6 +88,10 @@ Route::middleware(['auth', 'verified', 'social'])->group(function () {
 
     Route::get('app', LandingController::class)->name('app');
 
+    Route::post('presence/heartbeat', PresenceHeartbeatController::class)
+        ->middleware('throttle:30,1')
+        ->name('presence.heartbeat');
+
     Route::get('profile/create', [MemberProfileController::class, 'create'])
         ->name('member-profile.create');
     Route::post('profile', [MemberProfileController::class, 'store'])
@@ -144,7 +149,6 @@ Route::middleware(['auth', 'verified', 'social'])->group(function () {
                 ->name('conversations.messages.store');
             Route::post('conversations/{conversation}/read', ConversationReadController::class)
                 ->name('conversations.read.store');
-
             Route::get('dashboard', DashboardController::class)
                 ->middleware('role:admin')
                 ->name('dashboard');

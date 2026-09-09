@@ -15,6 +15,7 @@ class AccountUpdateRequest extends FormRequest
     {
         return [
             'email' => $this->emailRules($this->user()->id),
+            'show_presence' => ['sometimes', 'boolean'],
         ];
     }
 }
