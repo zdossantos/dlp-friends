@@ -119,11 +119,18 @@ return [
     'appearance' => [
         'label' => 'Choisir le thème', 'light' => 'Clair', 'dark' => 'Sombre', 'system' => 'Système',
     ],
+    'export' => [
+        'title' => 'Exporter tes données',
+        'description' => 'Télécharge une copie JSON de ton compte, de ton profil, de tes centres d’intérêt, de tes mises en relation et de tes messages.',
+        'generating' => 'Génération du document…',
+        'failed' => 'La génération a échoué. Tu peux réessayer.',
+        'download' => 'Télécharger mes données',
+    ],
     'deletion' => [
-        'title' => 'Supprimer ton compte', 'description' => 'Supprime définitivement ton compte et ses données.',
-        'warning' => 'Attention', 'irreversible' => 'Cette action est définitive et ne peut pas être annulée.',
+        'title' => 'Supprimer ton compte', 'description' => 'Demande la suppression définitive de ton compte et de ses données.',
+        'warning' => 'Attention', 'irreversible' => 'L’accès à ton compte cessera immédiatement. Tes données actives seront supprimées sous 30 jours, sans possibilité de restauration.',
         'question' => 'Veux-tu vraiment supprimer ton compte ?',
-        'confirmation' => 'Toutes tes données seront supprimées définitivement. Saisis ton mot de passe pour confirmer.',
+        'confirmation' => 'Cette demande est irréversible : ton accès sera révoqué immédiatement et la purge sera effectuée sous 30 jours. Saisis ton mot de passe pour confirmer.',
         'submit' => 'Supprimer mon compte',
     ],
     'passkeys' => [

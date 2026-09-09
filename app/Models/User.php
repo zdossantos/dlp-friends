@@ -6,6 +6,7 @@ use App\Enums\RoleName;
 use App\Enums\UserStatus;
 use App\Mail\ResetPasswordMail;
 use App\Mail\VerifyEmailMail;
+use Carbon\CarbonImmutable;
 use Database\Factories\UserFactory;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Contracts\Translation\HasLocalePreference;
@@ -34,6 +35,7 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
  * @property Carbon|null $email_verified_at
  * @property Carbon|null $birth_date
  * @property UserStatus $status
+ * @property CarbonImmutable|null $deletion_requested_at
  * @property-read int|null $age
  * @property string $password
  * @property string|null $two_factor_secret
@@ -213,6 +215,7 @@ class User extends Authenticatable implements HasLocalePreference, MustVerifyEma
             'email_verified_at' => 'datetime',
             'birth_date' => 'date',
             'status' => UserStatus::class,
+            'deletion_requested_at' => 'immutable_datetime',
             'password' => 'hashed',
             'two_factor_confirmed_at' => 'datetime',
         ];

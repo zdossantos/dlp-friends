@@ -228,12 +228,16 @@ La console Google doit déclarer exactement le callback de production :
 
 ## Tâches récurrentes
 
-- La cible opérationnelle prévoit que le scheduler traite les suppressions de
-  compte arrivées à échéance, les nettoyages de fichiers orphelins et les
-  opérations de maintenance déclarées par le produit. La purge différée des
-  comptes n’est pas encore implémentée.
+- Le scheduler exécute chaque heure `accounts:dispatch-due-purges` pour remettre
+  en file toute suppression échue. La commande utilise un verrou anti-chevauchement.
 - Le worker est supervisé : un job en échec est journalisé et rejoué selon une politique explicite; après le dernier essai, il rejoint la table des jobs échoués.
 - Après un déploiement, redémarrer proprement les workers pour qu'ils consomment le nouveau code.
+
+Les sauvegardes quotidiennes chiffrées MySQL et fichiers ne sont jamais
+réécrites pour une suppression individuelle. Leur rotation automatique doit
+garantir une rétention maximale de 30 jours ; une restauration exceptionnelle
+ne constitue pas un mécanisme de récupération de compte et doit préserver la
+liste des suppressions arrivées à échéance avant toute remise en service.
 
 ## Déploiement de la migration des conversations
 

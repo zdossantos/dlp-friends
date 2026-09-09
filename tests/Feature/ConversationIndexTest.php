@@ -1,6 +1,7 @@
 <?php
 
 use App\Enums\ProfileVisibility;
+use App\Models\Block;
 use App\Models\Conversation;
 use App\Models\MemberMatch;
 use App\Models\Message;
@@ -106,6 +107,21 @@ test('a conversation is excluded while the other member profile is hidden and re
         ->and(Gate::forUser($member)->allows('send', $hiddenConversation))->toBeTrue();
     $this->actingAs($member)->get("/conversations/{$hiddenConversation->id}")->assertOk();
 });
+
+test('a conversation is excluded when either member blocks the other', function (string $direction) {
+    $member = User::factory()->withProfile()->create();
+    $peer = User::factory()->withProfile()->create();
+    $conversation = conversationBetween($member, $peer);
+    [$blocker, $blocked] = $direction === 'incoming' ? [$peer, $member] : [$member, $peer];
+
+    Block::factory()->create([
+        'blocker_user_id' => $blocker->id,
+        'blocked_user_id' => $blocked->id,
+    ]);
+
+    $this->actingAs($member)->get('/conversations')
+        ->assertInertia(fn (Assert $page) => $page->where('conversations', []));
+})->with(['incoming', 'outgoing']);
 
 function conversationBetween(User $first, User $second): Conversation
 {

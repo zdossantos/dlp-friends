@@ -10,11 +10,14 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
+import UserDataExport from '@/components/UserDataExport.vue';
 import { useTranslations } from '@/composables/useTranslations';
 import { edit } from '@/routes/account';
 import { send } from '@/routes/verification';
 
-const page = usePage();
+const page = usePage<{
+    mustVerifyEmail: boolean;
+}>();
 const user = computed(() => page.props.auth.user);
 const { t } = useTranslations();
 setLayoutProps({
@@ -73,6 +76,7 @@ setLayoutProps({
                 </Button>
             </Form>
         </div>
+        <UserDataExport />
         <DeleteUser />
     </div>
 </template>
