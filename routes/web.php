@@ -21,6 +21,9 @@ use App\Http\Controllers\ConversationIndexController;
 use App\Http\Controllers\ConversationReadController;
 use App\Http\Controllers\DiscoveryController;
 use App\Http\Controllers\EventController;
+use App\Http\Controllers\EventRegistrationController;
+use App\Http\Controllers\EventRegistrationDecisionController;
+use App\Http\Controllers\EventRegistrationRemovalController;
 use App\Http\Controllers\LandingController;
 use App\Http\Controllers\LegalDocumentController;
 use App\Http\Controllers\LikeMemberController;
@@ -152,6 +155,14 @@ Route::middleware(['auth', 'verified', 'social'])->group(function () {
             Route::get('events/mine', MyEventController::class)->name('events.mine');
             Route::resource('events', EventController::class)
                 ->only(['index', 'create', 'store', 'show']);
+            Route::post('events/{event}/registrations', [EventRegistrationController::class, 'store'])
+                ->name('events.registrations.store');
+            Route::delete('events/{event}/registrations', [EventRegistrationController::class, 'destroy'])
+                ->name('events.registrations.destroy');
+            Route::patch('event-registrations/{registration}', EventRegistrationDecisionController::class)
+                ->name('events.registrations.decision');
+            Route::delete('event-registrations/{registration}', EventRegistrationRemovalController::class)
+                ->name('events.registrations.remove');
 
             Route::get('conversations', ConversationIndexController::class)
                 ->name('conversations.index');
