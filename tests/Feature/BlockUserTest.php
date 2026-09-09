@@ -3,8 +3,10 @@
 namespace Tests\Feature;
 
 use App\Actions\BlockUser;
+use App\Enums\EventRegistrationStatus;
 use App\Models\Block;
 use App\Models\Conversation;
+use App\Models\EventRegistration;
 use App\Models\MemberMatch;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -49,6 +51,21 @@ class BlockUserTest extends TestCase
 
         expect($block->blocker_user_id)->toBe($blocker->id)
             ->and($block->blocked_user_id)->toBe($blocked->id);
+    }
+
+    public function test_blocking_an_event_relationship_blocks_active_registrations_and_releases_capacity(): void
+    {
+        foreach (['organizer_blocks_member', 'member_blocks_organizer'] as $direction) {
+            $registration = EventRegistration::factory()->accepted()->create();
+            [$blocker, $blocked] = $direction === 'organizer_blocks_member'
+                ? [$registration->event->organizer, $registration->user]
+                : [$registration->user, $registration->event->organizer];
+
+            app(BlockUser::class)->handle($blocker, $blocked);
+
+            $this->assertSame(EventRegistrationStatus::Blocked, $registration->refresh()->status);
+            $this->assertSame(1, $registration->event->occupiedPlaces());
+        }
     }
 
     public function test_an_existing_archive_timestamp_is_preserved(): void

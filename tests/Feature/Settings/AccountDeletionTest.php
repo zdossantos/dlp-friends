@@ -5,6 +5,8 @@ namespace Tests\Feature\Settings;
 use App\Actions\RequestAccountDeletion;
 use App\Enums\UserStatus;
 use App\Jobs\PurgeDeletedUser;
+use App\Models\Event;
+use App\Models\EventRegistration;
 use App\Models\SocialAccount;
 use App\Models\User;
 use Carbon\CarbonImmutable;
@@ -40,6 +42,7 @@ class AccountDeletionTest extends TestCase
             ['id' => 'other-session', 'user_id' => $other->id, 'ip_address' => null, 'user_agent' => null, 'payload' => '', 'last_activity' => now()->timestamp],
         ]);
         SocialAccount::factory()->for($user)->create();
+        $organizedEvent = Event::factory()->create(['organizer_user_id' => $user->id]);
 
         $this->actingAs($user)
             ->delete(route('account.destroy'), ['password' => 'password'])
@@ -53,6 +56,7 @@ class AccountDeletionTest extends TestCase
         $this->assertFalse(DB::table('sessions')->where('user_id', $user->id)->exists());
         $this->assertTrue(DB::table('sessions')->where('user_id', $other->id)->exists());
         $this->assertFalse($user->socialAccounts()->exists());
+        $this->assertNotNull($organizedEvent->fresh()->cancelled_at);
         Queue::assertPushed(PurgeDeletedUser::class, fn (PurgeDeletedUser $job): bool => $job->delay?->equalTo(now()->addDays(30)) === true);
     }
 
@@ -69,5 +73,29 @@ class AccountDeletionTest extends TestCase
 
         $this->assertTrue($first->equalTo($second));
         Queue::assertPushed(PurgeDeletedUser::class, 1);
+    }
+
+    public function test_purge_removes_event_registrations_and_database_notifications(): void
+    {
+        $this->travelTo('2026-10-10 12:00:00');
+        $user = User::factory()->withProfile()->create([
+            'status' => UserStatus::PendingDeletion,
+            'deletion_requested_at' => now()->subDays(31),
+        ]);
+        EventRegistration::factory()->create(['user_id' => $user->id]);
+        $user->notifications()->create([
+            'id' => fake()->uuid(),
+            'type' => 'test',
+            'data' => [],
+        ]);
+
+        app(PurgeDeletedUser::class, [
+            'userId' => $user->id,
+            'requestedAt' => $user->deletion_requested_at->toISOString(),
+        ])->handle();
+
+        $this->assertDatabaseMissing('users', ['id' => $user->id]);
+        $this->assertDatabaseMissing('event_registrations', ['user_id' => $user->id]);
+        $this->assertDatabaseMissing('notifications', ['notifiable_id' => $user->id]);
     }
 }
