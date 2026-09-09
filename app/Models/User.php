@@ -59,6 +59,8 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
  * @property-read Collection<int, Message> $authoredMessages
  * @property-read Collection<int, SocialAccount> $socialAccounts
  * @property-read Collection<int, TermsAcceptance> $termsAcceptances
+ * @property-read Collection<int, Event> $organizedEvents
+ * @property-read Collection<int, EventRegistration> $eventRegistrations
  * @property-read Collection<int, DatabaseNotification> $notifications
  * @property-read Collection<int, DatabaseNotification> $readNotifications
  * @property-read Collection<int, DatabaseNotification> $unreadNotifications
@@ -140,6 +142,18 @@ class User extends Authenticatable implements HasLocalePreference, MustVerifyEma
     public function termsAcceptances(): HasMany
     {
         return $this->hasMany(TermsAcceptance::class);
+    }
+
+    /** @return HasMany<Event, $this> */
+    public function organizedEvents(): HasMany
+    {
+        return $this->hasMany(Event::class, 'organizer_user_id');
+    }
+
+    /** @return HasMany<EventRegistration, $this> */
+    public function eventRegistrations(): HasMany
+    {
+        return $this->hasMany(EventRegistration::class);
     }
 
     public function hasBlockedRelationshipWith(User $other): bool
