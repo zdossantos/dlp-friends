@@ -20,12 +20,14 @@ use App\Http\Controllers\ConversationController;
 use App\Http\Controllers\ConversationIndexController;
 use App\Http\Controllers\ConversationReadController;
 use App\Http\Controllers\DiscoveryController;
+use App\Http\Controllers\EventController;
 use App\Http\Controllers\LandingController;
 use App\Http\Controllers\LegalDocumentController;
 use App\Http\Controllers\LikeMemberController;
 use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\MemberProfileController;
 use App\Http\Controllers\MessageController;
+use App\Http\Controllers\MyEventController;
 use App\Http\Controllers\NotificationIndexController;
 use App\Http\Controllers\NotificationReadAllController;
 use App\Http\Controllers\NotificationReadController;
@@ -146,6 +148,10 @@ Route::middleware(['auth', 'verified', 'social'])->group(function () {
                 ->name('discovery.index');
             Route::post('discover/{target}/swipe', SwipeController::class)
                 ->name('discovery.swipe');
+
+            Route::get('events/mine', MyEventController::class)->name('events.mine');
+            Route::resource('events', EventController::class)
+                ->only(['index', 'create', 'store', 'show']);
 
             Route::get('conversations', ConversationIndexController::class)
                 ->name('conversations.index');
