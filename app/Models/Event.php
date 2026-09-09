@@ -6,6 +6,7 @@ use App\Enums\EventRegistrationMode;
 use App\Enums\EventRegistrationStatus;
 use Carbon\CarbonImmutable;
 use Database\Factories\EventFactory;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -57,9 +58,31 @@ class Event extends Model
 
     public function occupiedPlaces(): int
     {
-        return 1 + $this->registrations()
-            ->where('status', EventRegistrationStatus::Accepted)
-            ->count();
+        $acceptedRegistrations = array_key_exists('accepted_registrations_count', $this->attributes)
+            ? (int) $this->attributes['accepted_registrations_count']
+            : $this->registrations()
+                ->where('status', EventRegistrationStatus::Accepted)
+                ->count();
+
+        return 1 + $acceptedRegistrations;
+    }
+
+    /** @param Builder<Event> $query */
+    public function scopeWithAcceptedRegistrationCount(Builder $query): void
+    {
+        $query->withCount([
+            'registrations as accepted_registrations_count' => fn (Builder $registrations) => $registrations
+                ->where('status', EventRegistrationStatus::Accepted),
+        ]);
+    }
+
+    /** @param Builder<Event> $query */
+    public function scopeWithAvailableCapacity(Builder $query): void
+    {
+        $query->whereRaw(
+            'events.capacity > 1 + (select count(*) from event_registrations where event_registrations.event_id = events.id and event_registrations.status = ?)',
+            [EventRegistrationStatus::Accepted->value],
+        );
     }
 
     public function hasStarted(): bool

@@ -19,6 +19,10 @@ class EventVisibilityTest extends TestCase
     {
         $viewer = User::factory()->withProfile()->create();
         $visible = Event::factory()->create(['title' => 'Visible']);
+        $full = Event::factory()->create(['title' => 'Full', 'capacity' => 2]);
+        EventRegistration::factory()->accepted()->create([
+            'event_id' => $full->id,
+        ]);
         Event::factory()->create(['title' => 'Past', 'starts_at' => now()->subMinute()]);
         Event::factory()->create(['title' => 'Cancelled', 'cancelled_at' => now()]);
         $blocked = Event::factory()->create(['title' => 'Blocked']);
@@ -68,17 +72,32 @@ class EventVisibilityTest extends TestCase
                 ->missing('event.participants'));
     }
 
-    public function test_my_events_keeps_cancelled_and_started_events(): void
+    public function test_my_events_separates_organized_and_current_participating_events(): void
     {
         $member = User::factory()->withProfile()->create();
-        Event::factory()->create([
+        $organized = Event::factory()->create([
             'organizer_user_id' => $member->id,
             'starts_at' => now()->subDay(),
             'cancelled_at' => now()->subDays(2),
         ]);
+        $joined = Event::factory()->create(['capacity' => 2]);
+        EventRegistration::factory()->accepted()->create([
+            'event_id' => $joined->id,
+            'user_id' => $member->id,
+        ]);
+        $withdrawn = Event::factory()->create();
+        EventRegistration::factory()->create([
+            'event_id' => $withdrawn->id,
+            'user_id' => $member->id,
+            'status' => EventRegistrationStatus::Withdrawn,
+        ]);
 
         $this->actingAs($member)->get(route('events.mine'))
             ->assertOk()
-            ->assertInertia(fn (Assert $page) => $page->has('events', 1));
+            ->assertInertia(fn (Assert $page) => $page
+                ->has('organized', 1)
+                ->where('organized.0.id', $organized->id)
+                ->has('participating', 1)
+                ->where('participating.0.id', $joined->id));
     }
 }

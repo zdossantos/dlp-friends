@@ -5,10 +5,9 @@ namespace App\Http\Controllers;
 use App\Actions\CreateEvent;
 use App\Actions\UpdateEvent;
 use App\Data\EventDetailData;
-use App\Data\EventSummaryData;
+use App\Data\EventWorkspaceData;
 use App\Http\Requests\StoreEventRequest;
 use App\Http\Requests\UpdateEventRequest;
-use App\Models\Block;
 use App\Models\Event;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
@@ -19,27 +18,13 @@ use Inertia\Response;
 
 class EventController extends Controller
 {
+    public function __construct(private readonly EventWorkspaceData $workspace) {}
+
     public function index(Request $request): Response
     {
         $user = $this->user($request);
-        $blockedUserIds = Block::query()
-            ->where('blocker_user_id', $user->id)
-            ->orWhere('blocked_user_id', $user->id)
-            ->get()
-            ->map(fn (Block $block): int => $block->blocker_user_id === $user->id
-                ? $block->blocked_user_id
-                : $block->blocker_user_id);
 
-        $events = Event::query()
-            ->whereNull('cancelled_at')
-            ->where('starts_at', '>', now())
-            ->whereNotIn('organizer_user_id', $blockedUserIds)
-            ->with('organizer.profile')
-            ->orderBy('starts_at')
-            ->get()
-            ->map(fn (Event $event): array => EventSummaryData::from($event, $user));
-
-        return Inertia::render('Events/Index', ['events' => $events]);
+        return Inertia::render('Events/Index', ['events' => $this->workspace->discovery($user)]);
     }
 
     public function create(): Response
