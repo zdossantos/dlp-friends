@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { Head, Link } from '@inertiajs/vue3';
 import { computed, ref, watch } from 'vue';
-import AvatarPortrait from '@/components/profile/AvatarPortrait.vue';
 import ActivityStatus from '@/components/conversations/ActivityStatus.vue';
+import AvatarPortrait from '@/components/profile/AvatarPortrait.vue';
 import { Input } from '@/components/ui/input';
 import { useMemberRealtimeContext } from '@/composables/useMemberRealtimeNotifications';
 import { useTranslations } from '@/composables/useTranslations';
@@ -66,7 +66,10 @@ watch(latestMessage, (message) => {
     }
 });
 watch(presenceChanged, (event) => {
-    if (!event) return;
+    if (!event) {
+        return;
+    }
+
     visibleConversations.value = visibleConversations.value.map(
         (conversation) =>
             conversation.participant.id === event.user_id

@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import { usePage } from '@inertiajs/vue3';
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import { useTranslations } from '@/composables/useTranslations';
 
 const props = defineProps<{
@@ -17,9 +17,18 @@ onMounted(
 onBeforeUnmount(() => timer && clearInterval(timer));
 
 const label = computed(() => {
-    if (props.typing) return t('conversations.presence.typing');
-    if (props.presence?.online) return t('conversations.presence.online');
-    if (!props.presence?.last_active_at) return null;
+    if (props.typing) {
+        return t('conversations.presence.typing');
+    }
+
+    if (props.presence?.online) {
+        return t('conversations.presence.online');
+    }
+
+    if (!props.presence?.last_active_at) {
+        return null;
+    }
+
     const seconds = Math.max(
         0,
         Math.round(
@@ -35,6 +44,7 @@ const label = computed(() => {
             : seconds < 86_400
               ? formatter.format(-Math.round(seconds / 3_600), 'hour')
               : formatter.format(-Math.round(seconds / 86_400), 'day');
+
     return t('conversations.presence.last_active', { time: relative });
 });
 </script>

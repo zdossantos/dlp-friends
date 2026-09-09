@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { Link } from '@inertiajs/vue3';
 import { ArrowLeft } from '@lucide/vue';
-import AvatarPortrait from '@/components/profile/AvatarPortrait.vue';
 import ActivityStatus from '@/components/conversations/ActivityStatus.vue';
+import AvatarPortrait from '@/components/profile/AvatarPortrait.vue';
 import { useTranslations } from '@/composables/useTranslations';
 import type { ConversationParticipant } from '@/types';
 

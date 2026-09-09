@@ -18,35 +18,61 @@ export function useConversationTyping(
     let incomingTimer: ReturnType<typeof setTimeout> | undefined;
     const channel = echo().private(`conversation.${conversationId}`);
     const receive = (signal: TypingSignal): void => {
-        if (signal.user_id === currentUserId) return;
+        if (signal.user_id === currentUserId) {
+            return;
+        }
+
         peerTyping.value = signal.typing;
-        if (incomingTimer) clearTimeout(incomingTimer);
-        if (signal.typing)
+
+        if (incomingTimer) {
+            clearTimeout(incomingTimer);
+        }
+
+        if (signal.typing) {
             incomingTimer = setTimeout(() => (peerTyping.value = false), 5_000);
+        }
     };
     const send = (typing: boolean): void => {
         channel.whisper('typing', { user_id: currentUserId, typing });
-        if (!typing) lastStartedAt = 0;
+
+        if (!typing) {
+            lastStartedAt = 0;
+        }
     };
     const stop = (): void => {
-        if (outgoingTimer) clearTimeout(outgoingTimer);
+        if (outgoingTimer) {
+            clearTimeout(outgoingTimer);
+        }
+
         send(false);
     };
     const signalInput = (content: string): void => {
-        if (content.trim() === '') return stop();
+        if (content.trim() === '') {
+            return stop();
+        }
+
         const now = Date.now();
+
         if (now - lastStartedAt >= 2_000) {
             send(true);
             lastStartedAt = now;
         }
-        if (outgoingTimer) clearTimeout(outgoingTimer);
+
+        if (outgoingTimer) {
+            clearTimeout(outgoingTimer);
+        }
+
         outgoingTimer = setTimeout(stop, 4_000);
     };
 
     onMounted(() => channel.listenForWhisper('typing', receive));
     onBeforeUnmount(() => {
         stop();
-        if (incomingTimer) clearTimeout(incomingTimer);
+
+        if (incomingTimer) {
+            clearTimeout(incomingTimer);
+        }
+
         channel.stopListeningForWhisper('typing', receive);
     });
 
@@ -61,15 +87,26 @@ export function useConversationListTyping(
     const listeners = conversations.map((conversation) => {
         const channel = echo().private(`conversation.${conversation.id}`);
         const receive = (signal: TypingSignal): void => {
-            if (signal.user_id !== conversation.participant.id) return;
+            if (signal.user_id !== conversation.participant.id) {
+                return;
+            }
+
             const next = new Set(typingIds.value);
-            signal.typing
-                ? next.add(conversation.id)
-                : next.delete(conversation.id);
+
+            if (signal.typing) {
+                next.add(conversation.id);
+            } else {
+                next.delete(conversation.id);
+            }
+
             typingIds.value = next;
             const timer = timers.get(conversation.id);
-            if (timer) clearTimeout(timer);
-            if (signal.typing)
+
+            if (timer) {
+                clearTimeout(timer);
+            }
+
+            if (signal.typing) {
                 timers.set(
                     conversation.id,
                     setTimeout(() => {
@@ -78,7 +115,9 @@ export function useConversationListTyping(
                         typingIds.value = expired;
                     }, 5_000),
                 );
+            }
         };
+
         return { channel, receive };
     });
     onMounted(() =>

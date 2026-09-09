@@ -77,7 +77,11 @@ export function useMemberRealtimeNotifications(
             if ('online' in notification) {
                 presenceChanged.value = notification;
                 const existingTimer = presenceTimers.get(notification.user_id);
-                if (existingTimer) clearTimeout(existingTimer);
+
+                if (existingTimer) {
+                    clearTimeout(existingTimer);
+                }
+
                 if (notification.online && notification.expires_at) {
                     const delay = Math.max(
                         0,
@@ -97,6 +101,7 @@ export function useMemberRealtimeNotifications(
 
                 return;
             }
+
             if ('match_id' in notification) {
                 const pageMatch = (
                     page.props as typeof page.props & {
@@ -148,7 +153,10 @@ export function useMemberRealtimeNotifications(
 
     let heartbeatTimer: ReturnType<typeof setInterval> | undefined;
     const heartbeat = (): void => {
-        if (document.visibilityState !== 'visible') return;
+        if (document.visibilityState !== 'visible') {
+            return;
+        }
+
         void fetch('/presence/heartbeat', {
             method: 'POST',
             credentials: 'same-origin',
@@ -164,7 +172,10 @@ export function useMemberRealtimeNotifications(
         document.addEventListener('visibilitychange', heartbeat);
     });
     onBeforeUnmount(() => {
-        if (heartbeatTimer) clearInterval(heartbeatTimer);
+        if (heartbeatTimer) {
+            clearInterval(heartbeatTimer);
+        }
+
         document.removeEventListener('visibilitychange', heartbeat);
         presenceTimers.forEach(clearTimeout);
     });
