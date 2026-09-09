@@ -12,10 +12,15 @@ import {
 } from '@/components/ui/card';
 import { useTranslations } from '@/composables/useTranslations';
 import { show } from '@/routes/events';
-import type { EventSummary } from '@/types/event';
+import type { EventSummary, EventWorkspaceContext } from '@/types/event';
 
-defineProps<{ event: EventSummary }>();
+const props = defineProps<{
+    event: EventSummary;
+    context: EventWorkspaceContext;
+    role?: 'organizer' | 'participant';
+}>();
 const { t, formatDate } = useTranslations();
+const origin = props.context === 'mine' ? { origin: 'mine' } : {};
 </script>
 
 <template>
@@ -23,7 +28,10 @@ const { t, formatDate } = useTranslations();
         <CardHeader class="gap-2">
             <div class="flex items-start justify-between gap-3">
                 <CardTitle>{{ event.title }}</CardTitle>
-                <Badge v-if="event.isCancelled" variant="destructive">{{
+                <Badge v-if="role" variant="outline">
+                    {{ t(`events.roles.${role}`) }}
+                </Badge>
+                <Badge v-else-if="event.isCancelled" variant="destructive">{{
                     t('events.cancelled')
                 }}</Badge>
                 <Badge v-else-if="event.registrationStatus" variant="secondary">
@@ -58,9 +66,11 @@ const { t, formatDate } = useTranslations();
         </CardContent>
         <CardFooter
             ><Button as-child variant="outline"
-                ><Link :href="show(event.id)">{{
-                    t('events.actions.view')
-                }}</Link></Button
+                ><Link
+                    :href="show(event.id, { query: origin })"
+                    :data-test="`event-link-${event.id}`"
+                    >{{ t('events.actions.view') }}</Link
+                ></Button
             ></CardFooter
         >
     </Card>

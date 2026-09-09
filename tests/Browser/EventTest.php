@@ -9,6 +9,36 @@ use Illuminate\Support\Facades\Storage;
 
 beforeEach(fn () => Storage::fake('local'));
 
+test('manual and direct links open the same event panel over their workspace', function () {
+    $organizer = eventBrowserMember('Alice');
+    $event = Event::factory()->for($organizer, 'organizer')->create([
+        'title' => 'Promenade du matin',
+    ]);
+    $this->actingAs($organizer);
+
+    visit('/events')
+        ->assertPresent('[data-test="discover-events"]')
+        ->click("[data-test=\"event-link-{$event->id}\"]")
+        ->assertPresent('[data-test="event-panel"]')
+        ->assertPresent('[data-test="event-detail"]')
+        ->assertPresent('[data-test="discover-events"]')
+        ->assertPathIs("/events/{$event->id}")
+        ->assertNoJavaScriptErrors();
+
+    visit("/events/{$event->id}")
+        ->assertPresent('[data-test="event-panel"]')
+        ->assertPresent('[data-test="event-detail"]')
+        ->assertPresent('[data-test="discover-events"]')
+        ->assertNoJavaScriptErrors();
+
+    visit("/events/{$event->id}?origin=mine")
+        ->assertPresent('[data-test="event-panel"]')
+        ->assertPresent('[data-test="event-detail"]')
+        ->assertPresent('[data-test="mine-events"]')
+        ->assertSee('Mes événements')
+        ->assertNoJavaScriptErrors();
+});
+
 test('an organizer creates an automatic event and a member joins then withdraws', function () {
     $organizer = eventBrowserMember('Alice');
     $member = eventBrowserMember('Basile');
