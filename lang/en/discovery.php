@@ -8,6 +8,8 @@ return [
         'discover' => 'Discover',
         'pass_profile' => 'Pass this profile',
         'discover_profile' => 'Discover this profile',
+        'add_friend' => 'Add as a friend',
+        'adding_friend' => 'Adding…',
     ],
     'page' => [
         'title' => 'Explore', 'description' => 'Members who share your favourite worlds.', 'error_title' => 'Decision not saved',

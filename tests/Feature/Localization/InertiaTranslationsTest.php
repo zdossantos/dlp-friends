@@ -62,6 +62,7 @@ test('Inertia shares translations grouped by business feature', function () {
             ->where('i18n.locale', 'en')
             ->where('i18n.messages.common.locale.label', 'Language')
             ->where('i18n.messages.discovery.actions.discover', 'Discover')
+            ->where('i18n.messages.discovery.actions.add_friend', 'Add as a friend')
             ->where('i18n.messages.discovery.match.title', 'Your worlds cross paths')
             ->where('i18n.messages.notifications.page.title', 'Notifications')
             ->where('i18n.messages.profile.interests.title', 'Favorite worlds'));

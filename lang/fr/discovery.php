@@ -8,6 +8,8 @@ return [
         'discover' => 'Découvrir',
         'pass_profile' => 'Passer ce profil',
         'discover_profile' => 'Découvrir ce profil',
+        'add_friend' => 'Ajouter à mes amis',
+        'adding_friend' => 'Ajout en cours…',
     ],
     'page' => [
         'title' => 'Explorer',

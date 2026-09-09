@@ -582,6 +582,35 @@ test('a tap opens the profile while a horizontal drag keeps the swipe interactio
     $this->assertDatabaseCount('swipes', 0);
 });
 
+test('a member can like from a profile and open the existing match flow', function () {
+    $actor = discoveryMember('Alice');
+    $firstTarget = discoveryMember('Basile');
+    $this->actingAs($actor);
+
+    $page = visit("/members/{$firstTarget->id}")->on()->mobile()
+        ->assertSee('Basile')
+        ->assertSee('Ajouter à mes amis')
+        ->click('[data-test="like-member"]')
+        ->assertSee('Ce membre a été ajouté à tes découvertes.')
+        ->assertNotPresent('[data-test="like-member"]')
+        ->assertNoJavaScriptErrors();
+
+    $secondTarget = discoveryMember('Camille');
+    Swipe::factory()->create([
+        'actor_user_id' => $secondTarget->id,
+        'target_user_id' => $actor->id,
+        'decision' => SwipeDecision::Like,
+    ]);
+
+    $page->navigate("/members/{$secondTarget->id}")
+        ->click('[data-test="like-member"]')
+        ->assertPathIs('/discover')
+        ->assertSee('Vos univers se croisent')
+        ->assertSee('Camille souhaite aussi te découvrir.')
+        ->assertPresent('[data-test="open-match-conversation"]')
+        ->assertNoJavaScriptErrors();
+});
+
 test('vertical and cancelled pointer gestures return the card to its centre', function () {
     $actor = discoveryMember('Alice');
     discoveryMember('Basile');
