@@ -60,6 +60,7 @@ test('manual registration protects private data and lets the organizer accept re
     $this->actingAs($accepted);
     visit("/events/{$event->id}")
         ->assertSee('Le lieu précis et les participants sont visibles uniquement après acceptation.')
+        ->assertSee('En attente')
         ->assertDontSee($event->detailed_location)
         ->assertNoJavaScriptErrors();
 
@@ -79,6 +80,23 @@ test('manual registration protects private data and lets the organizer accept re
     $page->click('Retirer')->assertDontSee('Retirer');
     expect($event->registrations()->whereBelongsTo($accepted)->value('status'))
         ->toBe(EventRegistrationStatus::Removed);
+});
+
+test('event creation preserves its description after a validation error', function () {
+    $member = eventBrowserMember('Alice');
+    $this->actingAs($member);
+
+    visit('/events/create')
+        ->fill('title', 'Une journée entre amis')
+        ->fill('description', 'Description à préserver après validation.')
+        ->fill('general_location', 'Disneyland Park')
+        ->fill('detailed_location', 'Sous l’horloge de Main Street')
+        ->fill('starts_at', now('Europe/Paris')->subDay()->format('Y-m-d\TH:i'))
+        ->fill('capacity', '4')
+        ->click('[data-test="event-submit"]')
+        ->assertValue('description', 'Description à préserver après validation.')
+        ->assertSee('doit être une date postérieure')
+        ->assertNoJavaScriptErrors();
 });
 
 test('date and location changes notify a member and cancellation remains in history', function () {

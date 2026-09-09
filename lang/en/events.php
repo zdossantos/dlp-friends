@@ -1,6 +1,7 @@
 <?php
 
 return [
+    'validation' => ['starts_at_future' => 'The starts at field must be a date after now.'],
     'navigation' => 'Events',
     'index' => [
         'title' => 'Friendly events',

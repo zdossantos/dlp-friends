@@ -29,7 +29,7 @@ class StoreEventRequest extends FormRequest
                     $startsAt = CarbonImmutable::createFromFormat('Y-m-d\TH:i', $value, 'Europe/Paris');
 
                     if ($startsAt->isPast()) {
-                        $fail('validation.after')->translate(['date' => 'now']);
+                        $fail('events.validation.starts_at_future')->translate();
                     }
                 },
             ],

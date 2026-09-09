@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { router } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useTranslations } from '@/composables/useTranslations';
 import { availableEventActions } from '@/lib/eventState';
@@ -41,6 +42,12 @@ function withdraw(): void {
 
 <template>
     <div class="flex flex-wrap gap-3">
+        <Badge
+            v-if="!event.isOrganizer && event.registrationStatus"
+            variant="secondary"
+            data-test="event-registration-status"
+            >{{ t(`events.statuses.${event.registrationStatus}`) }}</Badge
+        >
         <Button
             v-if="actions.includes('register')"
             :disabled="busy"

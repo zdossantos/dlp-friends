@@ -1,6 +1,7 @@
 <?php
 
 return [
+    'validation' => ['starts_at_future' => 'Le champ starts at doit être une date postérieure à maintenant.'],
     'navigation' => 'Événements',
     'index' => [
         'title' => 'Événements amicaux',

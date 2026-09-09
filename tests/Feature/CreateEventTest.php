@@ -54,6 +54,24 @@ class CreateEventTest extends TestCase
         $this->assertDatabaseEmpty('events');
     }
 
+    public function test_a_past_start_date_has_a_localized_validation_message(): void
+    {
+        $this->travelTo('2026-09-10 10:00:00');
+        $member = User::factory()->withProfile()->create();
+
+        $this->actingAs($member)->post(route('events.store'), [
+            'title' => 'Une journée entre amis',
+            'description' => 'Retrouvons-nous pour profiter du parc.',
+            'general_location' => 'Disneyland Park',
+            'detailed_location' => 'Sous l’horloge de Main Street Station',
+            'starts_at' => '2026-09-09T10:00',
+            'capacity' => 4,
+            'registration_mode' => EventRegistrationMode::Automatic->value,
+        ])->assertSessionHasErrors([
+            'starts_at' => 'Le champ starts at doit être une date postérieure à maintenant.',
+        ]);
+    }
+
     public function test_guests_and_incomplete_members_cannot_access_event_creation(): void
     {
         $this->get(route('events.create'))->assertRedirect(route('login'));
