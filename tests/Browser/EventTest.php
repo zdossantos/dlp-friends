@@ -146,7 +146,10 @@ test('an organizer creates an automatic event and a member joins then withdraws'
     $member = eventBrowserMember('Basile');
     $this->actingAs($organizer);
 
-    visit('/events/create')
+    visit('/events')
+        ->click('[data-test="event-create"]')
+        ->assertPresent('[data-test="discover-events"]')
+        ->assertPresent('[data-test="event-panel"]')
         ->fill('title', 'Matinée attractions')
         ->fill('description', 'Un moment amical entre fans.')
         ->fill('general_location', 'Disneyland Park')
@@ -155,6 +158,8 @@ test('an organizer creates an automatic event and a member joins then withdraws'
         ->fill('capacity', '3')
         ->select('registration_mode', 'automatic')
         ->click('[data-test="event-submit"]')
+        ->assertPresent('[data-test="discover-events"]')
+        ->assertPresent('[data-test="event-detail"]')
         ->assertSee('Matinée attractions')
         ->assertSee('Sous l’horloge de Main Street')
         ->assertNoJavaScriptErrors();
@@ -166,7 +171,7 @@ test('an organizer creates an automatic event and a member joins then withdraws'
         ->assertDontSee('Sous l’horloge de Main Street')
         ->click('[data-test="event-register"]')
         ->assertSee('Sous l’horloge de Main Street')
-        ->assertSee('Alice')
+        ->assertCount('[data-test="participant-stack-avatar"]', 2)
         ->assertPresent('[data-test="event-withdraw"]');
 
     $page->script('window.confirm = () => true');
@@ -241,11 +246,16 @@ test('date and location changes notify a member and cancellation remains in hist
     EventRegistration::factory()->for($event)->for($member)->accepted()->create();
     $this->actingAs($organizer);
 
-    visit("/events/{$event->id}/edit")
+    visit("/events/{$event->id}?origin=mine")
+        ->click('[data-test="event-edit"]')
+        ->assertPresent('[data-test="mine-events"]')
+        ->assertPresent('[data-test="event-panel"]')
         ->fill('general_location', 'Walt Disney Studios')
         ->fill('detailed_location', 'Devant Studio 1')
         ->fill('starts_at', now('Europe/Paris')->addDays(6)->format('Y-m-d\TH:i'))
         ->click('[data-test="event-submit"]')
+        ->assertPresent('[data-test="mine-events"]')
+        ->assertPresent('[data-test="event-detail"]')
         ->assertSee('Walt Disney Studios')
         ->assertSee('Devant Studio 1');
 

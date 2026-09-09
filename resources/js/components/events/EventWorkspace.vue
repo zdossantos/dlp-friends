@@ -78,7 +78,7 @@ function updatePanel(open: boolean): void {
                     </Link>
                 </Button>
                 <Button as-child>
-                    <Link :href="createHref">{{
+                    <Link :href="createHref" data-test="event-create">{{
                         t('events.actions.create')
                     }}</Link>
                 </Button>

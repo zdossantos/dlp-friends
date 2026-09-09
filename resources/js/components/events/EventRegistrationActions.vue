@@ -6,11 +6,15 @@ import { Button } from '@/components/ui/button';
 import { useTranslations } from '@/composables/useTranslations';
 import { availableEventActions } from '@/lib/eventState';
 import { destroy, store } from '@/routes/events/registrations';
-import type { EventDetail } from '@/types/event';
+import type { EventDetail, EventWorkspaceContext } from '@/types/event';
 
-const props = defineProps<{ event: EventDetail }>();
+const props = defineProps<{
+    event: EventDetail;
+    context: EventWorkspaceContext;
+}>();
 const { t } = useTranslations();
 const busy = ref(false);
+const origin = props.context === 'mine' ? { origin: 'mine' } : {};
 const actions = computed(() =>
     availableEventActions({
         role: props.event.isOrganizer ? 'organizer' : 'member',
@@ -22,7 +26,7 @@ const actions = computed(() =>
 function register(): void {
     busy.value = true;
     router.post(
-        store(props.event.id).url,
+        store(props.event.id, { query: origin }).url,
         {},
         { preserveScroll: true, onFinish: () => (busy.value = false) },
     );
@@ -33,7 +37,7 @@ function withdraw(): void {
     }
 
     busy.value = true;
-    router.delete(destroy(props.event.id).url, {
+    router.delete(destroy(props.event.id, { query: origin }).url, {
         preserveScroll: true,
         onFinish: () => (busy.value = false),
     });

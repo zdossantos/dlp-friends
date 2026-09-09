@@ -86,13 +86,16 @@ function cancelEvent(): void {
         <p v-else class="text-sm text-muted-foreground">
             {{ t('events.show.privacy') }}
         </p>
-        <EventRegistrationActions :event="event" />
+        <EventRegistrationActions :event="event" :context="context" />
         <div
             v-if="event.isOrganizer && !event.isStarted && !event.isCancelled"
             class="flex flex-wrap gap-2"
         >
             <Button as-child variant="outline">
-                <Link :href="edit(event.id, { query: origin })">
+                <Link
+                    :href="edit(event.id, { query: origin })"
+                    data-test="event-edit"
+                >
                     {{ t('events.actions.edit') }}
                 </Link>
             </Button>
