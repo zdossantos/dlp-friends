@@ -122,6 +122,23 @@ Paris.
 - Un administrateur ne peut pas être bloqué.
 - Le signalement et les outils de modération ne font pas partie du MVP.
 
+### Événements amicaux et notifications
+
+- Tout membre peut créer un événement amical avec une date, un lieu général,
+  un lieu précis, une capacité et une inscription automatique ou validée par
+  l’organisateur.
+- L’organisateur occupe une place. Le lieu précis et l’identité des
+  participants restent privés jusqu’à l’acceptation.
+- La date, les lieux et la capacité peuvent être modifiés jusqu’à 24 heures
+  avant le début ; la capacité ne peut jamais passer sous les places occupées.
+  Le mode est verrouillé dès la première demande.
+- Les changements de date ou de lieu, décisions d’inscription, retraits et
+  annulations produisent des notifications persistantes dans l’application.
+  Leur ouverture mène à l’événement concerné.
+- Le centre de notifications réunit aussi les matches et messages existants,
+  avec filtres par catégorie et état non lu ; une notification de conversation
+  ouvre la conversation correspondante.
+
 ### Administration
 
 - Le rôle `admin` donne accès à un tableau de bord et aux catalogues d’intérêts
@@ -177,6 +194,8 @@ Paris.
 | Découverte, swipes et match réciproque | **Implémenté** | Service de classement, actions et tests sont présents. |
 | Conversations, messages temps réel, saisie, présence et état de lecture | **Implémenté** | Stockage, diffusion privée, annonces globales, indicateur de saisie éphémère, présence confidentielle avec dernière activité relative, recherche locale et tests sont présents. |
 | Blocage et déblocage | **Implémenté** | Effet immédiat sur découverte et conversation. |
+| Événements amicaux et inscriptions | **Implémenté** | Création, découverte, deux modes d’inscription, confidentialité, cycle de vie et notifications sont couverts. |
+| Centre de notifications persistant | **Implémenté** | Matches, messages et événements sont regroupés, filtrables et ouvrent leur élément cible. |
 | Tutoriel produit obligatoire | **Implémenté** | Progression persistée et statistiques admin sont livrées. |
 | Gestion administrative des membres | **Implémenté** | Recherche et compteurs, suppression confirmée, échange privé admin/membre et identification visuelle des admins sont livrés sans accès au contenu des messages. |
 | Français et anglais | **Implémenté** | Résolution de locale et catalogues backend/frontend sont présents. |
@@ -198,7 +217,7 @@ Les preuves détaillées de cet instantané sont consignées dans
 ## Hors périmètre du MVP
 
 - Compagnons pour une date de visite précise.
-- Groupes, fil communautaire, collections publiques et événements.
+- Groupes, fil communautaire et collections publiques.
 - Recherche par ville, distance ou tranche d’âge.
 - Limites quotidiennes, annulation de swipe et filtres avancés.
 - Signalement, équipe de modération et outils de modération avancés.
@@ -216,7 +235,6 @@ modération.
 
 ### Après V2 — À évaluer sur usage réel
 
-- Notifications de match et de nouveau message.
 - Options de matching plus fines, sans critère romantique.
 - Administration enrichie au-delà des catalogues et du tutoriel.
 - Fonctions communautaires uniquement si un besoin réel est validé.

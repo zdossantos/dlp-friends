@@ -441,9 +441,11 @@ test('member navigation appears on discovery conversations profile and settings 
 
     visit('/discover')
         ->on()->mobile()
-        ->assertCount('[data-test="member-bottom-navigation"] a', 3)
+        ->assertCount('[data-test="member-bottom-navigation"] a', 5)
         ->assertPresent('[aria-label="Explorer"][aria-current="page"]')
+        ->assertPresent('[aria-label="Événements"]')
         ->assertPresent('[aria-label="Échanges"]')
+        ->assertPresent('[aria-label="Notifications"]')
         ->assertPresent('[aria-label="Profil"]');
 
     visit('/conversations')
