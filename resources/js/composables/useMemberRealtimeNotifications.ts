@@ -1,5 +1,5 @@
 import { router, usePage } from '@inertiajs/vue3';
-import { useEcho } from '@laravel/echo-vue';
+import { useEcho, useEchoNotification } from '@laravel/echo-vue';
 import {
     inject,
     onBeforeUnmount,
@@ -7,6 +7,7 @@ import {
     provide,
     ref,
     shallowRef,
+    watch,
 } from 'vue';
 import type { InjectionKey, Ref, ShallowRef } from 'vue';
 import { toast } from 'vue-sonner';
@@ -14,6 +15,7 @@ import { useTranslations } from '@/composables/useTranslations';
 import { xsrfHeader } from '@/lib/csrf';
 import {
     activeConversationId,
+    registerNotification,
     selectMatchNotification,
     shouldShowMessageToast,
 } from '@/lib/memberNotifications';
@@ -30,6 +32,7 @@ type MemberRealtimeContext = {
     activeMatch: Ref<MemberMatchNotification | null>;
     latestMessage: ShallowRef<RealtimeConversationMessage | null>;
     presenceChanged: ShallowRef<MemberPresenceChanged | null>;
+    unreadNotificationsCount: Ref<number>;
     presentMatch: (match: MemberMatchNotification) => void;
     dismissMatch: () => void;
 };
@@ -39,6 +42,15 @@ export type MemberPresenceChanged = {
     online: boolean;
     last_active_at: string | null;
     expires_at: string | null;
+};
+
+type PersistentMemberNotification = {
+    id: string;
+    category: string;
+    translation_key: string;
+    parameters: Record<string, string | number | null>;
+    target_type: string;
+    target_id: number;
 };
 
 const memberRealtimeKey: InjectionKey<MemberRealtimeContext> = Symbol(
@@ -53,8 +65,12 @@ export function useMemberRealtimeNotifications(
     const activeMatch = ref<MemberMatchNotification | null>(null);
     const latestMessage = shallowRef<RealtimeConversationMessage | null>(null);
     const presenceChanged = shallowRef<MemberPresenceChanged | null>(null);
+    const unreadNotificationsCount = ref(
+        page.props.auth.unread_notifications_count,
+    );
     const seenMatchIds = new Set<number>();
     const seenMessageIds = new Set<number>();
+    const seenNotificationIds = new Set<string>();
     const presenceTimers = new Map<number, ReturnType<typeof setTimeout>>();
 
     const presentMatch = (match: MemberMatchNotification): void => {
@@ -151,6 +167,31 @@ export function useMemberRealtimeNotifications(
         },
     );
 
+    useEchoNotification<PersistentMemberNotification>(
+        `App.Models.User.${currentUserId}`,
+        (notification) => {
+            if (!registerNotification(seenNotificationIds, notification)) {
+                return;
+            }
+
+            unreadNotificationsCount.value += 1;
+
+            if (
+                new URL(page.url, window.location.origin).pathname ===
+                '/notifications'
+            ) {
+                router.reload({ only: ['auth', 'notifications'] });
+            }
+        },
+    );
+
+    watch(
+        () => page.props.auth.unread_notifications_count,
+        (count) => {
+            unreadNotificationsCount.value = count;
+        },
+    );
+
     let heartbeatTimer: ReturnType<typeof setInterval> | undefined;
     let initialHeartbeatTimer: ReturnType<typeof setTimeout> | undefined;
     const heartbeat = (): void => {
@@ -189,6 +230,7 @@ export function useMemberRealtimeNotifications(
         activeMatch,
         latestMessage,
         presenceChanged,
+        unreadNotificationsCount,
         presentMatch,
         dismissMatch: () => {
             activeMatch.value = null;

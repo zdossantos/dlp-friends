@@ -26,6 +26,7 @@ function openNotification(): void {
     <li>
         <button
             type="button"
+            :data-test="`notification-${notification.id}`"
             class="flex w-full items-start gap-3 px-4 py-4 text-left transition-colors hover:bg-muted/60 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none focus-visible:ring-inset disabled:opacity-60"
             :class="notification.read_at === null ? 'bg-primary/8' : ''"
             :disabled="processing"

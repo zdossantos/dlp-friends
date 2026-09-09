@@ -5,6 +5,7 @@ import { computed } from 'vue';
 const memberNavigationPaths = new Set([
     '/discover',
     '/conversations',
+    '/notifications',
     '/profile',
 ]);
 const memberNavigationPrefixes = ['/settings/'];
@@ -13,7 +14,12 @@ export function useMemberNavigationVisibility(): ComputedRef<boolean> {
     const page = usePage();
 
     return computed(() => {
-        const path = page.url.split('?')[0] ?? '';
+        const path = new URL(
+            page.url,
+            typeof window !== 'undefined'
+                ? window.location.origin
+                : 'http://localhost',
+        ).pathname;
 
         return (
             memberNavigationPaths.has(path) ||

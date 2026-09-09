@@ -36,6 +36,7 @@ function update(category: NotificationCategory | null, unread: boolean): void {
                 ]"
                 :key="filter.value ?? 'all'"
                 type="button"
+                :data-test="`notification-filter-${filter.value ?? 'all'}`"
                 :aria-pressed="category === filter.value"
                 class="rounded-full border px-4 py-2 text-sm font-medium transition-colors"
                 :class="
@@ -51,6 +52,7 @@ function update(category: NotificationCategory | null, unread: boolean): void {
         <label class="flex w-fit items-center gap-2 text-sm font-medium">
             <input
                 type="checkbox"
+                data-test="notification-filter-unread"
                 class="size-4 rounded border-border accent-primary"
                 :checked="unread"
                 @change="
