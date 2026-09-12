@@ -484,8 +484,12 @@ test('account deletion explains immediate access loss and the purge deadline in 
     $this->actingAs($french);
 
     visit('/settings/account')
+        ->on()->mobile()
         ->assertSee('L’accès à ton compte cessera immédiatement')
-        ->assertSee('sous 30 jours');
+        ->assertSee('sous 30 jours')
+        ->click('[data-test="delete-user-button"]')
+        ->assertPresent('[data-slot="drawer-content"]')
+        ->assertSee('Veux-tu vraiment supprimer ton compte ?');
 
     $english = User::factory()->withProfile()->create(['locale' => 'en']);
     $this->actingAs($english);

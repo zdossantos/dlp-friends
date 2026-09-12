@@ -134,6 +134,11 @@ pertinents. Une action destructrice utilise le token `destructive` et une
 confirmation explicite. Un état asynchrone important est annoncé de façon
 compréhensible, pas seulement animé.
 
+Les surfaces modales métier utilisent `useResponsiveModal` et la composition
+officielle shadcn-vue : `Drawer` sous 640 px, puis `Dialog` à partir de 640 px.
+Le contenu, l’état et les actions restent uniques entre les deux formats. Les
+`Sheet` sont réservées à la navigation latérale et ne suivent pas cette règle.
+
 ## Responsive et navigation
 
 - Concevoir mobile first à partir d’une largeur minimale de 320 px.

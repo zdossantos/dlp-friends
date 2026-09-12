@@ -1,15 +1,6 @@
 <script setup lang="ts">
 import { Button } from '@/components/ui/button';
-import {
-    Dialog,
-    DialogClose,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
-} from '@/components/ui/dialog';
+import { useResponsiveModal } from '@/composables/useResponsiveModal';
 import { useTranslations } from '@/composables/useTranslations';
 
 withDefaults(
@@ -25,20 +16,25 @@ withDefaults(
 
 const emit = defineEmits<{ confirm: [] }>();
 const { t } = useTranslations();
+const { isDesktop, Modal } = useResponsiveModal();
 </script>
 
 <template>
-    <Dialog>
-        <DialogTrigger as-child>
+    <component :is="Modal.Root">
+        <component :is="Modal.Trigger" as-child>
             <slot />
-        </DialogTrigger>
-        <DialogContent data-test="event-confirm-dialog">
-            <DialogHeader>
-                <DialogTitle>{{ title }}</DialogTitle>
-                <DialogDescription>{{ description }}</DialogDescription>
-            </DialogHeader>
-            <DialogFooter class="gap-2">
-                <DialogClose as-child>
+        </component>
+        <component
+            :is="Modal.Content"
+            data-test="event-confirm-dialog"
+            :class="[{ 'px-2 pb-8 *:px-4': !isDesktop }]"
+        >
+            <component :is="Modal.Header">
+                <component :is="Modal.Title">{{ title }}</component>
+                <component :is="Modal.Description">{{ description }}</component>
+            </component>
+            <component :is="Modal.Footer" class="gap-2">
+                <component :is="Modal.Close" as-child>
                     <Button
                         type="button"
                         variant="outline"
@@ -47,7 +43,7 @@ const { t } = useTranslations();
                     >
                         {{ t('common.actions.cancel') }}
                     </Button>
-                </DialogClose>
+                </component>
                 <Button
                     type="button"
                     :variant="destructive ? 'destructive' : 'default'"
@@ -57,7 +53,7 @@ const { t } = useTranslations();
                 >
                     {{ confirmLabel }}
                 </Button>
-            </DialogFooter>
-        </DialogContent>
-    </Dialog>
+            </component>
+        </component>
+    </component>
 </template>

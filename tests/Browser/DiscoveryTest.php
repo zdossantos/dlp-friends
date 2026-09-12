@@ -675,17 +675,19 @@ test('a reciprocal like opens a dismissible match dialog only once', function ()
     $this->actingAs($actor);
 
     $page = visit('/discover');
+    $page->resize(390, 844);
     $page->script("localStorage.setItem('appearance', 'dark')");
     $page->navigate('/discover')
         ->assertSee('Basile');
     $page->script("document.querySelector('[aria-label=\"Découvrir ce profil\"]').click()");
     $page->assertSee('Vos univers se croisent')
         ->assertSee('Basile souhaite aussi te découvrir.')
-        ->assertCount('[data-slot="dialog-title"]', 1)
+        ->assertCount('[data-slot$="-title"]', 1)
         ->assertSeeIn('[data-test="match-member-name"]', 'Basile')
         ->assertPresent('[data-test="match-member-avatar"] img')
-        ->assertPresent('[data-slot="dialog-title"]')
-        ->assertPresent('[data-slot="dialog-description"]')
+        ->assertPresent('[data-slot="drawer-content"]')
+        ->assertPresent('[data-slot$="-title"]')
+        ->assertPresent('[data-slot$="-description"]')
         ->assertPresent('[data-test="match-celebration-layer"]')
         ->assertPresent('[data-test="match-magic"]')
         ->assertAttribute('[data-test="match-magic"]', 'aria-hidden', 'true')
@@ -707,8 +709,8 @@ test('a reciprocal like opens a dismissible match dialog only once', function ()
             false,
         )
         ->assertScript(renderedContrastIsAtLeastScript(
-            '[data-slot="dialog-content"]',
-            '[data-slot="dialog-description"]',
+            '[data-slot="drawer-content"]',
+            '[data-slot$="-description"]',
         ), true)
         ->assertSeeLink('Commencer l’échange');
 

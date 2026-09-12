@@ -126,7 +126,7 @@ test('the member catalog exposes statistics and confirms immediate deletion', fu
     $admin = User::factory()->withProfile()->admin()->create();
     $this->actingAs($admin);
 
-    $page = visit('/admin/members')
+    $page = visit('/admin/members')->on()->mobile()
         ->assertSee('Membres')
         ->assertSee('member-to-delete@example.test')
         ->assertSee('personnes bloquées')
@@ -135,6 +135,7 @@ test('the member catalog exposes statistics and confirms immediate deletion', fu
         ->assertNoJavaScriptErrors();
 
     $page->click('[data-test="delete-member-trigger"]')
+        ->assertPresent('[data-slot="drawer-content"]')
         ->assertSee('Supprimer ce compte ?')
         ->assertSee('supprimés immédiatement')
         ->assertSee('Annuler');

@@ -6,13 +6,6 @@ import { computed, nextTick, ref, useTemplateRef, watch } from 'vue';
 import AlertError from '@/components/AlertError.vue';
 import InputError from '@/components/InputError.vue';
 import { Button } from '@/components/ui/button';
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogHeader,
-    DialogTitle,
-} from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import {
     InputOTP,
@@ -20,6 +13,7 @@ import {
     InputOTPSlot,
 } from '@/components/ui/input-otp';
 import { Spinner } from '@/components/ui/spinner';
+import { useResponsiveModal } from '@/composables/useResponsiveModal';
 import { useAppearance } from '@/composables/useAppearance';
 import { useTranslations } from '@/composables/useTranslations';
 import { useTwoFactorAuth } from '@/composables/useTwoFactorAuth';
@@ -33,6 +27,7 @@ type Props = {
 
 const { resolvedAppearance } = useAppearance();
 const { t } = useTranslations();
+const { isDesktop, Modal } = useResponsiveModal();
 
 const props = defineProps<Props>();
 const isOpen = defineModel<boolean>('isOpen');
@@ -111,9 +106,18 @@ watch(
 </script>
 
 <template>
-    <Dialog :open="isOpen" @update:open="isOpen = $event">
-        <DialogContent class="sm:max-w-md">
-            <DialogHeader class="flex items-center justify-center">
+    <component :is="Modal.Root" :open="isOpen" @update:open="isOpen = $event">
+        <component
+            :is="Modal.Content"
+            :class="[
+                'max-h-[92svh] overflow-y-auto sm:max-w-md',
+                { 'px-2 pb-8 *:px-4': !isDesktop },
+            ]"
+        >
+            <component
+                :is="Modal.Header"
+                class="flex items-center justify-center"
+            >
                 <div
                     class="mb-3 w-auto rounded-full border border-border bg-card p-0.5 shadow-sm"
                 >
@@ -143,11 +147,11 @@ watch(
                         />
                     </div>
                 </div>
-                <DialogTitle>{{ modalConfig.title }}</DialogTitle>
-                <DialogDescription class="text-center">
+                <component :is="Modal.Title">{{ modalConfig.title }}</component>
+                <component :is="Modal.Description" class="text-center">
                     {{ modalConfig.description }}
-                </DialogDescription>
-            </DialogHeader>
+                </component>
+            </component>
 
             <div
                 class="relative flex w-auto flex-col items-center justify-center space-y-5"
@@ -300,6 +304,6 @@ watch(
                     </Form>
                 </template>
             </div>
-        </DialogContent>
-    </Dialog>
+        </component>
+    </component>
 </template>

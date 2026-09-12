@@ -286,7 +286,7 @@ test('an organizer creates an automatic event and a member joins then withdraws'
     $event = Event::query()->where('title', 'Matinée attractions')->firstOrFail();
     $this->actingAs($member);
 
-    $page = visit("/events/{$event->id}")
+    $page = visit("/events/{$event->id}")->on()->mobile()
         ->assertDontSee('Sous l’horloge de Main Street')
         ->click('[data-test="event-register"]')
         ->assertSee('Sous l’horloge de Main Street')
@@ -295,6 +295,7 @@ test('an organizer creates an automatic event and a member joins then withdraws'
 
     $page->click('[data-test="event-withdraw"]')
         ->assertPresent('[data-test="event-confirm-dialog"]')
+        ->assertAttribute('[data-test="event-confirm-dialog"]', 'data-slot', 'drawer-content')
         ->assertSee('Ton inscription ne sera plus active')
         ->click('[data-test="event-confirm-cancel"]')
         ->assertPresent('[data-test="event-withdraw"]');

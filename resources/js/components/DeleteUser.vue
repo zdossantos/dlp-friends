@@ -6,22 +6,14 @@ import Heading from '@/components/Heading.vue';
 import InputError from '@/components/InputError.vue';
 import PasswordInput from '@/components/PasswordInput.vue';
 import { Button } from '@/components/ui/button';
-import {
-    Dialog,
-    DialogClose,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
-} from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
+import { useResponsiveModal } from '@/composables/useResponsiveModal';
 import { useTranslations } from '@/composables/useTranslations';
 
 const passwordInput = useTemplateRef('passwordInput');
 const { t } = useTranslations();
+const { isDesktop, Modal } = useResponsiveModal();
 </script>
 
 <template>
@@ -40,15 +32,18 @@ const { t } = useTranslations();
                     {{ t('account.deletion.irreversible') }}
                 </p>
             </div>
-            <Dialog>
-                <DialogTrigger as-child>
+            <component :is="Modal.Root">
+                <component :is="Modal.Trigger" as-child>
                     <Button
                         variant="destructive"
                         data-test="delete-user-button"
                         >{{ t('account.deletion.submit') }}</Button
                     >
-                </DialogTrigger>
-                <DialogContent>
+                </component>
+                <component
+                    :is="Modal.Content"
+                    :class="[{ 'px-2 pb-8 *:px-4': !isDesktop }]"
+                >
                     <Form
                         v-bind="AccountController.destroy.form()"
                         reset-on-success
@@ -59,14 +54,14 @@ const { t } = useTranslations();
                         class="space-y-6"
                         v-slot="{ errors, processing, reset, clearErrors }"
                     >
-                        <DialogHeader class="space-y-3">
-                            <DialogTitle>{{
+                        <component :is="Modal.Header" class="space-y-3">
+                            <component :is="Modal.Title">{{
                                 t('account.deletion.question')
-                            }}</DialogTitle>
-                            <DialogDescription>
+                            }}</component>
+                            <component :is="Modal.Description">
                                 {{ t('account.deletion.confirmation') }}
-                            </DialogDescription>
-                        </DialogHeader>
+                            </component>
+                        </component>
 
                         <div class="grid gap-2">
                             <Label for="password" class="sr-only">{{
@@ -81,8 +76,8 @@ const { t } = useTranslations();
                             <InputError :message="errors.password" />
                         </div>
 
-                        <DialogFooter class="gap-2">
-                            <DialogClose as-child>
+                        <component :is="Modal.Footer" class="gap-2">
+                            <component :is="Modal.Close" as-child>
                                 <Button
                                     variant="secondary"
                                     @click="
@@ -94,7 +89,7 @@ const { t } = useTranslations();
                                 >
                                     {{ t('common.actions.cancel') }}
                                 </Button>
-                            </DialogClose>
+                            </component>
 
                             <Button
                                 type="submit"
@@ -106,10 +101,10 @@ const { t } = useTranslations();
                                 <Spinner v-if="processing" />
                                 {{ t('account.deletion.submit') }}
                             </Button>
-                        </DialogFooter>
+                        </component>
                     </Form>
-                </DialogContent>
-            </Dialog>
+                </component>
+            </component>
         </div>
     </div>
 </template>
