@@ -202,7 +202,7 @@ function completeWithMessage(content: string): Promise<ConversationMessage> {
         />
 
         <p
-            class="w-full rounded-2xl bg-secondary px-4 py-3 text-center font-medium"
+            class="w-full rounded-2xl bg-secondary px-4 py-3 text-center font-medium text-secondary-foreground"
             aria-live="polite"
         >
             {{ stepInstruction[step] }}

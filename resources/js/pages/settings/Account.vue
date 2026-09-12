@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
+import { Switch } from '@/components/ui/switch';
 import UserDataExport from '@/components/UserDataExport.vue';
 import { useTranslations } from '@/composables/useTranslations';
 import { edit } from '@/routes/account';
@@ -75,12 +76,11 @@ setLayoutProps({
                     </p>
                     <label class="mt-4 flex items-start gap-3 text-sm">
                         <input type="hidden" name="show_presence" value="0" />
-                        <input
-                            type="checkbox"
+                        <Switch
                             name="show_presence"
                             value="1"
-                            :checked="user.show_presence"
-                            class="mt-0.5 size-4 rounded border-input"
+                            :default-value="user.show_presence"
+                            class="mt-0.5"
                         />
                         <span>{{ t('account.settings.presence_label') }}</span>
                     </label>

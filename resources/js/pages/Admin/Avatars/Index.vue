@@ -12,18 +12,9 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
-import {
-    Dialog,
-    DialogClose,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
-} from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { useResponsiveModal } from '@/composables/useResponsiveModal';
 import { useTranslations } from '@/composables/useTranslations';
 import { destroy, move, status, store, update } from '@/routes/admin/avatars';
 import type { AvatarOption } from '@/types';
@@ -40,6 +31,7 @@ defineProps<{ avatars: AdminAvatar[] }>();
 const newImageName = ref('');
 const replacementImageNames = ref<Record<number, string>>({});
 const { t } = useTranslations();
+const { isDesktop, Modal } = useResponsiveModal();
 
 function selectedFileName(event: Event): string {
     return (event.target as HTMLInputElement).files?.[0]?.name ?? '';
@@ -397,8 +389,8 @@ function selectReplacementImage(avatarId: number, event: Event): void {
                                 </Button>
                             </Form>
 
-                            <Dialog>
-                                <DialogTrigger as-child>
+                            <component :is="Modal.Root">
+                                <component :is="Modal.Trigger" as-child>
                                     <Button
                                         variant="destructive"
                                         :disabled="
@@ -414,34 +406,45 @@ function selectReplacementImage(avatarId: number, event: Event): void {
                                     >
                                         {{ t('administration.common.delete') }}
                                     </Button>
-                                </DialogTrigger>
-                                <DialogContent>
+                                </component>
+                                <component
+                                    :is="Modal.Content"
+                                    :class="[
+                                        { 'px-2 pb-8 *:px-4': !isDesktop },
+                                    ]"
+                                >
                                     <Form
                                         v-bind="destroy.form(avatar)"
                                         :options="{ preserveScroll: true }"
                                         v-slot="{ errors, processing }"
                                     >
-                                        <DialogHeader>
-                                            <DialogTitle>{{
+                                        <component :is="Modal.Header">
+                                            <component :is="Modal.Title">{{
                                                 t(
                                                     'administration.avatars.delete_title',
                                                     { name: avatar.name },
                                                 )
-                                            }}</DialogTitle>
-                                            <DialogDescription>
+                                            }}</component>
+                                            <component :is="Modal.Description">
                                                 {{
                                                     t(
                                                         'administration.avatars.delete_description',
                                                     )
                                                 }}
-                                            </DialogDescription>
-                                        </DialogHeader>
+                                            </component>
+                                        </component>
                                         <InputError
                                             class="my-4"
                                             :message="errors.avatar"
                                         />
-                                        <DialogFooter class="mt-6 gap-2">
-                                            <DialogClose as-child>
+                                        <component
+                                            :is="Modal.Footer"
+                                            class="mt-6 gap-2"
+                                        >
+                                            <component
+                                                :is="Modal.Close"
+                                                as-child
+                                            >
                                                 <Button
                                                     type="button"
                                                     variant="secondary"
@@ -451,7 +454,7 @@ function selectReplacementImage(avatarId: number, event: Event): void {
                                                         )
                                                     }}</Button
                                                 >
-                                            </DialogClose>
+                                            </component>
                                             <Button
                                                 type="submit"
                                                 variant="destructive"
@@ -463,10 +466,10 @@ function selectReplacementImage(avatarId: number, event: Event): void {
                                                     )
                                                 }}
                                             </Button>
-                                        </DialogFooter>
+                                        </component>
                                     </Form>
-                                </DialogContent>
-                            </Dialog>
+                                </component>
+                            </component>
                         </div>
                         <p class="text-xs text-muted-foreground">
                             {{

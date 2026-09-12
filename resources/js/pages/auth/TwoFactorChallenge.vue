@@ -89,13 +89,14 @@ const toggleRecoveryMode = (clearErrors: () => void): void => {
                     <span
                         >{{ t('account.two_factor_challenge.alternative') }}
                     </span>
-                    <button
+                    <Button
                         type="button"
-                        class="text-foreground underline decoration-neutral-300 underline-offset-4 transition-colors duration-300 ease-out hover:decoration-current! dark:decoration-neutral-500"
+                        variant="link"
+                        class="h-auto p-0 text-foreground"
                         @click="() => toggleRecoveryMode(clearErrors)"
                     >
                         {{ authConfigContent.buttonText }}
-                    </button>
+                    </Button>
                 </div>
             </Form>
         </template>
@@ -128,13 +129,14 @@ const toggleRecoveryMode = (clearErrors: () => void): void => {
                     <span
                         >{{ t('account.two_factor_challenge.alternative') }}
                     </span>
-                    <button
+                    <Button
                         type="button"
-                        class="text-foreground underline decoration-neutral-300 underline-offset-4 transition-colors duration-300 ease-out hover:decoration-current! dark:decoration-neutral-500"
+                        variant="link"
+                        class="h-auto p-0 text-foreground"
                         @click="() => toggleRecoveryMode(clearErrors)"
                     >
                         {{ authConfigContent.buttonText }}
-                    </button>
+                    </Button>
                 </div>
             </Form>
         </template>

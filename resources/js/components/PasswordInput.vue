@@ -2,6 +2,7 @@
 import { Eye, EyeOff } from '@lucide/vue';
 import { ref, useTemplateRef } from 'vue';
 import type { HTMLAttributes } from 'vue';
+import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useTranslations } from '@/composables/useTranslations';
 import { cn } from '@/lib/utils';
@@ -30,12 +31,14 @@ defineExpose({
             :class="cn('pr-10', props.class)"
             v-bind="$attrs"
         />
-        <button
+        <Button
             type="button"
+            variant="ghost"
+            size="icon"
             @click="showPassword = !showPassword"
             :class="
                 cn(
-                    'absolute inset-y-0 right-0 flex items-center rounded-r-md px-3 text-muted-foreground hover:text-foreground focus-visible:ring-[3px] focus-visible:ring-ring focus-visible:outline-none',
+                    'absolute inset-y-0 right-0 h-auto rounded-r-md text-muted-foreground hover:text-foreground',
                 )
             "
             :aria-label="
@@ -47,6 +50,6 @@ defineExpose({
         >
             <EyeOff v-if="showPassword" class="size-4" />
             <Eye v-else class="size-4" />
-        </button>
+        </Button>
     </div>
 </template>

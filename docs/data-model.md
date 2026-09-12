@@ -18,6 +18,9 @@ et son état de livraison sont définis dans le [`PRD.md`](PRD.md).
 | `matches` | Paire unique créée après deux likes |
 | `conversations` | Conversation liée à un match |
 | `messages` | Messages d'une conversation |
+| `events` | Événement amical organisé par un membre, avec horaire, lieux, capacité, mode et annulation |
+| `event_registrations` | Demande et état d’inscription d’un membre à un événement |
+| `notifications` | Notification persistante catégorisée, localisée et reliée à une cible applicative |
 | `blocks` | Blocage unidirectionnel entre deux membres |
 | `avatars` | Catalogue administrable : nom, image privée, deux couleurs de dégradé, activation et ordre |
 | `roles` / `user_roles` | Attribution du rôle d'administration sans le mélanger aux profils membres |
@@ -41,6 +44,9 @@ et son état de livraison sont définis dans le [`PRD.md`](PRD.md).
 - `messages` porte un identifiant séquentiel, l'auteur, le contenu texte validé,
   `read_at` pour l’état de lecture et les horodatages.
 - `blocks` est unique pour `(blocker_user_id, blocked_user_id)` et doit être vérifié dans chaque autorisation de conversation ou de matching.
+- `events.registration_mode` vaut `automatic` ou `manual`; `cancelled_at` conserve l’événement annulé dans l’historique.
+- `event_registrations` est unique pour `(event_id, user_id)`. Son état évolue entre `pending`, `accepted`, `refused`, `withdrawn`, `removed` et `blocked`. Seul `withdrawn` autorise une nouvelle inscription.
+- L’organisateur compte dans `events.capacity` sans ligne d’inscription. Les transitions qui occupent une place verrouillent l’événement en base afin de ne jamais dépasser cette capacité.
 
 ## Règles essentielles
 
@@ -57,6 +63,7 @@ et son état de livraison sont définis dans le [`PRD.md`](PRD.md).
 - Un blocage est prioritaire sur un match ou une conversation existante.
 - Un administrateur ne peut pas être la cible d’un blocage.
 - La suppression de compte doit anonymiser ou supprimer les données conformément à la politique de conservation définie dans [`security-privacy.md`](security-privacy.md).
+- Un blocage transforme en `blocked` toute inscription active entre les deux membres. Une suppression organisateur annule puis purge ses événements ; une suppression participante purge ses inscriptions.
 
 ## Score de proposition V1
 

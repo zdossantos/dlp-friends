@@ -24,7 +24,6 @@ class DiscoveryController extends Controller
                     ->values()
                     ->all(),
             ),
-            'match' => fn (): mixed => $request->session()->pull('discovery.match'),
         ]);
     }
 }

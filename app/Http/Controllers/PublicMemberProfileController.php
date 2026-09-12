@@ -2,9 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Block;
+use App\Data\PublicMemberData;
 use App\Models\Conversation;
-use App\Models\Interest;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -19,40 +18,11 @@ final class PublicMemberProfileController extends Controller
         $profile = $member->profile;
 
         abort_if($profile === null || ! Gate::forUser($request->user())->allows('viewPublic', $profile), 404);
-        $avatar = $profile->avatar;
-        abort_if($avatar === null, 404);
-
-        $isAdmin = $member->hasRole('admin');
-        $canUnblock = ! $isAdmin && Block::query()
-            ->where('blocker_user_id', $request->user()->id)
-            ->where('blocked_user_id', $member->id)
-            ->exists();
+        abort_if($profile->avatar === null, 404);
 
         return Inertia::render('Members/Show', [
             'backHref' => $this->backHref($request, $member),
-            'canBlock' => ! $isAdmin && ! $canUnblock,
-            'canUnblock' => $canUnblock,
-            'member' => [
-                'id' => $member->id,
-                'is_admin' => $isAdmin,
-                'display_name' => $profile->display_name,
-                'age' => $member->age,
-                'avatar' => [
-                    'id' => $avatar->id,
-                    'name' => $avatar->name,
-                    'image_url' => route('avatars.image', $avatar),
-                    'primary_color' => $avatar->primary_color,
-                    'secondary_color' => $avatar->secondary_color,
-                ],
-                'bio' => $profile->bio,
-                'visit_frequency' => $profile->visit_frequency?->value,
-                'interests' => $profile->interests
-                    ->sortBy([['sort_order', 'asc'], ['id', 'asc']])
-                    ->map(fn (Interest $interest): array => [
-                        'id' => $interest->id,
-                        'name' => $interest->display_name,
-                    ])->values()->all(),
-            ],
+            ...PublicMemberData::from($request->user(), $member),
         ]);
     }
 

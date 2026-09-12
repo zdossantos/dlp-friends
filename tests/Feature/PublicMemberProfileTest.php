@@ -2,8 +2,10 @@
 
 namespace Tests\Feature;
 
+use App\Enums\SwipeDecision;
 use App\Models\Block;
 use App\Models\MemberMatch;
+use App\Models\Swipe;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
@@ -23,11 +25,40 @@ class PublicMemberProfileTest extends TestCase
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->component('Members/Show')
+                ->where('canLike', true)
                 ->where('member.id', $member->id)
                 ->where('member.display_name', $member->profile->display_name)
                 ->has('member.avatar')
                 ->missing('member.email')
                 ->missing('member.birth_date'));
+    }
+
+    public function test_the_profile_like_is_hidden_after_any_outgoing_decision_or_for_a_blocked_pair(): void
+    {
+        config()->set('inertia.testing.ensure_pages_exist', false);
+        $viewer = User::factory()->withProfile()->create();
+        $member = User::factory()->withProfile()->create();
+
+        foreach (SwipeDecision::cases() as $decision) {
+            Swipe::query()->delete();
+            Swipe::factory()->create([
+                'actor_user_id' => $viewer->id,
+                'target_user_id' => $member->id,
+                'decision' => $decision,
+            ]);
+
+            $this->actingAs($viewer)->get(route('members.show', $member))
+                ->assertInertia(fn (Assert $page) => $page->where('canLike', false));
+        }
+
+        Swipe::query()->delete();
+        Block::factory()->create([
+            'blocker_user_id' => $member->id,
+            'blocked_user_id' => $viewer->id,
+        ]);
+
+        $this->actingAs($viewer)->get(route('members.show', $member))
+            ->assertInertia(fn (Assert $page) => $page->where('canLike', false));
     }
 
     public function test_a_blocked_pair_can_still_view_the_public_profile_without_revealing_an_incoming_block(): void

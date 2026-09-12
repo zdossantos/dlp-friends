@@ -2,15 +2,7 @@
 import { KeyRound, Trash2 } from '@lucide/vue';
 import { ref } from 'vue';
 import { Button } from '@/components/ui/button';
-import {
-    Dialog,
-    DialogClose,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogTitle,
-    DialogTrigger,
-} from '@/components/ui/dialog';
+import { useResponsiveModal } from '@/composables/useResponsiveModal';
 import { useTranslations } from '@/composables/useTranslations';
 import type { Passkey } from '@/types/auth';
 
@@ -24,6 +16,7 @@ const emit = defineEmits<{
 
 const isDeleting = ref(false);
 const { t } = useTranslations();
+const { isDesktop, Modal } = useResponsiveModal();
 
 const handleDelete = () => {
     isDeleting.value = true;
@@ -69,8 +62,8 @@ const handleDelete = () => {
             </div>
         </div>
 
-        <Dialog>
-            <DialogTrigger as-child>
+        <component :is="Modal.Root">
+            <component :is="Modal.Trigger" as-child>
                 <Button
                     variant="ghost"
                     size="sm"
@@ -81,25 +74,28 @@ const handleDelete = () => {
                         t('common.actions.delete')
                     }}</span>
                 </Button>
-            </DialogTrigger>
+            </component>
 
-            <DialogContent>
-                <DialogTitle>{{
+            <component
+                :is="Modal.Content"
+                :class="[{ 'px-2 pb-8 *:px-4': !isDesktop }]"
+            >
+                <component :is="Modal.Title">{{
                     t('account.passkeys.delete_title')
-                }}</DialogTitle>
-                <DialogDescription>
+                }}</component>
+                <component :is="Modal.Description">
                     {{
                         t('account.passkeys.delete_description', {
                             name: passkey.name,
                         })
                     }}
-                </DialogDescription>
-                <DialogFooter class="gap-2">
-                    <DialogClose as-child>
+                </component>
+                <component :is="Modal.Footer" class="gap-2">
+                    <component :is="Modal.Close" as-child>
                         <Button variant="secondary">{{
                             t('common.actions.cancel')
                         }}</Button>
-                    </DialogClose>
+                    </component>
                     <Button
                         variant="destructive"
                         :disabled="isDeleting"
@@ -111,8 +107,8 @@ const handleDelete = () => {
                                 : t('account.passkeys.delete')
                         }}
                     </Button>
-                </DialogFooter>
-            </DialogContent>
-        </Dialog>
+                </component>
+            </component>
+        </component>
     </div>
 </template>

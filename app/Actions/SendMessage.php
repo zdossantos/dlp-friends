@@ -6,6 +6,7 @@ use App\Events\MessageSent;
 use App\Models\Conversation;
 use App\Models\Message;
 use App\Models\User;
+use App\Notifications\NewMessageNotification;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 
@@ -36,6 +37,11 @@ final class SendMessage
             ]);
 
             MessageSent::dispatch($message);
+
+            $recipient = $lockedConversation->memberMatch->lowUser->is($author)
+                ? $lockedConversation->memberMatch->highUser
+                : $lockedConversation->memberMatch->lowUser;
+            $recipient->notify(new NewMessageNotification($message));
 
             return $message;
         });

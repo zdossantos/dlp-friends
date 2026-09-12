@@ -582,6 +582,35 @@ test('a tap opens the profile while a horizontal drag keeps the swipe interactio
     $this->assertDatabaseCount('swipes', 0);
 });
 
+test('a member can like from a profile and open the existing match flow', function () {
+    $actor = discoveryMember('Alice');
+    $firstTarget = discoveryMember('Basile');
+    $this->actingAs($actor);
+
+    $page = visit("/members/{$firstTarget->id}")->on()->mobile()
+        ->assertSee('Basile')
+        ->assertSee('Ajouter à mes amis')
+        ->click('[data-test="like-member"]')
+        ->assertSee('Ce membre a été ajouté à tes découvertes.')
+        ->assertNotPresent('[data-test="like-member"]')
+        ->assertNoJavaScriptErrors();
+
+    $secondTarget = discoveryMember('Camille');
+    Swipe::factory()->create([
+        'actor_user_id' => $secondTarget->id,
+        'target_user_id' => $actor->id,
+        'decision' => SwipeDecision::Like,
+    ]);
+
+    $page->navigate("/members/{$secondTarget->id}")
+        ->click('[data-test="like-member"]')
+        ->assertPathIs('/discover')
+        ->assertSee('Vos univers se croisent')
+        ->assertSee('Camille souhaite aussi te découvrir.')
+        ->assertPresent('[data-test="open-match-conversation"]')
+        ->assertNoJavaScriptErrors();
+});
+
 test('vertical and cancelled pointer gestures return the card to its centre', function () {
     $actor = discoveryMember('Alice');
     discoveryMember('Basile');
@@ -646,17 +675,19 @@ test('a reciprocal like opens a dismissible match dialog only once', function ()
     $this->actingAs($actor);
 
     $page = visit('/discover');
+    $page->resize(390, 844);
     $page->script("localStorage.setItem('appearance', 'dark')");
     $page->navigate('/discover')
         ->assertSee('Basile');
     $page->script("document.querySelector('[aria-label=\"Découvrir ce profil\"]').click()");
     $page->assertSee('Vos univers se croisent')
         ->assertSee('Basile souhaite aussi te découvrir.')
-        ->assertCount('[data-slot="dialog-title"]', 1)
+        ->assertCount('[data-slot$="-title"]', 1)
         ->assertSeeIn('[data-test="match-member-name"]', 'Basile')
         ->assertPresent('[data-test="match-member-avatar"] img')
-        ->assertPresent('[data-slot="dialog-title"]')
-        ->assertPresent('[data-slot="dialog-description"]')
+        ->assertPresent('[data-slot="drawer-content"]')
+        ->assertPresent('[data-slot$="-title"]')
+        ->assertPresent('[data-slot$="-description"]')
         ->assertPresent('[data-test="match-celebration-layer"]')
         ->assertPresent('[data-test="match-magic"]')
         ->assertAttribute('[data-test="match-magic"]', 'aria-hidden', 'true')
@@ -678,8 +709,8 @@ test('a reciprocal like opens a dismissible match dialog only once', function ()
             false,
         )
         ->assertScript(renderedContrastIsAtLeastScript(
-            '[data-slot="dialog-content"]',
-            '[data-slot="dialog-description"]',
+            '[data-slot="drawer-content"]',
+            '[data-slot$="-description"]',
         ), true)
         ->assertSeeLink('Commencer l’échange');
 

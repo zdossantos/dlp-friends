@@ -441,9 +441,11 @@ test('member navigation appears on discovery conversations profile and settings 
 
     visit('/discover')
         ->on()->mobile()
-        ->assertCount('[data-test="member-bottom-navigation"] a', 3)
+        ->assertCount('[data-test="member-bottom-navigation"] a', 5)
         ->assertPresent('[aria-label="Explorer"][aria-current="page"]')
+        ->assertPresent('[aria-label="Événements"]')
         ->assertPresent('[aria-label="Échanges"]')
+        ->assertPresent('[aria-label="Notifications"]')
         ->assertPresent('[aria-label="Profil"]');
 
     visit('/conversations')
@@ -482,8 +484,12 @@ test('account deletion explains immediate access loss and the purge deadline in 
     $this->actingAs($french);
 
     visit('/settings/account')
+        ->on()->mobile()
         ->assertSee('L’accès à ton compte cessera immédiatement')
-        ->assertSee('sous 30 jours');
+        ->assertSee('sous 30 jours')
+        ->click('[data-test="delete-user-button"]')
+        ->assertPresent('[data-slot="drawer-content"]')
+        ->assertSee('Veux-tu vraiment supprimer ton compte ?');
 
     $english = User::factory()->withProfile()->create(['locale' => 'en']);
     $this->actingAs($english);
