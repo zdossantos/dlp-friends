@@ -13,8 +13,8 @@ import {
     InputOTPSlot,
 } from '@/components/ui/input-otp';
 import { Spinner } from '@/components/ui/spinner';
-import { useResponsiveModal } from '@/composables/useResponsiveModal';
 import { useAppearance } from '@/composables/useAppearance';
+import { useResponsiveModal } from '@/composables/useResponsiveModal';
 import { useTranslations } from '@/composables/useTranslations';
 import { useTwoFactorAuth } from '@/composables/useTwoFactorAuth';
 import { confirm } from '@/routes/two-factor';
