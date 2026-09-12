@@ -21,6 +21,7 @@ const page = usePage();
 const busyRegistrationId = ref<number | null>(null);
 const registrationError = computed(() => {
     const errors = page.props.errors as Record<string, string> | undefined;
+
     return errors?.registration;
 });
 const origin = props.context === 'mine' ? { origin: 'mine' } : {};

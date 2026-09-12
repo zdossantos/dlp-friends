@@ -6,11 +6,20 @@ import EventCard from '@/components/events/EventCard.vue';
 import EventPanelContent from '@/components/events/EventPanelContent.vue';
 import { Button } from '@/components/ui/button';
 import { useTranslations } from '@/composables/useTranslations';
+import {
+    forgetEventWorkspaceScroll,
+    rememberEventWorkspaceScroll,
+    restoreEventWorkspaceScroll,
+} from '@/lib/eventWorkspaceScroll';
 import { create, index, mine } from '@/routes/events';
 import type { EventWorkspaceProps } from '@/types/event';
 
 const props = defineProps<EventWorkspaceProps>();
 const { t } = useTranslations();
+
+if (props.panel) {
+    restoreEventWorkspaceScroll();
+}
 
 const panelTitle = computed(() => {
     if (!props.panel) {
@@ -32,7 +41,8 @@ const createHref = computed(
             .url,
 );
 
-function rememberCreateOpener(): void {
+function rememberCreateOpener(event: Event): void {
+    rememberEventWorkspaceScroll(event.currentTarget as HTMLElement | null);
     sessionStorage.setItem('event-panel-opener', 'event-create');
 }
 
@@ -40,14 +50,28 @@ function updatePanel(open: boolean): void {
     if (!open) {
         router.visit(props.closeHref, {
             preserveScroll: true,
-            onSuccess: () => {
+            onFinish: () => {
                 const opener = sessionStorage.getItem('event-panel-opener');
-                if (!opener) return;
+
+                if (!opener) {
+                    return;
+                }
+
                 nextTick(() => {
-                    document
-                        .querySelector<HTMLElement>(`[data-test="${opener}"]`)
-                        ?.focus({ preventScroll: true });
-                    sessionStorage.removeItem('event-panel-opener');
+                    requestAnimationFrame(() => {
+                        restoreEventWorkspaceScroll();
+                        document
+                            .querySelector<HTMLElement>(
+                                `[data-test="${opener}"]`,
+                            )
+                            ?.focus({ preventScroll: true });
+
+                        requestAnimationFrame(() => {
+                            restoreEventWorkspaceScroll();
+                            forgetEventWorkspaceScroll();
+                            sessionStorage.removeItem('event-panel-opener');
+                        });
+                    });
                 });
             },
         });
@@ -99,6 +123,8 @@ function updatePanel(open: boolean): void {
                         preserve-scroll
                         data-test="event-create"
                         @click="rememberCreateOpener"
+                        @pointerdown.capture="rememberCreateOpener"
+                        @keydown.enter.capture="rememberCreateOpener"
                         >{{ t('events.actions.create') }}</Link
                     >
                 </Button>

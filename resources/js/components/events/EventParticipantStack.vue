@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Link } from '@inertiajs/vue3';
 import { computed } from 'vue';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import UserAvatar from '@/components/profile/UserAvatar.vue';
 import { useTranslations } from '@/composables/useTranslations';
 import type { EventParticipant } from '@/types/event';
 
@@ -21,22 +21,15 @@ const remaining = computed(() => Math.max(0, props.participants.length - 3));
             t('events.participants.open', { count: participants.length })
         "
     >
-        <Avatar
+        <UserAvatar
             v-for="(participant, index) in visible"
             :key="participant.id"
+            :avatar="participant.avatar"
+            :display-name="participant.displayName"
             data-test="participant-stack-avatar"
-            class="size-12 border-2 border-card bg-muted shadow-sm"
+            class="size-12 border-2 border-card shadow-sm"
             :class="index > 0 ? '-ml-3' : ''"
-        >
-            <AvatarImage
-                v-if="participant.avatar"
-                :src="participant.avatar.image_url"
-                :alt="participant.displayName ?? participant.avatar.name"
-            />
-            <AvatarFallback>
-                {{ participant.displayName?.slice(0, 1).toUpperCase() ?? '?' }}
-            </AvatarFallback>
-        </Avatar>
+        />
         <span
             v-if="remaining > 0"
             class="-ml-3 flex size-12 items-center justify-center rounded-full border-2 border-card bg-muted font-semibold text-muted-foreground shadow-sm"

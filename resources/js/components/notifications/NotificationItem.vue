@@ -2,6 +2,7 @@
 import { router } from '@inertiajs/vue3';
 import { CalendarDays, MessageCircle } from '@lucide/vue';
 import { ref } from 'vue';
+import { Button } from '@/components/ui/button';
 import { useTranslations } from '@/composables/useTranslations';
 import { read } from '@/routes/notifications';
 import type { MemberNotification } from '@/types/notification';
@@ -24,17 +25,18 @@ function openNotification(): void {
 
 <template>
     <li>
-        <button
+        <Button
             type="button"
+            variant="ghost"
             :data-test="`notification-${notification.id}`"
-            class="flex w-full items-start gap-3 px-4 py-4 text-left transition-colors hover:bg-muted/60 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none focus-visible:ring-inset disabled:opacity-60"
+            class="h-auto w-full items-start justify-start gap-3 rounded-none px-4 py-4 text-left hover:bg-muted/60 focus-visible:ring-inset"
             :class="notification.read_at === null ? 'bg-primary/8' : ''"
             :disabled="processing"
             :aria-busy="processing"
             @click="openNotification"
         >
             <span
-                class="grid size-10 shrink-0 place-items-center rounded-2xl bg-secondary text-primary"
+                class="grid size-10 shrink-0 place-items-center rounded-2xl bg-secondary text-secondary-foreground"
             >
                 <CalendarDays
                     v-if="notification.category === 'events'"
@@ -72,6 +74,6 @@ function openNotification(): void {
                 class="mt-2 size-2 shrink-0 rounded-full bg-primary"
                 :aria-label="t('notifications.items.unread')"
             />
-        </button>
+        </Button>
     </li>
 </template>

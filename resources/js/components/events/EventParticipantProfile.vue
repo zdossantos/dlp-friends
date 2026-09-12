@@ -34,7 +34,7 @@ const visitFrequency = computed(() =>
 
 <template>
     <section data-test="event-participant-profile" class="space-y-3 pt-1">
-        <div class="flex justify-end">
+        <div class="flex justify-start">
             <Button
                 as-child
                 type="button"

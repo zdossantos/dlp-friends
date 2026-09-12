@@ -19,7 +19,10 @@ provideMemberRealtimeContext(realtime);
 watch(
     () => page.props.match as DiscoveryMatch | null | undefined,
     (match) => {
-        if (!match) return;
+        if (!match) {
+            return;
+        }
+
         realtime.presentMatch({
             match_id: match.id,
             conversation_id: match.conversationId,

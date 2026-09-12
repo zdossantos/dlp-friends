@@ -13,6 +13,7 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
 import {
     InputOTP,
     InputOTPGroup,
@@ -214,26 +215,28 @@ watch(
                                     <Spinner />
                                 </div>
                                 <template v-else>
-                                    <input
+                                    <Input
                                         type="text"
                                         readonly
                                         :value="manualSetupKey"
-                                        class="h-full w-full bg-background p-3 text-foreground"
+                                        class="h-auto w-full rounded-none border-0 bg-background p-3 text-foreground shadow-none"
                                     />
-                                    <button
+                                    <Button
                                         type="button"
+                                        variant="ghost"
+                                        size="icon"
                                         :aria-label="
                                             t('account.two_factor.copy_key')
                                         "
                                         @click="copy(manualSetupKey || '')"
-                                        class="relative block h-auto border-l border-border px-3 hover:bg-muted"
+                                        class="relative h-auto rounded-none border-l border-border px-3"
                                     >
                                         <Check
                                             v-if="copied"
                                             class="w-4 text-green-500"
                                         />
                                         <Copy v-else class="w-4" />
-                                    </button>
+                                    </Button>
                                 </template>
                             </div>
                         </div>

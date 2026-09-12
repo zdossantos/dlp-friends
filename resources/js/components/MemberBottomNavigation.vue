@@ -104,9 +104,11 @@ onBeforeUnmount(() => {
                 "
                 class="relative grid size-12 place-items-center rounded-2xl text-muted-foreground transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
                 :class="[
-                    isActive(item) ? 'bg-secondary text-primary' : undefined,
+                    isActive(item)
+                        ? 'bg-secondary text-secondary-foreground'
+                        : undefined,
                     pendingPath === itemPath(item)
-                        ? 'motion-navigation-pending bg-secondary/70 text-primary'
+                        ? 'motion-navigation-pending bg-secondary/70 text-secondary-foreground'
                         : undefined,
                 ]"
             >

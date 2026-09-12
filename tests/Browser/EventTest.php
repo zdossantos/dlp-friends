@@ -42,18 +42,21 @@ test('manual and direct links open the same event panel over their workspace', f
         ->assertNoJavaScriptErrors();
 });
 
-test('event details use a bottom sheet on mobile and a dialog on desktop', function () {
+test('event details use the shadcn drawer on mobile without a close icon and a dialog on desktop', function () {
     $organizer = eventBrowserMember('Alice');
     $event = Event::factory()->for($organizer, 'organizer')->create();
     $this->actingAs($organizer);
 
     $page = visit("/events/{$event->id}")->on()->mobile()
-        ->assertAttribute('[data-test="event-panel"]', 'data-panel-mode', 'sheet')
+        ->assertAttribute('[data-test="event-panel"]', 'data-panel-mode', 'drawer')
+        ->assertAttribute('[data-test="event-panel"]', 'data-slot', 'drawer-content')
+        ->assertMissing('[data-test="event-panel"] [data-slot="drawer-close-icon"]')
         ->assertScript("getComputedStyle(document.querySelector('[data-test=event-panel]')).overflowY", 'visible')
         ->assertNoJavaScriptErrors();
 
     $page->resize(1280, 800)
         ->assertAttribute('[data-test="event-panel"]', 'data-panel-mode', 'dialog')
+        ->assertMissing('[data-test="event-panel"] [data-slot="dialog-close"]')
         ->assertNoJavaScriptErrors();
 });
 
@@ -145,6 +148,11 @@ test('participant avatar stack opens the list and profiles inside the event pane
     $page = visit('/events/mine')
         ->click("[data-test=\"event-link-{$event->id}\"]")
         ->assertCount('[data-test="participant-stack-avatar"]', 3)
+        ->assertScript(<<<'JS'
+            Array.from(document.querySelectorAll('[data-test="participant-stack-avatar"]')).every(
+                (avatar) => getComputedStyle(avatar).backgroundImage.includes('linear-gradient'),
+            )
+            JS, true)
         ->assertSee('+1')
         ->click('[data-test="participant-stack-trigger"]')
         ->assertPathIs("/events/{$event->id}/participants")
@@ -154,7 +162,15 @@ test('participant avatar stack opens the list and profiles inside the event pane
         ->assertPresent('[data-test="event-panel"]')
         ->assertPresent('[data-test="event-participant-profile"]')
         ->assertPresent('[data-test="profile-presentation"]')
-        ->assertPresent('[data-test="like-member"]');
+        ->assertPresent('[data-test="like-member"]')
+        ->assertScript(<<<'JS'
+            (() => {
+                const back = document.querySelector('[data-test="participant-profile-back"]');
+                const panel = document.querySelector('[data-test="event-panel"]');
+                return back.getBoundingClientRect().left
+                    < panel.getBoundingClientRect().left + panel.getBoundingClientRect().width / 2;
+            })()
+            JS, true);
 
     $page->script('history.back(); true;');
     $page->assertCount('[data-test="participant-row"]', 4);
@@ -347,11 +363,12 @@ test('opening and closing an event preserves list scroll and restores opener foc
     $target = $events->last();
 
     $page = visit('/events/mine')->resize(390, 700);
+    $page->script('new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))');
     $page->script("const opener = document.querySelector('[data-test=event-link-{$target->id}]'); opener.scrollIntoView({ block: 'center' }); const region = document.querySelector('[data-test=member-shell-content]'); window.__eventScroll = region.scrollTop;");
     $page->assertScript('window.__eventScroll > 0', true)
         ->click("[data-test=\"event-link-{$target->id}\"]")
-        ->assertScript("Math.abs(document.querySelector('[data-test=member-shell-content]').scrollTop - window.__eventScroll) < 2", true);
-    $page->script("document.querySelector('[data-test=event-panel] button.absolute').click();");
+        ->assertPresent('[data-test="event-panel"]')
+        ->click('[data-slot="drawer-overlay"]');
     $page->assertPathIs('/events/mine')
         ->assertScript("document.activeElement?.dataset.test === 'event-link-{$target->id}'", true)
         ->assertScript("Math.abs(document.querySelector('[data-test=member-shell-content]').scrollTop - window.__eventScroll) < 2", true)

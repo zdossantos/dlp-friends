@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { router } from '@inertiajs/vue3';
+import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { useTranslations } from '@/composables/useTranslations';
 import { applyNotificationFilters } from '@/lib/notificationFilters';
 import type { NotificationCategory } from '@/lib/notificationFilters';
@@ -22,7 +24,7 @@ function update(category: NotificationCategory | null, unread: boolean): void {
 <template>
     <div class="space-y-3" :aria-label="t('notifications.filters.label')">
         <div class="flex flex-wrap gap-2">
-            <button
+            <Button
                 v-for="filter in [
                     { value: null, label: t('notifications.filters.all') },
                     {
@@ -38,7 +40,8 @@ function update(category: NotificationCategory | null, unread: boolean): void {
                 type="button"
                 :data-test="`notification-filter-${filter.value ?? 'all'}`"
                 :aria-pressed="category === filter.value"
-                class="rounded-full border px-4 py-2 text-sm font-medium transition-colors"
+                variant="outline"
+                class="rounded-full px-4"
                 :class="
                     category === filter.value
                         ? 'border-primary bg-primary text-primary-foreground'
@@ -47,20 +50,13 @@ function update(category: NotificationCategory | null, unread: boolean): void {
                 @click="update(filter.value, unread)"
             >
                 {{ filter.label }}
-            </button>
+            </Button>
         </div>
         <label class="flex w-fit items-center gap-2 text-sm font-medium">
-            <input
-                type="checkbox"
+            <Checkbox
                 data-test="notification-filter-unread"
-                class="size-4 rounded border-border accent-primary"
-                :checked="unread"
-                @change="
-                    update(
-                        category,
-                        ($event.target as HTMLInputElement).checked,
-                    )
-                "
+                :model-value="unread"
+                @update:model-value="update(category, $event === true)"
             />
             {{ t('notifications.filters.unread_only') }}
         </label>

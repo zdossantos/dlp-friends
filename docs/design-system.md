@@ -115,8 +115,10 @@ et le texte OFL des deux familles distribuées sont conservés dans
 
 Réutiliser dans cet ordre :
 
-1. les primitives déjà présentes dans `resources/js/components/ui/` ;
-2. Reka UI lorsqu’une primitive accessible manque ;
+1. les composants shadcn-vue déjà présents dans `resources/js/components/ui/`
+   ou ajoutés depuis son catalogue officiel ;
+2. une primitive Reka UI directe uniquement lorsque shadcn-vue ne propose pas
+   le composant nécessaire ;
 3. un composant métier ciblé lorsqu’une interaction propre à DLP Friends ne
    peut pas être composée simplement.
 

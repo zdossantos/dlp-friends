@@ -5,7 +5,9 @@ import InputError from '@/components/InputError.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { NativeSelect } from '@/components/ui/native-select';
 import { Spinner } from '@/components/ui/spinner';
+import { Textarea } from '@/components/ui/textarea';
 import { useTranslations } from '@/composables/useTranslations';
 import { parisLocalFormValue } from '@/lib/eventState';
 import type { EventDetail } from '@/types/event';
@@ -19,6 +21,7 @@ const props = defineProps<{
 const { t } = useTranslations();
 const startsAt = props.event ? parisLocalFormValue(props.event.startsAt) : '';
 const description = ref(props.event?.description ?? '');
+const registrationMode = ref(props.event?.registrationMode ?? 'automatic');
 </script>
 
 <template>
@@ -40,12 +43,12 @@ const description = ref(props.event?.description ?? '');
         </div>
         <div class="space-y-2">
             <Label for="description">{{ t('events.fields.description') }}</Label
-            ><textarea
+            ><Textarea
                 id="description"
                 name="description"
                 required
                 maxlength="2000"
-                class="min-h-28 w-full rounded-md border bg-background px-3 py-2 text-sm"
+                class="min-h-28"
                 v-model="description"
             /><InputError :message="errors.description" />
         </div>
@@ -101,18 +104,18 @@ const description = ref(props.event?.description ?? '');
             <Label for="registration_mode">{{
                 t('events.fields.registration_mode')
             }}</Label
-            ><select
+            ><NativeSelect
                 id="registration_mode"
                 name="registration_mode"
-                class="h-9 w-full rounded-md border bg-background px-3 text-sm"
-                :value="event?.registrationMode ?? 'automatic'"
+                class="w-full"
+                v-model="registrationMode"
             >
                 <option value="automatic">
                     {{ t('events.modes.automatic') }}
                 </option>
                 <option value="manual">
                     {{ t('events.modes.manual') }}
-                </option></select
+                </option></NativeSelect
             ><InputError :message="errors.registration_mode" />
         </div>
         <InputError :message="errors.event" />

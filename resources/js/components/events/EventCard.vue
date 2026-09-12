@@ -11,6 +11,7 @@ import {
     CardTitle,
 } from '@/components/ui/card';
 import { useTranslations } from '@/composables/useTranslations';
+import { rememberEventWorkspaceScroll } from '@/lib/eventWorkspaceScroll';
 import { show } from '@/routes/events';
 import type { EventSummary, EventWorkspaceContext } from '@/types/event';
 
@@ -22,7 +23,8 @@ const props = defineProps<{
 const { t, formatDate } = useTranslations();
 const origin = props.context === 'mine' ? { origin: 'mine' } : {};
 
-function rememberOpener(): void {
+function rememberOpener(event: Event): void {
+    rememberEventWorkspaceScroll(event.currentTarget as HTMLElement | null);
     sessionStorage.setItem(
         'event-panel-opener',
         `event-link-${props.event.id}`,
@@ -103,6 +105,8 @@ function rememberOpener(): void {
                     preserve-scroll
                     :data-test="`event-link-${event.id}`"
                     @click="rememberOpener"
+                    @pointerdown.capture="rememberOpener"
+                    @keydown.enter.capture="rememberOpener"
                     >{{ t('events.actions.view') }}</Link
                 ></Button
             ></CardFooter

@@ -19,6 +19,7 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { Spinner } from '@/components/ui/spinner';
+import { Textarea } from '@/components/ui/textarea';
 import { useTranslations } from '@/composables/useTranslations';
 import type {
     AvatarOption,
@@ -265,12 +266,12 @@ function showInvalidStep(errors: Record<string, string>): void {
                         >{{ bio.length }} / 500</span
                     >
                 </div>
-                <textarea
+                <Textarea
                     id="bio"
                     v-model="bio"
                     name="bio"
                     maxlength="500"
-                    class="min-h-24 w-full resize-none rounded-2xl border border-input bg-background px-4 py-3 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 sm:min-h-32"
+                    class="min-h-24 resize-none rounded-2xl px-4 py-3 sm:min-h-32"
                 />
                 <InputError :message="errors.bio" />
             </div>
