@@ -24,8 +24,8 @@ function markAllRead(): void {
     <main
         class="mx-auto flex h-full min-h-0 w-full max-w-2xl flex-col gap-6 overflow-hidden px-4 pt-[max(1rem,env(safe-area-inset-top))] sm:px-6 sm:pt-8"
     >
-        <header class="flex items-start justify-between gap-4">
-            <div class="space-y-1">
+        <header class="flex min-w-0 items-start justify-between gap-4">
+            <div class="min-w-0 space-y-1">
                 <h1 class="text-2xl font-semibold tracking-tight sm:text-3xl">
                     {{ t('notifications.page.title') }}
                 </h1>
@@ -63,9 +63,9 @@ function markAllRead(): void {
         <section
             v-else
             :aria-label="t('notifications.page.list_label')"
-            class="min-h-0 flex-1 overflow-y-auto rounded-3xl border bg-card shadow-sm"
+            class="min-h-0 max-w-full min-w-0 flex-1 overflow-x-hidden overflow-y-auto rounded-3xl border bg-card shadow-sm"
         >
-            <ul role="list" class="divide-y">
+            <ul role="list" class="max-w-full min-w-0 divide-y">
                 <NotificationItem
                     v-for="notification in notifications.data"
                     :key="notification.id"

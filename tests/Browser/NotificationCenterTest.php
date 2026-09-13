@@ -51,6 +51,63 @@ test('a member filters notifications and opens the related conversation', functi
     expect($conversationNotification->fresh()?->read_at)->not->toBeNull();
 });
 
+test('mobile notifications stay within the viewport and keep the active filter legible in dark mode', function () {
+    $member = notificationBrowserMember('Alice');
+    $peer = notificationBrowserMember('Basile');
+    [$lowId, $highId] = collect([$member->id, $peer->id])->sort()->values()->all();
+    $match = MemberMatch::factory()->create([
+        'user_low_id' => $lowId,
+        'user_high_id' => $highId,
+    ]);
+    $conversation = $match->conversation()->create();
+    $notification = notificationBrowserNotice(
+        $member,
+        'conversations',
+        'Un membre avec un nom volontairement beaucoup trop long pour tenir dans une notification mobile',
+        $conversation->id,
+    );
+    $this->actingAs($member);
+
+    $page = visit('/notifications')->on()->mobile()->inDarkMode();
+    $page->script("localStorage.setItem('appearance', 'dark')");
+    $page->navigate('/notifications')
+        ->assertScript(<<<'JS'
+            (() => {
+                const root = document.documentElement;
+                const item = document.querySelector('li [data-test^="notification-"]');
+                if (!item) return false;
+                const title = item.querySelector('[data-test="notification-title"]');
+                if (!title) return false;
+                return root.scrollWidth <= root.clientWidth
+                    && item.scrollWidth <= item.clientWidth
+                    && title.scrollWidth > title.clientWidth
+                    && getComputedStyle(title).textOverflow === 'ellipsis'
+                    && getComputedStyle(title).whiteSpace === 'nowrap';
+            })()
+            JS, true)
+        ->assertScript(<<<'JS'
+            (() => {
+                const button = document.querySelector('[data-test="notification-filter-all"]');
+                const style = getComputedStyle(button);
+                const channels = (color) => color.match(/\d+(?:\.\d+)?/g).slice(0, 3).map(Number);
+                const luminance = (color) => channels(color)
+                    .map((channel) => channel / 255)
+                    .map((channel) => channel <= 0.04045
+                        ? channel / 12.92
+                        : Math.pow((channel + 0.055) / 1.055, 2.4))
+                    .reduce((value, channel, index) => value + channel * [0.2126, 0.7152, 0.0722][index], 0);
+                const foreground = luminance(style.color);
+                const background = luminance(style.backgroundColor);
+                return button.dataset.variant === 'default'
+                    && (Math.max(foreground, background) + 0.05)
+                        / (Math.min(foreground, background) + 0.05) >= 4.5;
+            })()
+            JS, true)
+        ->assertNoJavaScriptErrors();
+
+    expect($notification)->not->toBeNull();
+});
+
 test('an event notification opens its detail over the discover workspace', function () {
     $member = notificationBrowserMember('Alice');
     $event = Event::factory()->create(['title' => 'Balade du soir']);

@@ -177,7 +177,7 @@ test('participant avatar stack opens the list and profiles inside the event pane
                 return back.getBoundingClientRect().left - panel.getBoundingClientRect().left <= 32
                     && back.getBoundingClientRect().top - panel.getBoundingClientRect().top <= 80
                     && getComputedStyle(backLayer).position === 'absolute'
-                    && profile.getBoundingClientRect().top - panel.getBoundingClientRect().top <= 32
+                    && profile.getBoundingClientRect().top - panel.getBoundingClientRect().top <= 8
                     && getComputedStyle(profile).borderTopWidth === '0px';
             })()
             JS, true);

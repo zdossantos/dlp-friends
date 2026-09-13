@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { router } from '@inertiajs/vue3';
 import { CalendarDays, MessageCircle } from '@lucide/vue';
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import { Button } from '@/components/ui/button';
 import { useTranslations } from '@/composables/useTranslations';
 import { read } from '@/routes/notifications';
@@ -10,6 +10,9 @@ import type { MemberNotification } from '@/types/notification';
 const props = defineProps<{ notification: MemberNotification }>();
 const processing = ref(false);
 const { t, formatDate } = useTranslations();
+const title = computed(() =>
+    t(props.notification.translation_key, props.notification.parameters),
+);
 
 function openNotification(): void {
     router.patch(
@@ -24,12 +27,12 @@ function openNotification(): void {
 </script>
 
 <template>
-    <li>
+    <li class="max-w-full min-w-0 overflow-hidden">
         <Button
             type="button"
             variant="ghost"
             :data-test="`notification-${notification.id}`"
-            class="h-auto w-full items-start justify-start gap-3 rounded-none px-4 py-4 text-left hover:bg-muted/60 focus-visible:ring-inset"
+            class="h-auto max-w-full min-w-0 items-start justify-start gap-3 overflow-hidden rounded-none px-4 py-4 text-left hover:bg-muted/60 focus-visible:ring-inset"
             :class="notification.read_at === null ? 'bg-primary/8' : ''"
             :disabled="processing"
             :aria-busy="processing"
@@ -47,14 +50,14 @@ function openNotification(): void {
             </span>
             <span class="min-w-0 flex-1">
                 <span
-                    class="block text-sm"
+                    data-test="notification-title"
+                    class="block truncate text-sm"
                     :class="
                         notification.read_at === null ? 'font-semibold' : ''
                     "
+                    :title="title"
                 >
-                    {{
-                        t(notification.translation_key, notification.parameters)
-                    }}
+                    {{ title }}
                 </span>
                 <time
                     v-if="notification.created_at"

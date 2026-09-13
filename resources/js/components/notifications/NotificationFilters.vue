@@ -40,12 +40,10 @@ function update(category: NotificationCategory | null, unread: boolean): void {
                 type="button"
                 :data-test="`notification-filter-${filter.value ?? 'all'}`"
                 :aria-pressed="category === filter.value"
-                variant="outline"
+                :variant="category === filter.value ? 'default' : 'outline'"
                 class="rounded-full px-4"
                 :class="
-                    category === filter.value
-                        ? 'border-primary bg-primary text-primary-foreground'
-                        : 'bg-card hover:bg-muted'
+                    category === filter.value ? '' : 'bg-card hover:bg-muted'
                 "
                 @click="update(filter.value, unread)"
             >

@@ -46,11 +46,14 @@ function focusPanelWithoutScrolling(event: Event): void {
             tabindex="-1"
             @focusin="restoreEventWorkspaceScroll"
             @open-auto-focus="focusPanelWithoutScrolling"
-            :class="
+            :class="[
                 isDesktop
                     ? 'max-h-[min(90svh,52rem)] overflow-hidden border-border bg-card p-0 text-card-foreground sm:max-w-2xl'
-                    : 'max-h-[92svh] rounded-t-3xl border-border bg-card px-0 pb-[max(1rem,env(safe-area-inset-bottom))] text-card-foreground'
-            "
+                    : 'max-h-[92svh] rounded-t-3xl border-border bg-card px-0 pb-[max(1rem,env(safe-area-inset-bottom))] text-card-foreground',
+                !isDesktop && !hasVisibleHeader
+                    ? '[&>[data-slot=drawer-handle]]:absolute [&>[data-slot=drawer-handle]]:top-0 [&>[data-slot=drawer-handle]]:left-1/2 [&>[data-slot=drawer-handle]]:z-50 [&>[data-slot=drawer-handle]]:-translate-x-1/2'
+                    : '',
+            ]"
         >
             <component
                 :is="hasVisibleHeader ? Modal.Header : 'div'"
