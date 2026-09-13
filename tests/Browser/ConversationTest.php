@@ -28,7 +28,7 @@ test('a completed member can open the empty conversation list from mobile naviga
     visit('/conversations')->on()->mobile()
         ->assertSee('Mes échanges')
         ->assertSee('Aucun échange pour le moment')
-        ->assertPresent('[aria-label="Échanges"][aria-current="page"]')
+        ->assertPresent('[aria-label="Conversations"][aria-current="page"]')
         ->assertScript('document.documentElement.scrollWidth <= document.documentElement.clientWidth', true)
         ->assertNoJavaScriptErrors();
 });

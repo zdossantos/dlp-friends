@@ -29,7 +29,7 @@ const registrationMode = ref(props.event?.registrationMode ?? 'automatic');
         :action="action"
         :method="method"
         v-slot="{ errors, processing }"
-        class="space-y-5"
+        class="max-w-full min-w-0 space-y-5 overflow-x-hidden"
     >
         <div class="space-y-2">
             <Label for="title">{{ t('events.fields.title') }}</Label
@@ -76,18 +76,19 @@ const registrationMode = ref(props.event?.registrationMode ?? 'automatic');
                 :default-value="event?.detailedLocation"
             /><InputError :message="errors.detailed_location" />
         </div>
-        <div class="grid gap-5 sm:grid-cols-2">
-            <div class="space-y-2">
+        <div class="grid min-w-0 gap-5 sm:grid-cols-2">
+            <div class="min-w-0 space-y-2">
                 <Label for="starts_at">{{ t('events.fields.starts_at') }}</Label
                 ><Input
                     id="starts_at"
                     name="starts_at"
                     type="datetime-local"
+                    class="max-w-full min-w-0"
                     required
                     :default-value="startsAt"
                 /><InputError :message="errors.starts_at" />
             </div>
-            <div class="space-y-2">
+            <div class="min-w-0 space-y-2">
                 <Label for="capacity">{{ t('events.fields.capacity') }}</Label
                 ><Input
                     id="capacity"

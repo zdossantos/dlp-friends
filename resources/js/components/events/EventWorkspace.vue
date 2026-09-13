@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { Link, router } from '@inertiajs/vue3';
-import { ArrowLeft } from '@lucide/vue';
 import { computed, nextTick } from 'vue';
 import AdaptiveEventPanel from '@/components/events/AdaptiveEventPanel.vue';
 import EventCard from '@/components/events/EventCard.vue';
@@ -12,7 +11,7 @@ import {
     rememberEventWorkspaceScroll,
     restoreEventWorkspaceScroll,
 } from '@/lib/eventWorkspaceScroll';
-import { create, index, mine } from '@/routes/events';
+import { create, index, mine, show } from '@/routes/events';
 import { index as participantsIndex } from '@/routes/events/participants';
 import type { EventWorkspaceProps } from '@/types/event';
 
@@ -24,14 +23,14 @@ if (props.panel) {
 }
 
 const panelTitle = computed(() => {
-    if (!props.panel) {
+    if (!props.panel || props.panel.kind === 'participant-profile') {
         return '';
     }
 
     return t(`events.panels.${props.panel.kind}.title`);
 });
 const panelDescription = computed(() => {
-    if (!props.panel) {
+    if (!props.panel || props.panel.kind === 'participant-profile') {
         return '';
     }
 
@@ -42,14 +41,45 @@ const createHref = computed(
         create(props.context === 'mine' ? { query: { origin: 'mine' } } : {})
             .url,
 );
-const participantProfileBackHref = computed(() => {
-    if (props.panel?.kind !== 'participant-profile') {
+const panelBackHref = computed(() => {
+    if (props.panel?.kind === 'participant-profile') {
+        return participantsIndex(props.panel.event.id, {
+            query: props.context === 'mine' ? { origin: 'mine' } : {},
+        }).url;
+    }
+
+    if (props.panel?.kind === 'registrations') {
+        return show(props.panel.event.id, {
+            query: props.context === 'mine' ? { origin: 'mine' } : {},
+        }).url;
+    }
+
+    return null;
+});
+const panelBackDataTest = computed(() => {
+    if (props.panel?.kind === 'participant-profile') {
+        return 'participant-profile-back';
+    }
+
+    if (props.panel?.kind === 'registrations') {
+        return 'event-registrations-back';
+    }
+
+    return undefined;
+});
+const accessiblePanelTitle = computed(() => {
+    if (!props.panel) {
         return null;
     }
 
-    return participantsIndex(props.panel.event.id, {
-        query: props.context === 'mine' ? { origin: 'mine' } : {},
-    }).url;
+    return t(`events.panels.${props.panel.kind}.title`);
+});
+const accessiblePanelDescription = computed(() => {
+    if (!props.panel) {
+        return null;
+    }
+
+    return t(`events.panels.${props.panel.kind}.description`);
 });
 
 function rememberCreateOpener(event: Event): void {
@@ -215,27 +245,14 @@ function updatePanel(open: boolean): void {
         :open="panel !== null"
         :title="panelTitle"
         :description="panelDescription"
+        :a11y-heading="accessiblePanelTitle"
+        :a11y-summary="accessiblePanelDescription"
+        :back-href="panelBackHref"
+        :back-label="t('events.actions.back')"
+        :back-data-test="panelBackDataTest"
         :full-bleed="panel?.kind === 'participant-profile'"
         @update:open="updatePanel"
     >
-        <template v-if="participantProfileBackHref" #header-leading>
-            <Button
-                as-child
-                type="button"
-                variant="outline"
-                size="icon"
-                class="size-11 shrink-0 rounded-full"
-            >
-                <Link
-                    :href="participantProfileBackHref"
-                    preserve-scroll
-                    data-test="participant-profile-back"
-                    :aria-label="t('events.actions.back')"
-                >
-                    <ArrowLeft class="size-5" aria-hidden="true" />
-                </Link>
-            </Button>
-        </template>
         <EventPanelContent v-if="panel" :panel="panel" :context="context" />
     </AdaptiveEventPanel>
 </template>

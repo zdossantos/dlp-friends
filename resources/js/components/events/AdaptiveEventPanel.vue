@@ -1,16 +1,28 @@
 <script setup lang="ts">
+import { Link } from '@inertiajs/vue3';
+import { ArrowLeft } from '@lucide/vue';
+import { computed } from 'vue';
+import { Button } from '@/components/ui/button';
 import { useResponsiveModal } from '@/composables/useResponsiveModal';
 import { restoreEventWorkspaceScroll } from '@/lib/eventWorkspaceScroll';
 
-defineProps<{
+const props = defineProps<{
     open: boolean;
-    title: string;
-    description: string;
+    title?: string;
+    description?: string;
+    a11yHeading?: string | null;
+    a11ySummary?: string | null;
+    backHref?: string | null;
+    backLabel?: string;
+    backDataTest?: string;
     fullBleed?: boolean;
 }>();
 
 const emit = defineEmits<{ 'update:open': [open: boolean] }>();
 const { isDesktop, Modal } = useResponsiveModal();
+const hasVisibleHeader = computed(
+    () => Boolean(props.title) || Boolean(props.description),
+);
 
 function updateOpen(open: boolean): void {
     emit('update:open', open);
@@ -41,34 +53,79 @@ function focusPanelWithoutScrolling(event: Event): void {
             "
         >
             <component
-                :is="Modal.Header"
-                data-test="event-panel-header"
-                :class="
-                    isDesktop
-                        ? 'sticky top-0 z-20 shrink-0 bg-card px-6 pt-6 pb-4'
-                        : 'sticky top-0 z-20 shrink-0 bg-card px-5 pb-4 text-left'
-                "
+                :is="hasVisibleHeader ? Modal.Header : 'div'"
+                :data-test="hasVisibleHeader ? 'event-panel-header' : undefined"
+                :class="[
+                    hasVisibleHeader
+                        ? isDesktop
+                            ? 'sticky top-0 z-20 shrink-0 bg-card px-6 pt-6 pb-4'
+                            : 'sticky top-0 z-20 shrink-0 bg-card px-5 pb-4 text-left'
+                        : isDesktop
+                          ? 'sr-only'
+                          : 'pointer-events-none absolute top-5 left-5 z-40',
+                ]"
             >
-                <div class="flex items-center gap-3">
-                    <slot name="header-leading" />
-                    <component :is="Modal.Title">{{ title }}</component>
+                <div :class="hasVisibleHeader ? 'flex items-start gap-3' : ''">
+                    <Button
+                        v-if="backHref && !isDesktop"
+                        as-child
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        class="pointer-events-auto size-11 shrink-0 rounded-full bg-card/90 shadow-sm backdrop-blur"
+                    >
+                        <Link
+                            :href="backHref"
+                            preserve-scroll
+                            :data-test="backDataTest"
+                            :aria-label="backLabel"
+                        >
+                            <ArrowLeft class="size-5" aria-hidden="true" />
+                        </Link>
+                    </Button>
+                    <div v-if="hasVisibleHeader" class="min-w-0 flex-1">
+                        <component :is="Modal.Title">{{ title }}</component>
+                        <component :is="Modal.Description">{{
+                            description
+                        }}</component>
+                    </div>
+                    <div v-else class="sr-only">
+                        <component :is="Modal.Title">{{
+                            a11yHeading
+                        }}</component>
+                        <component :is="Modal.Description">{{
+                            a11ySummary
+                        }}</component>
+                    </div>
                 </div>
-                <component
-                    :is="Modal.Description"
-                    :class="$slots['header-leading'] ? 'pl-14' : ''"
-                    >{{ description }}</component
-                >
             </component>
             <div
+                data-test="event-panel-scroll"
                 :class="
                     fullBleed
-                        ? 'min-h-0 flex-1 overflow-y-auto bg-card'
+                        ? 'min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto bg-card'
                         : isDesktop
-                          ? 'min-h-0 overflow-y-auto px-6 pb-6'
-                          : 'min-h-0 flex-1 overflow-y-auto px-5 pb-2'
+                          ? 'min-h-0 min-w-0 overflow-x-hidden overflow-y-auto px-6 pb-6'
+                          : 'min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto px-5 pb-2'
                 "
             >
                 <slot />
+            </div>
+            <div
+                v-if="isDesktop && backHref"
+                class="shrink-0 border-t border-border bg-card px-6 py-4"
+            >
+                <Button as-child type="button" variant="outline">
+                    <Link
+                        :href="backHref"
+                        preserve-scroll
+                        :data-test="backDataTest"
+                        :aria-label="backLabel"
+                    >
+                        <ArrowLeft class="size-4" aria-hidden="true" />
+                        {{ backLabel }}
+                    </Link>
+                </Button>
             </div>
         </component>
     </component>

@@ -146,7 +146,7 @@ test('participant avatar stack opens the list and profiles inside the event pane
 
     $this->actingAs($viewer);
 
-    $page = visit('/events/mine')
+    $page = visit('/events/mine')->on()->mobile()
         ->click("[data-test=\"event-link-{$event->id}\"]")
         ->assertCount('[data-test="participant-stack-avatar"]', 3)
         ->assertScript(<<<'JS'
@@ -167,16 +167,17 @@ test('participant avatar stack opens the list and profiles inside the event pane
         ->assertPresent('[data-test="event-participant-profile"]')
         ->assertPresent('[data-test="profile-presentation"]')
         ->assertPresent('[data-test="like-member"]')
+        ->assertMissing('[data-test="event-panel-header"]')
         ->assertScript(<<<'JS'
             (() => {
                 const back = document.querySelector('[data-test="participant-profile-back"]');
                 const panel = document.querySelector('[data-test="event-panel"]');
-                const title = panel.querySelector('[data-slot="dialog-title"], [data-slot="drawer-title"]');
-                const header = panel.querySelector('[data-test="event-panel-header"]');
                 const profile = panel.querySelector('[data-test="profile-presentation"]');
-                return back.getBoundingClientRect().right <= title.getBoundingClientRect().left
-                    && Math.abs(header.getBoundingClientRect().top - panel.getBoundingClientRect().top) <= 2
-                    && getComputedStyle(header).backgroundColor === getComputedStyle(panel).backgroundColor
+                const backLayer = back.parentElement.parentElement;
+                return back.getBoundingClientRect().left - panel.getBoundingClientRect().left <= 32
+                    && back.getBoundingClientRect().top - panel.getBoundingClientRect().top <= 80
+                    && getComputedStyle(backLayer).position === 'absolute'
+                    && profile.getBoundingClientRect().top - panel.getBoundingClientRect().top <= 32
                     && getComputedStyle(profile).borderTopWidth === '0px';
             })()
             JS, true);
@@ -434,6 +435,17 @@ test('manual registration protects private data and lets the organizer accept re
         ->assertPresent('[data-test="event-panel"]')
         ->assertSee('Basile')
         ->assertSee('Camille')
+        ->assertScript(<<<'JS'
+            (() => {
+                const back = document.querySelector('[data-test="event-registrations-back"]');
+                const panel = document.querySelector('[data-test="event-panel"]');
+                const panelRect = panel.getBoundingClientRect();
+                const backRect = back.getBoundingClientRect();
+                return back.textContent.trim().includes('Retour')
+                    && backRect.left - panelRect.left <= 32
+                    && panelRect.bottom - backRect.bottom <= 32;
+            })()
+            JS, true)
         ->click('[data-test="event-registrations-back"]')
         ->assertPresent('[data-test="event-detail"]')
         ->click('[data-test="event-registrations"]')
@@ -491,9 +503,22 @@ test('date and location changes notify a member and cancellation remains in hist
     $this->actingAs($organizer);
 
     visit("/events/{$event->id}?origin=mine")
+        ->on()->mobile()
         ->click('[data-test="event-edit"]')
         ->assertPresent('[data-test="mine-events"]')
         ->assertPresent('[data-test="event-panel"]')
+        ->assertScript(<<<'JS'
+            (() => {
+                const panel = document.querySelector('[data-test="event-panel"]');
+                const content = panel.querySelector('form').parentElement;
+                const dateInput = panel.querySelector('input[type="datetime-local"]');
+                return panel.scrollWidth <= panel.clientWidth
+                    && content.scrollWidth <= content.clientWidth
+                    && document.documentElement.scrollWidth <= document.documentElement.clientWidth
+                    && getComputedStyle(dateInput).minWidth === '0px'
+                    && getComputedStyle(dateInput).maxWidth === '100%';
+            })()
+            JS, true)
         ->fill('general_location', 'Walt Disney Studios')
         ->fill('detailed_location', 'Devant Studio 1')
         ->fill('starts_at', now('Europe/Paris')->addDays(6)->format('Y-m-d\TH:i'))

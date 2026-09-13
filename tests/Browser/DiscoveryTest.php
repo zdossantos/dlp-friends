@@ -209,7 +209,7 @@ test('discovery renders its loading state while suggestions are deferred', funct
             };
         }
         JS);
-    $page->click('[aria-label="Explorer"]')
+    $page->click('[aria-label="Découvrir"]')
         ->assertSee('Recherche de profils…')
         ->assertPresent('[aria-busy="true"]');
     $page->script('window.__releaseDeferredRequest()');
