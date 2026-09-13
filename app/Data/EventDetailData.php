@@ -3,11 +3,8 @@
 namespace App\Data;
 
 use App\Enums\EventRegistrationStatus;
-use App\Enums\SwipeDecision;
 use App\Models\Block;
 use App\Models\Event;
-use App\Models\MemberMatch;
-use App\Models\Swipe;
 use App\Models\User;
 use App\Policies\EventPolicy;
 use Illuminate\Support\Collection;
@@ -45,25 +42,6 @@ final readonly class EventDetailData
                     ->where('blocked_user_id', $viewer->id);
             })
             ->get();
-        $decisions = Swipe::query()
-            ->where('actor_user_id', $viewer->id)
-            ->whereIn('target_user_id', $participantIds)
-            ->pluck('decision', 'target_user_id');
-        $matches = MemberMatch::query()
-            ->where(function ($query) use ($viewer, $participantIds): void {
-                $query->where('user_low_id', $viewer->id)
-                    ->whereIn('user_high_id', $participantIds);
-            })
-            ->orWhere(function ($query) use ($viewer, $participantIds): void {
-                $query->whereIn('user_low_id', $participantIds)
-                    ->where('user_high_id', $viewer->id);
-            })
-            ->with('conversation')
-            ->get()
-            ->keyBy(fn (MemberMatch $match): int => $match->user_low_id === $viewer->id
-                ? $match->user_high_id
-                : $match->user_low_id);
-
         $privateData = [
             'detailedLocation' => $event->detailed_location,
             'participants' => $participantUsers
@@ -71,8 +49,6 @@ final readonly class EventDetailData
                     $user,
                     $viewer,
                     $blocks,
-                    $decisions->get($user->id),
-                    $matches->get($user->id),
                 ))
                 ->all(),
         ];
@@ -104,14 +80,11 @@ final readonly class EventDetailData
         User $user,
         User $viewer,
         $blocks,
-        SwipeDecision|string|null $decision,
-        ?MemberMatch $match,
     ): array {
         $isSelf = $viewer->is($user);
         $outgoingBlock = ! $isSelf && $blocks->contains(fn (Block $block): bool => $block->blocker_user_id === $viewer->id && $block->blocked_user_id === $user->id);
         $isBlocked = ! $isSelf && $blocks->contains(fn (Block $block): bool => ($block->blocker_user_id === $viewer->id && $block->blocked_user_id === $user->id)
             || ($block->blocker_user_id === $user->id && $block->blocked_user_id === $viewer->id));
-        $conversation = ! $isBlocked ? $match?->conversation : null;
 
         return [
             'id' => $user->id,
@@ -120,15 +93,6 @@ final readonly class EventDetailData
             'isSelf' => $isSelf,
             'isBlocked' => $isBlocked,
             'canUnblock' => $outgoingBlock,
-            'canLike' => ! $isSelf
-                && ! $isBlocked
-                && $conversation === null
-                && ($decision === null
-                    || $decision === SwipeDecision::Pass
-                    || $decision === SwipeDecision::Pass->value),
-            'conversationHref' => $conversation !== null
-                ? route('conversations.show', $conversation, absolute: false)
-                : null,
         ];
     }
 

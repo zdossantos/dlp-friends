@@ -26,8 +26,6 @@ export type EventParticipant = {
     isSelf: boolean;
     isBlocked: boolean;
     canUnblock: boolean;
-    canLike: boolean;
-    conversationHref: string | null;
 };
 export type OrganizerRegistration = EventParticipant & {
     registrationId: number;
@@ -42,13 +40,26 @@ export type EventDetail = EventSummary & {
 
 export type EventWorkspaceContext = 'discover' | 'mine';
 
-export type EmbeddedMemberProfile = {
+type AvailableEmbeddedMemberProfile = {
+    isBlocked: false;
     member: PublicMember;
     canBlock: boolean;
     canLike: boolean;
     canUnblock: boolean;
     conversationHref: string | null;
 };
+
+type BlockedEmbeddedMemberProfile = {
+    isBlocked: true;
+    member: { id: number };
+    canBlock: false;
+    canLike: false;
+    canUnblock: boolean;
+    conversationHref: null;
+};
+
+export type EmbeddedMemberProfile =
+    AvailableEmbeddedMemberProfile | BlockedEmbeddedMemberProfile;
 
 export type EventPanel =
     | { kind: 'detail'; event: EventDetail }

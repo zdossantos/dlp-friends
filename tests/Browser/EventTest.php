@@ -161,7 +161,8 @@ test('participant avatar stack opens the list and profiles inside the event pane
         ->assertCount('[data-test="participant-row"]', 4)
         ->assertSee('Moi')
         ->assertPresent("[data-test=\"participant-self-{$viewer->id}\"]")
-        ->assertPresent("[data-test=\"participant-like-{$organizer->id}\"]")
+        ->assertMissing('[data-test^="participant-like-"]')
+        ->assertMissing('[data-test^="participant-discuss-"]')
         ->click("[data-test=\"participant-link-{$organizer->id}\"]")
         ->assertPresent('[data-test="event-panel"]')
         ->assertPresent('[data-test="event-participant-profile"]')
@@ -194,7 +195,7 @@ test('participant avatar stack opens the list and profiles inside the event pane
         ->assertNoJavaScriptErrors();
 });
 
-test('a blocked participant is clearly marked and can be unblocked from the list', function () {
+test('participant rows only open profiles and a blocked profile is redacted until unblocked', function () {
     $organizer = eventBrowserMember('Alice');
     $viewer = eventBrowserMember('Basile');
     $blocked = eventBrowserMember('Camille');
@@ -211,11 +212,18 @@ test('a blocked participant is clearly marked and can be unblocked from the list
     visit("/events/{$event->id}/participants?origin=mine")
         ->assertSee('Utilisateur bloqué')
         ->assertPresent("[data-test=\"participant-blocked-{$blocked->id}\"]")
-        ->assertPresent("[data-test=\"participant-unblock-{$blocked->id}\"]")
-        ->assertMissing("[data-test=\"participant-link-{$blocked->id}\"]")
-        ->click("[data-test=\"participant-unblock-{$blocked->id}\"]")
+        ->assertPresent("[data-test=\"participant-link-{$blocked->id}\"]")
+        ->assertMissing('[data-test^="participant-like-"]')
+        ->assertMissing('[data-test^="participant-discuss-"]')
+        ->assertMissing('[data-test^="participant-unblock-"]')
+        ->click("[data-test=\"participant-link-{$blocked->id}\"]")
+        ->assertPresent('[data-test="blocked-participant-profile"]')
+        ->assertSee('Utilisateur bloqué')
+        ->assertDontSee('Camille')
+        ->assertPresent('[data-test="unblock-member"]')
+        ->click('[data-test="unblock-member"]')
         ->assertSee('Camille')
-        ->assertMissing("[data-test=\"participant-blocked-{$blocked->id}\"]")
+        ->assertMissing('[data-test="blocked-participant-profile"]')
         ->assertNoJavaScriptErrors();
 });
 
@@ -543,8 +551,19 @@ test('date and location changes notify a member and cancellation remains in hist
     $page->click('Annuler l’événement')
         ->assertSee('Les membres inscrits seront prévenus')
         ->click('[data-test="event-confirm-submit"]')
-        ->assertSee('Annulé');
+        ->assertSee('Annulé')
+        ->assertMissing('[data-test="event-edit"]')
+        ->assertMissing('[data-test="event-registrations"]')
+        ->assertDontSee('Annuler l’événement');
 
+    $this->actingAs($member);
+    visit("/events/{$event->id}?origin=mine")
+        ->assertSee('Annulé')
+        ->assertMissing('[data-test="event-withdraw"]')
+        ->assertMissing('[data-test="event-register"]')
+        ->assertNoJavaScriptErrors();
+
+    $this->actingAs($organizer);
     visit('/events/mine')
         ->assertSee('Rencontre du soir')
         ->assertSee('Annulé')

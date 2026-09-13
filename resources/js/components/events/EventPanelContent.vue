@@ -6,7 +6,6 @@ import EventParticipantProfile from '@/components/events/EventParticipantProfile
 import OrganizerRegistrations from '@/components/events/OrganizerRegistrations.vue';
 import { useTranslations } from '@/composables/useTranslations';
 import { store, update } from '@/routes/events';
-import { index as participantsIndex } from '@/routes/events/participants';
 import type { EventPanel, EventWorkspaceContext } from '@/types/event';
 
 const props = defineProps<{
@@ -47,12 +46,7 @@ const origin = props.context === 'mine' ? { origin: 'mine' } : {};
         v-else-if="panel.kind === 'participant-profile'"
         class="h-full bg-card"
     >
-        <EventParticipantProfile
-            :profile="panel.profile"
-            :back-href="
-                participantsIndex(panel.event.id, { query: origin }).url
-            "
-        />
+        <EventParticipantProfile :profile="panel.profile" />
     </section>
     <section v-else-if="panel.kind === 'registrations'" class="space-y-4 pt-2">
         <OrganizerRegistrations

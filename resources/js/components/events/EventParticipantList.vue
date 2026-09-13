@@ -1,10 +1,7 @@
 <script setup lang="ts">
 import { Link } from '@inertiajs/vue3';
-import { Ban, ChevronRight, MessageCircle } from '@lucide/vue';
-import LikeMemberButton from '@/components/members/LikeMemberButton.vue';
-import UnblockMemberButton from '@/components/members/UnblockMemberButton.vue';
+import { ChevronRight, UserRoundX } from '@lucide/vue';
 import UserAvatar from '@/components/profile/UserAvatar.vue';
-import { Button } from '@/components/ui/button';
 import { useTranslations } from '@/composables/useTranslations';
 import { show } from '@/routes/events/participants';
 import type { EventParticipant, EventWorkspaceContext } from '@/types/event';
@@ -29,79 +26,42 @@ const { t } = useTranslations();
                 participant.isBlocked ? 'bg-muted text-muted-foreground' : ''
             "
         >
-            <div
-                v-if="participant.isBlocked"
-                :data-test="`participant-blocked-${participant.id}`"
-                class="flex min-h-16 flex-wrap items-center gap-3 px-4 py-3"
-            >
-                <span
-                    class="grid size-11 shrink-0 place-items-center rounded-full bg-muted-foreground/15"
-                >
-                    <Ban class="size-5" aria-hidden="true" />
-                </span>
-                <span class="min-w-0 flex-1 font-medium">{{
-                    t('events.participants.blocked_user')
-                }}</span>
-                <UnblockMemberButton
-                    v-if="participant.canUnblock"
-                    :member-id="participant.id"
-                    :return-href="$page.url"
-                    :data-test="`participant-unblock-${participant.id}`"
-                    class="min-h-11"
-                />
-            </div>
-            <div
-                v-else
+            <Link
+                :href="show([eventId, participant.id], { query: origin })"
+                preserve-scroll
                 :data-test="
                     participant.isSelf
                         ? `participant-self-${participant.id}`
-                        : undefined
+                        : `participant-link-${participant.id}`
                 "
-                class="flex min-h-16 flex-wrap items-center gap-2 p-2"
+                class="flex min-h-16 items-center gap-3 px-4 py-3 text-card-foreground transition-colors hover:bg-muted focus-visible:bg-muted focus-visible:outline-none"
             >
-                <Link
-                    :href="show([eventId, participant.id], { query: origin })"
-                    preserve-scroll
-                    :data-test="`participant-link-${participant.id}`"
-                    class="flex min-w-44 flex-1 items-center gap-3 rounded-xl px-2 py-1.5 text-card-foreground transition-colors hover:bg-muted focus-visible:bg-muted focus-visible:outline-none"
+                <span
+                    v-if="participant.isBlocked"
+                    :data-test="`participant-blocked-${participant.id}`"
+                    class="grid size-11 shrink-0 place-items-center rounded-full bg-muted-foreground/15"
                 >
+                    <UserRoundX class="size-6" aria-hidden="true" />
+                </span>
+                <template v-else>
                     <UserAvatar
                         :avatar="participant.avatar"
                         :display-name="participant.displayName"
                         class="size-11 border border-border"
                     />
-                    <span class="min-w-0 flex-1 truncate font-medium">{{
-                        participant.isSelf
-                            ? t('events.participants.me')
-                            : participant.displayName
-                    }}</span>
-                    <ChevronRight
-                        class="size-5 text-muted-foreground"
-                        aria-hidden="true"
-                    />
-                </Link>
-                <LikeMemberButton
-                    v-if="participant.canLike"
-                    :member-id="participant.id"
-                    :return-href="$page.url"
-                    :data-test="`participant-like-${participant.id}`"
-                    class="min-h-11"
+                </template>
+                <span class="min-w-0 flex-1 truncate font-medium">{{
+                    participant.isBlocked
+                        ? t('events.participants.blocked_user')
+                        : participant.isSelf
+                          ? t('events.participants.me')
+                          : participant.displayName
+                }}</span>
+                <ChevronRight
+                    class="size-5 shrink-0 text-muted-foreground"
+                    aria-hidden="true"
                 />
-                <Button
-                    v-else-if="participant.conversationHref"
-                    as-child
-                    variant="secondary"
-                    class="min-h-11"
-                >
-                    <Link
-                        :href="participant.conversationHref"
-                        :data-test="`participant-discuss-${participant.id}`"
-                    >
-                        <MessageCircle class="size-4" aria-hidden="true" />
-                        {{ t('events.participants.discuss') }}
-                    </Link>
-                </Button>
-            </div>
+            </Link>
         </li>
     </ul>
 </template>

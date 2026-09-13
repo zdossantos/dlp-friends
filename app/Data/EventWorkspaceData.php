@@ -9,6 +9,7 @@ use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -53,13 +54,7 @@ final readonly class EventWorkspaceData
     /** @return array<int, array<string, mixed>> */
     public function discovery(User $viewer): array
     {
-        $blockedUserIds = Block::query()
-            ->where('blocker_user_id', $viewer->id)
-            ->orWhere('blocked_user_id', $viewer->id)
-            ->get()
-            ->map(fn (Block $block): int => $block->blocker_user_id === $viewer->id
-                ? $block->blocked_user_id
-                : $block->blocker_user_id);
+        $blockedUserIds = $this->blockedUserIds($viewer);
 
         return Event::query()
             ->whereNull('cancelled_at')
@@ -81,6 +76,7 @@ final readonly class EventWorkspaceData
     /** @return array{organized: array<int, array<string, mixed>>, participating: array<int, array<string, mixed>>} */
     public function mine(User $viewer): array
     {
+        $blockedUserIds = $this->blockedUserIds($viewer);
         $organized = Event::query()
             ->where('organizer_user_id', $viewer->id)
             ->withAcceptedRegistrationCount()
@@ -93,6 +89,7 @@ final readonly class EventWorkspaceData
             ->get();
 
         $participating = Event::query()
+            ->whereNotIn('organizer_user_id', $blockedUserIds)
             ->whereHas('registrations', fn (Builder $registrations) => $registrations
                 ->where('user_id', $viewer->id)
                 ->whereIn('status', [
@@ -116,5 +113,17 @@ final readonly class EventWorkspaceData
                 ->map(fn (Event $event): array => EventSummaryData::from($event, $viewer))
                 ->all(),
         ];
+    }
+
+    /** @return Collection<int, int> */
+    private function blockedUserIds(User $viewer): Collection
+    {
+        return Block::query()
+            ->where('blocker_user_id', $viewer->id)
+            ->orWhere('blocked_user_id', $viewer->id)
+            ->get()
+            ->map(fn (Block $block): int => $block->blocker_user_id === $viewer->id
+                ? $block->blocked_user_id
+                : $block->blocker_user_id);
     }
 }

@@ -13,6 +13,7 @@ use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
+use Inertia\Inertia;
 use Inertia\Response;
 
 class EventController extends Controller
@@ -45,10 +46,20 @@ class EventController extends Controller
         ));
     }
 
-    public function show(Request $request, Event $event): Response
+    public function show(Request $request, Event $event): Response|RedirectResponse
     {
-        Gate::authorize('view', $event);
         $user = $this->user($request);
+        if (Gate::forUser($user)->denies('view', $event)) {
+            Inertia::flash('toast', [
+                'type' => 'error',
+                'message' => __('events.errors.event_unavailable'),
+            ]);
+
+            return redirect()->to($this->workspace->context($request) === 'mine'
+                ? route('events.mine', absolute: false)
+                : route('events.index', absolute: false));
+        }
+
         $event->load('organizer.profile');
 
         return $this->workspace->render($user, $this->workspace->context($request), [

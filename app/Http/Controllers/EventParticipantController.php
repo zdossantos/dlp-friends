@@ -44,16 +44,28 @@ final class EventParticipantController extends Controller
                 ->exists();
         abort_unless($isParticipant, 404);
 
-        if (! $viewer->is($member)) {
-            $isBlocked = Block::query()
-                ->where(fn ($query) => $query
-                    ->where('blocker_user_id', $viewer->id)
-                    ->where('blocked_user_id', $member->id))
-                ->orWhere(fn ($query) => $query
-                    ->where('blocker_user_id', $member->id)
-                    ->where('blocked_user_id', $viewer->id))
-                ->exists();
-            abort_if($isBlocked, 404);
+        $outgoingBlock = ! $viewer->is($member) && Block::query()
+            ->where('blocker_user_id', $viewer->id)
+            ->where('blocked_user_id', $member->id)
+            ->exists();
+        $isBlocked = $outgoingBlock || (! $viewer->is($member) && Block::query()
+            ->where('blocker_user_id', $member->id)
+            ->where('blocked_user_id', $viewer->id)
+            ->exists());
+
+        if ($isBlocked) {
+            return $this->workspace->render($viewer, $this->workspace->context($request), [
+                'kind' => 'participant-profile',
+                'event' => $this->eventData($event, $viewer),
+                'profile' => [
+                    'isBlocked' => true,
+                    'canBlock' => false,
+                    'canLike' => false,
+                    'canUnblock' => $outgoingBlock,
+                    'conversationHref' => null,
+                    'member' => ['id' => $member->id],
+                ],
+            ]);
         }
 
         $member->load(['profile.avatar', 'profile.interests', 'roles']);
@@ -76,7 +88,7 @@ final class EventParticipantController extends Controller
         return $this->workspace->render($viewer, $this->workspace->context($request), [
             'kind' => 'participant-profile',
             'event' => $this->eventData($event, $viewer),
-            'profile' => PublicMemberData::from($viewer, $member),
+            'profile' => ['isBlocked' => false] + PublicMemberData::from($viewer, $member),
         ]);
     }
 

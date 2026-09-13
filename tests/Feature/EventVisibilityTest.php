@@ -100,4 +100,44 @@ class EventVisibilityTest extends TestCase
                 ->has('participating', 1)
                 ->where('participating.0.id', $joined->id));
     }
+
+    public function test_an_event_from_a_blocked_organizer_is_absent_from_my_events_and_direct_links_return_to_the_list(): void
+    {
+        $viewer = User::factory()->withProfile()->create();
+        $event = Event::factory()->create();
+        EventRegistration::factory()->accepted()->create([
+            'event_id' => $event->id,
+            'user_id' => $viewer->id,
+        ]);
+        Block::factory()->create([
+            'blocker_user_id' => $viewer->id,
+            'blocked_user_id' => $event->organizer_user_id,
+        ]);
+
+        $this->actingAs($viewer)
+            ->get(route('events.mine'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page->has('participating', 0));
+
+        $this->actingAs($viewer)
+            ->get(route('events.show', ['event' => $event, 'origin' => 'mine']))
+            ->assertRedirect(route('events.mine', absolute: false));
+    }
+
+    public function test_a_cancelled_event_remains_readable_without_mutation_actions(): void
+    {
+        $viewer = User::factory()->withProfile()->create();
+        $event = Event::factory()->create(['cancelled_at' => now()]);
+        EventRegistration::factory()->accepted()->create([
+            'event_id' => $event->id,
+            'user_id' => $viewer->id,
+        ]);
+
+        $this->actingAs($viewer)
+            ->get(route('events.show', ['event' => $event, 'origin' => 'mine']))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('panel.kind', 'detail')
+                ->where('panel.event.isCancelled', true));
+    }
 }

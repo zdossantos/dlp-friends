@@ -18,7 +18,7 @@ return [
     'statuses' => ['pending' => 'En attente', 'accepted' => 'Acceptée', 'refused' => 'Refusée', 'withdrawn' => 'Désistée', 'removed' => 'Retirée', 'blocked' => 'Bloquée'],
     'actions' => ['create' => 'Créer', 'mine' => 'Mes événements', 'view' => 'Voir', 'edit' => 'Modifier', 'cancel' => 'Annuler l’événement', 'register' => 'Participer', 'withdraw' => 'Se désinscrire', 'accept' => 'Accepter', 'refuse' => 'Refuser', 'remove' => 'Retirer', 'manage_requests' => 'Gérer les demandes (:count)', 'confirm' => 'Confirmer', 'close' => 'Fermer', 'back' => 'Retour'],
     'roles' => ['organizer' => 'Organisateur', 'participant' => 'Participant'],
-    'participants' => ['open' => 'Voir les :count participants', 'me' => 'Moi', 'blocked_user' => 'Utilisateur bloqué', 'discuss' => 'Discuter'],
+    'participants' => ['open' => 'Voir les :count participants', 'me' => 'Moi', 'blocked_user' => 'Utilisateur bloqué', 'blocked_profile_description' => 'Les informations de ce profil ne sont pas disponibles.', 'discuss' => 'Discuter'],
     'panels' => [
         'detail' => ['title' => 'Détails de l’événement', 'description' => 'Toutes les informations utiles sans quitter ta liste.'],
         'create' => ['title' => 'Créer un événement', 'description' => 'Propose un rendez-vous amical aux autres membres.'],

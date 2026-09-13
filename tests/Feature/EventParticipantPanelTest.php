@@ -130,13 +130,6 @@ class EventParticipantPanelTest extends TestCase
         ]);
 
         $this->actingAs($viewer)
-            ->get(route('events.participants.index', $event))
-            ->assertOk()
-            ->assertInertia(fn (Assert $page) => $page
-                ->where('panel.event.participants.0.id', $event->organizer->id)
-                ->where('panel.event.participants.0.canLike', true));
-
-        $this->actingAs($viewer)
             ->get(route('events.participants.show', [$event, $event->organizer]))
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
@@ -159,14 +152,14 @@ class EventParticipantPanelTest extends TestCase
         $conversation = Conversation::query()->create(['match_id' => $match->id]);
 
         $this->actingAs($viewer)
-            ->get(route('events.participants.index', $event))
+            ->get(route('events.participants.show', [$event, $event->organizer]))
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
-                ->where('panel.event.participants.0.conversationHref', route('conversations.show', $conversation, absolute: false))
-                ->where('panel.event.participants.0.canLike', false));
+                ->where('panel.profile.conversationHref', route('conversations.show', $conversation, absolute: false))
+                ->where('panel.profile.canLike', false));
     }
 
-    public function test_a_blocked_participant_is_marked_without_exposing_their_profile(): void
+    public function test_a_blocked_participant_opens_a_redacted_profile_with_only_the_available_unblock_action(): void
     {
         $event = Event::factory()->create();
         $viewer = User::factory()->withProfile()->create();
@@ -194,7 +187,18 @@ class EventParticipantPanelTest extends TestCase
 
         $this->actingAs($viewer)
             ->get(route('events.participants.show', [$event, $blocked]))
-            ->assertNotFound();
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('panel.kind', 'participant-profile')
+                ->where('panel.profile.isBlocked', true)
+                ->where('panel.profile.member.id', $blocked->id)
+                ->missing('panel.profile.member.display_name')
+                ->missing('panel.profile.member.avatar')
+                ->missing('panel.profile.member.bio')
+                ->where('panel.profile.canUnblock', true)
+                ->where('panel.profile.canLike', false)
+                ->where('panel.profile.canBlock', false)
+                ->where('panel.profile.conversationHref', null));
     }
 
     public function test_a_non_participant_profile_is_not_exposed_by_an_event_route(): void
