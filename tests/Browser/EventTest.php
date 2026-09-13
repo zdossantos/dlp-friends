@@ -52,7 +52,7 @@ test('event details use the shadcn drawer on mobile without a close icon and a d
         ->assertAttribute('[data-test="event-panel"]', 'data-panel-mode', 'drawer')
         ->assertAttribute('[data-test="event-panel"]', 'data-slot', 'drawer-content')
         ->assertMissing('[data-test="event-panel"] [data-slot="drawer-close-icon"]')
-        ->assertScript("getComputedStyle(document.querySelector('[data-test=event-panel]')).overflowY", 'visible')
+        ->assertScript("getComputedStyle(document.querySelector('[data-test=event-panel]')).overflowY", 'hidden')
         ->assertNoJavaScriptErrors();
 
     $page->resize(1280, 800)
@@ -177,6 +177,7 @@ test('participant avatar stack opens the list and profiles inside the event pane
                 return back.getBoundingClientRect().left - panel.getBoundingClientRect().left <= 32
                     && back.getBoundingClientRect().top - panel.getBoundingClientRect().top <= 80
                     && getComputedStyle(backLayer).position === 'absolute'
+                    && getComputedStyle(panel).overflow === 'hidden'
                     && profile.getBoundingClientRect().top - panel.getBoundingClientRect().top <= 8
                     && getComputedStyle(profile).borderTopWidth === '0px';
             })()

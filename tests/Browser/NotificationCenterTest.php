@@ -65,12 +65,15 @@ test('mobile notifications stay within the viewport and keep the active filter l
         'conversations',
         'Un membre avec un nom volontairement beaucoup trop long pour tenir dans une notification mobile',
         $conversation->id,
+        'notifications.items.new_match',
     );
     $this->actingAs($member);
 
     $page = visit('/notifications')->on()->mobile()->inDarkMode();
     $page->script("localStorage.setItem('appearance', 'dark')");
     $page->navigate('/notifications')
+        ->assertSee('Nouveau match avec Un membre')
+        ->assertDontSee('Tu peux maintenant discuter avec')
         ->assertScript(<<<'JS'
             (() => {
                 const root = document.documentElement;
@@ -151,14 +154,15 @@ function notificationBrowserNotice(
     string $category,
     string $sender,
     int $conversationId,
+    string $translationKey = 'notifications.items.new_message',
 ): DatabaseNotification {
     return $member->notifications()->create([
         'id' => (string) Str::uuid(),
         'type' => 'test',
         'data' => [
             'category' => $category,
-            'translation_key' => 'notifications.items.new_message',
-            'parameters' => ['sender' => $sender],
+            'translation_key' => $translationKey,
+            'parameters' => ['sender' => $sender, 'member' => $sender],
             'target_type' => 'conversation',
             'target_id' => $conversationId,
         ],

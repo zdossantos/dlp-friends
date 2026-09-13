@@ -19,7 +19,7 @@ return [
     ],
     'actions' => ['mark_all_read' => 'Tout marquer comme lu'],
     'items' => [
-        'new_match' => 'Tu peux maintenant discuter avec :member.',
+        'new_match' => 'Nouveau match avec :member.',
         'new_message' => ':sender t’a envoyé un nouveau message.',
         'event_accepted' => 'Ton inscription à « :event » est acceptée.',
         'event_refused' => 'Ta demande pour « :event » a été refusée.',

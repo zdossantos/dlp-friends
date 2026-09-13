@@ -19,7 +19,7 @@ return [
     ],
     'actions' => ['mark_all_read' => 'Mark all as read'],
     'items' => [
-        'new_match' => 'You can now chat with :member.',
+        'new_match' => 'New match with :member.',
         'new_message' => ':sender sent you a new message.',
         'event_accepted' => 'Your registration for “:event” was accepted.',
         'event_refused' => 'Your request for “:event” was refused.',
