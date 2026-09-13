@@ -191,13 +191,13 @@ class CreateSwipeTest extends TestCase
         $this->assertDatabaseCount('swipes', 0);
     }
 
-    public function test_a_repeated_decision_is_reported_as_a_decision_validation_error(): void
+    public function test_a_repeated_like_is_reported_as_a_decision_validation_error(): void
     {
         [$actor, $target] = $this->memberPair();
         Swipe::factory()->create([
             'actor_user_id' => $actor->id,
             'target_user_id' => $target->id,
-            'decision' => SwipeDecision::Pass,
+            'decision' => SwipeDecision::Like,
         ]);
 
         try {
@@ -210,6 +210,28 @@ class CreateSwipeTest extends TestCase
         }
 
         $this->assertDatabaseCount('swipes', 1);
+        $this->assertDatabaseCount('matches', 0);
+    }
+
+    public function test_a_like_cannot_be_replaced_by_a_pass(): void
+    {
+        [$actor, $target] = $this->memberPair();
+        Swipe::factory()->create([
+            'actor_user_id' => $actor->id,
+            'target_user_id' => $target->id,
+            'decision' => SwipeDecision::Like,
+        ]);
+
+        try {
+            app(CreateSwipe::class)->handle($actor, $target, SwipeDecision::Pass);
+            $this->fail('A like should remain irreversible.');
+        } catch (ValidationException $exception) {
+            expect($exception->errors())->toBe([
+                'decision' => ['Vous avez déjà évalué ce profil.'],
+            ]);
+        }
+
+        expect(Swipe::query()->sole()->decision)->toBe(SwipeDecision::Like);
         $this->assertDatabaseCount('matches', 0);
     }
 

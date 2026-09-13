@@ -26,7 +26,7 @@ class SwipeController extends Controller
 
         if (! $targetUser instanceof User) {
             throw ValidationException::withMessages([
-                'target' => 'Ce profil n’est pas disponible.',
+                'target' => __('discovery.errors.target_unavailable'),
             ]);
         }
 

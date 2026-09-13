@@ -2,8 +2,10 @@
 
 namespace App\Data;
 
+use App\Enums\SwipeDecision;
 use App\Models\Block;
 use App\Models\Interest;
+use App\Models\MemberMatch;
 use App\Models\Swipe;
 use App\Models\User;
 
@@ -28,15 +30,31 @@ final readonly class PublicMemberData
             ->whereIn('blocker_user_id', [$viewer->id, $member->id])
             ->whereIn('blocked_user_id', [$viewer->id, $member->id])
             ->exists();
-        $hasOutgoingDecision = ! $isSelf && Swipe::query()
+        $outgoingDecision = ! $isSelf ? Swipe::query()
             ->where('actor_user_id', $viewer->id)
             ->where('target_user_id', $member->id)
-            ->exists();
+            ->value('decision') : null;
+        [$lowId, $highId] = collect([$viewer->id, $member->id])->sort()->values()->all();
+        $conversation = ! $isSelf && ! $isBlockedPair
+            ? MemberMatch::query()
+                ->where('user_low_id', $lowId)
+                ->where('user_high_id', $highId)
+                ->with('conversation')
+                ->first()?->conversation
+            : null;
 
         return [
             'canBlock' => ! $isSelf && ! $isAdmin && ! $canUnblock,
-            'canLike' => ! $isSelf && ! $isBlockedPair && ! $hasOutgoingDecision,
+            'canLike' => ! $isSelf
+                && ! $isBlockedPair
+                && $conversation === null
+                && ($outgoingDecision === null
+                    || $outgoingDecision === SwipeDecision::Pass
+                    || $outgoingDecision === SwipeDecision::Pass->value),
             'canUnblock' => $canUnblock,
+            'conversationHref' => $conversation !== null
+                ? route('conversations.show', $conversation, absolute: false)
+                : null,
             'member' => [
                 'id' => $member->id,
                 'is_admin' => $isAdmin,

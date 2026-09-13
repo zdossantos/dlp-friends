@@ -33,13 +33,13 @@ class PublicMemberProfileTest extends TestCase
                 ->missing('member.birth_date'));
     }
 
-    public function test_the_profile_like_is_hidden_after_any_outgoing_decision_or_for_a_blocked_pair(): void
+    public function test_the_profile_like_can_replace_a_pass_but_is_hidden_after_a_like_or_for_a_blocked_pair(): void
     {
         config()->set('inertia.testing.ensure_pages_exist', false);
         $viewer = User::factory()->withProfile()->create();
         $member = User::factory()->withProfile()->create();
 
-        foreach (SwipeDecision::cases() as $decision) {
+        foreach ([SwipeDecision::Pass, SwipeDecision::Like] as $decision) {
             Swipe::query()->delete();
             Swipe::factory()->create([
                 'actor_user_id' => $viewer->id,
@@ -48,7 +48,8 @@ class PublicMemberProfileTest extends TestCase
             ]);
 
             $this->actingAs($viewer)->get(route('members.show', $member))
-                ->assertInertia(fn (Assert $page) => $page->where('canLike', false));
+                ->assertInertia(fn (Assert $page) => $page
+                    ->where('canLike', $decision === SwipeDecision::Pass));
         }
 
         Swipe::query()->delete();

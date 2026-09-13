@@ -83,7 +83,9 @@ même changement.
 
 ## Décisions V1 explicites
 
-- Il n'y a ni limite quotidienne de swipes, ni annulation d'un swipe dans le MVP.
+- Il n'y a ni limite quotidienne de swipes, ni annulation libre dans le MVP. Un
+  `pass` peut uniquement être remplacé par un `like` depuis une surface membre
+  qui propose cette action ; le `like` obtenu reste irréversible.
 - Un profil passé ou liké n'est plus reproposé au même membre.
 - La messagerie accepte uniquement du texte brut, limité à 2 000 caractères. Les pièces jointes, GIF, réactions, édition et suppression de message sont hors V1.
 - Un membre ne peut lire ou envoyer un message que dans une conversation liée à son match et non affectée par un blocage.

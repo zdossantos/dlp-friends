@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Link, router } from '@inertiajs/vue3';
+import { ArrowLeft } from '@lucide/vue';
 import { computed, nextTick } from 'vue';
 import AdaptiveEventPanel from '@/components/events/AdaptiveEventPanel.vue';
 import EventCard from '@/components/events/EventCard.vue';
@@ -12,6 +13,7 @@ import {
     restoreEventWorkspaceScroll,
 } from '@/lib/eventWorkspaceScroll';
 import { create, index, mine } from '@/routes/events';
+import { index as participantsIndex } from '@/routes/events/participants';
 import type { EventWorkspaceProps } from '@/types/event';
 
 const props = defineProps<EventWorkspaceProps>();
@@ -40,6 +42,15 @@ const createHref = computed(
         create(props.context === 'mine' ? { query: { origin: 'mine' } } : {})
             .url,
 );
+const participantProfileBackHref = computed(() => {
+    if (props.panel?.kind !== 'participant-profile') {
+        return null;
+    }
+
+    return participantsIndex(props.panel.event.id, {
+        query: props.context === 'mine' ? { origin: 'mine' } : {},
+    }).url;
+});
 
 function rememberCreateOpener(event: Event): void {
     rememberEventWorkspaceScroll(event.currentTarget as HTMLElement | null);
@@ -204,8 +215,27 @@ function updatePanel(open: boolean): void {
         :open="panel !== null"
         :title="panelTitle"
         :description="panelDescription"
+        :full-bleed="panel?.kind === 'participant-profile'"
         @update:open="updatePanel"
     >
+        <template v-if="participantProfileBackHref" #header-leading>
+            <Button
+                as-child
+                type="button"
+                variant="outline"
+                size="icon"
+                class="size-11 shrink-0 rounded-full"
+            >
+                <Link
+                    :href="participantProfileBackHref"
+                    preserve-scroll
+                    data-test="participant-profile-back"
+                    :aria-label="t('events.actions.back')"
+                >
+                    <ArrowLeft class="size-5" aria-hidden="true" />
+                </Link>
+            </Button>
+        </template>
         <EventPanelContent v-if="panel" :panel="panel" :context="context" />
     </AdaptiveEventPanel>
 </template>

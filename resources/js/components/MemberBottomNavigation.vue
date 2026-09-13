@@ -26,18 +26,22 @@ const shouldShow = useMemberNavigationVisibility();
 const pendingPath = ref<string | null>(null);
 
 const items = computed(() => [
-    { label: t('discovery.navigation'), href: discovery(), icon: Sparkles },
+    {
+        label: t('discovery.bottom_navigation'),
+        href: discovery(),
+        icon: Sparkles,
+    },
+    {
+        label: t('conversations.bottom_navigation'),
+        href: conversations(),
+        icon: MessageCircle,
+        activeParents: ['/conversations'],
+    },
     {
         label: t('events.navigation'),
         href: events(),
         icon: CalendarDays,
         activeParents: ['/events'],
-    },
-    {
-        label: t('conversations.navigation'),
-        href: conversations(),
-        icon: MessageCircle,
-        activeParents: ['/conversations'],
     },
     {
         label: t('notifications.navigation'),

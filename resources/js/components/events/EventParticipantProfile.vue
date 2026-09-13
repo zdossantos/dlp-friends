@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Link } from '@inertiajs/vue3';
-import { ArrowLeft } from '@lucide/vue';
+import { MessageCircle } from '@lucide/vue';
 import { computed } from 'vue';
 import BlockMemberDialog from '@/components/members/BlockMemberDialog.vue';
 import LikeMemberButton from '@/components/members/LikeMemberButton.vue';
@@ -33,26 +33,9 @@ const visitFrequency = computed(() =>
 </script>
 
 <template>
-    <section data-test="event-participant-profile" class="space-y-3 pt-1">
-        <div class="flex justify-start">
-            <Button
-                as-child
-                type="button"
-                variant="outline"
-                size="icon"
-                class="size-11 rounded-full"
-            >
-                <Link
-                    :href="backHref"
-                    preserve-scroll
-                    data-test="participant-profile-back"
-                    :aria-label="t('events.actions.back')"
-                >
-                    <ArrowLeft class="size-5" aria-hidden="true" />
-                </Link>
-            </Button>
-        </div>
+    <section data-test="event-participant-profile" class="h-full bg-card">
         <ProfilePresentation
+            embedded
             :avatar="profile.member.avatar"
             :display-name="profile.member.display_name"
             :age-label="t('profile.details.age', { age: profile.member.age })"
@@ -70,6 +53,16 @@ const visitFrequency = computed(() =>
                     :member-id="profile.member.id"
                     :return-href="$page.url"
                 />
+                <Button
+                    v-else-if="profile.conversationHref"
+                    as-child
+                    variant="secondary"
+                >
+                    <Link :href="profile.conversationHref">
+                        <MessageCircle class="size-4" aria-hidden="true" />
+                        {{ t('events.participants.discuss') }}
+                    </Link>
+                </Button>
                 <UnblockMemberButton
                     v-if="profile.canUnblock"
                     :member-id="profile.member.id"

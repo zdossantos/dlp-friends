@@ -2,9 +2,15 @@
 
 namespace Tests\Feature;
 
+use App\Enums\EventRegistrationStatus;
 use App\Enums\ProfileVisibility;
+use App\Enums\SwipeDecision;
+use App\Models\Block;
+use App\Models\Conversation;
 use App\Models\Event;
 use App\Models\EventRegistration;
+use App\Models\MemberMatch;
+use App\Models\Swipe;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
@@ -92,6 +98,105 @@ class EventParticipantPanelTest extends TestCase
                 ->where('panel.profile.canUnblock', false));
     }
 
+    public function test_the_participant_list_identifies_the_current_member(): void
+    {
+        $event = Event::factory()->create();
+        $viewer = User::factory()->withProfile()->create();
+        EventRegistration::factory()->accepted()->create([
+            'event_id' => $event->id,
+            'user_id' => $viewer->id,
+        ]);
+
+        $this->actingAs($viewer)
+            ->get(route('events.participants.index', $event))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('panel.event.participants.1.id', $viewer->id)
+                ->where('panel.event.participants.1.isSelf', true));
+    }
+
+    public function test_a_previously_passed_participant_can_be_liked_from_the_event(): void
+    {
+        $event = Event::factory()->create();
+        $viewer = User::factory()->withProfile()->create();
+        EventRegistration::factory()->accepted()->create([
+            'event_id' => $event->id,
+            'user_id' => $viewer->id,
+        ]);
+        Swipe::factory()->create([
+            'actor_user_id' => $viewer->id,
+            'target_user_id' => $event->organizer->id,
+            'decision' => SwipeDecision::Pass,
+        ]);
+
+        $this->actingAs($viewer)
+            ->get(route('events.participants.index', $event))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('panel.event.participants.0.id', $event->organizer->id)
+                ->where('panel.event.participants.0.canLike', true));
+
+        $this->actingAs($viewer)
+            ->get(route('events.participants.show', [$event, $event->organizer]))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('panel.profile.canLike', true));
+    }
+
+    public function test_a_matched_participant_exposes_the_existing_conversation(): void
+    {
+        $event = Event::factory()->create();
+        $viewer = User::factory()->withProfile()->create();
+        EventRegistration::factory()->accepted()->create([
+            'event_id' => $event->id,
+            'user_id' => $viewer->id,
+        ]);
+        [$lowId, $highId] = collect([$viewer->id, $event->organizer->id])->sort()->values()->all();
+        $match = MemberMatch::factory()->create([
+            'user_low_id' => $lowId,
+            'user_high_id' => $highId,
+        ]);
+        $conversation = Conversation::query()->create(['match_id' => $match->id]);
+
+        $this->actingAs($viewer)
+            ->get(route('events.participants.index', $event))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('panel.event.participants.0.conversationHref', route('conversations.show', $conversation, absolute: false))
+                ->where('panel.event.participants.0.canLike', false));
+    }
+
+    public function test_a_blocked_participant_is_marked_without_exposing_their_profile(): void
+    {
+        $event = Event::factory()->create();
+        $viewer = User::factory()->withProfile()->create();
+        $blocked = User::factory()->withProfile()->create();
+        foreach ([$viewer, $blocked] as $participant) {
+            EventRegistration::factory()->accepted()->create([
+                'event_id' => $event->id,
+                'user_id' => $participant->id,
+            ]);
+        }
+        Block::factory()->create([
+            'blocker_user_id' => $viewer->id,
+            'blocked_user_id' => $blocked->id,
+        ]);
+
+        $this->actingAs($viewer)
+            ->get(route('events.participants.index', $event))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('panel.event.participants.2.id', $blocked->id)
+                ->where('panel.event.participants.2.isBlocked', true)
+                ->where('panel.event.participants.2.canUnblock', true)
+                ->where('panel.event.participants.2.displayName', null)
+                ->where('panel.event.participants.2.avatar', null));
+
+        $this->actingAs($viewer)
+            ->get(route('events.participants.show', [$event, $blocked]))
+            ->assertNotFound();
+    }
+
     public function test_a_non_participant_profile_is_not_exposed_by_an_event_route(): void
     {
         $event = Event::factory()->create();
@@ -143,5 +248,23 @@ class EventParticipantPanelTest extends TestCase
         $this->actingAs($accepted)
             ->get(route('events.registrations.index', $event))
             ->assertForbidden();
+    }
+
+    public function test_blocked_registrations_do_not_expose_who_blocked_the_organizer(): void
+    {
+        $event = Event::factory()->create();
+        $member = User::factory()->withProfile()->create();
+        EventRegistration::factory()->create([
+            'event_id' => $event->id,
+            'user_id' => $member->id,
+            'status' => EventRegistrationStatus::Blocked,
+        ]);
+
+        $this->actingAs($event->organizer)
+            ->get(route('events.registrations.index', $event))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('panel.kind', 'registrations')
+                ->has('panel.event.registrations', 0));
     }
 }

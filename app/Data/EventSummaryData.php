@@ -22,9 +22,22 @@ final readonly class EventSummaryData
             'isCancelled' => $event->cancelled_at !== null,
             'isStarted' => $event->hasStarted(),
             'isOrganizer' => $event->organizer_user_id === $viewer->id,
-            'registrationStatus' => $event->registrations()
-                ->where('user_id', $viewer->id)
-                ->first()?->status->value,
+            'registrationStatus' => self::registrationStatus($event, $viewer),
         ];
+    }
+
+    private static function registrationStatus(Event $event, User $viewer): ?string
+    {
+        if ($event->organizer_user_id === $viewer->id) {
+            return null;
+        }
+
+        if ($event->relationLoaded('registrations')) {
+            return $event->registrations->first()?->status->value;
+        }
+
+        return $event->registrations()
+            ->where('user_id', $viewer->id)
+            ->first()?->status->value;
     }
 }

@@ -39,7 +39,9 @@ et ces changements produisent une notification dans l’application.
 - Événements récurrents ou comportant plusieurs dates.
 - Notifications par e-mail ou push système.
 - Reconstruction rétroactive de notifications antérieures au déploiement.
-- Annulation ou remplacement d’une décision de swipe existante.
+- Annulation libre d’une décision de swipe existante. Une surface membre qui
+  propose le like autorise seulement la conversion définitive d’un `pass` en
+  `like`.
 
 ## Architecture retenue
 
@@ -188,9 +190,9 @@ inscription et protège aussi les données privées lors de l’affichage.
 
 ## Centre de notifications
 
-La barre mobile fixe comporte cinq destinations : Découvrir, Événements,
-Messages, Notifications et Profil. L’entrée Notifications utilise une icône de
-cloche et un badge accessible indiquant le nombre non lu.
+La barre mobile fixe comporte cinq destinations, dans l’ordre : Découvrir,
+Conversations, Événements, Notifications et Profil. L’entrée Notifications
+utilise une icône de cloche et un badge accessible indiquant le nombre non lu.
 
 La page Notifications présente :
 
@@ -223,12 +225,15 @@ mes amis » uniquement si :
 - le visiteur et la cible sont éligibles ;
 - il ne s’agit pas du même compte ;
 - aucune relation de blocage n’existe ;
-- aucune décision de swipe du visiteur vers la cible n’existe déjà.
+- aucun `like` du visiteur vers la cible n’existe déjà ; un `pass` antérieur
+  reste convertible depuis une surface membre qui propose cette action.
 
 L’action appelle la logique `CreateSwipe` existante avec la décision `like`.
 Elle respecte donc l’unicité, la concurrence et la création de match déjà
 implémentées. Un like réciproque crée la conversation et les notifications de
-match. Une décision antérieure, `like` ou `pass`, n’est ni remplacée ni annulée.
+match. Un `like` antérieur reste immuable. Depuis une surface membre qui propose
+cette action, un `pass` antérieur peut être remplacé de façon définitive par un
+`like` afin de corriger une décision prise par erreur.
 
 ## Autorisation et confidentialité
 

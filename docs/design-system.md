@@ -145,7 +145,8 @@ Le contenu, l’état et les actions restent uniques entre les deux formats. Les
 - Les paliers Tailwind `sm`, `md`, `lg` et `xl` enrichissent la disposition sans
   modifier l’ordre logique du contenu.
 - Les parcours membres utilisent une navigation inférieure sur les petits
-  écrans ; les surfaces administratives et de réglages peuvent employer une
+  écrans, ordonnée Découvrir, Conversations, Événements, Notifications puis
+  Profil ; les surfaces administratives et de réglages peuvent employer une
   navigation latérale ou une grille plus large.
 - Respecter les zones sûres avec `env(safe-area-inset-*)` pour les écrans
   concernés.
@@ -170,7 +171,10 @@ Le contenu, l’état et les actions restent uniques entre les deux formats. Les
   avant de fermer le panneau, sans perdre le contexte de la liste.
 - Une pile de participants affiche au plus trois avatars chevauchants puis un
   compteur `+N`. L’ensemble forme une seule cible accessible nommée ; la liste
-  complète présente avatar et nom dans des lignes tactiles d’au moins 44 px.
+  complète présente avatar, nom et action contextuelle dans des lignes tactiles
+  d’au moins 44 px. Le profil intégré occupe tout le fond du panneau et son
+  retour reste visible, immédiatement à gauche du titre. Les paires bloquées
+  emploient une surface grise, une icône et un libellé explicite.
 - Les rôles ne reposent pas uniquement sur la couleur : Mes événements sépare
   les sections organisées et rejointes et répète le rôle dans un badge textuel.
   Les surfaces de détail emploient exclusivement les tokens `card`,

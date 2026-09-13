@@ -2,6 +2,11 @@
 
 return [
     'navigation' => 'Explorer',
+    'bottom_navigation' => 'Découvrir',
+    'errors' => [
+        'already_evaluated' => 'Vous avez déjà évalué ce profil.',
+        'target_unavailable' => 'Ce profil n’est pas disponible.',
+    ],
     'profile_like' => ['success' => 'Ce membre a été ajouté à tes découvertes.'],
     'actions' => [
         'pass' => 'Passer',

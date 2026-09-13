@@ -6,6 +6,7 @@ defineProps<{
     open: boolean;
     title: string;
     description: string;
+    fullBleed?: boolean;
 }>();
 
 const emit = defineEmits<{ 'update:open': [open: boolean] }>();
@@ -41,18 +42,30 @@ function focusPanelWithoutScrolling(event: Event): void {
         >
             <component
                 :is="Modal.Header"
+                data-test="event-panel-header"
                 :class="
-                    isDesktop ? 'shrink-0 px-6 pt-6' : 'shrink-0 px-5 text-left'
+                    isDesktop
+                        ? 'sticky top-0 z-20 shrink-0 bg-card px-6 pt-6 pb-4'
+                        : 'sticky top-0 z-20 shrink-0 bg-card px-5 pb-4 text-left'
                 "
             >
-                <component :is="Modal.Title">{{ title }}</component>
-                <component :is="Modal.Description">{{ description }}</component>
+                <div class="flex items-center gap-3">
+                    <slot name="header-leading" />
+                    <component :is="Modal.Title">{{ title }}</component>
+                </div>
+                <component
+                    :is="Modal.Description"
+                    :class="$slots['header-leading'] ? 'pl-14' : ''"
+                    >{{ description }}</component
+                >
             </component>
             <div
                 :class="
-                    isDesktop
-                        ? 'min-h-0 overflow-y-auto px-6 pb-6'
-                        : 'min-h-0 flex-1 overflow-y-auto px-5 pb-2'
+                    fullBleed
+                        ? 'min-h-0 flex-1 overflow-y-auto bg-card'
+                        : isDesktop
+                          ? 'min-h-0 overflow-y-auto px-6 pb-6'
+                          : 'min-h-0 flex-1 overflow-y-auto px-5 pb-2'
                 "
             >
                 <slot />

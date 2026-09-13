@@ -102,7 +102,10 @@ Paris.
 - Les profils déjà évalués, bloqués, masqués, incomplets ou indisponibles sont
   exclus.
 - Un profil passé ou liké n’est plus reproposé au même membre.
-- Il n’existe ni limite quotidienne ni annulation de swipe dans le MVP.
+- Il n’existe ni limite quotidienne ni annulation libre de swipe dans le MVP.
+  Depuis une surface membre qui propose le like, un refus antérieur peut
+  toutefois être remplacé une seule fois par un like ; un like reste
+  irréversible.
 - Le détail du score et les contraintes de paire sont définis dans
   [`data-model.md`](data-model.md).
 
@@ -137,8 +140,11 @@ Paris.
   les demandes d’inscription s’ouvrent dans un drawer sur mobile et une modale
   sur ordinateur. Les URL directes et les notifications reconstruisent le même
   écran principal et le même panneau que la navigation manuelle.
-- La liste privée des participants utilise leurs avatars ; un profil peut être
-  consulté et liké dans le panneau sans quitter l’événement. Les refus,
+- La liste privée des participants utilise leurs avatars et nomme le membre
+  connecté « Moi ». Elle propose le like, y compris après un refus antérieur,
+  ou l’accès à la conversation lorsque le match existe. Un membre bloqué est
+  neutralisé visuellement et seul l’auteur du blocage peut le débloquer. Le
+  profil reste consultable dans le panneau sans quitter l’événement. Les refus,
   retraits, désinscriptions et annulations décrivent leur conséquence dans une
   confirmation explicite.
 - La date, les lieux et la capacité peuvent être modifiés jusqu’à 24 heures

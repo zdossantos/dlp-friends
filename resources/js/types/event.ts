@@ -23,6 +23,11 @@ export type EventParticipant = {
     id: number;
     displayName: string | null;
     avatar: AvatarOption | null;
+    isSelf: boolean;
+    isBlocked: boolean;
+    canUnblock: boolean;
+    canLike: boolean;
+    conversationHref: string | null;
 };
 export type OrganizerRegistration = EventParticipant & {
     registrationId: number;
@@ -42,6 +47,7 @@ export type EmbeddedMemberProfile = {
     canBlock: boolean;
     canLike: boolean;
     canUnblock: boolean;
+    conversationHref: string | null;
 };
 
 export type EventPanel =

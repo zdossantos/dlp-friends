@@ -37,6 +37,26 @@ class LikeMemberControllerTest extends TestCase
         $this->assertDatabaseCount('swipes', 1);
     }
 
+    public function test_a_profile_like_replaces_a_previous_pass(): void
+    {
+        [$viewer, $member] = $this->members();
+        Swipe::factory()->create([
+            'actor_user_id' => $viewer->id,
+            'target_user_id' => $member->id,
+            'decision' => SwipeDecision::Pass,
+        ]);
+
+        $this->actingAs($viewer)
+            ->post(route('members.like', $member))
+            ->assertRedirect();
+
+        $this->assertDatabaseCount('swipes', 1);
+        expect(Swipe::query()
+            ->whereBelongsTo($viewer, 'actor')
+            ->whereBelongsTo($member, 'target')
+            ->value('decision'))->toBe(SwipeDecision::Like);
+    }
+
     public function test_a_reciprocal_profile_like_creates_the_existing_match_flow_once(): void
     {
         Notification::fake();

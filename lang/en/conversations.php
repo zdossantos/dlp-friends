@@ -2,6 +2,7 @@
 
 return [
     'navigation' => 'Chats',
+    'bottom_navigation' => 'Conversations',
     'page' => [
         'title' => 'My chats',
         'description' => 'Find the people whose worlds have crossed with yours.',

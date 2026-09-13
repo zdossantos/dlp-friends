@@ -4,6 +4,7 @@ use App\Enums\EventRegistrationMode;
 use App\Enums\EventRegistrationStatus;
 use App\Enums\ProfileVisibility;
 use App\Enums\SwipeDecision;
+use App\Models\Block;
 use App\Models\Event;
 use App\Models\EventRegistration;
 use App\Models\Swipe;
@@ -158,6 +159,9 @@ test('participant avatar stack opens the list and profiles inside the event pane
         ->assertPathIs("/events/{$event->id}/participants")
         ->assertPresent('[data-test="event-panel"]')
         ->assertCount('[data-test="participant-row"]', 4)
+        ->assertSee('Moi')
+        ->assertPresent("[data-test=\"participant-self-{$viewer->id}\"]")
+        ->assertPresent("[data-test=\"participant-like-{$organizer->id}\"]")
         ->click("[data-test=\"participant-link-{$organizer->id}\"]")
         ->assertPresent('[data-test="event-panel"]')
         ->assertPresent('[data-test="event-participant-profile"]')
@@ -167,8 +171,13 @@ test('participant avatar stack opens the list and profiles inside the event pane
             (() => {
                 const back = document.querySelector('[data-test="participant-profile-back"]');
                 const panel = document.querySelector('[data-test="event-panel"]');
-                return back.getBoundingClientRect().left
-                    < panel.getBoundingClientRect().left + panel.getBoundingClientRect().width / 2;
+                const title = panel.querySelector('[data-slot="dialog-title"], [data-slot="drawer-title"]');
+                const header = panel.querySelector('[data-test="event-panel-header"]');
+                const profile = panel.querySelector('[data-test="profile-presentation"]');
+                return back.getBoundingClientRect().right <= title.getBoundingClientRect().left
+                    && Math.abs(header.getBoundingClientRect().top - panel.getBoundingClientRect().top) <= 2
+                    && getComputedStyle(header).backgroundColor === getComputedStyle(panel).backgroundColor
+                    && getComputedStyle(profile).borderTopWidth === '0px';
             })()
             JS, true);
 
@@ -180,6 +189,31 @@ test('participant avatar stack opens the list and profiles inside the event pane
     $page->assertPathIs('/events/mine')
         ->assertPresent('[data-test="mine-events"]')
         ->assertMissing('[data-test="event-panel"]')
+        ->assertNoJavaScriptErrors();
+});
+
+test('a blocked participant is clearly marked and can be unblocked from the list', function () {
+    $organizer = eventBrowserMember('Alice');
+    $viewer = eventBrowserMember('Basile');
+    $blocked = eventBrowserMember('Camille');
+    $event = Event::factory()->for($organizer, 'organizer')->create();
+    foreach ([$viewer, $blocked] as $participant) {
+        EventRegistration::factory()->for($event)->for($participant)->accepted()->create();
+    }
+    Block::factory()->create([
+        'blocker_user_id' => $viewer->id,
+        'blocked_user_id' => $blocked->id,
+    ]);
+    $this->actingAs($viewer);
+
+    visit("/events/{$event->id}/participants?origin=mine")
+        ->assertSee('Utilisateur bloqué')
+        ->assertPresent("[data-test=\"participant-blocked-{$blocked->id}\"]")
+        ->assertPresent("[data-test=\"participant-unblock-{$blocked->id}\"]")
+        ->assertMissing("[data-test=\"participant-link-{$blocked->id}\"]")
+        ->click("[data-test=\"participant-unblock-{$blocked->id}\"]")
+        ->assertSee('Camille')
+        ->assertMissing("[data-test=\"participant-blocked-{$blocked->id}\"]")
         ->assertNoJavaScriptErrors();
 });
 

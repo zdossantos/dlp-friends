@@ -2,6 +2,7 @@
 
 return [
     'navigation' => 'Échanges',
+    'bottom_navigation' => 'Conversations',
     'page' => [
         'title' => 'Mes échanges',
         'description' => 'Retrouve ici les personnes avec qui tes univers se sont croisés.',

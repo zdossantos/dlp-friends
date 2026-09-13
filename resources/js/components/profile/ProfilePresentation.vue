@@ -22,8 +22,9 @@ withDefaults(
         interestsLabel: string;
         visitFrequencyLabel: string;
         isAdmin?: boolean;
+        embedded?: boolean;
     }>(),
-    { isAdmin: false },
+    { isAdmin: false, embedded: false },
 );
 </script>
 
@@ -31,8 +32,15 @@ withDefaults(
     <section
         data-test="profile-presentation"
         :class="[
-            'flex max-h-full w-full flex-col overflow-hidden rounded-[2rem] border bg-card shadow-xl shadow-primary/10',
-            isAdmin ? 'border-2 border-amber-400' : 'border-border/70',
+            'flex max-h-full w-full flex-col overflow-hidden bg-card',
+            embedded
+                ? 'border-0 shadow-none'
+                : 'rounded-[2rem] border shadow-xl shadow-primary/10',
+            !embedded && isAdmin
+                ? 'border-2 border-amber-400'
+                : !embedded
+                  ? 'border-border/70'
+                  : undefined,
         ]"
     >
         <div

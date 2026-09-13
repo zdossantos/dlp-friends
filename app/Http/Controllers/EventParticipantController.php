@@ -6,6 +6,7 @@ use App\Data\EventDetailData;
 use App\Data\EventWorkspaceData;
 use App\Data\PublicMemberData;
 use App\Enums\EventRegistrationStatus;
+use App\Models\Block;
 use App\Models\Event;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
@@ -42,6 +43,18 @@ final class EventParticipantController extends Controller
                 ->where('status', EventRegistrationStatus::Accepted)
                 ->exists();
         abort_unless($isParticipant, 404);
+
+        if (! $viewer->is($member)) {
+            $isBlocked = Block::query()
+                ->where(fn ($query) => $query
+                    ->where('blocker_user_id', $viewer->id)
+                    ->where('blocked_user_id', $member->id))
+                ->orWhere(fn ($query) => $query
+                    ->where('blocker_user_id', $member->id)
+                    ->where('blocked_user_id', $viewer->id))
+                ->exists();
+            abort_if($isBlocked, 404);
+        }
 
         $member->load(['profile.avatar', 'profile.interests', 'roles']);
         if (! $viewer->is($member)) {

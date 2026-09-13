@@ -442,16 +442,21 @@ test('member navigation appears on discovery conversations profile and settings 
     visit('/discover')
         ->on()->mobile()
         ->assertCount('[data-test="member-bottom-navigation"] a', 5)
-        ->assertPresent('[aria-label="Explorer"][aria-current="page"]')
+        ->assertScript(<<<'JS'
+            Array.from(document.querySelectorAll('[data-test="member-bottom-navigation"] a'))
+                .map((item) => item.getAttribute('aria-label'))
+                .join('|') === 'Découvrir|Conversations|Événements|Notifications|Profil'
+            JS, true)
+        ->assertPresent('[aria-label="Découvrir"][aria-current="page"]')
         ->assertPresent('[aria-label="Événements"]')
-        ->assertPresent('[aria-label="Échanges"]')
+        ->assertPresent('[aria-label="Conversations"]')
         ->assertPresent('[aria-label="Notifications"]')
         ->assertPresent('[aria-label="Profil"]');
 
     visit('/conversations')
         ->on()->mobile()
         ->assertPresent('[data-test="member-bottom-navigation"]')
-        ->assertPresent('[aria-label="Échanges"][aria-current="page"]');
+        ->assertPresent('[aria-label="Conversations"][aria-current="page"]');
 
     visit('/profile')
         ->on()->mobile()

@@ -7,6 +7,7 @@ use App\Models\Block;
 use App\Models\Event;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -66,7 +67,11 @@ final readonly class EventWorkspaceData
             ->whereNotIn('organizer_user_id', $blockedUserIds)
             ->withAvailableCapacity()
             ->withAcceptedRegistrationCount()
-            ->with('organizer.profile')
+            ->with([
+                'organizer.profile',
+                'registrations' => fn (Relation $registrations) => $registrations
+                    ->where('user_id', $viewer->id),
+            ])
             ->orderBy('starts_at')
             ->get()
             ->map(fn (Event $event): array => EventSummaryData::from($event, $viewer))
@@ -79,7 +84,11 @@ final readonly class EventWorkspaceData
         $organized = Event::query()
             ->where('organizer_user_id', $viewer->id)
             ->withAcceptedRegistrationCount()
-            ->with('organizer.profile')
+            ->with([
+                'organizer.profile',
+                'registrations' => fn (Relation $registrations) => $registrations
+                    ->where('user_id', $viewer->id),
+            ])
             ->orderByDesc('starts_at')
             ->get();
 
@@ -91,7 +100,11 @@ final readonly class EventWorkspaceData
                     EventRegistrationStatus::Accepted,
                 ]))
             ->withAcceptedRegistrationCount()
-            ->with('organizer.profile')
+            ->with([
+                'organizer.profile',
+                'registrations' => fn (Relation $registrations) => $registrations
+                    ->where('user_id', $viewer->id),
+            ])
             ->orderByDesc('starts_at')
             ->get();
 

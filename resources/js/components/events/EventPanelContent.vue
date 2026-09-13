@@ -48,7 +48,7 @@ const origin = props.context === 'mine' ? { origin: 'mine' } : {};
     </section>
     <section
         v-else-if="panel.kind === 'participant-profile'"
-        class="space-y-4 pt-2"
+        class="h-full bg-card"
     >
         <EventParticipantProfile
             :profile="panel.profile"
