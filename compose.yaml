@@ -9,6 +9,8 @@ x-app: &app
     REVERB_SCHEME: http
   networks:
     - dlp-friends
+  volumes:
+    - app-storage:/var/www/html/storage/app
   restart: unless-stopped
   depends_on:
     mysql:
@@ -212,5 +214,6 @@ networks:
     driver: bridge
 
 volumes:
+  app-storage:
   mysql-data:
   minio-data:

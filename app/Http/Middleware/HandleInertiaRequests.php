@@ -50,6 +50,7 @@ class HandleInertiaRequests extends Middleware
                 'privacy_url' => PublicUrls::privacyPath(app()->getLocale()),
             ],
             'auth' => [
+                'unread_notifications_count' => fn (): int => $request->user()?->unreadNotifications()->count() ?? 0,
                 'user' => function () use ($request): ?array {
                     $user = $request->user()?->loadMissing(['profile', 'roles']);
 
@@ -79,6 +80,7 @@ class HandleInertiaRequests extends Middleware
                 },
             ],
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
+            'match' => fn (): mixed => $request->session()->pull('discovery.match'),
         ];
     }
 }

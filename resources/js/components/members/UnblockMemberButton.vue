@@ -6,7 +6,11 @@ import { Button } from '@/components/ui/button';
 import { useTranslations } from '@/composables/useTranslations';
 import { unblock as unblockMember } from '@/routes/members';
 
-const props = defineProps<{ memberId: number; returnHref: string }>();
+const props = defineProps<{
+    memberId: number;
+    returnHref: string;
+    dataTest?: string;
+}>();
 const { t } = useTranslations();
 const submitting = ref(false);
 
@@ -25,7 +29,7 @@ function submit(): void {
         type="button"
         variant="outline"
         dusk="unblock-member-trigger"
-        data-test="unblock-member-trigger"
+        :data-test="dataTest ?? 'unblock-member-trigger'"
         :disabled="submitting"
         @click="submit"
     >

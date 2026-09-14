@@ -115,8 +115,10 @@ et le texte OFL des deux familles distribuées sont conservés dans
 
 Réutiliser dans cet ordre :
 
-1. les primitives déjà présentes dans `resources/js/components/ui/` ;
-2. Reka UI lorsqu’une primitive accessible manque ;
+1. les composants shadcn-vue déjà présents dans `resources/js/components/ui/`
+   ou ajoutés depuis son catalogue officiel ;
+2. une primitive Reka UI directe uniquement lorsque shadcn-vue ne propose pas
+   le composant nécessaire ;
 3. un composant métier ciblé lorsqu’une interaction propre à DLP Friends ne
    peut pas être composée simplement.
 
@@ -132,13 +134,19 @@ pertinents. Une action destructrice utilise le token `destructive` et une
 confirmation explicite. Un état asynchrone important est annoncé de façon
 compréhensible, pas seulement animé.
 
+Les surfaces modales métier utilisent `useResponsiveModal` et la composition
+officielle shadcn-vue : `Drawer` sous 640 px, puis `Dialog` à partir de 640 px.
+Le contenu, l’état et les actions restent uniques entre les deux formats. Les
+`Sheet` sont réservées à la navigation latérale et ne suivent pas cette règle.
+
 ## Responsive et navigation
 
 - Concevoir mobile first à partir d’une largeur minimale de 320 px.
 - Les paliers Tailwind `sm`, `md`, `lg` et `xl` enrichissent la disposition sans
   modifier l’ordre logique du contenu.
 - Les parcours membres utilisent une navigation inférieure sur les petits
-  écrans ; les surfaces administratives et de réglages peuvent employer une
+  écrans, ordonnée Découvrir, Conversations, Événements, Notifications puis
+  Profil ; les surfaces administratives et de réglages peuvent employer une
   navigation latérale ou une grille plus large.
 - Respecter les zones sûres avec `env(safe-area-inset-*)` pour les écrans
   concernés.
@@ -146,6 +154,32 @@ compréhensible, pas seulement animé.
   conversations afin de préserver la lisibilité sur grand écran.
 - Éviter le défilement horizontal. Les contenus longs doivent se replier ou se
   tronquer avec une alternative accessible.
+
+### Panneaux adaptatifs et événements
+
+- Un parcours secondaire qui conserve un écran principal comme contexte
+  réutilise le même contenu dans une feuille remontant du bas sous `sm` et dans
+  un dialogue centré à partir de `sm`. Il ne possède pas une variante métier
+  différente selon le format.
+- Découvrir et Mes événements sont les deux seules surfaces plein écran du
+  domaine événements. Détail, création, modification, participants, profil,
+  demandes et confirmations restent dans des panneaux superposés et
+  adressables par URL.
+- Un lien direct ou issu d’une notification doit reconstruire exactement la
+  surface principale et le panneau correspondants. Chaque transition ajoute
+  une entrée cohérente à l’historique ; Retour remonte profil, liste et détail
+  avant de fermer le panneau, sans perdre le contexte de la liste.
+- Une pile de participants affiche au plus trois avatars chevauchants puis un
+  compteur `+N`. L’ensemble forme une seule cible accessible nommée ; la liste
+  complète présente avatar, nom et action contextuelle dans des lignes tactiles
+  d’au moins 44 px. Le profil intégré occupe tout le fond du panneau et son
+  retour reste visible, immédiatement à gauche du titre. Les paires bloquées
+  emploient une surface grise, une icône et un libellé explicite.
+- Les rôles ne reposent pas uniquement sur la couleur : Mes événements sépare
+  les sections organisées et rejointes et répète le rôle dans un badge textuel.
+  Les surfaces de détail emploient exclusivement les tokens `card`,
+  `foreground`, `muted`, `secondary` et leurs couleurs de premier plan afin de
+  conserver le contraste en thème sombre.
 
 ## Mouvement et retours
 

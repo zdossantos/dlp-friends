@@ -2,14 +2,7 @@
 import { Link } from '@inertiajs/vue3';
 import AvatarPortrait from '@/components/profile/AvatarPortrait.vue';
 import { Button } from '@/components/ui/button';
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-} from '@/components/ui/dialog';
+import { useResponsiveModal } from '@/composables/useResponsiveModal';
 import { useTranslations } from '@/composables/useTranslations';
 import type { MemberIdentity } from '@/types';
 
@@ -30,6 +23,7 @@ const emit = defineEmits<{
     openConversation: [];
 }>();
 const { t } = useTranslations();
+const { isDesktop, Modal } = useResponsiveModal();
 
 function updateOpen(open: boolean): void {
     if (open || props.dismissible) {
@@ -92,19 +86,24 @@ function updateOpen(open: boolean): void {
             </div>
         </div>
     </Teleport>
-    <Dialog :open="open" @update:open="updateOpen">
-        <DialogContent
-            class="z-[60] overflow-hidden border-secondary-foreground/25 bg-secondary"
-            :show-close-button="dismissible"
+    <component :is="Modal.Root" :open="open" @update:open="updateOpen">
+        <component
+            :is="Modal.Content"
+            :class="[
+                'z-[60] overflow-hidden border-secondary-foreground/25 bg-secondary',
+                { 'px-2 pb-8 *:px-4': !isDesktop },
+            ]"
+            v-bind="isDesktop ? { showCloseButton: dismissible } : {}"
         >
-            <DialogHeader class="relative z-10">
-                <DialogTitle
+            <component :is="Modal.Header" class="relative z-10">
+                <component
+                    :is="Modal.Title"
                     data-test="match-heading"
                     class="text-secondary-foreground outline-none"
                     tabindex="-1"
                 >
                     {{ t('discovery.match.title') }}
-                </DialogTitle>
+                </component>
                 <div class="flex items-center gap-3 py-2">
                     <AvatarPortrait
                         data-test="match-member-avatar"
@@ -118,15 +117,18 @@ function updateOpen(open: boolean): void {
                         {{ match.displayName }}
                     </p>
                 </div>
-                <DialogDescription class="text-secondary-foreground">
+                <component
+                    :is="Modal.Description"
+                    class="text-secondary-foreground"
+                >
                     {{
                         t('discovery.match.description', {
                             name: match.displayName,
                         })
                     }}
-                </DialogDescription>
-            </DialogHeader>
-            <DialogFooter class="relative z-10">
+                </component>
+            </component>
+            <component :is="Modal.Footer" class="relative z-10">
                 <Button v-if="conversationHref" as-child variant="outline">
                     <Link
                         :href="conversationHref"
@@ -154,7 +156,7 @@ function updateOpen(open: boolean): void {
                 >
                     {{ t('discovery.match.continue') }}
                 </Button>
-            </DialogFooter>
-        </DialogContent>
-    </Dialog>
+            </component>
+        </component>
+    </component>
 </template>

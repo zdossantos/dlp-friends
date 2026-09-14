@@ -3,6 +3,7 @@ import { Head, Link } from '@inertiajs/vue3';
 import { computed, ref, watch } from 'vue';
 import ActivityStatus from '@/components/conversations/ActivityStatus.vue';
 import AvatarPortrait from '@/components/profile/AvatarPortrait.vue';
+import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useMemberRealtimeContext } from '@/composables/useMemberRealtimeNotifications';
 import { useTranslations } from '@/composables/useTranslations';
@@ -132,14 +133,15 @@ watch(presenceChanged, (event) => {
             <p class="font-semibold">
                 {{ t('conversations.page.search_empty') }}
             </p>
-            <button
+            <Button
                 type="button"
+                variant="link"
                 data-test="clear-conversation-search"
-                class="mt-3 text-sm font-medium text-primary underline-offset-4 hover:underline"
+                class="mt-3 h-auto p-0 text-sm"
                 @click="search = ''"
             >
                 {{ t('conversations.page.search_clear') }}
-            </button>
+            </Button>
         </section>
 
         <section

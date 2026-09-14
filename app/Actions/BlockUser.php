@@ -11,6 +11,8 @@ use Illuminate\Validation\ValidationException;
 
 final class BlockUser
 {
+    public function __construct(private BlockEventRegistrations $blockEventRegistrations) {}
+
     public function handle(User $blocker, User $blocked): Block
     {
         if ($blocker->is($blocked) || $blocked->loadMissing('roles')->hasRole(RoleName::Admin)) {
@@ -51,6 +53,8 @@ final class BlockUser
             $match?->conversation()
                 ->whereNull('archived_at')
                 ->update(['archived_at' => now()]);
+
+            $this->blockEventRegistrations->handle($blocker, $blocked);
 
             return $block;
         });

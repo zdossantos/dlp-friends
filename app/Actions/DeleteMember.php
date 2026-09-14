@@ -17,6 +17,10 @@ final class DeleteMember
         $displayName = $member->profile->display_name ?? $email;
 
         DB::transaction(function () use ($member): void {
+            $member->organizedEvents()
+                ->whereNull('cancelled_at')
+                ->where('starts_at', '>', now())
+                ->update(['cancelled_at' => now()]);
             DB::table('sessions')->where('user_id', $member->id)->delete();
             $member->delete();
         });

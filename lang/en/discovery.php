@@ -2,11 +2,19 @@
 
 return [
     'navigation' => 'Explore',
+    'bottom_navigation' => 'Discover',
+    'errors' => [
+        'already_evaluated' => 'You have already evaluated this profile.',
+        'target_unavailable' => 'This profile is unavailable.',
+    ],
+    'profile_like' => ['success' => 'This member was added to your discoveries.'],
     'actions' => [
         'pass' => 'Pass',
         'discover' => 'Discover',
         'pass_profile' => 'Pass this profile',
         'discover_profile' => 'Discover this profile',
+        'add_friend' => 'Add as a friend',
+        'adding_friend' => 'Adding…',
     ],
     'page' => [
         'title' => 'Explore', 'description' => 'Members who share your favourite worlds.', 'error_title' => 'Decision not saved',

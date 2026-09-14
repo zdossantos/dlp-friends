@@ -20,8 +20,9 @@ création du compte ; la suppression du compte supprime aussi cette preuve.
 - MySQL 8.4 pour les données relationnelles ;
 - Redis pour le cache, les sessions et les files ;
 - Laravel Reverb et Echo pour le temps réel ;
-- le canal privé personnel diffuse les nouveaux univers croisés et les aperçus
-  de messages dans tout l’espace membre, tandis que le canal de conversation
+- le canal privé personnel diffuse les nouveaux univers croisés, les aperçus
+  de messages et les notifications d’événement dans tout l’espace membre,
+  tandis que le canal de conversation
   conserve la synchronisation du fil et des états de lecture ;
 - les heartbeats de présence maintiennent une clé Redis expirant après 45
   secondes et limitent la mise à jour de `last_active_at` à une fois par minute ;
@@ -39,6 +40,20 @@ Laravel porte l'authentification, les autorisations et les règles métier.
 Vue/Inertia affiche les pages servies par Laravel ; aucune API distincte n'est
 nécessaire actuellement. Toute action sensible doit être protégée côté serveur,
 de préférence avec une Policy Laravel.
+
+Le domaine événements repose sur `Event` et `EventRegistration`. Les Form
+Requests valident les entrées HTTP, `EventPolicy` protège la lecture et les
+détails privés, et les Actions transactionnelles portent création, inscription,
+décision, retrait, modification, annulation et intégration du blocage. Les
+routes Inertia `/events` servent la découverte, l’historique et la gestion sans
+API parallèle. Les prises de place verrouillent la ligne événement en MySQL.
+
+Les notifications Laravel sont stockées en base puis diffusées sur le canal
+privé personnel après validation métier. Un contrat commun catégorise
+conversations et événements et conserve seulement une clé de traduction, ses
+paramètres et la cible. Le centre Inertia filtre ce flux ; l’ouverture marque
+la notification comme lue avant de rediriger vers l’événement ou la
+conversation autorisée.
 
 ## Internationalisation
 

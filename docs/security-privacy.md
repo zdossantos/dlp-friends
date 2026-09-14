@@ -46,6 +46,7 @@ expiration automatique, au plus 30 jours après leur création.
 - Suppression : après confirmation explicite, le compte devient immédiatement inaccessible et invisible. Les sessions et liens sociaux sont révoqués immédiatement. Un job asynchrone gardé par le statut et l’horodatage supprime le profil, les intérêts, swipes, matches, conversations, messages et autres données liées 30 jours après la demande. Une tâche horaire redispatche les purges échues manquées ; les reprises sont idempotentes. Aucun parcours de restauration n’est proposé.
 - Documenter, avant mise en production, les durées de conservation et la politique de confidentialité applicable.
 - L’export JSON des données de compte, profil, intérêts, matches et messages est généré à la demande dans une réponse authentifiée téléchargée directement. Aucun fichier d’export n’est conservé côté serveur. Les messages exportés sont uniquement ceux envoyés par le membre dans les conversations visibles dans sa liste ; les profils masqués et toute relation bloquée dans un sens ou dans l’autre en sont exclus. Il exclut mots de passe, secrets, jetons et données inutiles sur les autres membres.
+- L’export inclut les événements organisés, les inscriptions du membre et ses notifications persistantes, sans exposer les inscriptions privées d’autrui.
 - Les sauvegardes ne sont pas modifiées rétroactivement lors d'une suppression ; leur rotation automatique est limitée à 30 jours.
 
 ## Autorisation et protection applicative
@@ -57,6 +58,8 @@ expiration automatique, au plus 30 jours après leur création.
 - La validation de l'état OAuth par Socialite reste obligatoire sur le callback Google.
 - Aucun jeton d'accès, jeton de renouvellement ou contenu brut de réponse Google n'est stocké ou journalisé. Seul l'identifiant stable nécessaire au lien de compte est conservé.
 - Les canaux Reverb de conversation sont privés et leur autorisation vérifie l'appartenance au match ainsi que l'absence de blocage.
+- Les pages événements exigent le même accès membre protégé. Le lieu précis et la liste des participants ne sont transmis qu’à l’organisateur et aux inscriptions acceptées ; une demande en attente ou refusée ne reçoit que le lieu général.
+- Les notifications persistantes contiennent une clé de traduction, des paramètres minimaux et une cible interne. Elles ne recopient ni message privé ni lieu précis et leur route cible est résolue côté serveur.
 - La présence est facultative et visible uniquement par les interlocuteurs
   encore autorisés. Redis conserve seulement un état temporaire avec expiration,
   `last_active_at` est limité en fréquence et seule une activité relative est

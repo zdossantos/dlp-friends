@@ -151,12 +151,13 @@ function cancelPointer(): void {
         <div
             class="relative flex min-h-0 flex-1 items-center justify-center overflow-hidden py-1"
         >
-            <button
+            <Button
                 v-for="(avatar, index) in avatars"
                 :key="avatar.id"
                 type="button"
+                variant="ghost"
                 :data-test="`avatar-carousel-item-${avatar.id}`"
-                class="absolute w-[66%] max-w-72 transition-[transform,opacity] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] will-change-transform focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none motion-reduce:transition-none sm:max-w-80"
+                class="absolute h-auto w-[66%] max-w-72 p-0 transition-[transform,opacity] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] will-change-transform motion-reduce:transition-none sm:max-w-80"
                 :class="
                     avatar.id === modelValue
                         ? 'cursor-default'
@@ -195,7 +196,7 @@ function cancelPointer(): void {
                     <Check class="size-4" aria-hidden="true" />
                     {{ t('profile.avatar.selected_badge') }}
                 </span>
-            </button>
+            </Button>
 
             <Button
                 v-if="avatars.length > 1"

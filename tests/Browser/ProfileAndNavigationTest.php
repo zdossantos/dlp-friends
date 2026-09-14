@@ -441,15 +441,22 @@ test('member navigation appears on discovery conversations profile and settings 
 
     visit('/discover')
         ->on()->mobile()
-        ->assertCount('[data-test="member-bottom-navigation"] a', 3)
-        ->assertPresent('[aria-label="Explorer"][aria-current="page"]')
-        ->assertPresent('[aria-label="Échanges"]')
+        ->assertCount('[data-test="member-bottom-navigation"] a', 5)
+        ->assertScript(<<<'JS'
+            Array.from(document.querySelectorAll('[data-test="member-bottom-navigation"] a'))
+                .map((item) => item.getAttribute('aria-label'))
+                .join('|') === 'Découvrir|Conversations|Événements|Notifications|Profil'
+            JS, true)
+        ->assertPresent('[aria-label="Découvrir"][aria-current="page"]')
+        ->assertPresent('[aria-label="Événements"]')
+        ->assertPresent('[aria-label="Conversations"]')
+        ->assertPresent('[aria-label="Notifications"]')
         ->assertPresent('[aria-label="Profil"]');
 
     visit('/conversations')
         ->on()->mobile()
         ->assertPresent('[data-test="member-bottom-navigation"]')
-        ->assertPresent('[aria-label="Échanges"][aria-current="page"]');
+        ->assertPresent('[aria-label="Conversations"][aria-current="page"]');
 
     visit('/profile')
         ->on()->mobile()
@@ -482,8 +489,12 @@ test('account deletion explains immediate access loss and the purge deadline in 
     $this->actingAs($french);
 
     visit('/settings/account')
+        ->on()->mobile()
         ->assertSee('L’accès à ton compte cessera immédiatement')
-        ->assertSee('sous 30 jours');
+        ->assertSee('sous 30 jours')
+        ->click('[data-test="delete-user-button"]')
+        ->assertPresent('[data-slot="drawer-content"]')
+        ->assertSee('Veux-tu vraiment supprimer ton compte ?');
 
     $english = User::factory()->withProfile()->create(['locale' => 'en']);
     $this->actingAs($english);

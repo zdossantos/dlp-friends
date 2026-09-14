@@ -32,6 +32,7 @@ class PurgeDeletedUser implements ShouldQueue
                 return;
             }
 
+            $user->notifications()->delete();
             $user->delete();
         });
     }

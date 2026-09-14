@@ -10,18 +10,9 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
-import {
-    Dialog,
-    DialogClose,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
-} from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { useResponsiveModal } from '@/composables/useResponsiveModal';
 import { useTranslations } from '@/composables/useTranslations';
 import { update as updateSetting } from '@/routes/admin/interest-setting';
 import { destroy, move, status, store, update } from '@/routes/admin/interests';
@@ -42,6 +33,7 @@ defineProps<{
     };
 }>();
 const { t } = useTranslations();
+const { isDesktop, Modal } = useResponsiveModal();
 
 const profileCountLabel = (count: number): string =>
     t(
@@ -348,8 +340,8 @@ const profileCountLabel = (count: number): string =>
                         </div>
                         <div class="flex flex-wrap gap-2">
                             <template v-if="interest.is_active">
-                                <Dialog>
-                                    <DialogTrigger as-child>
+                                <component :is="Modal.Root">
+                                    <component :is="Modal.Trigger" as-child>
                                         <Button
                                             :id="`archive-interest-${interest.id}`"
                                             variant="outline"
@@ -366,8 +358,13 @@ const profileCountLabel = (count: number): string =>
                                                 )
                                             }}
                                         </Button>
-                                    </DialogTrigger>
-                                    <DialogContent>
+                                    </component>
+                                    <component
+                                        :is="Modal.Content"
+                                        :class="[
+                                            { 'px-2 pb-8 *:px-4': !isDesktop },
+                                        ]"
+                                    >
                                         <Form
                                             v-bind="status.form(interest)"
                                             :options="{ preserveScroll: true }"
@@ -379,8 +376,8 @@ const profileCountLabel = (count: number): string =>
                                                 name="is_active"
                                                 value="0"
                                             />
-                                            <DialogHeader>
-                                                <DialogTitle>
+                                            <component :is="Modal.Header">
+                                                <component :is="Modal.Title">
                                                     {{
                                                         t(
                                                             'administration.interests.archive_title',
@@ -389,20 +386,28 @@ const profileCountLabel = (count: number): string =>
                                                             },
                                                         )
                                                     }}
-                                                </DialogTitle>
-                                                <DialogDescription>
+                                                </component>
+                                                <component
+                                                    :is="Modal.Description"
+                                                >
                                                     {{
                                                         t(
                                                             'administration.interests.archive_description',
                                                         )
                                                     }}
-                                                </DialogDescription>
-                                            </DialogHeader>
+                                                </component>
+                                            </component>
                                             <InputError
                                                 :message="errors.is_active"
                                             />
-                                            <DialogFooter class="gap-2">
-                                                <DialogClose as-child>
+                                            <component
+                                                :is="Modal.Footer"
+                                                class="gap-2"
+                                            >
+                                                <component
+                                                    :is="Modal.Close"
+                                                    as-child
+                                                >
                                                     <Button
                                                         type="button"
                                                         variant="secondary"
@@ -413,7 +418,7 @@ const profileCountLabel = (count: number): string =>
                                                             )
                                                         }}
                                                     </Button>
-                                                </DialogClose>
+                                                </component>
                                                 <Button
                                                     type="submit"
                                                     :disabled="processing"
@@ -424,10 +429,10 @@ const profileCountLabel = (count: number): string =>
                                                         )
                                                     }}
                                                 </Button>
-                                            </DialogFooter>
+                                            </component>
                                         </Form>
-                                    </DialogContent>
-                                </Dialog>
+                                    </component>
+                                </component>
                             </template>
                             <Form
                                 v-else
@@ -456,8 +461,8 @@ const profileCountLabel = (count: number): string =>
                                 </Button>
                             </Form>
 
-                            <Dialog>
-                                <DialogTrigger as-child>
+                            <component :is="Modal.Root">
+                                <component :is="Modal.Trigger" as-child>
                                     <Button
                                         :id="`delete-interest-${interest.id}`"
                                         variant="destructive"
@@ -480,24 +485,29 @@ const profileCountLabel = (count: number): string =>
                                     >
                                         {{ t('administration.common.delete') }}
                                     </Button>
-                                </DialogTrigger>
-                                <DialogContent>
+                                </component>
+                                <component
+                                    :is="Modal.Content"
+                                    :class="[
+                                        { 'px-2 pb-8 *:px-4': !isDesktop },
+                                    ]"
+                                >
                                     <Form
                                         v-bind="destroy.form(interest)"
                                         :options="{ preserveScroll: true }"
                                         class="space-y-6"
                                         v-slot="{ errors, processing }"
                                     >
-                                        <DialogHeader>
-                                            <DialogTitle>
+                                        <component :is="Modal.Header">
+                                            <component :is="Modal.Title">
                                                 {{
                                                     t(
                                                         'administration.interests.delete_title',
                                                         { name: interest.name },
                                                     )
                                                 }}
-                                            </DialogTitle>
-                                            <DialogDescription>
+                                            </component>
+                                            <component :is="Modal.Description">
                                                 {{
                                                     t(
                                                         'administration.interests.delete_description',
@@ -515,13 +525,19 @@ const profileCountLabel = (count: number): string =>
                                                         )
                                                     }}
                                                 </template>
-                                            </DialogDescription>
-                                        </DialogHeader>
+                                            </component>
+                                        </component>
                                         <InputError
                                             :message="errors.interest"
                                         />
-                                        <DialogFooter class="gap-2">
-                                            <DialogClose as-child>
+                                        <component
+                                            :is="Modal.Footer"
+                                            class="gap-2"
+                                        >
+                                            <component
+                                                :is="Modal.Close"
+                                                as-child
+                                            >
                                                 <Button
                                                     type="button"
                                                     variant="secondary"
@@ -532,7 +548,7 @@ const profileCountLabel = (count: number): string =>
                                                         )
                                                     }}
                                                 </Button>
-                                            </DialogClose>
+                                            </component>
                                             <Button
                                                 type="submit"
                                                 variant="destructive"
@@ -544,10 +560,10 @@ const profileCountLabel = (count: number): string =>
                                                     )
                                                 }}
                                             </Button>
-                                        </DialogFooter>
+                                        </component>
                                     </Form>
-                                </DialogContent>
-                            </Dialog>
+                                </component>
+                            </component>
                         </div>
                     </div>
                 </CardContent>

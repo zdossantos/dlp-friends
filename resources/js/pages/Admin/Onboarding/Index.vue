@@ -12,6 +12,8 @@ import {
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { NativeSelect } from '@/components/ui/native-select';
+import { Textarea } from '@/components/ui/textarea';
 import { useTranslations } from '@/composables/useTranslations';
 import { update } from '@/routes/admin/onboarding';
 
@@ -164,12 +166,12 @@ function formatDate(value: string): string {
                             <Label for="pass_avatar_id">{{
                                 t('administration.onboarding.pass_avatar')
                             }}</Label>
-                            <select
+                            <NativeSelect
                                 id="pass_avatar_id"
                                 name="pass_avatar_id"
                                 required
-                                :value="setting.pass_avatar_id ?? ''"
-                                class="h-10 rounded-md border bg-background px-3 text-sm"
+                                :model-value="setting.pass_avatar_id ?? ''"
+                                class="h-10 w-full"
                             >
                                 <option value="" disabled>
                                     {{
@@ -185,7 +187,7 @@ function formatDate(value: string): string {
                                 >
                                     {{ avatar.name }}
                                 </option>
-                            </select>
+                            </NativeSelect>
                             <InputError :message="errors.pass_avatar_id" />
                             <img
                                 v-if="avatarById(setting.pass_avatar_id)"
@@ -214,13 +216,13 @@ function formatDate(value: string): string {
                             <Label for="pass_bio">{{
                                 t('administration.onboarding.bio_fr')
                             }}</Label>
-                            <textarea
+                            <Textarea
                                 id="pass_bio"
                                 name="pass_bio"
                                 required
                                 maxlength="500"
-                                :value="setting.pass_bio ?? ''"
-                                class="min-h-24 rounded-md border bg-background px-3 py-2 text-sm"
+                                :default-value="setting.pass_bio ?? ''"
+                                class="min-h-24"
                             />
                             <InputError :message="errors.pass_bio" />
                         </div>
@@ -244,12 +246,12 @@ function formatDate(value: string): string {
                             <Label for="pass_bio_en">{{
                                 t('administration.onboarding.bio_en')
                             }}</Label>
-                            <textarea
+                            <Textarea
                                 id="pass_bio_en"
                                 name="pass_bio_en"
                                 maxlength="500"
-                                :value="setting.pass_bio_en ?? ''"
-                                class="min-h-24 rounded-md border bg-background px-3 py-2 text-sm"
+                                :default-value="setting.pass_bio_en ?? ''"
+                                class="min-h-24"
                             />
                             <InputError :message="errors.pass_bio_en" />
                         </div>
@@ -265,12 +267,12 @@ function formatDate(value: string): string {
                             <Label for="like_avatar_id">{{
                                 t('administration.onboarding.discover_avatar')
                             }}</Label>
-                            <select
+                            <NativeSelect
                                 id="like_avatar_id"
                                 name="like_avatar_id"
                                 required
-                                :value="setting.like_avatar_id ?? ''"
-                                class="h-10 rounded-md border bg-background px-3 text-sm"
+                                :model-value="setting.like_avatar_id ?? ''"
+                                class="h-10 w-full"
                             >
                                 <option value="" disabled>
                                     {{
@@ -286,7 +288,7 @@ function formatDate(value: string): string {
                                 >
                                     {{ avatar.name }}
                                 </option>
-                            </select>
+                            </NativeSelect>
                             <InputError :message="errors.like_avatar_id" />
                             <img
                                 v-if="avatarById(setting.like_avatar_id)"
@@ -315,13 +317,13 @@ function formatDate(value: string): string {
                             <Label for="like_bio">{{
                                 t('administration.onboarding.bio_fr')
                             }}</Label>
-                            <textarea
+                            <Textarea
                                 id="like_bio"
                                 name="like_bio"
                                 required
                                 maxlength="500"
-                                :value="setting.like_bio ?? ''"
-                                class="min-h-24 rounded-md border bg-background px-3 py-2 text-sm"
+                                :default-value="setting.like_bio ?? ''"
+                                class="min-h-24"
                             />
                             <InputError :message="errors.like_bio" />
                         </div>
@@ -345,12 +347,12 @@ function formatDate(value: string): string {
                             <Label for="like_bio_en">{{
                                 t('administration.onboarding.bio_en')
                             }}</Label>
-                            <textarea
+                            <Textarea
                                 id="like_bio_en"
                                 name="like_bio_en"
                                 maxlength="500"
-                                :value="setting.like_bio_en ?? ''"
-                                class="min-h-24 rounded-md border bg-background px-3 py-2 text-sm"
+                                :default-value="setting.like_bio_en ?? ''"
+                                class="min-h-24"
                             />
                             <InputError :message="errors.like_bio_en" />
                         </div>

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { usePage } from '@inertiajs/vue3';
+import { watch } from 'vue';
 import MatchDialog from '@/components/discovery/MatchDialog.vue';
 import MemberBottomNavigation from '@/components/MemberBottomNavigation.vue';
 import { Toaster } from '@/components/ui/sonner';
@@ -9,11 +10,27 @@ import {
     useMemberRealtimeNotifications,
 } from '@/composables/useMemberRealtimeNotifications';
 import { show as showConversation } from '@/routes/conversations';
+import type { DiscoveryMatch } from '@/types';
 
 const reservesMemberNavigation = useMemberNavigationVisibility();
 const page = usePage();
 const realtime = useMemberRealtimeNotifications(page.props.auth.user.id);
 provideMemberRealtimeContext(realtime);
+watch(
+    () => page.props.match as DiscoveryMatch | null | undefined,
+    (match) => {
+        if (!match) {
+            return;
+        }
+
+        realtime.presentMatch({
+            match_id: match.id,
+            conversation_id: match.conversationId,
+            member: match.member,
+        });
+    },
+    { immediate: true },
+);
 </script>
 
 <template>
@@ -26,6 +43,7 @@ provideMemberRealtimeContext(realtime);
         />
         <div
             data-test="member-shell-content"
+            scroll-region
             class="relative flex min-h-0 w-full flex-1 flex-col overflow-y-auto overscroll-contain"
             :class="
                 reservesMemberNavigation

@@ -12,10 +12,12 @@ use App\Models\MemberMatch;
 use App\Models\Profile;
 use App\Models\Swipe;
 use App\Models\User;
+use App\Notifications\NewMatchNotification;
 use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Validation\ValidationException;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
@@ -189,13 +191,13 @@ class CreateSwipeTest extends TestCase
         $this->assertDatabaseCount('swipes', 0);
     }
 
-    public function test_a_repeated_decision_is_reported_as_a_decision_validation_error(): void
+    public function test_a_repeated_like_is_reported_as_a_decision_validation_error(): void
     {
         [$actor, $target] = $this->memberPair();
         Swipe::factory()->create([
             'actor_user_id' => $actor->id,
             'target_user_id' => $target->id,
-            'decision' => SwipeDecision::Pass,
+            'decision' => SwipeDecision::Like,
         ]);
 
         try {
@@ -208,6 +210,28 @@ class CreateSwipeTest extends TestCase
         }
 
         $this->assertDatabaseCount('swipes', 1);
+        $this->assertDatabaseCount('matches', 0);
+    }
+
+    public function test_a_like_cannot_be_replaced_by_a_pass(): void
+    {
+        [$actor, $target] = $this->memberPair();
+        Swipe::factory()->create([
+            'actor_user_id' => $actor->id,
+            'target_user_id' => $target->id,
+            'decision' => SwipeDecision::Like,
+        ]);
+
+        try {
+            app(CreateSwipe::class)->handle($actor, $target, SwipeDecision::Pass);
+            $this->fail('A like should remain irreversible.');
+        } catch (ValidationException $exception) {
+            expect($exception->errors())->toBe([
+                'decision' => ['Vous avez déjà évalué ce profil.'],
+            ]);
+        }
+
+        expect(Swipe::query()->sole()->decision)->toBe(SwipeDecision::Like);
         $this->assertDatabaseCount('matches', 0);
     }
 
@@ -255,6 +279,22 @@ class CreateSwipeTest extends TestCase
                     && $event->socket === '1234.5678',
             );
         }
+    }
+
+    public function test_a_new_match_creates_one_durable_notification_for_each_member(): void
+    {
+        Notification::fake();
+        [$lowUser, $highUser] = $this->memberPair();
+        $action = app(CreateSwipe::class);
+
+        $action->handle($lowUser, $highUser, SwipeDecision::Like);
+
+        Notification::assertNothingSent();
+
+        $action->handle($highUser, $lowUser, SwipeDecision::Like);
+
+        Notification::assertSentToTimes($lowUser, NewMatchNotification::class, 1);
+        Notification::assertSentToTimes($highUser, NewMatchNotification::class, 1);
     }
 
     public function test_additional_attempts_leave_two_swipes_and_one_match(): void

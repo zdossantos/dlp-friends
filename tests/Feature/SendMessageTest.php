@@ -7,8 +7,10 @@ use App\Models\Block;
 use App\Models\Conversation;
 use App\Models\MemberMatch;
 use App\Models\User;
+use App\Notifications\NewMessageNotification;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Notification;
 use Tests\TestCase;
 
 class SendMessageTest extends TestCase
@@ -29,6 +31,21 @@ class SendMessageTest extends TestCase
         }
 
         $this->assertDatabaseCount('messages', 2);
+    }
+
+    public function test_a_message_creates_one_durable_notification_for_the_other_member_only(): void
+    {
+        Notification::fake();
+        [$author, $recipient, $conversation] = $this->conversationMembers();
+
+        $message = app(SendMessage::class)->handle($author, $conversation, 'Bonjour !');
+
+        Notification::assertSentTo(
+            $recipient,
+            NewMessageNotification::class,
+            fn (NewMessageNotification $notification): bool => $notification->message->is($message),
+        );
+        Notification::assertNotSentTo($author, NewMessageNotification::class);
     }
 
     public function test_an_outsider_cannot_persist_a_message(): void

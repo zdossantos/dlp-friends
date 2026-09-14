@@ -3,6 +3,7 @@ import { SendHorizontal } from '@lucide/vue';
 import { computed, nextTick, ref, watch } from 'vue';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
+import { Textarea } from '@/components/ui/textarea';
 import { useTranslations } from '@/composables/useTranslations';
 import { xsrfHeader } from '@/lib/csrf';
 import { store as storeMessage } from '@/routes/conversations/messages';
@@ -20,7 +21,7 @@ const props = defineProps<{
 const content = ref('');
 const error = ref('');
 const pending = ref(false);
-const textarea = ref<HTMLTextAreaElement | null>(null);
+const textarea = ref<{ focus: () => void } | null>(null);
 const { t } = useTranslations();
 const disabled = computed(
     () => props.archived || pending.value || content.value.trim() === '',
@@ -105,7 +106,7 @@ function handleKeydown(event: KeyboardEvent): void {
                 <label for="message-content" class="sr-only">
                     {{ t('conversations.message.label') }}
                 </label>
-                <textarea
+                <Textarea
                     id="message-content"
                     ref="textarea"
                     v-model="content"
@@ -116,7 +117,7 @@ function handleKeydown(event: KeyboardEvent): void {
                     :aria-invalid="error !== ''"
                     :disabled="pending"
                     :placeholder="t('conversations.message.placeholder')"
-                    class="max-h-32 min-h-11 w-full resize-none rounded-2xl border bg-background px-4 py-2.5 text-base outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-60"
+                    class="max-h-32 min-h-11 resize-none rounded-2xl px-4 py-2.5 text-base"
                     @keydown="handleKeydown"
                 />
                 <p

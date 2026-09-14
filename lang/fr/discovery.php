@@ -2,11 +2,19 @@
 
 return [
     'navigation' => 'Explorer',
+    'bottom_navigation' => 'Découvrir',
+    'errors' => [
+        'already_evaluated' => 'Vous avez déjà évalué ce profil.',
+        'target_unavailable' => 'Ce profil n’est pas disponible.',
+    ],
+    'profile_like' => ['success' => 'Ce membre a été ajouté à tes découvertes.'],
     'actions' => [
         'pass' => 'Passer',
         'discover' => 'Découvrir',
         'pass_profile' => 'Passer ce profil',
         'discover_profile' => 'Découvrir ce profil',
+        'add_friend' => 'Ajouter à mes amis',
+        'adding_friend' => 'Ajout en cours…',
     ],
     'page' => [
         'title' => 'Explorer',

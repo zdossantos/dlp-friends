@@ -31,6 +31,7 @@ test('blocking from a profile returns to the previous page with the member name'
         ->click("a[aria-label='Voir le profil de Basile']")
         ->assertPresent('[data-test="public-member-profile"]')
         ->click('@block-member-trigger')
+        ->assertPresent('[data-slot="drawer-content"]')
         ->assertSee('Bloquer ce membre ?')
         ->click('@confirm-block-member')
         ->assertPathIs("/conversations/{$conversation->id}")

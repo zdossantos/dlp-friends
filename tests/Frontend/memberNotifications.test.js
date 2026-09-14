@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'bun:test';
 import {
     activeConversationId,
+    registerNotification,
     selectMatchNotification,
     shouldShowMessageToast,
 } from '../../resources/js/lib/memberNotifications';
@@ -42,5 +43,15 @@ describe('member realtime notifications', () => {
         expect(selectMatchNotification(realtimeMatch, pageMatch)).toBe(
             realtimeMatch,
         );
+    });
+
+    test('counts a persistent notification UUID only once', () => {
+        const seen = new Set();
+
+        expect(registerNotification(seen, { id: 'notification-1' })).toBe(true);
+        expect(registerNotification(seen, { id: 'notification-1' })).toBe(
+            false,
+        );
+        expect(registerNotification(seen, { id: 'notification-2' })).toBe(true);
     });
 });

@@ -3,6 +3,7 @@ import { Head, router } from '@inertiajs/vue3';
 import { ArrowLeft } from '@lucide/vue';
 import { computed } from 'vue';
 import BlockMemberDialog from '@/components/members/BlockMemberDialog.vue';
+import LikeMemberButton from '@/components/members/LikeMemberButton.vue';
 import UnblockMemberButton from '@/components/members/UnblockMemberButton.vue';
 import ProfilePresentation from '@/components/profile/ProfilePresentation.vue';
 import { Button } from '@/components/ui/button';
@@ -13,6 +14,7 @@ const props = defineProps<{
     member: PublicMember;
     backHref: string;
     canBlock: boolean;
+    canLike: boolean;
     canUnblock: boolean;
 }>();
 const { t } = useTranslations();
@@ -73,6 +75,7 @@ function goBack(): void {
             :is-admin="member.is_admin"
         >
             <template #summary-actions>
+                <LikeMemberButton v-if="canLike" :member-id="member.id" />
                 <UnblockMemberButton
                     v-if="canUnblock"
                     :member-id="member.id"

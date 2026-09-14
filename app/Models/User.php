@@ -20,6 +20,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\DatabaseNotification;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Mail;
@@ -58,6 +59,11 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
  * @property-read Collection<int, Message> $authoredMessages
  * @property-read Collection<int, SocialAccount> $socialAccounts
  * @property-read Collection<int, TermsAcceptance> $termsAcceptances
+ * @property-read Collection<int, Event> $organizedEvents
+ * @property-read Collection<int, EventRegistration> $eventRegistrations
+ * @property-read Collection<int, DatabaseNotification> $notifications
+ * @property-read Collection<int, DatabaseNotification> $readNotifications
+ * @property-read Collection<int, DatabaseNotification> $unreadNotifications
  */
 #[Fillable(['email', 'locale', 'birth_date', 'password', 'show_presence'])]
 #[Hidden(['password', 'two_factor_secret', 'two_factor_recovery_codes', 'remember_token'])]
@@ -136,6 +142,18 @@ class User extends Authenticatable implements HasLocalePreference, MustVerifyEma
     public function termsAcceptances(): HasMany
     {
         return $this->hasMany(TermsAcceptance::class);
+    }
+
+    /** @return HasMany<Event, $this> */
+    public function organizedEvents(): HasMany
+    {
+        return $this->hasMany(Event::class, 'organizer_user_id');
+    }
+
+    /** @return HasMany<EventRegistration, $this> */
+    public function eventRegistrations(): HasMany
+    {
+        return $this->hasMany(EventRegistration::class);
     }
 
     public function hasBlockedRelationshipWith(User $other): bool

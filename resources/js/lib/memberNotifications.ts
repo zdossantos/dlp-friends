@@ -7,6 +7,23 @@ type MatchNotice = {
     match_id: number;
 };
 
+type PersistentNotice = {
+    id: string;
+};
+
+export function registerNotification(
+    seen: Set<string>,
+    notification: PersistentNotice,
+): boolean {
+    if (seen.has(notification.id)) {
+        return false;
+    }
+
+    seen.add(notification.id);
+
+    return true;
+}
+
 export function selectMatchNotification<T extends MatchNotice>(
     current: T | null,
     incoming: T,

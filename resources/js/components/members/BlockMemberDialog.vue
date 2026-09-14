@@ -3,21 +3,13 @@ import { router } from '@inertiajs/vue3';
 import { ShieldBan } from '@lucide/vue';
 import { ref } from 'vue';
 import { Button } from '@/components/ui/button';
-import {
-    Dialog,
-    DialogClose,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
-} from '@/components/ui/dialog';
+import { useResponsiveModal } from '@/composables/useResponsiveModal';
 import { useTranslations } from '@/composables/useTranslations';
 import { block as blockMember } from '@/routes/members';
 
 const props = defineProps<{ memberId: number; returnHref: string }>();
 const { t } = useTranslations();
+const { isDesktop, Modal } = useResponsiveModal();
 const open = ref(false);
 const submitting = ref(false);
 const failed = ref(false);
@@ -38,8 +30,8 @@ function submit(): void {
 </script>
 
 <template>
-    <Dialog v-model:open="open">
-        <DialogTrigger as-child>
+    <component :is="Modal.Root" v-model:open="open">
+        <component :is="Modal.Trigger" as-child>
             <Button
                 type="button"
                 variant="outline"
@@ -50,22 +42,27 @@ function submit(): void {
                 <ShieldBan class="size-4" aria-hidden="true" />
                 {{ t('blocking.trigger') }}
             </Button>
-        </DialogTrigger>
-        <DialogContent>
-            <DialogHeader>
-                <DialogTitle>{{ t('blocking.title') }}</DialogTitle>
-                <DialogDescription>
+        </component>
+        <component
+            :is="Modal.Content"
+            :class="[{ 'px-2 pb-8 *:px-4': !isDesktop }]"
+        >
+            <component :is="Modal.Header">
+                <component :is="Modal.Title">{{
+                    t('blocking.title')
+                }}</component>
+                <component :is="Modal.Description">
                     {{ t('blocking.description') }}
-                </DialogDescription>
-            </DialogHeader>
+                </component>
+            </component>
             <p class="text-sm text-muted-foreground">
                 {{ t('blocking.effects') }}
             </p>
             <p v-if="failed" role="alert" class="text-sm text-destructive">
                 {{ t('blocking.error') }}
             </p>
-            <DialogFooter>
-                <DialogClose as-child>
+            <component :is="Modal.Footer">
+                <component :is="Modal.Close" as-child>
                     <Button
                         type="button"
                         variant="outline"
@@ -73,7 +70,7 @@ function submit(): void {
                     >
                         {{ t('common.actions.cancel') }}
                     </Button>
-                </DialogClose>
+                </component>
                 <Button
                     type="button"
                     variant="destructive"
@@ -88,7 +85,7 @@ function submit(): void {
                             : t('blocking.confirm')
                     }}
                 </Button>
-            </DialogFooter>
-        </DialogContent>
-    </Dialog>
+            </component>
+        </component>
+    </component>
 </template>

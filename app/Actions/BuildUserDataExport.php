@@ -3,6 +3,8 @@
 namespace App\Actions;
 
 use App\Models\Conversation;
+use App\Models\Event;
+use App\Models\EventRegistration;
 use App\Models\Interest;
 use App\Models\MemberMatch;
 use App\Models\User;
@@ -93,6 +95,47 @@ final class BuildUserDataExport
                 ];
             })->all(),
             'messages' => $messages,
+            'organized_events' => Event::query()
+                ->where('organizer_user_id', $user->id)
+                ->orderBy('id')
+                ->get()
+                ->map(fn (Event $event): array => [
+                    'id' => $event->id,
+                    'title' => $event->title,
+                    'description' => $event->description,
+                    'general_location' => $event->general_location,
+                    'detailed_location' => $event->detailed_location,
+                    'starts_at' => $event->starts_at->toIso8601String(),
+                    'capacity' => $event->capacity,
+                    'registration_mode' => $event->registration_mode->value,
+                    'cancelled_at' => $event->cancelled_at?->toIso8601String(),
+                ])->all(),
+            'event_registrations' => EventRegistration::query()
+                ->where('user_id', $user->id)
+                ->orderBy('id')
+                ->get()
+                ->map(fn (EventRegistration $registration): array => [
+                    'event_id' => $registration->event_id,
+                    'status' => $registration->status->value,
+                    'created_at' => $registration->created_at?->toIso8601String(),
+                    'updated_at' => $registration->updated_at?->toIso8601String(),
+                ])->all(),
+            'notifications' => $user->notifications()
+                ->orderBy('created_at')
+                ->get()
+                ->map(function ($notification): array {
+                    $data = $notification->data;
+
+                    return [
+                        'category' => $data['category'] ?? null,
+                        'translation_key' => $data['translation_key'] ?? null,
+                        'parameters' => $data['parameters'] ?? [],
+                        'target_type' => $data['target_type'] ?? null,
+                        'target_id' => $data['target_id'] ?? null,
+                        'read_at' => $notification->read_at?->toIso8601String(),
+                        'created_at' => $notification->created_at?->toIso8601String(),
+                    ];
+                })->all(),
         ];
     }
 }

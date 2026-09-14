@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { Button } from '@/components/ui/button';
 import { useTranslations } from '@/composables/useTranslations';
 
 const props = defineProps<{
@@ -40,9 +41,10 @@ function selectStep(step: number): void {
             }"
         >
             <li v-for="(label, index) in labels" :key="label">
-                <button
+                <Button
                     type="button"
-                    class="group block min-h-11 w-full rounded-full focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-default"
+                    variant="ghost"
+                    class="group block min-h-11 w-full rounded-full p-0 disabled:cursor-default"
                     :disabled="selectable === false || index + 1 > furthestStep"
                     :aria-label="
                         t('profile.stepper.step', {
@@ -65,7 +67,7 @@ function selectStep(step: number): void {
                                   : 'bg-muted'
                         "
                     />
-                </button>
+                </Button>
             </li>
         </ol>
     </nav>

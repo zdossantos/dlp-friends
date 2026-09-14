@@ -20,11 +20,23 @@ use App\Http\Controllers\ConversationController;
 use App\Http\Controllers\ConversationIndexController;
 use App\Http\Controllers\ConversationReadController;
 use App\Http\Controllers\DiscoveryController;
+use App\Http\Controllers\EventCancellationController;
+use App\Http\Controllers\EventController;
+use App\Http\Controllers\EventParticipantController;
+use App\Http\Controllers\EventRegistrationController;
+use App\Http\Controllers\EventRegistrationDecisionController;
+use App\Http\Controllers\EventRegistrationIndexController;
+use App\Http\Controllers\EventRegistrationRemovalController;
 use App\Http\Controllers\LandingController;
 use App\Http\Controllers\LegalDocumentController;
+use App\Http\Controllers\LikeMemberController;
 use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\MemberProfileController;
 use App\Http\Controllers\MessageController;
+use App\Http\Controllers\MyEventController;
+use App\Http\Controllers\NotificationIndexController;
+use App\Http\Controllers\NotificationReadAllController;
+use App\Http\Controllers\NotificationReadController;
 use App\Http\Controllers\PresenceHeartbeatController;
 use App\Http\Controllers\ProductOnboardingController;
 use App\Http\Controllers\PublicLandingController;
@@ -131,6 +143,8 @@ Route::middleware(['auth', 'verified', 'social'])->group(function () {
 
             Route::get('members/{member}', PublicMemberProfileController::class)
                 ->name('members.show');
+            Route::post('members/{member}/like', LikeMemberController::class)
+                ->name('members.like');
             Route::post('members/{member}/block', BlockMemberController::class)
                 ->name('members.block');
             Route::delete('members/{member}/block', UnblockMemberController::class)
@@ -141,6 +155,26 @@ Route::middleware(['auth', 'verified', 'social'])->group(function () {
             Route::post('discover/{target}/swipe', SwipeController::class)
                 ->name('discovery.swipe');
 
+            Route::get('events/mine', MyEventController::class)->name('events.mine');
+            Route::resource('events', EventController::class)
+                ->only(['index', 'create', 'store', 'show', 'edit', 'update']);
+            Route::get('events/{event}/participants', [EventParticipantController::class, 'index'])
+                ->name('events.participants.index');
+            Route::get('events/{event}/participants/{member}', [EventParticipantController::class, 'show'])
+                ->name('events.participants.show');
+            Route::get('events/{event}/requests', EventRegistrationIndexController::class)
+                ->name('events.registrations.index');
+            Route::patch('events/{event}/cancel', EventCancellationController::class)
+                ->name('events.cancel');
+            Route::post('events/{event}/registrations', [EventRegistrationController::class, 'store'])
+                ->name('events.registrations.store');
+            Route::delete('events/{event}/registrations', [EventRegistrationController::class, 'destroy'])
+                ->name('events.registrations.destroy');
+            Route::patch('event-registrations/{registration}', EventRegistrationDecisionController::class)
+                ->name('events.registrations.decision');
+            Route::delete('event-registrations/{registration}', EventRegistrationRemovalController::class)
+                ->name('events.registrations.remove');
+
             Route::get('conversations', ConversationIndexController::class)
                 ->name('conversations.index');
             Route::get('conversations/{conversation}', ConversationController::class)
@@ -149,6 +183,12 @@ Route::middleware(['auth', 'verified', 'social'])->group(function () {
                 ->name('conversations.messages.store');
             Route::post('conversations/{conversation}/read', ConversationReadController::class)
                 ->name('conversations.read.store');
+            Route::get('notifications', NotificationIndexController::class)
+                ->name('notifications.index');
+            Route::patch('notifications/read-all', NotificationReadAllController::class)
+                ->name('notifications.read-all');
+            Route::patch('notifications/{notification}/read', NotificationReadController::class)
+                ->name('notifications.read');
             Route::get('dashboard', DashboardController::class)
                 ->middleware('role:admin')
                 ->name('dashboard');

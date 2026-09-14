@@ -18,6 +18,8 @@ final class FrontendTranslations
             'onboarding' => $onboarding,
             'discovery' => trans('discovery'),
             'conversations' => trans('conversations'),
+            'notifications' => trans('notifications'),
+            'events' => trans('events'),
             'blocking' => trans('blocking'),
             'administration' => trans('administration'),
         ];

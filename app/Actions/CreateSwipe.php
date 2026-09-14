@@ -11,6 +11,7 @@ use App\Models\MemberMatch;
 use App\Models\Profile;
 use App\Models\Swipe;
 use App\Models\User;
+use App\Notifications\NewMatchNotification;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
@@ -55,11 +56,27 @@ class CreateSwipe
                 $this->ensureTargetIsEligible($lockedActor, $lockedTarget);
                 $this->ensurePairIsNotBlocked($lockedActor, $lockedTarget);
 
-                Swipe::query()->create([
-                    'actor_user_id' => $actor->id,
-                    'target_user_id' => $target->id,
-                    'decision' => $decision,
-                ]);
+                $existingSwipe = Swipe::query()
+                    ->where('actor_user_id', $actor->id)
+                    ->where('target_user_id', $target->id)
+                    ->lockForUpdate()
+                    ->first();
+
+                if ($existingSwipe !== null) {
+                    if ($existingSwipe->decision !== SwipeDecision::Pass || $decision !== SwipeDecision::Like) {
+                        throw ValidationException::withMessages([
+                            'decision' => __('discovery.errors.already_evaluated'),
+                        ]);
+                    }
+
+                    $existingSwipe->update(['decision' => SwipeDecision::Like]);
+                } else {
+                    Swipe::query()->create([
+                        'actor_user_id' => $actor->id,
+                        'target_user_id' => $target->id,
+                        'decision' => $decision,
+                    ]);
+                }
 
                 if ($decision === SwipeDecision::Pass || ! Swipe::query()
                     ->where('actor_user_id', $target->id)
@@ -93,6 +110,11 @@ class CreateSwipe
                         $event = new MatchCreated($match, $recipient);
                         $event->dontBroadcastToCurrentUser();
                         event($event);
+
+                        $otherMember = $recipient->id === $lockedActor->id
+                            ? $lockedTarget
+                            : $lockedActor;
+                        $recipient->notify(new NewMatchNotification($match, $otherMember));
                     }
                 }
 
@@ -104,7 +126,7 @@ class CreateSwipe
             }
 
             throw ValidationException::withMessages([
-                'decision' => __('Vous avez déjà évalué ce profil.'),
+                'decision' => __('discovery.errors.already_evaluated'),
             ]);
         }
     }
@@ -150,7 +172,7 @@ class CreateSwipe
     private function throwUnavailableTarget(): never
     {
         throw ValidationException::withMessages([
-            'target' => 'Ce profil n’est pas disponible.',
+            'target' => __('discovery.errors.target_unavailable'),
         ]);
     }
 
