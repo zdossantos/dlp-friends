@@ -8,6 +8,7 @@ use App\Enums\RoleName;
 use App\Enums\VisitFrequency;
 use App\Models\Avatar;
 use App\Models\Interest;
+use App\Models\PartnerSetting;
 use App\Models\ProductOnboardingSetting;
 use App\Models\Role;
 use App\Models\User;
@@ -29,6 +30,8 @@ class DatabaseSeeder extends Seeder
         foreach (RoleName::cases() as $roleName) {
             Role::query()->firstOrCreate(['name' => $roleName]);
         }
+
+        PartnerSetting::current();
 
         $user = User::query()->updateOrCreate(
             ['email' => 'test@example.com'],

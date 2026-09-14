@@ -97,20 +97,99 @@ Route::middleware('guest')->group(function (): void {
         ->name('social.registration.store');
 });
 
-Route::middleware(['auth', 'verified', 'social'])->group(function () {
+Route::middleware(['auth', 'verified', 'social'])->group(function (): void {
     Route::get('avatars/{avatar}/image', AvatarImageController::class)
         ->name('avatars.image');
 
-    Route::get('app', LandingController::class)->name('app');
+    Route::middleware('role:user')->group(function (): void {
+        Route::get('app', LandingController::class)->name('app');
 
-    Route::post('presence/heartbeat', PresenceHeartbeatController::class)
-        ->middleware('throttle:30,1')
-        ->name('presence.heartbeat');
+        Route::post('presence/heartbeat', PresenceHeartbeatController::class)
+            ->middleware('throttle:30,1')
+            ->name('presence.heartbeat');
 
-    Route::get('profile/create', [MemberProfileController::class, 'create'])
-        ->name('member-profile.create');
-    Route::post('profile', [MemberProfileController::class, 'store'])
-        ->name('member-profile.store');
+        Route::get('profile/create', [MemberProfileController::class, 'create'])
+            ->name('member-profile.create');
+        Route::post('profile', [MemberProfileController::class, 'store'])
+            ->name('member-profile.store');
+
+        Route::middleware('profile.complete')->group(function (): void {
+            Route::get('onboarding', [ProductOnboardingController::class, 'show'])
+                ->name('onboarding.show');
+            Route::patch('onboarding', [ProductOnboardingController::class, 'advance'])
+                ->name('onboarding.advance');
+            Route::post('onboarding/complete', [ProductOnboardingController::class, 'complete'])
+                ->name('onboarding.complete');
+
+            Route::middleware('onboarding.complete')->group(function (): void {
+                Route::get('profile', [MemberProfileController::class, 'show'])
+                    ->name('member-profile.show');
+                Route::get('profile/edit', [MemberProfileController::class, 'edit'])
+                    ->name('member-profile.edit');
+                Route::patch('profile', [MemberProfileController::class, 'update'])
+                    ->name('member-profile.update');
+
+                Route::get('members/{member}', PublicMemberProfileController::class)
+                    ->name('members.show');
+                Route::post('members/{member}/like', LikeMemberController::class)
+                    ->name('members.like');
+                Route::post('members/{member}/block', BlockMemberController::class)
+                    ->name('members.block');
+                Route::delete('members/{member}/block', UnblockMemberController::class)
+                    ->name('members.unblock');
+
+                Route::get('discover', DiscoveryController::class)
+                    ->name('discovery.index');
+                Route::post('discover/{target}/swipe', SwipeController::class)
+                    ->name('discovery.swipe');
+
+                Route::get('events/mine', MyEventController::class)->name('events.mine');
+                Route::resource('events', EventController::class)
+                    ->only(['index', 'create', 'store', 'show', 'edit', 'update']);
+                Route::get('events/{event}/participants', [EventParticipantController::class, 'index'])
+                    ->name('events.participants.index');
+                Route::get('events/{event}/participants/{member}', [EventParticipantController::class, 'show'])
+                    ->name('events.participants.show');
+                Route::get('events/{event}/requests', EventRegistrationIndexController::class)
+                    ->name('events.registrations.index');
+                Route::patch('events/{event}/cancel', EventCancellationController::class)
+                    ->name('events.cancel');
+                Route::post('events/{event}/registrations', [EventRegistrationController::class, 'store'])
+                    ->name('events.registrations.store');
+                Route::delete('events/{event}/registrations', [EventRegistrationController::class, 'destroy'])
+                    ->name('events.registrations.destroy');
+                Route::post('events/{event}/chat/messages', EventChatMessageController::class)
+                    ->name('events.chat.messages.store');
+                Route::get('events/{event}/chat', EventChatController::class)
+                    ->name('events.chat.show');
+                Route::post('events/{event}/chat/read', EventChatReadController::class)
+                    ->name('events.chat.read.store');
+                Route::patch('event-registrations/{registration}', EventRegistrationDecisionController::class)
+                    ->name('events.registrations.decision');
+                Route::delete('event-registrations/{registration}', EventRegistrationRemovalController::class)
+                    ->name('events.registrations.remove');
+
+                Route::get('conversations', ConversationIndexController::class)
+                    ->name('conversations.index');
+                Route::get('conversations/{conversation}', ConversationController::class)
+                    ->name('conversations.show');
+                Route::post('conversations/{conversation}/messages', MessageController::class)
+                    ->name('conversations.messages.store');
+                Route::post('conversations/{conversation}/read', ConversationReadController::class)
+                    ->name('conversations.read.store');
+                Route::get('notifications', NotificationIndexController::class)
+                    ->name('notifications.index');
+                Route::patch('notifications/read-all', NotificationReadAllController::class)
+                    ->name('notifications.read-all');
+                Route::patch('notifications/{notification}/read', NotificationReadController::class)
+                    ->name('notifications.read');
+            });
+        });
+    });
+
+    Route::get('dashboard', DashboardController::class)
+        ->middleware('role:admin')
+        ->name('dashboard');
 
     Route::prefix('admin')->name('admin.')->middleware('role:admin')->group(function (): void {
         Route::resource('avatars', AvatarController::class)
@@ -119,106 +198,24 @@ Route::middleware(['auth', 'verified', 'social'])->group(function () {
             ->name('avatars.status');
         Route::patch('avatars/{avatar}/move', AvatarOrderController::class)
             ->name('avatars.move');
-    });
-
-    Route::middleware('profile.complete')->group(function () {
-        Route::get('onboarding', [ProductOnboardingController::class, 'show'])
-            ->name('onboarding.show');
-        Route::patch('onboarding', [ProductOnboardingController::class, 'advance'])
-            ->name('onboarding.advance');
-        Route::post('onboarding/complete', [ProductOnboardingController::class, 'complete'])
-            ->name('onboarding.complete');
-
-        Route::prefix('admin')->name('admin.')->middleware('role:admin')->group(function (): void {
-            Route::get('onboarding', [AdminProductOnboardingController::class, 'index'])
-                ->name('onboarding.index');
-            Route::patch('onboarding', [AdminProductOnboardingController::class, 'update'])
-                ->name('onboarding.update');
-        });
-
-        Route::middleware('onboarding.complete')->group(function () {
-            Route::get('profile', [MemberProfileController::class, 'show'])
-                ->name('member-profile.show');
-            Route::get('profile/edit', [MemberProfileController::class, 'edit'])
-                ->name('member-profile.edit');
-            Route::patch('profile', [MemberProfileController::class, 'update'])
-                ->name('member-profile.update');
-
-            Route::get('members/{member}', PublicMemberProfileController::class)
-                ->name('members.show');
-            Route::post('members/{member}/like', LikeMemberController::class)
-                ->name('members.like');
-            Route::post('members/{member}/block', BlockMemberController::class)
-                ->name('members.block');
-            Route::delete('members/{member}/block', UnblockMemberController::class)
-                ->name('members.unblock');
-
-            Route::get('discover', DiscoveryController::class)
-                ->name('discovery.index');
-            Route::post('discover/{target}/swipe', SwipeController::class)
-                ->name('discovery.swipe');
-
-            Route::get('events/mine', MyEventController::class)->name('events.mine');
-            Route::resource('events', EventController::class)
-                ->only(['index', 'create', 'store', 'show', 'edit', 'update']);
-            Route::get('events/{event}/participants', [EventParticipantController::class, 'index'])
-                ->name('events.participants.index');
-            Route::get('events/{event}/participants/{member}', [EventParticipantController::class, 'show'])
-                ->name('events.participants.show');
-            Route::get('events/{event}/requests', EventRegistrationIndexController::class)
-                ->name('events.registrations.index');
-            Route::patch('events/{event}/cancel', EventCancellationController::class)
-                ->name('events.cancel');
-            Route::post('events/{event}/registrations', [EventRegistrationController::class, 'store'])
-                ->name('events.registrations.store');
-            Route::delete('events/{event}/registrations', [EventRegistrationController::class, 'destroy'])
-                ->name('events.registrations.destroy');
-            Route::post('events/{event}/chat/messages', EventChatMessageController::class)
-                ->name('events.chat.messages.store');
-            Route::get('events/{event}/chat', EventChatController::class)
-                ->name('events.chat.show');
-            Route::post('events/{event}/chat/read', EventChatReadController::class)
-                ->name('events.chat.read.store');
-            Route::patch('event-registrations/{registration}', EventRegistrationDecisionController::class)
-                ->name('events.registrations.decision');
-            Route::delete('event-registrations/{registration}', EventRegistrationRemovalController::class)
-                ->name('events.registrations.remove');
-
-            Route::get('conversations', ConversationIndexController::class)
-                ->name('conversations.index');
-            Route::get('conversations/{conversation}', ConversationController::class)
-                ->name('conversations.show');
-            Route::post('conversations/{conversation}/messages', MessageController::class)
-                ->name('conversations.messages.store');
-            Route::post('conversations/{conversation}/read', ConversationReadController::class)
-                ->name('conversations.read.store');
-            Route::get('notifications', NotificationIndexController::class)
-                ->name('notifications.index');
-            Route::patch('notifications/read-all', NotificationReadAllController::class)
-                ->name('notifications.read-all');
-            Route::patch('notifications/{notification}/read', NotificationReadController::class)
-                ->name('notifications.read');
-            Route::get('dashboard', DashboardController::class)
-                ->middleware('role:admin')
-                ->name('dashboard');
-
-            Route::prefix('admin')->name('admin.')->middleware('role:admin')->group(function (): void {
-                Route::get('members', [AdminMemberController::class, 'index'])
-                    ->name('members.index');
-                Route::delete('members/{member}', [AdminMemberController::class, 'destroy'])
-                    ->name('members.destroy');
-                Route::post('members/{member}/conversation', MemberConversationController::class)
-                    ->name('members.conversation.store');
-                Route::resource('interests', InterestController::class)
-                    ->only(['index', 'store', 'update', 'destroy']);
-                Route::patch('interests/{interest}/status', InterestStatusController::class)
-                    ->name('interests.status');
-                Route::patch('interests/{interest}/move', InterestOrderController::class)
-                    ->name('interests.move');
-                Route::patch('interest-setting', InterestSettingController::class)
-                    ->name('interest-setting.update');
-            });
-        });
+        Route::get('onboarding', [AdminProductOnboardingController::class, 'index'])
+            ->name('onboarding.index');
+        Route::patch('onboarding', [AdminProductOnboardingController::class, 'update'])
+            ->name('onboarding.update');
+        Route::get('members', [AdminMemberController::class, 'index'])
+            ->name('members.index');
+        Route::delete('members/{member}', [AdminMemberController::class, 'destroy'])
+            ->name('members.destroy');
+        Route::post('members/{member}/conversation', MemberConversationController::class)
+            ->name('members.conversation.store');
+        Route::resource('interests', InterestController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+        Route::patch('interests/{interest}/status', InterestStatusController::class)
+            ->name('interests.status');
+        Route::patch('interests/{interest}/move', InterestOrderController::class)
+            ->name('interests.move');
+        Route::patch('interest-setting', InterestSettingController::class)
+            ->name('interest-setting.update');
     });
 });
 

@@ -56,6 +56,17 @@ class UserTest extends TestCase
         $this->assertTrue($user->hasRole(RoleName::User));
     }
 
+    public function test_partner_factory_states_keep_roles_explicit_and_cumulative(): void
+    {
+        $partner = User::factory()->partner()->create();
+        $partnerOnly = User::factory()->partnerOnly()->create();
+
+        $this->assertTrue($partner->fresh('roles')->hasRole(RoleName::User));
+        $this->assertTrue($partner->hasRole(RoleName::Partner));
+        $this->assertFalse($partnerOnly->fresh('roles')->hasRole(RoleName::User));
+        $this->assertTrue($partnerOnly->hasRole(RoleName::Partner));
+    }
+
     public function test_user_and_social_account_have_inverse_relationships(): void
     {
         $user = User::factory()->create();
