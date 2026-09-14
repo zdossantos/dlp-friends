@@ -40,4 +40,10 @@ class EventChat extends Model
     {
         return $this->hasMany(EventChatRead::class);
     }
+
+    public function isReadOnly(): bool
+    {
+        return $this->event->cancelled_at !== null
+            || now()->greaterThanOrEqualTo($this->event->starts_at->addDays(7));
+    }
 }
