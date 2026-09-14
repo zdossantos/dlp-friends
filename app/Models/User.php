@@ -61,6 +61,8 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
  * @property-read Collection<int, TermsAcceptance> $termsAcceptances
  * @property-read Collection<int, Event> $organizedEvents
  * @property-read Collection<int, EventRegistration> $eventRegistrations
+ * @property-read Collection<int, EventChatMessage> $authoredEventChatMessages
+ * @property-read Collection<int, EventChatRead> $eventChatReads
  * @property-read Collection<int, DatabaseNotification> $notifications
  * @property-read Collection<int, DatabaseNotification> $readNotifications
  * @property-read Collection<int, DatabaseNotification> $unreadNotifications
@@ -154,6 +156,18 @@ class User extends Authenticatable implements HasLocalePreference, MustVerifyEma
     public function eventRegistrations(): HasMany
     {
         return $this->hasMany(EventRegistration::class);
+    }
+
+    /** @return HasMany<EventChatMessage, $this> */
+    public function authoredEventChatMessages(): HasMany
+    {
+        return $this->hasMany(EventChatMessage::class, 'author_user_id');
+    }
+
+    /** @return HasMany<EventChatRead, $this> */
+    public function eventChatReads(): HasMany
+    {
+        return $this->hasMany(EventChatRead::class);
     }
 
     public function hasBlockedRelationshipWith(User $other): bool
