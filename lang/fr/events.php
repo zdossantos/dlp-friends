@@ -3,20 +3,21 @@
 return [
     'validation' => ['starts_at_future' => 'Le champ starts at doit être une date postérieure à maintenant.'],
     'navigation' => 'Événements',
+    'workspace_navigation' => 'Navigation des événements',
     'index' => [
         'title' => 'Événements amicaux',
         'description' => 'Retrouve des membres pour partager une journée ou un moment dans les parcs.',
         'empty_title' => 'Aucun événement à venir',
         'empty_description' => 'Propose le premier rendez-vous amical.',
     ],
-    'mine' => ['title' => 'Mes événements', 'description' => 'Tes organisations et inscriptions, passées ou à venir.', 'empty' => 'Tu n’as encore aucun événement.', 'organized' => 'J’organise', 'participating' => 'Je participe', 'empty_organized' => 'Tu n’organises encore aucun événement.', 'empty_participating' => 'Tu ne participes encore à aucun événement.'],
+    'mine' => ['title' => 'Mes événements', 'description' => 'Tes organisations et inscriptions, passées ou à venir.', 'empty' => 'Tu n’as encore aucun événement.', 'organized' => 'J’organise', 'organized_description' => 'Les événements que tu as créés et que tu gères.', 'participating' => 'Je participe', 'participating_description' => 'Les événements que tu as rejoints ou demandé à rejoindre.', 'empty_organized' => 'Tu n’organises encore aucun événement.', 'empty_participating' => 'Tu ne participes encore à aucun événement.'],
     'create' => ['title' => 'Créer un événement', 'submit' => 'Créer l’événement'],
     'edit' => ['title' => 'Modifier l’événement', 'submit' => 'Enregistrer les modifications'],
     'show' => ['participants' => 'Participants', 'requests' => 'Demandes d’inscription', 'private_location' => 'Lieu de rendez-vous précis', 'privacy' => 'Le lieu précis et les participants sont visibles uniquement après acceptation.'],
     'fields' => ['title' => 'Titre', 'description' => 'Description', 'general_location' => 'Lieu général', 'detailed_location' => 'Lieu précis', 'starts_at' => 'Date et heure', 'capacity' => 'Nombre de places', 'registration_mode' => 'Mode d’inscription'],
     'modes' => ['automatic' => 'Acceptation automatique', 'manual' => 'Validation par l’organisateur'],
     'statuses' => ['pending' => 'En attente', 'accepted' => 'Acceptée', 'refused' => 'Refusée', 'withdrawn' => 'Désistée', 'removed' => 'Retirée', 'blocked' => 'Bloquée'],
-    'actions' => ['create' => 'Créer', 'mine' => 'Mes événements', 'view' => 'Voir', 'edit' => 'Modifier', 'cancel' => 'Annuler l’événement', 'register' => 'Participer', 'withdraw' => 'Se désinscrire', 'accept' => 'Accepter', 'refuse' => 'Refuser', 'remove' => 'Retirer', 'manage_requests' => 'Gérer les demandes (:count)', 'confirm' => 'Confirmer', 'close' => 'Fermer', 'back' => 'Retour'],
+    'actions' => ['create' => 'Créer', 'discover' => 'Découvrir', 'mine' => 'Mes événements', 'view' => 'Voir', 'open_details' => 'Afficher les détails', 'edit' => 'Modifier', 'cancel' => 'Annuler l’événement', 'register' => 'Participer', 'withdraw' => 'Se désinscrire', 'accept' => 'Accepter', 'refuse' => 'Refuser', 'remove' => 'Retirer', 'manage_requests' => 'Gérer les demandes (:count)', 'confirm' => 'Confirmer', 'close' => 'Fermer', 'back' => 'Retour'],
     'roles' => ['organizer' => 'Organisateur', 'participant' => 'Participant'],
     'participants' => ['open' => 'Voir les :count participants', 'me' => 'Moi', 'blocked_user' => 'Utilisateur bloqué', 'blocked_profile_description' => 'Les informations de ce profil ne sont pas disponibles.', 'discuss' => 'Discuter'],
     'panels' => [

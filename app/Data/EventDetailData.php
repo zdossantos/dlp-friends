@@ -49,6 +49,7 @@ final readonly class EventDetailData
                     $user,
                     $viewer,
                     $blocks,
+                    $event->organizer_user_id === $user->id,
                 ))
                 ->all(),
         ];
@@ -80,6 +81,7 @@ final readonly class EventDetailData
         User $user,
         User $viewer,
         $blocks,
+        bool $isOrganizer,
     ): array {
         $isSelf = $viewer->is($user);
         $outgoingBlock = ! $isSelf && $blocks->contains(fn (Block $block): bool => $block->blocker_user_id === $viewer->id && $block->blocked_user_id === $user->id);
@@ -91,6 +93,7 @@ final readonly class EventDetailData
             'displayName' => $isBlocked ? null : $user->profile?->display_name,
             'avatar' => $isBlocked ? null : self::avatar($user),
             'isSelf' => $isSelf,
+            'isOrganizer' => $isOrganizer,
             'isBlocked' => $isBlocked,
             'canUnblock' => $outgoingBlock,
         ];

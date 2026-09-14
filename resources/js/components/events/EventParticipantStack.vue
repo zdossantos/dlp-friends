@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Link } from '@inertiajs/vue3';
+import { UserRoundX } from '@lucide/vue';
 import { computed } from 'vue';
 import UserAvatar from '@/components/profile/UserAvatar.vue';
 import { useTranslations } from '@/composables/useTranslations';
@@ -21,15 +22,25 @@ const remaining = computed(() => Math.max(0, props.participants.length - 3));
             t('events.participants.open', { count: participants.length })
         "
     >
-        <UserAvatar
-            v-for="(participant, index) in visible"
-            :key="participant.id"
-            :avatar="participant.avatar"
-            :display-name="participant.displayName"
-            data-test="participant-stack-avatar"
-            class="size-12 border-2 border-card shadow-sm"
-            :class="index > 0 ? '-ml-3' : ''"
-        />
+        <template v-for="(participant, index) in visible" :key="participant.id">
+            <span
+                v-if="participant.isBlocked"
+                data-test="participant-stack-avatar"
+                :data-test-blocked="`participant-stack-blocked-${participant.id}`"
+                class="grid size-12 shrink-0 place-items-center rounded-full border-2 border-card bg-muted text-muted-foreground shadow-sm"
+                :class="index > 0 ? '-ml-3' : ''"
+            >
+                <UserRoundX class="size-6" aria-hidden="true" />
+            </span>
+            <UserAvatar
+                v-else
+                :avatar="participant.avatar"
+                :display-name="participant.displayName"
+                data-test="participant-stack-avatar"
+                class="size-12 border-2 border-card shadow-sm"
+                :class="index > 0 ? '-ml-3' : ''"
+            />
+        </template>
         <span
             v-if="remaining > 0"
             class="-ml-3 flex size-12 items-center justify-center rounded-full border-2 border-card bg-muted font-semibold text-muted-foreground shadow-sm"

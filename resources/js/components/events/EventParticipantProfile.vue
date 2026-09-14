@@ -13,6 +13,7 @@ import type { EmbeddedMemberProfile } from '@/types/event';
 
 const props = defineProps<{
     profile: EmbeddedMemberProfile;
+    blockReturnHref: string;
 }>();
 const { t } = useTranslations();
 const frequencyKeys: Record<
@@ -96,7 +97,7 @@ const visitFrequency = computed(() =>
                 <BlockMemberDialog
                     v-else-if="profile.canBlock"
                     :member-id="profile.member.id"
-                    :return-href="$page.url"
+                    :return-href="blockReturnHref"
                 />
             </template>
         </ProfilePresentation>

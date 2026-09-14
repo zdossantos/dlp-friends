@@ -37,6 +37,7 @@ class EventParticipantPanelTest extends TestCase
                     ->component('Events/Mine')
                     ->where('panel.kind', 'participants')
                     ->has('panel.event.participants', 2)
+                    ->where('panel.event.participants.0.isOrganizer', true)
                     ->has('panel.event.participants.0.avatar.image_url'));
         }
     }

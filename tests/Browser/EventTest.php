@@ -22,6 +22,8 @@ test('manual and direct links open the same event panel over their workspace', f
 
     visit('/events')
         ->assertPresent('[data-test="discover-events"]')
+        ->assertAttribute('[data-test="events-nav-discover"]', 'aria-current', 'page')
+        ->assertPresent('[data-test="events-nav-mine"]')
         ->click("[data-test=\"event-link-{$event->id}\"]")
         ->assertPresent('[data-test="event-panel"]')
         ->assertPresent('[data-test="event-detail"]')
@@ -40,6 +42,30 @@ test('manual and direct links open the same event panel over their workspace', f
         ->assertPresent('[data-test="event-detail"]')
         ->assertPresent('[data-test="mine-events"]')
         ->assertSee('Mes événements')
+        ->assertNoJavaScriptErrors();
+});
+
+test('event workspace navigation is explicit and the whole event card opens its panel', function () {
+    $organizer = eventBrowserMember('Alice');
+    $event = Event::factory()->for($organizer, 'organizer')->create([
+        'title' => 'Navigation évidente',
+    ]);
+    $this->actingAs($organizer);
+
+    visit('/events')
+        ->assertSee('Découvrir')
+        ->click('[data-test="events-nav-mine"]')
+        ->assertPathIs('/events/mine')
+        ->assertAttribute('[data-test="events-nav-mine"]', 'aria-current', 'page')
+        ->assertPresent("[data-event-card-link=\"event-card-link-{$event->id}\"]")
+        ->assertScript(<<<JS
+            (() => {
+                const card = document.querySelector('[data-event-card-link="event-card-link-{$event->id}"]');
+                return card?.tagName === 'A' && card.querySelector('button') === null;
+            })()
+            JS, true)
+        ->click("[data-event-card-link=\"event-card-link-{$event->id}\"]")
+        ->assertPresent('[data-test="event-detail"]')
         ->assertNoJavaScriptErrors();
 });
 
@@ -161,6 +187,7 @@ test('participant avatar stack opens the list and profiles inside the event pane
         ->assertCount('[data-test="participant-row"]', 4)
         ->assertSee('Moi')
         ->assertPresent("[data-test=\"participant-self-{$viewer->id}\"]")
+        ->assertPresent("[data-test=\"participant-organizer-{$organizer->id}\"]")
         ->assertMissing('[data-test^="participant-like-"]')
         ->assertMissing('[data-test^="participant-discuss-"]')
         ->click("[data-test=\"participant-link-{$organizer->id}\"]")
@@ -195,6 +222,46 @@ test('participant avatar stack opens the list and profiles inside the event pane
         ->assertNoJavaScriptErrors();
 });
 
+test('blocking a participant from the event profile returns to the event workspace without a 404', function () {
+    $organizer = eventBrowserMember('Alice');
+    $viewer = eventBrowserMember('Basile');
+    $participant = eventBrowserMember('Camille');
+    $event = Event::factory()->for($organizer, 'organizer')->create([
+        'title' => 'Événement toujours visible',
+    ]);
+    foreach ([$viewer, $participant] as $member) {
+        EventRegistration::factory()->for($event)->for($member)->accepted()->create();
+    }
+    $this->actingAs($viewer);
+
+    visit("/events/{$event->id}/participants/{$participant->id}?origin=mine")
+        ->click('[data-test="block-member-trigger"]')
+        ->click('[data-test="confirm-block-member"]')
+        ->assertPathIs('/events/mine')
+        ->assertPresent('[data-test="mine-events"]')
+        ->assertSee('Événement toujours visible')
+        ->assertMissing('[data-test="event-panel"]')
+        ->assertNoJavaScriptErrors();
+});
+
+test('blocking the organizer while viewing their event removes the registration and event from the workspace', function () {
+    $organizer = eventBrowserMember('Alice');
+    $viewer = eventBrowserMember('Basile');
+    $event = Event::factory()->for($organizer, 'organizer')->create([
+        'title' => 'Événement de l’organisateur bloqué',
+    ]);
+    EventRegistration::factory()->for($event)->for($viewer)->accepted()->create();
+    $this->actingAs($viewer);
+
+    visit("/events/{$event->id}/participants/{$organizer->id}?origin=mine")
+        ->click('[data-test="block-member-trigger"]')
+        ->click('[data-test="confirm-block-member"]')
+        ->assertPathIs('/events/mine')
+        ->assertDontSee('Événement de l’organisateur bloqué')
+        ->assertMissing('[data-test="event-panel"]')
+        ->assertNoJavaScriptErrors();
+});
+
 test('participant rows only open profiles and a blocked profile is redacted until unblocked', function () {
     $organizer = eventBrowserMember('Alice');
     $viewer = eventBrowserMember('Basile');
@@ -224,6 +291,32 @@ test('participant rows only open profiles and a blocked profile is redacted unti
         ->click('[data-test="unblock-member"]')
         ->assertSee('Camille')
         ->assertMissing('[data-test="blocked-participant-profile"]')
+        ->assertNoJavaScriptErrors();
+});
+
+test('the compact participant stack uses the blocked profile icon and a grey background', function () {
+    $organizer = eventBrowserMember('Alice');
+    $viewer = eventBrowserMember('Basile');
+    $blocked = eventBrowserMember('Camille');
+    $event = Event::factory()->for($organizer, 'organizer')->create();
+    foreach ([$viewer, $blocked] as $participant) {
+        EventRegistration::factory()->for($event)->for($participant)->accepted()->create();
+    }
+    Block::factory()->create([
+        'blocker_user_id' => $viewer->id,
+        'blocked_user_id' => $blocked->id,
+    ]);
+    $this->actingAs($viewer);
+
+    visit("/events/{$event->id}?origin=mine")
+        ->assertPresent("[data-test-blocked=\"participant-stack-blocked-{$blocked->id}\"]")
+        ->assertScript(<<<JS
+            (() => {
+                const blocked = document.querySelector('[data-test-blocked="participant-stack-blocked-{$blocked->id}"]');
+                return blocked.querySelector('svg') !== null
+                    && getComputedStyle(blocked).backgroundColor !== 'rgba(0, 0, 0, 0)';
+            })()
+            JS, true)
         ->assertNoJavaScriptErrors();
 });
 

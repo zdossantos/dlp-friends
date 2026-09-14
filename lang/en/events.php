@@ -3,20 +3,21 @@
 return [
     'validation' => ['starts_at_future' => 'The starts at field must be a date after now.'],
     'navigation' => 'Events',
+    'workspace_navigation' => 'Event navigation',
     'index' => [
         'title' => 'Friendly events',
         'description' => 'Meet other members for a day or a moment in the parks.',
         'empty_title' => 'No upcoming events',
         'empty_description' => 'Suggest the first friendly meetup.',
     ],
-    'mine' => ['title' => 'My events', 'description' => 'Events you organize or joined, past and upcoming.', 'empty' => 'You do not have any events yet.', 'organized' => 'I organize', 'participating' => 'I’m joining', 'empty_organized' => 'You do not organize any events yet.', 'empty_participating' => 'You are not joining any events yet.'],
+    'mine' => ['title' => 'My events', 'description' => 'Events you organize or joined, past and upcoming.', 'empty' => 'You do not have any events yet.', 'organized' => 'I organize', 'organized_description' => 'Events you created and manage.', 'participating' => 'I’m joining', 'participating_description' => 'Events you joined or asked to join.', 'empty_organized' => 'You do not organize any events yet.', 'empty_participating' => 'You are not joining any events yet.'],
     'create' => ['title' => 'Create an event', 'submit' => 'Create event'],
     'edit' => ['title' => 'Edit event', 'submit' => 'Save changes'],
     'show' => ['participants' => 'Participants', 'requests' => 'Registration requests', 'private_location' => 'Exact meeting point', 'privacy' => 'The exact location and participants are only visible after acceptance.'],
     'fields' => ['title' => 'Title', 'description' => 'Description', 'general_location' => 'General location', 'detailed_location' => 'Exact location', 'starts_at' => 'Date and time', 'capacity' => 'Number of places', 'registration_mode' => 'Registration mode'],
     'modes' => ['automatic' => 'Automatic acceptance', 'manual' => 'Organizer approval'],
     'statuses' => ['pending' => 'Pending', 'accepted' => 'Accepted', 'refused' => 'Refused', 'withdrawn' => 'Withdrawn', 'removed' => 'Removed', 'blocked' => 'Blocked'],
-    'actions' => ['create' => 'Create', 'mine' => 'My events', 'view' => 'View', 'edit' => 'Edit', 'cancel' => 'Cancel event', 'register' => 'Join', 'withdraw' => 'Withdraw', 'accept' => 'Accept', 'refuse' => 'Refuse', 'remove' => 'Remove', 'manage_requests' => 'Manage requests (:count)', 'confirm' => 'Confirm', 'close' => 'Close', 'back' => 'Back'],
+    'actions' => ['create' => 'Create', 'discover' => 'Discover', 'mine' => 'My events', 'view' => 'View', 'open_details' => 'View details', 'edit' => 'Edit', 'cancel' => 'Cancel event', 'register' => 'Join', 'withdraw' => 'Withdraw', 'accept' => 'Accept', 'refuse' => 'Refuse', 'remove' => 'Remove', 'manage_requests' => 'Manage requests (:count)', 'confirm' => 'Confirm', 'close' => 'Close', 'back' => 'Back'],
     'roles' => ['organizer' => 'Organizer', 'participant' => 'Participant'],
     'participants' => ['open' => 'View all :count participants', 'me' => 'Me', 'blocked_user' => 'Blocked user', 'blocked_profile_description' => 'This profile’s information is not available.', 'discuss' => 'Chat'],
     'panels' => [

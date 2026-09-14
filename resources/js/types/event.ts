@@ -24,6 +24,7 @@ export type EventParticipant = {
     displayName: string | null;
     avatar: AvatarOption | null;
     isSelf: boolean;
+    isOrganizer: boolean;
     isBlocked: boolean;
     canUnblock: boolean;
 };

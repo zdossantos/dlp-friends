@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { Link } from '@inertiajs/vue3';
-import { ChevronRight, UserRoundX } from '@lucide/vue';
+import { ChevronRight, Crown, UserRoundX } from '@lucide/vue';
 import UserAvatar from '@/components/profile/UserAvatar.vue';
+import { Badge } from '@/components/ui/badge';
 import { useTranslations } from '@/composables/useTranslations';
 import { show } from '@/routes/events/participants';
 import type { EventParticipant, EventWorkspaceContext } from '@/types/event';
@@ -57,6 +58,15 @@ const { t } = useTranslations();
                           ? t('events.participants.me')
                           : participant.displayName
                 }}</span>
+                <Badge
+                    v-if="participant.isOrganizer"
+                    :data-test="`participant-organizer-${participant.id}`"
+                    variant="secondary"
+                    class="shrink-0"
+                >
+                    <Crown class="size-3.5" aria-hidden="true" />
+                    {{ t('events.roles.organizer') }}
+                </Badge>
                 <ChevronRight
                     class="size-5 shrink-0 text-muted-foreground"
                     aria-hidden="true"

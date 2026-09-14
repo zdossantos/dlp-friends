@@ -147,17 +147,6 @@ function updatePanel(open: boolean): void {
                 </p>
             </div>
             <div class="flex gap-2">
-                <Button as-child variant="outline">
-                    <Link :href="context === 'discover' ? mine() : index()">
-                        {{
-                            t(
-                                context === 'discover'
-                                    ? 'events.actions.mine'
-                                    : 'events.navigation',
-                            )
-                        }}
-                    </Link>
-                </Button>
                 <Button as-child>
                     <Link
                         :href="createHref"
@@ -171,6 +160,38 @@ function updatePanel(open: boolean): void {
                 </Button>
             </div>
         </header>
+
+        <nav
+            class="grid grid-cols-2 rounded-xl bg-muted p-1"
+            :aria-label="t('events.workspace_navigation')"
+        >
+            <Link
+                :href="index()"
+                data-test="events-nav-discover"
+                :aria-current="context === 'discover' ? 'page' : undefined"
+                class="rounded-lg px-4 py-2.5 text-center text-sm font-semibold transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+                :class="
+                    context === 'discover'
+                        ? 'bg-background text-foreground shadow-sm'
+                        : 'text-muted-foreground hover:text-foreground'
+                "
+            >
+                {{ t('events.actions.discover') }}
+            </Link>
+            <Link
+                :href="mine()"
+                data-test="events-nav-mine"
+                :aria-current="context === 'mine' ? 'page' : undefined"
+                class="rounded-lg px-4 py-2.5 text-center text-sm font-semibold transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+                :class="
+                    context === 'mine'
+                        ? 'bg-background text-foreground shadow-sm'
+                        : 'text-muted-foreground hover:text-foreground'
+                "
+            >
+                {{ t('events.actions.mine') }}
+            </Link>
+        </nav>
 
         <template v-if="context === 'discover'">
             <section v-if="events?.length" class="grid gap-4 md:grid-cols-2">
@@ -196,9 +217,14 @@ function updatePanel(open: boolean): void {
 
         <template v-else>
             <section data-test="organized-events" class="space-y-3">
-                <h2 class="text-xl font-semibold">
-                    {{ t('events.mine.organized') }}
-                </h2>
+                <div>
+                    <h2 class="text-xl font-semibold">
+                        {{ t('events.mine.organized') }}
+                    </h2>
+                    <p class="text-sm text-muted-foreground">
+                        {{ t('events.mine.organized_description') }}
+                    </p>
+                </div>
                 <div v-if="organized?.length" class="grid gap-4 md:grid-cols-2">
                     <EventCard
                         v-for="event in organized"
@@ -216,9 +242,14 @@ function updatePanel(open: boolean): void {
                 </p>
             </section>
             <section data-test="participating-events" class="space-y-3">
-                <h2 class="text-xl font-semibold">
-                    {{ t('events.mine.participating') }}
-                </h2>
+                <div>
+                    <h2 class="text-xl font-semibold">
+                        {{ t('events.mine.participating') }}
+                    </h2>
+                    <p class="text-sm text-muted-foreground">
+                        {{ t('events.mine.participating_description') }}
+                    </p>
+                </div>
                 <div
                     v-if="participating?.length"
                     class="grid gap-4 md:grid-cols-2"
@@ -253,6 +284,11 @@ function updatePanel(open: boolean): void {
         :full-bleed="panel?.kind === 'participant-profile'"
         @update:open="updatePanel"
     >
-        <EventPanelContent v-if="panel" :panel="panel" :context="context" />
+        <EventPanelContent
+            v-if="panel"
+            :panel="panel"
+            :context="context"
+            :close-href="closeHref"
+        />
     </AdaptiveEventPanel>
 </template>

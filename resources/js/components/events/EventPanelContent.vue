@@ -11,6 +11,7 @@ import type { EventPanel, EventWorkspaceContext } from '@/types/event';
 const props = defineProps<{
     panel: EventPanel;
     context: EventWorkspaceContext;
+    closeHref: string;
 }>();
 const { t } = useTranslations();
 const origin = props.context === 'mine' ? { origin: 'mine' } : {};
@@ -46,7 +47,10 @@ const origin = props.context === 'mine' ? { origin: 'mine' } : {};
         v-else-if="panel.kind === 'participant-profile'"
         class="h-full bg-card"
     >
-        <EventParticipantProfile :profile="panel.profile" />
+        <EventParticipantProfile
+            :profile="panel.profile"
+            :block-return-href="closeHref"
+        />
     </section>
     <section v-else-if="panel.kind === 'registrations'" class="space-y-4 pt-2">
         <OrganizerRegistrations
