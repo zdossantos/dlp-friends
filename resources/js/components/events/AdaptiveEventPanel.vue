@@ -16,6 +16,8 @@ const props = defineProps<{
     backLabel?: string;
     backDataTest?: string;
     fullBleed?: boolean;
+    fillHeight?: boolean;
+    backInHeader?: boolean;
 }>();
 
 const emit = defineEmits<{ 'update:open': [open: boolean] }>();
@@ -50,6 +52,11 @@ function focusPanelWithoutScrolling(event: Event): void {
                 isDesktop
                     ? 'max-h-[min(90svh,52rem)] overflow-hidden border-border bg-card p-0 text-card-foreground sm:max-w-2xl'
                     : 'max-h-[92svh] overflow-hidden rounded-t-3xl border-border bg-card px-0 pb-[max(1rem,env(safe-area-inset-bottom))] text-card-foreground',
+                fillHeight
+                    ? isDesktop
+                        ? 'flex h-[min(90svh,52rem)] flex-col'
+                        : 'flex h-[80vh] flex-col'
+                    : '',
                 !isDesktop && !hasVisibleHeader
                     ? '[&>[data-slot=drawer-handle]]:absolute [&>[data-slot=drawer-handle]]:top-0 [&>[data-slot=drawer-handle]]:left-1/2 [&>[data-slot=drawer-handle]]:z-50 [&>[data-slot=drawer-handle]]:-translate-x-1/2'
                     : '',
@@ -70,7 +77,7 @@ function focusPanelWithoutScrolling(event: Event): void {
             >
                 <div :class="hasVisibleHeader ? 'flex items-start gap-3' : ''">
                     <Button
-                        v-if="backHref && !isDesktop"
+                        v-if="backHref && (!isDesktop || backInHeader)"
                         as-child
                         type="button"
                         variant="outline"
@@ -115,7 +122,7 @@ function focusPanelWithoutScrolling(event: Event): void {
                 <slot />
             </div>
             <div
-                v-if="isDesktop && backHref"
+                v-if="isDesktop && backHref && !backInHeader"
                 class="shrink-0 border-t border-border bg-card px-6 py-4"
             >
                 <Button as-child type="button" variant="outline">

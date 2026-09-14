@@ -48,7 +48,7 @@ const panelBackHref = computed(() => {
         }).url;
     }
 
-    if (props.panel?.kind === 'registrations') {
+    if (props.panel?.kind === 'registrations' || props.panel?.kind === 'chat') {
         return show(props.panel.event.id, {
             query: props.context === 'mine' ? { origin: 'mine' } : {},
         }).url;
@@ -63,6 +63,10 @@ const panelBackDataTest = computed(() => {
 
     if (props.panel?.kind === 'registrations') {
         return 'event-registrations-back';
+    }
+
+    if (props.panel?.kind === 'chat') {
+        return 'event-chat-back';
     }
 
     return undefined;
@@ -284,6 +288,8 @@ function updatePanel(open: boolean): void {
         :full-bleed="
             panel?.kind === 'participant-profile' || panel?.kind === 'chat'
         "
+        :fill-height="panel?.kind === 'chat'"
+        :back-in-header="panel?.kind === 'chat'"
         @update:open="updatePanel"
     >
         <EventPanelContent

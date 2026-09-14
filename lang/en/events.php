@@ -15,7 +15,7 @@ return [
     'edit' => ['title' => 'Edit event', 'submit' => 'Save changes'],
     'show' => ['participants' => 'Participants', 'requests' => 'Registration requests', 'private_location' => 'Exact meeting point', 'privacy' => 'The exact location and participants are only visible after acceptance.'],
     'chat' => [
-        'tab' => 'Discussion', 'details_tab' => 'Details', 'navigation' => 'Event navigation',
+        'open' => 'Open discussion', 'open_description' => 'With the organizer and accepted participants',
         'empty' => 'The discussion is still empty. Send the first message!',
         'label' => 'Message', 'placeholder' => 'Write to the whole group…', 'send' => 'Send message',
         'character_count' => ':count / 2,000', 'unread' => ':count unread', 'timeline' => 'Discussion messages',

@@ -15,7 +15,7 @@ return [
     'edit' => ['title' => 'Modifier l’événement', 'submit' => 'Enregistrer les modifications'],
     'show' => ['participants' => 'Participants', 'requests' => 'Demandes d’inscription', 'private_location' => 'Lieu de rendez-vous précis', 'privacy' => 'Le lieu précis et les participants sont visibles uniquement après acceptation.'],
     'chat' => [
-        'tab' => 'Discussion', 'details_tab' => 'Détails', 'navigation' => 'Navigation dans l’événement',
+        'open' => 'Ouvrir la discussion', 'open_description' => 'Avec l’organisateur et les participants acceptés',
         'empty' => 'La discussion est encore vide. Lance le premier message !',
         'label' => 'Message', 'placeholder' => 'Écrire à tout le groupe…', 'send' => 'Envoyer le message',
         'character_count' => ':count / 2 000', 'unread' => ':count non lu(s)', 'timeline' => 'Messages de la discussion',

@@ -9,7 +9,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { useTranslations } from '@/composables/useTranslations';
 import { xsrfHeader } from '@/lib/csrf';
 import { mergeEventChatMessages } from '@/lib/eventChatState';
-import { show } from '@/routes/events';
 import { store as storeMessage } from '@/routes/events/chat/messages';
 import { store as storeRead } from '@/routes/events/chat/read';
 import type {
@@ -35,7 +34,6 @@ const error = ref('');
 const pending = ref(false);
 const scroll = ref<HTMLElement | null>(null);
 const status = useConnectionStatus();
-const origin = props.context === 'mine' ? { origin: 'mine' } : {};
 
 function merge(messages: EventChatMessage[]): void {
     visibleMessages.value = mergeEventChatMessages(
@@ -143,21 +141,6 @@ onMounted(async () => {
         class="flex h-full min-h-0 flex-col bg-card"
         data-test="event-chat"
     >
-        <nav
-            class="flex shrink-0 border-b px-4"
-            :aria-label="t('events.chat.navigation')"
-        >
-            <Link
-                :href="show(event.id, { query: origin })"
-                class="px-3 py-3 text-sm font-medium text-muted-foreground hover:text-foreground"
-                >{{ t('events.chat.details_tab') }}</Link
-            >
-            <span
-                aria-current="page"
-                class="border-b-2 border-primary px-3 py-3 text-sm font-semibold"
-                >{{ t('events.chat.tab') }}</span
-            >
-        </nav>
         <div
             v-if="['disconnected', 'failed'].includes(status)"
             role="status"
