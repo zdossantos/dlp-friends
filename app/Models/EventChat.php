@@ -46,4 +46,15 @@ class EventChat extends Model
         return $this->event->cancelled_at !== null
             || now()->greaterThanOrEqualTo($this->event->starts_at->addDays(7));
     }
+
+    public function readOnlyReason(): ?string
+    {
+        if ($this->event->cancelled_at !== null) {
+            return 'cancelled';
+        }
+
+        return now()->greaterThanOrEqualTo($this->event->starts_at->addDays(7))
+            ? 'expired'
+            : null;
+    }
 }
