@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useTranslations } from '@/composables/useTranslations';
 import { cancel, edit } from '@/routes/events';
+import { show as chatShow } from '@/routes/events/chat';
 import { index as participantsIndex } from '@/routes/events/participants';
 import { index as registrationsIndex } from '@/routes/events/registrations';
 import type { EventDetail, EventWorkspaceContext } from '@/types/event';
@@ -41,6 +42,24 @@ function cancelEvent(): void {
 
 <template>
     <article data-test="event-detail" class="space-y-6 pt-2">
+        <nav
+            v-if="event.chat"
+            class="flex border-b"
+            :aria-label="t('events.chat.navigation')"
+        >
+            <span
+                aria-current="page"
+                class="border-b-2 border-primary px-3 py-3 text-sm font-semibold"
+                >{{ t('events.chat.details_tab') }}</span
+            >
+            <Link
+                :href="chatShow(event.id, { query: origin })"
+                preserve-scroll
+                class="px-3 py-3 text-sm font-medium text-muted-foreground hover:text-foreground"
+                data-test="event-chat-tab"
+                >{{ t('events.chat.tab') }}</Link
+            >
+        </nav>
         <header class="flex items-start justify-between gap-4">
             <h2
                 data-test="event-detail-title"

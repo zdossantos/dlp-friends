@@ -3,12 +3,12 @@ export type EventChatAccessChanged = {
     access: 'granted' | 'revoked' | 'read_only';
 };
 
-export function eventChatAccessReloadOptions(
-    _change: EventChatAccessChanged,
-): {
+export function eventChatAccessReloadOptions(change: EventChatAccessChanged): {
     only: ['organized', 'participating', 'panel'];
     preserveScroll: true;
 } {
+    void change;
+
     return {
         only: ['organized', 'participating', 'panel'],
         preserveScroll: true,

@@ -281,7 +281,9 @@ function updatePanel(open: boolean): void {
         :back-href="panelBackHref"
         :back-label="t('events.actions.back')"
         :back-data-test="panelBackDataTest"
-        :full-bleed="panel?.kind === 'participant-profile'"
+        :full-bleed="
+            panel?.kind === 'participant-profile' || panel?.kind === 'chat'
+        "
         @update:open="updatePanel"
     >
         <EventPanelContent

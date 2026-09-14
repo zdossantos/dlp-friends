@@ -32,7 +32,7 @@ class EventChatHistoryTest extends TestCase
             ->has('panel.messages.data', 10)
             ->where('panel.messages.data.0.id', $created[2]->id)
             ->where('panel.messages.data.9.id', $created[11]->id)
-            ->where('panel.messages.data.0.author.displayName', $organizer->profile?->display_name)
+            ->where('panel.messages.data.0.author.display_name', $organizer->profile?->display_name)
             ->where('closeHref', route('events.mine', absolute: false)));
     }
 

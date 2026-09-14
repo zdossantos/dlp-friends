@@ -2,6 +2,7 @@
 
 namespace App\Data;
 
+use App\Enums\EventRegistrationStatus;
 use App\Models\Event;
 use App\Models\User;
 
@@ -47,7 +48,7 @@ final readonly class EventSummaryData
         $status = self::registrationStatus($event, $viewer);
 
         if ($event->organizer_user_id !== $viewer->id
-            && $status !== \App\Enums\EventRegistrationStatus::Accepted->value) {
+            && $status !== EventRegistrationStatus::Accepted->value) {
             return [];
         }
 

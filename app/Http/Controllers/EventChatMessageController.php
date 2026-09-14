@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Actions\SendEventChatMessage;
+use App\Data\EventChatData;
 use App\Http\Requests\StoreEventChatMessageRequest;
 use App\Models\Event;
 use App\Models\User;
@@ -25,14 +26,7 @@ final class EventChatMessageController extends Controller
         );
 
         return response()->json([
-            'data' => [
-                'id' => $message->id,
-                'event_chat_id' => $message->event_chat_id,
-                'author_user_id' => $message->author_user_id,
-                'content' => $message->content,
-                'created_at' => $message->created_at?->toISOString(),
-                'updated_at' => $message->updated_at?->toISOString(),
-            ],
+            'data' => EventChatData::message($message),
         ], Response::HTTP_CREATED);
     }
 }

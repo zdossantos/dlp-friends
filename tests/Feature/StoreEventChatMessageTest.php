@@ -116,7 +116,7 @@ class StoreEventChatMessageTest extends TestCase
     }
 
     /** @param array<string, mixed> $attributes
-     *  @return array{Event, EventChat, User}
+     * @return array{Event, EventChat, User}
      */
     private function eventChat(array $attributes = []): array
     {

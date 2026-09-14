@@ -25,14 +25,15 @@ final readonly class EventChatData
 
         return [
             'id' => $message->id,
-            'eventChatId' => $message->event_chat_id,
-            'authorUserId' => $message->author_user_id,
+            'event_chat_id' => $message->event_chat_id,
+            'author_user_id' => $message->author_user_id,
             'content' => $message->content,
             'author' => [
                 'id' => $message->author->id,
-                'displayName' => $message->author->profile?->display_name,
+                'display_name' => $message->author->profile?->display_name,
             ],
-            'createdAt' => $message->created_at?->toISOString(),
+            'created_at' => $message->created_at?->toISOString(),
+            'updated_at' => $message->updated_at?->toISOString(),
         ];
     }
 

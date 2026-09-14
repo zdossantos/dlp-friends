@@ -6,7 +6,6 @@ use App\Actions\SendEventChatMessage;
 use App\Events\EventChatMessageSent;
 use App\Models\Event;
 use App\Models\EventChat;
-use App\Models\EventChatMessage;
 use App\Models\User;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;

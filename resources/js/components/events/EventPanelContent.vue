@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import EventChat from '@/components/events/EventChat.vue';
 import EventDetail from '@/components/events/EventDetail.vue';
 import EventForm from '@/components/events/EventForm.vue';
 import EventParticipantList from '@/components/events/EventParticipantList.vue';
@@ -28,6 +29,13 @@ const origin = props.context === 'mine' ? { origin: 'mine' } : {};
         :action="store({ query: origin }).url"
         method="post"
         :submit-label="t('events.create.submit')"
+    />
+    <EventChat
+        v-else-if="panel.kind === 'chat'"
+        :event="panel.event"
+        :chat="panel.chat"
+        :messages="panel.messages"
+        :context="context"
     />
     <EventForm
         v-else-if="panel.kind === 'edit'"

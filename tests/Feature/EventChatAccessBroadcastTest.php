@@ -27,8 +27,7 @@ class EventChatAccessBroadcastTest extends TestCase
 
         app(DecideEventRegistration::class)->handle($organizer, $registration, true);
 
-        EventFacade::assertDispatched(fn (EventChatAccessChanged $change): bool =>
-            $change->eventId === $event->id
+        EventFacade::assertDispatched(fn (EventChatAccessChanged $change): bool => $change->eventId === $event->id
             && $change->userId === $member->id
             && $change->access === 'granted');
 
@@ -55,8 +54,7 @@ class EventChatAccessBroadcastTest extends TestCase
             [$removeEvent->id, $removed->id],
             [$blockEvent->id, $blocked->id],
         ] as [$eventId, $userId]) {
-            EventFacade::assertDispatched(fn (EventChatAccessChanged $change): bool =>
-                $change->eventId === $eventId
+            EventFacade::assertDispatched(fn (EventChatAccessChanged $change): bool => $change->eventId === $eventId
                 && $change->userId === $userId
                 && $change->access === 'revoked');
         }
@@ -71,13 +69,11 @@ class EventChatAccessBroadcastTest extends TestCase
         app(CancelEvent::class)->handle($organizer, $event);
 
         foreach ([$organizer->id, $accepted->id] as $userId) {
-            EventFacade::assertDispatched(fn (EventChatAccessChanged $change): bool =>
-                $change->eventId === $event->id
+            EventFacade::assertDispatched(fn (EventChatAccessChanged $change): bool => $change->eventId === $event->id
                 && $change->userId === $userId
                 && $change->access === 'read_only');
         }
-        EventFacade::assertNotDispatched(fn (EventChatAccessChanged $change): bool =>
-            $change->userId === $pending->id);
+        EventFacade::assertNotDispatched(fn (EventChatAccessChanged $change): bool => $change->userId === $pending->id);
     }
 
     /** @return array{Event, User, User, EventRegistration} */
