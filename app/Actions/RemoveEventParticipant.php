@@ -4,6 +4,7 @@ namespace App\Actions;
 
 use App\Enums\EventNotificationType;
 use App\Enums\EventRegistrationStatus;
+use App\Events\EventChatAccessChanged;
 use App\Models\Event;
 use App\Models\EventRegistration;
 use App\Models\User;
@@ -15,7 +16,8 @@ final class RemoveEventParticipant
 {
     public function handle(User $organizer, EventRegistration $registration): EventRegistration
     {
-        $removedRegistration = DB::transaction(function () use ($organizer, $registration): EventRegistration {
+        $hadAccess = false;
+        $removedRegistration = DB::transaction(function () use ($organizer, $registration, &$hadAccess): EventRegistration {
             $event = Event::query()->lockForUpdate()->findOrFail($registration->event_id);
             $lockedRegistration = EventRegistration::query()->lockForUpdate()->findOrFail($registration->id);
 
@@ -30,6 +32,7 @@ final class RemoveEventParticipant
                 $this->fail('events.errors.registration_terminal');
             }
 
+            $hadAccess = $lockedRegistration->status === EventRegistrationStatus::Accepted;
             $lockedRegistration->update(['status' => EventRegistrationStatus::Removed]);
 
             return $lockedRegistration->refresh();
@@ -39,6 +42,14 @@ final class RemoveEventParticipant
             $removedRegistration->event,
             EventNotificationType::Removed,
         ));
+
+        if ($hadAccess) {
+            EventChatAccessChanged::dispatch(
+                $removedRegistration->event_id,
+                $removedRegistration->user_id,
+                'revoked',
+            );
+        }
 
         return $removedRegistration;
     }
