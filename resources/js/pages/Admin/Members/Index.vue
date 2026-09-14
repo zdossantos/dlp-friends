@@ -3,6 +3,7 @@ import { Head, Link, router } from '@inertiajs/vue3';
 import { MessageCircle } from '@lucide/vue';
 import { ref, watch } from 'vue';
 import DeleteMemberDialog from '@/components/admin/DeleteMemberDialog.vue';
+import ManageMemberRolesDialog from '@/components/admin/ManageMemberRolesDialog.vue';
 import MatchDialog from '@/components/discovery/MatchDialog.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -11,7 +12,7 @@ import { Input } from '@/components/ui/input';
 import { useTranslations } from '@/composables/useTranslations';
 import { index } from '@/routes/admin/members';
 import { store as openConversation } from '@/routes/admin/members/conversation';
-import type { MemberIdentity } from '@/types';
+import type { MemberIdentity, RoleName } from '@/types';
 
 type Member = {
     id: number;
@@ -22,6 +23,7 @@ type Member = {
     created_at: string | null;
     email_verified_at: string | null;
     is_admin: boolean;
+    roles: Array<{ name: RoleName }>;
     likes_sent_count: number;
     likes_received_count: number;
     passes_sent_count: number;
@@ -32,6 +34,7 @@ type Member = {
     blocked_by_count: number;
     can_delete: boolean;
     can_start_conversation: boolean;
+    can_manage_roles: boolean;
 };
 type PageLink = { url: string | null; label: string; active: boolean };
 type CreatedMatch = { member: MemberIdentity; conversationHref: string };
@@ -245,6 +248,15 @@ function date(value: string | null): string {
                                 </td>
                                 <td class="p-2">
                                     <div class="flex gap-2">
+                                        <ManageMemberRolesDialog
+                                            v-if="member.can_manage_roles"
+                                            :member-id="member.id"
+                                            :display-name="
+                                                member.display_name ??
+                                                member.email
+                                            "
+                                            :roles="member.roles"
+                                        />
                                         <Button
                                             v-if="member.can_start_conversation"
                                             type="button"

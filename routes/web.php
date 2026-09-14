@@ -11,6 +11,7 @@ use App\Http\Controllers\Admin\InterestSettingController;
 use App\Http\Controllers\Admin\InterestStatusController;
 use App\Http\Controllers\Admin\MemberController as AdminMemberController;
 use App\Http\Controllers\Admin\MemberConversationController;
+use App\Http\Controllers\Admin\MemberRoleController;
 use App\Http\Controllers\Admin\ProductOnboardingController as AdminProductOnboardingController;
 use App\Http\Controllers\Auth\SocialAuthController;
 use App\Http\Controllers\Auth\SocialRegistrationController;
@@ -204,6 +205,8 @@ Route::middleware(['auth', 'verified', 'social'])->group(function (): void {
             ->name('onboarding.update');
         Route::get('members', [AdminMemberController::class, 'index'])
             ->name('members.index');
+        Route::patch('members/{member}/roles', MemberRoleController::class)
+            ->name('members.roles.update');
         Route::delete('members/{member}', [AdminMemberController::class, 'destroy'])
             ->name('members.destroy');
         Route::post('members/{member}/conversation', MemberConversationController::class)

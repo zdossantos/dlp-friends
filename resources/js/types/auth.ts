@@ -12,7 +12,7 @@ export type User = {
     [key: string]: unknown;
 };
 
-export type RoleName = 'user' | 'admin';
+export type RoleName = 'user' | 'admin' | 'partner';
 export type VisitFrequency = 'rarely' | 'sometimes' | 'often' | 'very_often';
 export type ProfileVisibility = 'visible' | 'hidden';
 

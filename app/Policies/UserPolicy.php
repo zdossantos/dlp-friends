@@ -19,6 +19,12 @@ final class UserPolicy
             && ! $member->hasRole(RoleName::Admin);
     }
 
+    public function manageRoles(User $actor, User $member): bool
+    {
+        return $actor->hasRole(RoleName::Admin)
+            && ! $actor->is($member);
+    }
+
     public function startConversation(User $actor, User $member): bool
     {
         return $this->delete($actor, $member)

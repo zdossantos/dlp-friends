@@ -148,6 +148,39 @@ test('the member catalog exposes statistics and confirms immediate deletion', fu
     Mail::assertQueued(MemberDeletedByAdminMail::class);
 });
 
+test('an admin confirms roles assignment and removal from the member catalog', function () {
+    $member = User::factory()->withProfile()->create(['email' => 'roles@example.test']);
+    $admin = User::factory()->withProfile()->admin()->create();
+    $this->actingAs($admin);
+
+    $page = visit('/admin/members')
+        ->assertSee('roles@example.test')
+        ->assertCount('[data-test="manage-member-roles-trigger"]', 1)
+        ->click('[data-test="manage-member-roles-trigger"]')
+        ->assertPresent('[data-slot="dialog-content"]')
+        ->assertSee('Gérer les rôles')
+        ->assertSee('Administrateur (lecture seule)')
+        ->assertDisabled('[data-test="confirm-member-roles"]');
+
+    $page->click("#member-role-partner-{$member->id}")
+        ->click("#member-role-confirmed-{$member->id}")
+        ->assertEnabled('[data-test="confirm-member-roles"]')
+        ->click('[data-test="confirm-member-roles"]')
+        ->assertSee('Les rôles ont été mis à jour.')
+        ->assertNoJavaScriptErrors();
+
+    expect($member->fresh('roles')->hasRole('partner'))->toBeTrue();
+
+    $page->click('[data-test="manage-member-roles-trigger"]')
+        ->click("#member-role-partner-{$member->id}")
+        ->click("#member-role-confirmed-{$member->id}")
+        ->click('[data-test="confirm-member-roles"]')
+        ->assertSee('Les rôles ont été mis à jour.')
+        ->assertNoJavaScriptErrors();
+
+    expect($member->fresh('roles')->hasRole('partner'))->toBeFalse();
+});
+
 test('an admin starts a classic private conversation and sees the match dialog', function () {
     $member = User::factory()->withProfile()->create(['email' => 'conversation@example.test']);
     $admin = User::factory()->withProfile()->admin()->create();
