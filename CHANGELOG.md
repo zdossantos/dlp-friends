@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.9.0](https://github.com/zdossantos/dlp-friends/compare/v1.8.2...v1.9.0) (2026-09-14)
+
+
+### Features
+
+* add friendly events and persistent notifications ([#198](https://github.com/zdossantos/dlp-friends/issues/198)) ([5676e8a](https://github.com/zdossantos/dlp-friends/commit/5676e8a5d27fcb120c4eb3839481bb10b27023ca))
+* add personal data export and deferred deletion ([#192](https://github.com/zdossantos/dlp-friends/issues/192)) ([3f60bc4](https://github.com/zdossantos/dlp-friends/commit/3f60bc49f856b76ccee9df61aa83a232c5158b6d))
+* **events:** ajouter le chat de groupe ([#202](https://github.com/zdossantos/dlp-friends/issues/202)) ([4307efe](https://github.com/zdossantos/dlp-friends/commit/4307efeb440388cbdfef0f6a2f6f7f53261fe0ae))
+* **messaging:** add presence and typing signals ([#197](https://github.com/zdossantos/dlp-friends/issues/197)) ([85e7f6c](https://github.com/zdossantos/dlp-friends/commit/85e7f6c18006253cd32f11fa27bedda04db230a2))
+* **privacy:** add analytics consent controls ([#196](https://github.com/zdossantos/dlp-friends/issues/196)) ([fbb2491](https://github.com/zdossantos/dlp-friends/commit/fbb2491486330b2c94a7fd5021cd4f083a87f3bc))
+
 ## [1.8.2](https://github.com/zdossantos/dlp-friends/compare/v1.8.1...v1.8.2) (2026-09-08)
 
 
