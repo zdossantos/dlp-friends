@@ -4,6 +4,7 @@ namespace App\Actions;
 
 use App\Enums\EventNotificationType;
 use App\Enums\EventRegistrationStatus;
+use App\Events\EventChatAccessChanged;
 use App\Models\Event;
 use App\Models\User;
 use App\Notifications\EventLifecycleNotification;
@@ -33,12 +34,24 @@ final class CancelEvent
         });
 
         if ($didCancel) {
+            $acceptedUserIds = $cancelledEvent->registrations()
+                ->where('status', EventRegistrationStatus::Accepted)
+                ->pluck('user_id');
             $cancelledEvent->registrations()
                 ->whereIn('status', [EventRegistrationStatus::Pending, EventRegistrationStatus::Accepted])
                 ->with('user')
                 ->get()
                 ->each(fn ($registration) => $registration->user->notify(
                     new EventLifecycleNotification($cancelledEvent, EventNotificationType::Cancelled),
+                ));
+
+            collect([$cancelledEvent->organizer_user_id])
+                ->concat($acceptedUserIds)
+                ->unique()
+                ->each(fn (int $userId) => EventChatAccessChanged::dispatch(
+                    $cancelledEvent->id,
+                    $userId,
+                    'read_only',
                 ));
         }
 

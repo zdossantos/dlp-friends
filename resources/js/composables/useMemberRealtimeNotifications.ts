@@ -14,6 +14,11 @@ import { toast } from 'vue-sonner';
 import { useTranslations } from '@/composables/useTranslations';
 import { xsrfHeader } from '@/lib/csrf';
 import {
+    eventChatAccessReloadOptions,
+    isEventWorkspaceUrl,
+} from '@/lib/eventChatAccess';
+import type { EventChatAccessChanged } from '@/lib/eventChatAccess';
+import {
     activeConversationId,
     registerNotification,
     selectMatchNotification,
@@ -86,10 +91,24 @@ export function useMemberRealtimeNotifications(
         | MemberMatchNotification
         | RealtimeConversationMessage
         | MemberPresenceChanged
+        | EventChatAccessChanged
     >(
         `App.Models.User.${currentUserId}`,
-        ['.match.created', '.message.sent', '.presence.changed'],
+        [
+            '.match.created',
+            '.message.sent',
+            '.presence.changed',
+            '.event-chat.access.changed',
+        ],
         (notification) => {
+            if ('access' in notification) {
+                if (isEventWorkspaceUrl(page.url)) {
+                    router.reload(eventChatAccessReloadOptions(notification));
+                }
+
+                return;
+            }
+
             if ('online' in notification) {
                 presenceChanged.value = notification;
                 const existingTimer = presenceTimers.get(notification.user_id);

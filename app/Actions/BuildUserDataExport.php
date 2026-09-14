@@ -4,6 +4,7 @@ namespace App\Actions;
 
 use App\Models\Conversation;
 use App\Models\Event;
+use App\Models\EventChatMessage;
 use App\Models\EventRegistration;
 use App\Models\Interest;
 use App\Models\MemberMatch;
@@ -95,6 +96,16 @@ final class BuildUserDataExport
                 ];
             })->all(),
             'messages' => $messages,
+            'event_chat_messages' => EventChatMessage::query()
+                ->where('author_user_id', $user->id)
+                ->orderBy('id')
+                ->get()
+                ->map(fn (EventChatMessage $message): array => [
+                    'event_chat_id' => $message->event_chat_id,
+                    'content' => $message->content,
+                    'created_at' => $message->created_at?->toIso8601String(),
+                    'updated_at' => $message->updated_at?->toIso8601String(),
+                ])->all(),
             'organized_events' => Event::query()
                 ->where('organizer_user_id', $user->id)
                 ->orderBy('id')

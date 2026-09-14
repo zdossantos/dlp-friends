@@ -17,6 +17,29 @@ export type EventSummary = {
     isStarted: boolean;
     isOrganizer: boolean;
     registrationStatus: EventRegistrationStatus | null;
+    chatUnreadCount?: number;
+};
+
+export type EventChatInfo = {
+    id: number;
+    isReadOnly: boolean;
+    readOnlyReason: 'cancelled' | 'archived' | null;
+};
+
+export type EventChatMessage = {
+    id: number;
+    event_chat_id: number;
+    author_user_id: number;
+    content: string;
+    author: { id: number; display_name: string };
+    created_at: string;
+    updated_at?: string;
+};
+
+export type PaginatedEventChatMessages = {
+    data: EventChatMessage[];
+    next_page_url: string | null;
+    prev_page_url: string | null;
 };
 
 export type EventParticipant = {
@@ -37,6 +60,7 @@ export type EventDetail = EventSummary & {
     detailedLocation?: string;
     participants?: EventParticipant[];
     registrations?: OrganizerRegistration[];
+    chat?: EventChatInfo;
 };
 
 export type EventWorkspaceContext = 'discover' | 'mine';
@@ -72,7 +96,13 @@ export type EventPanel =
           event: EventDetail;
           profile: EmbeddedMemberProfile;
       }
-    | { kind: 'registrations'; event: EventDetail };
+    | { kind: 'registrations'; event: EventDetail }
+    | {
+          kind: 'chat';
+          event: EventDetail;
+          chat: EventChatInfo;
+          messages: PaginatedEventChatMessages;
+      };
 
 export type EventWorkspaceProps = {
     context: EventWorkspaceContext;

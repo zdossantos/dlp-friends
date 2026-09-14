@@ -4,6 +4,7 @@ namespace App\Actions;
 
 use App\Enums\EventNotificationType;
 use App\Enums\EventRegistrationStatus;
+use App\Events\EventChatAccessChanged;
 use App\Models\Event;
 use App\Models\EventRegistration;
 use App\Models\User;
@@ -48,6 +49,14 @@ final class DecideEventRegistration
             $decidedRegistration->event,
             $accept ? EventNotificationType::Accepted : EventNotificationType::Refused,
         ));
+
+        if ($accept) {
+            EventChatAccessChanged::dispatch(
+                $decidedRegistration->event_id,
+                $decidedRegistration->user_id,
+                'granted',
+            );
+        }
 
         return $decidedRegistration;
     }

@@ -2,6 +2,7 @@
 
 namespace App\Data;
 
+use App\Enums\EventRegistrationStatus;
 use App\Models\Event;
 use App\Models\User;
 
@@ -23,7 +24,7 @@ final readonly class EventSummaryData
             'isStarted' => $event->hasStarted(),
             'isOrganizer' => $event->organizer_user_id === $viewer->id,
             'registrationStatus' => self::registrationStatus($event, $viewer),
-        ];
+        ] + self::chatData($event, $viewer);
     }
 
     private static function registrationStatus(Event $event, User $viewer): ?string
@@ -39,5 +40,22 @@ final readonly class EventSummaryData
         return $event->registrations()
             ->where('user_id', $viewer->id)
             ->first()?->status->value;
+    }
+
+    /** @return array<string, int> */
+    private static function chatData(Event $event, User $viewer): array
+    {
+        $status = self::registrationStatus($event, $viewer);
+
+        if ($event->organizer_user_id !== $viewer->id
+            && $status !== EventRegistrationStatus::Accepted->value) {
+            return [];
+        }
+
+        $chat = $event->chat;
+
+        return $chat === null ? [] : [
+            'chatUnreadCount' => EventChatData::unreadCount($chat, $viewer),
+        ];
     }
 }

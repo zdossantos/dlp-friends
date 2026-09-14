@@ -153,6 +153,12 @@ Paris.
 - Les changements de date ou de lieu, décisions d’inscription, retraits et
   annulations produisent des notifications persistantes dans l’application.
   Leur ouverture mène à l’événement concerné.
+- Chaque événement possède une discussion de groupe réservée à l’organisateur
+  et aux participants acceptés. Elle s’ouvre dans le même panneau adaptatif,
+  affiche un compteur de messages non lus et reçoit les messages en temps réel.
+  Un retrait, une exclusion ou un blocage révoque définitivement l’accès. Une
+  annulation la rend immédiatement consultable uniquement ; elle est également
+  archivée sept jours après le début de l’événement.
 - Le centre de notifications réunit aussi les matches et messages existants,
   avec filtres par catégorie et état non lu ; une notification de conversation
   ouvre la conversation correspondante.
@@ -212,7 +218,7 @@ Paris.
 | Découverte, swipes et match réciproque | **Implémenté** | Service de classement, actions et tests sont présents. |
 | Conversations, messages temps réel, saisie, présence et état de lecture | **Implémenté** | Stockage, diffusion privée, annonces globales, indicateur de saisie éphémère, présence confidentielle avec dernière activité relative, recherche locale et tests sont présents. |
 | Blocage et déblocage | **Implémenté** | Effet immédiat sur découverte et conversation. |
-| Événements amicaux et inscriptions | **Implémenté** | Deux écrans principaux, panneaux adaptatifs pour tous les parcours secondaires, événements complets filtrés, rôles distincts, participants avec avatars et profils intégrés, deux modes d’inscription, confidentialité, cycle de vie et notifications sont couverts. |
+| Événements amicaux, inscriptions et discussion de groupe | **Implémenté** | Deux écrans principaux, panneaux adaptatifs, rôles distincts, participants avec profils intégrés, deux modes d’inscription, confidentialité, cycle de vie, notifications et chat temps réel avec non-lus sont couverts. |
 | Centre de notifications persistant | **Implémenté** | Matches, messages et événements sont regroupés, filtrables et ouvrent leur élément cible. |
 | Tutoriel produit obligatoire | **Implémenté** | Progression persistée et statistiques admin sont livrées. |
 | Gestion administrative des membres | **Implémenté** | Recherche et compteurs, suppression confirmée, échange privé admin/membre et identification visuelle des admins sont livrés sans accès au contenu des messages. |

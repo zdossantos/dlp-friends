@@ -1,6 +1,12 @@
 <script setup lang="ts">
 import { Link, router } from '@inertiajs/vue3';
-import { CalendarDays, MapPin, Users } from '@lucide/vue';
+import {
+    CalendarDays,
+    ChevronRight,
+    MapPin,
+    MessageCircle,
+    Users,
+} from '@lucide/vue';
 import { computed, ref } from 'vue';
 import EventConfirmationDialog from '@/components/events/EventConfirmationDialog.vue';
 import EventParticipantStack from '@/components/events/EventParticipantStack.vue';
@@ -9,6 +15,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useTranslations } from '@/composables/useTranslations';
 import { cancel, edit } from '@/routes/events';
+import { show as chatShow } from '@/routes/events/chat';
 import { index as participantsIndex } from '@/routes/events/participants';
 import { index as registrationsIndex } from '@/routes/events/registrations';
 import type { EventDetail, EventWorkspaceContext } from '@/types/event';
@@ -96,6 +103,34 @@ function cancelEvent(): void {
         <p v-else class="text-sm text-muted-foreground">
             {{ t('events.show.privacy') }}
         </p>
+        <Link
+            v-if="event.chat"
+            :href="chatShow(event.id, { query: origin })"
+            preserve-scroll
+            data-test="event-chat-open"
+            class="group flex items-center gap-3 rounded-2xl border border-border bg-muted/40 p-4 transition-colors hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+        >
+            <span
+                class="flex size-11 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary"
+            >
+                <MessageCircle class="size-5" aria-hidden="true" />
+            </span>
+            <span class="min-w-0 flex-1">
+                <span class="flex items-center gap-2 font-semibold">
+                    {{ t('events.chat.open') }}
+                    <Badge v-if="event.chatUnreadCount" variant="default">
+                        {{ event.chatUnreadCount }}
+                    </Badge>
+                </span>
+                <span class="mt-0.5 block text-sm text-muted-foreground">
+                    {{ t('events.chat.open_description') }}
+                </span>
+            </span>
+            <ChevronRight
+                class="size-5 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5"
+                aria-hidden="true"
+            />
+        </Link>
         <EventRegistrationActions :event="event" :context="context" />
         <div
             v-if="event.isOrganizer && !event.isStarted && !event.isCancelled"

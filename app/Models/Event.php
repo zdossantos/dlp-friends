@@ -13,6 +13,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 /**
  * @property int $id
@@ -27,6 +28,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property CarbonImmutable|null $cancelled_at
  * @property-read User $organizer
  * @property-read Collection<int, EventRegistration> $registrations
+ * @property-read EventChat|null $chat
  */
 #[Fillable([
     'organizer_user_id',
@@ -54,6 +56,12 @@ class Event extends Model
     public function registrations(): HasMany
     {
         return $this->hasMany(EventRegistration::class);
+    }
+
+    /** @return HasOne<EventChat, $this> */
+    public function chat(): HasOne
+    {
+        return $this->hasOne(EventChat::class);
     }
 
     public function occupiedPlaces(): int

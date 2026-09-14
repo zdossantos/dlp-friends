@@ -5,6 +5,7 @@ import {
     ChevronRight,
     Crown,
     MapPin,
+    MessageCircle,
     UserCheck,
     Users,
 } from '@lucide/vue';
@@ -60,6 +61,21 @@ function rememberOpener(event: Event): void {
                         event.title
                     }}</CardTitle>
                     <div class="flex flex-wrap justify-end gap-2">
+                        <Badge
+                            v-if="event.chatUnreadCount"
+                            variant="default"
+                            data-test="event-chat-unread"
+                        >
+                            <MessageCircle
+                                class="size-3.5"
+                                aria-hidden="true"
+                            />
+                            {{
+                                t('events.chat.unread', {
+                                    count: event.chatUnreadCount,
+                                })
+                            }}
+                        </Badge>
                         <Badge
                             v-if="role"
                             :data-test="`event-role-${role}`"

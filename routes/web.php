@@ -21,6 +21,9 @@ use App\Http\Controllers\ConversationIndexController;
 use App\Http\Controllers\ConversationReadController;
 use App\Http\Controllers\DiscoveryController;
 use App\Http\Controllers\EventCancellationController;
+use App\Http\Controllers\EventChatController;
+use App\Http\Controllers\EventChatMessageController;
+use App\Http\Controllers\EventChatReadController;
 use App\Http\Controllers\EventController;
 use App\Http\Controllers\EventParticipantController;
 use App\Http\Controllers\EventRegistrationController;
@@ -170,6 +173,12 @@ Route::middleware(['auth', 'verified', 'social'])->group(function () {
                 ->name('events.registrations.store');
             Route::delete('events/{event}/registrations', [EventRegistrationController::class, 'destroy'])
                 ->name('events.registrations.destroy');
+            Route::post('events/{event}/chat/messages', EventChatMessageController::class)
+                ->name('events.chat.messages.store');
+            Route::get('events/{event}/chat', EventChatController::class)
+                ->name('events.chat.show');
+            Route::post('events/{event}/chat/read', EventChatReadController::class)
+                ->name('events.chat.read.store');
             Route::patch('event-registrations/{registration}', EventRegistrationDecisionController::class)
                 ->name('events.registrations.decision');
             Route::delete('event-registrations/{registration}', EventRegistrationRemovalController::class)

@@ -6,6 +6,7 @@ use App\Enums\ProfileVisibility;
 use App\Enums\SwipeDecision;
 use App\Models\Block;
 use App\Models\Event;
+use App\Models\EventChat;
 use App\Models\EventRegistration;
 use App\Models\Swipe;
 use App\Models\User;
@@ -84,6 +85,48 @@ test('event details use the shadcn drawer on mobile without a close icon and a d
     $page->resize(1280, 800)
         ->assertAttribute('[data-test="event-panel"]', 'data-panel-mode', 'dialog')
         ->assertMissing('[data-test="event-panel"] [data-slot="dialog-close"]')
+        ->assertNoJavaScriptErrors();
+});
+
+test('event discussion opens as a full height drill down inside the constrained panel', function () {
+    $organizer = eventBrowserMember('Alice');
+    $event = Event::factory()->for($organizer, 'organizer')->create([
+        'title' => 'Discussion du groupe',
+    ]);
+    EventChat::factory()->for($event)->create();
+    $this->actingAs($organizer);
+
+    $page = visit("/events/{$event->id}?origin=mine")->resize(390, 700)
+        ->assertPresent('[data-test="event-chat-open"]')
+        ->assertMissing('[data-test="event-chat-tab"]')
+        ->click('[data-test="event-chat-open"]')
+        ->assertPresent('[data-test="event-chat"]')
+        ->assertMissing('[data-test="event-chat"] nav')
+        ->assertPresent('[data-test="event-chat-back"]')
+        ->assertScript(<<<'JS'
+            (() => {
+                const panel = document.querySelector('[data-test="event-panel"]');
+                const rect = panel.getBoundingClientRect();
+
+                return rect.height >= window.innerHeight * 0.79
+                    && rect.height < window.innerHeight * 0.82;
+            })()
+            JS, true)
+        ->click('[data-test="event-chat-back"]')
+        ->assertPresent('[data-test="event-detail"]')
+        ->assertNoJavaScriptErrors();
+
+    $page->click('[data-test="event-chat-open"]')
+        ->resize(1280, 800)
+        ->assertScript(<<<'JS'
+            (() => {
+                const panel = document.querySelector('[data-test="event-panel"]');
+                const rect = panel.getBoundingClientRect();
+
+                return rect.height >= window.innerHeight * 0.89
+                    && rect.height < window.innerHeight * 0.91;
+            })()
+            JS, true)
         ->assertNoJavaScriptErrors();
 });
 
