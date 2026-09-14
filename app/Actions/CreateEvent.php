@@ -5,6 +5,7 @@ namespace App\Actions;
 use App\Models\Event;
 use App\Models\User;
 use Carbon\CarbonImmutable;
+use Illuminate\Support\Facades\DB;
 
 final class CreateEvent
 {
@@ -17,6 +18,11 @@ final class CreateEvent
             'Europe/Paris',
         )->utc();
 
-        return $organizer->organizedEvents()->create($validated);
+        return DB::transaction(function () use ($organizer, $validated): Event {
+            $event = $organizer->organizedEvents()->create($validated);
+            $event->chat()->firstOrCreate();
+
+            return $event->load('chat');
+        });
     }
 }

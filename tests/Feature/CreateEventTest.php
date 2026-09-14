@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Enums\EventRegistrationMode;
 use App\Models\Event;
+use App\Models\EventChat;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -32,6 +33,12 @@ class CreateEventTest extends TestCase
         $response->assertRedirect(route('events.show', $event));
         $this->assertTrue($event->organizer->is($organizer));
         $this->assertSame('2026-10-10 08:30', $event->starts_at->utc()->format('Y-m-d H:i'));
+        $this->assertNotNull($event->chat);
+        $this->assertSame(1, EventChat::query()->whereBelongsTo($event)->count());
+
+        $event->chat()->firstOrCreate();
+
+        $this->assertSame(1, EventChat::query()->whereBelongsTo($event)->count());
     }
 
     public function test_event_creation_requires_valid_bounded_data(): void
