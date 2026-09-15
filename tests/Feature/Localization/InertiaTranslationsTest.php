@@ -16,6 +16,7 @@ function featureTranslationKeys(string $locale): array
         'events',
         'blocking',
         'administration',
+        'partners',
     ];
     $flatten = function (array $items, string $prefix = '') use (&$flatten): array {
         $keys = [];
@@ -67,6 +68,7 @@ test('Inertia shares translations grouped by business feature', function () {
             ->where('i18n.messages.discovery.match.title', 'Your worlds cross paths')
             ->where('i18n.messages.notifications.page.title', 'Notifications')
             ->where('i18n.messages.events.index.title', 'Friendly events')
+            ->where('i18n.messages.partners.profile.page_title', 'Partner profile')
             ->where('i18n.messages.profile.interests.title', 'Favorite worlds'));
 });
 
@@ -90,5 +92,6 @@ test('only business feature catalogues are shared with the frontend', function (
     expect(array_keys(FrontendTranslations::messages()))->toBe([
         'common', 'account', 'profile', 'onboarding', 'discovery',
         'conversations', 'notifications', 'events', 'blocking', 'administration',
+        'partners',
     ]);
 });

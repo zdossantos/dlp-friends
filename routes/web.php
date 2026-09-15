@@ -41,6 +41,9 @@ use App\Http\Controllers\MyEventController;
 use App\Http\Controllers\NotificationIndexController;
 use App\Http\Controllers\NotificationReadAllController;
 use App\Http\Controllers\NotificationReadController;
+use App\Http\Controllers\Partner\ProfileController as PartnerProfileController;
+use App\Http\Controllers\Partner\ProfileImageController as PartnerProfileImageController;
+use App\Http\Controllers\Partner\ProfileSubmissionController as PartnerProfileSubmissionController;
 use App\Http\Controllers\PresenceHeartbeatController;
 use App\Http\Controllers\ProductOnboardingController;
 use App\Http\Controllers\PublicLandingController;
@@ -101,6 +104,18 @@ Route::middleware('guest')->group(function (): void {
 Route::middleware(['auth', 'verified', 'social'])->group(function (): void {
     Route::get('avatars/{avatar}/image', AvatarImageController::class)
         ->name('avatars.image');
+
+    Route::get('partner/profile-revisions/{revision}/image', PartnerProfileImageController::class)
+        ->name('partner.profile-revisions.image');
+
+    Route::prefix('partner')->name('partner.')->middleware('role:partner')->group(function (): void {
+        Route::get('profile', [PartnerProfileController::class, 'edit'])
+            ->name('profile.edit');
+        Route::put('profile', [PartnerProfileController::class, 'update'])
+            ->name('profile.update');
+        Route::post('profile/submit', PartnerProfileSubmissionController::class)
+            ->name('profile.submit');
+    });
 
     Route::middleware('role:user')->group(function (): void {
         Route::get('app', LandingController::class)->name('app');

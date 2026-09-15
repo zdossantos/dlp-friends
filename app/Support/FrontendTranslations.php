@@ -22,6 +22,7 @@ final class FrontendTranslations
             'events' => trans('events'),
             'blocking' => trans('blocking'),
             'administration' => trans('administration'),
+            'partners' => trans('partners'),
         ];
     }
 }
