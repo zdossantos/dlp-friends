@@ -45,6 +45,7 @@ final class SyncManageableUserRoles
                     'target_user_id' => $locked->id,
                     'role' => $role,
                     'action' => $has ? RoleAuditAction::Assigned : RoleAuditAction::Removed,
+                    'expires_at' => now()->addYears(2),
                 ]);
             }
         });

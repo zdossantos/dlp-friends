@@ -4,9 +4,11 @@ namespace Tests\Feature\Admin;
 
 use App\Enums\RoleName;
 use App\Models\PartnerProfile;
+use App\Models\RoleAudit;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Route;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
@@ -23,6 +25,7 @@ class ManageMemberRolesTest extends TestCase
 
     public function test_an_admin_exactly_synchronizes_manageable_roles_and_audits_each_change(): void
     {
+        $this->travelTo('2026-09-15 10:00:00');
         $admin = User::factory()->admin()->create();
         $member = User::factory()->create();
 
@@ -50,6 +53,10 @@ class ManageMemberRolesTest extends TestCase
             'action' => 'assigned',
         ]);
         $this->assertDatabaseCount('role_audits', 2);
+
+        foreach (RoleAudit::query()->get() as $audit) {
+            $this->assertTrue($audit->expires_at?->equalTo(now()->addYears(2)) ?? false);
+        }
     }
 
     public function test_an_unchanged_role_submission_has_no_effect_and_creates_no_audit(): void
@@ -87,6 +94,30 @@ class ManageMemberRolesTest extends TestCase
             'id' => $partnerProfile->id,
             'user_id' => $member->id,
         ]);
+    }
+
+    public function test_removing_the_partner_role_immediately_revokes_partner_route_access(): void
+    {
+        Route::get('/_test/partner-surface', fn (): string => 'partner')
+            ->middleware(['web', 'auth', 'role:partner']);
+
+        $admin = User::factory()->admin()->create();
+        $member = User::factory()->partner()->create();
+
+        $this->actingAs($member)
+            ->get('/_test/partner-surface')
+            ->assertOk();
+
+        $this->actingAs($admin)
+            ->patch(route('admin.members.roles.update', $member), [
+                'roles' => [RoleName::User->value],
+                'confirmed' => true,
+            ])
+            ->assertRedirect(route('admin.members.index'));
+
+        $this->actingAs($member->fresh())
+            ->get('/_test/partner-surface')
+            ->assertForbidden();
     }
 
     public function test_an_admin_cannot_change_their_own_roles(): void
