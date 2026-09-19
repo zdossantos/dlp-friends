@@ -13,3 +13,26 @@ export type PartnerRevision = {
     decidedAt: string | null;
     rejectionReason: string | null;
 };
+
+export type PartnerAnnouncementStatus =
+    | 'draft'
+    | 'pending_approval'
+    | 'approved'
+    | 'sending'
+    | 'sent'
+    | 'rejected'
+    | 'cancelled';
+
+export type PartnerAnnouncement = {
+    id: number;
+    title: string;
+    content: string;
+    destinationUrl: string;
+    status: PartnerAnnouncementStatus;
+    submittedAt: string | null;
+    decidedAt: string | null;
+    rejectionReason: string | null;
+    canEdit: boolean;
+    canSubmit: boolean;
+    canCancel: boolean;
+};

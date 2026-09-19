@@ -21,6 +21,7 @@ class PartnerAnnouncementFactory extends Factory
             'content' => fake()->text(400),
             'destination_url' => fake()->url(),
             'status' => PartnerAnnouncementStatus::Draft,
+            'submitted_at' => null,
             'run_uuid' => null,
             'audience_prepared_at' => null,
             'sending_started_at' => null,
@@ -37,6 +38,24 @@ class PartnerAnnouncementFactory extends Factory
         return $this->state(fn (): array => [
             'status' => PartnerAnnouncementStatus::Approved,
             'decided_at' => now(),
+        ]);
+    }
+
+    public function pendingApproval(): static
+    {
+        return $this->state(fn (): array => [
+            'status' => PartnerAnnouncementStatus::PendingApproval,
+            'submitted_at' => now(),
+        ]);
+    }
+
+    public function sent(): static
+    {
+        return $this->state(fn (): array => [
+            'status' => PartnerAnnouncementStatus::Sent,
+            'submitted_at' => now()->subDays(31),
+            'sending_started_at' => now()->subDays(30),
+            'sent_at' => now()->subDays(30),
         ]);
     }
 }

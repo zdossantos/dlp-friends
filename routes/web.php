@@ -12,9 +12,12 @@ use App\Http\Controllers\Admin\InterestStatusController;
 use App\Http\Controllers\Admin\MemberController as AdminMemberController;
 use App\Http\Controllers\Admin\MemberConversationController;
 use App\Http\Controllers\Admin\MemberRoleController;
+use App\Http\Controllers\Admin\PartnerAnnouncementController as AdminPartnerAnnouncementController;
+use App\Http\Controllers\Admin\PartnerAnnouncementDecisionController;
 use App\Http\Controllers\Admin\PartnerProfileController as AdminPartnerProfileController;
 use App\Http\Controllers\Admin\PartnerProfileDecisionController;
 use App\Http\Controllers\Admin\PartnerProfileOrderController;
+use App\Http\Controllers\Admin\PartnerSettingController;
 use App\Http\Controllers\Admin\ProductOnboardingController as AdminProductOnboardingController;
 use App\Http\Controllers\Auth\SocialAuthController;
 use App\Http\Controllers\Auth\SocialRegistrationController;
@@ -44,6 +47,8 @@ use App\Http\Controllers\MyEventController;
 use App\Http\Controllers\NotificationIndexController;
 use App\Http\Controllers\NotificationReadAllController;
 use App\Http\Controllers\NotificationReadController;
+use App\Http\Controllers\Partner\AnnouncementController as PartnerAnnouncementController;
+use App\Http\Controllers\Partner\AnnouncementSubmissionController;
 use App\Http\Controllers\Partner\ProfileController as PartnerProfileController;
 use App\Http\Controllers\Partner\ProfileImageController as PartnerProfileImageController;
 use App\Http\Controllers\Partner\ProfileSubmissionController as PartnerProfileSubmissionController;
@@ -120,6 +125,12 @@ Route::middleware(['auth', 'verified', 'social'])->group(function (): void {
             ->name('profile.update');
         Route::post('profile/submit', PartnerProfileSubmissionController::class)
             ->name('profile.submit');
+        Route::resource('announcements', PartnerAnnouncementController::class)
+            ->only(['index', 'create', 'store', 'edit', 'update', 'destroy']);
+        Route::post('announcements/{announcement}/submit', AnnouncementSubmissionController::class)
+            ->name('announcements.submit');
+        Route::post('announcements/{announcement}/cancel', [PartnerAnnouncementController::class, 'cancel'])
+            ->name('announcements.cancel');
     });
 
     Route::middleware('role:user')->group(function (): void {
@@ -213,6 +224,12 @@ Route::middleware(['auth', 'verified', 'social'])->group(function (): void {
         ->name('dashboard');
 
     Route::prefix('admin')->name('admin.')->middleware('role:admin')->group(function (): void {
+        Route::get('partner-announcements', [AdminPartnerAnnouncementController::class, 'index'])
+            ->name('partner-announcements.index');
+        Route::patch('partner-announcements/{announcement}', PartnerAnnouncementDecisionController::class)
+            ->name('partner-announcements.decide');
+        Route::patch('partner-settings', PartnerSettingController::class)
+            ->name('partner-settings.update');
         Route::get('partner-profiles', [AdminPartnerProfileController::class, 'index'])
             ->name('partner-profiles.index');
         Route::patch('partner-profile-revisions/{revision}', PartnerProfileDecisionController::class)

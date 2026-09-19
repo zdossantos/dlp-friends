@@ -21,6 +21,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
  * @property string $content
  * @property string $destination_url
  * @property PartnerAnnouncementStatus $status
+ * @property CarbonImmutable|null $submitted_at
  * @property string|null $run_uuid
  * @property CarbonImmutable|null $audience_prepared_at
  * @property CarbonImmutable|null $sending_started_at
@@ -40,6 +41,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
     'content',
     'destination_url',
     'status',
+    'submitted_at',
     'run_uuid',
     'audience_prepared_at',
     'sending_started_at',
@@ -92,6 +94,7 @@ class PartnerAnnouncement extends Model
     {
         return [
             'status' => PartnerAnnouncementStatus::class,
+            'submitted_at' => 'immutable_datetime',
             'audience_prepared_at' => 'immutable_datetime',
             'sending_started_at' => 'immutable_datetime',
             'sent_at' => 'immutable_datetime',
