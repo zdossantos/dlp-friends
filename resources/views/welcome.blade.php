@@ -125,6 +125,17 @@
                         @endforeach
                     </section>
 
+                    @if ($partners->isNotEmpty())
+                        <section aria-labelledby="partners-title" class="mx-auto mt-24 w-full max-w-5xl">
+                            <h2 id="partners-title" class="text-center text-3xl font-semibold tracking-tight">{{ __('common.welcome.partners.title') }}</h2>
+                            <div class="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                                @foreach ($partners as $partner)
+                                    <x-public-partner-card :partner="$partner" :locale="$seo['locale']" />
+                                @endforeach
+                            </div>
+                        </section>
+                    @endif
+
                     <section class="mx-auto mt-24 w-full max-w-5xl">
                         <div class="grid items-center gap-8 rounded-[2rem] border border-border/70 bg-card/90 p-7 shadow-xl shadow-primary/5 sm:p-10 lg:grid-cols-[0.9fr_1.1fr]">
                             <div>

@@ -12,6 +12,9 @@ use App\Http\Controllers\Admin\InterestStatusController;
 use App\Http\Controllers\Admin\MemberController as AdminMemberController;
 use App\Http\Controllers\Admin\MemberConversationController;
 use App\Http\Controllers\Admin\MemberRoleController;
+use App\Http\Controllers\Admin\PartnerProfileController as AdminPartnerProfileController;
+use App\Http\Controllers\Admin\PartnerProfileDecisionController;
+use App\Http\Controllers\Admin\PartnerProfileOrderController;
 use App\Http\Controllers\Admin\ProductOnboardingController as AdminProductOnboardingController;
 use App\Http\Controllers\Auth\SocialAuthController;
 use App\Http\Controllers\Auth\SocialRegistrationController;
@@ -55,6 +58,8 @@ use App\Support\PublicUrls;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [PublicLandingController::class, 'redirect'])->name('home');
+Route::get('partner-profiles/{partnerProfile}/image', [PublicLandingController::class, 'image'])
+    ->name('partner-profiles.image');
 Route::get('matching', [PublicMatchingController::class, 'redirect'])->name('matching.redirect');
 Route::get('fr/matching', [PublicMatchingController::class, 'show'])->defaults('locale', 'fr')->name('matching.show.fr');
 Route::get('en/matching', [PublicMatchingController::class, 'show'])->defaults('locale', 'en')->name('matching.show.en');
@@ -208,6 +213,14 @@ Route::middleware(['auth', 'verified', 'social'])->group(function (): void {
         ->name('dashboard');
 
     Route::prefix('admin')->name('admin.')->middleware('role:admin')->group(function (): void {
+        Route::get('partner-profiles', [AdminPartnerProfileController::class, 'index'])
+            ->name('partner-profiles.index');
+        Route::patch('partner-profile-revisions/{revision}', PartnerProfileDecisionController::class)
+            ->name('partner-profile-revisions.decide');
+        Route::delete('partner-profiles/{partnerProfile}/publication', [AdminPartnerProfileController::class, 'destroy'])
+            ->name('partner-profiles.unpublish');
+        Route::patch('partner-profiles/order', PartnerProfileOrderController::class)
+            ->name('partner-profiles.order');
         Route::resource('avatars', AvatarController::class)
             ->only(['index', 'store', 'update', 'destroy']);
         Route::patch('avatars/{avatar}/status', AvatarStatusController::class)

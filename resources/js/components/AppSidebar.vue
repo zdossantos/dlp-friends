@@ -4,6 +4,7 @@ import {
     GraduationCap,
     Images,
     LayoutDashboard,
+    Building2,
     Tags,
     UserRound,
     Users,
@@ -26,6 +27,7 @@ import { index as avatarIndex } from '@/routes/admin/avatars';
 import { index as interestIndex } from '@/routes/admin/interests';
 import { index as memberIndex } from '@/routes/admin/members';
 import { index as onboardingIndex } from '@/routes/admin/onboarding';
+import { index as partnerProfileIndex } from '@/routes/admin/partner-profiles';
 import { show as showProfile } from '@/routes/member-profile';
 import type { NavItem } from '@/types';
 
@@ -56,6 +58,11 @@ const mainNavItems: NavItem[] = [
         title: t('administration.navigation.onboarding'),
         href: onboardingIndex(),
         icon: GraduationCap,
+    },
+    {
+        title: t('administration.navigation.partners'),
+        href: partnerProfileIndex(),
+        icon: Building2,
     },
     {
         title: t('administration.navigation.back_to_profile'),

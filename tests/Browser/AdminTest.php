@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\PartnerRevisionStatus;
 use App\Enums\ProductOnboardingStatus;
 use App\Enums\ProductOnboardingStep;
 use App\Mail\MemberDeletedByAdminMail;
@@ -7,6 +8,8 @@ use App\Models\Avatar;
 use App\Models\Interest;
 use App\Models\InterestCategory;
 use App\Models\InterestSetting;
+use App\Models\PartnerProfile;
+use App\Models\PartnerProfileRevision;
 use App\Models\ProductOnboarding;
 use App\Models\ProductOnboardingSetting;
 use App\Models\User;
@@ -14,6 +17,53 @@ use Illuminate\Contracts\Debug\ExceptionHandler as ExceptionHandlerContract;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
+
+test('an admin reviews publishes orders and unpublishes partner profiles accessibly', function () {
+    config()->set('filesystems.default', 's3');
+    Storage::fake('s3');
+    $profile = PartnerProfile::factory()->create();
+    $pending = PartnerProfileRevision::factory()->for($profile)->create([
+        'name_fr' => 'Partenaire navigateur',
+        'name_en' => 'Browser partner',
+        'description_fr' => 'Une présentation française destinée à la validation.',
+        'description_en' => 'An English presentation ready for review.',
+        'image_path' => 'partners/browser-partner.webp',
+        'status' => PartnerRevisionStatus::PendingApproval,
+        'submitted_at' => now(),
+        'draft_key' => null,
+    ]);
+    Storage::disk('s3')->put($pending->image_path, base64_decode(
+        'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScL8WQAAAABJRU5ErkJggg==',
+    ));
+    $admin = User::factory()->withProfile()->admin()->create();
+    $this->actingAs($admin);
+
+    $page = visit('/admin/partner-profiles')->on()->mobile()
+        ->assertSee('Fiches partenaires')
+        ->assertSee('Partenaire navigateur')
+        ->assertSee('Browser partner')
+        ->assertPresent('img[alt="Partenaire navigateur"]')
+        ->assertPresent('[data-test="approve-partner-profile"]')
+        ->assertPresent('[data-test="reject-partner-profile"]')
+        ->assertNoJavaScriptErrors();
+
+    $page->click('[data-test="approve-partner-profile"]')
+        ->assertSee('La fiche partenaire a été approuvée et publiée.')
+        ->assertPresent('[aria-label="Monter Partenaire navigateur"]')
+        ->assertPresent('[aria-label="Descendre Partenaire navigateur"]')
+        ->assertPresent('[data-test="unpublish-partner-profile"]')
+        ->assertNoJavaScriptErrors();
+
+    expect($pending->fresh()->status)->toBe(PartnerRevisionStatus::Approved)
+        ->and($profile->fresh()->is_published)->toBeTrue();
+
+    $page->click('[data-test="unpublish-partner-profile"]')
+        ->assertSee('La fiche partenaire a été dépubliée.')
+        ->assertSee('Aucune fiche partenaire n’est publiée.')
+        ->assertNoJavaScriptErrors();
+
+    expect($profile->fresh()->is_published)->toBeFalse();
+});
 
 test('admin configures tutorial avatars and sees member progress', function () {
     Storage::fake('local');

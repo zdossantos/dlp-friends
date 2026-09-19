@@ -1,6 +1,41 @@
 <?php
 
+use App\Models\PartnerProfile;
 use App\Models\User;
+use Illuminate\Support\Facades\Storage;
+
+test('the localized landing displays at most six ordered partner cards on mobile', function () {
+    config()->set('filesystems.default', 's3');
+    Storage::fake('s3');
+    $profiles = PartnerProfile::factory()
+        ->count(7)
+        ->sequence(fn ($sequence) => ['position' => $sequence->index + 1])
+        ->published()
+        ->create();
+
+    foreach ($profiles as $index => $profile) {
+        $revision = $profile->publishedRevision;
+        $revision?->update([
+            'name_fr' => "Partenaire accueil {$index}",
+            'name_en' => "Landing partner {$index}",
+            'description_fr' => "Description française {$index}",
+            'description_en' => "English description {$index}",
+        ]);
+        Storage::disk('s3')->put($revision->image_path, base64_decode(
+            'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScL8WQAAAABJRU5ErkJggg==',
+        ));
+    }
+
+    visit('/en')->on()->mobile()
+        ->assertSee('Our partners')
+        ->assertCount('[data-test="public-partner-card"]', 6)
+        ->assertSee('Landing partner 0')
+        ->assertSee('Landing partner 5')
+        ->assertDontSee('Landing partner 6')
+        ->assertDontSee('Partenaire accueil 0')
+        ->assertPresent('img[alt="Landing partner 0 presentation"]')
+        ->assertNoJavaScriptErrors();
+});
 
 test('the landing page presents the adult friendship service to guests', function () {
     visit('/fr', ['locale' => 'fr-FR'])

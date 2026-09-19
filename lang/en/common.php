@@ -23,6 +23,10 @@ return [
         'create_account' => 'Create my account',
         'login' => 'Log in',
         'how_it_works' => 'How it works',
+        'partners' => [
+            'title' => 'Our partners',
+            'image_alt' => ':name presentation',
+        ],
         'value_title' => 'Friendly connections, made simple',
         'value_description' => 'DLP Friends helps you meet fans through what you enjoy together. No distance, age range, or romantic mechanics.',
         'algorithm_eyebrow' => 'Suggestions that make sense',

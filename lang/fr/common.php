@@ -23,6 +23,10 @@ return [
         'create_account' => 'Créer mon compte',
         'login' => 'Se connecter',
         'how_it_works' => 'Fonctionnement',
+        'partners' => [
+            'title' => 'Nos partenaires',
+            'image_alt' => 'Présentation de :name',
+        ],
         'value_title' => 'Des rencontres amicales, tout simplement',
         'value_description' => 'DLP Friends te permet de rencontrer des fans à partir de ce que vous aimez en commun. Pas de distance, de tranche d’âge ni de mécanique romantique.',
         'algorithm_eyebrow' => 'Des suggestions faciles à comprendre',
