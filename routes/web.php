@@ -48,6 +48,7 @@ use App\Http\Controllers\NotificationIndexController;
 use App\Http\Controllers\NotificationReadAllController;
 use App\Http\Controllers\NotificationReadController;
 use App\Http\Controllers\Partner\AnnouncementController as PartnerAnnouncementController;
+use App\Http\Controllers\Partner\AnnouncementRevisionController;
 use App\Http\Controllers\Partner\AnnouncementSubmissionController;
 use App\Http\Controllers\Partner\ProfileController as PartnerProfileController;
 use App\Http\Controllers\Partner\ProfileImageController as PartnerProfileImageController;
@@ -131,6 +132,8 @@ Route::middleware(['auth', 'verified', 'social'])->group(function (): void {
             ->name('announcements.submit');
         Route::post('announcements/{announcement}/cancel', [PartnerAnnouncementController::class, 'cancel'])
             ->name('announcements.cancel');
+        Route::post('announcements/{announcement}/revise', AnnouncementRevisionController::class)
+            ->name('announcements.revise');
     });
 
     Route::middleware('role:user')->group(function (): void {

@@ -35,4 +35,5 @@ export type PartnerAnnouncement = {
     canEdit: boolean;
     canSubmit: boolean;
     canCancel: boolean;
+    canRevise: boolean;
 };

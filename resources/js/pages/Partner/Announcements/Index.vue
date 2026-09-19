@@ -2,6 +2,7 @@
 import { Form, Head, Link } from '@inertiajs/vue3';
 import {
     Ban,
+    CopyPlus,
     ExternalLink,
     Megaphone,
     Pencil,
@@ -27,6 +28,7 @@ import {
     create,
     destroy,
     edit,
+    revise,
     submit,
 } from '@/routes/partner/announcements';
 import type { PartnerAnnouncement, PartnerAnnouncementStatus } from '@/types';
@@ -164,6 +166,26 @@ const statusKeys: Record<PartnerAnnouncementStatus, TranslationKey> = {
                     </p>
 
                     <div class="flex flex-wrap gap-2 border-t pt-4">
+                        <Form
+                            v-if="announcement.canRevise"
+                            v-bind="revise.form(announcement.id)"
+                            :options="{ preserveScroll: true }"
+                            v-slot="{ errors, processing }"
+                        >
+                            <Button
+                                type="submit"
+                                variant="outline"
+                                class="min-h-11"
+                                :disabled="processing"
+                                :aria-busy="processing ? 'true' : undefined"
+                            >
+                                <Spinner v-if="processing" />
+                                <CopyPlus v-else aria-hidden="true" />
+                                {{ t('partners.announcements.revise') }}
+                            </Button>
+                            <InputError :message="errors.announcement" />
+                            <InputError :message="errors.destination_url" />
+                        </Form>
                         <Button
                             v-if="announcement.canEdit"
                             as-child

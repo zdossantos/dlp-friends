@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Partner;
 
 use App\Actions\DecidePartnerAnnouncement;
+use App\Actions\DeletePartnerAnnouncementDraft;
 use App\Actions\SavePartnerAnnouncement;
 use App\Enums\PartnerAnnouncementStatus;
 use App\Http\Controllers\Controller;
@@ -80,17 +81,13 @@ final class AnnouncementController extends Controller
         return $this->saved();
     }
 
-    public function destroy(Request $request, PartnerAnnouncement $announcement): RedirectResponse
-    {
+    public function destroy(
+        Request $request,
+        PartnerAnnouncement $announcement,
+        DeletePartnerAnnouncementDraft $deleteAnnouncement,
+    ): RedirectResponse {
         Gate::authorize('delete', $announcement);
-
-        if ($announcement->status !== PartnerAnnouncementStatus::Draft) {
-            throw ValidationException::withMessages([
-                'announcement' => __('partners.announcements.errors.not_draft'),
-            ]);
-        }
-
-        $announcement->delete();
+        $deleteAnnouncement->handle($this->partner($request), $announcement);
 
         Inertia::flash('toast', [
             'type' => 'success',
@@ -116,7 +113,7 @@ final class AnnouncementController extends Controller
         return to_route('partner.announcements.index');
     }
 
-    /** @return array{id: int, title: string, content: string, destinationUrl: string, status: string, submittedAt: string|null, decidedAt: string|null, rejectionReason: string|null, canEdit: bool, canSubmit: bool, canCancel: bool} */
+    /** @return array{id: int, title: string, content: string, destinationUrl: string, status: string, submittedAt: string|null, decidedAt: string|null, rejectionReason: string|null, canEdit: bool, canSubmit: bool, canCancel: bool, canRevise: bool} */
     private function announcementData(PartnerAnnouncement $announcement): array
     {
         return [
@@ -134,6 +131,7 @@ final class AnnouncementController extends Controller
                 PartnerAnnouncementStatus::PendingApproval,
                 PartnerAnnouncementStatus::Approved,
             ], true),
+            'canRevise' => $announcement->status === PartnerAnnouncementStatus::Rejected,
         ];
     }
 

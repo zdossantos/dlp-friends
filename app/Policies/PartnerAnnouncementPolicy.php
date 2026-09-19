@@ -43,6 +43,11 @@ final class PartnerAnnouncementPolicy
         return $this->owns($user, $announcement);
     }
 
+    public function revise(User $user, PartnerAnnouncement $announcement): bool
+    {
+        return $this->owns($user, $announcement);
+    }
+
     private function owns(User $user, PartnerAnnouncement $announcement): bool
     {
         return $user->hasRole(RoleName::Partner)

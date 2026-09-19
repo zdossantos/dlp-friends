@@ -189,6 +189,86 @@ class PartnerAnnouncementTest extends TestCase
                 ->where('announcements.0.canCancel', false));
     }
 
+    public function test_a_rejected_announcement_creates_one_prefilled_draft_without_changing_history(): void
+    {
+        $partner = User::factory()->partnerOnly()->create();
+        $profile = PartnerProfile::factory()->for($partner)->create();
+        $rejected = PartnerAnnouncement::factory()->for($profile)->create([
+            'title' => 'Annonce refusée',
+            'content' => 'Le contenu à reprendre.',
+            'destination_url' => 'https://example.com/rejected',
+            'status' => PartnerAnnouncementStatus::Rejected,
+            'submitted_at' => now()->subDay(),
+            'decided_at' => now(),
+            'rejection_reason' => 'Précisez les conditions.',
+        ]);
+        $rejectedAttributes = $rejected->getAttributes();
+
+        $this->actingAs($partner)
+            ->get(route('partner.announcements.index'))
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('announcements.0.id', $rejected->id)
+                ->where('announcements.0.canRevise', true));
+
+        $firstResponse = $this->actingAs($partner)
+            ->post(route('partner.announcements.revise', $rejected));
+
+        $draft = $profile->announcements()
+            ->where('status', PartnerAnnouncementStatus::Draft)
+            ->sole();
+        $firstResponse->assertRedirect(route('partner.announcements.edit', $draft));
+        expect($draft->only(['title', 'content', 'destination_url']))->toBe([
+            'title' => 'Annonce refusée',
+            'content' => 'Le contenu à reprendre.',
+            'destination_url' => 'https://example.com/rejected',
+        ])->and($draft->submitted_at)->toBeNull()
+            ->and($draft->decided_at)->toBeNull()
+            ->and($draft->rejection_reason)->toBeNull()
+            ->and($rejected->fresh()->getAttributes())->toEqual($rejectedAttributes);
+
+        $this->actingAs($partner)
+            ->post(route('partner.announcements.revise', $rejected))
+            ->assertRedirect(route('partner.announcements.edit', $draft));
+
+        expect($profile->announcements()->count())->toBe(2)
+            ->and($rejected->fresh()->getAttributes())->toEqual($rejectedAttributes);
+    }
+
+    public function test_only_the_owner_can_revise_a_rejected_announcement(): void
+    {
+        $owner = User::factory()->partnerOnly()->create();
+        $rejected = PartnerAnnouncement::factory()
+            ->for(PartnerProfile::factory()->for($owner))
+            ->create([
+                'status' => PartnerAnnouncementStatus::Rejected,
+                'destination_url' => 'https://example.com/rejected',
+            ]);
+        $other = User::factory()->partnerOnly()->create();
+        PartnerProfile::factory()->for($other)->create();
+
+        $this->actingAs($other)
+            ->post(route('partner.announcements.revise', $rejected))
+            ->assertForbidden();
+
+        expect(PartnerAnnouncement::query()->count())->toBe(1);
+    }
+
+    public function test_only_a_rejected_announcement_can_be_revised(): void
+    {
+        $partner = User::factory()->partnerOnly()->create();
+        $pending = PartnerAnnouncement::factory()
+            ->for(PartnerProfile::factory()->for($partner))
+            ->pendingApproval()
+            ->create(['destination_url' => 'https://example.com/pending']);
+
+        $this->actingAs($partner)
+            ->post(route('partner.announcements.revise', $pending))
+            ->assertSessionHasErrors('announcement');
+
+        expect(PartnerAnnouncement::query()->count())->toBe(1)
+            ->and($pending->fresh()->status)->toBe(PartnerAnnouncementStatus::PendingApproval);
+    }
+
     /** @return array{title: string, content: string, destination_url: string} */
     private function validPayload(): array
     {
