@@ -3,6 +3,7 @@
 namespace Tests\Feature\Partner;
 
 use App\Actions\SavePartnerProfileDraft;
+use App\Enums\PartnerRevisionStatus;
 use App\Models\PartnerProfile;
 use App\Models\PartnerProfileRevision;
 use App\Models\User;
@@ -72,6 +73,60 @@ class PartnerImageTest extends TestCase
         expect($dimensions)->not->toBeFalse()
             ->and($dimensions[0])->toBe(1200)
             ->and($dimensions[1])->toBe(800);
+    }
+
+    public function test_replacing_a_draft_image_deletes_the_unreferenced_previous_file(): void
+    {
+        $partner = User::factory()->partnerOnly()->create();
+
+        $this->actingAs($partner)->put(route('partner.profile.update'), [
+            ...$this->validPayload(),
+            'image' => UploadedFile::fake()->image('first.png', 800, 600),
+        ])->assertRedirect()->assertSessionHasNoErrors();
+
+        $draft = $partner->refresh()->partnerProfile->revisions()->sole();
+        $previousImagePath = $draft->image_path;
+        Storage::disk('s3')->assertExists($previousImagePath);
+
+        $this->actingAs($partner)->put(route('partner.profile.update'), [
+            ...$this->validPayload(),
+            'image' => UploadedFile::fake()->image('replacement.png', 800, 600),
+        ])->assertRedirect()->assertSessionHasNoErrors();
+
+        $replacementImagePath = $draft->refresh()->image_path;
+
+        expect($replacementImagePath)->not->toBe($previousImagePath);
+        Storage::disk('s3')->assertMissing($previousImagePath);
+        Storage::disk('s3')->assertExists($replacementImagePath);
+    }
+
+    public function test_replacing_a_draft_image_keeps_the_previous_file_referenced_by_a_submission(): void
+    {
+        $partner = User::factory()->partnerOnly()->create();
+        $profile = PartnerProfile::factory()->for($partner)->create();
+        $sharedImagePath = 'partners/shared.webp';
+        Storage::disk('s3')->put($sharedImagePath, 'shared-image');
+        $submission = PartnerProfileRevision::factory()->for($profile)->create([
+            'image_path' => $sharedImagePath,
+            'status' => PartnerRevisionStatus::PendingApproval,
+            'submitted_at' => now(),
+            'draft_key' => null,
+        ]);
+        $draft = PartnerProfileRevision::factory()->for($profile)->create([
+            'image_path' => $sharedImagePath,
+        ]);
+
+        $this->actingAs($partner)->put(route('partner.profile.update'), [
+            ...$this->validPayload(),
+            'image' => UploadedFile::fake()->image('replacement.png', 800, 600),
+        ])->assertRedirect()->assertSessionHasNoErrors();
+
+        $replacementImagePath = $draft->refresh()->image_path;
+
+        expect($replacementImagePath)->not->toBe($sharedImagePath)
+            ->and($submission->fresh()->image_path)->toBe($sharedImagePath);
+        Storage::disk('s3')->assertExists($sharedImagePath);
+        Storage::disk('s3')->assertExists($replacementImagePath);
     }
 
     public function test_image_validation_rejects_unsupported_too_small_and_oversized_files(): void

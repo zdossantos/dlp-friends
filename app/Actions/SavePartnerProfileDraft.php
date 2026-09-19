@@ -19,9 +19,10 @@ final class SavePartnerProfileDraft
     public function handle(User $partner, array $data, ?UploadedFile $image): PartnerProfileRevision
     {
         $newImagePath = $image === null ? null : $this->transformImage->handle($image);
+        $oldImagePath = null;
 
         try {
-            return DB::transaction(function () use ($partner, $data, $newImagePath): PartnerProfileRevision {
+            $revision = DB::transaction(function () use ($partner, $data, $newImagePath, &$oldImagePath): PartnerProfileRevision {
                 User::query()->whereKey($partner->id)->lockForUpdate()->firstOrFail();
 
                 $profile = PartnerProfile::query()
@@ -37,6 +38,10 @@ final class SavePartnerProfileDraft
                     ->where('status', PartnerRevisionStatus::Draft)
                     ->lockForUpdate()
                     ->first();
+                if ($draft !== null && $newImagePath !== null) {
+                    $oldImagePath = $draft->image_path;
+                }
+
                 $imagePath = $newImagePath
                     ?? $draft->image_path
                     ?? $profile->revisions()->latest('id')->value('image_path');
@@ -66,5 +71,13 @@ final class SavePartnerProfileDraft
 
             throw $exception;
         }
+
+        if ($oldImagePath !== null
+            && $oldImagePath !== $newImagePath
+            && ! PartnerProfileRevision::query()->where('image_path', $oldImagePath)->exists()) {
+            Storage::delete($oldImagePath);
+        }
+
+        return $revision;
     }
 }
