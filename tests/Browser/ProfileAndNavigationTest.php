@@ -1,11 +1,13 @@
 <?php
 
 use App\Enums\ProductOnboardingStatus;
+use App\Enums\RoleName;
 use App\Http\Middleware\EnsureProfileIsComplete;
 use App\Models\Avatar;
 use App\Models\Interest;
 use App\Models\InterestSetting;
 use App\Models\ProductOnboardingSetting;
+use App\Models\Role;
 use App\Models\User;
 use Illuminate\Support\Facades\Storage;
 
@@ -541,4 +543,79 @@ test('logging out removes access to the private profile', function () {
         ->assertScript("localStorage.getItem('appearance')", 'dark');
 
     $this->assertGuest();
+});
+
+test('partner notification consent is explicit accessible and bilingual', function () {
+    $french = User::factory()->withProfile()->create(['locale' => 'fr']);
+    $this->actingAs($french);
+
+    visit('/settings/notifications')
+        ->on()->mobile()
+        ->assertSee('Notifications partenaires')
+        ->assertSee('Cette préférence est désactivée par défaut.')
+        ->assertAttribute(
+            '[data-test="partner-announcements-switch"]',
+            'role',
+            'switch',
+        )
+        ->assertAttribute(
+            '[data-test="partner-announcements-switch"]',
+            'aria-checked',
+            'false',
+        )
+        ->click('[data-test="partner-announcements-switch"]')
+        ->click('[data-test="save-notification-preferences"]')
+        ->assertSee('Tes préférences de notifications ont été enregistrées.')
+        ->assertNoJavaScriptErrors();
+
+    expect($french->partnerNotificationPreference()->value('enabled'))->toBeTrue();
+
+    $english = User::factory()->withProfile()->create(['locale' => 'en']);
+    $this->actingAs($english);
+
+    visit('/settings/notifications')
+        ->assertSee('Partner notifications')
+        ->assertSee('This preference is disabled by default.')
+        ->assertSee('Receive partner announcements')
+        ->assertNoJavaScriptErrors();
+});
+
+test('partner mobile navigation exposes only implemented partner destinations', function () {
+    $partner = User::factory()->partnerOnly()->create();
+    $this->actingAs($partner);
+
+    visit('/partner/profile')
+        ->on()->mobile()
+        ->assertCount('[data-test="member-bottom-navigation"] a', 2)
+        ->assertPresent('[aria-label="Profil partenaire"][aria-current="page"]')
+        ->assertPresent('[aria-label="Annonces partenaire"]')
+        ->assertDontSee('Statistiques')
+        ->assertNoJavaScriptErrors();
+
+    visit('/partner/announcements')
+        ->on()->mobile()
+        ->assertCount('[data-test="member-bottom-navigation"] a', 2)
+        ->assertPresent('[aria-label="Annonces partenaire"][aria-current="page"]')
+        ->assertNoJavaScriptErrors();
+});
+
+test('partner sidebar navigation disappears on the first render after role removal', function () {
+    $admin = User::factory()->withProfile()->admin()->partner()->create();
+    $admin->profile?->update(['display_name' => 'Admin partenaire']);
+    $this->actingAs($admin);
+
+    $page = visit('/dashboard')
+        ->assertSee('Espace partenaire')
+        ->assertSeeLink('Profil partenaire')
+        ->assertSeeLink('Annonces partenaire')
+        ->assertDontSee('Statistiques partenaire');
+
+    $partnerRole = Role::query()->where('name', RoleName::Partner)->firstOrFail();
+    $admin->roles()->detach($partnerRole);
+
+    $page->navigate('/dashboard')
+        ->assertDontSee('Espace partenaire')
+        ->assertDontSeeLink('Profil partenaire')
+        ->assertDontSeeLink('Annonces partenaire')
+        ->assertNoJavaScriptErrors();
 });

@@ -1,6 +1,12 @@
 <?php
 
 return [
+    'navigation' => [
+        'label' => 'Partner workspace',
+        'profile' => 'Partner profile',
+        'announcements' => 'Partner announcements',
+        'statistics' => 'Partner statistics',
+    ],
     'profile' => [
         'page_title' => 'Partner profile',
         'title' => 'Your partner profile',

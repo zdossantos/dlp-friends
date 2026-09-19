@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Settings\AccountController;
+use App\Http\Controllers\Settings\PartnerNotificationPreferenceController;
 use App\Http\Controllers\Settings\SecurityController;
 use App\Http\Controllers\Settings\UserDataExportController;
 use Illuminate\Auth\Middleware\RequirePassword;
@@ -26,6 +27,10 @@ Route::middleware(['auth', 'verified', 'social', 'role:user', 'profile.complete'
 
     Route::inertia('settings/appearance', 'settings/Appearance')->name('appearance.edit');
 
+    Route::get('settings/notifications', [PartnerNotificationPreferenceController::class, 'edit'])
+        ->name('notification-preferences.edit');
+    Route::patch('settings/notifications', [PartnerNotificationPreferenceController::class, 'update'])
+        ->name('notification-preferences.update');
 });
 
 Route::get('.well-known/passkey-endpoints', function () {

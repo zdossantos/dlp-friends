@@ -1,6 +1,12 @@
 <?php
 
 return [
+    'navigation' => [
+        'label' => 'Espace partenaire',
+        'profile' => 'Profil partenaire',
+        'announcements' => 'Annonces partenaire',
+        'statistics' => 'Statistiques partenaire',
+    ],
     'profile' => [
         'page_title' => 'Profil partenaire',
         'title' => 'Votre profil partenaire',

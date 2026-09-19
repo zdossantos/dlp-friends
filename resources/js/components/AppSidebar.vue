@@ -1,14 +1,16 @@
 <script setup lang="ts">
-import { Link } from '@inertiajs/vue3';
+import { Link, usePage } from '@inertiajs/vue3';
 import {
     GraduationCap,
     Images,
     LayoutDashboard,
     Building2,
+    Megaphone,
     Tags,
     UserRound,
     Users,
 } from '@lucide/vue';
+import { computed } from 'vue';
 import AppLogo from '@/components/AppLogo.vue';
 import NavMain from '@/components/NavMain.vue';
 import NavUser from '@/components/NavUser.vue';
@@ -29,9 +31,15 @@ import { index as memberIndex } from '@/routes/admin/members';
 import { index as onboardingIndex } from '@/routes/admin/onboarding';
 import { index as partnerProfileIndex } from '@/routes/admin/partner-profiles';
 import { show as showProfile } from '@/routes/member-profile';
+import { index as partnerAnnouncements } from '@/routes/partner/announcements';
+import { edit as editPartnerProfile } from '@/routes/partner/profile';
 import type { NavItem } from '@/types';
 
 const { t } = useTranslations();
+const page = usePage();
+const hasPartnerRole = computed(() =>
+    page.props.auth.user.roles.some((role) => role.name === 'partner'),
+);
 
 const mainNavItems: NavItem[] = [
     {
@@ -70,6 +78,19 @@ const mainNavItems: NavItem[] = [
         icon: UserRound,
     },
 ];
+
+const partnerNavItems: NavItem[] = [
+    {
+        title: t('partners.navigation.profile'),
+        href: editPartnerProfile(),
+        icon: Building2,
+    },
+    {
+        title: t('partners.navigation.announcements'),
+        href: partnerAnnouncements(),
+        icon: Megaphone,
+    },
+];
 </script>
 
 <template>
@@ -90,6 +111,11 @@ const mainNavItems: NavItem[] = [
             <NavMain
                 :items="mainNavItems"
                 :label="t('administration.navigation.label')"
+            />
+            <NavMain
+                v-if="hasPartnerRole"
+                :items="partnerNavItems"
+                :label="t('partners.navigation.label')"
             />
         </SidebarContent>
 
