@@ -8,15 +8,16 @@ use Illuminate\Validation\ValidationException;
 
 final class UpdatePublishedPartnerOrder
 {
+    public function __construct(private readonly LockPartnerProfileOrder $lockPartnerProfileOrder) {}
+
     /** @param list<int> $orderedIds */
     public function handle(array $orderedIds): void
     {
         DB::transaction(function () use ($orderedIds): void {
-            $published = PartnerProfile::query()
-                ->published()
-                ->orderBy('id')
-                ->lockForUpdate()
-                ->get();
+            $published = $this->lockPartnerProfileOrder
+                ->handle()
+                ->filter(fn (PartnerProfile $profile): bool => $profile->is_published
+                    && $profile->published_revision_id !== null);
 
             $expectedIds = $published->pluck('id')->sort()->values()->all();
             $submittedIds = collect($orderedIds)->sort()->values()->all();
