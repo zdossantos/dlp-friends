@@ -4,7 +4,7 @@ return [
     'navigation' => 'Notifications',
     'page' => [
         'title' => 'Notifications',
-        'description' => 'Retrouve les nouveautés de tes conversations et événements.',
+        'description' => 'Retrouve les nouveautés de tes conversations, événements et partenaires.',
         'empty_title' => 'Aucune notification',
         'empty_description' => 'Les nouveautés apparaîtront ici.',
         'list_label' => 'Liste des notifications',
@@ -18,7 +18,12 @@ return [
         'partners' => 'Partenaires',
         'unread_only' => 'Non lues uniquement',
     ],
-    'actions' => ['mark_all_read' => 'Tout marquer comme lu'],
+    'actions' => [
+        'mark_all_read' => 'Tout marquer comme lu',
+        'open_partner_announcement' => 'Voir l’annonce partenaire',
+        'dismiss_partner_announcement' => 'Supprimer cette annonce partenaire',
+        'confirm_dismiss_partner_announcement' => 'Supprimer cette annonce partenaire de tes notifications ?',
+    ],
     'items' => [
         'new_match' => 'Nouveau match avec :member.',
         'new_message' => ':sender t’a envoyé un nouveau message.',

@@ -2,27 +2,29 @@
 
 namespace App\Http\Controllers;
 
-use App\Actions\RecordPartnerAnnouncementRead;
+use App\Actions\DismissPartnerAnnouncement;
 use App\Models\User;
-use App\Support\MemberNotificationPresenter;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Notifications\DatabaseNotification;
 
-final class NotificationReadController extends Controller
+final class PartnerAnnouncementDismissController extends Controller
 {
     public function __invoke(
         Request $request,
         string $notification,
-        MemberNotificationPresenter $presenter,
-        RecordPartnerAnnouncementRead $recordRead,
+        DismissPartnerAnnouncement $dismissAnnouncement,
     ): RedirectResponse {
         /** @var User $user */
         $user = $request->user();
         /** @var DatabaseNotification $ownedNotification */
         $ownedNotification = $user->notifications()->findOrFail($notification);
-        $recordRead->handle($user, $ownedNotification);
 
-        return redirect()->to($presenter->targetUrl($ownedNotification->data, $user, $ownedNotification));
+        $dismissAnnouncement->handle($user, $ownedNotification);
+
+        // The engagement transaction must be durable before removing its presentation record.
+        $ownedNotification->delete();
+
+        return to_route('notifications.index');
     }
 }

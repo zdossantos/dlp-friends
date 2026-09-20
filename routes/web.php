@@ -55,6 +55,8 @@ use App\Http\Controllers\Partner\AnnouncementSubmissionController;
 use App\Http\Controllers\Partner\ProfileController as PartnerProfileController;
 use App\Http\Controllers\Partner\ProfileImageController as PartnerProfileImageController;
 use App\Http\Controllers\Partner\ProfileSubmissionController as PartnerProfileSubmissionController;
+use App\Http\Controllers\PartnerAnnouncementClickController;
+use App\Http\Controllers\PartnerAnnouncementDismissController;
 use App\Http\Controllers\PresenceHeartbeatController;
 use App\Http\Controllers\ProductOnboardingController;
 use App\Http\Controllers\PublicLandingController;
@@ -68,6 +70,9 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', [PublicLandingController::class, 'redirect'])->name('home');
 Route::get('partner-profiles/{partnerProfile}/image', [PublicLandingController::class, 'image'])
     ->name('partner-profiles.image');
+Route::get('partner-announcements/click/{token}', PartnerAnnouncementClickController::class)
+    ->where('token', '[A-Fa-f0-9]{64}')
+    ->name('partner-announcements.click');
 Route::get('matching', [PublicMatchingController::class, 'redirect'])->name('matching.redirect');
 Route::get('fr/matching', [PublicMatchingController::class, 'show'])->defaults('locale', 'fr')->name('matching.show.fr');
 Route::get('en/matching', [PublicMatchingController::class, 'show'])->defaults('locale', 'en')->name('matching.show.en');
@@ -220,6 +225,8 @@ Route::middleware(['auth', 'verified', 'social'])->group(function (): void {
                     ->name('notifications.read-all');
                 Route::patch('notifications/{notification}/read', NotificationReadController::class)
                     ->name('notifications.read');
+                Route::delete('notifications/{notification}/partner-announcement', PartnerAnnouncementDismissController::class)
+                    ->name('notifications.partner-announcements.dismiss');
             });
         });
     });

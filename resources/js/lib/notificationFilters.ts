@@ -1,4 +1,10 @@
-export type NotificationCategory = 'conversations' | 'events';
+export const notificationCategories = [
+    'conversations',
+    'events',
+    'partners',
+] as const;
+
+export type NotificationCategory = (typeof notificationCategories)[number];
 
 export function applyNotificationFilters(
     category: NotificationCategory | null,

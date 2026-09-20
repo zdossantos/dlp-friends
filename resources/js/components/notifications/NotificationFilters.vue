@@ -35,6 +35,10 @@ function update(category: NotificationCategory | null, unread: boolean): void {
                         value: 'events' as const,
                         label: t('notifications.filters.events'),
                     },
+                    {
+                        value: 'partners' as const,
+                        label: t('notifications.filters.partners'),
+                    },
                 ]"
                 :key="filter.value ?? 'all'"
                 type="button"

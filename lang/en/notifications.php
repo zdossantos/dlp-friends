@@ -4,7 +4,7 @@ return [
     'navigation' => 'Notifications',
     'page' => [
         'title' => 'Notifications',
-        'description' => 'Find updates from your conversations and events.',
+        'description' => 'Find updates from your conversations, events, and partners.',
         'empty_title' => 'No notifications',
         'empty_description' => 'New updates will appear here.',
         'list_label' => 'Notification list',
@@ -18,7 +18,12 @@ return [
         'partners' => 'Partners',
         'unread_only' => 'Unread only',
     ],
-    'actions' => ['mark_all_read' => 'Mark all as read'],
+    'actions' => [
+        'mark_all_read' => 'Mark all as read',
+        'open_partner_announcement' => 'View partner announcement',
+        'dismiss_partner_announcement' => 'Remove this partner announcement',
+        'confirm_dismiss_partner_announcement' => 'Remove this partner announcement from your notifications?',
+    ],
     'items' => [
         'new_match' => 'New match with :member.',
         'new_message' => ':sender sent you a new message.',
