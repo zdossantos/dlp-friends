@@ -444,6 +444,67 @@ test('a failed broadcast transport push remains retryable with the same notifica
         ->and($announcement->metric?->fresh()?->delivered_count)->toBe(1);
 });
 
+test('a crash after an accepted broadcast replays the same notification without duplicating durable side effects', function () {
+    Queue::fake();
+    $admin = User::factory()->admin()->create();
+    $user = dispatchEligibleUser();
+    $announcement = sendingAnnouncement(['audience_prepared_at' => now()]);
+    $delivery = PartnerAnnouncementDelivery::factory()->for($announcement, 'announcement')->for($user)->create();
+
+    app(DeliverPartnerAnnouncement::class)->handle($delivery);
+    $broadcast = Queue::pushed(BroadcastPartnerAnnouncementJob::class)->firstOrFail();
+    $notification = $user->notifications()->firstOrFail();
+    $expectedPayload = ['id' => $notification->id, ...$notification->data];
+
+    $crashBeforeConfirmation = true;
+    PartnerAnnouncementDelivery::updating(
+        static function (PartnerAnnouncementDelivery $candidate) use (&$crashBeforeConfirmation): void {
+            if ($crashBeforeConfirmation && $candidate->isDirty('broadcasted_at')) {
+                $crashBeforeConfirmation = false;
+
+                throw new RuntimeException('worker crashed before broadcast confirmation');
+            }
+        },
+    );
+
+    Queue::fake();
+    expect(fn () => app()->call([$broadcast, 'handle']))
+        ->toThrow(RuntimeException::class, 'worker crashed before broadcast confirmation');
+    Queue::assertPushed(
+        BroadcastEvent::class,
+        fn (BroadcastEvent $job): bool => $job->event instanceof BroadcastNotificationCreated
+            && $job->event->notification->id === $notification->id
+            && $job->event->data === $expectedPayload,
+    );
+    expect($delivery->fresh()?->broadcasted_at)->toBeNull()
+        ->and($user->notifications()->count())->toBe(1)
+        ->and($announcement->metric?->fresh()?->delivered_count)->toBe(1);
+
+    $announcement->update([
+        'status' => PartnerAnnouncementStatus::Sent,
+        'sent_at' => now(),
+    ]);
+    Queue::fake();
+    $this->actingAs($admin)
+        ->post(route('admin.partner-announcements.retry', $announcement))
+        ->assertRedirect(route('admin.partner-announcements.index'));
+    $retry = Queue::pushed(BroadcastPartnerAnnouncementJob::class)->firstOrFail();
+
+    Queue::fake();
+    app()->call([$retry, 'handle']);
+
+    Queue::assertPushed(
+        BroadcastEvent::class,
+        fn (BroadcastEvent $job): bool => $job->event instanceof BroadcastNotificationCreated
+            && $job->event->notification->id === $notification->id
+            && $job->event->data === $expectedPayload,
+    );
+    Queue::assertPushed(BroadcastEvent::class, 1);
+    expect($delivery->fresh()?->broadcasted_at)->not->toBeNull()
+        ->and($user->notifications()->count())->toBe(1)
+        ->and($announcement->metric?->fresh()?->delivered_count)->toBe(1);
+});
+
 test('terminal delivery failure stores bounded non personal metadata and is retryable by an admin only', function () {
     Queue::fake();
     $admin = User::factory()->admin()->create();

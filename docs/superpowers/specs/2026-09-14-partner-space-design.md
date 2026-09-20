@@ -167,11 +167,27 @@ puis créent au plus une notification Laravel. Les états de livraison sont
 `pending`, `delivered`, `skipped` ou `failed`, avec le nombre de tentatives et
 une erreur technique bornée ne contenant aucune donnée sensible.
 
-Une reprise ne sélectionne que `pending` et `failed`. Une livraison déjà
-`delivered` ou `skipped` n'est jamais rejouée. Les jobs Laravel utilisent les
-tentatives et délais progressifs existants. L'administration peut relancer les
-échecs d'une annonce, sans option de renvoi global. L'annonce devient `sent`
-lorsque la préparation est terminée et qu'aucune livraison traitable ne reste.
+La notification Laravel en base, le passage de la livraison à `delivered` et
+la métrique de livraison sont validés atomiquement et au plus une fois. Une
+reprise de livraison remet explicitement les échecs à `pending`, puis ré-enfile
+toutes les livraisons `pending`. Elle ne recrée jamais une notification pour
+une livraison `delivered`, et une livraison `skipped` n'est jamais rejouée. Les
+jobs Laravel utilisent les tentatives et délais progressifs existants.
+
+Le broadcast temps réel est une projection distincte, avec une garantie
+**at-least-once**. Une livraison `delivered` conserve `broadcasted_at` à
+`null` jusqu'à la confirmation de l'émission. Un crash peut survenir après
+l'acceptation du broadcast par le transport mais avant l'enregistrement de
+cette confirmation ; la reprise republie alors exactement le même UUID de
+notification et le même payload. Le client ou le transport doit dédupliquer
+ces relectures par UUID. La notification en base reste la source durable et le
+broadcast ne fournit que l'immédiateté.
+
+L'administration peut relancer les échecs d'une annonce et ré-enfiler les
+broadcasts `delivered` non confirmés d'une annonce `sending` ou `sent`, sans
+réinitialiser la livraison, recréer la notification ou modifier sa métrique.
+Il n'existe pas d'option de renvoi global. L'annonce devient `sent` lorsque la
+préparation est terminée et qu'aucune livraison traitable ne reste.
 
 Les notifications stockent uniquement l'identifiant d'annonce, les clés de
 présentation nécessaires et une cible interne. Elles n'incluent aucune donnée
@@ -289,8 +305,9 @@ Les tests Pest couvrent :
   ordre et limite de six ;
 - URL HTTPS, limites textuelles, transitions d'annonce et délai configurable ;
 - consentement par défaut, retrait et exclusions d'audience ;
-- transactions concurrentes, contraintes uniques, reprise partielle et
-  absence de double notification ;
+- transactions concurrentes, contraintes uniques, reprise partielle, absence
+  de double notification persistante et replay du broadcast avec le même UUID
+  après un crash avant confirmation ;
 - lecture, masquage, clics total et unique sous concurrence ;
 - statistiques sans identité, rétention, suppression et export personnel.
 

@@ -244,6 +244,32 @@ garantir une rétention maximale de 30 jours ; une restauration exceptionnelle
 ne constitue pas un mécanisme de récupération de compte et doit préserver la
 liste des suppressions arrivées à échéance avant toute remise en service.
 
+## Reprise des broadcasts d'annonces partenaires
+
+La notification Laravel en base est la source durable. Le broadcast temps réel
+est délivré **at-least-once** : une panne après son acceptation par le transport
+mais avant l'écriture de `broadcasted_at` laisse volontairement la livraison à
+reprendre. Cette fenêtre peut produire une seconde émission, toujours avec le
+même UUID et le même payload ; le client ou le transport la déduplique par
+UUID.
+
+Après un incident worker, Redis ou Reverb :
+
+1. rétablir les services et vérifier que les workers consomment de nouveau les
+   files ;
+2. identifier dans l'administration les annonces concernées à l'état `sending`
+   ou `sent` ;
+3. déclencher leur action de relance administrateur ; elle remet les échecs de
+   livraison à `pending`, ré-enfile les livraisons en attente et ré-enfile les
+   broadcasts des livraisons `delivered` dont `broadcasted_at` est encore
+   `null` ;
+4. vérifier la résorption des jobs en échec et des broadcasts non confirmés.
+
+Ne pas réinitialiser une livraison `delivered`, supprimer sa notification en
+base ou corriger manuellement sa métrique. La relance est idempotente pour ces
+effets durables ; seule la projection temps réel peut être répétée avec le même
+UUID dans la fenêtre de crash décrite ci-dessus.
+
 ## Déploiement de la migration des conversations
 
 La migration qui crée `conversations` reprend tous les matches existants. Pour
