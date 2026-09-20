@@ -10,13 +10,17 @@ use Illuminate\Support\Facades\DB;
 
 final class RequestAccountDeletion
 {
-    public function __construct(private CancelEvent $cancelEvent) {}
+    public function __construct(
+        private CancelEvent $cancelEvent,
+        private DeactivateDeletedPartner $deactivateDeletedPartner,
+    ) {}
 
     public function handle(User $user): CarbonImmutable
     {
         return DB::transaction(function () use ($user): CarbonImmutable {
             // Eligibility mutations lock the user before changing account activity.
             $lockedUser = User::query()->lockForUpdate()->findOrFail($user->id);
+            $this->deactivateDeletedPartner->handle($lockedUser);
 
             if ($lockedUser->status === UserStatus::PendingDeletion && $lockedUser->deletion_requested_at !== null) {
                 return $lockedUser->deletion_requested_at;

@@ -8,6 +8,11 @@ use App\Models\EventChatMessage;
 use App\Models\EventRegistration;
 use App\Models\Interest;
 use App\Models\MemberMatch;
+use App\Models\PartnerAnnouncement;
+use App\Models\PartnerAnnouncementDelivery;
+use App\Models\PartnerProfile;
+use App\Models\PartnerProfileRevision;
+use App\Models\RoleAudit;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 
@@ -17,6 +22,12 @@ final class BuildUserDataExport
     public function handle(User $user): array
     {
         $user->loadMissing('profile.avatar', 'profile.interestHistory');
+
+        $partnerPreference = $user->partnerNotificationPreference()->first();
+        $partnerProfile = PartnerProfile::query()
+            ->where('user_id', $user->id)
+            ->first();
+        $partnerProfileId = $partnerProfile?->id;
 
         $matches = MemberMatch::query()
             ->where(fn (Builder $query) => $query
@@ -147,6 +158,106 @@ final class BuildUserDataExport
                         'created_at' => $notification->created_at?->toIso8601String(),
                     ];
                 })->all(),
+            'notification_preferences' => [
+                'partner_announcements' => $partnerPreference->enabled ?? false,
+                'updated_at' => $partnerPreference?->updated_at?->toIso8601String(),
+            ],
+            'role_history' => RoleAudit::query()
+                ->where('target_user_id', $user->id)
+                ->orderBy('id')
+                ->get()
+                ->map(fn (RoleAudit $audit): array => [
+                    'id' => $audit->id,
+                    'role' => $audit->role->value,
+                    'action' => $audit->action->value,
+                    'actor' => $audit->actor_user_id === null ? 'system' : 'administrator',
+                    'expires_at' => $audit->expires_at?->toIso8601String(),
+                    'created_at' => $audit->created_at?->toIso8601String(),
+                    'updated_at' => $audit->updated_at?->toIso8601String(),
+                ])->all(),
+            'partner_profile' => $partnerProfile === null ? null : [
+                'id' => $partnerProfile->id,
+                'published_revision_id' => $partnerProfile->published_revision_id,
+                'is_published' => $partnerProfile->is_published,
+                'position' => $partnerProfile->position,
+                'created_at' => $partnerProfile->created_at?->toIso8601String(),
+                'updated_at' => $partnerProfile->updated_at?->toIso8601String(),
+            ],
+            'partner_profile_revisions' => $partnerProfileId === null ? [] : PartnerProfileRevision::query()
+                ->where('partner_profile_id', $partnerProfileId)
+                ->orderBy('id')
+                ->get()
+                ->map(fn (PartnerProfileRevision $revision): array => [
+                    'id' => $revision->id,
+                    'partner_profile_id' => $revision->partner_profile_id,
+                    'name_fr' => $revision->name_fr,
+                    'name_en' => $revision->name_en,
+                    'description_fr' => $revision->description_fr,
+                    'description_en' => $revision->description_en,
+                    'has_image' => $revision->image_path !== null,
+                    'status' => $revision->status->value,
+                    'submitted_at' => $revision->submitted_at?->toIso8601String(),
+                    'decided_at' => $revision->decided_at?->toIso8601String(),
+                    'rejection_reason' => $revision->rejection_reason,
+                    'draft_key' => $revision->draft_key,
+                    'expires_at' => $revision->expires_at?->toIso8601String(),
+                    'created_at' => $revision->created_at?->toIso8601String(),
+                    'updated_at' => $revision->updated_at?->toIso8601String(),
+                ])->all(),
+            'partner_announcements' => $partnerProfileId === null ? [] : PartnerAnnouncement::query()
+                ->where('partner_profile_id', $partnerProfileId)
+                ->with('metric')
+                ->orderBy('id')
+                ->get()
+                ->map(fn (PartnerAnnouncement $announcement): array => [
+                    'id' => $announcement->id,
+                    'partner_profile_id' => $announcement->partner_profile_id,
+                    'title' => $announcement->title,
+                    'content' => $announcement->content,
+                    'destination_url' => $announcement->destination_url,
+                    'status' => $announcement->status->value,
+                    'submitted_at' => $announcement->submitted_at?->toIso8601String(),
+                    'audience_prepared_at' => $announcement->audience_prepared_at?->toIso8601String(),
+                    'sending_started_at' => $announcement->sending_started_at?->toIso8601String(),
+                    'sent_at' => $announcement->sent_at?->toIso8601String(),
+                    'decided_at' => $announcement->decided_at?->toIso8601String(),
+                    'rejection_reason' => $announcement->rejection_reason,
+                    'expires_at' => $announcement->expires_at?->toIso8601String(),
+                    'created_at' => $announcement->created_at?->toIso8601String(),
+                    'updated_at' => $announcement->updated_at?->toIso8601String(),
+                    'metrics' => $announcement->metric === null ? null : [
+                        'id' => $announcement->metric->id,
+                        'prepared_count' => $announcement->metric->prepared_count,
+                        'delivered_count' => $announcement->metric->delivered_count,
+                        'read_count' => $announcement->metric->read_count,
+                        'dismissed_count' => $announcement->metric->dismissed_count,
+                        'unique_click_count' => $announcement->metric->unique_click_count,
+                        'total_click_count' => $announcement->metric->total_click_count,
+                        'expires_at' => $announcement->metric->expires_at?->toIso8601String(),
+                        'created_at' => $announcement->metric->created_at?->toIso8601String(),
+                        'updated_at' => $announcement->metric->updated_at?->toIso8601String(),
+                    ],
+                ])->all(),
+            'received_partner_announcements' => PartnerAnnouncementDelivery::query()
+                ->where('user_id', $user->id)
+                ->with('announcement:id,title,content,destination_url')
+                ->orderBy('id')
+                ->get()
+                ->map(fn (PartnerAnnouncementDelivery $delivery): array => [
+                    'id' => $delivery->id,
+                    'announcement_id' => $delivery->partner_announcement_id,
+                    'title' => $delivery->announcement->title,
+                    'content' => $delivery->announcement->content,
+                    'destination_url' => $delivery->announcement->destination_url,
+                    'status' => $delivery->status->value,
+                    'delivered_at' => $delivery->delivered_at?->toIso8601String(),
+                    'read_at' => $delivery->read_at?->toIso8601String(),
+                    'dismissed_at' => $delivery->dismissed_at?->toIso8601String(),
+                    'first_clicked_at' => $delivery->first_clicked_at?->toIso8601String(),
+                    'click_count' => $delivery->click_count,
+                    'created_at' => $delivery->created_at?->toIso8601String(),
+                    'updated_at' => $delivery->updated_at?->toIso8601String(),
+                ])->all(),
         ];
     }
 }

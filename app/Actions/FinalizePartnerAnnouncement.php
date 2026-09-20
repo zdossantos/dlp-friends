@@ -32,10 +32,13 @@ final class FinalizePartnerAnnouncement
                 return;
             }
 
+            $expiresAt = now()->addYears(2);
             $locked->update([
                 'status' => PartnerAnnouncementStatus::Sent,
                 'sent_at' => now(),
+                'expires_at' => $expiresAt,
             ]);
+            $locked->metric()->update(['expires_at' => $expiresAt]);
         });
     }
 }

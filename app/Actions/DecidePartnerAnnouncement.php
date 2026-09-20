@@ -72,6 +72,7 @@ final class DecidePartnerAnnouncement
                 'decided_by' => $admin->id,
                 'decided_at' => now(),
                 'rejection_reason' => $reason,
+                'expires_at' => now()->addYears(2),
             ]);
         });
     }
@@ -99,6 +100,7 @@ final class DecidePartnerAnnouncement
                 'status' => PartnerAnnouncementStatus::Cancelled,
                 'decided_by' => $actor->hasRole(RoleName::Admin) ? $actor->id : null,
                 'decided_at' => now(),
+                'expires_at' => now()->addYears(2),
             ]);
         });
     }
