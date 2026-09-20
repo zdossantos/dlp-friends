@@ -19,7 +19,9 @@ use App\Models\PartnerSetting;
 use App\Models\Role;
 use App\Models\User;
 use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Broadcasting\BroadcastEvent;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Notifications\Events\BroadcastNotificationCreated;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Str;
@@ -80,6 +82,92 @@ test('an admin starts an approved announcement only after commit and creates its
         ->and($started?->metric?->delivered_count)->toBe(0);
 });
 
+test('an admin can resume preparation when the initial after commit queue push failed', function () {
+    $queue = Queue::fake();
+    $queue->beforePushing(static function (object $job): void {
+        if ($job instanceof PreparePartnerAnnouncementAudienceJob) {
+            throw new RuntimeException('queue unavailable');
+        }
+    });
+    $admin = User::factory()->admin()->create();
+    $recipient = dispatchEligibleUser();
+    $announcement = PartnerAnnouncement::factory()->approved()->create([
+        'destination_url' => 'https://offers.example.com/resumable-start',
+    ]);
+
+    expect(fn () => app(StartPartnerAnnouncement::class)->handle($admin, $announcement))
+        ->toThrow(RuntimeException::class, 'queue unavailable');
+    expect($announcement->fresh()?->status)->toBe(PartnerAnnouncementStatus::Sending)
+        ->and($announcement->fresh()?->audience_prepared_at)->toBeNull();
+
+    Queue::fake();
+    $this->actingAs($admin)
+        ->post(route('admin.partner-announcements.retry', $announcement))
+        ->assertRedirect(route('admin.partner-announcements.index'));
+    Queue::assertPushed(PreparePartnerAnnouncementAudienceJob::class, 1);
+
+    $prepare = Queue::pushed(PreparePartnerAnnouncementAudienceJob::class)->firstOrFail();
+    Queue::fake();
+    $prepare->handle(
+        app(PreparePartnerAnnouncementAudience::class),
+        app(FinalizePartnerAnnouncement::class),
+    );
+
+    expect($announcement->fresh()?->audience_prepared_at)->not->toBeNull()
+        ->and($announcement->deliveries()->pluck('user_id')->all())->toBe([$recipient->id]);
+    Queue::assertPushed(DeliverPartnerAnnouncementJob::class, 1);
+});
+
+test('an admin can resume all pending delivery pushes after preparation was interrupted', function () {
+    $pushCount = 0;
+    $queue = Queue::fake();
+    $queue->beforePushing(static function (object $job) use (&$pushCount): void {
+        if (! $job instanceof DeliverPartnerAnnouncementJob) {
+            return;
+        }
+
+        $pushCount++;
+
+        if ($pushCount === 251) {
+            throw new RuntimeException('queue interrupted');
+        }
+    });
+    $admin = User::factory()->admin()->create();
+    collect(range(1, 501))->each(fn () => dispatchEligibleUser());
+    $announcement = sendingAnnouncement();
+
+    expect(fn () => app(PreparePartnerAnnouncementAudience::class)->handle($announcement))
+        ->toThrow(RuntimeException::class, 'queue interrupted');
+    expect($announcement->fresh()?->audience_prepared_at)->not->toBeNull()
+        ->and($announcement->deliveries()->count())->toBe(501)
+        ->and($pushCount)->toBe(251);
+
+    Queue::fake();
+    $this->actingAs($admin)
+        ->post(route('admin.partner-announcements.retry', $announcement))
+        ->assertRedirect(route('admin.partner-announcements.index'));
+    Queue::assertPushed(PreparePartnerAnnouncementAudienceJob::class, 1);
+
+    $prepare = Queue::pushed(PreparePartnerAnnouncementAudienceJob::class)->firstOrFail();
+    Queue::fake();
+    $prepare->handle(
+        app(PreparePartnerAnnouncementAudience::class),
+        app(FinalizePartnerAnnouncement::class),
+    );
+
+    $pendingIds = $announcement->deliveries()
+        ->where('status', PartnerDeliveryStatus::Pending)
+        ->orderBy('id')
+        ->pluck('id')
+        ->all();
+    $queuedIds = Queue::pushed(DeliverPartnerAnnouncementJob::class)
+        ->pluck('deliveryId')
+        ->sort()
+        ->values()
+        ->all();
+    expect($queuedIds)->toBe($pendingIds);
+});
+
 test('start is admin-only, validates the state and URL, and enforces the decisive cooldown boundary', function () {
     Queue::fake();
     $this->travelTo('2026-09-20 12:00:00');
@@ -116,7 +204,7 @@ test('start is admin-only, validates the state and URL, and enforces the decisiv
         ->toThrow(ValidationException::class);
 });
 
-test('audience preparation inserts eligible members once in chunks and queues only new deliveries', function () {
+test('audience preparation inserts eligible members once and requeues every pending delivery', function () {
     Queue::fake();
     $eligible = collect(range(1, 501))->map(fn (): User => dispatchEligibleUser());
     $withoutConsent = User::factory()->create();
@@ -146,7 +234,7 @@ test('audience preparation inserts eligible members once in chunks and queues on
         ])->exists())->toBeFalse()
         ->and($announcement->fresh()?->audience_prepared_at)->not->toBeNull()
         ->and($announcement->metric?->fresh()?->prepared_count)->toBe(501);
-    Queue::assertPushed(DeliverPartnerAnnouncementJob::class, 501);
+    Queue::assertPushed(DeliverPartnerAnnouncementJob::class, 1002);
 });
 
 test('delivery rechecks every eligibility condition and skips members who became ineligible', function (string $condition) {
@@ -195,6 +283,61 @@ test('delivery creates exactly one database notification and increments metrics 
         ->and($announcement->metric?->fresh()?->delivered_count)->toBe(1);
 });
 
+test('a rolled back delivery transaction never queues its broadcast', function () {
+    Queue::fake();
+    expect(config('queue.connections.database.after_commit'))->toBeFalse();
+    $user = dispatchEligibleUser();
+    $announcement = sendingAnnouncement(['audience_prepared_at' => now()]);
+    $delivery = PartnerAnnouncementDelivery::factory()->for($announcement, 'announcement')->for($user)->create();
+
+    $initialTransactionLevel = DB::transactionLevel();
+    DB::beginTransaction();
+    try {
+        app(DeliverPartnerAnnouncement::class)->handle($delivery);
+        DB::rollBack();
+    } finally {
+        while (DB::transactionLevel() > $initialTransactionLevel) {
+            DB::rollBack();
+        }
+    }
+
+    Queue::assertNotPushed(BroadcastEvent::class);
+    expect($delivery->fresh()?->status)->toBe(PartnerDeliveryStatus::Pending)
+        ->and($user->notifications()->count())->toBe(0)
+        ->and($announcement->metric?->fresh()?->delivered_count)->toBe(0);
+});
+
+test('a successful delivery queues one broadcast after commit with the persisted identity and data', function () {
+    Queue::fake();
+    expect(config('queue.connections.database.after_commit'))->toBeFalse();
+    $user = dispatchEligibleUser();
+    $announcement = sendingAnnouncement(['audience_prepared_at' => now()]);
+    $delivery = PartnerAnnouncementDelivery::factory()->for($announcement, 'announcement')->for($user)->create();
+
+    $initialTransactionLevel = DB::transactionLevel();
+    DB::beginTransaction();
+    try {
+        app(DeliverPartnerAnnouncement::class)->handle($delivery);
+        Queue::assertNotPushed(BroadcastEvent::class);
+        $notification = $user->notifications()->firstOrFail();
+        DB::commit();
+    } finally {
+        while (DB::transactionLevel() > $initialTransactionLevel) {
+            DB::rollBack();
+        }
+    }
+
+    Queue::assertPushed(BroadcastEvent::class, 1);
+    Queue::assertPushed(
+        BroadcastEvent::class,
+        fn (BroadcastEvent $job): bool => $job->event instanceof BroadcastNotificationCreated
+            && $job->event->notification->id === $notification->id
+            && $job->event->data === ['id' => $notification->id, ...$notification->data],
+    );
+    expect($delivery->fresh()?->notification_id)->toBe($notification->id)
+        ->and($announcement->metric?->fresh()?->delivered_count)->toBe(1);
+});
+
 test('terminal delivery failure stores bounded non personal metadata and is retryable by an admin only', function () {
     Queue::fake();
     $admin = User::factory()->admin()->create();
@@ -230,11 +373,23 @@ test('terminal delivery failure stores bounded non personal metadata and is retr
         ->and($failed->fresh()?->attempts)->toBe(3)
         ->and($delivered->fresh()?->status)->toBe(PartnerDeliveryStatus::Delivered)
         ->and($pending->fresh()?->status)->toBe(PartnerDeliveryStatus::Pending);
+    Queue::assertPushed(PreparePartnerAnnouncementAudienceJob::class, 1);
+
+    $prepare = Queue::pushed(PreparePartnerAnnouncementAudienceJob::class)->firstOrFail();
+    Queue::fake();
+    $prepare->handle(
+        app(PreparePartnerAnnouncementAudience::class),
+        app(FinalizePartnerAnnouncement::class),
+    );
     Queue::assertPushed(
         DeliverPartnerAnnouncementJob::class,
         fn (DeliverPartnerAnnouncementJob $queued): bool => $queued->deliveryId === $failed->id,
     );
-    Queue::assertPushed(DeliverPartnerAnnouncementJob::class, 1);
+    Queue::assertPushed(
+        DeliverPartnerAnnouncementJob::class,
+        fn (DeliverPartnerAnnouncementJob $queued): bool => $queued->deliveryId === $pending->id,
+    );
+    Queue::assertPushed(DeliverPartnerAnnouncementJob::class, 2);
 });
 
 test('finalization waits for prepared audience and all deliveries to become terminal', function () {

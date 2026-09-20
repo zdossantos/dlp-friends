@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Settings;
 
+use App\Actions\UpdatePartnerNotificationPreference;
 use App\Enums\RoleName;
 use App\Models\Role;
 use App\Models\User;
@@ -67,6 +68,19 @@ class PartnerNotificationPreferenceTest extends TestCase
         ]);
         $this->assertDatabaseHas('notifications', ['id' => $notification->id]);
         $this->assertTrue($member->fresh()->show_presence);
+    }
+
+    public function test_the_consent_action_updates_the_preference_through_the_user_mutex(): void
+    {
+        $member = User::factory()->create();
+
+        app(UpdatePartnerNotificationPreference::class)->handle($member, true);
+        app(UpdatePartnerNotificationPreference::class)->handle($member, false);
+
+        $this->assertDatabaseHas('partner_notification_preferences', [
+            'user_id' => $member->id,
+            'enabled' => false,
+        ]);
     }
 
     public function test_partner_notification_settings_require_the_user_role(): void

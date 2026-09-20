@@ -4,15 +4,22 @@ namespace Tests\Feature\Partner;
 
 use App\Actions\DeletePartnerAnnouncementDraft;
 use App\Actions\DeliverPartnerAnnouncement;
+use App\Actions\RequestAccountDeletion;
 use App\Actions\StartPartnerAnnouncement;
 use App\Actions\SubmitPartnerAnnouncement;
+use App\Actions\SyncManageableUserRoles;
+use App\Actions\UpdatePartnerNotificationPreference;
 use App\Enums\PartnerAnnouncementStatus;
 use App\Enums\PartnerDeliveryStatus;
+use App\Enums\RoleAuditAction;
+use App\Enums\RoleName;
+use App\Enums\UserStatus;
 use App\Models\PartnerAnnouncement;
 use App\Models\PartnerAnnouncementDelivery;
 use App\Models\PartnerAnnouncementMetric;
 use App\Models\PartnerNotificationPreference;
 use App\Models\PartnerProfile;
+use App\Models\RoleAudit;
 use App\Models\User;
 use Illuminate\Foundation\Testing\DatabaseMigrations;
 use Illuminate\Notifications\DatabaseNotification;
@@ -251,6 +258,21 @@ class PartnerAnnouncementConcurrencyTest extends TestCase
             ->and($announcement->metric?->fresh()?->delivered_count)->toBe(1);
     }
 
+    public function test_a_committed_consent_withdrawal_prevents_a_concurrent_delivery_on_mysql(): void
+    {
+        $this->assertCommittedEligibilityMutationPreventsDelivery('consent');
+    }
+
+    public function test_a_committed_user_role_removal_prevents_a_concurrent_delivery_on_mysql(): void
+    {
+        $this->assertCommittedEligibilityMutationPreventsDelivery('role');
+    }
+
+    public function test_a_committed_deletion_request_prevents_a_concurrent_delivery_on_mysql(): void
+    {
+        $this->assertCommittedEligibilityMutationPreventsDelivery('deletion');
+    }
+
     public function test_a_concurrent_submission_is_never_deleted_by_a_stale_draft_request_on_mysql(): void
     {
         $this->requirePcntl();
@@ -400,5 +422,154 @@ class PartnerAnnouncementConcurrencyTest extends TestCase
         if (! function_exists('pcntl_fork')) {
             $this->markTestSkipped('This lock test requires the pcntl extension.');
         }
+    }
+
+    private function assertCommittedEligibilityMutationPreventsDelivery(string $mutation): void
+    {
+        $this->requirePcntl();
+        Queue::fake();
+
+        $admin = User::factory()->admin()->create();
+        $recipient = User::factory()->create();
+        PartnerNotificationPreference::query()->create([
+            'user_id' => $recipient->id,
+            'enabled' => true,
+        ]);
+        $announcement = PartnerAnnouncement::factory()->create([
+            'status' => PartnerAnnouncementStatus::Sending,
+            'destination_url' => 'https://offers.example.com/eligibility-lock',
+            'audience_prepared_at' => now(),
+            'sending_started_at' => now(),
+        ]);
+        PartnerAnnouncementMetric::query()->create([
+            'partner_announcement_id' => $announcement->id,
+            'prepared_count' => 1,
+        ]);
+        $delivery = PartnerAnnouncementDelivery::factory()
+            ->for($announcement, 'announcement')
+            ->for($recipient)
+            ->create();
+        $mutationControl = $this->socketPair();
+        $deliveryControl = $this->socketPair();
+        $mutationResultFile = $this->resultFile("partner-eligibility-{$mutation}-");
+        $deliveryResultFile = $this->resultFile('partner-eligibility-delivery-');
+
+        DB::disconnect();
+
+        $mutationPid = pcntl_fork();
+        $this->assertNotSame(-1, $mutationPid);
+
+        if ($mutationPid === 0) {
+            fclose($mutationControl[0]);
+            fclose($deliveryControl[0]);
+            fclose($deliveryControl[1]);
+            DB::purge();
+
+            try {
+                $pauseBeforeCommit = static function () use ($mutationControl): void {
+                    fwrite($mutationControl[1], 'L');
+
+                    if (fread($mutationControl[1], 1) !== 'G') {
+                        throw new RuntimeException('The eligibility mutation was not released.');
+                    }
+                };
+
+                match ($mutation) {
+                    'consent' => PartnerNotificationPreference::updated(
+                        static function (PartnerNotificationPreference $preference) use ($recipient, $pauseBeforeCommit): void {
+                            if ($preference->user_id === $recipient->id && $preference->enabled === false) {
+                                $pauseBeforeCommit();
+                            }
+                        },
+                    ),
+                    'role' => RoleAudit::created(
+                        static function (RoleAudit $audit) use ($recipient, $pauseBeforeCommit): void {
+                            if ($audit->target_user_id === $recipient->id
+                                && $audit->role === RoleName::User
+                                && $audit->action === RoleAuditAction::Removed) {
+                                $pauseBeforeCommit();
+                            }
+                        },
+                    ),
+                    'deletion' => User::updated(
+                        static function (User $user) use ($recipient, $pauseBeforeCommit): void {
+                            if ($user->id === $recipient->id && $user->status === UserStatus::PendingDeletion) {
+                                $pauseBeforeCommit();
+                            }
+                        },
+                    ),
+                };
+
+                match ($mutation) {
+                    'consent' => app(UpdatePartnerNotificationPreference::class)->handle(
+                        User::query()->findOrFail($recipient->id),
+                        false,
+                    ),
+                    'role' => app(SyncManageableUserRoles::class)->handle(
+                        User::query()->findOrFail($admin->id),
+                        User::query()->findOrFail($recipient->id),
+                        [],
+                    ),
+                    'deletion' => app(RequestAccountDeletion::class)->handle(
+                        User::query()->findOrFail($recipient->id),
+                    ),
+                };
+                file_put_contents($mutationResultFile, json_encode(['committed' => true], JSON_THROW_ON_ERROR));
+                exit(0);
+            } catch (Throwable $exception) {
+                file_put_contents($mutationResultFile, json_encode([
+                    'error' => $exception::class.': '.$exception->getMessage(),
+                ], JSON_THROW_ON_ERROR));
+                exit(1);
+            }
+        }
+
+        fclose($mutationControl[1]);
+        $this->assertSame('L', fread($mutationControl[0], 1));
+
+        $deliveryPid = pcntl_fork();
+        $this->assertNotSame(-1, $deliveryPid);
+
+        if ($deliveryPid === 0) {
+            fclose($mutationControl[0]);
+            fclose($deliveryControl[0]);
+            DB::purge();
+
+            try {
+                fwrite($deliveryControl[1], 'R');
+                app(DeliverPartnerAnnouncement::class)->handle(
+                    PartnerAnnouncementDelivery::query()->findOrFail($delivery->id),
+                );
+                file_put_contents($deliveryResultFile, json_encode(['handled' => true], JSON_THROW_ON_ERROR));
+                exit(0);
+            } catch (Throwable $exception) {
+                file_put_contents($deliveryResultFile, json_encode([
+                    'error' => $exception::class.': '.$exception->getMessage(),
+                ], JSON_THROW_ON_ERROR));
+                exit(1);
+            }
+        }
+
+        fclose($deliveryControl[1]);
+        $this->assertSame('R', fread($deliveryControl[0], 1));
+        usleep(300_000);
+        fwrite($mutationControl[0], 'G');
+
+        pcntl_waitpid($mutationPid, $mutationStatus);
+        pcntl_waitpid($deliveryPid, $deliveryStatus);
+        fclose($mutationControl[0]);
+        fclose($deliveryControl[0]);
+
+        DB::purge();
+        DB::reconnect();
+
+        expect([pcntl_wexitstatus($mutationStatus), pcntl_wexitstatus($deliveryStatus)])
+            ->toBe([0, 0])
+            ->and($this->readResult($mutationResultFile))->toBe(['committed' => true])
+            ->and($this->readResult($deliveryResultFile))->toBe(['handled' => true])
+            ->and($delivery->fresh()?->status)->toBe(PartnerDeliveryStatus::Skipped)
+            ->and($delivery->fresh()?->attempts)->toBe(1)
+            ->and($recipient->notifications()->count())->toBe(0)
+            ->and($announcement->metric?->fresh()?->delivered_count)->toBe(0);
     }
 }

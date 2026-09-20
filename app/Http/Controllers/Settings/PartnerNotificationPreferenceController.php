@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Settings;
 
+use App\Actions\UpdatePartnerNotificationPreference;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Settings\PartnerNotificationPreferenceUpdateRequest;
 use Illuminate\Http\RedirectResponse;
@@ -20,11 +21,14 @@ class PartnerNotificationPreferenceController extends Controller
         ]);
     }
 
-    public function update(PartnerNotificationPreferenceUpdateRequest $request): RedirectResponse
-    {
-        $request->user()->partnerNotificationPreference()->updateOrCreate([], [
-            'enabled' => $request->boolean('partner_announcements'),
-        ]);
+    public function update(
+        PartnerNotificationPreferenceUpdateRequest $request,
+        UpdatePartnerNotificationPreference $updatePreference,
+    ): RedirectResponse {
+        $updatePreference->handle(
+            $request->user(),
+            $request->boolean('partner_announcements'),
+        );
 
         Inertia::flash('toast', [
             'type' => 'success',

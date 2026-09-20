@@ -15,6 +15,7 @@ final class SyncManageableUserRoles
     public function handle(User $actor, User $target, array $roles): void
     {
         DB::transaction(function () use ($actor, $target, $roles): void {
+            // Eligibility mutations lock the user before related role rows.
             $locked = User::query()
                 ->lockForUpdate()
                 ->with('roles')

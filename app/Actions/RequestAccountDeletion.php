@@ -15,6 +15,7 @@ final class RequestAccountDeletion
     public function handle(User $user): CarbonImmutable
     {
         return DB::transaction(function () use ($user): CarbonImmutable {
+            // Eligibility mutations lock the user before changing account activity.
             $lockedUser = User::query()->lockForUpdate()->findOrFail($user->id);
 
             if ($lockedUser->status === UserStatus::PendingDeletion && $lockedUser->deletion_requested_at !== null) {

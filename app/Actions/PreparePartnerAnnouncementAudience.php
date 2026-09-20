@@ -29,46 +29,47 @@ final class PreparePartnerAnnouncementAudience
                 ->lockForUpdate()
                 ->firstOrFail();
 
-            if ($locked->status !== PartnerAnnouncementStatus::Sending
-                || $locked->audience_prepared_at !== null) {
+            if ($locked->status !== PartnerAnnouncementStatus::Sending) {
                 return;
             }
 
-            User::query()
-                ->eligibleForPartnerAnnouncements()
-                ->select('users.id')
-                ->chunkById(500, function (Collection $users) use ($locked): void {
-                    $now = now();
-                    $rows = $users->map(fn (User $user): array => [
-                        'partner_announcement_id' => $locked->id,
-                        'user_id' => $user->id,
-                        'click_token' => hash('sha256', Str::uuid()->toString()),
-                        'status' => PartnerDeliveryStatus::Pending->value,
-                        'attempts' => 0,
-                        'click_count' => 0,
-                        'created_at' => $now,
-                        'updated_at' => $now,
-                    ])->all();
+            if ($locked->audience_prepared_at === null) {
+                User::query()
+                    ->eligibleForPartnerAnnouncements()
+                    ->select('users.id')
+                    ->chunkById(500, function (Collection $users) use ($locked): void {
+                        $now = now();
+                        $rows = $users->map(fn (User $user): array => [
+                            'partner_announcement_id' => $locked->id,
+                            'user_id' => $user->id,
+                            'click_token' => hash('sha256', Str::uuid()->toString()),
+                            'status' => PartnerDeliveryStatus::Pending->value,
+                            'attempts' => 0,
+                            'click_count' => 0,
+                            'created_at' => $now,
+                            'updated_at' => $now,
+                        ])->all();
 
-                    PartnerAnnouncementDelivery::query()->insertOrIgnore($rows);
+                        PartnerAnnouncementDelivery::query()->insertOrIgnore($rows);
+                    });
 
-                    $tokens = array_column($rows, 'click_token');
-                    PartnerAnnouncementDelivery::query()
-                        ->where('partner_announcement_id', $locked->id)
-                        ->whereIn('click_token', $tokens)
-                        ->orderBy('id')
-                        ->pluck('id')
-                        ->each(static function (int $deliveryId): void {
-                            DB::afterCommit(static fn () => DeliverPartnerAnnouncement::dispatch($deliveryId));
-                        });
+                $preparedCount = $locked->deliveries()->count();
+                PartnerAnnouncementMetric::query()->updateOrCreate(
+                    ['partner_announcement_id' => $locked->id],
+                    ['prepared_count' => $preparedCount],
+                );
+                $locked->update(['audience_prepared_at' => now()]);
+            }
+
+            $locked->deliveries()
+                ->where('status', PartnerDeliveryStatus::Pending)
+                ->select('id')
+                ->chunkById(500, function (Collection $deliveries): void {
+                    $deliveries->each(static function (PartnerAnnouncementDelivery $delivery): void {
+                        $deliveryId = $delivery->id;
+                        DB::afterCommit(static fn () => DeliverPartnerAnnouncement::dispatch($deliveryId));
+                    });
                 });
-
-            $preparedCount = $locked->deliveries()->count();
-            PartnerAnnouncementMetric::query()->updateOrCreate(
-                ['partner_announcement_id' => $locked->id],
-                ['prepared_count' => $preparedCount],
-            );
-            $locked->update(['audience_prepared_at' => now()]);
         });
     }
 }

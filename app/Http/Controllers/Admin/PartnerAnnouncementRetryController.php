@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Enums\PartnerAnnouncementStatus;
 use App\Enums\PartnerDeliveryStatus;
 use App\Http\Controllers\Controller;
-use App\Jobs\DeliverPartnerAnnouncement;
+use App\Jobs\PreparePartnerAnnouncementAudience;
 use App\Models\PartnerAnnouncement;
 use App\Models\PartnerAnnouncementDelivery;
 use App\Models\PartnerProfile;
@@ -45,9 +45,10 @@ final class PartnerAnnouncementRetryController extends Controller
                         'status' => PartnerDeliveryStatus::Pending,
                         'last_error' => null,
                     ]);
-                    $deliveryId = $delivery->id;
-                    DB::afterCommit(static fn () => DeliverPartnerAnnouncement::dispatch($deliveryId));
                 });
+
+            $announcementId = $locked->id;
+            DB::afterCommit(static fn () => PreparePartnerAnnouncementAudience::dispatch($announcementId));
         });
 
         return to_route('admin.partner-announcements.index')
