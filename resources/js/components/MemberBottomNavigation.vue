@@ -5,6 +5,7 @@ import {
     Bell,
     Building2,
     CalendarDays,
+    ChartBar,
     Megaphone,
     MessageCircle,
     Sparkles,
@@ -24,6 +25,7 @@ import { show as showProfile } from '@/routes/member-profile';
 import { index as notifications } from '@/routes/notifications';
 import { index as partnerAnnouncements } from '@/routes/partner/announcements';
 import { edit as editPartnerProfile } from '@/routes/partner/profile';
+import { index as partnerStatistics } from '@/routes/partner/statistics';
 
 const { currentUrl, isCurrentOrParentUrl } = useCurrentUrl();
 const { t } = useTranslations();
@@ -91,6 +93,12 @@ const partnerItems = computed<BottomNavigationItem[]>(() => [
         href: partnerAnnouncements(),
         icon: Megaphone,
         activeParents: ['/partner/announcements'],
+    },
+    {
+        label: t('partners.navigation.statistics'),
+        href: partnerStatistics(),
+        icon: ChartBar,
+        activeParents: ['/partner/statistics'],
     },
 ]);
 

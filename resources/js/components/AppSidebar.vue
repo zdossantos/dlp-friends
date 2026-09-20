@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Link, usePage } from '@inertiajs/vue3';
 import {
+    ChartBar,
     GraduationCap,
     Images,
     LayoutDashboard,
@@ -33,6 +34,7 @@ import { index as partnerProfileIndex } from '@/routes/admin/partner-profiles';
 import { show as showProfile } from '@/routes/member-profile';
 import { index as partnerAnnouncements } from '@/routes/partner/announcements';
 import { edit as editPartnerProfile } from '@/routes/partner/profile';
+import { index as partnerStatistics } from '@/routes/partner/statistics';
 import type { NavItem } from '@/types';
 
 const { t } = useTranslations();
@@ -89,6 +91,11 @@ const partnerNavItems: NavItem[] = [
         title: t('partners.navigation.announcements'),
         href: partnerAnnouncements(),
         icon: Megaphone,
+    },
+    {
+        title: t('partners.navigation.statistics'),
+        href: partnerStatistics(),
+        icon: ChartBar,
     },
 ];
 </script>

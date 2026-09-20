@@ -37,3 +37,22 @@ export type PartnerAnnouncement = {
     canCancel: boolean;
     canRevise: boolean;
 };
+
+export type PartnerAnnouncementStatistics = {
+    id: number;
+    title: string;
+    status: PartnerAnnouncementStatus;
+    prepared: number;
+    delivered: number;
+    read: number;
+    dismissed: number;
+    unique_clicks: number;
+    total_clicks: number;
+    read_rate: number;
+    dismiss_rate: number;
+    unique_click_rate: number;
+    partner_name?: string | null;
+    pending?: number;
+    failed?: number;
+    skipped?: number;
+};

@@ -20,6 +20,7 @@ use App\Http\Controllers\Admin\PartnerProfileController as AdminPartnerProfileCo
 use App\Http\Controllers\Admin\PartnerProfileDecisionController;
 use App\Http\Controllers\Admin\PartnerProfileOrderController;
 use App\Http\Controllers\Admin\PartnerSettingController;
+use App\Http\Controllers\Admin\PartnerStatisticsController as AdminPartnerStatisticsController;
 use App\Http\Controllers\Admin\ProductOnboardingController as AdminProductOnboardingController;
 use App\Http\Controllers\Auth\SocialAuthController;
 use App\Http\Controllers\Auth\SocialRegistrationController;
@@ -55,6 +56,7 @@ use App\Http\Controllers\Partner\AnnouncementSubmissionController;
 use App\Http\Controllers\Partner\ProfileController as PartnerProfileController;
 use App\Http\Controllers\Partner\ProfileImageController as PartnerProfileImageController;
 use App\Http\Controllers\Partner\ProfileSubmissionController as PartnerProfileSubmissionController;
+use App\Http\Controllers\Partner\StatisticsController as PartnerStatisticsController;
 use App\Http\Controllers\PartnerAnnouncementClickController;
 use App\Http\Controllers\PartnerAnnouncementDismissController;
 use App\Http\Controllers\PresenceHeartbeatController;
@@ -141,6 +143,8 @@ Route::middleware(['auth', 'verified', 'social'])->group(function (): void {
             ->name('announcements.cancel');
         Route::post('announcements/{announcement}/revise', AnnouncementRevisionController::class)
             ->name('announcements.revise');
+        Route::get('statistics', PartnerStatisticsController::class)
+            ->name('statistics.index');
     });
 
     Route::middleware('role:user')->group(function (): void {
@@ -244,6 +248,8 @@ Route::middleware(['auth', 'verified', 'social'])->group(function (): void {
             ->name('partner-announcements.dispatch');
         Route::post('partner-announcements/{announcement}/retry', PartnerAnnouncementRetryController::class)
             ->name('partner-announcements.retry');
+        Route::get('partner-statistics', AdminPartnerStatisticsController::class)
+            ->name('partner-statistics.index');
         Route::patch('partner-settings', PartnerSettingController::class)
             ->name('partner-settings.update');
         Route::get('partner-profiles', [AdminPartnerProfileController::class, 'index'])

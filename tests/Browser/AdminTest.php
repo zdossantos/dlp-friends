@@ -1,5 +1,7 @@
 <?php
 
+use App\Enums\PartnerAnnouncementStatus;
+use App\Enums\PartnerDeliveryStatus;
 use App\Enums\PartnerRevisionStatus;
 use App\Enums\ProductOnboardingStatus;
 use App\Enums\ProductOnboardingStep;
@@ -8,6 +10,9 @@ use App\Models\Avatar;
 use App\Models\Interest;
 use App\Models\InterestCategory;
 use App\Models\InterestSetting;
+use App\Models\PartnerAnnouncement;
+use App\Models\PartnerAnnouncementDelivery;
+use App\Models\PartnerAnnouncementMetric;
 use App\Models\PartnerProfile;
 use App\Models\PartnerProfileRevision;
 use App\Models\ProductOnboarding;
@@ -17,6 +22,73 @@ use Illuminate\Contracts\Debug\ExceptionHandler as ExceptionHandlerContract;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
+
+test('partner statistics stay readable and private on a mobile screen', function () {
+    $partner = User::factory()->partner()->create();
+    $profile = PartnerProfile::factory()->for($partner)->published()->create();
+    $announcement = PartnerAnnouncement::factory()->for($profile)->sent()->create([
+        'title' => 'Bilan de la campagne amicale',
+    ]);
+    PartnerAnnouncementMetric::query()->create([
+        'partner_announcement_id' => $announcement->id,
+        'prepared_count' => 10,
+        'delivered_count' => 8,
+        'read_count' => 4,
+        'dismissed_count' => 2,
+        'unique_click_count' => 2,
+        'total_click_count' => 5,
+    ]);
+    $recipient = User::factory()->create([
+        'email' => 'browser-recipient-secret@example.test',
+    ]);
+    PartnerAnnouncementDelivery::factory()
+        ->for($announcement, 'announcement')
+        ->for($recipient)
+        ->create(['status' => PartnerDeliveryStatus::Delivered]);
+    $this->actingAs($partner);
+
+    visit('/partner/statistics')->on()->mobile()
+        ->assertSee('Statistiques partenaire')
+        ->assertSee('Bilan de la campagne amicale')
+        ->assertSee('50,0 %')
+        ->assertDontSee('browser-recipient-secret@example.test')
+        ->assertPresent('[data-test="partner-statistics-table"]')
+        ->assertPresent('a[href="/partner/statistics"][aria-current="page"]')
+        ->assertScript('document.documentElement.scrollWidth <= window.innerWidth', true)
+        ->assertNoJavaScriptErrors();
+});
+
+test('admin partner statistics expose operational counts and retry in English', function () {
+    $admin = User::factory()->admin()->partner()->create(['locale' => 'en']);
+    $partner = User::factory()->partner()->create();
+    $profile = PartnerProfile::factory()->for($partner)->published()->create();
+    $announcement = PartnerAnnouncement::factory()->for($profile)->create([
+        'title' => 'Operational campaign',
+        'status' => PartnerAnnouncementStatus::Sending,
+    ]);
+    PartnerAnnouncementMetric::query()->create([
+        'partner_announcement_id' => $announcement->id,
+        'prepared_count' => 3,
+        'delivered_count' => 1,
+        'read_count' => 1,
+    ]);
+    foreach ([PartnerDeliveryStatus::Pending, PartnerDeliveryStatus::Failed, PartnerDeliveryStatus::Skipped] as $status) {
+        PartnerAnnouncementDelivery::factory()
+            ->for($announcement, 'announcement')
+            ->create(['status' => $status]);
+    }
+    $this->actingAs($admin);
+
+    visit('/admin/partner-statistics')
+        ->assertSee('Partner statistics')
+        ->assertSee('Operational campaign')
+        ->assertSee('Pending')
+        ->assertSee('Failed')
+        ->assertSee('Skipped')
+        ->assertPresent("[data-test=\"retry-partner-announcement-{$announcement->id}\"]")
+        ->assertPresent('a[href="/partner/statistics"]')
+        ->assertNoJavaScriptErrors();
+});
 
 test('an admin reviews publishes orders and unpublishes partner profiles accessibly', function () {
     config()->set('filesystems.default', 's3');

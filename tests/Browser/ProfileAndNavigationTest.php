@@ -586,15 +586,15 @@ test('partner mobile navigation exposes only implemented partner destinations', 
 
     visit('/partner/profile')
         ->on()->mobile()
-        ->assertCount('[data-test="member-bottom-navigation"] a', 2)
+        ->assertCount('[data-test="member-bottom-navigation"] a', 3)
         ->assertPresent('[aria-label="Profil partenaire"][aria-current="page"]')
         ->assertPresent('[aria-label="Annonces partenaire"]')
-        ->assertDontSee('Statistiques')
+        ->assertPresent('[aria-label="Statistiques partenaire"]')
         ->assertNoJavaScriptErrors();
 
     visit('/partner/announcements')
         ->on()->mobile()
-        ->assertCount('[data-test="member-bottom-navigation"] a', 2)
+        ->assertCount('[data-test="member-bottom-navigation"] a', 3)
         ->assertPresent('[aria-label="Annonces partenaire"][aria-current="page"]')
         ->assertNoJavaScriptErrors();
 });
@@ -608,7 +608,7 @@ test('partner sidebar navigation disappears on the first render after role remov
         ->assertSee('Espace partenaire')
         ->assertSeeLink('Profil partenaire')
         ->assertSeeLink('Annonces partenaire')
-        ->assertDontSee('Statistiques partenaire');
+        ->assertSeeLink('Statistiques partenaire');
 
     $partnerRole = Role::query()->where('name', RoleName::Partner)->firstOrFail();
     $admin->roles()->detach($partnerRole);
@@ -617,5 +617,6 @@ test('partner sidebar navigation disappears on the first render after role remov
         ->assertDontSee('Espace partenaire')
         ->assertDontSeeLink('Profil partenaire')
         ->assertDontSeeLink('Annonces partenaire')
+        ->assertDontSeeLink('Statistiques partenaire')
         ->assertNoJavaScriptErrors();
 });
