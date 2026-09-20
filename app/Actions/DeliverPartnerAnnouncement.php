@@ -3,11 +3,11 @@
 namespace App\Actions;
 
 use App\Enums\PartnerDeliveryStatus;
+use App\Jobs\BroadcastPartnerAnnouncement as BroadcastPartnerAnnouncementJob;
 use App\Models\PartnerAnnouncementDelivery;
 use App\Models\PartnerAnnouncementMetric;
 use App\Models\User;
 use App\Notifications\PartnerAnnouncementNotification;
-use Illuminate\Notifications\Channels\BroadcastChannel;
 use Illuminate\Notifications\Channels\DatabaseChannel;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -69,9 +69,8 @@ final class DeliverPartnerAnnouncement
                     ->where('partner_announcement_id', $locked->partner_announcement_id)
                     ->increment('delivered_count');
 
-                DB::afterCommit(static function () use ($recipient, $notification): void {
-                    app(BroadcastChannel::class)->send($recipient, $notification);
-                });
+                $deliveryId = $locked->id;
+                DB::afterCommit(static fn () => BroadcastPartnerAnnouncementJob::dispatch($deliveryId));
             });
         } catch (Throwable $exception) {
             DB::transaction(function () use ($delivery): void {

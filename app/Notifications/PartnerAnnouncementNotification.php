@@ -9,7 +9,11 @@ use Illuminate\Notifications\Notification;
 
 final class PartnerAnnouncementNotification extends Notification
 {
-    public function __construct(public PartnerAnnouncement $announcement) {}
+    /** @param array<string, mixed>|null $persistedData */
+    public function __construct(
+        public PartnerAnnouncement $announcement,
+        private ?array $persistedData = null,
+    ) {}
 
     /** @return list<string> */
     public function via(User $notifiable): array
@@ -17,9 +21,13 @@ final class PartnerAnnouncementNotification extends Notification
         return ['database', 'broadcast'];
     }
 
-    /** @return array{category: string, translation_key: string, parameters: array{announcement: string}, announcement_id: int, target_type: string, target_id: int} */
+    /** @return array<string, mixed> */
     public function toArray(User $notifiable): array
     {
+        if ($this->persistedData !== null) {
+            return $this->persistedData;
+        }
+
         return [
             'category' => 'partners',
             'translation_key' => 'notifications.items.partner_announcement',

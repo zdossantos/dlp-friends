@@ -26,6 +26,7 @@ class PartnerAnnouncementDeliveryFactory extends Factory
             'attempts' => 0,
             'last_error' => null,
             'delivered_at' => null,
+            'broadcasted_at' => null,
             'read_at' => null,
             'dismissed_at' => null,
             'first_clicked_at' => null,

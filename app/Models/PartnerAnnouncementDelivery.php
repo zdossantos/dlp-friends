@@ -21,6 +21,7 @@ use Illuminate\Notifications\DatabaseNotification;
  * @property int $attempts
  * @property string|null $last_error
  * @property CarbonImmutable|null $delivered_at
+ * @property CarbonImmutable|null $broadcasted_at
  * @property CarbonImmutable|null $read_at
  * @property CarbonImmutable|null $dismissed_at
  * @property CarbonImmutable|null $first_clicked_at
@@ -38,6 +39,7 @@ use Illuminate\Notifications\DatabaseNotification;
     'attempts',
     'last_error',
     'delivered_at',
+    'broadcasted_at',
     'read_at',
     'dismissed_at',
     'first_clicked_at',
@@ -73,6 +75,7 @@ class PartnerAnnouncementDelivery extends Model
             'status' => PartnerDeliveryStatus::class,
             'attempts' => 'integer',
             'delivered_at' => 'immutable_datetime',
+            'broadcasted_at' => 'immutable_datetime',
             'read_at' => 'immutable_datetime',
             'dismissed_at' => 'immutable_datetime',
             'first_clicked_at' => 'immutable_datetime',

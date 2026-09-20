@@ -8,6 +8,7 @@ use App\Enums\PartnerAnnouncementStatus;
 use App\Enums\PartnerDeliveryStatus;
 use App\Enums\RoleName;
 use App\Enums\UserStatus;
+use App\Jobs\BroadcastPartnerAnnouncement as BroadcastPartnerAnnouncementJob;
 use App\Jobs\DeliverPartnerAnnouncement as DeliverPartnerAnnouncementJob;
 use App\Jobs\PreparePartnerAnnouncementAudience as PreparePartnerAnnouncementAudienceJob;
 use App\Models\PartnerAnnouncement;
@@ -302,12 +303,13 @@ test('a rolled back delivery transaction never queues its broadcast', function (
     }
 
     Queue::assertNotPushed(BroadcastEvent::class);
+    Queue::assertNotPushed(BroadcastPartnerAnnouncementJob::class);
     expect($delivery->fresh()?->status)->toBe(PartnerDeliveryStatus::Pending)
         ->and($user->notifications()->count())->toBe(0)
         ->and($announcement->metric?->fresh()?->delivered_count)->toBe(0);
 });
 
-test('a successful delivery queues one broadcast after commit with the persisted identity and data', function () {
+test('a successful delivery durably queues its broadcast only after commit', function () {
     Queue::fake();
     expect(config('queue.connections.database.after_commit'))->toBeFalse();
     $user = dispatchEligibleUser();
@@ -319,6 +321,7 @@ test('a successful delivery queues one broadcast after commit with the persisted
     try {
         app(DeliverPartnerAnnouncement::class)->handle($delivery);
         Queue::assertNotPushed(BroadcastEvent::class);
+        Queue::assertNotPushed(BroadcastPartnerAnnouncementJob::class);
         $notification = $user->notifications()->firstOrFail();
         DB::commit();
     } finally {
@@ -327,14 +330,117 @@ test('a successful delivery queues one broadcast after commit with the persisted
         }
     }
 
+    Queue::assertPushed(
+        BroadcastPartnerAnnouncementJob::class,
+        fn (BroadcastPartnerAnnouncementJob $job): bool => $job->deliveryId === $delivery->id,
+    );
+    Queue::assertNotPushed(BroadcastEvent::class);
+    expect($delivery->fresh()?->notification_id)->toBe($notification->id)
+        ->and($delivery->fresh()?->broadcasted_at)->toBeNull()
+        ->and($announcement->metric?->fresh()?->delivered_count)->toBe(1);
+});
+
+test('an admin retry recovers a failed post commit broadcast without duplicating delivery side effects', function () {
+    $queue = Queue::fake();
+    $queue->beforePushing(static function (object $job): void {
+        if ($job instanceof BroadcastPartnerAnnouncementJob) {
+            throw new RuntimeException('broadcast queue unavailable');
+        }
+    });
+    $admin = User::factory()->admin()->create();
+    $user = dispatchEligibleUser();
+    $announcement = sendingAnnouncement(['audience_prepared_at' => now()]);
+    $delivery = PartnerAnnouncementDelivery::factory()->for($announcement, 'announcement')->for($user)->create();
+
+    expect(fn () => app(DeliverPartnerAnnouncement::class)->handle($delivery))
+        ->toThrow(RuntimeException::class, 'broadcast queue unavailable');
+
+    $delivered = $delivery->fresh();
+    $notification = $user->notifications()->firstOrFail();
+    $persistedData = $notification->data;
+    expect($delivered?->status)->toBe(PartnerDeliveryStatus::Delivered)
+        ->and($delivered?->broadcasted_at)->toBeNull()
+        ->and($user->notifications()->count())->toBe(1)
+        ->and($announcement->metric?->fresh()?->delivered_count)->toBe(1);
+
+    $announcement->update([
+        'status' => PartnerAnnouncementStatus::Sent,
+        'sent_at' => now(),
+        'title' => 'A title changed after database delivery',
+    ]);
+
+    Queue::fake();
+    $this->actingAs($admin)
+        ->post(route('admin.partner-announcements.retry', $announcement))
+        ->assertRedirect(route('admin.partner-announcements.index'));
+    Queue::assertPushed(BroadcastPartnerAnnouncementJob::class, 1);
+    Queue::assertNotPushed(PreparePartnerAnnouncementAudienceJob::class);
+
+    $broadcast = Queue::pushed(BroadcastPartnerAnnouncementJob::class)->firstOrFail();
+    Queue::fake();
+    app()->call([$broadcast, 'handle']);
+
+    Queue::assertPushed(
+        BroadcastEvent::class,
+        fn (BroadcastEvent $job): bool => $job->event instanceof BroadcastNotificationCreated
+            && $job->event->notification->id === $notification->id
+            && $job->event->data === ['id' => $notification->id, ...$persistedData],
+    );
+    expect($delivery->fresh()?->broadcasted_at)->not->toBeNull()
+        ->and($user->notifications()->count())->toBe(1)
+        ->and($announcement->metric?->fresh()?->delivered_count)->toBe(1);
+
+    app()->call([$broadcast, 'handle']);
+
     Queue::assertPushed(BroadcastEvent::class, 1);
+    expect($user->notifications()->count())->toBe(1)
+        ->and($announcement->metric?->fresh()?->delivered_count)->toBe(1);
+});
+
+test('a failed broadcast transport push remains retryable with the same notification identity', function () {
+    Queue::fake();
+    $admin = User::factory()->admin()->create();
+    $user = dispatchEligibleUser();
+    $announcement = sendingAnnouncement(['audience_prepared_at' => now()]);
+    $delivery = PartnerAnnouncementDelivery::factory()->for($announcement, 'announcement')->for($user)->create();
+
+    app(DeliverPartnerAnnouncement::class)->handle($delivery);
+    $broadcast = Queue::pushed(BroadcastPartnerAnnouncementJob::class)->firstOrFail();
+    $notification = $user->notifications()->firstOrFail();
+
+    $queue = Queue::fake();
+    $queue->beforePushing(static function (object $job): void {
+        if ($job instanceof BroadcastEvent) {
+            throw new RuntimeException('broadcast transport unavailable');
+        }
+    });
+    expect(fn () => app()->call([$broadcast, 'handle']))
+        ->toThrow(RuntimeException::class, 'broadcast transport unavailable');
+    expect($delivery->fresh()?->broadcasted_at)->toBeNull()
+        ->and($user->notifications()->count())->toBe(1)
+        ->and($announcement->metric?->fresh()?->delivered_count)->toBe(1);
+
+    $announcement->update([
+        'status' => PartnerAnnouncementStatus::Sent,
+        'sent_at' => now(),
+    ]);
+    Queue::fake();
+    $this->actingAs($admin)
+        ->post(route('admin.partner-announcements.retry', $announcement))
+        ->assertRedirect(route('admin.partner-announcements.index'));
+    $retry = Queue::pushed(BroadcastPartnerAnnouncementJob::class)->firstOrFail();
+
+    Queue::fake();
+    app()->call([$retry, 'handle']);
+
     Queue::assertPushed(
         BroadcastEvent::class,
         fn (BroadcastEvent $job): bool => $job->event instanceof BroadcastNotificationCreated
             && $job->event->notification->id === $notification->id
             && $job->event->data === ['id' => $notification->id, ...$notification->data],
     );
-    expect($delivery->fresh()?->notification_id)->toBe($notification->id)
+    expect($delivery->fresh()?->broadcasted_at)->not->toBeNull()
+        ->and($user->notifications()->count())->toBe(1)
         ->and($announcement->metric?->fresh()?->delivered_count)->toBe(1);
 });
 

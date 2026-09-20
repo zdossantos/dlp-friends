@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Enums\PartnerAnnouncementStatus;
 use App\Enums\PartnerDeliveryStatus;
 use App\Http\Controllers\Controller;
+use App\Jobs\BroadcastPartnerAnnouncement;
 use App\Jobs\PreparePartnerAnnouncementAudience;
 use App\Models\PartnerAnnouncement;
 use App\Models\PartnerAnnouncementDelivery;
@@ -28,27 +29,46 @@ final class PartnerAnnouncementRetryController extends Controller
                 ->lockForUpdate()
                 ->firstOrFail();
 
-            if ($locked->status !== PartnerAnnouncementStatus::Sending) {
+            if (! in_array($locked->status, [
+                PartnerAnnouncementStatus::Sending,
+                PartnerAnnouncementStatus::Sent,
+            ], true)) {
                 throw ValidationException::withMessages([
                     'announcement' => __('notifications.admin.not_sending'),
                 ]);
             }
 
+            if ($locked->status === PartnerAnnouncementStatus::Sending) {
+                PartnerAnnouncementDelivery::query()
+                    ->where('partner_announcement_id', $locked->id)
+                    ->where('status', PartnerDeliveryStatus::Failed)
+                    ->orderBy('id')
+                    ->lockForUpdate()
+                    ->get()
+                    ->each(static function (PartnerAnnouncementDelivery $delivery): void {
+                        $delivery->update([
+                            'status' => PartnerDeliveryStatus::Pending,
+                            'last_error' => null,
+                        ]);
+                    });
+            }
+
             PartnerAnnouncementDelivery::query()
                 ->where('partner_announcement_id', $locked->id)
-                ->where('status', PartnerDeliveryStatus::Failed)
+                ->where('status', PartnerDeliveryStatus::Delivered)
+                ->whereNotNull('notification_id')
+                ->whereNull('broadcasted_at')
                 ->orderBy('id')
                 ->lockForUpdate()
-                ->get()
-                ->each(static function (PartnerAnnouncementDelivery $delivery): void {
-                    $delivery->update([
-                        'status' => PartnerDeliveryStatus::Pending,
-                        'last_error' => null,
-                    ]);
+                ->pluck('id')
+                ->each(static function (int $deliveryId): void {
+                    DB::afterCommit(static fn () => BroadcastPartnerAnnouncement::dispatch($deliveryId));
                 });
 
-            $announcementId = $locked->id;
-            DB::afterCommit(static fn () => PreparePartnerAnnouncementAudience::dispatch($announcementId));
+            if ($locked->status === PartnerAnnouncementStatus::Sending) {
+                $announcementId = $locked->id;
+                DB::afterCommit(static fn () => PreparePartnerAnnouncementAudience::dispatch($announcementId));
+            }
         });
 
         return to_route('admin.partner-announcements.index')
