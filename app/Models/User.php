@@ -193,6 +193,23 @@ class User extends Authenticatable implements HasLocalePreference, MustVerifyEma
         return $this->hasMany(PartnerAnnouncementDelivery::class);
     }
 
+    /** @param Builder<User> $query */
+    public function scopeEligibleForPartnerAnnouncements(Builder $query): void
+    {
+        $query
+            ->where('status', UserStatus::Active)
+            ->whereNotNull('email_verified_at')
+            ->whereNull('deletion_requested_at')
+            ->whereHas(
+                'roles',
+                fn (Builder $roles) => $roles->where('name', RoleName::User),
+            )
+            ->whereHas(
+                'partnerNotificationPreference',
+                fn (Builder $preferences) => $preferences->where('enabled', true),
+            );
+    }
+
     /** @return HasMany<RoleAudit, $this> */
     public function roleAuditsAsActor(): HasMany
     {

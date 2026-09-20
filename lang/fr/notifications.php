@@ -15,6 +15,7 @@ return [
         'all' => 'Toutes',
         'conversations' => 'Conversations',
         'events' => 'Événements',
+        'partners' => 'Partenaires',
         'unread_only' => 'Non lues uniquement',
     ],
     'actions' => ['mark_all_read' => 'Tout marquer comme lu'],
@@ -26,7 +27,14 @@ return [
         'event_removed' => 'Tu ne participes plus à « :event ».',
         'event_changed' => 'La date ou le lieu de « :event » a changé.',
         'event_cancelled' => '« :event » a été annulé.',
+        'partner_announcement' => 'Nouvelle annonce partenaire : « :announcement ».',
         'unread' => 'Non lue',
     ],
     'accessibility' => ['unread_count' => ':count notifications non lues'],
+    'admin' => [
+        'dispatch_started' => 'La diffusion de l’annonce partenaire a démarré.',
+        'retry_started' => 'La reprise des livraisons en échec a démarré.',
+        'not_sending' => 'Seule une annonce en cours de diffusion peut être reprise.',
+        'not_approved' => 'Seule une annonce approuvée peut être diffusée.',
+    ],
 ];

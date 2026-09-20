@@ -15,6 +15,7 @@ return [
         'all' => 'All',
         'conversations' => 'Conversations',
         'events' => 'Events',
+        'partners' => 'Partners',
         'unread_only' => 'Unread only',
     ],
     'actions' => ['mark_all_read' => 'Mark all as read'],
@@ -26,7 +27,14 @@ return [
         'event_removed' => 'You are no longer attending “:event”.',
         'event_changed' => 'The date or location of “:event” changed.',
         'event_cancelled' => '“:event” was cancelled.',
+        'partner_announcement' => 'New partner announcement: “:announcement”.',
         'unread' => 'Unread',
     ],
     'accessibility' => ['unread_count' => ':count unread notifications'],
+    'admin' => [
+        'dispatch_started' => 'The partner announcement dispatch has started.',
+        'retry_started' => 'Retrying failed deliveries has started.',
+        'not_sending' => 'Only an announcement being dispatched can be retried.',
+        'not_approved' => 'Only an approved announcement can be dispatched.',
+    ],
 ];

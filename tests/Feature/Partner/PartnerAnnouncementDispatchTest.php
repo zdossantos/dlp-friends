@@ -1,0 +1,277 @@
+<?php
+
+use App\Actions\DeliverPartnerAnnouncement;
+use App\Actions\FinalizePartnerAnnouncement;
+use App\Actions\PreparePartnerAnnouncementAudience;
+use App\Actions\StartPartnerAnnouncement;
+use App\Enums\PartnerAnnouncementStatus;
+use App\Enums\PartnerDeliveryStatus;
+use App\Enums\RoleName;
+use App\Enums\UserStatus;
+use App\Jobs\DeliverPartnerAnnouncement as DeliverPartnerAnnouncementJob;
+use App\Jobs\PreparePartnerAnnouncementAudience as PreparePartnerAnnouncementAudienceJob;
+use App\Models\PartnerAnnouncement;
+use App\Models\PartnerAnnouncementDelivery;
+use App\Models\PartnerAnnouncementMetric;
+use App\Models\PartnerNotificationPreference;
+use App\Models\PartnerProfile;
+use App\Models\PartnerSetting;
+use App\Models\Role;
+use App\Models\User;
+use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Queue;
+use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
+
+uses(RefreshDatabase::class);
+
+function dispatchEligibleUser(array $attributes = []): User
+{
+    $user = User::factory()->create($attributes);
+    PartnerNotificationPreference::query()->create([
+        'user_id' => $user->id,
+        'enabled' => true,
+    ]);
+
+    return $user;
+}
+
+function sendingAnnouncement(array $attributes = []): PartnerAnnouncement
+{
+    $announcement = PartnerAnnouncement::factory()->create([
+        'status' => PartnerAnnouncementStatus::Sending,
+        'destination_url' => 'https://offers.example.com/member-benefit',
+        'run_uuid' => (string) Str::uuid(),
+        'sending_started_at' => now(),
+        ...$attributes,
+    ]);
+    PartnerAnnouncementMetric::query()->create([
+        'partner_announcement_id' => $announcement->id,
+    ]);
+
+    return $announcement;
+}
+
+test('an admin starts an approved announcement only after commit and creates its run atomically', function () {
+    Queue::fake();
+    $admin = User::factory()->admin()->create();
+    $announcement = PartnerAnnouncement::factory()->approved()->create([
+        'destination_url' => 'https://offers.example.com/start',
+    ]);
+
+    DB::beginTransaction();
+    app(StartPartnerAnnouncement::class)->handle($admin, $announcement);
+    Queue::assertNothingPushed();
+    DB::commit();
+
+    Queue::assertPushed(
+        PreparePartnerAnnouncementAudienceJob::class,
+        fn (PreparePartnerAnnouncementAudienceJob $job): bool => $job->announcementId === $announcement->id,
+    );
+    $started = $announcement->fresh();
+    expect($started?->status)->toBe(PartnerAnnouncementStatus::Sending)
+        ->and($started?->run_uuid)->not->toBeNull()
+        ->and(Str::isUuid((string) $started?->run_uuid))->toBeTrue()
+        ->and($started?->sending_started_at)->not->toBeNull()
+        ->and($started?->metric)->not->toBeNull()
+        ->and($started?->metric?->prepared_count)->toBe(0)
+        ->and($started?->metric?->delivered_count)->toBe(0);
+});
+
+test('start is admin-only, validates the state and URL, and enforces the decisive cooldown boundary', function () {
+    Queue::fake();
+    $this->travelTo('2026-09-20 12:00:00');
+    $partner = User::factory()->partnerOnly()->create();
+    $admin = User::factory()->admin()->create();
+    $profile = PartnerProfile::factory()->create();
+    PartnerSetting::current()->update(['cooldown_days' => 30]);
+    PartnerAnnouncement::factory()->for($profile)->sent()->create([
+        'destination_url' => 'https://offers.example.com/previous',
+        'sending_started_at' => now()->subDays(30)->addSecond(),
+        'sent_at' => now()->subDays(30)->addSecond(),
+    ]);
+    $approved = PartnerAnnouncement::factory()->for($profile)->approved()->create([
+        'destination_url' => 'https://offers.example.com/next',
+    ]);
+
+    expect(fn () => app(StartPartnerAnnouncement::class)->handle($partner, $approved))
+        ->toThrow(AuthorizationException::class);
+    expect(fn () => app(StartPartnerAnnouncement::class)->handle($admin, $approved))
+        ->toThrow(ValidationException::class);
+    expect($approved->fresh()?->status)->toBe(PartnerAnnouncementStatus::Approved);
+
+    $profile->announcements()->whereNotNull('sent_at')->update([
+        'sending_started_at' => now()->subDays(30),
+        'sent_at' => now()->subDays(30),
+    ]);
+    app(StartPartnerAnnouncement::class)->handle($admin, $approved);
+    expect($approved->fresh()?->status)->toBe(PartnerAnnouncementStatus::Sending);
+
+    $unsafe = PartnerAnnouncement::factory()->approved()->create([
+        'destination_url' => 'https://localhost/internal',
+    ]);
+    expect(fn () => app(StartPartnerAnnouncement::class)->handle($admin, $unsafe))
+        ->toThrow(ValidationException::class);
+});
+
+test('audience preparation inserts eligible members once in chunks and queues only new deliveries', function () {
+    Queue::fake();
+    $eligible = collect(range(1, 501))->map(fn (): User => dispatchEligibleUser());
+    $withoutConsent = User::factory()->create();
+    $unverified = dispatchEligibleUser(['email_verified_at' => null]);
+    $pendingDeletion = dispatchEligibleUser([
+        'status' => UserStatus::PendingDeletion,
+        'deletion_requested_at' => now(),
+    ]);
+    $partnerOnly = User::factory()->partnerOnly()->create();
+    PartnerNotificationPreference::query()->create([
+        'user_id' => $partnerOnly->id,
+        'enabled' => true,
+    ]);
+    $announcement = sendingAnnouncement();
+
+    app(PreparePartnerAnnouncementAudience::class)->handle($announcement);
+    app(PreparePartnerAnnouncementAudience::class)->handle($announcement->fresh());
+
+    expect($announcement->deliveries()->count())->toBe(501)
+        ->and($announcement->deliveries()->pluck('user_id')->all())
+        ->toEqualCanonicalizing($eligible->pluck('id')->all())
+        ->and($announcement->deliveries()->whereIn('user_id', [
+            $withoutConsent->id,
+            $unverified->id,
+            $pendingDeletion->id,
+            $partnerOnly->id,
+        ])->exists())->toBeFalse()
+        ->and($announcement->fresh()?->audience_prepared_at)->not->toBeNull()
+        ->and($announcement->metric?->fresh()?->prepared_count)->toBe(501);
+    Queue::assertPushed(DeliverPartnerAnnouncementJob::class, 501);
+});
+
+test('delivery rechecks every eligibility condition and skips members who became ineligible', function (string $condition) {
+    config()->set('broadcasting.default', 'null');
+    $user = dispatchEligibleUser();
+    $announcement = sendingAnnouncement(['audience_prepared_at' => now()]);
+    $delivery = PartnerAnnouncementDelivery::factory()->for($announcement, 'announcement')->for($user)->create();
+
+    match ($condition) {
+        'consent' => $user->partnerNotificationPreference()->update(['enabled' => false]),
+        'activity' => $user->forceFill(['status' => UserStatus::PendingDeletion])->save(),
+        'verification' => $user->forceFill(['email_verified_at' => null])->save(),
+        'role' => $user->roles()->detach(Role::query()->where('name', RoleName::User)->firstOrFail()),
+    };
+
+    app(DeliverPartnerAnnouncement::class)->handle($delivery);
+
+    expect($delivery->fresh()?->status)->toBe(PartnerDeliveryStatus::Skipped)
+        ->and($delivery->fresh()?->attempts)->toBe(1)
+        ->and($user->notifications()->count())->toBe(0)
+        ->and($announcement->metric?->fresh()?->delivered_count)->toBe(0);
+})->with(['consent', 'activity', 'verification', 'role']);
+
+test('delivery creates exactly one database notification and increments metrics once', function () {
+    config()->set('broadcasting.default', 'null');
+    $user = dispatchEligibleUser();
+    $announcement = sendingAnnouncement(['audience_prepared_at' => now()]);
+    $delivery = PartnerAnnouncementDelivery::factory()->for($announcement, 'announcement')->for($user)->create();
+
+    app(DeliverPartnerAnnouncement::class)->handle($delivery);
+    app(DeliverPartnerAnnouncement::class)->handle($delivery->fresh());
+
+    $delivered = $delivery->fresh();
+    expect($delivered?->status)->toBe(PartnerDeliveryStatus::Delivered)
+        ->and($delivered?->attempts)->toBe(1)
+        ->and($delivered?->notification_id)->not->toBeNull()
+        ->and($user->notifications()->count())->toBe(1)
+        ->and($user->notifications()->firstOrFail()->id)->toBe($delivered?->notification_id)
+        ->and($user->notifications()->firstOrFail()->data)->toMatchArray([
+            'category' => 'partners',
+            'translation_key' => 'notifications.items.partner_announcement',
+            'announcement_id' => $announcement->id,
+            'target_type' => 'partner_announcement',
+            'target_id' => $announcement->id,
+        ])
+        ->and($announcement->metric?->fresh()?->delivered_count)->toBe(1);
+});
+
+test('terminal delivery failure stores bounded non personal metadata and is retryable by an admin only', function () {
+    Queue::fake();
+    $admin = User::factory()->admin()->create();
+    $partner = User::factory()->partnerOnly()->create();
+    $user = dispatchEligibleUser();
+    $announcement = sendingAnnouncement(['audience_prepared_at' => now()]);
+    $failed = PartnerAnnouncementDelivery::factory()->for($announcement, 'announcement')->for($user)->create([
+        'status' => PartnerDeliveryStatus::Pending,
+        'attempts' => 3,
+    ]);
+    $delivered = PartnerAnnouncementDelivery::factory()->for($announcement, 'announcement')->create([
+        'status' => PartnerDeliveryStatus::Delivered,
+    ]);
+    $pending = PartnerAnnouncementDelivery::factory()->for($announcement, 'announcement')->create();
+    $job = new DeliverPartnerAnnouncementJob($failed->id);
+
+    $job->failed(new RuntimeException(str_repeat('alice@example.test secret-payload ', 100)));
+    expect($failed->fresh()?->status)->toBe(PartnerDeliveryStatus::Failed)
+        ->and($failed->fresh()?->last_error)->toContain('RuntimeException')
+        ->and($failed->fresh()?->last_error)->not->toContain('alice@example.test')
+        ->and($failed->fresh()?->last_error)->not->toContain('secret-payload')
+        ->and(strlen((string) $failed->fresh()?->last_error))->toBeLessThanOrEqual(1000);
+
+    $this->actingAs($partner)
+        ->post(route('admin.partner-announcements.retry', $announcement))
+        ->assertForbidden();
+    $this->actingAs($admin)
+        ->post(route('admin.partner-announcements.retry', $announcement))
+        ->assertRedirect(route('admin.partner-announcements.index'));
+
+    expect($failed->fresh()?->status)->toBe(PartnerDeliveryStatus::Pending)
+        ->and($failed->fresh()?->last_error)->toBeNull()
+        ->and($failed->fresh()?->attempts)->toBe(3)
+        ->and($delivered->fresh()?->status)->toBe(PartnerDeliveryStatus::Delivered)
+        ->and($pending->fresh()?->status)->toBe(PartnerDeliveryStatus::Pending);
+    Queue::assertPushed(
+        DeliverPartnerAnnouncementJob::class,
+        fn (DeliverPartnerAnnouncementJob $queued): bool => $queued->deliveryId === $failed->id,
+    );
+    Queue::assertPushed(DeliverPartnerAnnouncementJob::class, 1);
+});
+
+test('finalization waits for prepared audience and all deliveries to become terminal', function () {
+    $announcement = sendingAnnouncement();
+    $pending = PartnerAnnouncementDelivery::factory()->for($announcement, 'announcement')->create();
+
+    app(FinalizePartnerAnnouncement::class)->handle($announcement);
+    expect($announcement->fresh()?->status)->toBe(PartnerAnnouncementStatus::Sending);
+
+    $announcement->update(['audience_prepared_at' => now()]);
+    app(FinalizePartnerAnnouncement::class)->handle($announcement->fresh());
+    expect($announcement->fresh()?->status)->toBe(PartnerAnnouncementStatus::Sending);
+
+    $pending->update(['status' => PartnerDeliveryStatus::Failed]);
+    app(FinalizePartnerAnnouncement::class)->handle($announcement->fresh());
+    expect($announcement->fresh()?->status)->toBe(PartnerAnnouncementStatus::Sending);
+
+    $pending->update(['status' => PartnerDeliveryStatus::Skipped]);
+    app(FinalizePartnerAnnouncement::class)->handle($announcement->fresh());
+    expect($announcement->fresh()?->status)->toBe(PartnerAnnouncementStatus::Sent)
+        ->and($announcement->fresh()?->sent_at)->not->toBeNull();
+});
+
+test('the dispatch endpoint is restricted to admins', function () {
+    Queue::fake();
+    $admin = User::factory()->admin()->create();
+    $partner = User::factory()->partnerOnly()->create();
+    $announcement = PartnerAnnouncement::factory()->approved()->create([
+        'destination_url' => 'https://offers.example.com/http-start',
+    ]);
+
+    $this->actingAs($partner)
+        ->post(route('admin.partner-announcements.dispatch', $announcement))
+        ->assertForbidden();
+    $this->actingAs($admin)
+        ->post(route('admin.partner-announcements.dispatch', $announcement))
+        ->assertRedirect(route('admin.partner-announcements.index'));
+
+    expect($announcement->fresh()?->status)->toBe(PartnerAnnouncementStatus::Sending);
+});

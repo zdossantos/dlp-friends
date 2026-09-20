@@ -14,6 +14,8 @@ use App\Http\Controllers\Admin\MemberConversationController;
 use App\Http\Controllers\Admin\MemberRoleController;
 use App\Http\Controllers\Admin\PartnerAnnouncementController as AdminPartnerAnnouncementController;
 use App\Http\Controllers\Admin\PartnerAnnouncementDecisionController;
+use App\Http\Controllers\Admin\PartnerAnnouncementDispatchController;
+use App\Http\Controllers\Admin\PartnerAnnouncementRetryController;
 use App\Http\Controllers\Admin\PartnerProfileController as AdminPartnerProfileController;
 use App\Http\Controllers\Admin\PartnerProfileDecisionController;
 use App\Http\Controllers\Admin\PartnerProfileOrderController;
@@ -231,6 +233,10 @@ Route::middleware(['auth', 'verified', 'social'])->group(function (): void {
             ->name('partner-announcements.index');
         Route::patch('partner-announcements/{announcement}', PartnerAnnouncementDecisionController::class)
             ->name('partner-announcements.decide');
+        Route::post('partner-announcements/{announcement}/dispatch', PartnerAnnouncementDispatchController::class)
+            ->name('partner-announcements.dispatch');
+        Route::post('partner-announcements/{announcement}/retry', PartnerAnnouncementRetryController::class)
+            ->name('partner-announcements.retry');
         Route::patch('partner-settings', PartnerSettingController::class)
             ->name('partner-settings.update');
         Route::get('partner-profiles', [AdminPartnerProfileController::class, 'index'])
