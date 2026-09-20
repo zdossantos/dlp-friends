@@ -31,6 +31,7 @@ import { index as interestIndex } from '@/routes/admin/interests';
 import { index as memberIndex } from '@/routes/admin/members';
 import { index as onboardingIndex } from '@/routes/admin/onboarding';
 import { index as partnerProfileIndex } from '@/routes/admin/partner-profiles';
+import { index as adminPartnerStatistics } from '@/routes/admin/partner-statistics';
 import { show as showProfile } from '@/routes/member-profile';
 import { index as partnerAnnouncements } from '@/routes/partner/announcements';
 import { edit as editPartnerProfile } from '@/routes/partner/profile';
@@ -73,6 +74,11 @@ const mainNavItems: NavItem[] = [
         title: t('administration.navigation.partners'),
         href: partnerProfileIndex(),
         icon: Building2,
+    },
+    {
+        title: t('administration.navigation.partner_statistics'),
+        href: adminPartnerStatistics(),
+        icon: ChartBar,
     },
     {
         title: t('administration.navigation.back_to_profile'),

@@ -16,6 +16,7 @@ return [
         'avatars' => 'Avatars',
         'onboarding' => 'Tutoriel',
         'partners' => 'Partenaires',
+        'partner_statistics' => 'Statistiques partenaire',
         'back_to_profile' => 'Retour au profil',
         'repository' => 'Dépôt du projet',
         'documentation' => 'Documentation Laravel',

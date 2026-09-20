@@ -608,7 +608,8 @@ test('partner sidebar navigation disappears on the first render after role remov
         ->assertSee('Espace partenaire')
         ->assertSeeLink('Profil partenaire')
         ->assertSeeLink('Annonces partenaire')
-        ->assertSeeLink('Statistiques partenaire');
+        ->assertPresent('a[href="/partner/statistics"]')
+        ->assertPresent('a[href="/admin/partner-statistics"]');
 
     $partnerRole = Role::query()->where('name', RoleName::Partner)->firstOrFail();
     $admin->roles()->detach($partnerRole);
@@ -617,6 +618,7 @@ test('partner sidebar navigation disappears on the first render after role remov
         ->assertDontSee('Espace partenaire')
         ->assertDontSeeLink('Profil partenaire')
         ->assertDontSeeLink('Annonces partenaire')
-        ->assertDontSeeLink('Statistiques partenaire')
+        ->assertMissing('a[href="/partner/statistics"]')
+        ->assertPresent('a[href="/admin/partner-statistics"]')
         ->assertNoJavaScriptErrors();
 });

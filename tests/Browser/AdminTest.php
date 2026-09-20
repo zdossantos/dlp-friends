@@ -5,6 +5,7 @@ use App\Enums\PartnerDeliveryStatus;
 use App\Enums\PartnerRevisionStatus;
 use App\Enums\ProductOnboardingStatus;
 use App\Enums\ProductOnboardingStep;
+use App\Enums\RoleName;
 use App\Mail\MemberDeletedByAdminMail;
 use App\Models\Avatar;
 use App\Models\Interest;
@@ -22,6 +23,22 @@ use Illuminate\Contracts\Debug\ExceptionHandler as ExceptionHandlerContract;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
+
+test('admin without partner role opens partner statistics from admin navigation', function () {
+    $admin = User::factory()->admin()->create(['locale' => 'en']);
+
+    expect($admin->fresh('roles')->hasRole(RoleName::Partner))->toBeFalse();
+
+    $this->actingAs($admin);
+
+    visit('/dashboard')
+        ->assertSeeLink('Partner statistics')
+        ->assertPresent('a[href="/admin/partner-statistics"]')
+        ->click('Partner statistics')
+        ->assertPathIs('/admin/partner-statistics')
+        ->assertPresent('a[href="/admin/partner-statistics"][data-active="true"]')
+        ->assertNoJavaScriptErrors();
+});
 
 test('partner statistics stay readable and private on a mobile screen', function () {
     $partner = User::factory()->partner()->create();
