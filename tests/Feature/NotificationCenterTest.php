@@ -56,8 +56,10 @@ class NotificationCenterTest extends TestCase
         expect($notification->fresh()?->read_at)->toBeNull();
 
         $this->actingAs($member)
+            ->withHeader('X-Inertia', 'true')
             ->patch(route('notifications.read', $notification))
-            ->assertRedirect(route('conversations.show', $conversation, absolute: false));
+            ->assertRedirect(route('conversations.show', $conversation, absolute: false))
+            ->assertHeaderMissing('X-Inertia-Location');
         expect($notification->fresh()?->read_at)->not->toBeNull();
     }
 

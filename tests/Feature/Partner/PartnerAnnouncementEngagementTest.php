@@ -25,11 +25,21 @@ class PartnerAnnouncementEngagementTest extends TestCase
         [$member, $announcement, $notification, $delivery] = $this->deliveredNotification();
 
         $this->actingAs($member)
+            ->withHeader('X-Inertia', 'true')
             ->patch(route('notifications.read', $notification))
-            ->assertRedirect(route('partner-announcements.click', $delivery->click_token, absolute: false));
+            ->assertStatus(409)
+            ->assertHeader(
+                'X-Inertia-Location',
+                route('partner-announcements.click', $delivery->click_token, absolute: false),
+            );
         $this->actingAs($member)
+            ->withHeader('X-Inertia', 'true')
             ->patch(route('notifications.read', $notification))
-            ->assertRedirect(route('partner-announcements.click', $delivery->click_token, absolute: false));
+            ->assertStatus(409)
+            ->assertHeader(
+                'X-Inertia-Location',
+                route('partner-announcements.click', $delivery->click_token, absolute: false),
+            );
 
         expect($notification->fresh()?->read_at)->not->toBeNull()
             ->and($delivery->fresh()?->read_at)->not->toBeNull()
@@ -61,8 +71,13 @@ class PartnerAnnouncementEngagementTest extends TestCase
         $notification->markAsRead();
 
         $this->actingAs($member)
+            ->withHeader('X-Inertia', 'true')
             ->patch(route('notifications.read', $notification))
-            ->assertRedirect(route('partner-announcements.click', $delivery->click_token, absolute: false));
+            ->assertStatus(409)
+            ->assertHeader(
+                'X-Inertia-Location',
+                route('partner-announcements.click', $delivery->click_token, absolute: false),
+            );
 
         expect($delivery->fresh()?->read_at)->toBeNull()
             ->and($announcement->metric?->fresh()?->read_count)->toBe(0);
