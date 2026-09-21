@@ -27,7 +27,7 @@ final class BroadcastPartnerAnnouncement
             $recipient = $delivery->user()->firstOrFail();
             $databaseNotification = $delivery->notification()->firstOrFail();
             $notification = new PartnerAnnouncementNotification(
-                $delivery->announcement()->firstOrFail(),
+                $delivery->announcement()->first(),
                 $databaseNotification->data,
             );
             $notification->id = (string) $databaseNotification->id;

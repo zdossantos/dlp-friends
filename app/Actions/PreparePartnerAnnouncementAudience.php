@@ -41,6 +41,10 @@ final class PreparePartnerAnnouncementAudience
                         $now = now();
                         $rows = $users->map(fn (User $user): array => [
                             'partner_announcement_id' => $locked->id,
+                            'source_announcement_id' => $locked->id,
+                            'announcement_title' => $locked->title,
+                            'announcement_content' => $locked->content,
+                            'announcement_destination_url' => $locked->destination_url,
                             'user_id' => $user->id,
                             'click_token' => hash('sha256', Str::uuid()->toString()),
                             'status' => PartnerDeliveryStatus::Pending->value,

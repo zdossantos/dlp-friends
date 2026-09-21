@@ -167,6 +167,13 @@ puis créent au plus une notification Laravel. Les états de livraison sont
 `pending`, `delivered`, `skipped` ou `failed`, avec le nombre de tentatives et
 une erreur technique bornée ne contenant aucune donnée sensible.
 
+Chaque livraison conserve aussi un instantané immuable du titre, du contenu et
+de l'URL de destination, ainsi que l'identifiant public de l'annonce source.
+Cet instantané ne contient ni identité de compte expéditeur, ni destinataire,
+ni secret opérationnel. Sa relation vers l'annonce source devient nulle lorsque
+cette dernière est purgée : l'historique du destinataire et son lien restent
+alors utilisables jusqu'au propre cycle de suppression du destinataire.
+
 La notification Laravel en base, le passage de la livraison à `delivered` et
 la métrique de livraison sont validés atomiquement et au plus une fois. Une
 reprise de livraison remet explicitement les échecs à `pending`, puis ré-enfile
@@ -210,6 +217,8 @@ total. Aucun paramètre identifiant le membre n'est ajouté à la destination.
 Lecture, masquage et clic mettent à jour dans la même transaction la livraison
 et les agrégats de l'annonce. Des contraintes et mises à jour atomiques
 empêchent un double comptage unique sous concurrence.
+Lorsque l'annonce et ses agrégats ont atteint leur échéance, les interactions
+restent enregistrées sur la livraison du destinataire sans recréer de métrique.
 
 ## Statistiques
 
@@ -279,8 +288,13 @@ La demande de suppression rend immédiatement invisibles les fiches du
 partenaire et annule ses annonces `draft`, `pending_approval` ou `approved`.
 Une annonce déjà `sending` n'accepte plus de nouvelles livraisons et ses jobs
 restants deviennent `skipped`. La purge différée supprime préférences,
-révisions non nécessaires, images privées et livraisons identifiables. Les
-agrégats anonymes et audits minimaux restent jusqu'à leur échéance de deux ans.
+révisions non nécessaires, images privées et livraisons dont le compte supprimé
+était destinataire. Les livraisons appartenant à d'autres destinataires ne sont
+pas supprimées avec l'expéditeur : elles perdent leur relation à l'annonce à
+l'échéance de celle-ci et gardent seulement l'instantané reçu. Les agrégats
+anonymes et audits minimaux restent jusqu'à leur échéance de deux ans. Une
+révision encore publiée est toujours exclue de la purge, même si son
+`expires_at` est dépassé ; seul l'historique non actif expire.
 
 ## Erreurs et cohérence
 
@@ -288,6 +302,13 @@ Les Form Requests gèrent les validations HTTP ; les Policies refusent les
 accès ; les Actions transactionnelles portent publication, approbation,
 démarrage et statistiques. Une erreur d'image ne remplace jamais la révision
 publique. Une transaction échouée ne crée ni notification ni compteur.
+
+Les mutations concurrentes du cycle partenaire prennent leurs verrous dans
+l'ordre global `user` → `partner_profile` → `partner_announcement` →
+`partner_announcement_delivery` → `partner_announcement_metric`. Les verrous
+singleton de classement précèdent le jeu ordonné des fiches dans les seules
+actions de modération concernées. L'approbation verrouille et revalide le
+propriétaire actif avant de publier une révision.
 
 Les conflits d'état et de délai renvoient une erreur métier localisée sans
 révéler l'existence d'une ressource inaccessible. Les erreurs techniques de

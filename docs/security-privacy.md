@@ -47,6 +47,18 @@ expiration automatique, au plus 30 jours après leur création.
 - Documenter, avant mise en production, les durées de conservation et la politique de confidentialité applicable.
 - L’export JSON des données de compte, profil, intérêts, matches et messages est généré à la demande dans une réponse authentifiée téléchargée directement. Aucun fichier d’export n’est conservé côté serveur. Les messages exportés sont uniquement ceux envoyés par le membre dans les conversations visibles dans sa liste ; les profils masqués et toute relation bloquée dans un sens ou dans l’autre en sont exclus. Il exclut mots de passe, secrets, jetons et données inutiles sur les autres membres.
 - L’export inclut les événements organisés, les inscriptions du membre, les messages de discussion d’événement qu’il a lui-même envoyés et ses notifications persistantes, sans exposer les inscriptions privées ni les messages d’autrui.
+- L'export inclut toutes les données partenaires propres au compte : consentement,
+  historique de rôle ciblé, fiche et révisions possédées, annonces et agrégats,
+  ainsi que les annonces qu'il a lui-même reçues et ses interactions. Il exclut
+  les chemins de stockage, jetons de clic, identifiants de notification ou de
+  destinataire, erreurs techniques, identité des acteurs et toute interaction
+  individuelle d'un autre membre.
+- La suppression d'un partenaire dépublie immédiatement sa fiche, refuse ses
+  révisions en attente, annule ses annonces actives et neutralise les livraisons
+  encore en attente. Sa purge retire ses préférences et ses propres livraisons,
+  mais ne retire pas l'historique des autres destinataires. Celui-ci conserve
+  seulement l'instantané public reçu, sans identité de compte expéditeur ni
+  secret, jusqu'au propre cycle de suppression du destinataire.
 - Les sauvegardes ne sont pas modifiées rétroactivement lors d'une suppression ; leur rotation automatique est limitée à 30 jours.
 
 ## Autorisation et protection applicative

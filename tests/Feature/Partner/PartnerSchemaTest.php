@@ -37,7 +37,9 @@ class PartnerSchemaTest extends TestCase
             'decided_by', 'decided_at', 'rejection_reason', 'expires_at',
         ]));
         $this->assertTrue(Schema::hasColumns('partner_announcement_deliveries', [
-            'partner_announcement_id', 'user_id', 'notification_id', 'click_token',
+            'partner_announcement_id', 'source_announcement_id', 'announcement_title',
+            'announcement_content', 'announcement_destination_url', 'user_id',
+            'notification_id', 'click_token',
             'status', 'attempts', 'last_error', 'delivered_at', 'read_at',
             'dismissed_at', 'first_clicked_at', 'click_count',
         ]));

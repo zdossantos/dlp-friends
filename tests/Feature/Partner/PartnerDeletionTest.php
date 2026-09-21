@@ -2,8 +2,11 @@
 
 namespace Tests\Feature\Partner;
 
+use App\Actions\ApprovePartnerProfileRevision;
+use App\Actions\BuildUserDataExport;
 use App\Actions\DeleteMember;
 use App\Actions\PreparePartnerAnnouncementAudience;
+use App\Actions\RecordPartnerAnnouncementClick;
 use App\Actions\RequestAccountDeletion;
 use App\Enums\PartnerAnnouncementStatus;
 use App\Enums\PartnerDeliveryStatus;
@@ -22,6 +25,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\ValidationException;
 use Tests\TestCase;
 
 class PartnerDeletionTest extends TestCase
@@ -42,6 +46,11 @@ class PartnerDeletionTest extends TestCase
         Queue::fake();
         $partner = User::factory()->partner()->create();
         $profile = PartnerProfile::factory()->for($partner)->published()->create();
+        $pendingRevision = PartnerProfileRevision::factory()->for($profile)->create([
+            'status' => PartnerRevisionStatus::PendingApproval,
+            'submitted_at' => now()->subMinute(),
+            'draft_key' => null,
+        ]);
 
         $announcements = collect([
             PartnerAnnouncementStatus::Draft,
@@ -68,6 +77,20 @@ class PartnerDeletionTest extends TestCase
 
         $this->assertSame(UserStatus::PendingDeletion, $partner->fresh()?->status);
         $this->assertFalse($profile->fresh()?->is_published ?? true);
+        $this->assertSame(PartnerRevisionStatus::Rejected, $pendingRevision->fresh()?->status);
+        $this->assertTrue($pendingRevision->fresh()?->decided_at?->equalTo(now()) ?? false);
+        $this->assertTrue($pendingRevision->fresh()?->expires_at?->equalTo(now()->addYears(2)) ?? false);
+
+        try {
+            app(ApprovePartnerProfileRevision::class)->handle(
+                User::factory()->admin()->create(),
+                $pendingRevision,
+            );
+            $this->fail('A revision belonging to a deleting partner must not be publishable.');
+        } catch (ValidationException) {
+            $this->assertFalse($profile->fresh()?->is_published ?? true);
+        }
+
         foreach ($announcements as $announcement) {
             $this->assertSame(PartnerAnnouncementStatus::Cancelled, $announcement->fresh()?->status);
         }
@@ -143,6 +166,75 @@ class PartnerDeletionTest extends TestCase
         Storage::disk('s3')->assertExists($retainedPath);
     }
 
+    public function test_sender_purge_preserves_the_recipients_snapshot_export_and_click_history_without_sender_identity(): void
+    {
+        Mail::fake();
+        $sender = User::factory()->partner()->withProfile()->create([
+            'email' => 'deleted-sender@example.test',
+        ]);
+        $profile = PartnerProfile::factory()->for($sender)->create();
+        $announcement = PartnerAnnouncement::factory()->for($profile)->sent()->create([
+            'title' => 'Avantage reçu',
+            'content' => 'Contenu public conservé pour le destinataire.',
+            'destination_url' => 'https://offers.example.test/preserved',
+        ]);
+        $metric = PartnerAnnouncementMetric::query()->create([
+            'partner_announcement_id' => $announcement->id,
+            'prepared_count' => 1,
+            'delivered_count' => 1,
+        ]);
+        $recipient = User::factory()->create();
+        $delivery = PartnerAnnouncementDelivery::factory()
+            ->for($announcement, 'announcement')
+            ->for($recipient)
+            ->create([
+                'status' => PartnerDeliveryStatus::Delivered,
+                'delivered_at' => now()->subHour(),
+                'click_count' => 0,
+            ]);
+        $before = app(BuildUserDataExport::class)->handle($recipient)['received_partner_announcements'];
+
+        app(DeleteMember::class)->handle($sender);
+
+        $after = app(BuildUserDataExport::class)->handle($recipient)['received_partner_announcements'];
+        $json = json_encode($after, JSON_THROW_ON_ERROR);
+
+        $this->assertSame($before, $after);
+        $this->assertStringNotContainsString('deleted-sender@example.test', $json);
+        $this->assertDatabaseHas('partner_announcement_deliveries', ['id' => $delivery->id]);
+        $this->assertDatabaseHas('partner_profiles', ['id' => $profile->id, 'user_id' => null]);
+        $this->assertSame(
+            'https://offers.example.test/preserved',
+            app(RecordPartnerAnnouncementClick::class)->handle($delivery->click_token),
+        );
+        $this->assertSame(1, $delivery->fresh()?->click_count);
+        $this->assertSame(1, $metric->fresh()?->unique_click_count);
+        $this->assertSame(1, $metric->fresh()?->total_click_count);
+    }
+
+    public function test_an_orphaned_pending_revision_cannot_be_published_after_the_owner_was_purged(): void
+    {
+        Mail::fake();
+        $admin = User::factory()->admin()->create();
+        $partner = User::factory()->partner()->withProfile()->create();
+        $profile = PartnerProfile::factory()->for($partner)->create();
+        $revision = PartnerProfileRevision::factory()->for($profile)->create([
+            'status' => PartnerRevisionStatus::PendingApproval,
+            'submitted_at' => now(),
+            'draft_key' => null,
+        ]);
+
+        app(DeleteMember::class)->handle($partner);
+        $revision->forceFill([
+            'status' => PartnerRevisionStatus::PendingApproval,
+            'decided_at' => null,
+        ])->save();
+
+        $this->expectException(ValidationException::class);
+
+        app(ApprovePartnerProfileRevision::class)->handle($admin, $revision);
+    }
+
     public function test_immediate_admin_deletion_applies_the_same_partner_cleanup_before_removing_the_user(): void
     {
         CarbonImmutable::setTestNow('2026-09-20 14:00:00');
@@ -171,7 +263,10 @@ class PartnerDeletionTest extends TestCase
         $this->assertDatabaseMissing('users', ['id' => $partner->id]);
         $this->assertDatabaseMissing('partner_notification_preferences', ['user_id' => $partner->id]);
         $this->assertDatabaseMissing('partner_announcement_deliveries', ['id' => $received->id]);
-        $this->assertDatabaseMissing('partner_announcement_deliveries', ['id' => $pending->id]);
+        $this->assertDatabaseHas('partner_announcement_deliveries', [
+            'id' => $pending->id,
+            'status' => PartnerDeliveryStatus::Skipped->value,
+        ]);
         $this->assertDatabaseHas('partner_announcement_metrics', ['id' => $metric->id, 'prepared_count' => 4]);
         $this->assertTrue($metric->fresh()?->expires_at?->equalTo(now()->addYears(2)) ?? false);
         $this->assertDatabaseMissing('partner_profile_revisions', ['id' => $draft->id]);

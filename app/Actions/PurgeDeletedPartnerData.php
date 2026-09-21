@@ -3,7 +3,6 @@
 namespace App\Actions;
 
 use App\Enums\PartnerRevisionStatus;
-use App\Models\PartnerAnnouncementDelivery;
 use App\Models\PartnerProfile;
 use App\Models\PartnerProfileRevision;
 use App\Models\User;
@@ -25,13 +24,6 @@ final class PurgeDeletedPartnerData
         if ($profile === null) {
             return;
         }
-
-        PartnerAnnouncementDelivery::query()
-            ->whereHas(
-                'announcement',
-                fn ($announcements) => $announcements->where('partner_profile_id', $profile->id),
-            )
-            ->delete();
 
         $drafts = PartnerProfileRevision::query()
             ->where('partner_profile_id', $profile->id)

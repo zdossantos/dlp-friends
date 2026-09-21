@@ -29,12 +29,33 @@ final class DeactivateDeletedPartner
             }
 
             $profile->update(['is_published' => false]);
+            $decidedAt = now();
+            $expiresAt = $decidedAt->copy()->addYears(2);
 
-            PartnerProfileRevision::query()
+            $revisions = PartnerProfileRevision::query()
                 ->where('partner_profile_id', $profile->id)
                 ->where('status', '!=', PartnerRevisionStatus::Draft->value)
-                ->whereNull('expires_at')
-                ->update(['expires_at' => now()->addYears(2)]);
+                ->orderBy('id')
+                ->lockForUpdate()
+                ->get();
+
+            foreach ($revisions as $revision) {
+                $revision->update([
+                    'status' => $revision->status === PartnerRevisionStatus::PendingApproval
+                        ? PartnerRevisionStatus::Rejected
+                        : $revision->status,
+                    'decided_at' => $revision->status === PartnerRevisionStatus::PendingApproval
+                        ? $decidedAt
+                        : $revision->decided_at,
+                    'decided_by' => $revision->status === PartnerRevisionStatus::PendingApproval
+                        ? null
+                        : $revision->decided_by,
+                    'rejection_reason' => $revision->status === PartnerRevisionStatus::PendingApproval
+                        ? null
+                        : $revision->rejection_reason,
+                    'expires_at' => $revision->expires_at ?? $expiresAt,
+                ]);
+            }
 
             $announcements = PartnerAnnouncement::query()
                 ->where('partner_profile_id', $profile->id)
@@ -49,21 +70,28 @@ final class DeactivateDeletedPartner
                 ->get();
 
             foreach ($announcements as $announcement) {
-                $expiresAt = $announcement->expires_at ?? now()->addYears(2);
+                $announcementExpiresAt = $announcement->expires_at ?? $expiresAt;
                 $announcement->update([
                     'status' => PartnerAnnouncementStatus::Cancelled,
-                    'decided_at' => $announcement->decided_at ?? now(),
-                    'expires_at' => $expiresAt,
+                    'decided_at' => $announcement->decided_at ?? $decidedAt,
+                    'expires_at' => $announcementExpiresAt,
                 ]);
-                $announcement->metric()->update(['expires_at' => $expiresAt]);
 
-                PartnerAnnouncementDelivery::query()
+                $pendingDeliveries = PartnerAnnouncementDelivery::query()
                     ->where('partner_announcement_id', $announcement->id)
                     ->where('status', PartnerDeliveryStatus::Pending)
-                    ->update([
+                    ->orderBy('id')
+                    ->lockForUpdate()
+                    ->get();
+
+                foreach ($pendingDeliveries as $delivery) {
+                    $delivery->update([
                         'status' => PartnerDeliveryStatus::Skipped,
                         'last_error' => null,
                     ]);
+                }
+
+                $announcement->metric()->update(['expires_at' => $announcementExpiresAt]);
             }
         });
     }

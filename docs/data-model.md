@@ -24,6 +24,11 @@ et son état de livraison sont définis dans le [`PRD.md`](PRD.md).
 | `blocks` | Blocage unidirectionnel entre deux membres |
 | `avatars` | Catalogue administrable : nom, image privée, deux couleurs de dégradé, activation et ordre |
 | `roles` / `user_roles` | Attribution du rôle d'administration sans le mélanger aux profils membres |
+| `partner_profiles` / `partner_profile_revisions` | Fiche partenaire, version publique et historique modéré bilingue |
+| `partner_announcements` / `partner_announcement_metrics` | Contenu d'annonce et statistiques agrégées sans identité de destinataire |
+| `partner_announcement_deliveries` | Historique individuel du destinataire avec instantané immuable du contenu reçu |
+| `partner_notification_preferences` | Consentement explicite et révocable aux annonces partenaires |
+| `role_audits` | Trace minimale et temporaire des changements de rôle |
 
 ## États et contraintes de stockage
 
@@ -47,6 +52,17 @@ et son état de livraison sont définis dans le [`PRD.md`](PRD.md).
 - `events.registration_mode` vaut `automatic` ou `manual`; `cancelled_at` conserve l’événement annulé dans l’historique.
 - `event_registrations` est unique pour `(event_id, user_id)`. Son état évolue entre `pending`, `accepted`, `refused`, `withdrawn`, `removed` et `blocked`. Seul `withdrawn` autorise une nouvelle inscription.
 - L’organisateur compte dans `events.capacity` sans ligne d’inscription. Les transitions qui occupent une place verrouillent l’événement en base afin de ne jamais dépasser cette capacité.
+- `partner_profiles.user_id` devient nul à la suppression du compte. Toute
+  révision en attente est alors refusée et aucune révision ne peut être publiée
+  sans propriétaire existant, actif et hors suppression.
+- `partner_announcement_deliveries.partner_announcement_id` devient nul lorsque
+  l'annonce source expire. `source_announcement_id`, le titre, le contenu et
+  l'URL de destination sont figés à la préparation ; ils ne contiennent aucune
+  identité d'expéditeur ou de destinataire. La livraison reste attachée au seul
+  destinataire et disparaît avec son compte.
+- Une révision de fiche encore publiée n'est jamais éligible à la purge de
+  rétention. Les historiques non actifs, annonces terminales, métriques et
+  audits expirent par lots de 500 lorsque `expires_at <= now()`.
 
 ## Règles essentielles
 

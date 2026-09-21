@@ -14,6 +14,21 @@ class PartnerAnnouncementDeliveryFactory extends Factory
 {
     protected $model = PartnerAnnouncementDelivery::class;
 
+    public function configure(): static
+    {
+        return $this->afterMaking(function (PartnerAnnouncementDelivery $delivery): void {
+            $announcement = PartnerAnnouncement::query()
+                ->findOrFail((int) $delivery->partner_announcement_id);
+
+            $delivery->forceFill([
+                'source_announcement_id' => $announcement->id,
+                'announcement_title' => $announcement->title,
+                'announcement_content' => $announcement->content,
+                'announcement_destination_url' => $announcement->destination_url,
+            ]);
+        });
+    }
+
     /** @return array<string, mixed> */
     public function definition(): array
     {

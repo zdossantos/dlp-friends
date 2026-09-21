@@ -42,14 +42,16 @@ final class RecordPartnerAnnouncementRead
                 return;
             }
 
-            $metric = PartnerAnnouncementMetric::query()
-                ->where('partner_announcement_id', $delivery->partner_announcement_id)
-                ->lockForUpdate()
-                ->firstOrFail();
+            $metric = $delivery->partner_announcement_id === null
+                ? null
+                : PartnerAnnouncementMetric::query()
+                    ->where('partner_announcement_id', $delivery->partner_announcement_id)
+                    ->lockForUpdate()
+                    ->first();
 
             $lockedNotification->markAsRead();
             $delivery->update(['read_at' => now()]);
-            $metric->increment('read_count');
+            $metric?->increment('read_count');
         });
     }
 }

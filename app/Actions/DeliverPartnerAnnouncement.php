@@ -53,8 +53,20 @@ final class DeliverPartnerAnnouncement
                     return;
                 }
 
+                $announcement = $locked->announcement()->first();
+
+                if ($announcement === null) {
+                    $locked->update([
+                        'status' => PartnerDeliveryStatus::Skipped,
+                        'attempts' => $locked->attempts + 1,
+                        'last_error' => null,
+                    ]);
+
+                    return;
+                }
+
                 $notificationId = (string) Str::uuid();
-                $notification = new PartnerAnnouncementNotification($locked->announcement);
+                $notification = new PartnerAnnouncementNotification($announcement);
                 $notification->id = $notificationId;
                 app(DatabaseChannel::class)->send($recipient, $notification);
 
@@ -66,7 +78,7 @@ final class DeliverPartnerAnnouncement
                     'delivered_at' => now(),
                 ]);
                 PartnerAnnouncementMetric::query()
-                    ->where('partner_announcement_id', $locked->partner_announcement_id)
+                    ->where('partner_announcement_id', $announcement->id)
                     ->increment('delivered_count');
 
                 $deliveryId = $locked->id;

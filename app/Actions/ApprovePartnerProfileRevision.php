@@ -3,6 +3,7 @@
 namespace App\Actions;
 
 use App\Enums\PartnerRevisionStatus;
+use App\Enums\UserStatus;
 use App\Models\PartnerProfile;
 use App\Models\PartnerProfileRevision;
 use App\Models\User;
@@ -17,6 +18,13 @@ final class ApprovePartnerProfileRevision
     public function handle(User $admin, PartnerProfileRevision $revision): void
     {
         DB::transaction(function () use ($admin, $revision): void {
+            $ownerId = PartnerProfile::query()
+                ->whereKey($revision->partner_profile_id)
+                ->value('user_id');
+            $owner = is_numeric($ownerId)
+                ? User::query()->whereKey((int) $ownerId)->lockForUpdate()->first()
+                : null;
+
             $profiles = $this->lockPartnerProfileOrder->handle();
             $profile = $profiles->first(
                 fn (PartnerProfile $candidate): bool => $candidate->id === $revision->partner_profile_id,
@@ -36,6 +44,7 @@ final class ApprovePartnerProfileRevision
                 ->firstOrFail();
 
             $this->ensurePending($lockedRevision);
+            $this->ensureActiveOwner($profile, $owner);
 
             $position = $profile->position;
 
@@ -97,6 +106,18 @@ final class ApprovePartnerProfileRevision
         if ($revision->status !== PartnerRevisionStatus::PendingApproval) {
             throw ValidationException::withMessages([
                 'decision' => __('administration.partners.errors.not_pending'),
+            ]);
+        }
+    }
+
+    private function ensureActiveOwner(PartnerProfile $profile, ?User $owner): void
+    {
+        if ($owner === null
+            || $profile->user_id !== $owner->id
+            || $owner->status !== UserStatus::Active
+            || $owner->deletion_requested_at !== null) {
+            throw ValidationException::withMessages([
+                'profile' => __('administration.partners.errors.owner_unavailable'),
             ]);
         }
     }

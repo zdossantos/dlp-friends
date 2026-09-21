@@ -138,6 +138,7 @@ return [
         'errors' => [
             'not_pending' => 'Cette fiche a déjà reçu une décision.',
             'not_published' => 'Cette fiche n’est plus publiée.',
+            'owner_unavailable' => 'Ce compte partenaire n’est plus actif.',
             'order_exact' => 'L’ordre doit contenir exactement toutes les fiches publiées.',
         ],
     ],

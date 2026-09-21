@@ -135,6 +135,7 @@ return [
         'errors' => [
             'not_pending' => 'This profile has already received a decision.',
             'not_published' => 'This profile is no longer published.',
+            'owner_unavailable' => 'This partner account is no longer active.',
             'order_exact' => 'The order must contain every published profile exactly once.',
         ],
     ],

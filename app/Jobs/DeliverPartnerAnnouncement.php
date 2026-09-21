@@ -31,7 +31,11 @@ final class DeliverPartnerAnnouncement implements ShouldQueue
         }
 
         $deliver->handle($delivery);
-        $finalize->handle($delivery->announcement);
+        $announcement = $delivery->announcement()->first();
+
+        if ($announcement !== null) {
+            $finalize->handle($announcement);
+        }
     }
 
     public function failed(Throwable $exception): void

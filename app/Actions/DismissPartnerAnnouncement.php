@@ -28,13 +28,15 @@ final class DismissPartnerAnnouncement
                 return;
             }
 
-            $metric = PartnerAnnouncementMetric::query()
-                ->where('partner_announcement_id', $delivery->partner_announcement_id)
-                ->lockForUpdate()
-                ->firstOrFail();
+            $metric = $delivery->partner_announcement_id === null
+                ? null
+                : PartnerAnnouncementMetric::query()
+                    ->where('partner_announcement_id', $delivery->partner_announcement_id)
+                    ->lockForUpdate()
+                    ->first();
 
             $delivery->update(['dismissed_at' => now()]);
-            $metric->increment('dismissed_count');
+            $metric?->increment('dismissed_count');
         });
     }
 }

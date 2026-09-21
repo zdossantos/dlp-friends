@@ -240,15 +240,14 @@ final class BuildUserDataExport
                 ])->all(),
             'received_partner_announcements' => PartnerAnnouncementDelivery::query()
                 ->where('user_id', $user->id)
-                ->with('announcement:id,title,content,destination_url')
                 ->orderBy('id')
                 ->get()
                 ->map(fn (PartnerAnnouncementDelivery $delivery): array => [
                     'id' => $delivery->id,
-                    'announcement_id' => $delivery->partner_announcement_id,
-                    'title' => $delivery->announcement->title,
-                    'content' => $delivery->announcement->content,
-                    'destination_url' => $delivery->announcement->destination_url,
+                    'announcement_id' => $delivery->source_announcement_id,
+                    'title' => $delivery->announcement_title,
+                    'content' => $delivery->announcement_content,
+                    'destination_url' => $delivery->announcement_destination_url,
                     'status' => $delivery->status->value,
                     'delivered_at' => $delivery->delivered_at?->toIso8601String(),
                     'read_at' => $delivery->read_at?->toIso8601String(),

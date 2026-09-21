@@ -5,7 +5,9 @@ namespace App\Console\Commands;
 use App\Enums\PartnerAnnouncementStatus;
 use App\Models\PartnerAnnouncement;
 use App\Models\PartnerAnnouncementMetric;
+use App\Models\PartnerProfile;
 use App\Models\PartnerProfileRevision;
+use App\Models\PartnerSetting;
 use App\Models\RoleAudit;
 use Illuminate\Console\Command;
 use Illuminate\Database\Eloquent\Builder;
@@ -38,13 +40,34 @@ final class PurgeExpiredPartnerRecords extends Command
         PartnerProfileRevision::query()
             ->whereNotNull('expires_at')
             ->where('expires_at', '<=', $expiredAt)
+            ->whereNotIn(
+                'id',
+                PartnerProfile::query()
+                    ->published()
+                    ->select('published_revision_id'),
+            )
             ->orderBy('id')
             ->chunkById(500, function ($revisions): void {
                 DB::transaction(function () use ($revisions): void {
-                    $paths = $revisions->pluck('image_path')->filter()->unique()->values();
+                    PartnerSetting::query()->whereKey(1)->lockForUpdate()->firstOrFail();
+                    $publishedRevisionIds = PartnerProfile::query()
+                        ->published()
+                        ->orderBy('id')
+                        ->lockForUpdate()
+                        ->pluck('published_revision_id');
+                    $expiredRevisions = PartnerProfileRevision::query()
+                        ->whereKey($revisions->modelKeys())
+                        ->when(
+                            $publishedRevisionIds->isNotEmpty(),
+                            fn (Builder $query) => $query->whereNotIn('id', $publishedRevisionIds),
+                        )
+                        ->orderBy('id')
+                        ->lockForUpdate()
+                        ->get();
+                    $paths = $expiredRevisions->pluck('image_path')->filter()->unique()->values();
 
                     PartnerProfileRevision::query()
-                        ->whereKey($revisions->modelKeys())
+                        ->whereKey($expiredRevisions->modelKeys())
                         ->delete();
 
                     foreach ($paths as $path) {

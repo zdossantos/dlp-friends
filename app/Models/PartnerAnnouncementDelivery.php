@@ -13,7 +13,11 @@ use Illuminate\Notifications\DatabaseNotification;
 
 /**
  * @property int $id
- * @property int $partner_announcement_id
+ * @property int|null $partner_announcement_id
+ * @property int $source_announcement_id
+ * @property string $announcement_title
+ * @property string $announcement_content
+ * @property string $announcement_destination_url
  * @property int $user_id
  * @property string|null $notification_id
  * @property string $click_token
@@ -26,12 +30,16 @@ use Illuminate\Notifications\DatabaseNotification;
  * @property CarbonImmutable|null $dismissed_at
  * @property CarbonImmutable|null $first_clicked_at
  * @property int $click_count
- * @property-read PartnerAnnouncement $announcement
+ * @property-read PartnerAnnouncement|null $announcement
  * @property-read User $user
  * @property-read DatabaseNotification|null $notification
  */
 #[Fillable([
     'partner_announcement_id',
+    'source_announcement_id',
+    'announcement_title',
+    'announcement_content',
+    'announcement_destination_url',
     'user_id',
     'notification_id',
     'click_token',

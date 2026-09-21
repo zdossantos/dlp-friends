@@ -273,6 +273,146 @@ class PartnerAnnouncementConcurrencyTest extends TestCase
         $this->assertCommittedEligibilityMutationPreventsDelivery('deletion');
     }
 
+    public function test_sender_deletion_and_delivery_complete_without_deadlock_or_double_counting_on_mysql(): void
+    {
+        $this->requirePcntl();
+        Queue::fake();
+
+        $sender = User::factory()->partner()->create();
+        $profile = PartnerProfile::factory()->for($sender)->published()->create();
+        $recipient = User::factory()->create();
+        PartnerNotificationPreference::query()->create([
+            'user_id' => $recipient->id,
+            'enabled' => true,
+        ]);
+        $announcement = PartnerAnnouncement::factory()->for($profile)->create([
+            'status' => PartnerAnnouncementStatus::Sending,
+            'destination_url' => 'https://offers.example.com/sender-deletion',
+            'audience_prepared_at' => now(),
+            'sending_started_at' => now(),
+        ]);
+        $metric = PartnerAnnouncementMetric::query()->create([
+            'partner_announcement_id' => $announcement->id,
+            'prepared_count' => 1,
+        ]);
+        $delivery = PartnerAnnouncementDelivery::factory()
+            ->for($announcement, 'announcement')
+            ->for($recipient)
+            ->create();
+        $deliveryControl = $this->socketPair();
+        $deletionControl = $this->socketPair();
+        $deliveryResultFile = $this->resultFile('partner-sender-deletion-delivery-');
+        $deletionResultFile = $this->resultFile('partner-sender-deletion-request-');
+
+        DB::disconnect();
+
+        $deliveryPid = pcntl_fork();
+        $this->assertNotSame(-1, $deliveryPid);
+
+        if ($deliveryPid === 0) {
+            fclose($deliveryControl[0]);
+            fclose($deletionControl[0]);
+            fclose($deletionControl[1]);
+            DB::purge();
+
+            try {
+                PartnerAnnouncementDelivery::updating(
+                    static function (PartnerAnnouncementDelivery $candidate) use ($delivery, $deliveryControl): void {
+                        if ($candidate->id !== $delivery->id
+                            || $candidate->status !== PartnerDeliveryStatus::Delivered) {
+                            return;
+                        }
+
+                        fwrite($deliveryControl[1], 'L');
+
+                        if (fread($deliveryControl[1], 1) !== 'G') {
+                            throw new RuntimeException('The delivery transaction was not released.');
+                        }
+                    },
+                );
+                app(DeliverPartnerAnnouncement::class)->handle(
+                    PartnerAnnouncementDelivery::query()->findOrFail($delivery->id),
+                );
+                file_put_contents($deliveryResultFile, json_encode(['delivered' => true], JSON_THROW_ON_ERROR));
+                exit(0);
+            } catch (Throwable $exception) {
+                file_put_contents($deliveryResultFile, json_encode([
+                    'error' => $exception::class.': '.$exception->getMessage(),
+                ], JSON_THROW_ON_ERROR));
+                exit(1);
+            }
+        }
+
+        fclose($deliveryControl[1]);
+        $this->assertSame('L', fread($deliveryControl[0], 1));
+
+        $deletionPid = pcntl_fork();
+        $this->assertNotSame(-1, $deletionPid);
+
+        if ($deletionPid === 0) {
+            fclose($deliveryControl[0]);
+            fclose($deletionControl[0]);
+            DB::purge();
+
+            try {
+                PartnerAnnouncement::updated(
+                    static function (PartnerAnnouncement $candidate) use ($announcement, $deletionControl): void {
+                        if ($candidate->id !== $announcement->id
+                            || $candidate->status !== PartnerAnnouncementStatus::Cancelled) {
+                            return;
+                        }
+
+                        fwrite($deletionControl[1], 'R');
+
+                        if (fread($deletionControl[1], 1) !== 'G') {
+                            throw new RuntimeException('The sender deletion transaction was not released.');
+                        }
+                    },
+                );
+                app(RequestAccountDeletion::class)->handle(
+                    User::query()->findOrFail($sender->id),
+                );
+                file_put_contents($deletionResultFile, json_encode(['deleted' => true], JSON_THROW_ON_ERROR));
+                exit(0);
+            } catch (Throwable $exception) {
+                file_put_contents($deletionResultFile, json_encode([
+                    'error' => $exception::class.': '.$exception->getMessage(),
+                ], JSON_THROW_ON_ERROR));
+                exit(1);
+            }
+        }
+
+        fclose($deletionControl[1]);
+        $this->assertSame('R', fread($deletionControl[0], 1));
+        fwrite($deletionControl[0], 'G');
+        usleep(300_000);
+        fwrite($deliveryControl[0], 'G');
+
+        pcntl_waitpid($deliveryPid, $deliveryStatus);
+        pcntl_waitpid($deletionPid, $deletionStatus);
+        fclose($deliveryControl[0]);
+        fclose($deletionControl[0]);
+
+        DB::purge();
+        DB::reconnect();
+
+        expect([pcntl_wexitstatus($deliveryStatus), pcntl_wexitstatus($deletionStatus)])
+            ->toBe([0, 0])
+            ->and($this->readResult($deliveryResultFile))->toBe(['delivered' => true])
+            ->and($this->readResult($deletionResultFile))->toBe(['deleted' => true])
+            ->and($profile->fresh()?->is_published)->toBeFalse()
+            ->and($announcement->fresh()?->status)->toBe(PartnerAnnouncementStatus::Cancelled)
+            ->and($delivery->fresh()?->status)->toBe(PartnerDeliveryStatus::Delivered)
+            ->and($delivery->fresh()?->attempts)->toBe(1)
+            ->and($recipient->notifications()->count())->toBe(1)
+            ->and($metric->fresh()?->delivered_count)->toBe(1);
+
+        app(DeliverPartnerAnnouncement::class)->handle($delivery->fresh());
+
+        expect($recipient->notifications()->count())->toBe(1)
+            ->and($metric->fresh()?->delivered_count)->toBe(1);
+    }
+
     public function test_a_concurrent_submission_is_never_deleted_by_a_stale_draft_request_on_mysql(): void
     {
         $this->requirePcntl();

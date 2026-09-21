@@ -6,12 +6,13 @@ use App\Models\PartnerAnnouncement;
 use App\Models\User;
 use Illuminate\Notifications\Messages\BroadcastMessage;
 use Illuminate\Notifications\Notification;
+use LogicException;
 
 final class PartnerAnnouncementNotification extends Notification
 {
     /** @param array<string, mixed>|null $persistedData */
     public function __construct(
-        public PartnerAnnouncement $announcement,
+        public ?PartnerAnnouncement $announcement,
         private ?array $persistedData = null,
     ) {}
 
@@ -26,6 +27,10 @@ final class PartnerAnnouncementNotification extends Notification
     {
         if ($this->persistedData !== null) {
             return $this->persistedData;
+        }
+
+        if ($this->announcement === null) {
+            throw new LogicException('A new partner notification requires its source announcement.');
         }
 
         return [

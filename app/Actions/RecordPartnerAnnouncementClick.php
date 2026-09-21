@@ -23,23 +23,25 @@ final class RecordPartnerAnnouncementClick
             }
 
             // Engagement lock order: delivery, aggregate metrics.
-            $metric = PartnerAnnouncementMetric::query()
-                ->where('partner_announcement_id', $delivery->partner_announcement_id)
-                ->lockForUpdate()
-                ->firstOrFail();
+            $metric = $delivery->partner_announcement_id === null
+                ? null
+                : PartnerAnnouncementMetric::query()
+                    ->where('partner_announcement_id', $delivery->partner_announcement_id)
+                    ->lockForUpdate()
+                    ->first();
             $firstClick = $delivery->first_clicked_at === null;
 
             $delivery->update([
                 'first_clicked_at' => $delivery->first_clicked_at ?? now(),
                 'click_count' => $delivery->click_count + 1,
             ]);
-            $metric->increment('total_click_count');
+            $metric?->increment('total_click_count');
 
             if ($firstClick) {
-                $metric->increment('unique_click_count');
+                $metric?->increment('unique_click_count');
             }
 
-            return (string) $delivery->announcement()->value('destination_url');
+            return $delivery->announcement_destination_url;
         });
     }
 }

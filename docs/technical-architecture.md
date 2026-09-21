@@ -117,6 +117,28 @@ verrouille la paire canonique, réutilise son match et sa conversation s’ils
 existent, ou les crée sans ajouter de swipe. Les Policies de profil et l’Action
 de blocage interdisent toutes deux de cibler un administrateur.
 
+## Cycle de vie partenaire et concurrence
+
+Les livraisons d'annonces conservent un instantané immuable du contenu public
+reçu. Leur clé étrangère vers l'annonce est nullable avec `null on delete` : la
+rétention peut supprimer une campagne et ses agrégats sans effacer l'historique
+appartenant à un autre membre. Aucun identifiant de compte expéditeur ni secret
+opérationnel n'est dupliqué dans cet instantané. La suppression du destinataire
+reste la seule opération qui supprime sa livraison identifiable.
+
+Les actions concurrentes respectent l'ordre de verrouillage global `user` →
+`partner_profile` → `partner_announcement` →
+`partner_announcement_delivery` → `partner_announcement_metric`. La livraison
+et la désactivation verrouillent donc toutes deux la ligne de livraison avant
+la métrique, ce qui évite l'inversion lors d'une suppression simultanée de
+l'expéditeur. L'approbation d'une fiche verrouille d'abord son propriétaire et
+refuse la publication si le compte a disparu, est inactif ou en suppression.
+
+La rétention s'exécute quotidiennement à 03:30 dans `Europe/Paris`, sans
+chevauchement et sur un seul serveur. Elle traite les échéances inclusives par
+lots de 500 et exclut toujours la révision actuellement publiée d'une fiche
+active.
+
 ## Accueil public et indexation
 
 La racine `/` sélectionne la langue du visiteur à partir de sa préférence puis
