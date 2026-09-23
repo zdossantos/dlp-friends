@@ -201,6 +201,9 @@ Paris.
   ni mémoriser les rôles du compte.
 - L’administration regroupe les fiches, les annonces et les statistiques dans
   un sous-menu « Partenaires » distinct de l’espace de travail du partenaire.
+  Les soumissions de fiche et d’annonce créent aussi une notification persistante
+  pour chaque administrateur actif, dans la catégorie « Administration », avec
+  un accès direct à la file de validation concernée.
 - Le partenaire enregistre une fiche avec noms et descriptions obligatoires
   français/anglais et une image contrôlée. L’enregistrement modifie le brouillon,
   pas la version publique ; la soumission fige une révision. L’administrateur
@@ -212,7 +215,8 @@ Paris.
   avant le début de l’envoi. Le texte et le lien HTTPS sont validés côté serveur.
   Une annonce soumise n’est plus éditable ; après un refus, sa nouvelle version
   repart en brouillon et doit être approuvée.
-- L’administrateur lance les annonces approuvées depuis les statistiques.
+- L’approbation administrative lance immédiatement l’envoi de l’annonce. La
+  relance manuelle reste disponible pour reprendre un traitement interrompu.
   Le délai entre deux envois d’un même partenaire vaut 30 jours par défaut et
   est configurable. La reprise d’une livraison échouée ne renvoie pas les
   notifications déjà livrées ou ignorées.
@@ -263,7 +267,7 @@ Paris.
 | Centre de notifications persistant | **Implémenté** | Matches, messages et événements sont regroupés, filtrables et ouvrent leur élément cible. |
 | Tutoriel produit obligatoire | **Implémenté** | Progression persistée et statistiques admin sont livrées. |
 | Gestion administrative des membres | **Implémenté** | Recherche et compteurs, suppression confirmée, échange privé admin/membre et identification visuelle des admins sont livrés sans accès au contenu des messages. |
-| Espace partenaire et annonces modérées (issue 199) | **Implémenté** | Rôles cumulables et audités, fiches bilingues révisées, six cartes SSR au maximum, annonces approuvées et envoi administrateur, préférence membre révocable activée par défaut, interactions et statistiques agrégées, export/suppression/rétention et tests sont livrés. |
+| Espace partenaire et annonces modérées (issue 199) | **Implémenté** | Rôles cumulables et audités, fiches bilingues révisées, six cartes SSR au maximum, envoi automatique après approbation, préférence membre révocable activée par défaut, interactions et statistiques agrégées, export/suppression/rétention et tests sont livrés. |
 | Français et anglais | **Implémenté** | Résolution de locale et catalogues backend/frontend sont présents. |
 | Univers éditorial | **Implémenté** | Tutoiement, vocabulaire canonique et catalogues par feature sont contrôlés automatiquement. |
 | Thèmes clair, sombre et système | **Implémenté** | Préférence persistée et interface correspondante sont présentes. |

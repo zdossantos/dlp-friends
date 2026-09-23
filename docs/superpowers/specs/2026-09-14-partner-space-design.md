@@ -114,7 +114,7 @@ L'annonce suit les états :
 
 - `draft` : modifiable et supprimable par le partenaire ;
 - `pending_approval` : immuable, en attente d'une décision admin ;
-- `approved` : approuvée et prête à lancer l'envoi ;
+- `approved` : état technique transitoire entre l'approbation et le démarrage automatique de l'envoi ;
 - `sending` : envoi commencé, non annulable ;
 - `sent` : tous les destinataires préparés ont atteint un état terminal ;
 - `rejected` : refusée avec motif facultatif ;
@@ -266,6 +266,8 @@ L'administration ajoute :
 - le dialogue de rôles depuis chaque ligne de la liste des utilisateurs ;
 - une file de validation des fiches et leur ordre public ;
 - une file de validation des annonces ;
+- des notifications « Administration » lors de chaque soumission de fiche ou
+  d’annonce, ouvrant directement la file de validation correspondante ;
 - le délai minimal d'envoi ;
 - les statistiques et commandes de reprise autorisées.
 

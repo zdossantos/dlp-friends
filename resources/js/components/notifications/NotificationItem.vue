@@ -1,6 +1,12 @@
 <script setup lang="ts">
 import { router } from '@inertiajs/vue3';
-import { CalendarDays, Handshake, MessageCircle, X } from '@lucide/vue';
+import {
+    CalendarDays,
+    Handshake,
+    MessageCircle,
+    ShieldCheck,
+    X,
+} from '@lucide/vue';
 import { computed, ref } from 'vue';
 import { Button } from '@/components/ui/button';
 import { useTranslations } from '@/composables/useTranslations';
@@ -59,15 +65,26 @@ function dismissNotification(): void {
             @click="openNotification"
         >
             <span
-                class="grid size-10 shrink-0 place-items-center rounded-2xl bg-secondary text-secondary-foreground"
+                class="grid size-10 shrink-0 place-items-center overflow-hidden rounded-2xl bg-secondary text-secondary-foreground"
             >
+                <img
+                    v-if="notification.image_url"
+                    :src="notification.image_url"
+                    alt=""
+                    class="size-full object-cover"
+                />
                 <CalendarDays
-                    v-if="notification.category === 'events'"
+                    v-else-if="notification.category === 'events'"
                     class="size-5"
                     aria-hidden="true"
                 />
                 <Handshake
                     v-else-if="notification.category === 'partners'"
+                    class="size-5"
+                    aria-hidden="true"
+                />
+                <ShieldCheck
+                    v-else-if="notification.category === 'administration'"
                     class="size-5"
                     aria-hidden="true"
                 />

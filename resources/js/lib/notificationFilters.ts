@@ -2,6 +2,7 @@ export const notificationCategories = [
     'conversations',
     'events',
     'partners',
+    'administration',
 ] as const;
 
 export type NotificationCategory = (typeof notificationCategories)[number];

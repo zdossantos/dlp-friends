@@ -19,8 +19,12 @@ test('notification categories expose partner announcements', () => {
         'conversations',
         'events',
         'partners',
+        'administration',
     ]);
     expect(applyNotificationFilters('partners', true).toString()).toBe(
         'category=partners&unread=1',
+    );
+    expect(applyNotificationFilters('administration', true).toString()).toBe(
+        'category=administration&unread=1',
     );
 });

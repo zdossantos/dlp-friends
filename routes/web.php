@@ -243,6 +243,8 @@ Route::middleware(['auth', 'verified', 'social'])->group(function (): void {
         ->name('dashboard');
 
     Route::prefix('admin')->name('admin.')->middleware('role:admin')->group(function (): void {
+        Route::get('notifications', NotificationIndexController::class)
+            ->name('notifications.index');
         Route::get('partner-announcements', [AdminPartnerAnnouncementController::class, 'index'])
             ->name('partner-announcements.index');
         Route::patch('partner-announcements/{announcement}', PartnerAnnouncementDecisionController::class)

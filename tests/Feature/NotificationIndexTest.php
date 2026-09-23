@@ -6,6 +6,7 @@ use App\Enums\PartnerDeliveryStatus;
 use App\Models\PartnerAnnouncement;
 use App\Models\PartnerAnnouncementDelivery;
 use App\Models\PartnerAnnouncementMetric;
+use App\Models\PartnerProfile;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Notifications\DatabaseNotification;
@@ -47,6 +48,7 @@ class NotificationIndexTest extends TestCase
                 ->where('notifications.data.0.dismiss_url', route('notifications.partner-announcements.dismiss', $notification, absolute: false))
                 ->where('notifications.data.0.action_label', __('notifications.actions.open_partner_announcement'))
                 ->where('notifications.data.0.content', $delivery->announcement_content)
+                ->where('notifications.data.0.image_url', route('partner-profiles.image', $delivery->announcement->partnerProfile, absolute: false))
                 ->missing('notifications.data.0.user_id')
                 ->missing('notifications.data.0.email'));
     }
@@ -77,7 +79,8 @@ class NotificationIndexTest extends TestCase
     /** @return array{DatabaseNotification, PartnerAnnouncementDelivery} */
     private function partnerNotification(User $member): array
     {
-        $announcement = PartnerAnnouncement::factory()->create([
+        $profile = PartnerProfile::factory()->published()->create();
+        $announcement = PartnerAnnouncement::factory()->for($profile)->create([
             'destination_url' => 'https://offers.example.com/frozen-destination',
         ]);
         PartnerAnnouncementMetric::query()->create(['partner_announcement_id' => $announcement->id]);

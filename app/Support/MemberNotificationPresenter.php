@@ -13,7 +13,7 @@ use LogicException;
 
 final class MemberNotificationPresenter
 {
-    /** @return array{id: string, category: string, translation_key: string, parameters: array<string, string|int|null>, target_url: string, read_at: string|null, created_at: string|null, dismiss_url?: string, action_label?: string, content?: string} */
+    /** @return array{id: string, category: string, translation_key: string, parameters: array<string, string|int|null>, target_url: string, read_at: string|null, created_at: string|null, dismiss_url?: string, action_label?: string, content?: string, image_url?: string} */
     public function present(DatabaseNotification $notification, User $viewer): array
     {
         $data = $notification->data;
@@ -43,6 +43,17 @@ final class MemberNotificationPresenter
             );
             $presented['action_label'] = $actionLabel;
             $presented['content'] = $partnerDelivery->announcement_content;
+
+            $profile = $partnerDelivery->announcement?->partnerProfile;
+
+            if ($profile?->is_published
+                && $profile->publishedRevision?->image_path !== null) {
+                $presented['image_url'] = route(
+                    'partner-profiles.image',
+                    $profile,
+                    absolute: false,
+                );
+            }
         }
 
         return $presented;
@@ -70,6 +81,16 @@ final class MemberNotificationPresenter
         if (($data['target_type'] ?? null) === 'partner_announcement_management'
             && $viewer->hasRole(RoleName::Partner)) {
             return route('partner.announcements.index', absolute: false);
+        }
+
+        if (($data['target_type'] ?? null) === 'admin_partner_profile_review'
+            && $viewer->hasRole(RoleName::Admin)) {
+            return route('admin.partner-profiles.index', absolute: false);
+        }
+
+        if (($data['target_type'] ?? null) === 'admin_partner_announcement_review'
+            && $viewer->hasRole(RoleName::Admin)) {
+            return route('admin.partner-announcements.index', absolute: false);
         }
 
         $targetId = filter_var($data['target_id'] ?? null, FILTER_VALIDATE_INT);

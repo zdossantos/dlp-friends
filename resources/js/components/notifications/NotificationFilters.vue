@@ -38,6 +38,10 @@ function update(category: NotificationCategory | null, unread: boolean): void {
                         value: 'partners' as const,
                         label: t('notifications.filters.partners'),
                     },
+                    {
+                        value: 'administration' as const,
+                        label: t('notifications.filters.administration'),
+                    },
                 ]"
                 :key="filter.value ?? 'all'"
                 type="button"

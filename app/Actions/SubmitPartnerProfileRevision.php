@@ -11,9 +11,13 @@ use Illuminate\Validation\ValidationException;
 
 final class SubmitPartnerProfileRevision
 {
+    public function __construct(
+        private NotifyAdminsOfPartnerModerationRequest $notifyAdmins,
+    ) {}
+
     public function handle(User $partner): PartnerProfileRevision
     {
-        return DB::transaction(function () use ($partner): PartnerProfileRevision {
+        $revision = DB::transaction(function () use ($partner): PartnerProfileRevision {
             User::query()->whereKey($partner->id)->lockForUpdate()->firstOrFail();
             $profile = PartnerProfile::query()
                 ->where('user_id', $partner->id)
@@ -51,5 +55,14 @@ final class SubmitPartnerProfileRevision
 
             return $draft->refresh();
         });
+
+        $this->notifyAdmins->handle(
+            'notifications.items.partner_profile_review_requested',
+            ['partner' => $revision->name_fr],
+            'admin_partner_profile_review',
+            $revision->id,
+        );
+
+        return $revision;
     }
 }

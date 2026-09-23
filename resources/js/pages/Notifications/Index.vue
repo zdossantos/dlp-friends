@@ -8,7 +8,7 @@ import type { NotificationCategory } from '@/lib/notificationFilters';
 import { readAll } from '@/routes/notifications';
 import type { NotificationPage } from '@/types/notification';
 
-defineProps<{
+const props = defineProps<{
     indexUrl: string;
     filters: { category: NotificationCategory | null; unread: boolean };
     notifications: NotificationPage;
@@ -16,7 +16,11 @@ defineProps<{
 const { t } = useTranslations();
 
 function markAllRead(): void {
-    router.patch(readAll().url, {}, { preserveScroll: true });
+    router.patch(
+        readAll().url,
+        { context: props.indexUrl.startsWith('/admin/') ? 'admin' : null },
+        { preserveScroll: true },
+    );
 }
 </script>
 

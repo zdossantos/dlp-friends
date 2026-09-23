@@ -20,9 +20,12 @@ final class NotificationReadAllController extends Controller
             ->each(fn ($notification) => $recordRead->handle($user, $notification));
 
         return to_route(
-            $user->hasRole(RoleName::User)
-                ? 'notifications.index'
-                : 'partner.notifications.index',
+            match (true) {
+                $request->string('context')->toString() === 'admin'
+                    && $user->hasRole(RoleName::Admin) => 'admin.notifications.index',
+                $user->hasRole(RoleName::User) => 'notifications.index',
+                default => 'partner.notifications.index',
+            },
         );
     }
 }

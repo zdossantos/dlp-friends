@@ -88,14 +88,9 @@ test('a partner authors an announcement and admin approves sends and checks aggr
 
     $announcement = PartnerAnnouncement::query()->sole();
     $this->actingAs($admin);
-    visit('/admin/partner-announcements')->resize(1440, 900)
+    $page = visit('/admin/partner-announcements')->resize(1440, 900)
         ->keys('[data-test="approve-partner-announcement"]', 'Enter')
-        ->assertSee(__('administration.partner_announcements.approved'));
-
-    $page = visit('/admin/partner-statistics')->resize(320, 700)
-        ->assertPresent('[data-test="dispatch-partner-announcement-'.$announcement->id.'"]')
-        ->keys('[data-test="dispatch-partner-announcement-'.$announcement->id.'"]', 'Enter')
-        ->assertSee(__('notifications.admin.dispatch_started'))
+        ->assertSee(__('administration.partner_announcements.approved'))
         ->assertPathIs('/admin/partner-statistics');
     expect($announcement->fresh()->status)->toBe(PartnerAnnouncementStatus::Sending);
 
@@ -230,6 +225,7 @@ test('a member receives partner announcements by default reads dismisses and can
     $page->navigate('/notifications')
         ->click('[data-test="notification-filter-partners"]')
         ->assertSee('Invitation partenaire navigateur')
+        ->assertScript('document.querySelector("[data-test=notification-title]").textContent.trim()', 'Invitation partenaire navigateur')
         ->assertScript('document.querySelector("[data-test=notification-content]").textContent.trim()', '<strong>Avantage partenaire figé</strong>')
         ->assertScript('document.querySelector("[data-test=notification-content] strong") === null', true)
         ->assertScript('document.querySelector("[data-test=notification-content]").classList.contains("line-clamp-3")', false)

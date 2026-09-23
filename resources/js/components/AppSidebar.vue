@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import { Link, usePage } from '@inertiajs/vue3';
 import {
+    Bell,
+    Building2,
     ChartBar,
     GraduationCap,
     Images,
     LayoutDashboard,
-    Building2,
     Megaphone,
     Tags,
     UserRound,
@@ -29,6 +30,7 @@ import { dashboard } from '@/routes';
 import { index as avatarIndex } from '@/routes/admin/avatars';
 import { index as interestIndex } from '@/routes/admin/interests';
 import { index as memberIndex } from '@/routes/admin/members';
+import { index as adminNotifications } from '@/routes/admin/notifications';
 import { index as onboardingIndex } from '@/routes/admin/onboarding';
 import { index as adminPartnerAnnouncements } from '@/routes/admin/partner-announcements';
 import { index as partnerProfileIndex } from '@/routes/admin/partner-profiles';
@@ -50,6 +52,11 @@ const mainNavItems: NavItem[] = [
         title: t('administration.navigation.dashboard'),
         href: dashboard(),
         icon: LayoutDashboard,
+    },
+    {
+        title: t('administration.navigation.notifications'),
+        href: adminNotifications({ query: { category: 'administration' } }),
+        icon: Bell,
     },
     {
         title: t('administration.navigation.members'),

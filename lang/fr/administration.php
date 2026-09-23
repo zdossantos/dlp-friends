@@ -11,6 +11,7 @@ return [
     'navigation' => [
         'label' => 'Administration',
         'dashboard' => 'Tableau de bord',
+        'notifications' => 'Notifications',
         'members' => 'Membres',
         'interests' => 'Univers favoris',
         'avatars' => 'Avatars',
@@ -158,7 +159,7 @@ return [
         'rejecting' => 'Refus…',
         'cancel' => 'Annuler',
         'cancelling' => 'Annulation…',
-        'approved' => 'L’annonce partenaire a été approuvée.',
+        'approved' => 'L’annonce partenaire a été approuvée et son envoi a démarré.',
         'rejected' => 'L’annonce partenaire a été refusée.',
         'cancelled' => 'L’annonce partenaire a été annulée.',
         'rejection_reason' => 'Motif du refus (facultatif)',

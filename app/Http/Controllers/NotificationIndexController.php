@@ -27,9 +27,11 @@ final class NotificationIndexController extends Controller
             ->through(fn (DatabaseNotification $notification): array => $presenter->present($notification, $user));
 
         return Inertia::render('Notifications/Index', [
-            'indexUrl' => $request->routeIs('partner.notifications.index')
-                ? route('partner.notifications.index', absolute: false)
-                : route('notifications.index', absolute: false),
+            'indexUrl' => match (true) {
+                $request->routeIs('admin.notifications.index') => route('admin.notifications.index', absolute: false),
+                $request->routeIs('partner.notifications.index') => route('partner.notifications.index', absolute: false),
+                default => route('notifications.index', absolute: false),
+            },
             'filters' => [
                 'category' => $category,
                 'unread' => $unread,

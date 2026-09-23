@@ -18,6 +18,8 @@ use Illuminate\Validation\ValidationException;
 
 final class DecidePartnerAnnouncement
 {
+    public function __construct(private readonly StartPartnerAnnouncement $startAnnouncement) {}
+
     public function approve(User $admin, PartnerAnnouncement $announcement): void
     {
         $this->ensureAdmin($admin);
@@ -58,6 +60,8 @@ final class DecidePartnerAnnouncement
 
             $this->notifyOwner($profile, $locked);
         });
+
+        $this->startAnnouncement->handle($admin, $announcement);
     }
 
     public function reject(

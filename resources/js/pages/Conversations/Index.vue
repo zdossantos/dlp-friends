@@ -162,15 +162,10 @@ watch(presenceChanged, (event) => {
                             conversation.unread_count > 0 ? 'bg-primary/8' : ''
                         "
                     >
-                        <span class="relative shrink-0">
+                        <span class="shrink-0">
                             <AvatarPortrait
                                 :avatar="conversation.participant.avatar"
                                 class="size-12 rounded-2xl"
-                            />
-                            <span
-                                v-if="conversation.participant.presence?.online"
-                                class="absolute -right-1 -bottom-1 size-3.5 rounded-full border-2 border-card bg-emerald-500"
-                                aria-hidden="true"
                             />
                         </span>
                         <span class="min-w-0 flex-1">

@@ -3,12 +3,14 @@
 use App\Actions\DecidePartnerAnnouncement;
 use App\Enums\PartnerAnnouncementStatus;
 use App\Enums\RoleName;
+use App\Jobs\PreparePartnerAnnouncementAudience;
 use App\Models\PartnerAnnouncement;
 use App\Models\PartnerProfile;
 use App\Models\PartnerSetting;
 use App\Models\Role;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Queue;
 use Illuminate\Validation\ValidationException;
 use Inertia\Testing\AssertableInertia as Assert;
 
@@ -59,7 +61,8 @@ test('the moderation queue exposes pending announcements and the singleton coold
     expect(PartnerSetting::query()->count())->toBe(1);
 });
 
-test('approval revalidates the link and records the decision without changing content', function () {
+test('approval revalidates the link records the decision and starts delivery without changing content', function () {
+    Queue::fake();
     $this->travelTo('2026-09-19 10:00:00');
     $admin = User::factory()->admin()->create();
     $owner = User::factory()->partnerOnly()->create();
@@ -79,10 +82,17 @@ test('approval revalidates the link and records the decision without changing co
         ])
         ->assertRedirect(route('admin.partner-statistics.index'));
 
-    expect($pending->fresh()->status)->toBe(PartnerAnnouncementStatus::Approved)
+    expect($pending->fresh()->status)->toBe(PartnerAnnouncementStatus::Sending)
         ->and($pending->fresh()->decided_by)->toBe($admin->id)
         ->and($pending->fresh()->decided_at?->equalTo(now()))->toBeTrue()
-        ->and($pending->fresh()->only(['title', 'content', 'destination_url']))->toBe($content);
+        ->and($pending->fresh()->only(['title', 'content', 'destination_url']))->toBe($content)
+        ->and($pending->fresh()->sending_started_at?->equalTo(now()))->toBeTrue()
+        ->and($pending->fresh()->metric)->not->toBeNull();
+
+    Queue::assertPushed(
+        PreparePartnerAnnouncementAudience::class,
+        fn (PreparePartnerAnnouncementAudience $job): bool => $job->announcementId === $pending->id,
+    );
 
     expect($owner->notifications()->count())->toBe(1)
         ->and($owner->notifications()->firstOrFail()->data)->toMatchArray([
@@ -116,6 +126,7 @@ test('approval revalidates the link and records the decision without changing co
 });
 
 test('approval respects the per-partner cooldown including its exact boundary', function () {
+    Queue::fake();
     $this->travelTo('2026-09-19 10:00:00');
     $admin = User::factory()->admin()->create();
     PartnerSetting::current()->update(['cooldown_days' => 30]);
@@ -147,7 +158,7 @@ test('approval respects the per-partner cooldown including its exact boundary', 
 
     app(DecidePartnerAnnouncement::class)->approve($admin, $pending);
 
-    expect($pending->fresh()->status)->toBe(PartnerAnnouncementStatus::Approved);
+    expect($pending->fresh()->status)->toBe(PartnerAnnouncementStatus::Sending);
 });
 
 test('admins can reject or cancel before sending but cannot decide locked states', function () {

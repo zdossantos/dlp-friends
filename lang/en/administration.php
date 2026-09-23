@@ -11,6 +11,7 @@ return [
     'navigation' => [
         'label' => 'Administration',
         'dashboard' => 'Dashboard',
+        'notifications' => 'Notifications',
         'members' => 'Members',
         'interests' => 'Favorite worlds',
         'avatars' => 'Avatars',
@@ -155,7 +156,7 @@ return [
         'rejecting' => 'Rejecting…',
         'cancel' => 'Cancel',
         'cancelling' => 'Cancelling…',
-        'approved' => 'The partner announcement has been approved.',
+        'approved' => 'The partner announcement has been approved and sending has started.',
         'rejected' => 'The partner announcement has been rejected.',
         'cancelled' => 'The partner announcement has been cancelled.',
         'rejection_reason' => 'Rejection reason (optional)',

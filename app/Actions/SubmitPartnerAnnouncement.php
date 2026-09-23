@@ -14,6 +14,10 @@ use Illuminate\Validation\ValidationException;
 
 final class SubmitPartnerAnnouncement
 {
+    public function __construct(
+        private NotifyAdminsOfPartnerModerationRequest $notifyAdmins,
+    ) {}
+
     public function handle(User $partner, PartnerAnnouncement $announcement): void
     {
         DB::transaction(function () use ($partner, $announcement): void {
@@ -50,5 +54,13 @@ final class SubmitPartnerAnnouncement
                 'rejection_reason' => null,
             ]);
         });
+
+        $announcement->refresh();
+        $this->notifyAdmins->handle(
+            'notifications.items.partner_announcement_review_requested',
+            ['announcement' => $announcement->title],
+            'admin_partner_announcement_review',
+            $announcement->id,
+        );
     }
 }

@@ -4,6 +4,7 @@ use App\Models\Event;
 use App\Models\MemberMatch;
 use App\Models\User;
 use Illuminate\Notifications\DatabaseNotification;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
@@ -109,6 +110,32 @@ test('mobile notifications stay within the viewport and keep the active filter l
         ->assertNoJavaScriptErrors();
 
     expect($notification)->not->toBeNull();
+});
+
+test('the conversation list shows online presence only beside the label', function () {
+    $member = notificationBrowserMember('Alice');
+    $peer = notificationBrowserMember('Basile');
+    [$lowId, $highId] = collect([$member->id, $peer->id])->sort()->values()->all();
+    $match = MemberMatch::factory()->create([
+        'user_low_id' => $lowId,
+        'user_high_id' => $highId,
+    ]);
+    $match->conversation()->create();
+    Cache::put("presence:user:{$peer->id}", true, now()->addMinute());
+    $this->actingAs($member);
+
+    visit('/conversations')->on()->mobile()
+        ->assertSee(__('conversations.presence.online'))
+        ->assertScript(<<<'JS'
+            (() => {
+                const labels = [...document.querySelectorAll('span')].filter(
+                    (element) => element.textContent.trim() === 'En ligne'
+                        && element.childElementCount === 1,
+                );
+                return labels.length === 1
+                    && labels[0].querySelectorAll('span').length === 1;
+            })()
+            JS, true);
 });
 
 test('an event notification opens its detail over the discover workspace', function () {
