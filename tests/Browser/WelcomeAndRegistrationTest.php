@@ -9,7 +9,9 @@ test('the localized landing displays six ordered partner cards accessibly in eve
     Storage::fake('s3');
     $profiles = PartnerProfile::factory()
         ->count(7)
-        ->sequence(fn ($sequence) => ['position' => $sequence->index + 1])
+        // Reverse the manual positions relative to creation IDs so this test
+        // cannot pass accidentally through primary-key ordering.
+        ->sequence(fn ($sequence) => ['position' => 7 - $sequence->index])
         ->published()
         ->create();
 
@@ -31,13 +33,13 @@ test('the localized landing displays six ordered partner cards accessibly in eve
     $name = $locale === 'fr' ? 'Partenaire accueil' : 'Landing partner';
     $page->assertSee($locale === 'fr' ? 'Nos partenaires' : 'Our partners')
         ->assertCount('[data-test="public-partner-card"]', 6)
-        ->assertSee($name.' 0')
-        ->assertSee($name.' 5')
-        ->assertDontSee($name.' 6')
-        ->assertDontSee(($locale === 'fr' ? 'Landing partner' : 'Partenaire accueil').' 0')
-        ->assertPresent('img[alt="'.__('common.welcome.partners.image_alt', ['name' => $name.' 0'], $locale).'"]')
+        ->assertSee($name.' 6')
+        ->assertSee($name.' 1')
+        ->assertDontSee($name.' 0')
+        ->assertDontSee(($locale === 'fr' ? 'Landing partner' : 'Partenaire accueil').' 6')
+        ->assertPresent('img[alt="'.__('common.welcome.partners.image_alt', ['name' => $name.' 6'], $locale).'"]')
         ->assertScript('document.documentElement.scrollWidth <= window.innerWidth', true)
-        ->assertScript("document.querySelector('[data-test=public-partner-card]').textContent.includes('{$name} 0')", true)
+        ->assertScript("document.querySelector('[data-test=public-partner-card]').textContent.includes('{$name} 6')", true)
         ->keys('[data-test="landing-register"]', 'Tab')
         ->assertScript('document.activeElement.tagName === "A"', true)
         ->assertNoAccessibilityIssues()

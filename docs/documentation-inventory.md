@@ -100,8 +100,8 @@ Il sert de preuve pour la matrice de statut du futur PRD.
 | Photo personnelle facultative | Planifié | aucun champ de photo dans les migrations de profil et aucun flux HTTP de téléversement membre |
 | Export des données du compte | Implémenté | téléchargement JSON direct et authentifié, sans conservation côté serveur |
 | Masquage du profil | Implémenté | `profiles.visibility`, contrôleurs de profil, filtrage de découverte et tests de profil/découverte |
-| Suppression différée sous 30 jours | Partiel | `AccountController::destroy()` et le réglage existent, mais suppriment immédiatement l’utilisateur ; aucun job de purge différée n’est présent |
-| Signalement et modération | Planifié après le MVP | aucune entité, route, interface ou suite de tests dédiée ; le blocage immédiat existe séparément |
+| Suppression différée sous 30 jours | Implémenté | `AccountController::destroy()` désactive immédiatement le compte et programme `PurgeDeletedUser`, qui vérifie encore l’échéance avant la purge ; tests de contrôle des données et de cycle de vie partenaire |
+| Signalement et modération des profils ou messages sociaux | Planifié après le MVP | aucune entité, route, interface ou suite de tests de signalement social ; le blocage immédiat existe séparément, tandis que la modération des fiches et annonces partenaires est livrée et détaillée ci-dessous |
 
 ## Complément vérifié — espace partenaire, issue 199
 

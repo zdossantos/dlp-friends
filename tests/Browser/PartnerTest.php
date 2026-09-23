@@ -94,7 +94,8 @@ test('a partner authors an announcement and admin approves sends and checks aggr
     $page = visit('/admin/partner-statistics')->resize(320, 700)
         ->assertPresent('[data-test="dispatch-partner-announcement-'.$announcement->id.'"]')
         ->keys('[data-test="dispatch-partner-announcement-'.$announcement->id.'"]', 'Enter')
-        ->assertSee(__('notifications.admin.dispatch_started'));
+        ->assertSee(__('notifications.admin.dispatch_started'))
+        ->assertPathIs('/admin/partner-statistics');
     expect($announcement->fresh()->status)->toBe(PartnerAnnouncementStatus::Sending);
 
     // Execute the real worker actions; the browser test transaction defers queued after-commit jobs.
@@ -168,7 +169,7 @@ test('a partner previews the selected profile image before saving', function () 
         ->assertNoJavaScriptErrors();
 });
 
-test('opening a partner notification records a read and a click before redirecting', function () {
+test('opening a partner notification exposes an opaque click route that records engagement before redirecting', function () {
     Queue::fake();
     $member = User::factory()->withProfile()->create();
     $member->partnerNotificationPreference()->create(['enabled' => true]);
@@ -183,8 +184,15 @@ test('opening a partner notification records a read and a click before redirecti
     $notification = $member->notifications()->sole();
     $this->actingAs($member);
     visit('/notifications')->resize(320, 700)
-        ->keys('[data-test="notification-'.$notification->id.'"]', 'Enter')
-        ->assertUrlIs('https://example.org');
+        ->assertSee(__('notifications.actions.open_partner_announcement'));
+
+    // Exercise the same internal read and opaque click routes without asking
+    // Chromium to load the third-party destination, keeping this browser test
+    // network-independent.
+    $this->patch(route('notifications.read', $notification))
+        ->assertRedirect(route('partner-announcements.click', $delivery->click_token));
+    $this->get(route('partner-announcements.click', $delivery->click_token))
+        ->assertRedirect('https://example.org/');
 
     expect($delivery->fresh()->read_at)->not->toBeNull()
         ->and($delivery->fresh()->click_count)->toBe(1)

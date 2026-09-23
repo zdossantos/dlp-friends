@@ -23,7 +23,7 @@ final class PartnerAnnouncementDispatchController extends Controller
             'message' => __('notifications.admin.dispatch_started'),
         ]);
 
-        return to_route('admin.partner-announcements.index')
+        return to_route('admin.partner-statistics.index')
             ->with('success', __('notifications.admin.dispatch_started'));
     }
 }
