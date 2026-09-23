@@ -605,9 +605,9 @@ test('a member partner switches workspaces from the bottom navigation', function
 
     $page = visit('/discover')
         ->on()->mobile()
-        ->assertCount('[data-test="member-bottom-navigation"] a', 4)
+        ->assertCount('[data-test="member-bottom-navigation"] a', 5)
         ->assertPresent('[data-test="workspace-switcher-trigger"]')
-        ->assertMissing('[aria-label="Profil"]')
+        ->assertPresent('[aria-label="Profil"]')
         ->click('[data-test="workspace-switcher-trigger"]')
         ->assertSee('Changer d’espace')
         ->assertSee('Espace membre')

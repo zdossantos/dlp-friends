@@ -122,9 +122,7 @@ const partnerItems = computed<BottomNavigationItem[]>(() => [
 const items = computed<BottomNavigationItem[]>(() =>
     isPartnerContext.value && hasPartnerRole.value
         ? partnerItems.value
-        : canSwitchWorkspace.value
-          ? memberItems.value.slice(0, -1)
-          : memberItems.value,
+        : memberItems.value,
 );
 
 function isActive(item: BottomNavigationItem): boolean {

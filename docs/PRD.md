@@ -196,8 +196,9 @@ Paris.
   arrive directement dans son espace après authentification. Un compte admin
   sans rôle membre arrive directement dans l’administration.
 - Un compte cumulant les rôles membre et partenaire peut changer d’espace
-  depuis la navigation basse. Le sélecteur indique l’espace courant et conserve
-  un accès direct au profil membre, sans modifier ni mémoriser ses rôles.
+  depuis un bouton dédié ajouté à la navigation basse, sans remplacer l’accès
+  direct au profil membre. Le sélecteur indique l’espace courant, sans modifier
+  ni mémoriser les rôles du compte.
 - Le partenaire enregistre une fiche avec noms et descriptions obligatoires
   français/anglais et une image contrôlée. L’enregistrement modifie le brouillon,
   pas la version publique ; la soumission fige une révision. L’administrateur
