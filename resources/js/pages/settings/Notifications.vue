@@ -82,6 +82,7 @@ setLayoutProps({
                 :disabled="processing"
                 :aria-busy="processing ? 'true' : undefined"
                 data-test="save-notification-preferences"
+                class="min-h-11"
             >
                 <Spinner v-if="processing" />
                 {{ t('account.settings.save') }}

@@ -287,19 +287,23 @@ test('the member catalog exposes statistics and confirms immediate deletion', fu
     Mail::assertQueued(MemberDeletedByAdminMail::class);
 });
 
-test('an admin confirms roles assignment and removal from the member catalog', function () {
+test('an admin confirms partner roles assignment and removal from the member catalog', function (int $width, int $height) {
     $member = User::factory()->withProfile()->create(['email' => 'roles@example.test']);
     $admin = User::factory()->withProfile()->admin()->create();
     $this->actingAs($admin);
 
-    $page = visit('/admin/members')
+    $page = visit('/admin/members')->resize($width, $height)
         ->assertSee('roles@example.test')
         ->assertCount('[data-test="manage-member-roles-trigger"]', 1)
-        ->click('[data-test="manage-member-roles-trigger"]')
-        ->assertPresent('[data-slot="dialog-content"]')
+        ->keys('[data-test="manage-member-roles-trigger"]', 'Enter')
+        ->assertPresent('[role="dialog"]')
         ->assertSee('Gérer les rôles')
         ->assertSee('Administrateur (lecture seule)')
-        ->assertDisabled('[data-test="confirm-member-roles"]');
+        ->assertDisabled('[data-test="confirm-member-roles"]')
+        ->assertScript('document.querySelector("[data-test=confirm-member-roles]").getBoundingClientRect().height >= 44', true)
+        ->assertScript('document.documentElement.scrollWidth <= window.innerWidth', true);
+    $page->script('async () => { await Promise.all(document.getAnimations().map(animation => animation.finished)); }');
+    $page->assertNoAccessibilityIssues();
 
     $page->click("#member-role-partner-{$member->id}")
         ->click("#member-role-confirmed-{$member->id}")
@@ -318,7 +322,9 @@ test('an admin confirms roles assignment and removal from the member catalog', f
         ->assertNoJavaScriptErrors();
 
     expect($member->fresh('roles')->hasRole('partner'))->toBeFalse();
-});
+    $page->assertNotPresent('[role="dialog"]')
+        ->assertScript('document.activeElement?.matches("[data-test=manage-member-roles-trigger]")', true);
+})->with([[320, 700], [1440, 900]]);
 
 test('an admin starts a classic private conversation and sees the match dialog', function () {
     $member = User::factory()->withProfile()->create(['email' => 'conversation@example.test']);

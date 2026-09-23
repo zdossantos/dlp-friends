@@ -119,6 +119,36 @@ de blocage interdisent toutes deux de cibler un administrateur.
 
 ## Cycle de vie partenaire et concurrence
 
+Les routes Inertia `/partner/profile`, `/partner/announcements` et
+`/partner/statistics` sont réservées au rôle `partner`, indépendamment du
+parcours social `user`. Les contrôleurs admin de fiches, annonces, paramètres
+et statistiques utilisent les mêmes Actions métier et des autorisations serveur.
+Les rôles cumulables sont modifiés transactionnellement avec audit ; `admin`
+reste hors de ce formulaire.
+
+`SavePartnerProfileDraft` et `TransformPartnerImage` enregistrent le brouillon
+et une image réencodée dans le stockage privé. Soumettre fige la révision ;
+l’approbation change le pointeur de version publique sans exposer les brouillons.
+`PublicLandingController` sélectionne au plus six fiches publiées/approuvées
+dans l’ordre manuel et sert leurs images via une route publique contrôlée.
+
+Le bouton administrateur des statistiques appelle `StartPartnerAnnouncement` :
+verrouillage de la fiche et de l’annonce, validation de l’état et du délai,
+création du run et de la métrique, puis job après commit. La préparation capture
+l’audience par lots de 500 (compte actif, vérifié, rôle `user`, hors suppression,
+opt-in), insère les livraisons uniques et déclenche leurs jobs après commit.
+Chaque livraison revérifie l’éligibilité sous verrou, écrit notification et
+métrique atomiquement, puis diffuse via Reverb après commit. La finalisation
+attend la fin de préparation et des livraisons non terminales ; les reprises
+conservent les lignes déjà livrées ou ignorées et réessaient les broadcasts manqués.
+
+Le centre de notifications résout l’annonce reçue côté serveur : lecture,
+retrait avec confirmation, puis redirection par jeton opaque pour l’ouverture.
+Les compteurs d’engagement sont atomiques ; `PartnerAnnouncementStatisticsData`
+ne transmet que les agrégats, avec compteurs opérationnels supplémentaires
+pour l’administration. Les taux sont rapportés aux livraisons effectives.
+Il n’existe ni API séparée, ni ciblage partenaire, ni envoi e-mail/push.
+
 Les livraisons d'annonces conservent un instantané immuable du contenu public
 reçu. Leur clé étrangère vers l'annonce est nullable avec `null on delete` : la
 rétention peut supprimer une campagne et ses agrégats sans effacer l'historique
@@ -213,6 +243,7 @@ UUID des URL sont retirés ou remplacés par `{id}`. Aucun événement applicati
 ne doit contenir de nom, d’e-mail, d’identifiant de membre, de texte de profil
 ou de message. `GOOGLE_SITE_VERIFICATION` ajoute, lorsqu’elle est configurée,
 la balise de validation Search Console aux documents HTML.
+
 ## Services Docker
 
 | Service | Responsabilité |

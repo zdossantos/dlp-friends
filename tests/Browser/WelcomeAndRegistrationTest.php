@@ -4,7 +4,7 @@ use App\Models\PartnerProfile;
 use App\Models\User;
 use Illuminate\Support\Facades\Storage;
 
-test('the localized landing displays at most six ordered partner cards on mobile', function () {
+test('the localized landing displays six ordered partner cards accessibly in every viewport and theme', function (string $locale, int $width, int $height, string $theme) {
     config()->set('filesystems.default', 's3');
     Storage::fake('s3');
     $profiles = PartnerProfile::factory()
@@ -26,16 +26,28 @@ test('the localized landing displays at most six ordered partner cards on mobile
         ));
     }
 
-    visit('/en')->on()->mobile()
-        ->assertSee('Our partners')
+    $page = visit('/'.$locale)->resize($width, $height);
+    $page->script("document.documentElement.classList.toggle('dark', '{$theme}' === 'dark')");
+    $name = $locale === 'fr' ? 'Partenaire accueil' : 'Landing partner';
+    $page->assertSee($locale === 'fr' ? 'Nos partenaires' : 'Our partners')
         ->assertCount('[data-test="public-partner-card"]', 6)
-        ->assertSee('Landing partner 0')
-        ->assertSee('Landing partner 5')
-        ->assertDontSee('Landing partner 6')
-        ->assertDontSee('Partenaire accueil 0')
-        ->assertPresent('img[alt="Landing partner 0 presentation"]')
+        ->assertSee($name.' 0')
+        ->assertSee($name.' 5')
+        ->assertDontSee($name.' 6')
+        ->assertDontSee(($locale === 'fr' ? 'Landing partner' : 'Partenaire accueil').' 0')
+        ->assertPresent('img[alt="'.__('common.welcome.partners.image_alt', ['name' => $name.' 0'], $locale).'"]')
+        ->assertScript('document.documentElement.scrollWidth <= window.innerWidth', true)
+        ->assertScript("document.querySelector('[data-test=public-partner-card]').textContent.includes('{$name} 0')", true)
+        ->keys('[data-test="landing-register"]', 'Tab')
+        ->assertScript('document.activeElement.tagName === "A"', true)
+        ->assertNoAccessibilityIssues()
         ->assertNoJavaScriptErrors();
-});
+})->with([
+    ['fr', 320, 700, 'light'], ['fr', 320, 700, 'dark'],
+    ['fr', 1440, 900, 'light'], ['fr', 1440, 900, 'dark'],
+    ['en', 320, 700, 'light'], ['en', 320, 700, 'dark'],
+    ['en', 1440, 900, 'light'], ['en', 1440, 900, 'dark'],
+]);
 
 test('the landing page presents the adult friendship service to guests', function () {
     visit('/fr', ['locale' => 'fr-FR'])

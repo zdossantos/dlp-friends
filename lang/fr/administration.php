@@ -187,5 +187,7 @@ return [
         'actions' => 'Actions',
         'retry' => 'Relancer',
         'retrying' => 'Relance…',
+        'dispatch' => 'Envoyer l’annonce',
+        'dispatching' => 'Envoi…',
     ],
 ];

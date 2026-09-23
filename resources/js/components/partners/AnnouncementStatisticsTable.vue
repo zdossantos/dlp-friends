@@ -1,12 +1,13 @@
 <script setup lang="ts">
 import { Form } from '@inertiajs/vue3';
-import { RotateCcw } from '@lucide/vue';
+import { RotateCcw, Send } from '@lucide/vue';
+import InputError from '@/components/InputError.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
 import { useTranslations } from '@/composables/useTranslations';
 import type { TranslationKey } from '@/composables/useTranslations';
-import { retry } from '@/routes/admin/partner-announcements';
+import { dispatch, retry } from '@/routes/admin/partner-announcements';
 import type {
     PartnerAnnouncementStatistics,
     PartnerAnnouncementStatus,
@@ -60,7 +61,10 @@ function canRetry(status: PartnerAnnouncementStatus): boolean {
     <div
         v-else
         data-test="partner-statistics-table"
-        class="max-w-full overflow-x-auto rounded-xl border"
+        role="region"
+        :aria-label="caption"
+        tabindex="0"
+        class="max-w-full overflow-x-auto rounded-xl border focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
     >
         <table
             class="w-full text-left text-sm"
@@ -202,7 +206,47 @@ function canRetry(status: PartnerAnnouncementStatus): boolean {
                         </td>
                         <td class="px-3 py-4">
                             <Form
-                                v-if="canRetry(announcement.status)"
+                                v-if="announcement.status === 'approved'"
+                                v-bind="dispatch.form(announcement.id)"
+                                :options="{ preserveScroll: true }"
+                                v-slot="{ errors, processing }"
+                            >
+                                <Button
+                                    type="submit"
+                                    class="min-h-11"
+                                    :data-test="`dispatch-partner-announcement-${announcement.id}`"
+                                    :disabled="processing"
+                                    :aria-busy="processing ? 'true' : undefined"
+                                    :aria-describedby="
+                                        errors.announcement ||
+                                        errors.destination_url
+                                            ? `dispatch-error-${announcement.id}`
+                                            : undefined
+                                    "
+                                >
+                                    <Spinner v-if="processing" />
+                                    <Send v-else aria-hidden="true" />
+                                    {{
+                                        processing
+                                            ? t(
+                                                  'administration.partner_statistics.dispatching',
+                                              )
+                                            : t(
+                                                  'administration.partner_statistics.dispatch',
+                                              )
+                                    }}
+                                </Button>
+                                <InputError
+                                    :id="`dispatch-error-${announcement.id}`"
+                                    :message="
+                                        errors.announcement ||
+                                        errors.destination_url
+                                    "
+                                    class="mt-2"
+                                />
+                            </Form>
+                            <Form
+                                v-else-if="canRetry(announcement.status)"
                                 v-bind="retry.form(announcement.id)"
                                 :options="{ preserveScroll: true }"
                                 v-slot="{ processing }"

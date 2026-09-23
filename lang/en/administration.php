@@ -184,5 +184,7 @@ return [
         'actions' => 'Actions',
         'retry' => 'Retry',
         'retrying' => 'Retrying…',
+        'dispatch' => 'Send announcement',
+        'dispatching' => 'Sending…',
     ],
 ];

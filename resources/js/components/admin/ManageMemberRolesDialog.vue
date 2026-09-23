@@ -155,6 +155,7 @@ function submit(): void {
                         <Button
                             type="button"
                             variant="outline"
+                            class="min-h-11"
                             :disabled="form.processing"
                         >
                             {{ t('common.actions.cancel') }}
@@ -163,6 +164,7 @@ function submit(): void {
                     <Button
                         type="submit"
                         data-test="confirm-member-roles"
+                        class="min-h-11"
                         :disabled="form.processing || !form.confirmed"
                     >
                         {{

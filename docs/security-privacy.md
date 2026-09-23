@@ -86,6 +86,36 @@ expiration automatique, au plus 30 jours après leur création.
 - Un administrateur ne peut ni supprimer un autre administrateur ni ouvrir un
   échange d’assistance avec lui.
 
+## Partenaires : accès, consentement et conservation
+
+- Les routes partenaires exigent le rôle `partner`, un compte actif, majeur et
+  vérifié, mais pas le profil social ni son tutoriel. Les routes sociales exigent
+  `user` et leurs prérequis existants ; l’administration exige `admin`.
+  Les Policies et Actions vérifient propriétaire, rôle et transition côté serveur.
+- Les modifications de rôles exigent une confirmation et créent un audit minimal
+  immuable. Le retrait de `partner` bloque immédiatement les routes privées
+  partenaires ; l’UI ne peut pas accorder `admin`. La dépublication est une
+  action administrative distincte (elle est automatique à la suppression du compte).
+- Les images de fiche sont JPEG, PNG ou WebP, de 640 × 360 à 6000 × 6000 pixels,
+  au plus 5 Mo. Le serveur les réencode sans métadonnées et les garde privées.
+  Une route contrôlée ne rend public que le fichier de la révision publiée ; les
+  brouillons restent réservés au propriétaire et aux administrateurs.
+- Les liens d’annonce exigent HTTPS et refusent notamment identifiants intégrés,
+  hôtes locaux et adresses IP non publiques. Aucune récupération distante ni
+  prévisualisation serveur de l’URL n’est effectuée.
+- L’opt-in partenaire est indépendant du consentement analytique. Il est absent
+  ou faux par défaut, révocable dans les réglages et vérifié à chaque livraison,
+  avec l’éligibilité actuelle du membre. Pas de ciblage ni d’accès aux identités
+  des destinataires dans les vues statistiques, seulement des agrégats.
+- Le lien de clic utilise un jeton opaque propre à la livraison. Lecture/retrait
+  restent authentifiés et réservés au destinataire ; le lien opaque permet la
+  redirection et le comptage sans exposer d’identifiant utilisateur dans l’URL.
+- Les données historiques expirables (révisions non actives, annonces terminales,
+  agrégats et audits) sont purgées après deux ans. Une version actuellement
+  publiée n’expire pas. Les annonces reçues sont des instantanés distincts : elles
+  restent dans l’historique du destinataire après suppression de l’expéditeur ou
+  expiration de la source, jusqu’au cycle de suppression du destinataire.
+
 ## Mesure d’audience
 
 Lorsque `GOOGLE_ANALYTICS_ID` est défini, Google Analytics 4 mesure les pages
@@ -117,4 +147,6 @@ publicitaires restent refusées.
 
 ## Différé
 
-Le signalement de profils/messages, la console de modération et les processus d'équipe sont prévus en V2. Leur absence du MVP ne dispense pas de sécuriser les accès, les fichiers et la suppression de compte.
+Le signalement de profils/messages sociaux, leur console de modération et les
+processus d’équipe sont prévus en V2. La modération des fiches et annonces
+partenaires est déjà livrée et ne constitue pas une modération sociale.

@@ -23,11 +23,12 @@ et son état de livraison sont définis dans le [`PRD.md`](PRD.md).
 | `notifications` | Notification persistante catégorisée, localisée et reliée à une cible applicative |
 | `blocks` | Blocage unidirectionnel entre deux membres |
 | `avatars` | Catalogue administrable : nom, image privée, deux couleurs de dégradé, activation et ordre |
-| `roles` / `user_roles` | Attribution du rôle d'administration sans le mélanger aux profils membres |
+| `roles` / `user_roles` | Rôles cumulables `user`, `partner`, `admin`, distincts des profils |
 | `partner_profiles` / `partner_profile_revisions` | Fiche partenaire, version publique et historique modéré bilingue |
 | `partner_announcements` / `partner_announcement_metrics` | Contenu d'annonce et statistiques agrégées sans identité de destinataire |
 | `partner_announcement_deliveries` | Historique individuel du destinataire avec instantané immuable du contenu reçu |
 | `partner_notification_preferences` | Consentement explicite et révocable aux annonces partenaires |
+| `partner_settings` | Délai global entre deux envois d’un même partenaire, 30 jours par défaut |
 | `role_audits` | Trace minimale et temporaire des changements de rôle |
 
 ## États et contraintes de stockage
@@ -65,6 +66,31 @@ et son état de livraison sont définis dans le [`PRD.md`](PRD.md).
   audits expirent par lots de 500 lorsque `expires_at <= now()`.
 
 ## Règles essentielles
+
+### Partenaires
+
+- Une fiche appartient à un compte partenaire ; `published_revision_id` désigne
+  la révision publique, distincte du brouillon mutable unique (`draft_key`).
+  Les révisions passent de `draft` à `pending_approval`, puis `approved` ou
+  `rejected`. Les champs FR/EN sont obligatoires et `position` règle l’ordre public.
+- Les annonces évoluent entre `draft`, `pending_approval`, `approved`, `sending`,
+  `sent`, `rejected` et `cancelled`. Le contenu soumis est figé ; la révision d’une
+  annonce refusée crée une nouvelle annonce brouillon. `run_uuid` identifie le
+  lancement et `audience_prepared_at` la fin de préparation.
+- La paire annonce/destinataire est unique. Les livraisons sont `pending`,
+  `delivered`, `failed` ou `skipped` ; une reprise ne recrée pas une notification
+  livrée. Les horodatages de lecture, retrait et premier clic sont individuels,
+  le compteur total de clics est cumulatif, le jeton de clic est opaque et unique.
+- Une métrique unique par annonce stocke préparation, livraison, lecture,
+  retrait, clics uniques et clics totaux. Les taux utilisent les livraisons
+  effectives comme dénominateur, et valent zéro sans livraison.
+- L’absence de préférence signifie refus. Le consentement est unique par
+  utilisateur et revérifié au moment de la livraison.
+- `role_audits` conserve acteur, cible, rôle, opération et date, sans modification
+  après création. Les références de compte sont détachées à leur suppression ;
+  les audits et historiques expirables ont une échéance de deux ans.
+
+### Membres et relations sociales
 
 - Un profil appartient à un seul utilisateur.
 - Un profil complet doit sélectionner un avatar actif. Archiver cet avatar conserve la sélection mais rend le profil incomplet jusqu'à sa réactivation ou son remplacement.
@@ -105,5 +131,7 @@ même changement.
 - Un profil passé ou liké n'est plus reproposé au même membre.
 - La messagerie accepte uniquement du texte brut, limité à 2 000 caractères. Les pièces jointes, GIF, réactions, édition et suppression de message sont hors V1.
 - Un membre ne peut lire ou envoyer un message que dans une conversation liée à son match et non affectée par un blocage.
-- Chaque compte reçoit le rôle `user`; `admin` est un rôle additionnel attribué explicitement.
+- L’inscription donne initialement `user`. L’administration peut ensuite modifier
+  `user` et `partner` avec confirmation ; `admin` reste géré par console. Le rôle
+  partenaire ne confère aucun droit social ni administrateur implicite.
 - Le rôle `admin` donne accès au dashboard, à la gestion des membres et aux catalogues d’intérêts et d’avatars. La gestion des membres agrège des compteurs directionnels sans charger le contenu des messages. Elle permet la suppression immédiate d’un membre et la création d’un échange privé avec lui, mais jamais ces actions sur un autre administrateur. La gestion des avatars reste accessible avant la complétion du profil afin de permettre l’ajout initial au catalogue. Ce rôle ne donne pas de droit de lecture des messages privés dans le MVP. Les catégories d’intérêts restent techniques et ne sont pas gérées dans cette interface.

@@ -7,7 +7,7 @@ vision, la cible du MVP, les règles métier, les critères de succès et les
 évolutions envisagées. Il distingue volontairement le produit attendu de ce
 qui est déjà livré.
 
-La matrice d’implémentation est un instantané du dépôt au 30 août 2026. Elle
+La matrice d’implémentation est mise à jour au fil des capacités livrées. Elle
 doit être mise à jour dès qu’une capacité change de statut. Les détails de
 stockage, d’architecture, de sécurité et d’interface appartiennent aux
 références spécialisées liées en fin de document.
@@ -123,7 +123,7 @@ Paris.
   inaccessible aux deux membres, sans notifier explicitement la personne
   bloquée.
 - Un administrateur ne peut pas être bloqué.
-- Le signalement et les outils de modération ne font pas partie du MVP.
+- Le signalement et la modération des profils/messages sociaux restent hors MVP.
 
 ### Événements amicaux et notifications
 
@@ -187,6 +187,39 @@ Paris.
 - Les profils administrateurs sont identifiés dans l’application par le badge
   « Administrateur » et une bordure dorée sur leurs cartes et pages profil.
 
+### Espace partenaire (issue 199)
+
+- Les rôles `user`, `partner` et `admin` sont cumulables. L’administration peut
+  attribuer ou retirer `user` et `partner` depuis la liste des membres après
+  confirmation, avec audit ; `admin` reste attribué par la console. Un compte
+  partenaire seul n’accède ni aux fonctions sociales ni à l’administration.
+- Le partenaire enregistre une fiche avec noms et descriptions obligatoires
+  français/anglais et une image contrôlée. L’enregistrement modifie le brouillon,
+  pas la version publique ; la soumission fige une révision. L’administrateur
+  approuve ou refuse avec motif. Seule la version approuvée est publiée.
+- Les accueils SSR `/fr` et `/en` affichent au plus six fiches publiées, dans
+  l’ordre manuel administrateur. La section disparaît lorsqu’il n’y en a aucune.
+- Les annonces suivent une modération distincte : brouillon, attente,
+  approbation ou refus, puis envoi et état envoyé ; une annulation est possible
+  avant le début de l’envoi. Le texte et le lien HTTPS sont validés côté serveur.
+  Une annonce soumise n’est plus éditable ; après un refus, sa nouvelle version
+  repart en brouillon et doit être approuvée.
+- L’administrateur lance les annonces approuvées depuis les statistiques.
+  Le délai entre deux envois d’un même partenaire vaut 30 jours par défaut et
+  est configurable. La reprise d’une livraison échouée ne renvoie pas les
+  notifications déjà livrées ou ignorées.
+- Les annonces sont exclusivement des notifications dans l’application, sur
+  consentement explicite désactivé par défaut. Le membre peut se désinscrire,
+  lire, ouvrir le lien et retirer une annonce avec confirmation. Le partenaire
+  ne choisit aucun segment ni destinataire.
+- Les statistiques exposent uniquement les volumes et taux agrégés : livraisons,
+  lectures, retraits, clics uniques et totaux ; l’administrateur dispose en plus
+  des compteurs opérationnels et de la relance. Aucune liste de destinataires
+  ni histoire individuelle n’est accessible au partenaire ou à l’administrateur.
+- Export, suppression, historique reçu et conservation de deux ans des données
+  historiques sont décrits dans [`security-privacy.md`](security-privacy.md).
+  Aucun envoi e-mail/push partenaire, paiement ou système publicitaire n’est livré.
+
 ### Contrôle des données
 
 - Le membre peut modifier son profil et ses intérêts actifs.
@@ -222,6 +255,7 @@ Paris.
 | Centre de notifications persistant | **Implémenté** | Matches, messages et événements sont regroupés, filtrables et ouvrent leur élément cible. |
 | Tutoriel produit obligatoire | **Implémenté** | Progression persistée et statistiques admin sont livrées. |
 | Gestion administrative des membres | **Implémenté** | Recherche et compteurs, suppression confirmée, échange privé admin/membre et identification visuelle des admins sont livrés sans accès au contenu des messages. |
+| Espace partenaire et annonces modérées (issue 199) | **Implémenté** | Rôles cumulables et audités, fiches bilingues révisées, six cartes SSR au maximum, annonces approuvées et envoi administrateur, opt-in membre, interactions et statistiques agrégées, export/suppression/rétention et tests sont livrés. |
 | Français et anglais | **Implémenté** | Résolution de locale et catalogues backend/frontend sont présents. |
 | Univers éditorial | **Implémenté** | Tutoiement, vocabulaire canonique et catalogues par feature sont contrôlés automatiquement. |
 | Thèmes clair, sombre et système | **Implémenté** | Préférence persistée et interface correspondante sont présentes. |
@@ -233,7 +267,7 @@ Paris.
 | Photo personnelle facultative | **Planifié** | Aucun flux de téléversement membre n’existe. |
 | Export des données | **Implémenté** | Les réglages génèrent à la demande un export JSON authentifié, téléchargé directement sans fichier conservé côté serveur. |
 | Suppression différée sous 30 jours | **Implémenté** | L’accès, les sessions et les liens sociaux sont révoqués immédiatement ; un job gardé purge les données après 30 jours et le scheduler récupère les échéances manquées. |
-| Signalement et console de modération | **Planifié après le MVP** | Le blocage existe ; aucun signalement ou workflow de modération n’est livré. |
+| Signalement et modération des profils/messages sociaux | **Planifié après le MVP** | Le blocage existe ; la modération partenaire est livrée séparément, sans signalement social. |
 
 Les preuves détaillées de cet instantané sont consignées dans
 [`documentation-inventory.md`](documentation-inventory.md).
@@ -245,7 +279,8 @@ Les preuves détaillées de cet instantané sont consignées dans
 - Recherche par ville, distance ou tranche d’âge.
 - Limites quotidiennes, annulation de swipe et filtres avancés.
 - Signalement, équipe de modération et outils de modération avancés.
-- Paiement, abonnement et publicité.
+- Paiement, abonnement et moteur publicitaire ; les annonces partenaires
+  modérées sur opt-in constituent le seul parcours partenaire livré.
 
 ## Évolutions envisagées
 
