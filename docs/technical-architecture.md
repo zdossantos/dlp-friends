@@ -128,6 +128,11 @@ reste hors de ce formulaire. L’entrée authentifiée conserve `/app` pour tout
 compte `user`, puis dirige un compte sans `user` vers `/dashboard` s’il est
 administrateur ou `/partner/profile` s’il est partenaire.
 
+La navigation basse expose un sélecteur d’espace uniquement lorsque les rôles
+`user` et `partner` sont tous deux présents. L’espace actif est dérivé de l’URL :
+aucune préférence supplémentaire n’est persistée, et les middlewares de rôles
+restent la source de vérité des autorisations.
+
 `SavePartnerProfileDraft` et `TransformPartnerImage` enregistrent le brouillon
 et une image réencodée dans le stockage privé. Soumettre fige la révision ;
 l’approbation change le pointeur de version publique sans exposer les brouillons.

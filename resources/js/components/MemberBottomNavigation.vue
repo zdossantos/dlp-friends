@@ -2,10 +2,12 @@
 import type { InertiaLinkProps } from '@inertiajs/vue3';
 import { Link, router, usePage } from '@inertiajs/vue3';
 import {
+    ArrowLeftRight,
     Bell,
     Building2,
     CalendarDays,
     ChartBar,
+    Check,
     Megaphone,
     MessageCircle,
     Sparkles,
@@ -13,6 +15,15 @@ import {
 } from '@lucide/vue';
 import type { LucideIcon } from '@lucide/vue';
 import { computed, onBeforeUnmount, ref } from 'vue';
+import {
+    Sheet,
+    SheetClose,
+    SheetContent,
+    SheetDescription,
+    SheetHeader,
+    SheetTitle,
+    SheetTrigger,
+} from '@/components/ui/sheet';
 import { useCurrentUrl } from '@/composables/useCurrentUrl';
 import { useMemberNavigationVisibility } from '@/composables/useMemberNavigationVisibility';
 import { useMemberRealtimeContext } from '@/composables/useMemberRealtimeNotifications';
@@ -36,6 +47,12 @@ const shouldShow = useMemberNavigationVisibility();
 const pendingPath = ref<string | null>(null);
 const hasPartnerRole = computed(() =>
     page.props.auth.user.roles.some((role) => role.name === 'partner'),
+);
+const hasMemberRole = computed(() =>
+    page.props.auth.user.roles.some((role) => role.name === 'user'),
+);
+const canSwitchWorkspace = computed(
+    () => hasMemberRole.value && hasPartnerRole.value,
 );
 const isPartnerContext = computed(() =>
     currentUrl.value.startsWith('/partner/'),
@@ -105,7 +122,9 @@ const partnerItems = computed<BottomNavigationItem[]>(() => [
 const items = computed<BottomNavigationItem[]>(() =>
     isPartnerContext.value && hasPartnerRole.value
         ? partnerItems.value
-        : memberItems.value,
+        : canSwitchWorkspace.value
+          ? memberItems.value.slice(0, -1)
+          : memberItems.value,
 );
 
 function isActive(item: BottomNavigationItem): boolean {
@@ -178,6 +197,92 @@ onBeforeUnmount(() => {
                     {{ item.unreadCount > 99 ? '99+' : item.unreadCount }}
                 </span>
             </Link>
+            <Sheet v-if="canSwitchWorkspace">
+                <SheetTrigger :as-child="true">
+                    <button
+                        type="button"
+                        data-test="workspace-switcher-trigger"
+                        :aria-label="t('common.workspace_switcher.trigger')"
+                        class="relative grid size-12 place-items-center rounded-2xl text-muted-foreground transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+                    >
+                        <ArrowLeftRight class="size-6" aria-hidden="true" />
+                    </button>
+                </SheetTrigger>
+                <SheetContent
+                    side="bottom"
+                    class="rounded-t-3xl px-4 pt-2 [padding-bottom:max(1.5rem,env(safe-area-inset-bottom))]"
+                >
+                    <SheetHeader class="px-0 text-left">
+                        <SheetTitle>
+                            {{ t('common.workspace_switcher.title') }}
+                        </SheetTitle>
+                        <SheetDescription>
+                            {{ t('common.workspace_switcher.description') }}
+                        </SheetDescription>
+                    </SheetHeader>
+
+                    <div class="grid gap-2">
+                        <SheetClose :as-child="true">
+                            <Link
+                                :href="discovery()"
+                                data-test="workspace-member-link"
+                                :aria-current="
+                                    !isPartnerContext ? 'page' : undefined
+                                "
+                                class="flex items-center gap-3 rounded-2xl border border-border p-4 transition-colors hover:bg-secondary focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+                            >
+                                <UserRound
+                                    class="size-5 shrink-0"
+                                    aria-hidden="true"
+                                />
+                                <span class="flex-1 font-medium">
+                                    {{ t('common.workspace_switcher.member') }}
+                                </span>
+                                <Check
+                                    v-if="!isPartnerContext"
+                                    class="size-5 text-primary"
+                                    aria-hidden="true"
+                                />
+                            </Link>
+                        </SheetClose>
+                        <SheetClose :as-child="true">
+                            <Link
+                                :href="editPartnerProfile()"
+                                data-test="workspace-partner-link"
+                                :aria-current="
+                                    isPartnerContext ? 'page' : undefined
+                                "
+                                class="flex items-center gap-3 rounded-2xl border border-border p-4 transition-colors hover:bg-secondary focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+                            >
+                                <Building2
+                                    class="size-5 shrink-0"
+                                    aria-hidden="true"
+                                />
+                                <span class="flex-1 font-medium">
+                                    {{ t('common.workspace_switcher.partner') }}
+                                </span>
+                                <Check
+                                    v-if="isPartnerContext"
+                                    class="size-5 text-primary"
+                                    aria-hidden="true"
+                                />
+                            </Link>
+                        </SheetClose>
+                        <SheetClose :as-child="true">
+                            <Link
+                                :href="showProfile()"
+                                class="mt-2 text-center text-sm font-medium text-muted-foreground underline-offset-4 hover:text-foreground hover:underline focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+                            >
+                                {{
+                                    t(
+                                        'common.workspace_switcher.member_profile',
+                                    )
+                                }}
+                            </Link>
+                        </SheetClose>
+                    </div>
+                </SheetContent>
+            </Sheet>
         </nav>
     </div>
 </template>

@@ -53,6 +53,14 @@ return [
         'close' => 'Fermer',
         'delete' => 'Supprimer',
     ],
+    'workspace_switcher' => [
+        'trigger' => 'Espaces',
+        'title' => 'Changer d’espace',
+        'description' => 'Choisis l’espace que tu souhaites utiliser.',
+        'member' => 'Espace membre',
+        'partner' => 'Espace partenaire',
+        'member_profile' => 'Profil membre',
+    ],
     'errors' => [
         'generic_title' => 'Une erreur est survenue',
     ],

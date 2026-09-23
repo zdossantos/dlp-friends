@@ -49,6 +49,14 @@ return [
         ],
     ],
     'actions' => ['cancel' => 'Cancel', 'close' => 'Close', 'delete' => 'Delete'],
+    'workspace_switcher' => [
+        'trigger' => 'Workspaces',
+        'title' => 'Switch workspace',
+        'description' => 'Choose the workspace you want to use.',
+        'member' => 'Member workspace',
+        'partner' => 'Partner workspace',
+        'member_profile' => 'Member profile',
+    ],
     'errors' => ['generic_title' => 'Something went wrong'],
     'accessibility' => [
         'main_navigation' => 'Main navigation', 'menu_navigation' => 'Navigation menu', 'breadcrumb' => 'Breadcrumb',

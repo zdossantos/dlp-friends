@@ -599,6 +599,42 @@ test('partner mobile navigation exposes only implemented partner destinations', 
         ->assertNoJavaScriptErrors();
 });
 
+test('a member partner switches workspaces from the bottom navigation', function () {
+    $memberPartner = User::factory()->withProfile()->partner()->create();
+    $this->actingAs($memberPartner);
+
+    $page = visit('/discover')
+        ->on()->mobile()
+        ->assertCount('[data-test="member-bottom-navigation"] a', 4)
+        ->assertPresent('[data-test="workspace-switcher-trigger"]')
+        ->assertMissing('[aria-label="Profil"]')
+        ->click('[data-test="workspace-switcher-trigger"]')
+        ->assertSee('Changer d’espace')
+        ->assertSee('Espace membre')
+        ->assertSee('Espace partenaire')
+        ->assertSeeLink('Profil membre')
+        ->assertAttribute(
+            '[data-test="workspace-member-link"]',
+            'aria-current',
+            'page',
+        )
+        ->click('[data-test="workspace-partner-link"]')
+        ->assertPathIs('/partner/profile')
+        ->assertCount('[data-test="member-bottom-navigation"] a', 3)
+        ->assertPresent('[data-test="workspace-switcher-trigger"]')
+        ->assertNoJavaScriptErrors();
+
+    $page->click('[data-test="workspace-switcher-trigger"]')
+        ->assertAttribute(
+            '[data-test="workspace-partner-link"]',
+            'aria-current',
+            'page',
+        )
+        ->click('[data-test="workspace-member-link"]')
+        ->assertPathIs('/discover')
+        ->assertNoJavaScriptErrors();
+});
+
 test('partner sidebar navigation disappears on the first render after role removal', function () {
     $admin = User::factory()->withProfile()->admin()->partner()->create();
     $admin->profile?->update(['display_name' => 'Admin partenaire']);
