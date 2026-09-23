@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Enums\PartnerRevisionStatus;
 use App\Models\PartnerProfile;
+use App\Support\AuthenticatedHome;
 use App\Support\Locale;
 use App\Support\PublicUrls;
 use Illuminate\Http\RedirectResponse;
@@ -19,7 +20,7 @@ class PublicLandingController extends Controller
     public function redirect(Request $request): SymfonyResponse
     {
         if ($request->user() !== null) {
-            return to_route('app');
+            return redirect()->to(AuthenticatedHome::url($request->user()));
         }
 
         $localizedUrl = route('landing.show', ['locale' => app()->getLocale()], absolute: false);
@@ -34,7 +35,7 @@ class PublicLandingController extends Controller
     public function show(Request $request, string $locale): Response|RedirectResponse
     {
         if ($request->user() !== null) {
-            return to_route('app');
+            return redirect()->to(AuthenticatedHome::url($request->user()));
         }
 
         if (! Locale::isSupported($locale)) {

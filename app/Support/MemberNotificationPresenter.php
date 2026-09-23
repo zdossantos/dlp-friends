@@ -12,7 +12,7 @@ use LogicException;
 
 final class MemberNotificationPresenter
 {
-    /** @return array{id: string, category: string, translation_key: string, parameters: array<string, string|int|null>, target_url: string, read_at: string|null, created_at: string|null, dismiss_url?: string, action_label?: string} */
+    /** @return array{id: string, category: string, translation_key: string, parameters: array<string, string|int|null>, target_url: string, read_at: string|null, created_at: string|null, dismiss_url?: string, action_label?: string, content?: string} */
     public function present(DatabaseNotification $notification, User $viewer): array
     {
         $data = $notification->data;
@@ -41,6 +41,7 @@ final class MemberNotificationPresenter
                 absolute: false,
             );
             $presented['action_label'] = $actionLabel;
+            $presented['content'] = $partnerDelivery->announcement_content;
         }
 
         return $presented;

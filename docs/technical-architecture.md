@@ -124,7 +124,9 @@ Les routes Inertia `/partner/profile`, `/partner/announcements` et
 parcours social `user`. Les contrôleurs admin de fiches, annonces, paramètres
 et statistiques utilisent les mêmes Actions métier et des autorisations serveur.
 Les rôles cumulables sont modifiés transactionnellement avec audit ; `admin`
-reste hors de ce formulaire.
+reste hors de ce formulaire. L’entrée authentifiée conserve `/app` pour tout
+compte `user`, puis dirige un compte sans `user` vers `/dashboard` s’il est
+administrateur ou `/partner/profile` s’il est partenaire.
 
 `SavePartnerProfileDraft` et `TransformPartnerImage` enregistrent le brouillon
 et une image réencodée dans le stockage privé. Soumettre fige la révision ;
@@ -133,7 +135,8 @@ l’approbation change le pointeur de version publique sans exposer les brouillo
 dans l’ordre manuel et sert leurs images via une route publique contrôlée.
 
 Le bouton administrateur des statistiques appelle `StartPartnerAnnouncement` :
-verrouillage de la fiche et de l’annonce, validation de l’état et du délai,
+verrouillage du réglage singleton, de la fiche et de l’annonce, validation de
+l’état et du délai,
 création du run et de la métrique, puis job après commit. La préparation capture
 l’audience par lots de 500 (compte actif, vérifié, rôle `user`, hors suppression,
 opt-in), insère les livraisons uniques et déclenche leurs jobs après commit.
@@ -157,12 +160,19 @@ opérationnel n'est dupliqué dans cet instantané. La suppression du destinatai
 reste la seule opération qui supprime sa livraison identifiable.
 
 Les actions concurrentes respectent l'ordre de verrouillage global `user` →
-`partner_profile` → `partner_announcement` →
+`partner_setting` → `partner_profile` → `partner_announcement` →
 `partner_announcement_delivery` → `partner_announcement_metric`. La livraison
 et la désactivation verrouillent donc toutes deux la ligne de livraison avant
 la métrique, ce qui évite l'inversion lors d'une suppression simultanée de
 l'expéditeur. L'approbation d'une fiche verrouille d'abord son propriétaire et
 refuse la publication si le compte a disparu, est inactif ou en suppression.
+
+Le job de projection temps réel appelle le diffuseur pendant sa propre tentative
+et ne renseigne `broadcasted_at` qu'après le retour réussi du transport. Une
+panne épuise donc les tentatives du job sans confirmer l'émission ni recréer la
+notification en base ; la relance administrative republie le même UUID et le
+même instantané. Le centre affiche le contenu figé depuis la livraison, rendu
+comme texte échappé, jamais comme HTML.
 
 La rétention s'exécute quotidiennement à 03:30 dans `Europe/Paris`, sans
 chevauchement et sur un seul serveur. Elle traite les échéances inclusives par

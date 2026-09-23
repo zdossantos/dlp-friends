@@ -12,6 +12,7 @@ export type MemberNotification = {
     target_url: string;
     dismiss_url?: string;
     action_label?: string;
+    content?: string;
     read_at: string | null;
     created_at: string | null;
 };

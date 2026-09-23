@@ -46,6 +46,7 @@ class NotificationIndexTest extends TestCase
                 ->where('notifications.data.0.target_url', route('partner-announcements.click', $delivery->click_token, absolute: false))
                 ->where('notifications.data.0.dismiss_url', route('notifications.partner-announcements.dismiss', $notification, absolute: false))
                 ->where('notifications.data.0.action_label', __('notifications.actions.open_partner_announcement'))
+                ->where('notifications.data.0.content', $delivery->announcement_content)
                 ->missing('notifications.data.0.user_id')
                 ->missing('notifications.data.0.email'));
     }

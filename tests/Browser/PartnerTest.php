@@ -215,6 +215,7 @@ test('a member opts into partner announcements reads and dismisses a delivered a
     $announcement = PartnerAnnouncement::factory()->create([
         'status' => PartnerAnnouncementStatus::Sending,
         'title' => 'Invitation partenaire navigateur',
+        'content' => '<strong>Avantage partenaire figé</strong>',
         'destination_url' => 'https://example.org/friends',
     ]);
     app(PreparePartnerAnnouncementAudience::class)->handle($announcement);
@@ -225,6 +226,8 @@ test('a member opts into partner announcements reads and dismisses a delivered a
     $page->navigate('/notifications')
         ->click('[data-test="notification-filter-partners"]')
         ->assertSee('Invitation partenaire navigateur')
+        ->assertScript('document.querySelector("[data-test=notification-content]").textContent.trim()', '<strong>Avantage partenaire figé</strong>')
+        ->assertScript('document.querySelector("[data-test=notification-content] strong") === null', true)
         ->press(__('notifications.actions.mark_all_read'))
         ->assertScript('document.documentElement.scrollWidth <= window.innerWidth', true);
     $page->script('async () => { await Promise.all(document.getAnimations().map(animation => animation.finished)); }');

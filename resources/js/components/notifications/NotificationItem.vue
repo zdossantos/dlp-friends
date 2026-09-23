@@ -97,6 +97,13 @@ function dismissNotification(): void {
                     }}
                 </time>
                 <span
+                    v-if="notification.content"
+                    data-test="notification-content"
+                    class="mt-2 line-clamp-3 block text-sm font-normal whitespace-pre-line text-foreground"
+                >
+                    {{ notification.content }}
+                </span>
+                <span
                     v-if="notification.action_label"
                     class="mt-2 block text-xs font-semibold text-primary"
                 >

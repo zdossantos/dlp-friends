@@ -22,6 +22,10 @@ final class DecidePartnerAnnouncement
         $this->ensureAdmin($admin);
 
         DB::transaction(function () use ($admin, $announcement): void {
+            $cooldownDays = PartnerSetting::query()->lockForUpdate()->firstOrCreate(
+                ['id' => 1],
+                ['cooldown_days' => 30],
+            )->cooldown_days;
             [$profile, $locked] = $this->lock($announcement);
             $this->ensurePending($locked);
 
@@ -30,10 +34,6 @@ final class DecidePartnerAnnouncement
                 ['destination_url' => ['required', 'string', 'max:2048', new SafeHttpsUrl]],
             )->validate();
 
-            $cooldownDays = PartnerSetting::query()->lockForUpdate()->firstOrCreate(
-                ['id' => 1],
-                ['cooldown_days' => 30],
-            )->cooldown_days;
             $latestStart = $profile->announcements()
                 ->whereKeyNot($locked->id)
                 ->whereNotNull('sending_started_at')

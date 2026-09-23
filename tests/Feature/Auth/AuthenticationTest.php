@@ -2,6 +2,8 @@
 
 namespace Tests\Feature\Auth;
 
+use App\Enums\RoleName;
+use App\Models\Role;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\RateLimiter;
@@ -44,6 +46,35 @@ class AuthenticationTest extends TestCase
             ]);
 
         $response->assertRedirect('/app');
+    }
+
+    public function test_partner_only_accounts_authenticate_into_the_partner_space(): void
+    {
+        $partner = User::factory()->partnerOnly()->create();
+
+        $response = $this->post(route('login.store'), [
+            'email' => $partner->email,
+            'password' => 'password',
+        ]);
+
+        $this->assertAuthenticatedAs($partner);
+        $response->assertRedirect(route('partner.profile.edit'));
+    }
+
+    public function test_admin_only_accounts_authenticate_into_the_admin_space(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $admin->roles()->sync([
+            Role::query()->where('name', RoleName::Admin)->firstOrFail()->id,
+        ]);
+
+        $response = $this->post(route('login.store'), [
+            'email' => $admin->email,
+            'password' => 'password',
+        ]);
+
+        $this->assertAuthenticatedAs($admin);
+        $response->assertRedirect(route('dashboard'));
     }
 
     public function test_passkey_login_response_uses_the_authenticated_landing_page(): void

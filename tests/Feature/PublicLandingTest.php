@@ -2,9 +2,11 @@
 
 use App\Enums\PartnerRevisionStatus;
 use App\Enums\ProductOnboardingStatus;
+use App\Enums\RoleName;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Models\PartnerProfile;
 use App\Models\ProductOnboarding;
+use App\Models\Role;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Storage;
@@ -51,6 +53,22 @@ test('an authenticated member bypasses the public landing page', function () {
         ->get('/')
         ->assertRedirect(route('app'));
 });
+
+test('authenticated partner-only and admin-only accounts bypass public pages into their own space', function (string $role, string $expectedRoute) {
+    $account = $role === RoleName::Partner->value
+        ? User::factory()->partnerOnly()->create()
+        : User::factory()->admin()->create();
+    $account->roles()->sync([
+        Role::query()->where('name', $role)->firstOrFail()->id,
+    ]);
+
+    $this->actingAs($account)
+        ->get('/fr')
+        ->assertRedirect(route($expectedRoute));
+})->with([
+    'partner' => [RoleName::Partner->value, 'partner.profile.edit'],
+    'admin' => [RoleName::Admin->value, 'dashboard'],
+]);
 
 test('the public landing is server rendered without application javascript', function () {
     $this->get('/fr')

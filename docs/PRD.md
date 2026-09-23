@@ -192,7 +192,9 @@ Paris.
 - Les rôles `user`, `partner` et `admin` sont cumulables. L’administration peut
   attribuer ou retirer `user` et `partner` depuis la liste des membres après
   confirmation, avec audit ; `admin` reste attribué par la console. Un compte
-  partenaire seul n’accède ni aux fonctions sociales ni à l’administration.
+  partenaire seul n’accède ni aux fonctions sociales ni à l’administration et
+  arrive directement dans son espace après authentification. Un compte admin
+  sans rôle membre arrive directement dans l’administration.
 - Le partenaire enregistre une fiche avec noms et descriptions obligatoires
   français/anglais et une image contrôlée. L’enregistrement modifie le brouillon,
   pas la version publique ; la soumission fige une révision. L’administrateur
@@ -210,8 +212,8 @@ Paris.
   notifications déjà livrées ou ignorées.
 - Les annonces sont exclusivement des notifications dans l’application, sur
   consentement explicite désactivé par défaut. Le membre peut se désinscrire,
-  lire, ouvrir le lien et retirer une annonce avec confirmation. Le partenaire
-  ne choisit aucun segment ni destinataire.
+  lire le contenu figé reçu, ouvrir le lien et retirer une annonce avec
+  confirmation. Le partenaire ne choisit aucun segment ni destinataire.
 - Les statistiques exposent uniquement les volumes et taux agrégés : livraisons,
   lectures, retraits, clics uniques et totaux ; l’administrateur dispose en plus
   des compteurs opérationnels et de la relance. Aucune liste de destinataires

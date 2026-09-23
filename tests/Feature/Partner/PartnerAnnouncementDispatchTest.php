@@ -21,8 +21,9 @@ use App\Models\Role;
 use App\Models\User;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Broadcasting\BroadcastEvent;
+use Illuminate\Contracts\Broadcasting\Broadcaster;
+use Illuminate\Contracts\Broadcasting\Factory as BroadcastingFactory;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Notifications\Events\BroadcastNotificationCreated;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Str;
@@ -357,7 +358,6 @@ test('an admin retry recovers a failed post commit broadcast without duplicating
 
     $delivered = $delivery->fresh();
     $notification = $user->notifications()->firstOrFail();
-    $persistedData = $notification->data;
     expect($delivered?->status)->toBe(PartnerDeliveryStatus::Delivered)
         ->and($delivered?->broadcasted_at)->toBeNull()
         ->and($user->notifications()->count())->toBe(1)
@@ -380,19 +380,14 @@ test('an admin retry recovers a failed post commit broadcast without duplicating
     Queue::fake();
     app()->call([$broadcast, 'handle']);
 
-    Queue::assertPushed(
-        BroadcastEvent::class,
-        fn (BroadcastEvent $job): bool => $job->event instanceof BroadcastNotificationCreated
-            && $job->event->notification->id === $notification->id
-            && $job->event->data === ['id' => $notification->id, ...$persistedData],
-    );
+    Queue::assertNotPushed(BroadcastEvent::class);
     expect($delivery->fresh()?->broadcasted_at)->not->toBeNull()
         ->and($user->notifications()->count())->toBe(1)
         ->and($announcement->metric?->fresh()?->delivered_count)->toBe(1);
 
     app()->call([$broadcast, 'handle']);
 
-    Queue::assertPushed(BroadcastEvent::class, 1);
+    Queue::assertNotPushed(BroadcastEvent::class);
     expect($user->notifications()->count())->toBe(1)
         ->and($announcement->metric?->fresh()?->delivered_count)->toBe(1);
 });
@@ -408,14 +403,19 @@ test('a failed broadcast transport push remains retryable with the same notifica
     $broadcast = Queue::pushed(BroadcastPartnerAnnouncementJob::class)->firstOrFail();
     $notification = $user->notifications()->firstOrFail();
 
-    $queue = Queue::fake();
-    $queue->beforePushing(static function (object $job): void {
-        if ($job instanceof BroadcastEvent) {
-            throw new RuntimeException('broadcast transport unavailable');
-        }
-    });
-    expect(fn () => app()->call([$broadcast, 'handle']))
-        ->toThrow(RuntimeException::class, 'broadcast transport unavailable');
+    $originalBroadcaster = app(BroadcastingFactory::class);
+    $broadcaster = Mockery::mock(BroadcastingFactory::class);
+    $connection = Mockery::mock(Broadcaster::class);
+    $broadcaster->shouldReceive('connection')->times(3)->with(null)->andReturn($connection);
+    $connection->shouldReceive('broadcast')->times(3)->andThrow(
+        new RuntimeException('broadcast transport unavailable'),
+    );
+    app()->instance(BroadcastingFactory::class, $broadcaster);
+
+    foreach (range(1, 3) as $_attempt) {
+        expect(fn () => app()->call([$broadcast, 'handle']))
+            ->toThrow(RuntimeException::class, 'broadcast transport unavailable');
+    }
     expect($delivery->fresh()?->broadcasted_at)->toBeNull()
         ->and($user->notifications()->count())->toBe(1)
         ->and($announcement->metric?->fresh()?->delivered_count)->toBe(1);
@@ -424,6 +424,8 @@ test('a failed broadcast transport push remains retryable with the same notifica
         'status' => PartnerAnnouncementStatus::Sent,
         'sent_at' => now(),
     ]);
+    app()->instance(BroadcastingFactory::class, $originalBroadcaster);
+    config()->set('broadcasting.default', 'null');
     Queue::fake();
     $this->actingAs($admin)
         ->post(route('admin.partner-announcements.retry', $announcement))
@@ -433,12 +435,7 @@ test('a failed broadcast transport push remains retryable with the same notifica
     Queue::fake();
     app()->call([$retry, 'handle']);
 
-    Queue::assertPushed(
-        BroadcastEvent::class,
-        fn (BroadcastEvent $job): bool => $job->event instanceof BroadcastNotificationCreated
-            && $job->event->notification->id === $notification->id
-            && $job->event->data === ['id' => $notification->id, ...$notification->data],
-    );
+    Queue::assertNotPushed(BroadcastEvent::class);
     expect($delivery->fresh()?->broadcasted_at)->not->toBeNull()
         ->and($user->notifications()->count())->toBe(1)
         ->and($announcement->metric?->fresh()?->delivered_count)->toBe(1);
@@ -454,7 +451,6 @@ test('a crash after an accepted broadcast replays the same notification without 
     app(DeliverPartnerAnnouncement::class)->handle($delivery);
     $broadcast = Queue::pushed(BroadcastPartnerAnnouncementJob::class)->firstOrFail();
     $notification = $user->notifications()->firstOrFail();
-    $expectedPayload = ['id' => $notification->id, ...$notification->data];
 
     $crashBeforeConfirmation = true;
     PartnerAnnouncementDelivery::updating(
@@ -470,12 +466,7 @@ test('a crash after an accepted broadcast replays the same notification without 
     Queue::fake();
     expect(fn () => app()->call([$broadcast, 'handle']))
         ->toThrow(RuntimeException::class, 'worker crashed before broadcast confirmation');
-    Queue::assertPushed(
-        BroadcastEvent::class,
-        fn (BroadcastEvent $job): bool => $job->event instanceof BroadcastNotificationCreated
-            && $job->event->notification->id === $notification->id
-            && $job->event->data === $expectedPayload,
-    );
+    Queue::assertNotPushed(BroadcastEvent::class);
     expect($delivery->fresh()?->broadcasted_at)->toBeNull()
         ->and($user->notifications()->count())->toBe(1)
         ->and($announcement->metric?->fresh()?->delivered_count)->toBe(1);
@@ -493,13 +484,7 @@ test('a crash after an accepted broadcast replays the same notification without 
     Queue::fake();
     app()->call([$retry, 'handle']);
 
-    Queue::assertPushed(
-        BroadcastEvent::class,
-        fn (BroadcastEvent $job): bool => $job->event instanceof BroadcastNotificationCreated
-            && $job->event->notification->id === $notification->id
-            && $job->event->data === $expectedPayload,
-    );
-    Queue::assertPushed(BroadcastEvent::class, 1);
+    Queue::assertNotPushed(BroadcastEvent::class);
     expect($delivery->fresh()?->broadcasted_at)->not->toBeNull()
         ->and($user->notifications()->count())->toBe(1)
         ->and($announcement->metric?->fresh()?->delivered_count)->toBe(1);

@@ -92,6 +92,8 @@ expiration automatique, au plus 30 jours après leur création.
   vérifié, mais pas le profil social ni son tutoriel. Les routes sociales exigent
   `user` et leurs prérequis existants ; l’administration exige `admin`.
   Les Policies et Actions vérifient propriétaire, rôle et transition côté serveur.
+  Après authentification, la redirection est calculée avec les mêmes rôles afin
+  qu’un compte partenaire ou admin sans `user` ne soit pas envoyé vers `/app`.
 - Les modifications de rôles exigent une confirmation et créent un audit minimal
   immuable. Le retrait de `partner` bloque immédiatement les routes privées
   partenaires ; l’UI ne peut pas accorder `admin`. La dépublication est une
@@ -115,6 +117,8 @@ expiration automatique, au plus 30 jours après leur création.
   publiée n’expire pas. Les annonces reçues sont des instantanés distincts : elles
   restent dans l’historique du destinataire après suppression de l’expéditeur ou
   expiration de la source, jusqu’au cycle de suppression du destinataire.
+  Le centre présente le contenu de cet instantané par interpolation texte
+  échappée ; il n’interprète aucun HTML et n’ajoute aucune donnée personnelle.
 
 ## Mesure d’audience
 

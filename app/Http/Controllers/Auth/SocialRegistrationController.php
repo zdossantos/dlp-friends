@@ -7,6 +7,7 @@ use App\Data\PendingSocialIdentity;
 use App\Exceptions\SocialAuthenticationException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\CompleteSocialRegistrationRequest;
+use App\Support\AuthenticatedHome;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -49,7 +50,7 @@ class SocialRegistrationController extends Controller
         Auth::login($user);
         $request->session()->regenerate();
 
-        return redirect()->route('app');
+        return redirect()->to(AuthenticatedHome::url($user));
     }
 
     private function identity(Request $request): ?PendingSocialIdentity

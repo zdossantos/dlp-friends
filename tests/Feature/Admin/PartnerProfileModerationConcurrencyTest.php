@@ -3,11 +3,16 @@
 namespace Tests\Feature\Admin;
 
 use App\Actions\ApprovePartnerProfileRevision;
+use App\Actions\StartPartnerAnnouncement;
 use App\Actions\UpdatePublishedPartnerOrder;
+use App\Enums\PartnerAnnouncementStatus;
 use App\Enums\PartnerRevisionStatus;
+use App\Models\PartnerAnnouncement;
 use App\Models\PartnerProfile;
 use App\Models\PartnerProfileRevision;
+use App\Models\PartnerSetting;
 use App\Models\User;
+use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Foundation\Testing\DatabaseMigrations;
 use Illuminate\Support\Facades\DB;
 use RuntimeException;
@@ -189,6 +194,104 @@ class PartnerProfileModerationConcurrencyTest extends TestCase
             ->and($target->fresh()->is_published)->toBeFalse()
             ->and($published->pluck('id')->all())->toBe($orderedIds)
             ->and($published->pluck('position')->all())->toBe([1, 2]);
+    }
+
+    public function test_announcement_start_and_profile_reorder_share_one_lock_order_on_mysql(): void
+    {
+        $this->requirePcntl();
+
+        $admin = User::factory()->admin()->create();
+        PartnerSetting::current();
+        [$first, $second] = PartnerProfile::factory()
+            ->count(2)
+            ->sequence(['position' => 1], ['position' => 2])
+            ->published()
+            ->create();
+        $announcement = PartnerAnnouncement::factory()->for($first)->create([
+            'status' => PartnerAnnouncementStatus::Approved,
+            'destination_url' => 'https://offers.example.com/lock-order',
+        ]);
+        $orderedIds = [$second->id, $first->id];
+        $startControl = $this->socketPair();
+        $startResultFile = $this->resultFile('partner-start-lock-order-');
+        $orderResultFile = $this->resultFile('partner-order-lock-order-');
+
+        DB::disconnect();
+        $startPid = pcntl_fork();
+        $this->assertNotSame(-1, $startPid);
+
+        if ($startPid === 0) {
+            fclose($startControl[0]);
+            DB::purge();
+
+            try {
+                $paused = false;
+                DB::listen(static function (QueryExecuted $query) use (&$paused, $startControl): void {
+                    if ($paused
+                        || ! str_contains($query->sql, '`partner_profiles`')
+                        || ! str_contains(strtolower($query->sql), 'for update')) {
+                        return;
+                    }
+
+                    $paused = true;
+                    fwrite($startControl[1], 'L');
+
+                    if (fread($startControl[1], 1) !== 'G') {
+                        throw new RuntimeException('The announcement start was not released.');
+                    }
+                });
+                app(StartPartnerAnnouncement::class)->handle(
+                    User::query()->findOrFail($admin->id),
+                    PartnerAnnouncement::query()->findOrFail($announcement->id),
+                );
+                file_put_contents($startResultFile, json_encode(['started' => true], JSON_THROW_ON_ERROR));
+                exit(0);
+            } catch (Throwable $exception) {
+                file_put_contents($startResultFile, json_encode([
+                    'error' => $exception::class.': '.$exception->getMessage(),
+                ], JSON_THROW_ON_ERROR));
+                exit(1);
+            }
+        }
+
+        fclose($startControl[1]);
+        $this->assertSame('L', fread($startControl[0], 1));
+
+        $orderPid = pcntl_fork();
+        $this->assertNotSame(-1, $orderPid);
+
+        if ($orderPid === 0) {
+            fclose($startControl[0]);
+            DB::purge();
+
+            try {
+                app(UpdatePublishedPartnerOrder::class)->handle($orderedIds);
+                file_put_contents($orderResultFile, json_encode(['reordered' => true], JSON_THROW_ON_ERROR));
+                exit(0);
+            } catch (Throwable $exception) {
+                file_put_contents($orderResultFile, json_encode([
+                    'error' => $exception::class.': '.$exception->getMessage(),
+                ], JSON_THROW_ON_ERROR));
+                exit(1);
+            }
+        }
+
+        usleep(300_000);
+        fwrite($startControl[0], 'G');
+        pcntl_waitpid($startPid, $startStatus);
+        pcntl_waitpid($orderPid, $orderStatus);
+        fclose($startControl[0]);
+
+        DB::purge();
+        DB::reconnect();
+
+        expect([pcntl_wexitstatus($startStatus), pcntl_wexitstatus($orderStatus)])
+            ->toBe([0, 0])
+            ->and([$this->readResult($startResultFile), $this->readResult($orderResultFile)])
+            ->toBe([['started' => true], ['reordered' => true]])
+            ->and($announcement->fresh()?->status)->toBe(PartnerAnnouncementStatus::Sent)
+            ->and(PartnerProfile::query()->published()->orderBy('position')->pluck('id')->all())
+            ->toBe($orderedIds);
     }
 
     /**

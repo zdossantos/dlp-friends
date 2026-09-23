@@ -183,7 +183,9 @@ jobs Laravel utilisent les tentatives et délais progressifs existants.
 
 Le broadcast temps réel est une projection distincte, avec une garantie
 **at-least-once**. Une livraison `delivered` conserve `broadcasted_at` à
-`null` jusqu'à la confirmation de l'émission. Un crash peut survenir après
+`null` jusqu'au retour réussi du diffuseur réel dans le job de projection ; la
+simple mise en file d'un événement de framework n'est pas une confirmation.
+Un crash peut survenir après
 l'acceptation du broadcast par le transport mais avant l'enregistrement de
 cette confirmation ; la reprise republie alors exactement le même UUID de
 notification et le même payload. Le client ou le transport doit dédupliquer
@@ -199,6 +201,8 @@ préparation est terminée et qu'aucune livraison traitable ne reste.
 Les notifications stockent uniquement l'identifiant d'annonce, les clés de
 présentation nécessaires et une cible interne. Elles n'incluent aucune donnée
 personnelle, aucun message privé et aucune copie de contenu membre.
+Le centre résout cependant la livraison du destinataire et affiche son instantané
+de contenu comme texte échappé ; il reste disponible après purge de la source.
 
 ## Lecture, masquage et clic
 

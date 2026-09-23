@@ -113,7 +113,7 @@ correspondent aux migrations, routes, composants et tests effectivement livrés.
 | --- | --- | --- |
 | Rôles cumulables, confirmation et audit | `SyncManageableUserRoles`, `RoleAudit`, `tests/Feature/Admin/ManageMemberRolesTest.php`, `tests/Browser/AdminTest.php` | PRD, modèle, sécurité |
 | Fiche bilingue, image privée et approbation | `SavePartnerProfileDraft`, `TransformPartnerImage`, contrôleurs `Partner/Profile*` et `Admin/PartnerProfile*`, `tests/Feature/Partner/PartnerProfileTest.php`, `tests/Browser/PartnerTest.php` | PRD, modèle, architecture, design |
-| Annonces modérées et envois idempotents | Actions `StartPartnerAnnouncement`, `PreparePartnerAnnouncementAudience`, `DeliverPartnerAnnouncement`, `FinalizePartnerAnnouncement`, jobs partenaires et tests `tests/Feature/Partner/` | PRD, modèle, architecture |
+| Annonces modérées et envois idempotents | Actions `StartPartnerAnnouncement`, `PreparePartnerAnnouncementAudience`, `DeliverPartnerAnnouncement`, `BroadcastPartnerAnnouncement`, `FinalizePartnerAnnouncement`, jobs partenaires et tests `tests/Feature/Partner/` | PRD, modèle, architecture |
 | Opt-in, lecture, retrait et clics | `UpdatePartnerNotificationPreference`, `RecordPartnerAnnouncementRead`, `DismissPartnerAnnouncement`, `RecordPartnerAnnouncementClick`, tests Feature/Browser partenaires | PRD, sécurité |
 | Statistiques agrégées et contrôles admin | `PartnerAnnouncementStatisticsData`, `AnnouncementStatisticsTable.vue`, `tests/Feature/Partner/PartnerStatisticsTest.php`, `tests/Browser/PartnerTest.php` | PRD, architecture, design |
 | Six cartes publiques FR/EN au maximum | `PublicLandingController`, `resources/views/welcome.blade.php`, `tests/Browser/WelcomeAndRegistrationTest.php` | PRD, design |
