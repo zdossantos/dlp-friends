@@ -593,7 +593,7 @@ test('the dispatch endpoint is restricted to admins', function () {
         ->assertForbidden();
     $this->actingAs($admin)
         ->post(route('admin.partner-announcements.dispatch', $announcement))
-        ->assertRedirect(route('admin.partner-announcements.index'));
+        ->assertRedirect(route('admin.partner-statistics.index'));
 
     expect($announcement->fresh()?->status)->toBe(PartnerAnnouncementStatus::Sending);
 });
