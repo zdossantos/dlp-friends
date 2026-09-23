@@ -55,7 +55,6 @@ return [
         'description' => 'Choose the workspace you want to use.',
         'member' => 'Member workspace',
         'partner' => 'Partner workspace',
-        'member_profile' => 'Member profile',
     ],
     'errors' => ['generic_title' => 'Something went wrong'],
     'accessibility' => [

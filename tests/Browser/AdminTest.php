@@ -24,7 +24,7 @@ use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 
-test('admin without partner role opens partner statistics from admin navigation', function () {
+test('admin without partner role opens partner management pages from its submenu', function () {
     $admin = User::factory()->admin()->create(['locale' => 'en']);
 
     expect($admin->fresh('roles')->hasRole(RoleName::Partner))->toBeFalse();
@@ -32,10 +32,17 @@ test('admin without partner role opens partner statistics from admin navigation'
     $this->actingAs($admin);
 
     visit('/dashboard')
+        ->assertPresent('[data-test="admin-partners-menu-trigger"]')
+        ->click('[data-test="admin-partners-menu-trigger"]')
+        ->assertSeeLink('Partner profiles')
+        ->assertPresent('a[href="/admin/partner-profiles"]')
+        ->assertSeeLink('Partner announcements')
+        ->assertPresent('a[href="/admin/partner-announcements"]')
         ->assertSeeLink('Partner statistics')
         ->assertPresent('a[href="/admin/partner-statistics"]')
         ->click('Partner statistics')
         ->assertPathIs('/admin/partner-statistics')
+        ->assertPresent('[data-test="admin-partners-menu-trigger"][data-state="open"]')
         ->assertPresent('a[href="/admin/partner-statistics"][data-active="true"]')
         ->assertNoJavaScriptErrors();
 });

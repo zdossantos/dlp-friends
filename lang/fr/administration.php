@@ -16,6 +16,8 @@ return [
         'avatars' => 'Avatars',
         'onboarding' => 'Tutoriel',
         'partners' => 'Partenaires',
+        'partner_profiles' => 'Fiches partenaires',
+        'partner_announcements' => 'Annonces partenaire',
         'partner_statistics' => 'Statistiques partenaire',
         'back_to_profile' => 'Retour au profil',
         'repository' => 'Dépôt du projet',

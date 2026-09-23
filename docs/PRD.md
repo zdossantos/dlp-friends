@@ -199,6 +199,8 @@ Paris.
   depuis un bouton dédié ajouté à la navigation basse, sans remplacer l’accès
   direct au profil membre. Le sélecteur indique l’espace courant, sans modifier
   ni mémoriser les rôles du compte.
+- L’administration regroupe les fiches, les annonces et les statistiques dans
+  un sous-menu « Partenaires » distinct de l’espace de travail du partenaire.
 - Le partenaire enregistre une fiche avec noms et descriptions obligatoires
   français/anglais et une image contrôlée. L’enregistrement modifie le brouillon,
   pas la version publique ; la soumission fige une révision. L’administrateur

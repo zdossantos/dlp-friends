@@ -612,7 +612,7 @@ test('a member partner switches workspaces from the bottom navigation', function
         ->assertSee('Changer d’espace')
         ->assertSee('Espace membre')
         ->assertSee('Espace partenaire')
-        ->assertSeeLink('Profil membre')
+        ->assertDontSeeLink('Profil membre')
         ->assertAttribute(
             '[data-test="workspace-member-link"]',
             'aria-current',
@@ -645,6 +645,7 @@ test('partner sidebar navigation disappears on the first render after role remov
         ->assertSeeLink('Profil partenaire')
         ->assertSeeLink('Annonces partenaire')
         ->assertPresent('a[href="/partner/statistics"]')
+        ->click('[data-test="admin-partners-menu-trigger"]')
         ->assertPresent('a[href="/admin/partner-statistics"]');
 
     $partnerRole = Role::query()->where('name', RoleName::Partner)->firstOrFail();
@@ -655,6 +656,7 @@ test('partner sidebar navigation disappears on the first render after role remov
         ->assertDontSeeLink('Profil partenaire')
         ->assertDontSeeLink('Annonces partenaire')
         ->assertMissing('a[href="/partner/statistics"]')
+        ->click('[data-test="admin-partners-menu-trigger"]')
         ->assertPresent('a[href="/admin/partner-statistics"]')
         ->assertNoJavaScriptErrors();
 });

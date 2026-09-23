@@ -266,18 +266,6 @@ onBeforeUnmount(() => {
                                 />
                             </Link>
                         </SheetClose>
-                        <SheetClose :as-child="true">
-                            <Link
-                                :href="showProfile()"
-                                class="mt-2 text-center text-sm font-medium text-muted-foreground underline-offset-4 hover:text-foreground hover:underline focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
-                            >
-                                {{
-                                    t(
-                                        'common.workspace_switcher.member_profile',
-                                    )
-                                }}
-                            </Link>
-                        </SheetClose>
                     </div>
                 </SheetContent>
             </Sheet>
