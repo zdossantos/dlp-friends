@@ -204,8 +204,8 @@ Le contenu, l’état et les actions restent uniques entre les deux formats. Les
 - L’affectation des rôles réutilise le dialogue adaptatif avec confirmation,
   `admin` en lecture seule et retour du focus au déclencheur. Le retrait d’une
   notification partenaire reste une action distincte de son ouverture. Son
-  contenu figé est affiché comme texte sur trois lignes au maximum, en conservant
-  les retours à la ligne sans interpréter de balisage.
+  contenu figé est affiché intégralement comme texte, en conservant les retours
+  à la ligne sans interpréter de balisage.
 - Les scénarios Chromium couvrent 320 × 700 et 1440 × 900, thèmes clair/sombre,
   navigation clavier et scans axe ; les animations finies sont stabilisées
   avant les mesures de contraste, sans modifier les tokens de production.

@@ -19,11 +19,14 @@ use App\Models\PartnerProfile;
 use App\Models\PartnerSetting;
 use App\Models\Role;
 use App\Models\User;
+use App\Notifications\PartnerAnnouncementNotification;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Broadcasting\BroadcastEvent;
+use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\Broadcaster;
 use Illuminate\Contracts\Broadcasting\Factory as BroadcastingFactory;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Notifications\Events\BroadcastNotificationCreated;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Str;
@@ -403,12 +406,18 @@ test('a failed broadcast transport push remains retryable with the same notifica
     $broadcast = Queue::pushed(BroadcastPartnerAnnouncementJob::class)->firstOrFail();
     $notification = $user->notifications()->firstOrFail();
 
-    $originalBroadcaster = app(BroadcastingFactory::class);
     $broadcaster = Mockery::mock(BroadcastingFactory::class);
     $connection = Mockery::mock(Broadcaster::class);
-    $broadcaster->shouldReceive('connection')->times(3)->with(null)->andReturn($connection);
-    $connection->shouldReceive('broadcast')->times(3)->andThrow(
-        new RuntimeException('broadcast transport unavailable'),
+    $attempts = [];
+    $broadcaster->shouldReceive('connection')->times(4)->with(null)->andReturn($connection);
+    $connection->shouldReceive('broadcast')->times(4)->andReturnUsing(
+        static function (array $channels, string $event, array $payload) use (&$attempts): void {
+            $attempts[] = compact('channels', 'event', 'payload');
+
+            if (count($attempts) <= 3) {
+                throw new RuntimeException('broadcast transport unavailable');
+            }
+        },
     );
     app()->instance(BroadcastingFactory::class, $broadcaster);
 
@@ -418,14 +427,26 @@ test('a failed broadcast transport push remains retryable with the same notifica
     }
     expect($delivery->fresh()?->broadcasted_at)->toBeNull()
         ->and($user->notifications()->count())->toBe(1)
-        ->and($announcement->metric?->fresh()?->delivered_count)->toBe(1);
+        ->and($announcement->metric?->fresh()?->delivered_count)->toBe(1)
+        ->and($attempts)->toHaveCount(3);
+
+    foreach ($attempts as $attempt) {
+        expect($attempt['channels'])->toHaveCount(1)
+            ->and($attempt['channels'][0])->toBeInstanceOf(PrivateChannel::class)
+            ->and($attempt['channels'][0]->name)->toBe("private-App.Models.User.{$user->id}")
+            ->and($attempt['event'])->toBe(BroadcastNotificationCreated::class)
+            ->and($attempt['payload'])->toBe([
+                'id' => $notification->id,
+                ...$notification->data,
+                'type' => PartnerAnnouncementNotification::class,
+                'socket' => null,
+            ]);
+    }
 
     $announcement->update([
         'status' => PartnerAnnouncementStatus::Sent,
         'sent_at' => now(),
     ]);
-    app()->instance(BroadcastingFactory::class, $originalBroadcaster);
-    config()->set('broadcasting.default', 'null');
     Queue::fake();
     $this->actingAs($admin)
         ->post(route('admin.partner-announcements.retry', $announcement))
@@ -438,7 +459,11 @@ test('a failed broadcast transport push remains retryable with the same notifica
     Queue::assertNotPushed(BroadcastEvent::class);
     expect($delivery->fresh()?->broadcasted_at)->not->toBeNull()
         ->and($user->notifications()->count())->toBe(1)
-        ->and($announcement->metric?->fresh()?->delivered_count)->toBe(1);
+        ->and($announcement->metric?->fresh()?->delivered_count)->toBe(1)
+        ->and($attempts)->toHaveCount(4)
+        ->and($attempts[3]['channels'][0]->name)->toBe($attempts[0]['channels'][0]->name)
+        ->and($attempts[3]['event'])->toBe($attempts[0]['event'])
+        ->and($attempts[3]['payload'])->toBe($attempts[0]['payload']);
 });
 
 test('a crash after an accepted broadcast replays the same notification without duplicating durable side effects', function () {
@@ -451,6 +476,17 @@ test('a crash after an accepted broadcast replays the same notification without 
     app(DeliverPartnerAnnouncement::class)->handle($delivery);
     $broadcast = Queue::pushed(BroadcastPartnerAnnouncementJob::class)->firstOrFail();
     $notification = $user->notifications()->firstOrFail();
+
+    $broadcaster = Mockery::mock(BroadcastingFactory::class);
+    $connection = Mockery::mock(Broadcaster::class);
+    $attempts = [];
+    $broadcaster->shouldReceive('connection')->twice()->with(null)->andReturn($connection);
+    $connection->shouldReceive('broadcast')->twice()->andReturnUsing(
+        static function (array $channels, string $event, array $payload) use (&$attempts): void {
+            $attempts[] = compact('channels', 'event', 'payload');
+        },
+    );
+    app()->instance(BroadcastingFactory::class, $broadcaster);
 
     $crashBeforeConfirmation = true;
     PartnerAnnouncementDelivery::updating(
@@ -469,7 +505,18 @@ test('a crash after an accepted broadcast replays the same notification without 
     Queue::assertNotPushed(BroadcastEvent::class);
     expect($delivery->fresh()?->broadcasted_at)->toBeNull()
         ->and($user->notifications()->count())->toBe(1)
-        ->and($announcement->metric?->fresh()?->delivered_count)->toBe(1);
+        ->and($announcement->metric?->fresh()?->delivered_count)->toBe(1)
+        ->and($attempts)->toHaveCount(1)
+        ->and($attempts[0]['channels'])->toHaveCount(1)
+        ->and($attempts[0]['channels'][0])->toBeInstanceOf(PrivateChannel::class)
+        ->and($attempts[0]['channels'][0]->name)->toBe("private-App.Models.User.{$user->id}")
+        ->and($attempts[0]['event'])->toBe(BroadcastNotificationCreated::class)
+        ->and($attempts[0]['payload'])->toBe([
+            'id' => $notification->id,
+            ...$notification->data,
+            'type' => PartnerAnnouncementNotification::class,
+            'socket' => null,
+        ]);
 
     $announcement->update([
         'status' => PartnerAnnouncementStatus::Sent,
@@ -487,7 +534,11 @@ test('a crash after an accepted broadcast replays the same notification without 
     Queue::assertNotPushed(BroadcastEvent::class);
     expect($delivery->fresh()?->broadcasted_at)->not->toBeNull()
         ->and($user->notifications()->count())->toBe(1)
-        ->and($announcement->metric?->fresh()?->delivered_count)->toBe(1);
+        ->and($announcement->metric?->fresh()?->delivered_count)->toBe(1)
+        ->and($attempts)->toHaveCount(2)
+        ->and($attempts[1]['channels'][0]->name)->toBe($attempts[0]['channels'][0]->name)
+        ->and($attempts[1]['event'])->toBe($attempts[0]['event'])
+        ->and($attempts[1]['payload'])->toBe($attempts[0]['payload']);
 });
 
 test('terminal delivery failure stores bounded non personal metadata and is retryable by an admin only', function () {

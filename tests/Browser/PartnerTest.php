@@ -228,6 +228,7 @@ test('a member opts into partner announcements reads and dismisses a delivered a
         ->assertSee('Invitation partenaire navigateur')
         ->assertScript('document.querySelector("[data-test=notification-content]").textContent.trim()', '<strong>Avantage partenaire figé</strong>')
         ->assertScript('document.querySelector("[data-test=notification-content] strong") === null', true)
+        ->assertScript('document.querySelector("[data-test=notification-content]").classList.contains("line-clamp-3")', false)
         ->press(__('notifications.actions.mark_all_read'))
         ->assertScript('document.documentElement.scrollWidth <= window.innerWidth', true);
     $page->script('async () => { await Promise.all(document.getAnimations().map(animation => animation.finished)); }');

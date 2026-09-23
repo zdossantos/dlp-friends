@@ -99,7 +99,7 @@ function dismissNotification(): void {
                 <span
                     v-if="notification.content"
                     data-test="notification-content"
-                    class="mt-2 line-clamp-3 block text-sm font-normal whitespace-pre-line text-foreground"
+                    class="mt-2 block text-sm font-normal whitespace-pre-line text-foreground"
                 >
                     {{ notification.content }}
                 </span>
