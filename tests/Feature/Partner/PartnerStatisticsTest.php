@@ -6,6 +6,7 @@ use App\Enums\PartnerDeliveryStatus;
 use App\Models\PartnerAnnouncement;
 use App\Models\PartnerAnnouncementDelivery;
 use App\Models\PartnerAnnouncementMetric;
+use App\Models\PartnerNotificationPreference;
 use App\Models\PartnerProfile;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -165,6 +166,12 @@ test('admin statistics include every partner and operational counts without reci
     $secondAnnouncement = PartnerAnnouncement::factory()->for($secondProfile)->create([
         'title' => 'Autre partenaire',
     ]);
+    $eligibleByDefault = User::factory()->create();
+    $optedOut = User::factory()->create();
+    PartnerNotificationPreference::query()->create([
+        'user_id' => $optedOut->id,
+        'enabled' => false,
+    ]);
 
     $response = $this->actingAs($admin)
         ->get(route('admin.partner-statistics.index'))
@@ -173,6 +180,7 @@ test('admin statistics include every partner and operational counts without reci
 
     $response->assertInertia(fn (Assert $page) => $page
         ->component('Admin/Partners/Statistics')
+        ->where('eligibleRecipientCount', 10)
         ->has('announcements', 2)
         ->where('announcements.0.id', $secondAnnouncement->id)
         ->where('announcements.1.id', $announcement->id)

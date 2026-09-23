@@ -22,7 +22,7 @@ Le périmètre comprend :
   et anglais ;
 - des annonces in-app préparées par un partenaire et approuvées par un
   administrateur ;
-- un consentement membre distinct, désactivé par défaut ;
+- une préférence membre distincte, activée par défaut et révocable ;
 - un envoi asynchrone reprenable, concurrent et idempotent ;
 - des statistiques agrégées de livraison, lecture, masquage et clic ;
 - l'ajout de toutes les données personnelles concernées à l'export membre ;
@@ -135,15 +135,15 @@ pas le contourner.
 ## Consentement et audience
 
 La préférence `partner_announcements` est distincte des notifications
-fonctionnelles et désactivée par défaut pour tous les comptes existants et
-nouveaux. Les réglages expliquent sa finalité et permettent de l'activer ou de
-la retirer à tout moment. Le retrait bloque les nouvelles livraisons sans
+fonctionnelles et activée par défaut pour tous les comptes existants et
+nouveaux. Les réglages expliquent sa finalité et permettent de la désactiver ou de
+la réactiver à tout moment. La désactivation bloque les nouvelles livraisons sans
 effacer ni modifier les notifications déjà reçues.
 
 Un destinataire est éligible seulement s'il :
 
 - possède le rôle `user` ;
-- a explicitement activé `partner_announcements` ;
+- n'a pas désactivé `partner_announcements` ;
 - possède un compte actif, vérifié et non en attente de suppression.
 
 L'éligibilité est évaluée lors de la préparation de l'envoi puis juste avant

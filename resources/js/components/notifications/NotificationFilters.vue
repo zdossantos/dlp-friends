@@ -5,9 +5,8 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { useTranslations } from '@/composables/useTranslations';
 import { applyNotificationFilters } from '@/lib/notificationFilters';
 import type { NotificationCategory } from '@/lib/notificationFilters';
-import { index as notificationsIndex } from '@/routes/notifications';
-
-defineProps<{
+const props = defineProps<{
+    indexUrl: string;
     category: NotificationCategory | null;
     unread: boolean;
 }>();
@@ -15,7 +14,7 @@ const { t } = useTranslations();
 
 function update(category: NotificationCategory | null, unread: boolean): void {
     const query = applyNotificationFilters(category, unread);
-    const url = `${notificationsIndex().url}${query.size > 0 ? `?${query}` : ''}`;
+    const url = `${props.indexUrl}${query.size > 0 ? `?${query}` : ''}`;
 
     router.get(url, {}, { preserveState: true, preserveScroll: true });
 }

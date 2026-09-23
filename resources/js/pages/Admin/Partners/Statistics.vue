@@ -7,9 +7,10 @@ import type { PartnerAnnouncementStatistics } from '@/types';
 
 defineProps<{
     announcements: PartnerAnnouncementStatistics[];
+    eligibleRecipientCount: number;
 }>();
 
-const { t } = useTranslations();
+const { formatNumber, t } = useTranslations();
 </script>
 
 <template>
@@ -30,6 +31,17 @@ const { t } = useTranslations();
                 {{ t('administration.partner_statistics.description') }}
             </p>
         </header>
+
+        <p
+            data-test="eligible-partner-announcement-recipients"
+            class="rounded-2xl border bg-card p-4 text-sm text-muted-foreground"
+        >
+            {{
+                t('administration.partner_statistics.eligible_recipients', {
+                    count: formatNumber(eligibleRecipientCount),
+                })
+            }}
+        </p>
 
         <AnnouncementStatisticsTable
             :announcements="announcements"

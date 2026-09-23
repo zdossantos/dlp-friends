@@ -33,6 +33,8 @@ return [
         'event_changed' => 'The date or location of “:event” changed.',
         'event_cancelled' => '“:event” was cancelled.',
         'partner_announcement' => 'New partner announcement: “:announcement”.',
+        'partner_announcement_approved' => 'Your announcement “:announcement” was approved.',
+        'partner_announcement_rejected' => 'Your announcement “:announcement” was rejected.',
         'unread' => 'Unread',
     ],
     'accessibility' => ['unread_count' => ':count unread notifications'],

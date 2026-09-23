@@ -15,9 +15,9 @@ class PartnerNotificationPreferenceController extends Controller
     public function edit(Request $request): Response
     {
         return Inertia::render('settings/Notifications', [
-            'partnerAnnouncementsEnabled' => (bool) $request->user()
+            'partnerAnnouncementsEnabled' => $request->user()
                 ->partnerNotificationPreference()
-                ->value('enabled'),
+                ->value('enabled') ?? true,
         ]);
     }
 

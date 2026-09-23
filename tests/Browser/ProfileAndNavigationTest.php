@@ -552,7 +552,7 @@ test('partner notification consent is explicit accessible and bilingual', functi
     visit('/settings/notifications')
         ->on()->mobile()
         ->assertSee('Notifications partenaires')
-        ->assertSee('Cette préférence est désactivée par défaut.')
+        ->assertSee('Cette préférence est activée par défaut.')
         ->assertAttribute(
             '[data-test="partner-announcements-switch"]',
             'role',
@@ -561,21 +561,21 @@ test('partner notification consent is explicit accessible and bilingual', functi
         ->assertAttribute(
             '[data-test="partner-announcements-switch"]',
             'aria-checked',
-            'false',
+            'true',
         )
         ->click('[data-test="partner-announcements-switch"]')
         ->click('[data-test="save-notification-preferences"]')
         ->assertSee('Tes préférences de notifications ont été enregistrées.')
         ->assertNoJavaScriptErrors();
 
-    expect($french->partnerNotificationPreference()->value('enabled'))->toBeTrue();
+    expect($french->partnerNotificationPreference()->value('enabled'))->toBeFalse();
 
     $english = User::factory()->withProfile()->create(['locale' => 'en']);
     $this->actingAs($english);
 
     visit('/settings/notifications')
         ->assertSee('Partner notifications')
-        ->assertSee('This preference is disabled by default.')
+        ->assertSee('This preference is enabled by default.')
         ->assertSee('Receive partner announcements')
         ->assertNoJavaScriptErrors();
 });
@@ -586,15 +586,16 @@ test('partner mobile navigation exposes only implemented partner destinations', 
 
     visit('/partner/profile')
         ->on()->mobile()
-        ->assertCount('[data-test="member-bottom-navigation"] a', 3)
+        ->assertCount('[data-test="member-bottom-navigation"] a', 4)
         ->assertPresent('[aria-label="Profil partenaire"][aria-current="page"]')
         ->assertPresent('[aria-label="Annonces partenaire"]')
         ->assertPresent('[aria-label="Statistiques partenaire"]')
+        ->assertPresent('[aria-label="Notifications"]')
         ->assertNoJavaScriptErrors();
 
     visit('/partner/announcements')
         ->on()->mobile()
-        ->assertCount('[data-test="member-bottom-navigation"] a', 3)
+        ->assertCount('[data-test="member-bottom-navigation"] a', 4)
         ->assertPresent('[aria-label="Annonces partenaire"][aria-current="page"]')
         ->assertNoJavaScriptErrors();
 });
@@ -620,7 +621,7 @@ test('a member partner switches workspaces from the bottom navigation', function
         )
         ->click('[data-test="workspace-partner-link"]')
         ->assertPathIs('/partner/profile')
-        ->assertCount('[data-test="member-bottom-navigation"] a', 3)
+        ->assertCount('[data-test="member-bottom-navigation"] a', 4)
         ->assertPresent('[data-test="workspace-switcher-trigger"]')
         ->assertNoJavaScriptErrors();
 

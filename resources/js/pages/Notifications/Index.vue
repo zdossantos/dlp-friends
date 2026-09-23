@@ -9,6 +9,7 @@ import { readAll } from '@/routes/notifications';
 import type { NotificationPage } from '@/types/notification';
 
 defineProps<{
+    indexUrl: string;
     filters: { category: NotificationCategory | null; unread: boolean };
     notifications: NotificationPage;
 }>();
@@ -45,6 +46,7 @@ function markAllRead(): void {
         </header>
 
         <NotificationFilters
+            :index-url="indexUrl"
             :category="filters.category"
             :unread="filters.unread"
         />

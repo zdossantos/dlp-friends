@@ -2,6 +2,7 @@
 
 namespace App\Support;
 
+use App\Enums\RoleName;
 use App\Models\Conversation;
 use App\Models\Event;
 use App\Models\PartnerAnnouncementDelivery;
@@ -64,6 +65,11 @@ final class MemberNotificationPresenter
                     absolute: false,
                 );
             }
+        }
+
+        if (($data['target_type'] ?? null) === 'partner_announcement_management'
+            && $viewer->hasRole(RoleName::Partner)) {
+            return route('partner.announcements.index', absolute: false);
         }
 
         $targetId = filter_var($data['target_id'] ?? null, FILTER_VALIDATE_INT);

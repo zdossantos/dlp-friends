@@ -112,7 +112,7 @@ return [
             'title' => 'Notifications partenaires',
             'description' => 'Choisis si tu souhaites recevoir les annonces envoyées par les partenaires de DLP Friends.',
             'partner_announcements' => 'Recevoir les annonces partenaires',
-            'partner_announcements_help' => 'Cette préférence est désactivée par défaut. Tu peux retirer ton consentement à tout moment sans supprimer les notifications déjà reçues.',
+            'partner_announcements_help' => 'Cette préférence est activée par défaut. Tu peux la désactiver à tout moment sans supprimer les notifications déjà reçues.',
             'saved' => 'Tes préférences de notifications ont été enregistrées.',
         ],
         'account_page_title' => 'Réglages du compte',

@@ -144,7 +144,7 @@ verrouillage du réglage singleton, de la fiche et de l’annonce, validation de
 l’état et du délai,
 création du run et de la métrique, puis job après commit. La préparation capture
 l’audience par lots de 500 (compte actif, vérifié, rôle `user`, hors suppression,
-opt-in), insère les livraisons uniques et déclenche leurs jobs après commit.
+préférence absente ou active), insère les livraisons uniques et déclenche leurs jobs après commit.
 Chaque livraison revérifie l’éligibilité sous verrou, écrit notification et
 métrique atomiquement, puis diffuse via Reverb après commit. La finalisation
 attend la fin de préparation et des livraisons non terminales ; les reprises

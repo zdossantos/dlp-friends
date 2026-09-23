@@ -69,6 +69,7 @@ test('a partner authors an announcement and admin approves sends and checks aggr
     $partner = User::factory()->partnerOnly()->create();
     PartnerProfile::factory()->for($partner)->published()->create();
     $admin = User::factory()->admin()->create();
+    $admin->partnerNotificationPreference()->create(['enabled' => false]);
     $recipient = User::factory()->withProfile()->create();
     $recipient->partnerNotificationPreference()->create(['enabled' => true]);
     $this->actingAs($partner);
@@ -179,7 +180,7 @@ test('opening a partner notification exposes an opaque click route that records 
         'destination_url' => 'https://example.org/',
     ]);
     app(PreparePartnerAnnouncementAudience::class)->handle($announcement);
-    $delivery = $announcement->deliveries()->sole();
+    $delivery = $announcement->deliveries()->where('user_id', $member->id)->sole();
     app(DeliverPartnerAnnouncement::class)->handle($delivery);
     $notification = $member->notifications()->sole();
     $this->actingAs($member);
@@ -200,12 +201,15 @@ test('opening a partner notification exposes an opaque click route that records 
         ->and($announcement->metric()->sole()->total_click_count)->toBe(1);
 });
 
-test('a member opts into partner announcements reads and dismisses a delivered announcement', function () {
+test('a member receives partner announcements by default reads dismisses and can opt out', function () {
     Queue::fake();
     $member = User::factory()->withProfile()->create();
     $this->actingAs($member);
     $page = visit('/settings/notifications')->resize(320, 700)
         ->assertScript('document.querySelector("[data-test=save-notification-preferences]").getBoundingClientRect().height >= 44', true)
+        ->assertAttribute('[data-test="partner-announcements-switch"]', 'aria-checked', 'true')
+        ->keys('[data-test="partner-announcements-switch"]', 'Space')
+        ->press('[data-test="save-notification-preferences"]')
         ->assertAttribute('[data-test="partner-announcements-switch"]', 'aria-checked', 'false')
         ->keys('[data-test="partner-announcements-switch"]', 'Space')
         ->press('[data-test="save-notification-preferences"]')
@@ -219,7 +223,7 @@ test('a member opts into partner announcements reads and dismisses a delivered a
         'destination_url' => 'https://example.org/friends',
     ]);
     app(PreparePartnerAnnouncementAudience::class)->handle($announcement);
-    $delivery = $announcement->deliveries()->sole();
+    $delivery = $announcement->deliveries()->where('user_id', $member->id)->sole();
     app(DeliverPartnerAnnouncement::class)->handle($delivery);
     $notification = $member->notifications()->sole();
 

@@ -24,6 +24,7 @@ final class PartnerAnnouncementDecisionController extends Controller
         if ($decision === 'approve') {
             $decideAnnouncement->approve($admin, $announcement);
             $message = __('administration.partner_announcements.approved');
+            $redirectRoute = 'admin.partner-statistics.index';
         } elseif ($decision === 'reject') {
             $decideAnnouncement->reject(
                 $admin,
@@ -31,9 +32,11 @@ final class PartnerAnnouncementDecisionController extends Controller
                 $request->rejectionReason(),
             );
             $message = __('administration.partner_announcements.rejected');
+            $redirectRoute = 'admin.partner-announcements.index';
         } else {
             $decideAnnouncement->cancel($admin, $announcement);
             $message = __('administration.partner_announcements.cancelled');
+            $redirectRoute = 'admin.partner-announcements.index';
         }
 
         Inertia::flash('toast', [
@@ -41,6 +44,6 @@ final class PartnerAnnouncementDecisionController extends Controller
             'message' => $message,
         ]);
 
-        return to_route('admin.partner-announcements.index');
+        return to_route($redirectRoute);
     }
 }

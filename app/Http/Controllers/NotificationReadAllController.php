@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Actions\RecordPartnerAnnouncementRead;
+use App\Enums\RoleName;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -18,6 +19,10 @@ final class NotificationReadAllController extends Controller
             ->get()
             ->each(fn ($notification) => $recordRead->handle($user, $notification));
 
-        return to_route('notifications.index');
+        return to_route(
+            $user->hasRole(RoleName::User)
+                ? 'notifications.index'
+                : 'partner.notifications.index',
+        );
     }
 }

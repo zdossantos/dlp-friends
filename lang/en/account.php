@@ -78,7 +78,7 @@ return [
             'title' => 'Partner notifications',
             'description' => 'Choose whether you want to receive announcements sent by DLP Friends partners.',
             'partner_announcements' => 'Receive partner announcements',
-            'partner_announcements_help' => 'This preference is disabled by default. You can withdraw your consent at any time without deleting notifications you have already received.',
+            'partner_announcements_help' => 'This preference is enabled by default. You can disable it at any time without deleting notifications you have already received.',
             'saved' => 'Your notification preferences have been saved.',
         ],
         'account_description' => 'Update your login email address.', 'email_unverified' => 'Your email address is not verified.',

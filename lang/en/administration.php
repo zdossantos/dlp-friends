@@ -188,5 +188,6 @@ return [
         'retrying' => 'Retrying…',
         'dispatch' => 'Send announcement',
         'dispatching' => 'Sending…',
+        'eligible_recipients' => ':count members will receive the announcement if it is sent now.',
     ],
 ];

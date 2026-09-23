@@ -33,6 +33,8 @@ return [
         'event_changed' => 'La date ou le lieu de « :event » a changé.',
         'event_cancelled' => '« :event » a été annulé.',
         'partner_announcement' => 'Nouvelle annonce partenaire : « :announcement ».',
+        'partner_announcement_approved' => 'Ton annonce « :announcement » a été approuvée.',
+        'partner_announcement_rejected' => 'Ton annonce « :announcement » a été refusée.',
         'unread' => 'Non lue',
     ],
     'accessibility' => ['unread_count' => ':count notifications non lues'],

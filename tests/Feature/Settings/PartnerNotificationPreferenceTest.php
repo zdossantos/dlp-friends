@@ -15,7 +15,7 @@ class PartnerNotificationPreferenceTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_partner_announcements_are_opt_in_and_default_to_disabled(): void
+    public function test_partner_announcements_are_enabled_by_default_without_persisting_a_preference(): void
     {
         $member = User::factory()->withProfile()->create();
 
@@ -24,7 +24,7 @@ class PartnerNotificationPreferenceTest extends TestCase
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->component('settings/Notifications')
-                ->where('partnerAnnouncementsEnabled', false)
+                ->where('partnerAnnouncementsEnabled', true)
                 ->where('auth.user.roles', [['name' => RoleName::User->value]]));
 
         $this->assertDatabaseMissing('partner_notification_preferences', [

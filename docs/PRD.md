@@ -216,8 +216,8 @@ Paris.
   Le délai entre deux envois d’un même partenaire vaut 30 jours par défaut et
   est configurable. La reprise d’une livraison échouée ne renvoie pas les
   notifications déjà livrées ou ignorées.
-- Les annonces sont exclusivement des notifications dans l’application, sur
-  consentement explicite désactivé par défaut. Le membre peut se désinscrire,
+- Les annonces sont exclusivement des notifications dans l’application. Leur
+  réception est activée par défaut et le membre peut se désinscrire à tout moment,
   lire le contenu figé reçu, ouvrir le lien et retirer une annonce avec
   confirmation. Le partenaire ne choisit aucun segment ni destinataire.
 - Les statistiques exposent uniquement les volumes et taux agrégés : livraisons,
@@ -263,7 +263,7 @@ Paris.
 | Centre de notifications persistant | **Implémenté** | Matches, messages et événements sont regroupés, filtrables et ouvrent leur élément cible. |
 | Tutoriel produit obligatoire | **Implémenté** | Progression persistée et statistiques admin sont livrées. |
 | Gestion administrative des membres | **Implémenté** | Recherche et compteurs, suppression confirmée, échange privé admin/membre et identification visuelle des admins sont livrés sans accès au contenu des messages. |
-| Espace partenaire et annonces modérées (issue 199) | **Implémenté** | Rôles cumulables et audités, fiches bilingues révisées, six cartes SSR au maximum, annonces approuvées et envoi administrateur, opt-in membre, interactions et statistiques agrégées, export/suppression/rétention et tests sont livrés. |
+| Espace partenaire et annonces modérées (issue 199) | **Implémenté** | Rôles cumulables et audités, fiches bilingues révisées, six cartes SSR au maximum, annonces approuvées et envoi administrateur, préférence membre révocable activée par défaut, interactions et statistiques agrégées, export/suppression/rétention et tests sont livrés. |
 | Français et anglais | **Implémenté** | Résolution de locale et catalogues backend/frontend sont présents. |
 | Univers éditorial | **Implémenté** | Tutoiement, vocabulaire canonique et catalogues par feature sont contrôlés automatiquement. |
 | Thèmes clair, sombre et système | **Implémenté** | Préférence persistée et interface correspondante sont présentes. |
@@ -288,7 +288,7 @@ Les preuves détaillées de cet instantané sont consignées dans
 - Limites quotidiennes, annulation de swipe et filtres avancés.
 - Signalement, équipe de modération et outils de modération avancés.
 - Paiement, abonnement et moteur publicitaire ; les annonces partenaires
-  modérées sur opt-in constituent le seul parcours partenaire livré.
+  modérées avec désinscription membre constituent le seul parcours partenaire livré.
 
 ## Évolutions envisagées
 

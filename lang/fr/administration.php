@@ -191,5 +191,6 @@ return [
         'retrying' => 'Relance…',
         'dispatch' => 'Envoyer l’annonce',
         'dispatching' => 'Envoi…',
+        'eligible_recipients' => ':count membres recevront l’annonce si elle est diffusée maintenant.',
     ],
 ];

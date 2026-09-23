@@ -35,6 +35,7 @@ import { index as events } from '@/routes/events';
 import { show as showProfile } from '@/routes/member-profile';
 import { index as notifications } from '@/routes/notifications';
 import { index as partnerAnnouncements } from '@/routes/partner/announcements';
+import { index as partnerNotifications } from '@/routes/partner/notifications';
 import { edit as editPartnerProfile } from '@/routes/partner/profile';
 import { index as partnerStatistics } from '@/routes/partner/statistics';
 
@@ -116,6 +117,13 @@ const partnerItems = computed<BottomNavigationItem[]>(() => [
         href: partnerStatistics(),
         icon: ChartBar,
         activeParents: ['/partner/statistics'],
+    },
+    {
+        label: t('notifications.navigation'),
+        href: partnerNotifications(),
+        icon: Bell,
+        activeParents: ['/partner/notifications'],
+        unreadCount: unreadNotificationsCount.value,
     },
 ]);
 

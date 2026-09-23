@@ -204,10 +204,14 @@ class User extends Authenticatable implements HasLocalePreference, MustVerifyEma
                 'roles',
                 fn (Builder $roles) => $roles->where('name', RoleName::User),
             )
-            ->whereHas(
-                'partnerNotificationPreference',
-                fn (Builder $preferences) => $preferences->where('enabled', true),
-            );
+            ->where(function (Builder $preferences): void {
+                $preferences
+                    ->whereDoesntHave('partnerNotificationPreference')
+                    ->orWhereHas(
+                        'partnerNotificationPreference',
+                        fn (Builder $preference) => $preference->where('enabled', true),
+                    );
+            });
     }
 
     /** @return HasMany<RoleAudit, $this> */

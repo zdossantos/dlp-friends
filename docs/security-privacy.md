@@ -105,8 +105,8 @@ expiration automatique, au plus 30 jours après leur création.
 - Les liens d’annonce exigent HTTPS et refusent notamment identifiants intégrés,
   hôtes locaux et adresses IP non publiques. Aucune récupération distante ni
   prévisualisation serveur de l’URL n’est effectuée.
-- L’opt-in partenaire est indépendant du consentement analytique. Il est absent
-  ou faux par défaut, révocable dans les réglages et vérifié à chaque livraison,
+- La préférence partenaire est indépendante du consentement analytique. Elle est
+  active en l’absence de choix, révocable dans les réglages et vérifiée à chaque livraison,
   avec l’éligibilité actuelle du membre. Pas de ciblage ni d’accès aux identités
   des destinataires dans les vues statistiques, seulement des agrégats.
 - Le lien de clic utilise un jeton opaque propre à la livraison. Lecture/retrait

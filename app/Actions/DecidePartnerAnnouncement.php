@@ -8,6 +8,7 @@ use App\Models\PartnerAnnouncement;
 use App\Models\PartnerProfile;
 use App\Models\PartnerSetting;
 use App\Models\User;
+use App\Notifications\PartnerAnnouncementDecisionNotification;
 use App\Rules\SafeHttpsUrl;
 use Carbon\CarbonImmutable;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -54,6 +55,8 @@ final class DecidePartnerAnnouncement
                 'decided_at' => now(),
                 'rejection_reason' => null,
             ]);
+
+            $this->notifyOwner($profile, $locked);
         });
     }
 
@@ -65,7 +68,7 @@ final class DecidePartnerAnnouncement
         $this->ensureAdmin($admin);
 
         DB::transaction(function () use ($admin, $announcement, $reason): void {
-            [, $locked] = $this->lock($announcement);
+            [$profile, $locked] = $this->lock($announcement);
             $this->ensurePending($locked);
             $locked->update([
                 'status' => PartnerAnnouncementStatus::Rejected,
@@ -74,6 +77,8 @@ final class DecidePartnerAnnouncement
                 'rejection_reason' => $reason,
                 'expires_at' => now()->addYears(2),
             ]);
+
+            $this->notifyOwner($profile, $locked);
         });
     }
 
@@ -134,6 +139,15 @@ final class DecidePartnerAnnouncement
             throw ValidationException::withMessages([
                 'decision' => __('administration.partner_announcements.errors.not_pending'),
             ]);
+        }
+    }
+
+    private function notifyOwner(PartnerProfile $profile, PartnerAnnouncement $announcement): void
+    {
+        $owner = $profile->user()->first();
+
+        if ($owner !== null) {
+            $owner->notify(new PartnerAnnouncementDecisionNotification($announcement));
         }
     }
 }

@@ -145,7 +145,14 @@ Route::middleware(['auth', 'verified', 'social'])->group(function (): void {
             ->name('announcements.revise');
         Route::get('statistics', PartnerStatisticsController::class)
             ->name('statistics.index');
+        Route::get('notifications', NotificationIndexController::class)
+            ->name('notifications.index');
     });
+
+    Route::patch('notifications/read-all', NotificationReadAllController::class)
+        ->name('notifications.read-all');
+    Route::patch('notifications/{notification}/read', NotificationReadController::class)
+        ->name('notifications.read');
 
     Route::middleware('role:user')->group(function (): void {
         Route::get('app', LandingController::class)->name('app');
@@ -225,10 +232,6 @@ Route::middleware(['auth', 'verified', 'social'])->group(function (): void {
                     ->name('conversations.read.store');
                 Route::get('notifications', NotificationIndexController::class)
                     ->name('notifications.index');
-                Route::patch('notifications/read-all', NotificationReadAllController::class)
-                    ->name('notifications.read-all');
-                Route::patch('notifications/{notification}/read', NotificationReadController::class)
-                    ->name('notifications.read');
                 Route::delete('notifications/{notification}/partner-announcement', PartnerAnnouncementDismissController::class)
                     ->name('notifications.partner-announcements.dismiss');
             });

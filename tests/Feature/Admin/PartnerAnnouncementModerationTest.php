@@ -62,7 +62,9 @@ test('the moderation queue exposes pending announcements and the singleton coold
 test('approval revalidates the link and records the decision without changing content', function () {
     $this->travelTo('2026-09-19 10:00:00');
     $admin = User::factory()->admin()->create();
-    $pending = PartnerAnnouncement::factory()->create([
+    $owner = User::factory()->partnerOnly()->create();
+    $profile = PartnerProfile::factory()->for($owner)->create();
+    $pending = PartnerAnnouncement::factory()->for($profile)->create([
         'title' => 'Titre approuvé',
         'content' => 'Contenu approuvé',
         'destination_url' => 'https://offers.example.com/approved',
@@ -75,12 +77,29 @@ test('approval revalidates the link and records the decision without changing co
         ->patch(route('admin.partner-announcements.decide', $pending), [
             'decision' => 'approve',
         ])
-        ->assertRedirect(route('admin.partner-announcements.index'));
+        ->assertRedirect(route('admin.partner-statistics.index'));
 
     expect($pending->fresh()->status)->toBe(PartnerAnnouncementStatus::Approved)
         ->and($pending->fresh()->decided_by)->toBe($admin->id)
         ->and($pending->fresh()->decided_at?->equalTo(now()))->toBeTrue()
         ->and($pending->fresh()->only(['title', 'content', 'destination_url']))->toBe($content);
+
+    expect($owner->notifications()->count())->toBe(1)
+        ->and($owner->notifications()->firstOrFail()->data)->toMatchArray([
+            'category' => 'partners',
+            'translation_key' => 'notifications.items.partner_announcement_approved',
+            'parameters' => ['announcement' => 'Titre approuvé'],
+            'target_type' => 'partner_announcement_management',
+            'target_id' => $pending->id,
+        ]);
+
+    $this->actingAs($owner)
+        ->get(route('partner.notifications.index'))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('Notifications/Index')
+            ->has('notifications.data', 1)
+            ->where('notifications.data.0.translation_key', 'notifications.items.partner_announcement_approved'));
 
     $unsafe = PartnerAnnouncement::factory()->create([
         'destination_url' => 'https://localhost/internal',
@@ -153,6 +172,13 @@ test('admins can reject or cancel before sending but cannot decide locked states
     expect($rejected->fresh()->status)->toBe(PartnerAnnouncementStatus::Rejected)
         ->and($rejected->fresh()->rejection_reason)->toBe('Le contenu doit être clarifié.')
         ->and($rejected->fresh()->decided_by)->toBe($admin->id);
+
+    expect($rejected->partnerProfile->user?->notifications()->firstOrFail()->data)
+        ->toMatchArray([
+            'translation_key' => 'notifications.items.partner_announcement_rejected',
+            'parameters' => ['announcement' => $rejected->title],
+            'target_type' => 'partner_announcement_management',
+        ]);
 
     $this->actingAs($admin)->patch(route('admin.partner-announcements.decide', $cancelled), [
         'decision' => 'cancel',

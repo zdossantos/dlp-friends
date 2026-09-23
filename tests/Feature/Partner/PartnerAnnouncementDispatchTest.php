@@ -119,8 +119,12 @@ test('an admin can resume preparation when the initial after commit queue push f
     );
 
     expect($announcement->fresh()?->audience_prepared_at)->not->toBeNull()
-        ->and($announcement->deliveries()->pluck('user_id')->all())->toBe([$recipient->id]);
-    Queue::assertPushed(DeliverPartnerAnnouncementJob::class, 1);
+        ->and($announcement->deliveries()->pluck('user_id')->all())->toEqualCanonicalizing([
+            $admin->id,
+            $recipient->id,
+            $announcement->partnerProfile->user_id,
+        ]);
+    Queue::assertPushed(DeliverPartnerAnnouncementJob::class, 3);
 });
 
 test('an admin can resume all pending delivery pushes after preparation was interrupted', function () {
@@ -144,7 +148,7 @@ test('an admin can resume all pending delivery pushes after preparation was inte
     expect(fn () => app(PreparePartnerAnnouncementAudience::class)->handle($announcement))
         ->toThrow(RuntimeException::class, 'queue interrupted');
     expect($announcement->fresh()?->audience_prepared_at)->not->toBeNull()
-        ->and($announcement->deliveries()->count())->toBe(501)
+        ->and($announcement->deliveries()->count())->toBe(503)
         ->and($pushCount)->toBe(251);
 
     Queue::fake();
@@ -212,7 +216,12 @@ test('start is admin-only, validates the state and URL, and enforces the decisiv
 test('audience preparation inserts eligible members once and requeues every pending delivery', function () {
     Queue::fake();
     $eligible = collect(range(1, 501))->map(fn (): User => dispatchEligibleUser());
-    $withoutConsent = User::factory()->create();
+    $enabledByDefault = User::factory()->create();
+    $optedOut = User::factory()->create();
+    PartnerNotificationPreference::query()->create([
+        'user_id' => $optedOut->id,
+        'enabled' => false,
+    ]);
     $unverified = dispatchEligibleUser(['email_verified_at' => null]);
     $pendingDeletion = dispatchEligibleUser([
         'status' => UserStatus::PendingDeletion,
@@ -228,18 +237,22 @@ test('audience preparation inserts eligible members once and requeues every pend
     app(PreparePartnerAnnouncementAudience::class)->handle($announcement);
     app(PreparePartnerAnnouncementAudience::class)->handle($announcement->fresh());
 
-    expect($announcement->deliveries()->count())->toBe(501)
+    expect($announcement->deliveries()->count())->toBe(503)
         ->and($announcement->deliveries()->pluck('user_id')->all())
-        ->toEqualCanonicalizing($eligible->pluck('id')->all())
+        ->toEqualCanonicalizing([
+            ...$eligible->pluck('id')->all(),
+            $enabledByDefault->id,
+            $announcement->partnerProfile->user_id,
+        ])
         ->and($announcement->deliveries()->whereIn('user_id', [
-            $withoutConsent->id,
+            $optedOut->id,
             $unverified->id,
             $pendingDeletion->id,
             $partnerOnly->id,
         ])->exists())->toBeFalse()
         ->and($announcement->fresh()?->audience_prepared_at)->not->toBeNull()
-        ->and($announcement->metric?->fresh()?->prepared_count)->toBe(501);
-    Queue::assertPushed(DeliverPartnerAnnouncementJob::class, 1002);
+        ->and($announcement->metric?->fresh()?->prepared_count)->toBe(503);
+    Queue::assertPushed(DeliverPartnerAnnouncementJob::class, 1006);
 });
 
 test('delivery rechecks every eligibility condition and skips members who became ineligible', function (string $condition) {

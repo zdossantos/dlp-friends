@@ -6,6 +6,7 @@ use App\Data\PartnerAnnouncementStatisticsData;
 use App\Enums\PartnerDeliveryStatus;
 use App\Http\Controllers\Controller;
 use App\Models\PartnerAnnouncement;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -15,6 +16,7 @@ final class PartnerStatisticsController extends Controller
     public function __invoke(): Response
     {
         return Inertia::render('Admin/Partners/Statistics', [
+            'eligibleRecipientCount' => User::query()->eligibleForPartnerAnnouncements()->count(),
             'announcements' => PartnerAnnouncement::query()
                 ->with(['metric', 'partnerProfile.publishedRevision'])
                 ->withCount([
