@@ -38,15 +38,10 @@ const { t } = useTranslations();
             "
             class="shrink-0 rounded-2xl focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
         >
-            <span class="relative block">
+            <span class="block">
                 <AvatarPortrait
                     :avatar="participant.avatar"
                     class="size-11 rounded-2xl"
-                />
-                <span
-                    v-if="participant.presence?.online"
-                    class="absolute -right-1 -bottom-1 size-3.5 rounded-full border-2 border-card bg-emerald-500"
-                    aria-hidden="true"
                 />
             </span>
         </Link>
