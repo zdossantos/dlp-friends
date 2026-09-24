@@ -90,6 +90,7 @@ return [
             'back' => 'Retour aux annonces',
         ],
         'errors' => [
+            'cooldown' => 'Vous pourrez soumettre une nouvelle annonce le :date.',
             'unsafe_url' => 'Utilisez une adresse HTTPS publique valide, sans identifiants ni adresse locale ou privée.',
             'profile_required' => 'Enregistrez votre profil partenaire avant de créer une annonce.',
             'not_draft' => 'Seul un brouillon peut être modifié, soumis ou supprimé.',

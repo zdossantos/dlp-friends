@@ -44,6 +44,12 @@ final class MemberNotificationPresenter
             $presented['action_label'] = $actionLabel;
             $presented['content'] = $partnerDelivery->announcement_content;
 
+            if (is_string($data['image_url'] ?? null) && $data['image_url'] !== '') {
+                $presented['image_url'] = $data['image_url'];
+
+                return $presented;
+            }
+
             $profile = $partnerDelivery->announcement?->partnerProfile;
 
             if ($profile?->is_published

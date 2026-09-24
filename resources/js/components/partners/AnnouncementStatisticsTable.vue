@@ -25,7 +25,7 @@ withDefaults(
     },
 );
 
-const { formatNumber, t } = useTranslations();
+const { formatDate, formatNumber, t } = useTranslations();
 
 const statusKeys: Record<PartnerAnnouncementStatus, TranslationKey> = {
     draft: 'partners.announcements.status.draft',
@@ -215,7 +215,10 @@ function canRetry(status: PartnerAnnouncementStatus): boolean {
                                     type="submit"
                                     class="min-h-11"
                                     :data-test="`dispatch-partner-announcement-${announcement.id}`"
-                                    :disabled="processing"
+                                    :disabled="
+                                        processing ||
+                                        Boolean(announcement.next_dispatch_at)
+                                    "
                                     :aria-busy="processing ? 'true' : undefined"
                                     :aria-describedby="
                                         errors.announcement ||
@@ -244,6 +247,28 @@ function canRetry(status: PartnerAnnouncementStatus): boolean {
                                     "
                                     class="mt-2"
                                 />
+                                <p
+                                    v-if="announcement.next_dispatch_at"
+                                    class="mt-2 max-w-72 text-sm text-destructive"
+                                    role="alert"
+                                >
+                                    {{
+                                        t(
+                                            'administration.partner_statistics.dispatch_available_at',
+                                            {
+                                                date: formatDate(
+                                                    announcement.next_dispatch_at,
+                                                    {
+                                                        dateStyle: 'full',
+                                                        timeStyle: 'short',
+                                                        timeZone:
+                                                            'Europe/Paris',
+                                                    },
+                                                ),
+                                            },
+                                        )
+                                    }}
+                                </p>
                             </Form>
                             <Form
                                 v-else-if="canRetry(announcement.status)"

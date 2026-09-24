@@ -7,6 +7,7 @@ use App\Models\PartnerAnnouncement;
 use App\Models\PartnerProfile;
 use App\Models\User;
 use App\Rules\SafeHttpsUrl;
+use App\Support\PartnerAnnouncementCooldown;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -16,11 +17,14 @@ final class SubmitPartnerAnnouncement
 {
     public function __construct(
         private NotifyAdminsOfPartnerModerationRequest $notifyAdmins,
+        private PartnerAnnouncementCooldown $cooldown,
     ) {}
 
     public function handle(User $partner, PartnerAnnouncement $announcement): void
     {
         DB::transaction(function () use ($partner, $announcement): void {
+            $this->cooldown->acquireGlobalLock();
+
             $profile = PartnerProfile::query()
                 ->whereKey($announcement->partner_profile_id)
                 ->lockForUpdate()
@@ -38,6 +42,20 @@ final class SubmitPartnerAnnouncement
             if ($locked->status !== PartnerAnnouncementStatus::Draft) {
                 throw ValidationException::withMessages([
                     'announcement' => __('partners.announcements.errors.not_draft'),
+                ]);
+            }
+
+            $availableAt = $this->cooldown->nextAvailableAt(
+                $profile->id,
+                $locked->id,
+                lockForUpdate: true,
+            );
+
+            if ($availableAt !== null) {
+                throw ValidationException::withMessages([
+                    'announcement' => __('partners.announcements.errors.cooldown', [
+                        'date' => $this->cooldown->formatted($availableAt),
+                    ]),
                 ]);
             }
 

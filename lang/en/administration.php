@@ -170,7 +170,7 @@ return [
         'errors' => [
             'not_pending' => 'This announcement has already received a decision.',
             'not_cancellable' => 'This announcement can no longer be cancelled.',
-            'cooldown' => 'The minimum delay since this partner’s last send has not elapsed yet.',
+            'cooldown' => 'This announcement can be sent on :date.',
         ],
     ],
     'partner_statistics' => [
@@ -185,6 +185,7 @@ return [
         'failed' => 'Failed',
         'skipped' => 'Skipped',
         'actions' => 'Actions',
+        'dispatch_available_at' => 'This announcement can be sent on :date.',
         'retry' => 'Retry',
         'retrying' => 'Retrying…',
         'dispatch' => 'Send announcement',

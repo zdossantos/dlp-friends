@@ -8,10 +8,9 @@ use App\Jobs\PreparePartnerAnnouncementAudience;
 use App\Models\PartnerAnnouncement;
 use App\Models\PartnerAnnouncementMetric;
 use App\Models\PartnerProfile;
-use App\Models\PartnerSetting;
 use App\Models\User;
 use App\Rules\SafeHttpsUrl;
-use Carbon\CarbonImmutable;
+use App\Support\PartnerAnnouncementCooldown;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -20,6 +19,8 @@ use Illuminate\Validation\ValidationException;
 
 final class StartPartnerAnnouncement
 {
+    public function __construct(private readonly PartnerAnnouncementCooldown $cooldown) {}
+
     public function handle(User $admin, PartnerAnnouncement $announcement): void
     {
         if (! $admin->hasRole(RoleName::Admin)) {
@@ -27,10 +28,8 @@ final class StartPartnerAnnouncement
         }
 
         DB::transaction(function () use ($announcement): void {
-            $cooldownDays = PartnerSetting::query()->lockForUpdate()->firstOrCreate(
-                ['id' => 1],
-                ['cooldown_days' => 30],
-            )->cooldown_days;
+            $this->cooldown->acquireGlobalLock();
+
             $profile = PartnerProfile::query()
                 ->whereKey($announcement->partner_profile_id)
                 ->lockForUpdate()
@@ -52,17 +51,17 @@ final class StartPartnerAnnouncement
                 ['destination_url' => ['required', 'string', 'max:2048', new SafeHttpsUrl]],
             )->validate();
 
-            $latestStart = $profile->announcements()
-                ->whereKeyNot($locked->id)
-                ->whereNotNull('sending_started_at')
-                ->lockForUpdate()
-                ->latest('sending_started_at')
-                ->value('sending_started_at');
+            $availableAt = $this->cooldown->nextAvailableAt(
+                $profile->id,
+                $locked->id,
+                lockForUpdate: true,
+            );
 
-            if ($latestStart !== null
-                && CarbonImmutable::parse($latestStart)->isAfter(now()->subDays($cooldownDays))) {
+            if ($availableAt !== null) {
                 throw ValidationException::withMessages([
-                    'announcement' => __('administration.partner_announcements.errors.cooldown'),
+                    'announcement' => __('administration.partner_announcements.errors.cooldown', [
+                        'date' => $this->cooldown->formatted($availableAt),
+                    ]),
                 ]);
             }
 

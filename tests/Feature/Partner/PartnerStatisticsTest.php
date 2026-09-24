@@ -8,6 +8,7 @@ use App\Models\PartnerAnnouncementDelivery;
 use App\Models\PartnerAnnouncementMetric;
 use App\Models\PartnerNotificationPreference;
 use App\Models\PartnerProfile;
+use App\Models\PartnerSetting;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
@@ -202,4 +203,23 @@ test('statistics routes enforce their sibling role boundaries', function () {
     $this->actingAs($partner)->get(route('partner.statistics.index'))->assertOk();
     $this->actingAs($partner)->get(route('admin.partner-statistics.index'))->assertForbidden();
     $this->actingAs($admin)->get(route('admin.partner-statistics.index'))->assertOk();
+});
+
+test('admin statistics expose the exact next dispatch time during cooldown', function () {
+    $this->travelTo('2026-09-20 12:00:00');
+    $admin = User::factory()->admin()->create();
+    $profile = PartnerProfile::factory()->published()->create();
+    PartnerSetting::current()->update(['cooldown_days' => 30]);
+    PartnerAnnouncement::factory()->for($profile)->sent()->create([
+        'sending_started_at' => now()->subDays(10),
+        'sent_at' => now()->subDays(10),
+    ]);
+    $approved = PartnerAnnouncement::factory()->for($profile)->approved()->create();
+
+    $this->actingAs($admin)
+        ->get(route('admin.partner-statistics.index'))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('announcements.0.id', $approved->id)
+            ->where('announcements.0.next_dispatch_at', '2026-10-10T12:00:00+00:00'));
 });

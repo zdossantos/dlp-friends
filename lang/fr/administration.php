@@ -173,7 +173,7 @@ return [
         'errors' => [
             'not_pending' => 'Cette annonce a déjà reçu une décision.',
             'not_cancellable' => 'Cette annonce ne peut plus être annulée.',
-            'cooldown' => 'Le délai minimal depuis le dernier envoi de ce partenaire n’est pas encore écoulé.',
+            'cooldown' => 'Cette annonce pourra être envoyée le :date.',
         ],
     ],
     'partner_statistics' => [
@@ -188,6 +188,7 @@ return [
         'failed' => 'Échecs',
         'skipped' => 'Ignorées',
         'actions' => 'Actions',
+        'dispatch_available_at' => 'Cette annonce pourra être envoyée le :date.',
         'retry' => 'Relancer',
         'retrying' => 'Relance…',
         'dispatch' => 'Envoyer l’annonce',

@@ -216,6 +216,43 @@ const statusKeys: Record<PartnerAnnouncementStatus, TranslationKey> = {
                             <InputError :message="errors.destination_url" />
                             <InputError :message="errors.announcement" />
                         </Form>
+                        <div
+                            v-else-if="
+                                announcement.status === 'draft' &&
+                                announcement.nextSubmissionAt
+                            "
+                            class="space-y-2"
+                        >
+                            <Button
+                                type="button"
+                                class="min-h-11"
+                                :data-test="`partner-announcement-cooldown-submit-${announcement.id}`"
+                                disabled
+                            >
+                                <Send aria-hidden="true" />
+                                {{ t('partners.announcements.submit') }}
+                            </Button>
+                            <p
+                                class="max-w-sm text-sm text-destructive"
+                                role="alert"
+                            >
+                                {{
+                                    t(
+                                        'partners.announcements.errors.cooldown',
+                                        {
+                                            date: formatDate(
+                                                announcement.nextSubmissionAt,
+                                                {
+                                                    dateStyle: 'full',
+                                                    timeStyle: 'short',
+                                                    timeZone: 'Europe/Paris',
+                                                },
+                                            ),
+                                        },
+                                    )
+                                }}
+                            </p>
+                        </div>
                         <Form
                             v-if="announcement.canCancel"
                             v-bind="cancel.form(announcement.id)"

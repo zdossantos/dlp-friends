@@ -90,6 +90,7 @@ return [
             'back' => 'Back to announcements',
         ],
         'errors' => [
+            'cooldown' => 'You can submit a new announcement on :date.',
             'unsafe_url' => 'Use a valid public HTTPS address without credentials or a local or private address.',
             'profile_required' => 'Save your partner profile before creating an announcement.',
             'not_draft' => 'Only a draft can be edited, submitted, or deleted.',

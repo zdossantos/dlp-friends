@@ -6,11 +6,10 @@ use App\Enums\PartnerAnnouncementStatus;
 use App\Enums\RoleName;
 use App\Models\PartnerAnnouncement;
 use App\Models\PartnerProfile;
-use App\Models\PartnerSetting;
 use App\Models\User;
 use App\Notifications\PartnerAnnouncementDecisionNotification;
 use App\Rules\SafeHttpsUrl;
-use Carbon\CarbonImmutable;
+use App\Support\PartnerAnnouncementCooldown;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -18,17 +17,18 @@ use Illuminate\Validation\ValidationException;
 
 final class DecidePartnerAnnouncement
 {
-    public function __construct(private readonly StartPartnerAnnouncement $startAnnouncement) {}
+    public function __construct(
+        private readonly StartPartnerAnnouncement $startAnnouncement,
+        private readonly PartnerAnnouncementCooldown $cooldown,
+    ) {}
 
     public function approve(User $admin, PartnerAnnouncement $announcement): void
     {
         $this->ensureAdmin($admin);
 
         DB::transaction(function () use ($admin, $announcement): void {
-            $cooldownDays = PartnerSetting::query()->lockForUpdate()->firstOrCreate(
-                ['id' => 1],
-                ['cooldown_days' => 30],
-            )->cooldown_days;
+            $this->cooldown->acquireGlobalLock();
+
             [$profile, $locked] = $this->lock($announcement);
             $this->ensurePending($locked);
 
@@ -37,17 +37,17 @@ final class DecidePartnerAnnouncement
                 ['destination_url' => ['required', 'string', 'max:2048', new SafeHttpsUrl]],
             )->validate();
 
-            $latestStart = $profile->announcements()
-                ->whereKeyNot($locked->id)
-                ->whereNotNull('sending_started_at')
-                ->lockForUpdate()
-                ->latest('sending_started_at')
-                ->value('sending_started_at');
+            $availableAt = $this->cooldown->nextAvailableAt(
+                $profile->id,
+                $locked->id,
+                lockForUpdate: true,
+            );
 
-            if ($latestStart !== null
-                && CarbonImmutable::parse($latestStart)->isAfter(now()->subDays($cooldownDays))) {
+            if ($availableAt !== null) {
                 throw ValidationException::withMessages([
-                    'decision' => __('administration.partner_announcements.errors.cooldown'),
+                    'decision' => __('administration.partner_announcements.errors.cooldown', [
+                        'date' => $this->cooldown->formatted($availableAt),
+                    ]),
                 ]);
             }
 

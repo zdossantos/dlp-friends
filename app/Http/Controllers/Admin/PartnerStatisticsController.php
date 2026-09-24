@@ -7,13 +7,14 @@ use App\Enums\PartnerDeliveryStatus;
 use App\Http\Controllers\Controller;
 use App\Models\PartnerAnnouncement;
 use App\Models\User;
+use App\Support\PartnerAnnouncementCooldown;
 use Illuminate\Database\Eloquent\Builder;
 use Inertia\Inertia;
 use Inertia\Response;
 
 final class PartnerStatisticsController extends Controller
 {
-    public function __invoke(): Response
+    public function __invoke(PartnerAnnouncementCooldown $cooldown): Response
     {
         return Inertia::render('Admin/Partners/Statistics', [
             'eligibleRecipientCount' => User::query()->eligibleForPartnerAnnouncements()->count(),
@@ -32,6 +33,10 @@ final class PartnerStatisticsController extends Controller
                 ->map(fn (PartnerAnnouncement $announcement): array => [
                     ...PartnerAnnouncementStatisticsData::from($announcement, includeOperations: true),
                     'partner_name' => $this->partnerName($announcement),
+                    'next_dispatch_at' => $cooldown->nextAvailableAt(
+                        $announcement->partner_profile_id,
+                        $announcement->id,
+                    )?->toIso8601String(),
                 ]),
         ]);
     }

@@ -10,6 +10,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Partner\SavePartnerAnnouncementRequest;
 use App\Models\PartnerAnnouncement;
 use App\Models\User;
+use App\Support\PartnerAnnouncementCooldown;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -19,10 +20,14 @@ use Inertia\Response;
 
 final class AnnouncementController extends Controller
 {
-    public function index(Request $request): Response
+    public function index(Request $request, PartnerAnnouncementCooldown $cooldown): Response
     {
         Gate::authorize('viewAny', PartnerAnnouncement::class);
         $partner = $this->partner($request);
+        $profile = $partner->partnerProfile;
+        $nextSubmissionAt = $profile === null
+            ? null
+            : $cooldown->nextAvailableAt($profile->id);
 
         return Inertia::render('Partner/Announcements/Index', [
             'canCreate' => $partner->can('create', PartnerAnnouncement::class),
@@ -30,7 +35,10 @@ final class AnnouncementController extends Controller
                 ->ownedBy($partner)
                 ->latest('id')
                 ->get()
-                ->map(fn (PartnerAnnouncement $announcement): array => $this->announcementData($announcement)),
+                ->map(fn (PartnerAnnouncement $announcement): array => $this->announcementData(
+                    $announcement,
+                    $nextSubmissionAt?->toIso8601String(),
+                )),
         ]);
     }
 
@@ -113,9 +121,11 @@ final class AnnouncementController extends Controller
         return to_route('partner.announcements.index');
     }
 
-    /** @return array{id: int, title: string, content: string, destinationUrl: string, status: string, submittedAt: string|null, decidedAt: string|null, rejectionReason: string|null, canEdit: bool, canSubmit: bool, canCancel: bool, canRevise: bool} */
-    private function announcementData(PartnerAnnouncement $announcement): array
-    {
+    /** @return array{id: int, title: string, content: string, destinationUrl: string, status: string, submittedAt: string|null, decidedAt: string|null, rejectionReason: string|null, canEdit: bool, canSubmit: bool, nextSubmissionAt: string|null, canCancel: bool, canRevise: bool} */
+    private function announcementData(
+        PartnerAnnouncement $announcement,
+        ?string $nextSubmissionAt = null,
+    ): array {
         return [
             'id' => $announcement->id,
             'title' => $announcement->title,
@@ -126,7 +136,11 @@ final class AnnouncementController extends Controller
             'decidedAt' => $announcement->decided_at?->toIso8601String(),
             'rejectionReason' => $announcement->rejection_reason,
             'canEdit' => $announcement->status === PartnerAnnouncementStatus::Draft,
-            'canSubmit' => $announcement->status === PartnerAnnouncementStatus::Draft,
+            'canSubmit' => $announcement->status === PartnerAnnouncementStatus::Draft
+                && $nextSubmissionAt === null,
+            'nextSubmissionAt' => $announcement->status === PartnerAnnouncementStatus::Draft
+                ? $nextSubmissionAt
+                : null,
             'canCancel' => in_array($announcement->status, [
                 PartnerAnnouncementStatus::PendingApproval,
                 PartnerAnnouncementStatus::Approved,

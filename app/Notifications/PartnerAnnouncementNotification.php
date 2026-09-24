@@ -33,7 +33,7 @@ final class PartnerAnnouncementNotification extends Notification
             throw new LogicException('A new partner notification requires its source announcement.');
         }
 
-        return [
+        $data = [
             'category' => 'partners',
             'translation_key' => 'notifications.items.partner_announcement',
             'parameters' => ['announcement' => $this->announcement->title],
@@ -41,6 +41,14 @@ final class PartnerAnnouncementNotification extends Notification
             'target_type' => 'partner_announcement',
             'target_id' => $this->announcement->id,
         ];
+
+        $profile = $this->announcement->partnerProfile;
+
+        if ($profile->is_published && $profile->publishedRevision?->image_path !== null) {
+            $data['image_url'] = route('partner-profiles.image', $profile, absolute: false);
+        }
+
+        return $data;
     }
 
     public function toBroadcast(User $notifiable): BroadcastMessage

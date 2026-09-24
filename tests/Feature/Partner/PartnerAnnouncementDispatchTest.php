@@ -279,7 +279,11 @@ test('delivery rechecks every eligibility condition and skips members who became
 test('delivery creates exactly one database notification and increments metrics once', function () {
     config()->set('broadcasting.default', 'null');
     $user = dispatchEligibleUser();
-    $announcement = sendingAnnouncement(['audience_prepared_at' => now()]);
+    $profile = PartnerProfile::factory()->published()->create();
+    $announcement = sendingAnnouncement([
+        'partner_profile_id' => $profile->id,
+        'audience_prepared_at' => now(),
+    ]);
     $delivery = PartnerAnnouncementDelivery::factory()->for($announcement, 'announcement')->for($user)->create();
 
     app(DeliverPartnerAnnouncement::class)->handle($delivery);
@@ -297,6 +301,7 @@ test('delivery creates exactly one database notification and increments metrics 
             'announcement_id' => $announcement->id,
             'target_type' => 'partner_announcement',
             'target_id' => $announcement->id,
+            'image_url' => route('partner-profiles.image', $profile, absolute: false),
         ])
         ->and($announcement->metric?->fresh()?->delivered_count)->toBe(1);
 });

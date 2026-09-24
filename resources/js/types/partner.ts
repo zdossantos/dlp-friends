@@ -34,6 +34,7 @@ export type PartnerAnnouncement = {
     rejectionReason: string | null;
     canEdit: boolean;
     canSubmit: boolean;
+    nextSubmissionAt: string | null;
     canCancel: boolean;
     canRevise: boolean;
 };
@@ -55,4 +56,5 @@ export type PartnerAnnouncementStatistics = {
     pending?: number;
     failed?: number;
     skipped?: number;
+    next_dispatch_at?: string | null;
 };

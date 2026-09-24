@@ -6,6 +6,7 @@ use App\Actions\SavePartnerAnnouncement;
 use App\Enums\PartnerAnnouncementStatus;
 use App\Models\PartnerAnnouncement;
 use App\Models\PartnerProfile;
+use App\Models\PartnerSetting;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Validation\ValidationException;
@@ -131,6 +132,35 @@ class PartnerAnnouncementTest extends TestCase
             ->assertSessionHasErrors('destination_url');
 
         expect($unsafe->fresh()->status)->toBe(PartnerAnnouncementStatus::Draft);
+    }
+
+    public function test_partner_sees_and_cannot_bypass_the_next_submission_time(): void
+    {
+        $this->travelTo('2026-09-20 12:00:00');
+        $partner = User::factory()->partnerOnly()->create();
+        $profile = PartnerProfile::factory()->for($partner)->create();
+        PartnerSetting::current()->update(['cooldown_days' => 30]);
+        PartnerAnnouncement::factory()->for($profile)->sent()->create([
+            'sending_started_at' => now()->subDays(10),
+            'sent_at' => now()->subDays(10),
+        ]);
+        $draft = PartnerAnnouncement::factory()->for($profile)->create();
+
+        $this->actingAs($partner)
+            ->get(route('partner.announcements.index'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('announcements.0.id', $draft->id)
+                ->where('announcements.0.canSubmit', false)
+                ->where('announcements.0.nextSubmissionAt', '2026-10-10T12:00:00+00:00'));
+
+        $this->actingAs($partner)
+            ->post(route('partner.announcements.submit', $draft))
+            ->assertSessionHasErrors([
+                'announcement' => 'Vous pourrez soumettre une nouvelle annonce le samedi 10 octobre 2026 à 14:00.',
+            ]);
+
+        expect($draft->fresh()->status)->toBe(PartnerAnnouncementStatus::Draft);
     }
 
     public function test_a_partner_can_delete_a_draft_and_cancel_before_sending_only(): void

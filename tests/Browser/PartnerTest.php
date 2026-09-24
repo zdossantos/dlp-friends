@@ -7,6 +7,7 @@ use App\Enums\PartnerAnnouncementStatus;
 use App\Enums\PartnerRevisionStatus;
 use App\Models\PartnerAnnouncement;
 use App\Models\PartnerProfile;
+use App\Models\PartnerSetting;
 use App\Models\User;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Queue;
@@ -133,10 +134,6 @@ test('partner statistics can be scrolled with the keyboard without overflowing t
 test('admin partner dispatch reports translated validation errors without starting another send', function (string $url, string $message) {
     Queue::fake();
     $profile = PartnerProfile::factory()->published()->create();
-    PartnerAnnouncement::factory()->for($profile)->create([
-        'status' => PartnerAnnouncementStatus::Sent,
-        'sending_started_at' => now(),
-    ]);
     $announcement = PartnerAnnouncement::factory()->for($profile)->create([
         'status' => PartnerAnnouncementStatus::Approved,
         'destination_url' => $url,
@@ -151,9 +148,42 @@ test('admin partner dispatch reports translated validation errors without starti
     expect($announcement->fresh()->status)->toBe(PartnerAnnouncementStatus::Approved);
     Queue::assertNothingPushed();
 })->with([
-    ['https://example.org/friends', 'administration.partner_announcements.errors.cooldown'],
     ['https://127.0.0.1/friends', 'partners.announcements.errors.unsafe_url'],
 ]);
+
+test('partner and admin see the exact Paris cooldown deadline before acting', function () {
+    Queue::fake();
+    $partner = User::factory()->partner()->create();
+    $profile = PartnerProfile::factory()->for($partner)->published()->create();
+    PartnerSetting::current()->update(['cooldown_days' => 30]);
+    $nextAvailableAt = now()->addDays(20)->tz('Europe/Paris');
+    $partnerMessage = 'Vous pourrez soumettre une nouvelle annonce le '
+        .$nextAvailableAt->locale('fr')->isoFormat('dddd D MMMM YYYY [à] HH:mm').'.';
+    $adminMessage = 'Cette annonce pourra être envoyée le '
+        .$nextAvailableAt->locale('fr')->isoFormat('dddd D MMMM YYYY [à] HH:mm').'.';
+    PartnerAnnouncement::factory()->for($profile)->sent()->create([
+        'sending_started_at' => now()->subDays(10),
+        'sent_at' => now()->subDays(10),
+    ]);
+    $approved = PartnerAnnouncement::factory()->for($profile)->approved()->create();
+    $draft = PartnerAnnouncement::factory()->for($profile)->create();
+
+    $this->actingAs($partner);
+    visit('/partner/announcements')->resize(320, 700)
+        ->assertScript('document.body.innerText.includes('.json_encode($partnerMessage).')', true)
+        ->assertDisabled('[data-test="partner-announcement-cooldown-submit-'.$draft->id.'"]')
+        ->assertNoJavaScriptErrors();
+
+    $this->actingAs(User::factory()->admin()->create());
+    visit('/admin/partner-statistics')->resize(320, 700)
+        ->assertScript('document.body.innerText.includes('.json_encode($adminMessage).')', true)
+        ->assertDisabled('[data-test="dispatch-partner-announcement-'.$approved->id.'"]')
+        ->assertNoJavaScriptErrors();
+
+    expect($draft->fresh()->status)->toBe(PartnerAnnouncementStatus::Draft)
+        ->and($approved->fresh()->status)->toBe(PartnerAnnouncementStatus::Approved);
+    Queue::assertNothingPushed();
+});
 
 test('a partner previews the selected profile image before saving', function () {
     $this->actingAs(User::factory()->partnerOnly()->create());
