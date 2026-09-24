@@ -139,9 +139,9 @@ de défilement horizontal. Aucun asset protégé ou distant n'est chargé.
 fonctionnelle. Seule sa couche décorative varie :
 
 - standard : halos, feux et joyaux actuels ;
-- Halloween : lune/halos ambrés, silhouettes géométriques et particules en
-  feuilles ;
-- Noël : étoile centrale, flocons et scintillements rouges/verts/dorés.
+- Halloween : lune, fantôme et étincelles issus de Lucide sur des halos
+  ambrés ;
+- Noël : étoile centrale, flocons et canne en sucre issus de Lucide.
 
 Le DOM expose un identifiant de variante testable. Les animations n'utilisent
 que `transform`, `opacity` et ombres. Avec `prefers-reduced-motion: reduce`,

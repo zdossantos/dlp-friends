@@ -220,6 +220,19 @@
     }
 }
 
+@keyframes motion-match-seasonal {
+    0%,
+    100% {
+        opacity: 0;
+        transform: translate3d(0, 0.75rem, 0) scale(0.7) rotate(-8deg);
+    }
+    35%,
+    70% {
+        opacity: 0.85;
+        transform: translate3d(0, -0.5rem, 0) scale(1) rotate(8deg);
+    }
+}
+
 .landing-reveal {
     animation: landing-reveal 600ms ease-out both;
 }
@@ -327,6 +340,11 @@
             var(--motion-ease-expressive) both;
     }
 
+    .motion-match-seasonal {
+        animation: motion-match-seasonal var(--motion-duration-celebration)
+            var(--motion-ease-expressive) both;
+    }
+
     .motion-card-exit-right {
         animation: motion-card-exit-right 420ms var(--motion-ease-expressive)
             both;
@@ -368,6 +386,7 @@
     .motion-match-firework,
     .motion-match-ray,
     .motion-match-jewel,
+    .motion-match-seasonal,
     .motion-card-exit-right,
     .motion-card-exit-left,
     .motion-navigation-pending {
