@@ -76,6 +76,10 @@ export function initializeSeasonalTheme(): void {
     router.on('navigate', (event) => {
         applyState(event.detail.page.props.seasonalTheme);
     });
+
+    router.on('success', (event) => {
+        applyState(event.detail.page.props.seasonalTheme);
+    });
 }
 
 export function useSeasonalTheme() {

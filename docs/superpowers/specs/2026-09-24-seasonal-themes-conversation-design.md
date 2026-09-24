@@ -116,12 +116,11 @@ Les thèmes saisonniers peuvent changer sensiblement les tokens sémantiques,
 mais chaque combinaison conserve les contrastes et usages documentés.
 
 - Halloween emploie des fonds prune/charbon, un primaire orange citrouille,
-  des accents mauves et des surfaces chaudes. Les décorations abstraites
-  utilisent lunes, étoiles, feuilles, chauves-souris géométriques et citrouilles
-  simplifiées originales.
+  des accents mauves et des surfaces chaudes. Les décorations combinent des
+  icônes génériques Lucide (lune, fantôme et étincelles).
 - Noël emploie des fonds sapin/crème, un primaire rouge canneberge, des accents
-  verts et dorés modérés. Les décorations utilisent flocons, étoiles, branches
-  géométriques et boules abstraites originales.
+  verts et dorés modérés. Les décorations combinent des icônes génériques
+  Lucide (flocon, sapin, cadeau et canne en sucre).
 
 Chaque thème définit ses variantes claire et sombre dans `app.css` via les
 classes combinées `.seasonal-*` et `.dark.seasonal-*`. Les composants continuent
@@ -129,10 +128,10 @@ d'utiliser `background`, `foreground`, `card`, `primary`, `secondary`,
 `accent`, `muted`, `border`, `input`, `ring` et leurs premiers plans plutôt que
 des couleurs brutes.
 
-Un composant purement décoratif `SeasonalDecorations` rend de petits SVG inline
-originaux, `aria-hidden`, non focalisables et sans texte. Il apparaît sur les
+Un composant purement décoratif `SeasonalDecorations` compose de petites icônes
+SVG Lucide, `aria-hidden`, non focalisables et sans texte. Il apparaît sur les
 surfaces de marque et la célébration de match sans gêner les contrôles ni créer
-de défilement horizontal. Il ne charge aucun asset tiers.
+de défilement horizontal. Aucun asset protégé ou distant n'est chargé.
 
 ### Célébration de match
 

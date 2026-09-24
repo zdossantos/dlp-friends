@@ -30,6 +30,7 @@ class SeasonalThemeController extends Controller
             ),
             'activeTheme' => $resolved->active?->value,
             'nextTransitionAt' => $resolved->nextTransitionAt?->toISOString(),
+            'timezone' => config('app.timezone'),
         ]);
     }
 

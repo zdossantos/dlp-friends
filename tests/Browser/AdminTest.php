@@ -18,11 +18,47 @@ use App\Models\PartnerProfile;
 use App\Models\PartnerProfileRevision;
 use App\Models\ProductOnboarding;
 use App\Models\ProductOnboardingSetting;
+use App\Models\SeasonalTheme;
 use App\Models\User;
 use Illuminate\Contracts\Debug\ExceptionHandler as ExceptionHandlerContract;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
+
+test('admin schedules activates and disables seasonal themes on mobile', function () {
+    $admin = User::factory()->withProfile()->admin()->create();
+    $this->actingAs($admin);
+
+    $page = visit('/admin/seasonal-themes')->on()->mobile()
+        ->assertSee('Thèmes saisonniers')
+        ->assertSee('Halloween')
+        ->assertSee('Noël')
+        ->assertValue('#halloween-starts-at', '')
+        ->assertValue('#halloween-ends-at', '')
+        ->assertPresent('[data-test="seasonal-theme-halloween"]')
+        ->assertPresent('[data-test="seasonal-theme-christmas"]')
+        ->assertScript('document.documentElement.scrollWidth <= window.innerWidth', true)
+        ->assertNoJavaScriptErrors();
+
+    $page->type('#halloween-starts-at', '2026-10-01T08:00')
+        ->type('#halloween-ends-at', '2026-11-01T08:00')
+        ->press('Enregistrer la période Halloween')
+        ->assertSee('La programmation du thème a été enregistrée.')
+        ->assertNoJavaScriptErrors();
+
+    expect(SeasonalTheme::query()->where('theme', 'halloween')->firstOrFail()->starts_at)
+        ->not->toBeNull();
+
+    $page->press('Activer Halloween manuellement')
+        ->assertSee('Le thème saisonnier a été activé manuellement.')
+        ->assertScript("document.documentElement.classList.contains('seasonal-halloween')", true)
+        ->assertNoJavaScriptErrors();
+
+    $page->press('Désactiver le thème manuel')
+        ->assertSee('Le forçage manuel du thème a été désactivé.')
+        ->assertScript("document.documentElement.classList.contains('seasonal-halloween')", false)
+        ->assertNoJavaScriptErrors();
+});
 
 test('admin without partner role opens partner management pages from its submenu', function () {
     $admin = User::factory()->admin()->create(['locale' => 'en']);

@@ -8,6 +8,7 @@ import {
     Images,
     LayoutDashboard,
     Megaphone,
+    Sparkles,
     Tags,
     UserRound,
     Users,
@@ -35,6 +36,7 @@ import { index as onboardingIndex } from '@/routes/admin/onboarding';
 import { index as adminPartnerAnnouncements } from '@/routes/admin/partner-announcements';
 import { index as partnerProfileIndex } from '@/routes/admin/partner-profiles';
 import { index as adminPartnerStatistics } from '@/routes/admin/partner-statistics';
+import { index as seasonalThemeIndex } from '@/routes/admin/seasonal-themes';
 import { show as showProfile } from '@/routes/member-profile';
 import { index as partnerAnnouncements } from '@/routes/partner/announcements';
 import { edit as editPartnerProfile } from '@/routes/partner/profile';
@@ -77,6 +79,11 @@ const mainNavItems: NavItem[] = [
         title: t('administration.navigation.onboarding'),
         href: onboardingIndex(),
         icon: GraduationCap,
+    },
+    {
+        title: t('administration.navigation.seasonal_themes'),
+        href: seasonalThemeIndex(),
+        icon: Sparkles,
     },
     {
         title: t('administration.navigation.partners'),
