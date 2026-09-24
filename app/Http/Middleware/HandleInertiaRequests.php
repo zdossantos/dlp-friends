@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Actions\ResolveActiveSeasonalTheme;
 use App\Models\Role;
 use App\Support\FrontendTranslations;
 use App\Support\PublicUrls;
@@ -38,6 +39,8 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
+        $seasonalThemeResolver = app(ResolveActiveSeasonalTheme::class);
+
         return [
             ...parent::share($request),
             'name' => config('app.name'),
@@ -49,6 +52,14 @@ class HandleInertiaRequests extends Middleware
                 'terms_url' => PublicUrls::termsPath(app()->getLocale()),
                 'privacy_url' => PublicUrls::privacyPath(app()->getLocale()),
             ],
+            'seasonalTheme' => function () use ($seasonalThemeResolver): array {
+                $theme = $seasonalThemeResolver->handle();
+
+                return [
+                    'active' => $theme->active?->value,
+                    'nextTransitionAt' => $theme->nextTransitionAt?->toIso8601String(),
+                ];
+            },
             'auth' => [
                 'unread_notifications_count' => fn (): int => $request->user()?->unreadNotifications()->count() ?? 0,
                 'user' => function () use ($request): ?array {

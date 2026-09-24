@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\SeasonalTheme;
 use App\Models\User;
 
 function semanticHueIsBetweenScript(string $token, int $minimumHue, int $maximumHue): string
@@ -141,6 +142,21 @@ function semanticColorEqualsRgbScript(string $token, int $red, int $green, int $
     JS;
 }
 
+function seasonalTokenDiffersFromDefaultScript(string $seasonalClass, string $token): string
+{
+    return <<<JS
+        (() => {
+            const root = document.documentElement;
+            const seasonalValue = getComputedStyle(root).getPropertyValue('--{$token}').trim();
+            root.classList.remove('{$seasonalClass}');
+            const defaultValue = getComputedStyle(root).getPropertyValue('--{$token}').trim();
+            root.classList.add('{$seasonalClass}');
+
+            return seasonalValue !== defaultValue;
+        })()
+    JS;
+}
+
 test('a stored appearance takes precedence over the system preference', function () {
     $user = User::factory()->withProfile()->create();
     $this->actingAs($user);
@@ -220,4 +236,42 @@ test('semantic colors keep pastel pink secondary and neutral interaction accents
         ->assertScript(semanticContrastScript('accent', 'accent-foreground'), true)
         ->assertScript(interactionPaletteHasPinkScript(), false)
         ->assertNoJavaScriptErrors();
+});
+
+test('seasonal palettes remain distinct accessible and decorative in light and dark modes', function () {
+    $user = User::factory()->withProfile()->create();
+    $this->actingAs($user);
+
+    foreach (['halloween', 'christmas'] as $themeName) {
+        SeasonalTheme::query()->update(['is_manually_active' => false]);
+        SeasonalTheme::query()->where('theme', $themeName)->update(['is_manually_active' => true]);
+        $selector = "[data-test='seasonal-decoration-{$themeName}']";
+        $seasonalClass = "seasonal-{$themeName}";
+
+        $page = visit('/settings/appearance');
+        $page->script("localStorage.setItem('appearance', 'light')");
+        $page->navigate('/settings/appearance')
+            ->assertScript("document.documentElement.classList.contains('{$seasonalClass}')", true)
+            ->assertScript(seasonalTokenDiffersFromDefaultScript($seasonalClass, 'primary'), true)
+            ->assertScript(semanticContrastScript('background', 'foreground'), true)
+            ->assertScript(semanticContrastScript('card', 'card-foreground'), true)
+            ->assertScript(semanticContrastScript('primary', 'primary-foreground'), true)
+            ->assertScript(semanticContrastScript('secondary', 'secondary-foreground'), true)
+            ->assertScript(semanticContrastScript('background', 'ring'), true)
+            ->assertPresent($selector)
+            ->assertAttribute($selector, 'aria-hidden', 'true')
+            ->assertAttribute($selector, 'focusable', 'false')
+            ->navigate('/notifications')
+            ->assertPresent("[data-test='seasonal-surface-{$themeName}']");
+
+        $page->script("localStorage.setItem('appearance', 'dark')");
+        $page->navigate('/settings/appearance')
+            ->assertScript(semanticContrastScript('background', 'foreground'), true)
+            ->assertScript(semanticContrastScript('card', 'card-foreground'), true)
+            ->assertScript(semanticContrastScript('primary', 'primary-foreground'), true)
+            ->assertScript(semanticContrastScript('secondary', 'secondary-foreground'), true)
+            ->assertScript(semanticContrastScript('background', 'ring'), true)
+            ->assertPresent("{$selector}.seasonal-decoration-static")
+            ->assertNoJavaScriptErrors();
+    }
 });

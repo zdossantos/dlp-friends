@@ -3,6 +3,7 @@ import { Head, Link } from '@inertiajs/vue3';
 import { computed, ref, watch } from 'vue';
 import ActivityStatus from '@/components/conversations/ActivityStatus.vue';
 import AvatarPortrait from '@/components/profile/AvatarPortrait.vue';
+import SeasonalDecorations from '@/components/seasonal/SeasonalDecorations.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useMemberRealtimeContext } from '@/composables/useMemberRealtimeNotifications';
@@ -116,8 +117,9 @@ watch(presenceChanged, (event) => {
 
         <section
             v-if="visibleConversations.length === 0"
-            class="rounded-3xl border bg-card p-6 text-center shadow-sm"
+            class="relative isolate overflow-hidden rounded-3xl border bg-card p-6 text-center shadow-sm"
         >
+            <SeasonalDecorations placement="panel" />
             <h2 class="font-semibold">
                 {{ t('conversations.page.empty_title') }}
             </h2>
@@ -128,8 +130,9 @@ watch(presenceChanged, (event) => {
 
         <section
             v-else-if="filteredConversations.length === 0"
-            class="rounded-3xl border bg-card p-6 text-center shadow-sm"
+            class="relative isolate overflow-hidden rounded-3xl border bg-card p-6 text-center shadow-sm"
         >
+            <SeasonalDecorations placement="panel" />
             <p class="font-semibold">
                 {{ t('conversations.page.search_empty') }}
             </p>
@@ -147,9 +150,10 @@ watch(presenceChanged, (event) => {
         <section
             v-else
             :aria-label="t('conversations.page.list_label')"
-            class="min-h-0 flex-1 overflow-y-auto overscroll-contain rounded-3xl border bg-card shadow-sm"
+            class="relative isolate min-h-0 flex-1 overflow-y-auto overscroll-contain rounded-3xl border bg-card shadow-sm"
         >
-            <ul role="list" class="divide-y">
+            <SeasonalDecorations placement="panel" />
+            <ul role="list" class="relative z-10 divide-y">
                 <li
                     v-for="conversation in filteredConversations"
                     :key="conversation.id"

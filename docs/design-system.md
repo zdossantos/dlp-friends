@@ -49,6 +49,21 @@ secondaires. Toute nouvelle couleur doit d’abord recevoir une fonction
 sémantique ; une valeur locale n’est acceptable que pour une illustration, une
 couleur d'avatar administrable ou un état métier réellement spécifique.
 
+Les ambiances saisonnières `halloween` et `christmas` se superposent à la
+préférence `light`/`dark`/`system`. Elles redéfinissent les mêmes tokens
+sémantiques, sans couleur métier écrite en dur dans les composants. La priorité
+est : activation manuelle administrateur, plage planifiée active, puis thème
+standard. Une activation manuelle ne s’arrête qu’après désactivation explicite.
+
+Les décorations globales, les célébrations de match et les doodles de
+conversation utilisent exclusivement les composants SVG de Lucide déjà
+installés, sont `aria-hidden` et non focalisables. Les motifs de conversation
+sont bulles/enveloppes/mains/étincelles en standard, lunes/fantômes/feuilles/
+étincelles pour Halloween et flocons/sapins/cadeaux/étincelles pour Noël. Leur
+couleur et leur opacité s’adaptent aux modes clair et sombre. Les animations
+saisonnières sont supprimées avec `prefers-reduced-motion: reduce` tout en
+conservant un visuel statique compréhensible.
+
 ## Typographie, espacement, rayons et ombres
 
 ### Choix typographique

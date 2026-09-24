@@ -4,6 +4,7 @@ use App\Actions\CreateSwipe;
 use App\Enums\SwipeDecision;
 use App\Models\Interest;
 use App\Models\MemberMatch;
+use App\Models\SeasonalTheme;
 use App\Models\Swipe;
 use App\Models\User;
 use Illuminate\Support\Facades\Storage;
@@ -726,6 +727,53 @@ test('a reciprocal like opens a dismissible match dialog only once', function ()
     $page->navigate('/discover')
         ->assertNotPresent('[data-slot="dialog-title"]');
 });
+
+test('match celebration follows the active seasonal theme', function (?string $theme, string $variant) {
+    if ($theme !== null) {
+        SeasonalTheme::query()->where('theme', $theme)->update([
+            'is_manually_active' => true,
+        ]);
+    }
+
+    $actor = discoveryMember('Alice');
+    $target = discoveryMember('Basile');
+    Swipe::factory()->create([
+        'actor_user_id' => $target->id,
+        'target_user_id' => $actor->id,
+        'decision' => SwipeDecision::Like,
+    ]);
+    $this->actingAs($actor);
+
+    $page = visit('/discover')
+        ->assertSee('Basile')
+        ->click('[aria-label="Découvrir ce profil"]')
+        ->assertPresent("[data-test=match-celebration-{$variant}]")
+        ->assertCount(
+            '[data-test^="match-celebration-"]:not([data-test="match-celebration-layer"])',
+            1,
+        )
+        ->assertScript(
+            "Math.abs(document.querySelector('[data-test=match-celebration-layer]').getBoundingClientRect().width - window.innerWidth) < 1 && Math.abs(document.querySelector('[data-test=match-celebration-layer]').getBoundingClientRect().height - window.innerHeight) < 1",
+            true,
+        )
+        ->assertScript(
+            "document.querySelector('[data-test=open-match-conversation]').matches(':disabled')",
+            false,
+        )
+        ->assertNoJavaScriptErrors();
+
+    if ($theme !== null) {
+        $page->assertPresent('[data-test="match-seasonal-particle"]')
+            ->assertScript(
+                "(() => { const walk = (rules, reduced = false) => [...rules].some((rule) => { const insideReduced = reduced || rule.conditionText?.includes('prefers-reduced-motion'); if (insideReduced && rule.selectorText?.includes('.motion-match-seasonal') && rule.style?.animationName === 'none') return true; return rule.cssRules ? walk(rule.cssRules, insideReduced) : false; }); return [...document.styleSheets].some((sheet) => { try { return walk(sheet.cssRules) } catch { return false } }); })()",
+                true,
+            );
+    }
+})->with([
+    'standard' => [null, 'standard'],
+    'halloween' => ['halloween', 'halloween'],
+    'christmas' => ['christmas', 'christmas'],
+]);
 
 test('a member sends the first message immediately after opening a new match conversation', function () {
     $actor = discoveryMember('Alice');

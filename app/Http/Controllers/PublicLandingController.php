@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\ResolveActiveSeasonalTheme;
 use App\Enums\PartnerRevisionStatus;
 use App\Models\PartnerProfile;
 use App\Support\AuthenticatedHome;
@@ -32,8 +33,11 @@ class PublicLandingController extends Controller
         return redirect($localizedUrl);
     }
 
-    public function show(Request $request, string $locale): Response|RedirectResponse
-    {
+    public function show(
+        Request $request,
+        string $locale,
+        ResolveActiveSeasonalTheme $resolveActiveSeasonalTheme,
+    ): Response|RedirectResponse {
         if ($request->user() !== null) {
             return redirect()->to(AuthenticatedHome::url($request->user()));
         }
@@ -59,7 +63,10 @@ class PublicLandingController extends Controller
             'x_default' => PublicUrls::landing(Locale::fallback()),
         ];
 
+        $activeSeasonalTheme = $resolveActiveSeasonalTheme->handle()->active?->value;
+
         return response()->view('welcome', [
+            'activeSeasonalTheme' => $activeSeasonalTheme,
             'seo' => [
                 'locale' => $locale,
                 'title' => __('common.welcome.seo.title'),

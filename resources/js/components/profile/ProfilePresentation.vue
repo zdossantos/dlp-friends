@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { CalendarDays, ShieldCheck, Sparkles } from '@lucide/vue';
+import SeasonalDecorations from '@/components/seasonal/SeasonalDecorations.vue';
 import { Badge } from '@/components/ui/badge';
 import { useTranslations } from '@/composables/useTranslations';
 
@@ -50,6 +51,7 @@ withDefaults(
                 backgroundImage: `linear-gradient(145deg, ${avatar.primary_color}, ${avatar.secondary_color})`,
             }"
         >
+            <SeasonalDecorations placement="hero" />
             <div
                 data-test="profile-avatar-hero"
                 class="absolute inset-0 flex items-end justify-center px-6 pt-4"
@@ -82,6 +84,7 @@ withDefaults(
             data-test="profile-information-sheet"
             class="relative z-20 -mt-5 min-h-0 flex-1 space-y-4 overflow-y-auto overscroll-contain rounded-t-[2rem] bg-card p-4 sm:p-6"
         >
+            <SeasonalDecorations placement="panel" />
             <div class="flex flex-wrap items-start justify-between gap-3">
                 <div>
                     <div class="flex flex-wrap items-center gap-2">

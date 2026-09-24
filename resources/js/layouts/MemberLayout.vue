@@ -3,6 +3,7 @@ import { usePage } from '@inertiajs/vue3';
 import { watch } from 'vue';
 import MatchDialog from '@/components/discovery/MatchDialog.vue';
 import MemberBottomNavigation from '@/components/MemberBottomNavigation.vue';
+import SeasonalDecorations from '@/components/seasonal/SeasonalDecorations.vue';
 import { Toaster } from '@/components/ui/sonner';
 import { useMemberNavigationVisibility } from '@/composables/useMemberNavigationVisibility';
 import {
@@ -41,6 +42,7 @@ watch(
             aria-hidden="true"
             class="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_top_left,var(--color-secondary),transparent_42%),radial-gradient(circle_at_bottom_right,var(--color-accent),transparent_38%)] opacity-35"
         />
+        <SeasonalDecorations />
         <div
             data-test="member-shell-content"
             scroll-region

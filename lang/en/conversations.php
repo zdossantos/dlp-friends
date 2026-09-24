@@ -39,6 +39,10 @@ return [
         'timeline' => 'Message history',
         'received' => 'New message received',
         'loading_previous' => 'Loading previous messages…',
+        'empty' => 'Start your friendly chat with a first message.',
+        'you' => 'You',
+        'today' => 'Today',
+        'yesterday' => 'Yesterday',
     ],
     'realtime' => [
         'unavailable' => 'Live updates are unavailable. Your messages remain visible.',

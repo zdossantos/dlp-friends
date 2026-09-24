@@ -7,6 +7,7 @@ use App\Http\Middleware\HandleInertiaRequests;
 use App\Models\PartnerProfile;
 use App\Models\ProductOnboarding;
 use App\Models\Role;
+use App\Models\SeasonalTheme;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Storage;
@@ -80,6 +81,20 @@ test('the public landing is server rendered without application javascript', fun
         ->assertSee('Comprendre nos suggestions')
         ->assertDontSee('type="module"', false);
 });
+
+test('the public landing renders the active seasonal art direction', function (string $theme) {
+    SeasonalTheme::query()->update(['is_manually_active' => false]);
+    SeasonalTheme::query()->where('theme', $theme)->update([
+        'is_manually_active' => true,
+    ]);
+
+    $this->get('/fr')
+        ->assertOk()
+        ->assertViewHas('activeSeasonalTheme', $theme)
+        ->assertSee("seasonal-{$theme}", false)
+        ->assertSee("data-test=\"landing-seasonal-{$theme}\"", false)
+        ->assertSee('data-lucide-seasonal-icon', false);
+})->with(['halloween', 'christmas']);
 
 test('the public landing renders the first six published partners in exact order and requested language', function () {
     $profiles = PartnerProfile::factory()
