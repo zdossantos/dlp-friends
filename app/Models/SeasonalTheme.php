@@ -17,6 +17,11 @@ use Illuminate\Database\Eloquent\Model;
 #[Fillable(['theme', 'is_manually_active', 'starts_at', 'ends_at'])]
 class SeasonalTheme extends Model
 {
+    public function getRouteKeyName(): string
+    {
+        return 'theme';
+    }
+
     /** @return array<string, string> */
     protected function casts(): array
     {

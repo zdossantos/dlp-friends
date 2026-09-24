@@ -22,6 +22,8 @@ use App\Http\Controllers\Admin\PartnerProfileOrderController;
 use App\Http\Controllers\Admin\PartnerSettingController;
 use App\Http\Controllers\Admin\PartnerStatisticsController as AdminPartnerStatisticsController;
 use App\Http\Controllers\Admin\ProductOnboardingController as AdminProductOnboardingController;
+use App\Http\Controllers\Admin\SeasonalThemeActivationController;
+use App\Http\Controllers\Admin\SeasonalThemeController;
 use App\Http\Controllers\Auth\SocialAuthController;
 use App\Http\Controllers\Auth\SocialRegistrationController;
 use App\Http\Controllers\AvatarImageController;
@@ -291,6 +293,14 @@ Route::middleware(['auth', 'verified', 'social'])->group(function (): void {
             ->name('interests.move');
         Route::patch('interest-setting', InterestSettingController::class)
             ->name('interest-setting.update');
+        Route::get('seasonal-themes', [SeasonalThemeController::class, 'index'])
+            ->name('seasonal-themes.index');
+        Route::patch('seasonal-themes/{seasonalTheme}', [SeasonalThemeController::class, 'update'])
+            ->name('seasonal-themes.update');
+        Route::post('seasonal-themes/{seasonalTheme}/activate', [SeasonalThemeActivationController::class, 'store'])
+            ->name('seasonal-themes.activate');
+        Route::post('seasonal-themes/deactivate', [SeasonalThemeActivationController::class, 'destroy'])
+            ->name('seasonal-themes.deactivate');
     });
 });
 

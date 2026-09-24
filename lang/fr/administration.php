@@ -8,6 +8,11 @@ return [
         'role_already_assigned' => 'Ce rôle est déjà attribué.',
     ],
     'title' => 'Administration',
+    'seasonal_themes' => [
+        'schedule_saved' => 'La programmation du thème a été enregistrée.',
+        'activated' => 'Le thème saisonnier a été activé manuellement.',
+        'deactivated' => 'Le forçage manuel du thème a été désactivé.',
+    ],
     'navigation' => [
         'label' => 'Administration',
         'dashboard' => 'Tableau de bord',
