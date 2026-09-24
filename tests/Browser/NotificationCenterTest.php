@@ -52,6 +52,22 @@ test('a member filters notifications and opens the related conversation', functi
     expect($conversationNotification->fresh()?->read_at)->not->toBeNull();
 });
 
+test('administration notifications and their filter stay exclusive to administrators', function () {
+    $member = notificationBrowserMember('Alice');
+    $notification = notificationBrowserNotice(
+        $member,
+        'administration',
+        'Administration',
+        999,
+    );
+    $this->actingAs($member);
+
+    visit('/notifications')->on()->mobile()
+        ->assertMissing('[data-test="notification-filter-administration"]')
+        ->assertMissing('[data-test="notification-'.$notification->id.'"]')
+        ->assertNoJavaScriptErrors();
+});
+
 test('mobile notifications stay within the viewport and keep the active filter legible in dark mode', function () {
     $member = notificationBrowserMember('Alice');
     $peer = notificationBrowserMember('Basile');

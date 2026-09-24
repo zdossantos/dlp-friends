@@ -1,16 +1,40 @@
 <script setup lang="ts">
 import { router } from '@inertiajs/vue3';
+import { computed } from 'vue';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useTranslations } from '@/composables/useTranslations';
 import { applyNotificationFilters } from '@/lib/notificationFilters';
 import type { NotificationCategory } from '@/lib/notificationFilters';
+
 const props = defineProps<{
+    canViewAdministrationNotifications: boolean;
     indexUrl: string;
     category: NotificationCategory | null;
     unread: boolean;
 }>();
 const { t } = useTranslations();
+
+const filters = computed(() => [
+    { value: null, label: t('notifications.filters.all') },
+    {
+        value: 'conversations' as const,
+        label: t('notifications.filters.conversations'),
+    },
+    { value: 'events' as const, label: t('notifications.filters.events') },
+    {
+        value: 'partners' as const,
+        label: t('notifications.filters.partners'),
+    },
+    ...(props.canViewAdministrationNotifications
+        ? [
+              {
+                  value: 'administration' as const,
+                  label: t('notifications.filters.administration'),
+              },
+          ]
+        : []),
+]);
 
 function update(category: NotificationCategory | null, unread: boolean): void {
     const query = applyNotificationFilters(category, unread);
@@ -24,25 +48,7 @@ function update(category: NotificationCategory | null, unread: boolean): void {
     <div class="space-y-3" :aria-label="t('notifications.filters.label')">
         <div class="flex flex-wrap gap-2">
             <Button
-                v-for="filter in [
-                    { value: null, label: t('notifications.filters.all') },
-                    {
-                        value: 'conversations' as const,
-                        label: t('notifications.filters.conversations'),
-                    },
-                    {
-                        value: 'events' as const,
-                        label: t('notifications.filters.events'),
-                    },
-                    {
-                        value: 'partners' as const,
-                        label: t('notifications.filters.partners'),
-                    },
-                    {
-                        value: 'administration' as const,
-                        label: t('notifications.filters.administration'),
-                    },
-                ]"
+                v-for="filter in filters"
                 :key="filter.value ?? 'all'"
                 type="button"
                 :data-test="`notification-filter-${filter.value ?? 'all'}`"

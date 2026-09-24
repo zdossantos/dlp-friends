@@ -9,6 +9,7 @@ import { readAll } from '@/routes/notifications';
 import type { NotificationPage } from '@/types/notification';
 
 const props = defineProps<{
+    canViewAdministrationNotifications: boolean;
     indexUrl: string;
     filters: { category: NotificationCategory | null; unread: boolean };
     notifications: NotificationPage;
@@ -53,6 +54,9 @@ function markAllRead(): void {
             :index-url="indexUrl"
             :category="filters.category"
             :unread="filters.unread"
+            :can-view-administration-notifications="
+                canViewAdministrationNotifications
+            "
         />
 
         <section

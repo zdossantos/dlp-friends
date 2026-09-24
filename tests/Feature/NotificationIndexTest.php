@@ -18,6 +18,60 @@ class NotificationIndexTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_members_cannot_see_or_request_administration_notifications(): void
+    {
+        $member = User::factory()->withProfile()->create();
+        $administration = $this->notification($member, 'administration');
+        $event = $this->notification($member, 'events');
+
+        $this->actingAs($member)
+            ->get(route('notifications.index'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('canViewAdministrationNotifications', false)
+                ->has('notifications.data', 1)
+                ->where('notifications.data.0.id', $event->id)
+                ->where('notifications.data.0.category', 'events'));
+
+        $this->actingAs($member)
+            ->get(route('notifications.index', ['category' => 'administration']))
+            ->assertForbidden();
+
+        $this->assertDatabaseHas('notifications', ['id' => $administration->id]);
+    }
+
+    public function test_partners_cannot_see_or_request_administration_notifications(): void
+    {
+        $partner = User::factory()->partnerOnly()->create();
+        $this->notification($partner, 'administration');
+
+        $this->actingAs($partner)
+            ->get(route('partner.notifications.index'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('canViewAdministrationNotifications', false)
+                ->has('notifications.data', 0));
+
+        $this->actingAs($partner)
+            ->get(route('partner.notifications.index', ['category' => 'administration']))
+            ->assertForbidden();
+    }
+
+    public function test_administrators_keep_access_to_administration_notifications(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $notification = $this->notification($admin, 'administration');
+
+        $this->actingAs($admin)
+            ->get(route('admin.notifications.index', ['category' => 'administration']))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('canViewAdministrationNotifications', true)
+                ->where('filters.category', 'administration')
+                ->has('notifications.data', 1)
+                ->where('notifications.data.0.id', $notification->id));
+    }
+
     public function test_partner_notifications_can_be_filtered_and_expose_only_opaque_engagement_routes(): void
     {
         $member = User::factory()->withProfile()->create();
@@ -105,5 +159,20 @@ class NotificationIndexTest extends TestCase
             ]);
 
         return [$notification, $delivery];
+    }
+
+    private function notification(User $user, string $category): DatabaseNotification
+    {
+        return $user->notifications()->create([
+            'id' => (string) Str::uuid(),
+            'type' => 'test',
+            'data' => [
+                'category' => $category,
+                'translation_key' => 'notifications.items.event_changed',
+                'parameters' => ['event' => 'Sortie'],
+                'target_type' => 'event',
+                'target_id' => 999,
+            ],
+        ]);
     }
 }

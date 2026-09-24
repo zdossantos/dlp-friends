@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\NotificationCategory;
+use App\Enums\RoleName;
 use App\Http\Requests\NotificationIndexRequest;
 use App\Models\User;
 use App\Support\MemberNotificationPresenter;
@@ -17,9 +19,18 @@ final class NotificationIndexController extends Controller
     ): Response {
         /** @var User $user */
         $user = $request->user();
+        $canViewAdministrationNotifications = $user->hasRole(RoleName::Admin);
         $category = $request->validated('category');
         $unread = $request->boolean('unread');
         $notifications = $user->notifications()
+            ->when(
+                ! $canViewAdministrationNotifications,
+                fn ($query) => $query->where(
+                    'data->category',
+                    '!=',
+                    NotificationCategory::Administration->value,
+                ),
+            )
             ->when($category, fn ($query, string $value) => $query->where('data->category', $value))
             ->when($unread, fn ($query) => $query->whereNull('read_at'))
             ->paginate(20)
@@ -27,6 +38,7 @@ final class NotificationIndexController extends Controller
             ->through(fn (DatabaseNotification $notification): array => $presenter->present($notification, $user));
 
         return Inertia::render('Notifications/Index', [
+            'canViewAdministrationNotifications' => $canViewAdministrationNotifications,
             'indexUrl' => match (true) {
                 $request->routeIs('admin.notifications.index') => route('admin.notifications.index', absolute: false),
                 $request->routeIs('partner.notifications.index') => route('partner.notifications.index', absolute: false),
