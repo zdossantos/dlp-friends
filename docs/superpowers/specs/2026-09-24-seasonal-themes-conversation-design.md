@@ -161,9 +161,22 @@ asset externe. Le motif est construit avec un petit SVG CSS encodé et des
 formes génériques liées à l'amitié et à l'échange : bulles, étincelles, mains
 stylisées et enveloppes abstraites. Il n'emploie aucune forme propriétaire.
 
-Le motif utilise un nouveau token local `--conversation-pattern`, avec une
+Le motif utilise des tokens locaux `--conversation-pattern-image`,
+`--conversation-pattern-color` et `--conversation-pattern-opacity`, avec une
 opacité suffisamment faible pour que les bulles restent la surface dominante.
-Les variantes standard, sombre, Halloween et Noël sont définies explicitement.
+Il change réellement avec l'ambiance active, et pas seulement de couleur :
+
+- le motif standard combine bulles, étincelles, mains stylisées et enveloppes
+  abstraites ;
+- le motif Halloween combine petites lunes, feuilles, citrouilles géométriques
+  et chauves-souris abstraites ;
+- le motif Noël combine flocons, étoiles, branches géométriques et boules
+  abstraites.
+
+Chaque dessin possède une variante claire et sombre. Les SVG restent originaux,
+décoratifs, encodés localement et suffisamment espacés pour ne pas produire un
+fond chargé. Le changement de classe saisonnière remplace immédiatement le
+motif sans modifier le DOM de la conversation.
 
 ### Hiérarchie et identification des messages
 
@@ -209,8 +222,9 @@ Le développement suit un cycle rouge, vert, refactorisation.
   saisonnière, contrastes principaux et changement automatique simulé ;
 - match : variante standard/Halloween/Noël et suppression des animations sous
   réduction des mouvements ;
-- conversation : libellés d'émetteur, séparateurs temporels, motif, messages
-  longs, erreur, envoi en cours et état vide ;
+- conversation : libellés d'émetteur, séparateurs temporels, trois dessins de
+  doodle distincts dans leurs variantes claire et sombre, messages longs,
+  erreur, envoi en cours et état vide ;
 - revues navigateur à 320 px et ordinateur, clair et sombre, sans erreur
   JavaScript ni défilement horizontal.
 
