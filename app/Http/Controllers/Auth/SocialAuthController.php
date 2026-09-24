@@ -9,6 +9,7 @@ use App\Exceptions\SocialAuthenticationException;
 use App\Http\Controllers\Controller;
 use App\Models\SocialAccount;
 use App\Models\User;
+use App\Support\AuthenticatedHome;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -56,7 +57,7 @@ class SocialAuthController extends Controller
                 Auth::login($account->user);
                 $request->session()->regenerate();
 
-                return redirect()->route('app');
+                return redirect()->to(AuthenticatedHome::url($account->user));
             }
 
             $email = Str::lower(trim((string) $socialiteUser->getEmail()));

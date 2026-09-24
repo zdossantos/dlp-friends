@@ -6,6 +6,7 @@ use App\Events\MessageSent;
 use App\Models\MemberMatch;
 use App\Models\Message;
 use App\Models\User;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
 
 function conversationBrowserMember(string $displayName): User
@@ -73,6 +74,29 @@ test('the conversation list prefixes the member latest message with vous', funct
     visit('/conversations')->on()->mobile()
         ->assertSee('Toi : À tout de suite !')
         ->assertPresent("a[href='/conversations/{$conversation->id}'][data-unread='false']")
+        ->assertNoJavaScriptErrors();
+});
+
+test('a conversation header shows online presence only beside the label', function () {
+    $member = conversationBrowserMember('Alice');
+    $peer = conversationBrowserMember('Basile');
+    $match = MemberMatch::factory()->create([
+        'user_low_id' => min($member->id, $peer->id),
+        'user_high_id' => max($member->id, $peer->id),
+    ]);
+    $conversation = $match->conversation()->create();
+    Cache::put("presence:user:{$peer->id}", true, now()->addMinute());
+    $this->actingAs($member);
+
+    visit("/conversations/{$conversation->id}")->on()->mobile()
+        ->assertSee(__('conversations.presence.online'))
+        ->assertScript(<<<'JS'
+            (() => {
+                const header = document.querySelector('[data-test="conversation-page"] > header');
+
+                return header?.querySelectorAll('.bg-emerald-500').length === 1;
+            })()
+        JS, true)
         ->assertNoJavaScriptErrors();
 });
 

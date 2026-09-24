@@ -23,6 +23,10 @@ return [
         'create_account' => 'Créer mon compte',
         'login' => 'Se connecter',
         'how_it_works' => 'Fonctionnement',
+        'partners' => [
+            'title' => 'Nos partenaires',
+            'image_alt' => 'Présentation de :name',
+        ],
         'value_title' => 'Des rencontres amicales, tout simplement',
         'value_description' => 'DLP Friends te permet de rencontrer des fans à partir de ce que vous aimez en commun. Pas de distance, de tranche d’âge ni de mécanique romantique.',
         'algorithm_eyebrow' => 'Des suggestions faciles à comprendre',
@@ -48,6 +52,13 @@ return [
         'cancel' => 'Annuler',
         'close' => 'Fermer',
         'delete' => 'Supprimer',
+    ],
+    'workspace_switcher' => [
+        'trigger' => 'Espaces',
+        'title' => 'Changer d’espace',
+        'description' => 'Choisis l’espace que tu souhaites utiliser.',
+        'member' => 'Espace membre',
+        'partner' => 'Espace partenaire',
     ],
     'errors' => [
         'generic_title' => 'Une erreur est survenue',

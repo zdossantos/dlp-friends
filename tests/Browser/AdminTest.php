@@ -1,12 +1,21 @@
 <?php
 
+use App\Enums\PartnerAnnouncementStatus;
+use App\Enums\PartnerDeliveryStatus;
+use App\Enums\PartnerRevisionStatus;
 use App\Enums\ProductOnboardingStatus;
 use App\Enums\ProductOnboardingStep;
+use App\Enums\RoleName;
 use App\Mail\MemberDeletedByAdminMail;
 use App\Models\Avatar;
 use App\Models\Interest;
 use App\Models\InterestCategory;
 use App\Models\InterestSetting;
+use App\Models\PartnerAnnouncement;
+use App\Models\PartnerAnnouncementDelivery;
+use App\Models\PartnerAnnouncementMetric;
+use App\Models\PartnerProfile;
+use App\Models\PartnerProfileRevision;
 use App\Models\ProductOnboarding;
 use App\Models\ProductOnboardingSetting;
 use App\Models\User;
@@ -14,6 +23,143 @@ use Illuminate\Contracts\Debug\ExceptionHandler as ExceptionHandlerContract;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
+
+test('admin without partner role opens partner management pages from its submenu', function () {
+    $admin = User::factory()->admin()->create(['locale' => 'en']);
+
+    expect($admin->fresh('roles')->hasRole(RoleName::Partner))->toBeFalse();
+
+    $this->actingAs($admin);
+
+    visit('/dashboard')
+        ->assertPresent('[data-test="admin-partners-menu-trigger"]')
+        ->click('[data-test="admin-partners-menu-trigger"]')
+        ->assertSeeLink('Partner profiles')
+        ->assertPresent('a[href="/admin/partner-profiles"]')
+        ->assertSeeLink('Partner announcements')
+        ->assertPresent('a[href="/admin/partner-announcements"]')
+        ->assertSeeLink('Partner statistics')
+        ->assertPresent('a[href="/admin/partner-statistics"]')
+        ->click('Partner statistics')
+        ->assertPathIs('/admin/partner-statistics')
+        ->assertPresent('[data-test="admin-partners-menu-trigger"][data-state="open"]')
+        ->assertPresent('a[href="/admin/partner-statistics"][data-active="true"]')
+        ->assertNoJavaScriptErrors();
+});
+
+test('partner statistics stay readable and private on a mobile screen', function () {
+    $partner = User::factory()->partner()->create();
+    $profile = PartnerProfile::factory()->for($partner)->published()->create();
+    $announcement = PartnerAnnouncement::factory()->for($profile)->sent()->create([
+        'title' => 'Bilan de la campagne amicale',
+    ]);
+    PartnerAnnouncementMetric::query()->create([
+        'partner_announcement_id' => $announcement->id,
+        'prepared_count' => 10,
+        'delivered_count' => 8,
+        'read_count' => 4,
+        'dismissed_count' => 2,
+        'unique_click_count' => 2,
+        'total_click_count' => 5,
+    ]);
+    $recipient = User::factory()->create([
+        'email' => 'browser-recipient-secret@example.test',
+    ]);
+    PartnerAnnouncementDelivery::factory()
+        ->for($announcement, 'announcement')
+        ->for($recipient)
+        ->create(['status' => PartnerDeliveryStatus::Delivered]);
+    $this->actingAs($partner);
+
+    visit('/partner/statistics')->on()->mobile()
+        ->assertSee('Statistiques partenaire')
+        ->assertSee('Bilan de la campagne amicale')
+        ->assertSee('50,0 %')
+        ->assertDontSee('browser-recipient-secret@example.test')
+        ->assertPresent('[data-test="partner-statistics-table"]')
+        ->assertPresent('a[href="/partner/statistics"][aria-current="page"]')
+        ->assertScript('document.documentElement.scrollWidth <= window.innerWidth', true)
+        ->assertNoJavaScriptErrors();
+});
+
+test('admin partner statistics expose operational counts and retry in English', function () {
+    $admin = User::factory()->admin()->partner()->create(['locale' => 'en']);
+    $partner = User::factory()->partner()->create();
+    $profile = PartnerProfile::factory()->for($partner)->published()->create();
+    $announcement = PartnerAnnouncement::factory()->for($profile)->create([
+        'title' => 'Operational campaign',
+        'status' => PartnerAnnouncementStatus::Sending,
+    ]);
+    PartnerAnnouncementMetric::query()->create([
+        'partner_announcement_id' => $announcement->id,
+        'prepared_count' => 3,
+        'delivered_count' => 1,
+        'read_count' => 1,
+    ]);
+    foreach ([PartnerDeliveryStatus::Pending, PartnerDeliveryStatus::Failed, PartnerDeliveryStatus::Skipped] as $status) {
+        PartnerAnnouncementDelivery::factory()
+            ->for($announcement, 'announcement')
+            ->create(['status' => $status]);
+    }
+    $this->actingAs($admin);
+
+    visit('/admin/partner-statistics')
+        ->assertSee('Partner statistics')
+        ->assertSee('Operational campaign')
+        ->assertSee('Pending')
+        ->assertSee('Failed')
+        ->assertSee('Skipped')
+        ->assertPresent("[data-test=\"retry-partner-announcement-{$announcement->id}\"]")
+        ->assertPresent('a[href="/partner/statistics"]')
+        ->assertNoJavaScriptErrors();
+});
+
+test('an admin reviews publishes orders and unpublishes partner profiles accessibly', function () {
+    config()->set('filesystems.default', 's3');
+    Storage::fake('s3');
+    $profile = PartnerProfile::factory()->create();
+    $pending = PartnerProfileRevision::factory()->for($profile)->create([
+        'name_fr' => 'Partenaire navigateur',
+        'name_en' => 'Browser partner',
+        'description_fr' => 'Une présentation française destinée à la validation.',
+        'description_en' => 'An English presentation ready for review.',
+        'image_path' => 'partners/browser-partner.webp',
+        'status' => PartnerRevisionStatus::PendingApproval,
+        'submitted_at' => now(),
+        'draft_key' => null,
+    ]);
+    Storage::disk('s3')->put($pending->image_path, base64_decode(
+        'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScL8WQAAAABJRU5ErkJggg==',
+    ));
+    $admin = User::factory()->withProfile()->admin()->create();
+    $this->actingAs($admin);
+
+    $page = visit('/admin/partner-profiles')->on()->mobile()
+        ->assertSee('Fiches partenaires')
+        ->assertSee('Partenaire navigateur')
+        ->assertSee('Browser partner')
+        ->assertPresent('img[alt="Partenaire navigateur"]')
+        ->assertPresent('[data-test="approve-partner-profile"]')
+        ->assertPresent('[data-test="reject-partner-profile"]')
+        ->assertNoJavaScriptErrors();
+
+    $page->click('[data-test="approve-partner-profile"]')
+        ->assertSee('La fiche partenaire a été approuvée et publiée.')
+        ->assertPresent('[aria-label="Monter Partenaire navigateur"]')
+        ->assertPresent('[aria-label="Descendre Partenaire navigateur"]')
+        ->assertPresent('[data-test="unpublish-partner-profile"]')
+        ->assertNoJavaScriptErrors();
+
+    expect($pending->fresh()->status)->toBe(PartnerRevisionStatus::Approved)
+        ->and($profile->fresh()->is_published)->toBeTrue();
+
+    $page->click('[data-test="unpublish-partner-profile"]')
+        ->assertSee('La fiche partenaire a été dépubliée.')
+        ->assertSee('Aucune fiche partenaire n’est publiée.')
+        ->assertNoJavaScriptErrors();
+
+    expect($profile->fresh()->is_published)->toBeFalse();
+});
 
 test('admin configures tutorial avatars and sees member progress', function () {
     Storage::fake('local');
@@ -147,6 +293,45 @@ test('the member catalog exposes statistics and confirms immediate deletion', fu
     $this->assertDatabaseMissing('users', ['id' => $member->id]);
     Mail::assertQueued(MemberDeletedByAdminMail::class);
 });
+
+test('an admin confirms partner roles assignment and removal from the member catalog', function (int $width, int $height) {
+    $member = User::factory()->withProfile()->create(['email' => 'roles@example.test']);
+    $admin = User::factory()->withProfile()->admin()->create();
+    $this->actingAs($admin);
+
+    $page = visit('/admin/members')->resize($width, $height)
+        ->assertSee('roles@example.test')
+        ->assertCount('[data-test="manage-member-roles-trigger"]', 1)
+        ->keys('[data-test="manage-member-roles-trigger"]', 'Enter')
+        ->assertPresent('[role="dialog"]')
+        ->assertSee('Gérer les rôles')
+        ->assertSee('Administrateur (lecture seule)')
+        ->assertDisabled('[data-test="confirm-member-roles"]')
+        ->assertScript('document.querySelector("[data-test=confirm-member-roles]").getBoundingClientRect().height >= 44', true)
+        ->assertScript('document.documentElement.scrollWidth <= window.innerWidth', true);
+    $page->script('async () => { await Promise.all(document.getAnimations().map(animation => animation.finished)); }');
+    $page->assertNoAccessibilityIssues();
+
+    $page->click("#member-role-partner-{$member->id}")
+        ->click("#member-role-confirmed-{$member->id}")
+        ->assertEnabled('[data-test="confirm-member-roles"]')
+        ->click('[data-test="confirm-member-roles"]')
+        ->assertSee('Les rôles ont été mis à jour.')
+        ->assertNoJavaScriptErrors();
+
+    expect($member->fresh('roles')->hasRole('partner'))->toBeTrue();
+
+    $page->click('[data-test="manage-member-roles-trigger"]')
+        ->click("#member-role-partner-{$member->id}")
+        ->click("#member-role-confirmed-{$member->id}")
+        ->click('[data-test="confirm-member-roles"]')
+        ->assertSee('Les rôles ont été mis à jour.')
+        ->assertNoJavaScriptErrors();
+
+    expect($member->fresh('roles')->hasRole('partner'))->toBeFalse();
+    $page->assertNotPresent('[role="dialog"]')
+        ->assertScript('document.activeElement?.matches("[data-test=manage-member-roles-trigger]")', true);
+})->with([[320, 700], [1440, 900]]);
 
 test('an admin starts a classic private conversation and sees the match dialog', function () {
     $member = User::factory()->withProfile()->create(['email' => 'conversation@example.test']);

@@ -6,6 +6,7 @@ use App\Actions\DeleteMember;
 use App\Enums\SwipeDecision;
 use App\Http\Controllers\Controller;
 use App\Models\Conversation;
+use App\Models\Role;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
@@ -67,6 +68,9 @@ final class MemberController extends Controller
                     'created_at' => $member->created_at?->toIso8601String(),
                     'email_verified_at' => $member->email_verified_at?->toIso8601String(),
                     'is_admin' => $isAdmin,
+                    'roles' => $member->roles
+                        ->map(fn (Role $role): array => ['name' => $role->name->value])
+                        ->values(),
                     'likes_sent_count' => (int) $member->getAttribute('likes_sent_count'),
                     'likes_received_count' => (int) $member->getAttribute('likes_received_count'),
                     'passes_sent_count' => (int) $member->getAttribute('passes_sent_count'),
@@ -77,6 +81,7 @@ final class MemberController extends Controller
                     'blocked_by_count' => (int) $member->getAttribute('blocked_by_count'),
                     'can_delete' => Gate::forUser($request->user())->allows('delete', $member),
                     'can_start_conversation' => Gate::forUser($request->user())->allows('startConversation', $member),
+                    'can_manage_roles' => Gate::forUser($request->user())->allows('manageRoles', $member),
                 ];
             });
 

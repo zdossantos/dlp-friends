@@ -12,7 +12,7 @@ class EnsureUserHasRole
     public function handle(Request $request, Closure $next, string $role): Response
     {
         abort_unless(
-            $request->user()?->loadMissing('roles')->hasRole($role),
+            $request->user()?->load('roles')->hasRole($role),
             Response::HTTP_FORBIDDEN,
         );
 

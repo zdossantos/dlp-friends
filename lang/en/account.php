@@ -71,8 +71,16 @@ return [
         'use_auth' => 'use an authentication code', 'use_recovery' => 'use a recovery code', 'continue' => 'Continue', 'alternative' => 'You can also',
     ],
     'settings' => [
-        'title' => 'Settings', 'description' => 'Manage your account, security, and appearance.', 'navigation' => 'Settings',
+        'title' => 'Settings', 'description' => 'Manage your account, notifications, security, and appearance.', 'navigation' => 'Settings',
         'account' => 'Account', 'security' => 'Security', 'appearance' => 'Appearance', 'account_page_title' => 'Account settings',
+        'notifications' => [
+            'navigation' => 'Notifications',
+            'title' => 'Partner notifications',
+            'description' => 'Choose whether you want to receive announcements sent by DLP Friends partners.',
+            'partner_announcements' => 'Receive partner announcements',
+            'partner_announcements_help' => 'This preference is enabled by default. You can disable it at any time without deleting notifications you have already received.',
+            'saved' => 'Your notification preferences have been saved.',
+        ],
         'account_description' => 'Update your login email address.', 'email_unverified' => 'Your email address is not verified.',
         'resend_verification' => 'Resend verification link', 'save' => 'Save',
         'presence_title' => 'Activity status',

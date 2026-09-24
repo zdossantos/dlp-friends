@@ -63,6 +63,11 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
  * @property-read Collection<int, EventRegistration> $eventRegistrations
  * @property-read Collection<int, EventChatMessage> $authoredEventChatMessages
  * @property-read Collection<int, EventChatRead> $eventChatReads
+ * @property-read PartnerProfile|null $partnerProfile
+ * @property-read PartnerNotificationPreference|null $partnerNotificationPreference
+ * @property-read Collection<int, PartnerAnnouncementDelivery> $partnerAnnouncementDeliveries
+ * @property-read Collection<int, RoleAudit> $roleAuditsAsActor
+ * @property-read Collection<int, RoleAudit> $roleAuditsAsTarget
  * @property-read Collection<int, DatabaseNotification> $notifications
  * @property-read Collection<int, DatabaseNotification> $readNotifications
  * @property-read Collection<int, DatabaseNotification> $unreadNotifications
@@ -168,6 +173,57 @@ class User extends Authenticatable implements HasLocalePreference, MustVerifyEma
     public function eventChatReads(): HasMany
     {
         return $this->hasMany(EventChatRead::class);
+    }
+
+    /** @return HasOne<PartnerProfile, $this> */
+    public function partnerProfile(): HasOne
+    {
+        return $this->hasOne(PartnerProfile::class);
+    }
+
+    /** @return HasOne<PartnerNotificationPreference, $this> */
+    public function partnerNotificationPreference(): HasOne
+    {
+        return $this->hasOne(PartnerNotificationPreference::class);
+    }
+
+    /** @return HasMany<PartnerAnnouncementDelivery, $this> */
+    public function partnerAnnouncementDeliveries(): HasMany
+    {
+        return $this->hasMany(PartnerAnnouncementDelivery::class);
+    }
+
+    /** @param Builder<User> $query */
+    public function scopeEligibleForPartnerAnnouncements(Builder $query): void
+    {
+        $query
+            ->where('status', UserStatus::Active)
+            ->whereNotNull('email_verified_at')
+            ->whereNull('deletion_requested_at')
+            ->whereHas(
+                'roles',
+                fn (Builder $roles) => $roles->where('name', RoleName::User),
+            )
+            ->where(function (Builder $preferences): void {
+                $preferences
+                    ->whereDoesntHave('partnerNotificationPreference')
+                    ->orWhereHas(
+                        'partnerNotificationPreference',
+                        fn (Builder $preference) => $preference->where('enabled', true),
+                    );
+            });
+    }
+
+    /** @return HasMany<RoleAudit, $this> */
+    public function roleAuditsAsActor(): HasMany
+    {
+        return $this->hasMany(RoleAudit::class, 'actor_user_id');
+    }
+
+    /** @return HasMany<RoleAudit, $this> */
+    public function roleAuditsAsTarget(): HasMany
+    {
+        return $this->hasMany(RoleAudit::class, 'target_user_id');
     }
 
     public function hasBlockedRelationshipWith(User $other): bool

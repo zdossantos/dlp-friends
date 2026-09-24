@@ -181,6 +181,35 @@ Le contenu, l’état et les actions restent uniques entre les deux formats. Les
   `foreground`, `muted`, `secondary` et leurs couleurs de premier plan afin de
   conserver le contraste en thème sombre.
 
+## Surfaces partenaires
+
+- Les fiches séparent version publiée, dernière soumission et brouillon ; les
+  champs FR/EN sont regroupés dans des `fieldset` nommés. La sélection d’image
+  possède une prévisualisation et des contraintes explicites, sans image distante.
+- Les cartes publiques sont rendues en SSR : image au ratio 16:9, nom et
+  description localisés, grille responsive, six cartes maximum dans l’ordre
+  administrateur. Elles présentent le partenaire sans inventer d’action ou
+  de lien commercial. La section vide n’est pas rendue.
+- Les statuts de révision/annonce sont des badges textuels traduits ; les
+  soumissions, décisions et envois désactivent le bouton pendant le traitement.
+  Les actions principales des formulaires partenaire, de l’envoi, de la
+  confirmation des rôles et du consentement mesurent au moins 44 px de haut.
+- Les statistiques gardent une vraie table avec légende et en-têtes. Sur petit
+  écran, seule sa région nommée et focalisable défile horizontalement ; le
+  document ne doit pas déborder. Le focus utilise le token `ring` et les
+  flèches du clavier permettent de parcourir les colonnes.
+- L’envoi d’une annonce approuvée est une action administrative dans cette
+  table, avec spinner, libellé de chargement et erreur reliée au bouton. Le
+  partenaire ne voit pas ces contrôles opérationnels.
+- L’affectation des rôles réutilise le dialogue adaptatif avec confirmation,
+  `admin` en lecture seule et retour du focus au déclencheur. Le retrait d’une
+  notification partenaire reste une action distincte de son ouverture. Son
+  contenu figé est affiché intégralement comme texte, en conservant les retours
+  à la ligne sans interpréter de balisage.
+- Les scénarios Chromium couvrent 320 × 700 et 1440 × 900, thèmes clair/sombre,
+  navigation clavier et scans axe ; les animations finies sont stabilisées
+  avant les mesures de contraste, sans modifier les tokens de production.
+
 ## Mouvement et retours
 
 Le mouvement suit deux niveaux sémantiques. Les retours fonctionnels discrets

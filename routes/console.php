@@ -9,3 +9,8 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 Schedule::command('accounts:dispatch-due-purges')->hourly()->withoutOverlapping();
+Schedule::command('partners:purge-expired-records')
+    ->dailyAt('03:30')
+    ->timezone('Europe/Paris')
+    ->withoutOverlapping()
+    ->onOneServer();

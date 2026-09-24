@@ -11,6 +11,16 @@ use App\Http\Controllers\Admin\InterestSettingController;
 use App\Http\Controllers\Admin\InterestStatusController;
 use App\Http\Controllers\Admin\MemberController as AdminMemberController;
 use App\Http\Controllers\Admin\MemberConversationController;
+use App\Http\Controllers\Admin\MemberRoleController;
+use App\Http\Controllers\Admin\PartnerAnnouncementController as AdminPartnerAnnouncementController;
+use App\Http\Controllers\Admin\PartnerAnnouncementDecisionController;
+use App\Http\Controllers\Admin\PartnerAnnouncementDispatchController;
+use App\Http\Controllers\Admin\PartnerAnnouncementRetryController;
+use App\Http\Controllers\Admin\PartnerProfileController as AdminPartnerProfileController;
+use App\Http\Controllers\Admin\PartnerProfileDecisionController;
+use App\Http\Controllers\Admin\PartnerProfileOrderController;
+use App\Http\Controllers\Admin\PartnerSettingController;
+use App\Http\Controllers\Admin\PartnerStatisticsController as AdminPartnerStatisticsController;
 use App\Http\Controllers\Admin\ProductOnboardingController as AdminProductOnboardingController;
 use App\Http\Controllers\Auth\SocialAuthController;
 use App\Http\Controllers\Auth\SocialRegistrationController;
@@ -40,6 +50,15 @@ use App\Http\Controllers\MyEventController;
 use App\Http\Controllers\NotificationIndexController;
 use App\Http\Controllers\NotificationReadAllController;
 use App\Http\Controllers\NotificationReadController;
+use App\Http\Controllers\Partner\AnnouncementController as PartnerAnnouncementController;
+use App\Http\Controllers\Partner\AnnouncementRevisionController;
+use App\Http\Controllers\Partner\AnnouncementSubmissionController;
+use App\Http\Controllers\Partner\ProfileController as PartnerProfileController;
+use App\Http\Controllers\Partner\ProfileImageController as PartnerProfileImageController;
+use App\Http\Controllers\Partner\ProfileSubmissionController as PartnerProfileSubmissionController;
+use App\Http\Controllers\Partner\StatisticsController as PartnerStatisticsController;
+use App\Http\Controllers\PartnerAnnouncementClickController;
+use App\Http\Controllers\PartnerAnnouncementDismissController;
 use App\Http\Controllers\PresenceHeartbeatController;
 use App\Http\Controllers\ProductOnboardingController;
 use App\Http\Controllers\PublicLandingController;
@@ -51,6 +70,11 @@ use App\Support\PublicUrls;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [PublicLandingController::class, 'redirect'])->name('home');
+Route::get('partner-profiles/{partnerProfile}/image', [PublicLandingController::class, 'image'])
+    ->name('partner-profiles.image');
+Route::get('partner-announcements/click/{token}', PartnerAnnouncementClickController::class)
+    ->where('token', '[A-Fa-f0-9]{64}')
+    ->name('partner-announcements.click');
 Route::get('matching', [PublicMatchingController::class, 'redirect'])->name('matching.redirect');
 Route::get('fr/matching', [PublicMatchingController::class, 'show'])->defaults('locale', 'fr')->name('matching.show.fr');
 Route::get('en/matching', [PublicMatchingController::class, 'show'])->defaults('locale', 'en')->name('matching.show.en');
@@ -97,128 +121,176 @@ Route::middleware('guest')->group(function (): void {
         ->name('social.registration.store');
 });
 
-Route::middleware(['auth', 'verified', 'social'])->group(function () {
+Route::middleware(['auth', 'verified', 'social'])->group(function (): void {
     Route::get('avatars/{avatar}/image', AvatarImageController::class)
         ->name('avatars.image');
 
-    Route::get('app', LandingController::class)->name('app');
+    Route::get('partner/profile-revisions/{revision}/image', PartnerProfileImageController::class)
+        ->name('partner.profile-revisions.image');
 
-    Route::post('presence/heartbeat', PresenceHeartbeatController::class)
-        ->middleware('throttle:30,1')
-        ->name('presence.heartbeat');
+    Route::prefix('partner')->name('partner.')->middleware('role:partner')->group(function (): void {
+        Route::get('profile', [PartnerProfileController::class, 'edit'])
+            ->name('profile.edit');
+        Route::put('profile', [PartnerProfileController::class, 'update'])
+            ->name('profile.update');
+        Route::post('profile/submit', PartnerProfileSubmissionController::class)
+            ->name('profile.submit');
+        Route::resource('announcements', PartnerAnnouncementController::class)
+            ->only(['index', 'create', 'store', 'edit', 'update', 'destroy']);
+        Route::post('announcements/{announcement}/submit', AnnouncementSubmissionController::class)
+            ->name('announcements.submit');
+        Route::post('announcements/{announcement}/cancel', [PartnerAnnouncementController::class, 'cancel'])
+            ->name('announcements.cancel');
+        Route::post('announcements/{announcement}/revise', AnnouncementRevisionController::class)
+            ->name('announcements.revise');
+        Route::get('statistics', PartnerStatisticsController::class)
+            ->name('statistics.index');
+        Route::get('notifications', NotificationIndexController::class)
+            ->name('notifications.index');
+    });
 
-    Route::get('profile/create', [MemberProfileController::class, 'create'])
-        ->name('member-profile.create');
-    Route::post('profile', [MemberProfileController::class, 'store'])
-        ->name('member-profile.store');
+    Route::patch('notifications/read-all', NotificationReadAllController::class)
+        ->name('notifications.read-all');
+    Route::patch('notifications/{notification}/read', NotificationReadController::class)
+        ->name('notifications.read');
+
+    Route::middleware('role:user')->group(function (): void {
+        Route::get('app', LandingController::class)->name('app');
+
+        Route::post('presence/heartbeat', PresenceHeartbeatController::class)
+            ->middleware('throttle:30,1')
+            ->name('presence.heartbeat');
+
+        Route::get('profile/create', [MemberProfileController::class, 'create'])
+            ->name('member-profile.create');
+        Route::post('profile', [MemberProfileController::class, 'store'])
+            ->name('member-profile.store');
+
+        Route::middleware('profile.complete')->group(function (): void {
+            Route::get('onboarding', [ProductOnboardingController::class, 'show'])
+                ->name('onboarding.show');
+            Route::patch('onboarding', [ProductOnboardingController::class, 'advance'])
+                ->name('onboarding.advance');
+            Route::post('onboarding/complete', [ProductOnboardingController::class, 'complete'])
+                ->name('onboarding.complete');
+
+            Route::middleware('onboarding.complete')->group(function (): void {
+                Route::get('profile', [MemberProfileController::class, 'show'])
+                    ->name('member-profile.show');
+                Route::get('profile/edit', [MemberProfileController::class, 'edit'])
+                    ->name('member-profile.edit');
+                Route::patch('profile', [MemberProfileController::class, 'update'])
+                    ->name('member-profile.update');
+
+                Route::get('members/{member}', PublicMemberProfileController::class)
+                    ->name('members.show');
+                Route::post('members/{member}/like', LikeMemberController::class)
+                    ->name('members.like');
+                Route::post('members/{member}/block', BlockMemberController::class)
+                    ->name('members.block');
+                Route::delete('members/{member}/block', UnblockMemberController::class)
+                    ->name('members.unblock');
+
+                Route::get('discover', DiscoveryController::class)
+                    ->name('discovery.index');
+                Route::post('discover/{target}/swipe', SwipeController::class)
+                    ->name('discovery.swipe');
+
+                Route::get('events/mine', MyEventController::class)->name('events.mine');
+                Route::resource('events', EventController::class)
+                    ->only(['index', 'create', 'store', 'show', 'edit', 'update']);
+                Route::get('events/{event}/participants', [EventParticipantController::class, 'index'])
+                    ->name('events.participants.index');
+                Route::get('events/{event}/participants/{member}', [EventParticipantController::class, 'show'])
+                    ->name('events.participants.show');
+                Route::get('events/{event}/requests', EventRegistrationIndexController::class)
+                    ->name('events.registrations.index');
+                Route::patch('events/{event}/cancel', EventCancellationController::class)
+                    ->name('events.cancel');
+                Route::post('events/{event}/registrations', [EventRegistrationController::class, 'store'])
+                    ->name('events.registrations.store');
+                Route::delete('events/{event}/registrations', [EventRegistrationController::class, 'destroy'])
+                    ->name('events.registrations.destroy');
+                Route::post('events/{event}/chat/messages', EventChatMessageController::class)
+                    ->name('events.chat.messages.store');
+                Route::get('events/{event}/chat', EventChatController::class)
+                    ->name('events.chat.show');
+                Route::post('events/{event}/chat/read', EventChatReadController::class)
+                    ->name('events.chat.read.store');
+                Route::patch('event-registrations/{registration}', EventRegistrationDecisionController::class)
+                    ->name('events.registrations.decision');
+                Route::delete('event-registrations/{registration}', EventRegistrationRemovalController::class)
+                    ->name('events.registrations.remove');
+
+                Route::get('conversations', ConversationIndexController::class)
+                    ->name('conversations.index');
+                Route::get('conversations/{conversation}', ConversationController::class)
+                    ->name('conversations.show');
+                Route::post('conversations/{conversation}/messages', MessageController::class)
+                    ->name('conversations.messages.store');
+                Route::post('conversations/{conversation}/read', ConversationReadController::class)
+                    ->name('conversations.read.store');
+                Route::get('notifications', NotificationIndexController::class)
+                    ->name('notifications.index');
+                Route::delete('notifications/{notification}/partner-announcement', PartnerAnnouncementDismissController::class)
+                    ->name('notifications.partner-announcements.dismiss');
+            });
+        });
+    });
+
+    Route::get('dashboard', DashboardController::class)
+        ->middleware('role:admin')
+        ->name('dashboard');
 
     Route::prefix('admin')->name('admin.')->middleware('role:admin')->group(function (): void {
+        Route::get('notifications', NotificationIndexController::class)
+            ->name('notifications.index');
+        Route::get('partner-announcements', [AdminPartnerAnnouncementController::class, 'index'])
+            ->name('partner-announcements.index');
+        Route::patch('partner-announcements/{announcement}', PartnerAnnouncementDecisionController::class)
+            ->name('partner-announcements.decide');
+        Route::post('partner-announcements/{announcement}/dispatch', PartnerAnnouncementDispatchController::class)
+            ->name('partner-announcements.dispatch');
+        Route::post('partner-announcements/{announcement}/retry', PartnerAnnouncementRetryController::class)
+            ->name('partner-announcements.retry');
+        Route::get('partner-statistics', AdminPartnerStatisticsController::class)
+            ->name('partner-statistics.index');
+        Route::patch('partner-settings', PartnerSettingController::class)
+            ->name('partner-settings.update');
+        Route::get('partner-profiles', [AdminPartnerProfileController::class, 'index'])
+            ->name('partner-profiles.index');
+        Route::patch('partner-profile-revisions/{revision}', PartnerProfileDecisionController::class)
+            ->name('partner-profile-revisions.decide');
+        Route::delete('partner-profiles/{partnerProfile}/publication', [AdminPartnerProfileController::class, 'destroy'])
+            ->name('partner-profiles.unpublish');
+        Route::patch('partner-profiles/order', PartnerProfileOrderController::class)
+            ->name('partner-profiles.order');
         Route::resource('avatars', AvatarController::class)
             ->only(['index', 'store', 'update', 'destroy']);
         Route::patch('avatars/{avatar}/status', AvatarStatusController::class)
             ->name('avatars.status');
         Route::patch('avatars/{avatar}/move', AvatarOrderController::class)
             ->name('avatars.move');
-    });
-
-    Route::middleware('profile.complete')->group(function () {
-        Route::get('onboarding', [ProductOnboardingController::class, 'show'])
-            ->name('onboarding.show');
-        Route::patch('onboarding', [ProductOnboardingController::class, 'advance'])
-            ->name('onboarding.advance');
-        Route::post('onboarding/complete', [ProductOnboardingController::class, 'complete'])
-            ->name('onboarding.complete');
-
-        Route::prefix('admin')->name('admin.')->middleware('role:admin')->group(function (): void {
-            Route::get('onboarding', [AdminProductOnboardingController::class, 'index'])
-                ->name('onboarding.index');
-            Route::patch('onboarding', [AdminProductOnboardingController::class, 'update'])
-                ->name('onboarding.update');
-        });
-
-        Route::middleware('onboarding.complete')->group(function () {
-            Route::get('profile', [MemberProfileController::class, 'show'])
-                ->name('member-profile.show');
-            Route::get('profile/edit', [MemberProfileController::class, 'edit'])
-                ->name('member-profile.edit');
-            Route::patch('profile', [MemberProfileController::class, 'update'])
-                ->name('member-profile.update');
-
-            Route::get('members/{member}', PublicMemberProfileController::class)
-                ->name('members.show');
-            Route::post('members/{member}/like', LikeMemberController::class)
-                ->name('members.like');
-            Route::post('members/{member}/block', BlockMemberController::class)
-                ->name('members.block');
-            Route::delete('members/{member}/block', UnblockMemberController::class)
-                ->name('members.unblock');
-
-            Route::get('discover', DiscoveryController::class)
-                ->name('discovery.index');
-            Route::post('discover/{target}/swipe', SwipeController::class)
-                ->name('discovery.swipe');
-
-            Route::get('events/mine', MyEventController::class)->name('events.mine');
-            Route::resource('events', EventController::class)
-                ->only(['index', 'create', 'store', 'show', 'edit', 'update']);
-            Route::get('events/{event}/participants', [EventParticipantController::class, 'index'])
-                ->name('events.participants.index');
-            Route::get('events/{event}/participants/{member}', [EventParticipantController::class, 'show'])
-                ->name('events.participants.show');
-            Route::get('events/{event}/requests', EventRegistrationIndexController::class)
-                ->name('events.registrations.index');
-            Route::patch('events/{event}/cancel', EventCancellationController::class)
-                ->name('events.cancel');
-            Route::post('events/{event}/registrations', [EventRegistrationController::class, 'store'])
-                ->name('events.registrations.store');
-            Route::delete('events/{event}/registrations', [EventRegistrationController::class, 'destroy'])
-                ->name('events.registrations.destroy');
-            Route::post('events/{event}/chat/messages', EventChatMessageController::class)
-                ->name('events.chat.messages.store');
-            Route::get('events/{event}/chat', EventChatController::class)
-                ->name('events.chat.show');
-            Route::post('events/{event}/chat/read', EventChatReadController::class)
-                ->name('events.chat.read.store');
-            Route::patch('event-registrations/{registration}', EventRegistrationDecisionController::class)
-                ->name('events.registrations.decision');
-            Route::delete('event-registrations/{registration}', EventRegistrationRemovalController::class)
-                ->name('events.registrations.remove');
-
-            Route::get('conversations', ConversationIndexController::class)
-                ->name('conversations.index');
-            Route::get('conversations/{conversation}', ConversationController::class)
-                ->name('conversations.show');
-            Route::post('conversations/{conversation}/messages', MessageController::class)
-                ->name('conversations.messages.store');
-            Route::post('conversations/{conversation}/read', ConversationReadController::class)
-                ->name('conversations.read.store');
-            Route::get('notifications', NotificationIndexController::class)
-                ->name('notifications.index');
-            Route::patch('notifications/read-all', NotificationReadAllController::class)
-                ->name('notifications.read-all');
-            Route::patch('notifications/{notification}/read', NotificationReadController::class)
-                ->name('notifications.read');
-            Route::get('dashboard', DashboardController::class)
-                ->middleware('role:admin')
-                ->name('dashboard');
-
-            Route::prefix('admin')->name('admin.')->middleware('role:admin')->group(function (): void {
-                Route::get('members', [AdminMemberController::class, 'index'])
-                    ->name('members.index');
-                Route::delete('members/{member}', [AdminMemberController::class, 'destroy'])
-                    ->name('members.destroy');
-                Route::post('members/{member}/conversation', MemberConversationController::class)
-                    ->name('members.conversation.store');
-                Route::resource('interests', InterestController::class)
-                    ->only(['index', 'store', 'update', 'destroy']);
-                Route::patch('interests/{interest}/status', InterestStatusController::class)
-                    ->name('interests.status');
-                Route::patch('interests/{interest}/move', InterestOrderController::class)
-                    ->name('interests.move');
-                Route::patch('interest-setting', InterestSettingController::class)
-                    ->name('interest-setting.update');
-            });
-        });
+        Route::get('onboarding', [AdminProductOnboardingController::class, 'index'])
+            ->name('onboarding.index');
+        Route::patch('onboarding', [AdminProductOnboardingController::class, 'update'])
+            ->name('onboarding.update');
+        Route::get('members', [AdminMemberController::class, 'index'])
+            ->name('members.index');
+        Route::patch('members/{member}/roles', MemberRoleController::class)
+            ->name('members.roles.update');
+        Route::delete('members/{member}', [AdminMemberController::class, 'destroy'])
+            ->name('members.destroy');
+        Route::post('members/{member}/conversation', MemberConversationController::class)
+            ->name('members.conversation.store');
+        Route::resource('interests', InterestController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+        Route::patch('interests/{interest}/status', InterestStatusController::class)
+            ->name('interests.status');
+        Route::patch('interests/{interest}/move', InterestOrderController::class)
+            ->name('interests.move');
+        Route::patch('interest-setting', InterestSettingController::class)
+            ->name('interest-setting.update');
     });
 });
 

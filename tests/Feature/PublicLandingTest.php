@@ -1,10 +1,15 @@
 <?php
 
+use App\Enums\PartnerRevisionStatus;
 use App\Enums\ProductOnboardingStatus;
+use App\Enums\RoleName;
 use App\Http\Middleware\HandleInertiaRequests;
+use App\Models\PartnerProfile;
 use App\Models\ProductOnboarding;
+use App\Models\Role;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Storage;
 
 uses(RefreshDatabase::class);
 
@@ -49,6 +54,22 @@ test('an authenticated member bypasses the public landing page', function () {
         ->assertRedirect(route('app'));
 });
 
+test('authenticated partner-only and admin-only accounts bypass public pages into their own space', function (string $role, string $expectedRoute) {
+    $account = $role === RoleName::Partner->value
+        ? User::factory()->partnerOnly()->create()
+        : User::factory()->admin()->create();
+    $account->roles()->sync([
+        Role::query()->where('name', $role)->firstOrFail()->id,
+    ]);
+
+    $this->actingAs($account)
+        ->get('/fr')
+        ->assertRedirect(route($expectedRoute));
+})->with([
+    'partner' => [RoleName::Partner->value, 'partner.profile.edit'],
+    'admin' => [RoleName::Admin->value, 'dashboard'],
+]);
+
 test('the public landing is server rendered without application javascript', function () {
     $this->get('/fr')
         ->assertOk()
@@ -58,6 +79,70 @@ test('the public landing is server rendered without application javascript', fun
         ->assertSee('href="/fr/matching"', false)
         ->assertSee('Comprendre nos suggestions')
         ->assertDontSee('type="module"', false);
+});
+
+test('the public landing renders the first six published partners in exact order and requested language', function () {
+    $profiles = PartnerProfile::factory()
+        ->count(7)
+        ->sequence(fn ($sequence) => ['position' => $sequence->index + 1])
+        ->published()
+        ->create();
+
+    foreach ($profiles as $index => $profile) {
+        $profile->publishedRevision?->update([
+            'name_fr' => "Partenaire français {$index}",
+            'name_en' => "English partner {$index}",
+            'description_fr' => "Description française {$index}",
+            'description_en' => "English description {$index}",
+        ]);
+    }
+
+    PartnerProfile::factory()->create();
+
+    $response = $this->get('/en')->assertOk();
+
+    $response
+        ->assertViewHas('partners', fn ($partners) => $partners->pluck('id')->all()
+            === $profiles->take(6)->pluck('id')->all())
+        ->assertSeeInOrder($profiles->take(6)->map(
+            fn (PartnerProfile $profile): string => $profile->publishedRevision?->name_en ?? '',
+        )->all())
+        ->assertDontSee('English partner 6')
+        ->assertDontSee('Partenaire français 0')
+        ->assertDontSee('@vite([\'resources/js/app.ts\'])', false);
+
+    expect(substr_count($response->getContent(), 'data-test="public-partner-card"'))->toBe(6);
+});
+
+test('the controlled public image route serves only a currently published revision', function () {
+    config()->set('filesystems.default', 's3');
+    Storage::fake('s3');
+    $profile = PartnerProfile::factory()->published()->create();
+    $revision = $profile->publishedRevision;
+    Storage::disk('s3')->put($revision->image_path, 'published-image');
+
+    $this->get(route('partner-profiles.image', $profile))
+        ->assertOk()
+        ->assertStreamedContent('published-image');
+
+    $profile->update(['is_published' => false]);
+
+    $this->get(route('partner-profiles.image', $profile))->assertNotFound();
+});
+
+test('a non approved revision never reaches the public landing or image route', function () {
+    config()->set('filesystems.default', 's3');
+    Storage::fake('s3');
+    $profile = PartnerProfile::factory()->published()->create();
+    $revision = $profile->publishedRevision;
+    $revision->update(['status' => PartnerRevisionStatus::PendingApproval]);
+    Storage::disk('s3')->put($revision->image_path, 'unapproved-image');
+
+    $this->get('/fr')
+        ->assertOk()
+        ->assertViewHas('partners', fn ($partners) => $partners->isEmpty());
+
+    $this->get(route('partner-profiles.image', $profile))->assertNotFound();
 });
 
 test('each landing locale exposes localized indexable seo metadata', function (string $locale, string $title, string $description) {
