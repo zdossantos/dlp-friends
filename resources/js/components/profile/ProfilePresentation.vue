@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { CalendarDays, ShieldCheck, Sparkles } from '@lucide/vue';
-import { Badge } from '@/components/ui/badge';
 import SeasonalDecorations from '@/components/seasonal/SeasonalDecorations.vue';
+import { Badge } from '@/components/ui/badge';
 import { useTranslations } from '@/composables/useTranslations';
 
 const { t } = useTranslations();

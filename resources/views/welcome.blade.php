@@ -1,8 +1,5 @@
 <!DOCTYPE html>
-<html lang="{{ $seo['locale'] }}" @class([
-    'seasonal-halloween' => $activeSeasonalTheme === 'halloween',
-    'seasonal-christmas' => $activeSeasonalTheme === 'christmas',
-])>
+<html lang="{{ $seo['locale'] }}"@if ($activeSeasonalTheme !== null) class="seasonal-{{ $activeSeasonalTheme }}"@endif>
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">

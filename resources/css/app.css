@@ -233,30 +233,14 @@
     }
 }
 
-.landing-reveal {
-    animation: landing-reveal 600ms ease-out both;
-}
-
 .landing-drift {
     animation: landing-drift 14s ease-in-out infinite alternate;
     will-change: transform;
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .landing-reveal,
     .landing-drift {
         animation: none;
-    }
-}
-
-@keyframes landing-reveal {
-    from {
-        opacity: 0;
-        transform: translateY(0.75rem);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
     }
 }
 

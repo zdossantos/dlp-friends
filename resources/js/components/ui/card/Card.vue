@@ -13,7 +13,7 @@ const props = defineProps<{
     data-slot="card"
     :class="
       cn(
-        'bg-card text-card-foreground relative isolate flex flex-col gap-6 overflow-hidden rounded-xl border py-6 shadow-sm [&>*:not([data-test^=seasonal-surface-])]:relative [&>*:not([data-test^=seasonal-surface-])]:z-10',
+        'bg-card text-card-foreground relative isolate flex flex-col gap-6 overflow-hidden rounded-xl border py-6 shadow-sm [&>*:not(.absolute):not([data-test^=seasonal-surface-])]:relative [&>*:not([data-test^=seasonal-surface-])]:z-10',
         props.class,
       )
     "

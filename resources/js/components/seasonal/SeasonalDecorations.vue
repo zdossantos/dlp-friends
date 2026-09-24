@@ -8,8 +8,8 @@ import {
     Snowflake,
     Sparkles,
     TreePine,
-    type LucideIcon,
 } from '@lucide/vue';
+import type { LucideIcon } from '@lucide/vue';
 import { computed } from 'vue';
 import { useSeasonalTheme } from '@/composables/useSeasonalTheme';
 import type { SeasonalThemeName } from '@/types/seasonalTheme';
