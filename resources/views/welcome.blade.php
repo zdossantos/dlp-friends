@@ -1,5 +1,8 @@
 <!DOCTYPE html>
-<html lang="{{ $seo['locale'] }}">
+<html lang="{{ $seo['locale'] }}" @class([
+    'seasonal-halloween' => $activeSeasonalTheme === 'halloween',
+    'seasonal-christmas' => $activeSeasonalTheme === 'christmas',
+])>
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -40,6 +43,20 @@
         <div class="relative min-h-svh overflow-hidden bg-background text-foreground">
             <div aria-hidden="true" class="landing-drift pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,var(--color-secondary),transparent_44%),radial-gradient(circle_at_bottom_right,var(--color-accent),transparent_40%)] opacity-55"></div>
 
+            @if ($activeSeasonalTheme === 'halloween')
+                <div data-test="landing-seasonal-halloween" aria-hidden="true" class="pointer-events-none absolute inset-0 z-0 overflow-hidden text-primary">
+                    <x-seasonal-icon name="moon-star" class="absolute top-[8%] left-[5%] size-12 -rotate-6 opacity-20" />
+                    <x-seasonal-icon name="ghost" class="absolute top-[31%] right-[3%] size-16 rotate-6 opacity-[0.14]" />
+                    <x-seasonal-icon name="ghost" class="absolute bottom-[9%] left-[4%] size-9 -rotate-12 opacity-[0.11]" />
+                </div>
+            @elseif ($activeSeasonalTheme === 'christmas')
+                <div data-test="landing-seasonal-christmas" aria-hidden="true" class="pointer-events-none absolute inset-0 z-0 overflow-hidden text-primary">
+                    <x-seasonal-icon name="snowflake" class="absolute top-[8%] left-[5%] size-12 rotate-12 opacity-20" />
+                    <x-seasonal-icon name="gift" class="absolute top-[30%] right-[3%] size-14 -rotate-6 opacity-[0.15]" />
+                    <x-seasonal-icon name="tree-pine" class="absolute bottom-[7%] left-[3%] size-16 rotate-3 opacity-[0.12]" />
+                </div>
+            @endif
+
             <div class="relative mx-auto flex min-h-svh w-full max-w-6xl flex-col px-4 pt-[max(1rem,env(safe-area-inset-top))] pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:px-6 lg:px-8">
                 <header class="flex flex-col items-stretch gap-3 py-2 sm:flex-row sm:items-center sm:justify-between">
                     <div class="flex items-center gap-3">
@@ -67,7 +84,13 @@
                 </header>
 
                 <main id="contenu-principal" class="flex flex-1 flex-col py-12 sm:py-16 lg:py-20">
-                    <section class="landing-reveal mx-auto flex min-h-[62svh] w-full max-w-3xl flex-col justify-center text-center">
+                    <section class="landing-reveal relative mx-auto flex min-h-[62svh] w-full max-w-3xl flex-col justify-center text-center">
+                        @if ($activeSeasonalTheme === 'halloween')
+                            <x-seasonal-icon name="ghost" class="absolute right-[7%] bottom-[12%] size-20 rotate-6 text-primary opacity-[0.12]" />
+                        @elseif ($activeSeasonalTheme === 'christmas')
+                            <x-seasonal-icon name="gift" class="absolute right-[7%] bottom-[12%] size-20 -rotate-6 text-primary opacity-[0.14]" />
+                            <x-seasonal-icon name="snowflake" class="absolute top-[18%] left-[8%] size-8 rotate-12 text-primary opacity-20" />
+                        @endif
                         <p class="mx-auto mb-5 w-fit rounded-full bg-secondary px-4 py-2 text-sm font-medium text-secondary-foreground">{{ __('common.welcome.eyebrow') }}</p>
                         <h1 class="font-accent text-4xl font-bold tracking-tight text-balance sm:text-5xl lg:text-6xl">{{ __('common.welcome.title') }}</h1>
                         <p class="mx-auto mt-6 max-w-2xl text-base leading-7 text-muted-foreground sm:text-lg">{{ __('common.welcome.description') }}</p>
@@ -80,7 +103,12 @@
                     @php($benefits = ['interests', 'discovery', 'conversations'])
                     <section class="landing-reveal mx-auto mt-14 grid w-full max-w-5xl gap-4 sm:grid-cols-3">
                         @foreach ($benefits as $benefit)
-                            <article class="rounded-3xl border border-border/70 bg-card/90 p-6 shadow-lg shadow-primary/5 backdrop-blur">
+                            <article class="relative overflow-hidden rounded-3xl border border-border/70 bg-card/90 p-6 shadow-lg shadow-primary/5 backdrop-blur">
+                                @if ($activeSeasonalTheme === 'halloween')
+                                    <x-seasonal-icon name="ghost" class="absolute -right-3 -bottom-3 size-20 rotate-6 text-primary opacity-[0.09]" />
+                                @elseif ($activeSeasonalTheme === 'christmas')
+                                    <x-seasonal-icon :name="$loop->odd ? 'gift' : 'tree-pine'" class="absolute -right-3 -bottom-3 size-20 rotate-3 text-primary opacity-[0.09]" />
+                                @endif
                                 <span data-test="landing-benefit-icon-{{ $benefit }}" class="mb-4 grid size-11 place-items-center rounded-2xl bg-secondary text-primary">
                                     <svg
                                         data-icon="{{ match ($benefit) {
@@ -130,14 +158,20 @@
                             <h2 id="partners-title" class="text-center text-3xl font-semibold tracking-tight">{{ __('common.welcome.partners.title') }}</h2>
                             <div class="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
                                 @foreach ($partners as $partner)
-                                    <x-public-partner-card :partner="$partner" :locale="$seo['locale']" />
+                                    <x-public-partner-card :partner="$partner" :locale="$seo['locale']" :active-seasonal-theme="$activeSeasonalTheme" />
                                 @endforeach
                             </div>
                         </section>
                     @endif
 
                     <section class="mx-auto mt-24 w-full max-w-5xl">
-                        <div class="grid items-center gap-8 rounded-[2rem] border border-border/70 bg-card/90 p-7 shadow-xl shadow-primary/5 sm:p-10 lg:grid-cols-[0.9fr_1.1fr]">
+                        <div class="relative grid items-center gap-8 overflow-hidden rounded-[2rem] border border-border/70 bg-card/90 p-7 shadow-xl shadow-primary/5 sm:p-10 lg:grid-cols-[0.9fr_1.1fr]">
+                            @if ($activeSeasonalTheme === 'halloween')
+                                <x-seasonal-icon name="moon-star" class="pointer-events-none absolute top-5 right-5 size-14 rotate-6 text-primary opacity-[0.1]" />
+                            @elseif ($activeSeasonalTheme === 'christmas')
+                                <x-seasonal-icon name="tree-pine" class="pointer-events-none absolute right-4 bottom-3 size-24 rotate-3 text-primary opacity-[0.09]" />
+                                <x-seasonal-icon name="snowflake" class="pointer-events-none absolute top-5 left-[45%] size-7 -rotate-12 text-primary opacity-[0.14]" />
+                            @endif
                             <div>
                                 <p class="text-sm font-semibold tracking-wide text-primary uppercase">{{ __('common.welcome.algorithm_eyebrow') }}</p>
                                 <h2 class="mt-3 text-3xl font-semibold tracking-tight text-balance">{{ __('common.welcome.algorithm_title') }}</h2>
@@ -155,7 +189,12 @@
                         <h2 class="text-center text-3xl font-semibold tracking-tight">{{ __('common.welcome.steps_title') }}</h2>
                         <ol class="mt-10 grid gap-5 md:grid-cols-3">
                             @foreach ($steps as $step)
-                                <li class="relative rounded-3xl border bg-card p-6">
+                                <li class="relative overflow-hidden rounded-3xl border bg-card p-6">
+                                    @if ($activeSeasonalTheme === 'halloween')
+                                        <x-seasonal-icon name="ghost" class="pointer-events-none absolute -right-2 bottom-2 size-16 rotate-6 text-primary opacity-[0.08]" />
+                                    @elseif ($activeSeasonalTheme === 'christmas')
+                                        <x-seasonal-icon :name="$loop->iteration === 2 ? 'gift' : 'snowflake'" class="pointer-events-none absolute right-3 bottom-3 size-12 rotate-6 text-primary opacity-10" />
+                                    @endif
                                     <span aria-hidden="true" class="grid size-10 place-items-center rounded-full bg-primary font-semibold text-primary-foreground">{{ $loop->iteration }}</span>
                                     <h3 class="mt-5 font-semibold">{{ __("common.welcome.steps.{$step}.title") }}</h3>
                                     <p class="mt-2 text-sm leading-6 text-muted-foreground">{{ __("common.welcome.steps.{$step}.description") }}</p>
@@ -164,7 +203,14 @@
                         </ol>
                     </section>
 
-                    <section class="mx-auto mt-24 w-full max-w-4xl rounded-[2rem] bg-primary px-6 py-12 text-center text-primary-foreground shadow-xl shadow-primary/20 sm:px-12">
+                    <section class="relative mx-auto mt-24 w-full max-w-4xl overflow-hidden rounded-[2rem] bg-primary px-6 py-12 text-center text-primary-foreground shadow-xl shadow-primary/20 sm:px-12">
+                        @if ($activeSeasonalTheme === 'halloween')
+                            <x-seasonal-icon name="ghost" class="pointer-events-none absolute -right-3 -bottom-4 size-28 rotate-6 opacity-15" />
+                            <x-seasonal-icon name="moon-star" class="pointer-events-none absolute top-5 left-5 size-10 -rotate-6 opacity-15" />
+                        @elseif ($activeSeasonalTheme === 'christmas')
+                            <x-seasonal-icon name="gift" class="pointer-events-none absolute -right-3 -bottom-4 size-28 -rotate-6 opacity-15" />
+                            <x-seasonal-icon name="snowflake" class="pointer-events-none absolute top-5 left-5 size-10 rotate-12 opacity-20" />
+                        @endif
                         <h2 class="text-3xl font-semibold tracking-tight text-balance">{{ __('common.welcome.final_title') }}</h2>
                         <p class="mx-auto mt-4 max-w-xl text-primary-foreground/80">{{ __('common.welcome.final_description') }}</p>
                         <div class="mt-7 flex flex-col justify-center gap-3 sm:flex-row">

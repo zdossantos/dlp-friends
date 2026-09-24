@@ -1,9 +1,20 @@
 <script setup lang="ts">
-import { ShieldCheck, Sparkles, Users, X } from '@lucide/vue';
+import {
+    Candy,
+    Ghost,
+    Gift,
+    ShieldCheck,
+    Snowflake,
+    Sparkles,
+    TreePine,
+    Users,
+    X,
+} from '@lucide/vue';
 import { computed, ref, watch } from 'vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { useSeasonalTheme } from '@/composables/useSeasonalTheme';
 import { useTranslations } from '@/composables/useTranslations';
 import type {
     DiscoveryCardProfile,
@@ -31,6 +42,8 @@ const props = withDefaults(
 
 const emit = defineEmits<{ like: []; pass: []; open: [] }>();
 const { t } = useTranslations();
+const seasonalTheme = useSeasonalTheme();
+const themeVariant = computed(() => seasonalTheme.value.active ?? 'standard');
 
 const visitFrequencyLabels: Record<VisitFrequency, string> = {
     rarely: t('discovery.card.frequency_rarely'),
@@ -398,6 +411,30 @@ watch(
                     class="absolute right-[8%] bottom-[14%] size-36 rounded-full bg-white/20 blur-3xl"
                     aria-hidden="true"
                 />
+                <template v-if="themeVariant === 'christmas'">
+                    <Snowflake
+                        class="seasonal-decoration absolute top-4 left-5 z-20 size-9 rounded-full border border-white/50 bg-white/70 p-1.5 text-primary shadow-sm backdrop-blur-sm"
+                        :stroke-width="1.4"
+                        aria-hidden="true"
+                    />
+                    <Gift
+                        class="seasonal-decoration absolute top-4 right-5 z-20 size-10 rotate-6 rounded-2xl border border-white/50 bg-white/70 p-2 text-primary shadow-sm backdrop-blur-sm [animation-delay:-2s]"
+                        :stroke-width="1.4"
+                        aria-hidden="true"
+                    />
+                </template>
+                <template v-else-if="themeVariant === 'halloween'">
+                    <Ghost
+                        class="seasonal-decoration absolute top-4 left-5 z-20 size-8 text-white/70 drop-shadow-sm"
+                        :stroke-width="1.4"
+                        aria-hidden="true"
+                    />
+                    <Candy
+                        class="seasonal-decoration absolute top-5 right-5 z-20 size-8 rotate-12 text-white/70 drop-shadow-sm [animation-delay:-2s]"
+                        :stroke-width="1.4"
+                        aria-hidden="true"
+                    />
+                </template>
                 <img
                     :src="profile.avatar.image_url"
                     :alt="
@@ -420,6 +457,30 @@ watch(
                     compact ? '-mt-5 px-4 pt-4 pb-3' : '-mt-6 px-4 pt-3 pb-3',
                 ]"
             >
+                <TreePine
+                    v-if="themeVariant === 'christmas'"
+                    class="pointer-events-none absolute top-[48%] right-5 size-20 rotate-3 text-primary/12"
+                    :stroke-width="1.1"
+                    aria-hidden="true"
+                />
+                <Ghost
+                    v-else-if="themeVariant === 'halloween'"
+                    class="pointer-events-none absolute right-1 bottom-1 size-24 text-primary/10"
+                    :stroke-width="1.1"
+                    aria-hidden="true"
+                />
+                <Snowflake
+                    v-if="themeVariant === 'christmas'"
+                    class="pointer-events-none absolute -top-4 right-7 z-30 size-9 rounded-full border border-primary/20 bg-card p-1.5 text-primary shadow-md"
+                    :stroke-width="1.35"
+                    aria-hidden="true"
+                />
+                <Ghost
+                    v-else-if="themeVariant === 'halloween'"
+                    class="pointer-events-none absolute -top-4 right-7 z-30 size-9 rounded-full border border-primary/20 bg-card p-1.5 text-primary shadow-md"
+                    :stroke-width="1.35"
+                    aria-hidden="true"
+                />
                 <div
                     data-test="discovery-identity"
                     class="flex min-h-8 items-center gap-2 overflow-hidden"
@@ -530,7 +591,19 @@ watch(
             :aria-label="t('discovery.card.actions_label')"
             @pointerdown.stop
         >
-            <div class="flex flex-col items-center gap-1">
+            <div class="relative flex flex-col items-center gap-1">
+                <Snowflake
+                    v-if="themeVariant === 'christmas'"
+                    class="pointer-events-none absolute -top-1 -right-4 size-5 rotate-12 text-primary/45"
+                    :stroke-width="1.35"
+                    aria-hidden="true"
+                />
+                <Ghost
+                    v-else-if="themeVariant === 'halloween'"
+                    class="pointer-events-none absolute -top-1 -right-4 size-5 rotate-12 text-primary/45"
+                    :stroke-width="1.35"
+                    aria-hidden="true"
+                />
                 <Button
                     type="button"
                     variant="outline"

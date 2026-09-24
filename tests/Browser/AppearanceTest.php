@@ -260,7 +260,9 @@ test('seasonal palettes remain distinct accessible and decorative in light and d
             ->assertScript(semanticContrastScript('background', 'ring'), true)
             ->assertPresent($selector)
             ->assertAttribute($selector, 'aria-hidden', 'true')
-            ->assertAttribute($selector, 'focusable', 'false');
+            ->assertAttribute($selector, 'focusable', 'false')
+            ->navigate('/notifications')
+            ->assertPresent("[data-test='seasonal-surface-{$themeName}']");
 
         $page->script("localStorage.setItem('appearance', 'dark')");
         $page->navigate('/settings/appearance')

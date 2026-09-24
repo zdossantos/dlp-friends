@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import {
+    Candy,
     CandyCane,
     Ghost,
-    MoonStar,
     Snowflake,
     Sparkles,
     Star,
@@ -80,12 +80,12 @@ const variant = computed(() => seasonalTheme.value.active ?? 'standard');
                 <span
                     class="motion-match-halo absolute top-1/2 left-1/2 size-72 -translate-x-1/2 -translate-y-1/2 rounded-full border border-primary/35"
                 />
-                <MoonStar
-                    class="motion-match-seasonal absolute top-[12%] left-[14%] size-20 opacity-70"
+                <Ghost
+                    class="motion-match-seasonal absolute top-[32%] left-[7%] size-12 opacity-45"
                     :stroke-width="1.25"
                 />
-                <Ghost
-                    class="motion-match-seasonal absolute right-[12%] bottom-[16%] size-16 opacity-60 [animation-delay:320ms]"
+                <Candy
+                    class="motion-match-seasonal absolute top-[27%] right-[8%] size-10 rotate-12 opacity-35 [animation-delay:320ms]"
                     :stroke-width="1.25"
                 />
                 <Sparkles
@@ -112,7 +112,7 @@ const variant = computed(() => seasonalTheme.value.active ?? 'standard');
                     :stroke-width="1"
                 />
                 <CandyCane
-                    class="motion-match-seasonal absolute top-[14%] right-[14%] size-16 opacity-60"
+                    class="motion-match-seasonal absolute top-[31%] right-[7%] size-12 opacity-40"
                     :stroke-width="1.25"
                 />
                 <Snowflake
