@@ -41,6 +41,22 @@ Vue/Inertia affiche les pages servies par Laravel ; aucune API distincte n'est
 nécessaire actuellement. Toute action sensible doit être protégée côté serveur,
 de préférence avec une Policy Laravel.
 
+## Résolution des thèmes saisonniers
+
+`seasonal_themes` stocke les plages Halloween et Noël ainsi que l’éventuelle
+activation manuelle. `ResolveActiveSeasonalTheme` applique à chaque requête la
+priorité manuel, planning, standard. Le partage Inertia expose `seasonalTheme`
+avec le thème actif et le prochain instant de transition ; le composable
+frontend programme alors un minuteur et recharge cette seule donnée à
+l’échéance. Aucun scheduler ni cron n’est nécessaire.
+
+Les routes `admin.seasonal-themes.*`, protégées par rôle et Policy, permettent
+de modifier une plage, d’activer un thème et de désactiver le mode manuel. Les
+dates saisies dans le fuseau de l’application sont persistées comme instants
+UTC. Les classes racine saisonnières modifient les tokens CSS, tandis que les
+composants de décoration, de match et de conversation sélectionnent leurs
+icônes dans Lucide.
+
 Le domaine événements repose sur `Event` et `EventRegistration`. Les Form
 Requests valident les entrées HTTP, `EventPolicy` protège la lecture et les
 détails privés, et les Actions transactionnelles portent création, inscription,

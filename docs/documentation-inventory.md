@@ -91,7 +91,8 @@ Il sert de preuve pour la matrice de statut du futur PRD.
 | Profil et avatar de catalogue obligatoire | Implémenté | `app/Models/Profile.php`, `app/Models/Avatar.php`, contrôleurs de profil et d’avatars, `tests/Feature/MemberProfileTest.php`, `tests/Feature/Admin/ManageAvatarCatalogTest.php` |
 | Catalogue d’intérêts et limite configurable | Implémenté | migrations des intérêts, contrôleurs `Admin/Interest*`, `tests/Feature/Admin/ManageInterestCatalogTest.php` |
 | Découverte, swipes et match réciproque | Implémenté | `app/Actions/CreateSwipe.php`, `app/Services/DiscoveryService.php`, routes sociales et tests `CreateSwipe*`/`Discovery*` |
-| Conversations, messagerie temps réel et lecture | Implémenté | migrations `conversations`/`messages`, `app/Actions/SendMessage.php`, événements de messages, contrôleurs et tests de conversation/message |
+| Conversations, messagerie temps réel, lecture et ambiance (issue 185) | Implémenté | migrations `conversations`/`messages`, `app/Actions/SendMessage.php`, `MessageTimeline.vue`, `ConversationPattern.vue`, événements et tests de conversation/message |
+| Thèmes saisonniers Halloween et Noël (issue 189) | Implémenté | migration/modèle `seasonal_themes`, `ResolveActiveSeasonalTheme`, routes et page admin, partage Inertia, palettes, décorations Lucide et tests dédiés |
 | Blocage immédiat d’un membre | Implémenté | `app/Actions/BlockUser.php`, `app/Actions/UnblockUser.php`, routes de blocage et tests `Block*`/`MemberBlockingTest.php` |
 | Tutoriel produit obligatoire | Implémenté | migrations `product_onboarding`, action de progression, contrôleurs/pages et tests `ProductOnboarding*`/`OnboardingTest.php` |
 | Français et anglais | Implémenté | `app/Http/Middleware/SetLocale.php`, catalogues `lang/`, composable de traduction et tests `Localization/*` |

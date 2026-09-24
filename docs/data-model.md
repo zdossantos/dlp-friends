@@ -18,6 +18,7 @@ et son état de livraison sont définis dans le [`PRD.md`](PRD.md).
 | `matches` | Paire unique créée après deux likes |
 | `conversations` | Conversation liée à un match |
 | `messages` | Messages d'une conversation |
+| `seasonal_themes` | Plages administrables et activation manuelle des ambiances Halloween et Noël |
 | `events` | Événement amical organisé par un membre, avec horaire, lieux, capacité, mode et annulation |
 | `event_registrations` | Demande et état d’inscription d’un membre à un événement |
 | `notifications` | Notification persistante catégorisée, localisée et reliée à une cible applicative |
@@ -49,6 +50,9 @@ et son état de livraison sont définis dans le [`PRD.md`](PRD.md).
 - `matches` est unique pour une paire non ordonnée : stocker les deux identifiants dans un ordre canonique (`user_low_id < user_high_id`).
 - `messages` porte un identifiant séquentiel, l'auteur, le contenu texte validé,
   `read_at` pour l’état de lecture et les horodatages.
+- `seasonal_themes.theme` est limité à `halloween` et `christmas`. Les bornes
+  sont toutes deux nulles ou forment une plage ordonnée ; au plus une ligne est
+  activée manuellement, et cette activation est prioritaire sur les plages.
 - `blocks` est unique pour `(blocker_user_id, blocked_user_id)` et doit être vérifié dans chaque autorisation de conversation ou de matching.
 - `events.registration_mode` vaut `automatic` ou `manual`; `cancelled_at` conserve l’événement annulé dans l’historique.
 - `event_registrations` est unique pour `(event_id, user_id)`. Son état évolue entre `pending`, `accepted`, `refused`, `withdrawn`, `removed` et `blocked`. Seul `withdrawn` autorise une nouvelle inscription.

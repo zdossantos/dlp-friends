@@ -114,6 +114,8 @@ Paris.
 - Chaque match possède une conversation privée textuelle.
 - Les messages sont limités à 2 000 caractères. Pièces jointes, GIF, réactions,
   édition et suppression de message sont hors MVP.
+- Le fil identifie visiblement l’expéditeur, sépare les jours dans le fuseau de
+  l’application et utilise un fond décoratif Lucide adapté au thème saisonnier.
 - Seuls les deux membres du match peuvent lire et envoyer des messages.
 - Les compteurs associés à une liste de conversations ignorent les échanges
   dont l’autre profil est masqué. Le masquage ne désactive ni l’accès direct,
@@ -248,6 +250,10 @@ Paris.
 - Le français est la langue par défaut et de repli ; l’anglais est également
   pris en charge.
 - Les thèmes clair, sombre et système sont persistés.
+- Les ambiances saisonnières `halloween` et `christmas` complètent cette
+  préférence sans la remplacer. Un administrateur peut les planifier ou les
+  activer manuellement ; l’activation manuelle reste prioritaire jusqu’à sa
+  désactivation explicite.
 - Les parcours sont responsive, utilisables au clavier et compréhensibles sans
   dépendre uniquement de la couleur.
 - Le langage visuel et les règles de composants sont définis dans
@@ -271,6 +277,8 @@ Paris.
 | Français et anglais | **Implémenté** | Résolution de locale et catalogues backend/frontend sont présents. |
 | Univers éditorial | **Implémenté** | Tutoiement, vocabulaire canonique et catalogues par feature sont contrôlés automatiquement. |
 | Thèmes clair, sombre et système | **Implémenté** | Préférence persistée et interface correspondante sont présentes. |
+| Ambiances saisonnières Halloween et Noël (issue 189) | **Implémenté** | Planification administrative, priorité manuelle, palettes claire/sombre, décorations Lucide et célébrations de match dédiées sont livrées. |
+| Ambiance enrichie des conversations (issue 185) | **Implémenté** | Expéditeurs, séparateurs de jour locaux, bulles distinctes et fonds Lucide standard/Halloween/Noël sont couverts à partir de 320 px. |
 | Accueil public et référencement bilingue | **Implémenté** | Landing pages françaises et anglaises, métadonnées SEO, données structurées, sitemap public et exclusion des parcours privés sont livrés. |
 | Explication publique du classement et du matching | **Implémenté** | Pages françaises et anglaises indexables, liées depuis l’accueil, décrivant l’éligibilité, les priorités, le bonus de fréquence, le départage et la réciprocité. |
 | Mesure d’audience et suivi d’indexation | **Implémenté** | GA4 ne charge qu’après consentement explicite, avec refus et retrait accessibles, choix conservé six mois, Consent Mode basic et chemins normalisés ; Search Console s’appuie sur une validation configurable, le sitemap et robots.txt. |
