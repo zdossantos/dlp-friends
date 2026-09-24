@@ -155,6 +155,11 @@ watch(
                         : 'participant'
                 "
                 class="min-w-0"
+                :class="
+                    message.id === animatedMessageId
+                        ? 'motion-message-enter'
+                        : undefined
+                "
             >
                 <div
                     v-if="showDaySeparator(index)"
@@ -176,9 +181,6 @@ watch(
                         message.author_user_id === currentUserId
                             ? 'justify-end'
                             : 'justify-start',
-                        message.id === animatedMessageId
-                            ? 'motion-message-enter'
-                            : undefined,
                     ]"
                 >
                     <div
