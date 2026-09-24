@@ -27,6 +27,36 @@ const icons = computed(() => {
 
     return [MessageCircle, Mail, Hand, Sparkles];
 });
+
+const rotations = [-34, 17, -9, 42, -21, 7, 29, -46, 13, -27, 38, -14];
+const sizes = [14, 18, 22, 16, 25, 19, 15, 27, 20, 17];
+const opacities = [0.52, 0.78, 0.61, 0.9, 0.68, 0.46, 0.84];
+
+const decorations = computed(() => {
+    const phase =
+        variant.value === 'halloween'
+            ? 11
+            : variant.value === 'christmas'
+              ? 23
+              : 3;
+
+    return Array.from({ length: 52 }, (_, index) => {
+        const row = Math.floor(index / 7);
+        const column = index % 7;
+        const horizontalJitter = ((index * 37 + phase * 5) % 17) - 8;
+        const verticalJitter = ((index * 19 + phase * 3) % 13) - 6;
+
+        return {
+            component:
+                icons.value[(index * 3 + row + phase) % icons.value.length],
+            x: column * 16.7 - 1.5 + horizontalJitter * 0.72,
+            y: row * 14.4 - 1.2 + verticalJitter * 0.58,
+            rotation: rotations[(index + phase + row * 2) % rotations.length],
+            size: sizes[(index * 2 + phase + column) % sizes.length],
+            opacity: opacities[(index + phase + column * 2) % opacities.length],
+        };
+    });
+});
 </script>
 
 <template>
@@ -34,15 +64,22 @@ const icons = computed(() => {
         data-test="conversation-pattern"
         :data-pattern="variant"
         aria-hidden="true"
-        class="conversation-pattern pointer-events-none absolute inset-0 grid grid-cols-4 content-start gap-x-10 gap-y-14 overflow-hidden p-6"
+        class="conversation-pattern pointer-events-none absolute inset-0 overflow-hidden"
     >
         <component
-            :is="icons[(index - 1) % icons.length]"
-            v-for="index in 24"
-            :key="index"
-            class="size-5"
-            :class="index % 3 === 0 ? 'rotate-12' : '-rotate-6'"
+            :is="decoration.component"
+            v-for="(decoration, index) in decorations"
+            :key="`${variant}-${index}`"
+            class="absolute"
             :stroke-width="1.25"
+            :style="{
+                left: `${decoration.x}%`,
+                top: `${decoration.y}%`,
+                width: `${decoration.size}px`,
+                height: `${decoration.size}px`,
+                opacity: decoration.opacity,
+                transform: `translate(-50%, -50%) rotate(${decoration.rotation}deg)`,
+            }"
         />
     </div>
 </template>
