@@ -153,29 +153,26 @@ visibles et utilisables.
 La page de conversation garde les composables temps réel, l'état de lecture,
 la saisie, le blocage et les routes existants.
 
-### Fond original
+### Fond décoratif Lucide
 
-`MessageTimeline` reçoit une couche de fond doodle originale, légère et sans
-asset externe. Le motif est construit avec un petit SVG CSS encodé et des
-formes génériques liées à l'amitié et à l'échange : bulles, étincelles, mains
-stylisées et enveloppes abstraites. Il n'emploie aucune forme propriétaire.
+`MessageTimeline` reçoit une couche de fond doodle légère et sans asset externe.
+Le motif est composé dans le DOM avec les icônes de la bibliothèque Lucide déjà
+utilisée par l'application. Les icônes sont décoratives, `aria-hidden`, non
+focalisables et n'emploient aucune forme propriétaire.
 
-Le motif utilise des tokens locaux `--conversation-pattern-image`,
-`--conversation-pattern-color` et `--conversation-pattern-opacity`, avec une
-opacité suffisamment faible pour que les bulles restent la surface dominante.
-Il change réellement avec l'ambiance active, et pas seulement de couleur :
+Le motif utilise les couleurs sémantiques du thème et une opacité locale
+suffisamment faible pour que les bulles restent la surface dominante. Il change
+réellement avec l'ambiance active, et pas seulement de couleur :
 
 - le motif standard combine bulles, étincelles, mains stylisées et enveloppes
   abstraites ;
-- le motif Halloween combine petites lunes, feuilles, citrouilles géométriques
-  et chauves-souris abstraites ;
-- le motif Noël combine flocons, étoiles, branches géométriques et boules
-  abstraites.
+- le motif Halloween combine lunes, fantômes, feuilles et étincelles Lucide ;
+- le motif Noël combine flocons, sapins, cadeaux et étincelles Lucide.
 
-Chaque dessin possède une variante claire et sombre. Les SVG restent originaux,
-décoratifs, encodés localement et suffisamment espacés pour ne pas produire un
-fond chargé. Le changement de classe saisonnière remplace immédiatement le
-motif sans modifier le DOM de la conversation.
+Chaque motif s'adapte aux palettes claire et sombre par les tokens sémantiques.
+Les icônes restent suffisamment espacées pour ne pas produire un fond chargé.
+Le changement de classe saisonnière remplace immédiatement les composants
+Lucide affichés.
 
 ### Hiérarchie et identification des messages
 

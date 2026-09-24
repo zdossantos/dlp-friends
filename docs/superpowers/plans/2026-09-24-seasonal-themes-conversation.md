@@ -553,7 +553,7 @@ git add resources/js/components/discovery/MatchCelebration.vue resources/js/comp
 git commit -m "feat(theme): décliner la célébration de match"
 ```
 
-### Task 7: Conversation doodles, sender labels, and day separators
+### Task 7: Conversation Lucide doodles, sender labels, and day separators
 
 **Files:**
 - Create: `resources/js/lib/conversationTimeline.ts`
@@ -613,9 +613,9 @@ Expected: FAIL because sender labels, day separators, and pattern tokens do not 
 
 Pass `participant.display_name` from `Show.vue`. Render a separator before the first message of each local day. Render a visible sender label above the first message in each consecutive sender group. Preserve `role="log"`, InfiniteScroll, read receipt, live announcement, current animation, and scroll behavior. Add `min-w-0`, `overflow-wrap:anywhere`, and mobile max widths so 2,000-character content cannot overflow.
 
-- [ ] **Step 7: Implement six original conversation patterns**
+- [ ] **Step 7: Implement theme-aware Lucide conversation patterns**
 
-Define standard light/dark, Halloween light/dark, and Christmas light/dark `--conversation-pattern-image`, `--conversation-pattern-color`, and `--conversation-pattern-opacity` values. Use locally encoded original SVG data URIs containing the shapes specified in the design. Apply them only to the timeline pseudo-layer; keep message content above it and ensure pattern opacity is independent from bubble opacity.
+Compose the standard, Halloween, and Christmas patterns with decorative components from the existing Lucide library. Adapt their semantic color and opacity in light and dark modes, keep message content above the pattern, and ensure pattern opacity is independent from bubble opacity. Do not add inline or encoded custom SVGs.
 
 - [ ] **Step 8: Verify utilities, browser behavior, and frontend checks**
 
@@ -649,7 +649,7 @@ git commit -m "feat(messaging): enrichir l’ambiance des échanges"
 
 - [ ] **Step 1: Update the design-system contract**
 
-Document exact theme names, manual/schedule priority, light/dark palette intent, seasonal semantic-token rule, SVG/IP constraints, six conversation pattern variants, match celebration variants, and reduced-motion behavior.
+Document exact theme names, manual/schedule priority, light/dark palette intent, seasonal semantic-token rule, Lucide/IP constraints, six conversation pattern appearances, match celebration variants, and reduced-motion behavior.
 
 - [ ] **Step 2: Update product and implementation status**
 

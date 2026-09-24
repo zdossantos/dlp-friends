@@ -591,6 +591,25 @@
     animation: seasonal-decoration-drift 8s ease-in-out infinite alternate;
 }
 
+.conversation-pattern {
+    color: var(--muted-foreground);
+    opacity: 0.075;
+}
+
+.seasonal-halloween .conversation-pattern {
+    color: var(--primary);
+    opacity: 0.1;
+}
+
+.seasonal-christmas .conversation-pattern {
+    color: var(--secondary-foreground);
+    opacity: 0.085;
+}
+
+.dark .conversation-pattern {
+    opacity: 0.09;
+}
+
 @media (prefers-reduced-motion: reduce) {
     .seasonal-decoration {
         animation: none;

@@ -97,11 +97,17 @@ function handleKeydown(event: KeyboardEvent): void {
 </script>
 
 <template>
-    <footer class="shrink-0 border-t bg-card/95 px-4 py-3 sm:px-6">
+    <footer
+        class="relative z-10 shrink-0 border-t bg-card/95 px-4 py-3 shadow-sm backdrop-blur sm:px-6"
+    >
         <p v-if="archived" class="text-center text-sm text-muted-foreground">
             {{ t('conversations.message.archived') }}
         </p>
-        <form v-else class="flex items-end gap-2" @submit.prevent="submit">
+        <form
+            v-else
+            class="mx-auto flex w-full max-w-4xl items-end gap-2"
+            @submit.prevent="submit"
+        >
             <div class="min-w-0 flex-1">
                 <label for="message-content" class="sr-only">
                     {{ t('conversations.message.label') }}

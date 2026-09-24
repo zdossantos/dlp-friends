@@ -5,6 +5,7 @@ use App\Actions\SendMessage;
 use App\Events\MessageSent;
 use App\Models\MemberMatch;
 use App\Models\Message;
+use App\Models\SeasonalTheme;
 use App\Models\User;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
@@ -240,7 +241,13 @@ test('a conversation renders safe recent history and repeatedly loads older mess
         ->assertPresent('[role="log"][aria-label="Historique des messages"]')
         ->assertSee('<img src=x onerror=window.__messageXss=true>')
         ->assertNotPresent('[role="log"] img[src="x"]')
-        ->assertScript('window.__messageXss !== true', true)
+        ->assertScript('window.__messageXss !== true', true);
+
+    $page->page()->waitForFunction(
+        "document.querySelector('[data-test=message-scroll]').scrollTop > 0",
+    );
+
+    $page
         ->assertScript("document.querySelector('[data-test=message-scroll]').scrollTop > 0", true)
         ->assertScript('document.documentElement.scrollWidth <= document.documentElement.clientWidth', true);
 
@@ -388,6 +395,47 @@ test('a member sends a message with enter and keeps composer focus', function ()
         'author_user_id' => $member->id,
         'content' => 'Bonjour !',
     ]);
+});
+
+test('conversation atmosphere stays readable and changes with seasonal themes', function () {
+    $member = conversationBrowserMember('Alice');
+    $peer = conversationBrowserMember('Basile');
+    $match = MemberMatch::factory()->create([
+        'user_low_id' => min($member->id, $peer->id),
+        'user_high_id' => max($member->id, $peer->id),
+    ]);
+    $conversation = $match->conversation()->create();
+    Message::factory()->for($conversation)->for($peer, 'author')->create([
+        'content' => 'Message de la veille',
+        'created_at' => now()->subDay(),
+    ]);
+    Message::factory()->for($conversation)->for($member, 'author')->create([
+        'content' => str_repeat('message-sans-espace', 110),
+        'created_at' => now(),
+    ]);
+    $this->actingAs($member);
+
+    $page = visit("/conversations/{$conversation->id}");
+    $page->resize(320, 700);
+
+    foreach ([[null, 'standard'], ['halloween', 'halloween'], ['christmas', 'christmas']] as [$theme, $pattern]) {
+        SeasonalTheme::query()->update(['is_manually_active' => false]);
+        if ($theme !== null) {
+            SeasonalTheme::query()->where('theme', $theme)->update([
+                'is_manually_active' => true,
+            ]);
+        }
+
+        $page->navigate("/conversations/{$conversation->id}")
+            ->assertPresent("[data-test='conversation-pattern'][data-pattern='{$pattern}']")
+            ->assertSee('Basile')
+            ->assertSee('Vous')
+            ->assertSee('Hier')
+            ->assertSee('Aujourd’hui')
+            ->assertCount('[data-test="conversation-day-separator"]', 2)
+            ->assertScript('document.documentElement.scrollWidth <= window.innerWidth', true)
+            ->assertNoJavaScriptErrors();
+    }
 });
 
 test('an archived conversation remains readable without a composer', function () {
