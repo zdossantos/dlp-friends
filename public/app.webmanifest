@@ -1,0 +1,55 @@
+{
+    "id": "/",
+    "name": "DLP Friends",
+    "short_name": "DLP Friends",
+    "description": "Des rencontres strictement amicales entre fans majeurs de Disneyland Paris.",
+    "lang": "fr",
+    "start_url": "/app",
+    "scope": "/",
+    "display": "standalone",
+    "background_color": "#fdfaf7",
+    "theme_color": "#fdfaf7",
+    "categories": ["social"],
+    "icons": [
+        {
+            "src": "/pwa/icon-192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "/pwa/icon-512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "/pwa/icon-maskable-192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "maskable"
+        },
+        {
+            "src": "/pwa/icon-maskable-512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "maskable"
+        }
+    ],
+    "screenshots": [
+        {
+            "src": "/pwa/screenshot-fr.png",
+            "sizes": "941x1672",
+            "type": "image/png",
+            "form_factor": "narrow",
+            "label": "Découverte de profils amicaux"
+        },
+        {
+            "src": "/pwa/screenshot-en.png",
+            "sizes": "940x1672",
+            "type": "image/png",
+            "form_factor": "narrow",
+            "label": "Friendly profile discovery"
+        }
+    ]
+}
