@@ -1,5 +1,25 @@
 # Changelog
 
+## [1.9.0](https://github.com/zdossantos/dlp-friends/compare/v1.8.2...v1.9.0) (2026-09-26)
+
+
+### Features
+
+* add friendly events and persistent notifications ([#198](https://github.com/zdossantos/dlp-friends/issues/198)) ([5676e8a](https://github.com/zdossantos/dlp-friends/commit/5676e8a5d27fcb120c4eb3839481bb10b27023ca))
+* add personal data export and deferred deletion ([#192](https://github.com/zdossantos/dlp-friends/issues/192)) ([3f60bc4](https://github.com/zdossantos/dlp-friends/commit/3f60bc49f856b76ccee9df61aa83a232c5158b6d))
+* ajouter les thèmes saisonniers et enrichir la messagerie ([#210](https://github.com/zdossantos/dlp-friends/issues/210)) ([d6f74ea](https://github.com/zdossantos/dlp-friends/commit/d6f74ea58437149f61c0d5b99d866da7a8a7b99f))
+* **brand:** colorer le logo et moderniser le favicon ([#214](https://github.com/zdossantos/dlp-friends/issues/214)) ([db91ac7](https://github.com/zdossantos/dlp-friends/commit/db91ac73490638a742b4169bfd113e2abb12ba31))
+* **events:** ajouter le chat de groupe ([#202](https://github.com/zdossantos/dlp-friends/issues/202)) ([4307efe](https://github.com/zdossantos/dlp-friends/commit/4307efeb440388cbdfef0f6a2f6f7f53261fe0ae))
+* **messaging:** add presence and typing signals ([#197](https://github.com/zdossantos/dlp-friends/issues/197)) ([85e7f6c](https://github.com/zdossantos/dlp-friends/commit/85e7f6c18006253cd32f11fa27bedda04db230a2))
+* **partners:** add moderated partner space and analytics ([#207](https://github.com/zdossantos/dlp-friends/issues/207)) ([302aa32](https://github.com/zdossantos/dlp-friends/commit/302aa32db7c7fc9b36fe8cfcebcb38bee3fcb9bb))
+* **privacy:** add analytics consent controls ([#196](https://github.com/zdossantos/dlp-friends/issues/196)) ([fbb2491](https://github.com/zdossantos/dlp-friends/commit/fbb2491486330b2c94a7fd5021cd4f083a87f3bc))
+
+
+### Fixes
+
+* **account:** permettre la suppression après une inscription Google ([#213](https://github.com/zdossantos/dlp-friends/issues/213)) ([0b304b6](https://github.com/zdossantos/dlp-friends/commit/0b304b64c841596de378c61947cf746afed36b85))
+* **messaging:** faire remonter les nouveaux univers croisés ([#212](https://github.com/zdossantos/dlp-friends/issues/212)) ([8deb2de](https://github.com/zdossantos/dlp-friends/commit/8deb2dec4459606df870427ddd4495acfd86575a))
+
 ## [1.8.2](https://github.com/zdossantos/dlp-friends/compare/v1.8.1...v1.8.2) (2026-09-08)
 
 
