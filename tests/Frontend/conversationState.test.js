@@ -3,6 +3,7 @@ import {
     applyConversationMessage,
     applyReadReceipt,
     conversationPreview,
+    sortConversationSummaries,
 } from '../../resources/js/lib/conversationState';
 
 const message = (overrides = {}) => ({
@@ -26,14 +27,22 @@ const summary = (overrides = {}) => ({
 });
 
 describe('conversation list state', () => {
+    test('orders message and creation activities together with a stable conversation tie-breaker', () => {
+        const conversations = [
+            summary({ id: 1, activity_at: '2026-08-28T19:00:00.000Z' }),
+            summary({ id: 3, activity_at: '2026-08-28T20:00:00.000Z' }),
+            summary({ id: 2, activity_at: '2026-08-28T20:00:00.000Z' }),
+        ];
+
+        expect(
+            sortConversationSummaries(conversations).map(({ id }) => id),
+        ).toEqual([3, 2, 1]);
+    });
+
     test('an incoming message updates its preview, increments unread and moves it first', () => {
         const conversations = [summary({ id: 1 }), summary()];
 
-        const updated = applyConversationMessage(
-            conversations,
-            message(),
-            7,
-        );
+        const updated = applyConversationMessage(conversations, message(), 7);
 
         expect(updated.map(({ id }) => id)).toEqual([2, 1]);
         expect(updated[0].latest_message).toEqual(message());
@@ -48,7 +57,9 @@ describe('conversation list state', () => {
         );
 
         expect(updated[0].unread_count).toBe(0);
-        expect(conversationPreview(updated[0], 7, 'Nouvel échange', 'Toi : ')).toBe('Toi : Bonjour');
+        expect(
+            conversationPreview(updated[0], 7, 'Nouvel échange', 'Toi : '),
+        ).toBe('Toi : Bonjour');
     });
 
     test('a duplicate realtime message does not increment unread twice', () => {
@@ -60,15 +71,47 @@ describe('conversation list state', () => {
 
     test('a delayed older event does not replace the latest preview or increment unread', () => {
         const latest = message({ id: 12, content: 'Le plus récent' });
-        const conversations = applyConversationMessage(
-            [summary()],
-            latest,
-            7,
-        );
+        const conversations = applyConversationMessage([summary()], latest, 7);
 
         const updated = applyConversationMessage(
             conversations,
             message({ id: 11, content: 'En retard' }),
+            7,
+        );
+
+        expect(updated[0].latest_message).toEqual(latest);
+        expect(updated[0].unread_count).toBe(1);
+    });
+
+    test('a higher identifier with an older timestamp does not replace the latest preview', () => {
+        const latest = message({
+            id: 11,
+            content: 'Le plus récent',
+            created_at: '2026-08-28T20:01:00.000Z',
+        });
+        const conversations = applyConversationMessage([summary()], latest, 7);
+
+        const updated = applyConversationMessage(
+            conversations,
+            message({
+                id: 12,
+                content: 'Horodatage plus ancien',
+                created_at: '2026-08-28T20:00:00.000Z',
+            }),
+            7,
+        );
+
+        expect(updated[0].latest_message).toEqual(latest);
+        expect(updated[0].unread_count).toBe(1);
+    });
+
+    test('a message without a timestamp does not replace a dated latest message', () => {
+        const latest = message({ id: 11, content: 'Message daté' });
+        const conversations = applyConversationMessage([summary()], latest, 7);
+
+        const updated = applyConversationMessage(
+            conversations,
+            message({ id: 12, content: 'Sans date', created_at: null }),
             7,
         );
 
@@ -105,12 +148,16 @@ describe('read receipt state', () => {
             message({ id: 4, author_user_id: 7 }),
         ];
 
-        const updated = applyReadReceipt(messages, {
-            conversation_id: 2,
-            reader_user_id: 8,
-            last_read_message_id: 3,
-            read_at: '2026-08-28T20:01:00.000Z',
-        }, 7);
+        const updated = applyReadReceipt(
+            messages,
+            {
+                conversation_id: 2,
+                reader_user_id: 8,
+                last_read_message_id: 3,
+                read_at: '2026-08-28T20:01:00.000Z',
+            },
+            7,
+        );
 
         expect(updated.map(({ read_at }) => read_at)).toEqual([
             '2026-08-28T20:01:00.000Z',

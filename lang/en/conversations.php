@@ -11,6 +11,7 @@ return [
         'list_label' => 'Chats',
         'archived' => 'Archived',
         'new_exchange' => 'New chat',
+        'start_exchange' => 'Start the conversation.',
         'current_user_prefix' => 'You: ',
         'unread_message' => ':count unread message',
         'unread_messages' => ':count unread messages',
