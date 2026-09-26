@@ -4,6 +4,37 @@ import type {
     MessagesReadReceipt,
 } from '@/types';
 
+export function sortConversationSummaries(
+    conversations: ConversationSummary[],
+): ConversationSummary[] {
+    return [...conversations].sort((first, second) => {
+        const firstActivity = first.activity_at ?? '';
+        const secondActivity = second.activity_at ?? '';
+        const activityOrder = secondActivity.localeCompare(firstActivity);
+
+        return activityOrder !== 0 ? activityOrder : second.id - first.id;
+    });
+}
+
+function compareConversationMessages(
+    first: ConversationMessage,
+    second: ConversationMessage,
+): number {
+    if (first.created_at !== second.created_at) {
+        if (first.created_at === null) {
+            return -1;
+        }
+
+        if (second.created_at === null) {
+            return 1;
+        }
+
+        return first.created_at.localeCompare(second.created_at);
+    }
+
+    return first.id - second.id;
+}
+
 export function applyConversationMessage(
     conversations: ConversationSummary[],
     message: ConversationMessage,
@@ -17,9 +48,12 @@ export function applyConversationMessage(
         return conversations;
     }
 
-    const latestMessageId = target.latest_message?.id;
+    const latestMessage = target.latest_message;
 
-    if (latestMessageId !== undefined && latestMessageId >= message.id) {
+    if (
+        latestMessage !== null &&
+        compareConversationMessages(message, latestMessage) <= 0
+    ) {
         return conversations;
     }
 
@@ -36,20 +70,7 @@ export function applyConversationMessage(
             : conversation,
     );
 
-    return updated.sort((first, second) => {
-        const firstActivity = first.activity_at ?? '';
-        const secondActivity = second.activity_at ?? '';
-
-        const activityOrder = secondActivity.localeCompare(firstActivity);
-
-        if (activityOrder !== 0) {
-            return activityOrder;
-        }
-
-        return (
-            (second.latest_message?.id ?? 0) - (first.latest_message?.id ?? 0)
-        );
-    });
+    return sortConversationSummaries(updated);
 }
 
 export function conversationPreview(

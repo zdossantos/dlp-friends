@@ -1,8 +1,10 @@
 <script setup lang="ts">
-import { Head, Link } from '@inertiajs/vue3';
+import { Head, Link, router } from '@inertiajs/vue3';
+import { MessageCircle } from '@lucide/vue';
 import { computed, ref, watch } from 'vue';
 import ActivityStatus from '@/components/conversations/ActivityStatus.vue';
 import AvatarPortrait from '@/components/profile/AvatarPortrait.vue';
+import SeasonalDecorations from '@/components/seasonal/SeasonalDecorations.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useMemberRealtimeContext } from '@/composables/useMemberRealtimeNotifications';
@@ -11,6 +13,7 @@ import { useConversationListTyping } from '@/composables/useTypingSignals';
 import {
     applyConversationMessage,
     conversationPreview,
+    sortConversationSummaries,
 } from '@/lib/conversationState';
 import { normalizeSearchText } from '@/lib/textSearch';
 import { show as showConversation } from '@/routes/conversations';
@@ -20,9 +23,12 @@ const props = defineProps<{
     conversations: ConversationSummary[];
     currentUserId: number;
 }>();
-const visibleConversations = ref(props.conversations);
+const visibleConversations = ref(
+    sortConversationSummaries(props.conversations),
+);
 const { t } = useTranslations();
-const { latestMessage, presenceChanged } = useMemberRealtimeContext();
+const { activeMatch, latestMessage, presenceChanged } =
+    useMemberRealtimeContext();
 const typingIds = useConversationListTyping(
     props.conversations.filter((conversation) => !conversation.archived_at),
 );
@@ -52,7 +58,7 @@ function unreadLabel(count: number): string {
 watch(
     () => props.conversations,
     (conversations) => {
-        visibleConversations.value = conversations;
+        visibleConversations.value = sortConversationSummaries(conversations);
     },
     { deep: true },
 );
@@ -64,6 +70,11 @@ watch(latestMessage, (message) => {
             message,
             props.currentUserId,
         );
+    }
+});
+watch(activeMatch, (match) => {
+    if (match) {
+        router.reload({ only: ['conversations'] });
     }
 });
 watch(presenceChanged, (event) => {
@@ -116,8 +127,9 @@ watch(presenceChanged, (event) => {
 
         <section
             v-if="visibleConversations.length === 0"
-            class="rounded-3xl border bg-card p-6 text-center shadow-sm"
+            class="relative isolate overflow-hidden rounded-3xl border bg-card p-6 text-center shadow-sm"
         >
+            <SeasonalDecorations placement="panel" />
             <h2 class="font-semibold">
                 {{ t('conversations.page.empty_title') }}
             </h2>
@@ -128,8 +140,9 @@ watch(presenceChanged, (event) => {
 
         <section
             v-else-if="filteredConversations.length === 0"
-            class="rounded-3xl border bg-card p-6 text-center shadow-sm"
+            class="relative isolate overflow-hidden rounded-3xl border bg-card p-6 text-center shadow-sm"
         >
+            <SeasonalDecorations placement="panel" />
             <p class="font-semibold">
                 {{ t('conversations.page.search_empty') }}
             </p>
@@ -147,9 +160,10 @@ watch(presenceChanged, (event) => {
         <section
             v-else
             :aria-label="t('conversations.page.list_label')"
-            class="min-h-0 flex-1 overflow-y-auto overscroll-contain rounded-3xl border bg-card shadow-sm"
+            class="relative isolate min-h-0 flex-1 overflow-y-auto overscroll-contain rounded-3xl border bg-card shadow-sm"
         >
-            <ul role="list" class="divide-y">
+            <SeasonalDecorations placement="panel" />
+            <ul role="list" class="relative z-10 divide-y">
                 <li
                     v-for="conversation in filteredConversations"
                     :key="conversation.id"
@@ -157,20 +171,15 @@ watch(presenceChanged, (event) => {
                     <Link
                         :href="showConversation(conversation.id)"
                         :data-unread="conversation.unread_count > 0"
-                        class="flex min-h-20 items-center gap-3 px-4 py-3 transition-colors hover:bg-muted/60 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none focus-visible:ring-inset"
+                        class="flex min-h-20 items-center gap-3 px-4 py-3 transition-colors hover:bg-muted/60 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none focus-visible:ring-inset motion-reduce:transition-none"
                         :class="
                             conversation.unread_count > 0 ? 'bg-primary/8' : ''
                         "
                     >
-                        <span class="relative shrink-0">
+                        <span class="shrink-0">
                             <AvatarPortrait
                                 :avatar="conversation.participant.avatar"
                                 class="size-12 rounded-2xl"
-                            />
-                            <span
-                                v-if="conversation.participant.presence?.online"
-                                class="absolute -right-1 -bottom-1 size-3.5 rounded-full border-2 border-card bg-emerald-500"
-                                aria-hidden="true"
                             />
                         </span>
                         <span class="min-w-0 flex-1">
@@ -197,6 +206,20 @@ watch(presenceChanged, (event) => {
                                     {{ conversation.unread_count }}
                                 </span>
                                 <span
+                                    v-else-if="
+                                        conversation.latest_message === null &&
+                                        conversation.archived_at === null
+                                    "
+                                    data-test="new-conversation-label"
+                                    class="inline-flex shrink-0 items-center gap-1 rounded-full border border-primary/30 px-2 py-0.5 text-xs font-medium text-primary"
+                                >
+                                    <MessageCircle
+                                        class="size-3.5"
+                                        aria-hidden="true"
+                                    />
+                                    {{ t('conversations.page.new_exchange') }}
+                                </span>
+                                <span
                                     v-if="conversation.archived_at"
                                     class="shrink-0 text-xs font-medium text-muted-foreground"
                                 >
@@ -220,7 +243,11 @@ watch(presenceChanged, (event) => {
                                     conversationPreview(
                                         conversation,
                                         currentUserId,
-                                        t('conversations.page.new_exchange'),
+                                        t(
+                                            conversation.archived_at
+                                                ? 'conversations.page.new_exchange'
+                                                : 'conversations.page.start_exchange',
+                                        ),
                                         t(
                                             'conversations.page.current_user_prefix',
                                         ),

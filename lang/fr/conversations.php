@@ -11,6 +11,7 @@ return [
         'list_label' => 'Échanges',
         'archived' => 'Archivé',
         'new_exchange' => 'Nouvel échange',
+        'start_exchange' => 'Commence la conversation.',
         'current_user_prefix' => 'Toi : ',
         'unread_message' => ':count message non lu',
         'unread_messages' => ':count messages non lus',
@@ -39,6 +40,10 @@ return [
         'timeline' => 'Historique des messages',
         'received' => 'Nouveau message reçu',
         'loading_previous' => 'Chargement des messages précédents…',
+        'empty' => 'Commence votre échange amical avec un premier message.',
+        'you' => 'Vous',
+        'today' => 'Aujourd’hui',
+        'yesterday' => 'Hier',
     ],
     'realtime' => [
         'unavailable' => 'Le temps réel est indisponible. Tes messages restent affichés.',

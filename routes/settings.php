@@ -1,12 +1,13 @@
 <?php
 
 use App\Http\Controllers\Settings\AccountController;
+use App\Http\Controllers\Settings\PartnerNotificationPreferenceController;
 use App\Http\Controllers\Settings\SecurityController;
 use App\Http\Controllers\Settings\UserDataExportController;
 use Illuminate\Auth\Middleware\RequirePassword;
 use Illuminate\Support\Facades\Route;
 
-Route::middleware(['auth', 'verified', 'social', 'profile.complete', 'onboarding.complete'])->group(function () {
+Route::middleware(['auth', 'verified', 'social', 'role:user', 'profile.complete', 'onboarding.complete'])->group(function () {
     Route::redirect('settings', '/settings/account');
 
     Route::get('settings/account', [AccountController::class, 'edit'])->name('account.edit');
@@ -26,6 +27,10 @@ Route::middleware(['auth', 'verified', 'social', 'profile.complete', 'onboarding
 
     Route::inertia('settings/appearance', 'settings/Appearance')->name('appearance.edit');
 
+    Route::get('settings/notifications', [PartnerNotificationPreferenceController::class, 'edit'])
+        ->name('notification-preferences.edit');
+    Route::patch('settings/notifications', [PartnerNotificationPreferenceController::class, 'update'])
+        ->name('notification-preferences.update');
 });
 
 Route::get('.well-known/passkey-endpoints', function () {

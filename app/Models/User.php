@@ -40,7 +40,7 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
  * @property CarbonImmutable|null $deletion_requested_at
  * @property Carbon|null $last_active_at
  * @property-read int|null $age
- * @property string $password
+ * @property string|null $password
  * @property string|null $two_factor_secret
  * @property string|null $two_factor_recovery_codes
  * @property Carbon|null $two_factor_confirmed_at
@@ -63,6 +63,11 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
  * @property-read Collection<int, EventRegistration> $eventRegistrations
  * @property-read Collection<int, EventChatMessage> $authoredEventChatMessages
  * @property-read Collection<int, EventChatRead> $eventChatReads
+ * @property-read PartnerProfile|null $partnerProfile
+ * @property-read PartnerNotificationPreference|null $partnerNotificationPreference
+ * @property-read Collection<int, PartnerAnnouncementDelivery> $partnerAnnouncementDeliveries
+ * @property-read Collection<int, RoleAudit> $roleAuditsAsActor
+ * @property-read Collection<int, RoleAudit> $roleAuditsAsTarget
  * @property-read Collection<int, DatabaseNotification> $notifications
  * @property-read Collection<int, DatabaseNotification> $readNotifications
  * @property-read Collection<int, DatabaseNotification> $unreadNotifications
@@ -170,6 +175,57 @@ class User extends Authenticatable implements HasLocalePreference, MustVerifyEma
         return $this->hasMany(EventChatRead::class);
     }
 
+    /** @return HasOne<PartnerProfile, $this> */
+    public function partnerProfile(): HasOne
+    {
+        return $this->hasOne(PartnerProfile::class);
+    }
+
+    /** @return HasOne<PartnerNotificationPreference, $this> */
+    public function partnerNotificationPreference(): HasOne
+    {
+        return $this->hasOne(PartnerNotificationPreference::class);
+    }
+
+    /** @return HasMany<PartnerAnnouncementDelivery, $this> */
+    public function partnerAnnouncementDeliveries(): HasMany
+    {
+        return $this->hasMany(PartnerAnnouncementDelivery::class);
+    }
+
+    /** @param Builder<User> $query */
+    public function scopeEligibleForPartnerAnnouncements(Builder $query): void
+    {
+        $query
+            ->where('status', UserStatus::Active)
+            ->whereNotNull('email_verified_at')
+            ->whereNull('deletion_requested_at')
+            ->whereHas(
+                'roles',
+                fn (Builder $roles) => $roles->where('name', RoleName::User),
+            )
+            ->where(function (Builder $preferences): void {
+                $preferences
+                    ->whereDoesntHave('partnerNotificationPreference')
+                    ->orWhereHas(
+                        'partnerNotificationPreference',
+                        fn (Builder $preference) => $preference->where('enabled', true),
+                    );
+            });
+    }
+
+    /** @return HasMany<RoleAudit, $this> */
+    public function roleAuditsAsActor(): HasMany
+    {
+        return $this->hasMany(RoleAudit::class, 'actor_user_id');
+    }
+
+    /** @return HasMany<RoleAudit, $this> */
+    public function roleAuditsAsTarget(): HasMany
+    {
+        return $this->hasMany(RoleAudit::class, 'target_user_id');
+    }
+
     public function hasBlockedRelationshipWith(User $other): bool
     {
         return Block::query()
@@ -196,6 +252,11 @@ class User extends Authenticatable implements HasLocalePreference, MustVerifyEma
     public function preferredLocale(): string
     {
         return $this->locale ?? config('app.fallback_locale', 'fr');
+    }
+
+    public function hasUsablePassword(): bool
+    {
+        return $this->password !== null;
     }
 
     public function sendEmailVerificationNotification(): void

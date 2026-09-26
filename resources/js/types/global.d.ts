@@ -1,5 +1,6 @@
 import type { Auth } from '@/types/auth';
 import type { I18n } from '@/types/i18n';
+import type { SeasonalThemeState } from '@/types/seasonalTheme';
 
 // Extend ImportMeta interface for Vite...
 declare module 'vite/client' {
@@ -22,6 +23,7 @@ declare module '@inertiajs/core' {
             i18n: I18n;
             sidebarOpen: boolean;
             legal: { terms_url: string; privacy_url: string };
+            seasonalTheme: SeasonalThemeState;
             [key: string]: unknown;
         };
     }

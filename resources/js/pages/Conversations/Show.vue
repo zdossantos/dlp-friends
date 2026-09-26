@@ -24,6 +24,7 @@ const props = defineProps<{
     conversation: ConversationDetails;
     participant: ConversationParticipant;
     currentUserId: number;
+    timezone: string;
     messages: PaginatedMessages;
 }>();
 const { presenceChanged } = useMemberRealtimeContext();
@@ -110,6 +111,8 @@ const timelineMessages = computed<PaginatedMessages>(() => ({
         <MessageTimeline
             :messages="timelineMessages"
             :current-user-id="currentUserId"
+            :participant-name="participant.display_name"
+            :timezone="timezone"
         />
         <MessageComposer
             :conversation-id="conversation.id"

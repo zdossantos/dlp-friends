@@ -41,6 +41,22 @@ Vue/Inertia affiche les pages servies par Laravel ; aucune API distincte n'est
 nécessaire actuellement. Toute action sensible doit être protégée côté serveur,
 de préférence avec une Policy Laravel.
 
+## Résolution des thèmes saisonniers
+
+`seasonal_themes` stocke les plages Halloween et Noël ainsi que l’éventuelle
+activation manuelle. `ResolveActiveSeasonalTheme` applique à chaque requête la
+priorité manuel, planning, standard. Le partage Inertia expose `seasonalTheme`
+avec le thème actif et le prochain instant de transition ; le composable
+frontend programme alors un minuteur et recharge cette seule donnée à
+l’échéance. Aucun scheduler ni cron n’est nécessaire.
+
+Les routes `admin.seasonal-themes.*`, protégées par rôle et Policy, permettent
+de modifier une plage, d’activer un thème et de désactiver le mode manuel. Les
+dates saisies dans le fuseau de l’application sont persistées comme instants
+UTC. Les classes racine saisonnières modifient les tokens CSS, tandis que les
+composants de décoration, de match et de conversation sélectionnent leurs
+icônes dans Lucide.
+
 Le domaine événements repose sur `Event` et `EventRegistration`. Les Form
 Requests valident les entrées HTTP, `EventPolicy` protège la lecture et les
 détails privés, et les Actions transactionnelles portent création, inscription,
@@ -117,6 +133,73 @@ verrouille la paire canonique, réutilise son match et sa conversation s’ils
 existent, ou les crée sans ajouter de swipe. Les Policies de profil et l’Action
 de blocage interdisent toutes deux de cibler un administrateur.
 
+## Cycle de vie partenaire et concurrence
+
+Les routes Inertia `/partner/profile`, `/partner/announcements` et
+`/partner/statistics` sont réservées au rôle `partner`, indépendamment du
+parcours social `user`. Les contrôleurs admin de fiches, annonces, paramètres
+et statistiques utilisent les mêmes Actions métier et des autorisations serveur.
+Les rôles cumulables sont modifiés transactionnellement avec audit ; `admin`
+reste hors de ce formulaire. L’entrée authentifiée conserve `/app` pour tout
+compte `user`, puis dirige un compte sans `user` vers `/dashboard` s’il est
+administrateur ou `/partner/profile` s’il est partenaire.
+
+La navigation basse expose un sélecteur d’espace uniquement lorsque les rôles
+`user` et `partner` sont tous deux présents. L’espace actif est dérivé de l’URL :
+aucune préférence supplémentaire n’est persistée, et les middlewares de rôles
+restent la source de vérité des autorisations.
+
+`SavePartnerProfileDraft` et `TransformPartnerImage` enregistrent le brouillon
+et une image réencodée dans le stockage privé. Soumettre fige la révision ;
+l’approbation change le pointeur de version publique sans exposer les brouillons.
+`PublicLandingController` sélectionne au plus six fiches publiées/approuvées
+dans l’ordre manuel et sert leurs images via une route publique contrôlée.
+
+Le bouton administrateur des statistiques appelle `StartPartnerAnnouncement` :
+verrouillage du réglage singleton, de la fiche et de l’annonce, validation de
+l’état et du délai,
+création du run et de la métrique, puis job après commit. La préparation capture
+l’audience par lots de 500 (compte actif, vérifié, rôle `user`, hors suppression,
+préférence absente ou active), insère les livraisons uniques et déclenche leurs jobs après commit.
+Chaque livraison revérifie l’éligibilité sous verrou, écrit notification et
+métrique atomiquement, puis diffuse via Reverb après commit. La finalisation
+attend la fin de préparation et des livraisons non terminales ; les reprises
+conservent les lignes déjà livrées ou ignorées et réessaient les broadcasts manqués.
+
+Le centre de notifications résout l’annonce reçue côté serveur : lecture,
+retrait avec confirmation, puis redirection par jeton opaque pour l’ouverture.
+Les compteurs d’engagement sont atomiques ; `PartnerAnnouncementStatisticsData`
+ne transmet que les agrégats, avec compteurs opérationnels supplémentaires
+pour l’administration. Les taux sont rapportés aux livraisons effectives.
+Il n’existe ni API séparée, ni ciblage partenaire, ni envoi e-mail/push.
+
+Les livraisons d'annonces conservent un instantané immuable du contenu public
+reçu. Leur clé étrangère vers l'annonce est nullable avec `null on delete` : la
+rétention peut supprimer une campagne et ses agrégats sans effacer l'historique
+appartenant à un autre membre. Aucun identifiant de compte expéditeur ni secret
+opérationnel n'est dupliqué dans cet instantané. La suppression du destinataire
+reste la seule opération qui supprime sa livraison identifiable.
+
+Les actions concurrentes respectent l'ordre de verrouillage global `user` →
+`partner_setting` → `partner_profile` → `partner_announcement` →
+`partner_announcement_delivery` → `partner_announcement_metric`. La livraison
+et la désactivation verrouillent donc toutes deux la ligne de livraison avant
+la métrique, ce qui évite l'inversion lors d'une suppression simultanée de
+l'expéditeur. L'approbation d'une fiche verrouille d'abord son propriétaire et
+refuse la publication si le compte a disparu, est inactif ou en suppression.
+
+Le job de projection temps réel appelle le diffuseur pendant sa propre tentative
+et ne renseigne `broadcasted_at` qu'après le retour réussi du transport. Une
+panne épuise donc les tentatives du job sans confirmer l'émission ni recréer la
+notification en base ; la relance administrative republie le même UUID et le
+même instantané. Le centre affiche le contenu figé depuis la livraison, rendu
+comme texte échappé, jamais comme HTML.
+
+La rétention s'exécute quotidiennement à 03:30 dans `Europe/Paris`, sans
+chevauchement et sur un seul serveur. Elle traite les échéances inclusives par
+lots de 500 et exclut toujours la révision actuellement publiée d'une fiche
+active.
+
 ## Accueil public et indexation
 
 La racine `/` sélectionne la langue du visiteur à partir de sa préférence puis
@@ -191,6 +274,7 @@ UUID des URL sont retirés ou remplacés par `{id}`. Aucun événement applicati
 ne doit contenir de nom, d’e-mail, d’identifiant de membre, de texte de profil
 ou de message. `GOOGLE_SITE_VERIFICATION` ajoute, lorsqu’elle est configurée,
 la balise de validation Search Console aux documents HTML.
+
 ## Services Docker
 
 | Service | Responsabilité |

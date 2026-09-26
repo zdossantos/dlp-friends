@@ -43,10 +43,22 @@ expiration automatique, au plus 30 jours après leur création.
   les notifications d’une conversation existante ; ces échanges réapparaissent
   dans les listes lorsque le profil redevient visible. Le blocage reste le
   mécanisme qui interdit réellement l’accès et la messagerie.
-- Suppression : après confirmation explicite, le compte devient immédiatement inaccessible et invisible. Les sessions et liens sociaux sont révoqués immédiatement. Un job asynchrone gardé par le statut et l’horodatage supprime le profil, les intérêts, swipes, matches, conversations, messages et autres données liées 30 jours après la demande. Une tâche horaire redispatche les purges échues manquées ; les reprises sont idempotentes. Aucun parcours de restauration n’est proposé.
+- Suppression : après confirmation explicite, le compte devient immédiatement inaccessible et invisible. Un compte disposant d’un mot de passe utilisable doit fournir son mot de passe actuel ; un compte créé exclusivement avec un fournisseur social doit accepter explicitement les conséquences irréversibles de la demande. Ce mode est déterminé côté serveur. Les sessions et tous les liens sociaux sont révoqués immédiatement. Un job asynchrone gardé par le statut et l’horodatage supprime le profil, les intérêts, swipes, matches, conversations, messages et autres données liées 30 jours après la demande. Une tâche horaire redispatche les purges échues manquées ; les reprises sont idempotentes. Aucun parcours de restauration n’est proposé.
 - Documenter, avant mise en production, les durées de conservation et la politique de confidentialité applicable.
 - L’export JSON des données de compte, profil, intérêts, matches et messages est généré à la demande dans une réponse authentifiée téléchargée directement. Aucun fichier d’export n’est conservé côté serveur. Les messages exportés sont uniquement ceux envoyés par le membre dans les conversations visibles dans sa liste ; les profils masqués et toute relation bloquée dans un sens ou dans l’autre en sont exclus. Il exclut mots de passe, secrets, jetons et données inutiles sur les autres membres.
 - L’export inclut les événements organisés, les inscriptions du membre, les messages de discussion d’événement qu’il a lui-même envoyés et ses notifications persistantes, sans exposer les inscriptions privées ni les messages d’autrui.
+- L'export inclut toutes les données partenaires propres au compte : consentement,
+  historique de rôle ciblé, fiche et révisions possédées, annonces et agrégats,
+  ainsi que les annonces qu'il a lui-même reçues et ses interactions. Il exclut
+  les chemins de stockage, jetons de clic, identifiants de notification ou de
+  destinataire, erreurs techniques, identité des acteurs et toute interaction
+  individuelle d'un autre membre.
+- La suppression d'un partenaire dépublie immédiatement sa fiche, refuse ses
+  révisions en attente, annule ses annonces actives et neutralise les livraisons
+  encore en attente. Sa purge retire ses préférences et ses propres livraisons,
+  mais ne retire pas l'historique des autres destinataires. Celui-ci conserve
+  seulement l'instantané public reçu, sans identité de compte expéditeur ni
+  secret, jusqu'au propre cycle de suppression du destinataire.
 - Les sauvegardes ne sont pas modifiées rétroactivement lors d'une suppression ; leur rotation automatique est limitée à 30 jours.
 
 ## Autorisation et protection applicative
@@ -73,6 +85,40 @@ expiration automatique, au plus 30 jours après leur création.
   panne d’envoi ne restaure pas le compte.
 - Un administrateur ne peut ni supprimer un autre administrateur ni ouvrir un
   échange d’assistance avec lui.
+
+## Partenaires : accès, consentement et conservation
+
+- Les routes partenaires exigent le rôle `partner`, un compte actif, majeur et
+  vérifié, mais pas le profil social ni son tutoriel. Les routes sociales exigent
+  `user` et leurs prérequis existants ; l’administration exige `admin`.
+  Les Policies et Actions vérifient propriétaire, rôle et transition côté serveur.
+  Après authentification, la redirection est calculée avec les mêmes rôles afin
+  qu’un compte partenaire ou admin sans `user` ne soit pas envoyé vers `/app`.
+- Les modifications de rôles exigent une confirmation et créent un audit minimal
+  immuable. Le retrait de `partner` bloque immédiatement les routes privées
+  partenaires ; l’UI ne peut pas accorder `admin`. La dépublication est une
+  action administrative distincte (elle est automatique à la suppression du compte).
+- Les images de fiche sont JPEG, PNG ou WebP, de 640 × 360 à 6000 × 6000 pixels,
+  au plus 5 Mo. Le serveur les réencode sans métadonnées et les garde privées.
+  Une route contrôlée ne rend public que le fichier de la révision publiée ; les
+  brouillons restent réservés au propriétaire et aux administrateurs.
+- Les liens d’annonce exigent HTTPS et refusent notamment identifiants intégrés,
+  hôtes locaux et adresses IP non publiques. Aucune récupération distante ni
+  prévisualisation serveur de l’URL n’est effectuée.
+- La préférence partenaire est indépendante du consentement analytique. Elle est
+  active en l’absence de choix, révocable dans les réglages et vérifiée à chaque livraison,
+  avec l’éligibilité actuelle du membre. Pas de ciblage ni d’accès aux identités
+  des destinataires dans les vues statistiques, seulement des agrégats.
+- Le lien de clic utilise un jeton opaque propre à la livraison. Lecture/retrait
+  restent authentifiés et réservés au destinataire ; le lien opaque permet la
+  redirection et le comptage sans exposer d’identifiant utilisateur dans l’URL.
+- Les données historiques expirables (révisions non actives, annonces terminales,
+  agrégats et audits) sont purgées après deux ans. Une version actuellement
+  publiée n’expire pas. Les annonces reçues sont des instantanés distincts : elles
+  restent dans l’historique du destinataire après suppression de l’expéditeur ou
+  expiration de la source, jusqu’au cycle de suppression du destinataire.
+  Le centre présente le contenu de cet instantané par interpolation texte
+  échappée ; il n’interprète aucun HTML et n’ajoute aucune donnée personnelle.
 
 ## Mesure d’audience
 
@@ -105,4 +151,6 @@ publicitaires restent refusées.
 
 ## Différé
 
-Le signalement de profils/messages, la console de modération et les processus d'équipe sont prévus en V2. Leur absence du MVP ne dispense pas de sécuriser les accès, les fichiers et la suppression de compte.
+Le signalement de profils/messages sociaux, leur console de modération et les
+processus d’équipe sont prévus en V2. La modération des fiches et annonces
+partenaires est déjà livrée et ne constitue pas une modération sociale.

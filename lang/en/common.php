@@ -23,6 +23,10 @@ return [
         'create_account' => 'Create my account',
         'login' => 'Log in',
         'how_it_works' => 'How it works',
+        'partners' => [
+            'title' => 'Our partners',
+            'image_alt' => ':name presentation',
+        ],
         'value_title' => 'Friendly connections, made simple',
         'value_description' => 'DLP Friends helps you meet fans through what you enjoy together. No distance, age range, or romantic mechanics.',
         'algorithm_eyebrow' => 'Suggestions that make sense',
@@ -45,6 +49,13 @@ return [
         ],
     ],
     'actions' => ['cancel' => 'Cancel', 'close' => 'Close', 'delete' => 'Delete'],
+    'workspace_switcher' => [
+        'trigger' => 'Workspaces',
+        'title' => 'Switch workspace',
+        'description' => 'Choose the workspace you want to use.',
+        'member' => 'Member workspace',
+        'partner' => 'Partner workspace',
+    ],
     'errors' => ['generic_title' => 'Something went wrong'],
     'accessibility' => [
         'main_navigation' => 'Main navigation', 'menu_navigation' => 'Navigation menu', 'breadcrumb' => 'Breadcrumb',

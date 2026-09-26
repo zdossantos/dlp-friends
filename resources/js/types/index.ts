@@ -5,4 +5,6 @@ export * from './interest';
 export * from './i18n';
 export * from './member';
 export * from './navigation';
+export * from './partner';
+export * from './seasonalTheme';
 export * from './ui';

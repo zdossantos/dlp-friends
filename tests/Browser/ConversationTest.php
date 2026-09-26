@@ -2,10 +2,13 @@
 
 use App\Actions\MarkConversationRead;
 use App\Actions\SendMessage;
+use App\Events\MatchCreated;
 use App\Events\MessageSent;
 use App\Models\MemberMatch;
 use App\Models\Message;
+use App\Models\SeasonalTheme;
 use App\Models\User;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
 
 function conversationBrowserMember(string $displayName): User
@@ -56,6 +59,34 @@ test('the conversation list links to a peer and previews its latest message', fu
         ->assertNoJavaScriptErrors();
 });
 
+test('a new conversation is first and invites the member to start without appearing unread', function () {
+    $member = conversationBrowserMember('Alice');
+    $olderPeer = conversationBrowserMember('Basile');
+    $newPeer = conversationBrowserMember('Camille');
+    $olderMatch = MemberMatch::factory()->create([
+        'user_low_id' => min($member->id, $olderPeer->id),
+        'user_high_id' => max($member->id, $olderPeer->id),
+    ]);
+    $newMatch = MemberMatch::factory()->create([
+        'user_low_id' => min($member->id, $newPeer->id),
+        'user_high_id' => max($member->id, $newPeer->id),
+    ]);
+    $older = $olderMatch->conversation()->create(['created_at' => now()->subDay()]);
+    $new = $newMatch->conversation()->create(['created_at' => now()]);
+    Message::factory()->for($older)->for($olderPeer, 'author')->create([
+        'created_at' => now()->subHour(),
+        'read_at' => now(),
+    ]);
+    $this->actingAs($member);
+
+    visit('/conversations')->on()->mobile()
+        ->assertSee('Nouvel échange')
+        ->assertSee('Commence la conversation.')
+        ->assertPresent("a[href='/conversations/{$new->id}'][data-unread='false'] [data-test='new-conversation-label']")
+        ->assertScript("document.querySelector('[aria-label=Échanges] li:first-child a').getAttribute('href')", "/conversations/{$new->id}")
+        ->assertNoJavaScriptErrors();
+});
+
 test('the conversation list prefixes the member latest message with vous', function () {
     $member = conversationBrowserMember('Alice');
     $peer = conversationBrowserMember('Basile');
@@ -73,6 +104,29 @@ test('the conversation list prefixes the member latest message with vous', funct
     visit('/conversations')->on()->mobile()
         ->assertSee('Toi : À tout de suite !')
         ->assertPresent("a[href='/conversations/{$conversation->id}'][data-unread='false']")
+        ->assertNoJavaScriptErrors();
+});
+
+test('a conversation header shows online presence only beside the label', function () {
+    $member = conversationBrowserMember('Alice');
+    $peer = conversationBrowserMember('Basile');
+    $match = MemberMatch::factory()->create([
+        'user_low_id' => min($member->id, $peer->id),
+        'user_high_id' => max($member->id, $peer->id),
+    ]);
+    $conversation = $match->conversation()->create();
+    Cache::put("presence:user:{$peer->id}", true, now()->addMinute());
+    $this->actingAs($member);
+
+    visit("/conversations/{$conversation->id}")->on()->mobile()
+        ->assertSee(__('conversations.presence.online'))
+        ->assertScript(<<<'JS'
+            (() => {
+                const header = document.querySelector('[data-test="conversation-page"] > header');
+
+                return header?.querySelectorAll('.bg-emerald-500').length === 1;
+            })()
+        JS, true)
         ->assertNoJavaScriptErrors();
 });
 
@@ -175,19 +229,59 @@ test('the conversation list updates and reorders its preview in realtime', funct
     ]);
     $this->actingAs($member);
 
-    $page = visit('/conversations')->on()->mobile()->assertSee('Conversation initiale');
+    $page = visit('/conversations')->on()->mobile()
+        ->assertSee('Conversation initiale')
+        ->assertPresent("a[href='/conversations/{$second->id}'] [data-test='new-conversation-label']");
 
     $this->app->make(SendMessage::class)->handle($secondPeer, $second, 'Aperçu reçu en direct');
 
     $page->assertSee('Aperçu reçu en direct')
         ->assertPresent("a[href='/conversations/{$second->id}'][data-unread='true']")
-        ->assertScript("document.querySelector('[aria-label=Conversations] li:first-child a').getAttribute('href')", "/conversations/{$second->id}")
+        ->assertNotPresent("a[href='/conversations/{$second->id}'] [data-test='new-conversation-label']")
+        ->assertScript("document.querySelector('[aria-label=Échanges] li:first-child a').getAttribute('href')", "/conversations/{$second->id}")
         ->assertNoJavaScriptErrors();
 
+    $this->travel(1)->seconds();
     $this->app->make(SendMessage::class)->handle($member, $first, 'Réponse en direct');
 
     $page->assertSee('Toi : Réponse en direct')
-        ->assertScript("document.querySelector('[aria-label=Conversations] li:first-child a').getAttribute('href')", "/conversations/{$first->id}")
+        ->assertScript("document.querySelector('[aria-label=Échanges] li:first-child a').getAttribute('href')", "/conversations/{$first->id}")
+        ->assertNoJavaScriptErrors();
+});
+
+test('a conversation created in realtime appears first without a reload', function () {
+    if (! filter_var(env('REALTIME_BROWSER_TESTS', false), FILTER_VALIDATE_BOOL)) {
+        $this->markTestSkipped('Set REALTIME_BROWSER_TESTS=true and start Reverb to run this integration test.');
+    }
+
+    $member = conversationBrowserMember('Alice');
+    $olderPeer = conversationBrowserMember('Basile');
+    $newPeer = conversationBrowserMember('Camille');
+    $olderMatch = MemberMatch::factory()->create([
+        'user_low_id' => min($member->id, $olderPeer->id),
+        'user_high_id' => max($member->id, $olderPeer->id),
+    ]);
+    $older = $olderMatch->conversation()->create(['created_at' => now()->subDay()]);
+    Message::factory()->for($older)->for($olderPeer, 'author')->create([
+        'created_at' => now()->subHour(),
+        'read_at' => now(),
+    ]);
+    $this->actingAs($member);
+
+    $page = visit('/conversations')->on()->mobile()
+        ->assertSee('Basile')
+        ->assertDontSee('Camille');
+
+    $newMatch = MemberMatch::factory()->create([
+        'user_low_id' => min($member->id, $newPeer->id),
+        'user_high_id' => max($member->id, $newPeer->id),
+    ]);
+    $new = $newMatch->conversation()->create(['created_at' => now()]);
+    event(new MatchCreated($newMatch, $member));
+
+    $page->assertSee('Camille')
+        ->assertPresent("a[href='/conversations/{$new->id}'] [data-test='new-conversation-label']")
+        ->assertScript("document.querySelector('[aria-label=Échanges] li:first-child a').getAttribute('href')", "/conversations/{$new->id}")
         ->assertNoJavaScriptErrors();
 });
 
@@ -216,7 +310,13 @@ test('a conversation renders safe recent history and repeatedly loads older mess
         ->assertPresent('[role="log"][aria-label="Historique des messages"]')
         ->assertSee('<img src=x onerror=window.__messageXss=true>')
         ->assertNotPresent('[role="log"] img[src="x"]')
-        ->assertScript('window.__messageXss !== true', true)
+        ->assertScript('window.__messageXss !== true', true);
+
+    $page->page()->waitForFunction(
+        "document.querySelector('[data-test=message-scroll]').scrollTop > 0",
+    );
+
+    $page
         ->assertScript("document.querySelector('[data-test=message-scroll]').scrollTop > 0", true)
         ->assertScript('document.documentElement.scrollWidth <= document.documentElement.clientWidth', true);
 
@@ -364,6 +464,47 @@ test('a member sends a message with enter and keeps composer focus', function ()
         'author_user_id' => $member->id,
         'content' => 'Bonjour !',
     ]);
+});
+
+test('conversation atmosphere stays readable and changes with seasonal themes', function () {
+    $member = conversationBrowserMember('Alice');
+    $peer = conversationBrowserMember('Basile');
+    $match = MemberMatch::factory()->create([
+        'user_low_id' => min($member->id, $peer->id),
+        'user_high_id' => max($member->id, $peer->id),
+    ]);
+    $conversation = $match->conversation()->create();
+    Message::factory()->for($conversation)->for($peer, 'author')->create([
+        'content' => 'Message de la veille',
+        'created_at' => now()->subDay(),
+    ]);
+    Message::factory()->for($conversation)->for($member, 'author')->create([
+        'content' => str_repeat('message-sans-espace', 110),
+        'created_at' => now(),
+    ]);
+    $this->actingAs($member);
+
+    $page = visit("/conversations/{$conversation->id}");
+    $page->resize(320, 700);
+
+    foreach ([[null, 'standard'], ['halloween', 'halloween'], ['christmas', 'christmas']] as [$theme, $pattern]) {
+        SeasonalTheme::query()->update(['is_manually_active' => false]);
+        if ($theme !== null) {
+            SeasonalTheme::query()->where('theme', $theme)->update([
+                'is_manually_active' => true,
+            ]);
+        }
+
+        $page->navigate("/conversations/{$conversation->id}")
+            ->assertPresent("[data-test='conversation-pattern'][data-pattern='{$pattern}']")
+            ->assertSee('Basile')
+            ->assertSee('Vous')
+            ->assertSee('Hier')
+            ->assertSee('Aujourd’hui')
+            ->assertCount('[data-test="conversation-day-separator"]', 2)
+            ->assertScript('document.documentElement.scrollWidth <= window.innerWidth', true)
+            ->assertNoJavaScriptErrors();
+    }
 });
 
 test('an archived conversation remains readable without a composer', function () {

@@ -91,7 +91,8 @@ Il sert de preuve pour la matrice de statut du futur PRD.
 | Profil et avatar de catalogue obligatoire | Implémenté | `app/Models/Profile.php`, `app/Models/Avatar.php`, contrôleurs de profil et d’avatars, `tests/Feature/MemberProfileTest.php`, `tests/Feature/Admin/ManageAvatarCatalogTest.php` |
 | Catalogue d’intérêts et limite configurable | Implémenté | migrations des intérêts, contrôleurs `Admin/Interest*`, `tests/Feature/Admin/ManageInterestCatalogTest.php` |
 | Découverte, swipes et match réciproque | Implémenté | `app/Actions/CreateSwipe.php`, `app/Services/DiscoveryService.php`, routes sociales et tests `CreateSwipe*`/`Discovery*` |
-| Conversations, messagerie temps réel et lecture | Implémenté | migrations `conversations`/`messages`, `app/Actions/SendMessage.php`, événements de messages, contrôleurs et tests de conversation/message |
+| Conversations, messagerie temps réel, lecture et ambiance (issue 185) | Implémenté | migrations `conversations`/`messages`, `app/Actions/SendMessage.php`, `MessageTimeline.vue`, `ConversationPattern.vue`, événements et tests de conversation/message |
+| Thèmes saisonniers Halloween et Noël (issue 189) | Implémenté | migration/modèle `seasonal_themes`, `ResolveActiveSeasonalTheme`, routes et page admin, partage Inertia, palettes, décorations Lucide et tests dédiés |
 | Blocage immédiat d’un membre | Implémenté | `app/Actions/BlockUser.php`, `app/Actions/UnblockUser.php`, routes de blocage et tests `Block*`/`MemberBlockingTest.php` |
 | Tutoriel produit obligatoire | Implémenté | migrations `product_onboarding`, action de progression, contrôleurs/pages et tests `ProductOnboarding*`/`OnboardingTest.php` |
 | Français et anglais | Implémenté | `app/Http/Middleware/SetLocale.php`, catalogues `lang/`, composable de traduction et tests `Localization/*` |
@@ -100,8 +101,29 @@ Il sert de preuve pour la matrice de statut du futur PRD.
 | Photo personnelle facultative | Planifié | aucun champ de photo dans les migrations de profil et aucun flux HTTP de téléversement membre |
 | Export des données du compte | Implémenté | téléchargement JSON direct et authentifié, sans conservation côté serveur |
 | Masquage du profil | Implémenté | `profiles.visibility`, contrôleurs de profil, filtrage de découverte et tests de profil/découverte |
-| Suppression différée sous 30 jours | Partiel | `AccountController::destroy()` et le réglage existent, mais suppriment immédiatement l’utilisateur ; aucun job de purge différée n’est présent |
-| Signalement et modération | Planifié après le MVP | aucune entité, route, interface ou suite de tests dédiée ; le blocage immédiat existe séparément |
+| Suppression différée sous 30 jours | Implémenté | `AccountController::destroy()` désactive immédiatement le compte et programme `PurgeDeletedUser`, qui vérifie encore l’échéance avant la purge ; tests de contrôle des données et de cycle de vie partenaire |
+| Signalement et modération des profils ou messages sociaux | Planifié après le MVP | aucune entité, route, interface ou suite de tests de signalement social ; le blocage immédiat existe séparément, tandis que la modération des fiches et annonces partenaires est livrée et détaillée ci-dessous |
+
+## Complément vérifié — espace partenaire, issue 199
+
+Ce complément ne réécrit pas l’inventaire historique de l’issue 89. Les contrats
+courants restent dans les six références canoniques ; les preuves ci-dessous
+correspondent aux migrations, routes, composants et tests effectivement livrés.
+
+| Capacité | Preuves dans le dépôt | Référence courante |
+| --- | --- | --- |
+| Rôles cumulables, confirmation et audit | `SyncManageableUserRoles`, `RoleAudit`, `tests/Feature/Admin/ManageMemberRolesTest.php`, `tests/Browser/AdminTest.php` | PRD, modèle, sécurité |
+| Fiche bilingue, image privée et approbation | `SavePartnerProfileDraft`, `TransformPartnerImage`, contrôleurs `Partner/Profile*` et `Admin/PartnerProfile*`, `tests/Feature/Partner/PartnerProfileTest.php`, `tests/Browser/PartnerTest.php` | PRD, modèle, architecture, design |
+| Annonces modérées et envois idempotents | Actions `StartPartnerAnnouncement`, `PreparePartnerAnnouncementAudience`, `DeliverPartnerAnnouncement`, `BroadcastPartnerAnnouncement`, `FinalizePartnerAnnouncement`, jobs partenaires et tests `tests/Feature/Partner/` | PRD, modèle, architecture |
+| Opt-in, lecture, retrait et clics | `UpdatePartnerNotificationPreference`, `RecordPartnerAnnouncementRead`, `DismissPartnerAnnouncement`, `RecordPartnerAnnouncementClick`, tests Feature/Browser partenaires | PRD, sécurité |
+| Statistiques agrégées et contrôles admin | `PartnerAnnouncementStatisticsData`, `AnnouncementStatisticsTable.vue`, `tests/Feature/Partner/PartnerStatisticsTest.php`, `tests/Browser/PartnerTest.php` | PRD, architecture, design |
+| Six cartes publiques FR/EN au maximum | `PublicLandingController`, `resources/views/welcome.blade.php`, `tests/Browser/WelcomeAndRegistrationTest.php` | PRD, design |
+| Export, suppression et rétention | `BuildUserDataExport`, `DeactivateDeletedPartner`, `PurgeDeletedPartnerData`, commande `partners:purge-expired-records`, tests de cycle de vie partenaire | Modèle, architecture, sécurité |
+
+La conception et le plan approuvés de l’issue 199 restent des traces historiques :
+`docs/superpowers/specs/2026-09-14-partner-space-design.md` et
+`docs/superpowers/plans/2026-09-14-partner-space.md`. Aucun ciblage, paiement,
+e-mail ou push partenaire n’est décrit comme livré.
 
 ## Règle de maintenance
 

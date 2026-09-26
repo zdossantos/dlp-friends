@@ -2,11 +2,16 @@
 
 namespace Tests\Feature\Settings;
 
+use App\Actions\CreateSocialUser;
 use App\Actions\RequestAccountDeletion;
+use App\Data\PendingSocialIdentity;
+use App\Enums\ProductOnboardingStatus;
+use App\Enums\SocialProvider;
 use App\Enums\UserStatus;
 use App\Jobs\PurgeDeletedUser;
 use App\Models\Event;
 use App\Models\EventRegistration;
+use App\Models\Profile;
 use App\Models\SocialAccount;
 use App\Models\User;
 use Carbon\CarbonImmutable;
@@ -58,6 +63,85 @@ class AccountDeletionTest extends TestCase
         $this->assertFalse($user->socialAccounts()->exists());
         $this->assertNotNull($organizedEvent->fresh()->cancelled_at);
         Queue::assertPushed(PurgeDeletedUser::class, fn (PurgeDeletedUser $job): bool => $job->delay?->equalTo(now()->addDays(30)) === true);
+    }
+
+    public function test_social_only_member_can_confirm_deletion_without_a_password(): void
+    {
+        CarbonImmutable::setTestNow('2026-09-08 12:00:00');
+        Queue::fake();
+        $user = app(CreateSocialUser::class)->execute(new PendingSocialIdentity(
+            SocialProvider::Google,
+            'google-primary',
+            'social@example.com',
+        ), '2000-01-01');
+        Profile::factory()->complete()->for($user)->create();
+        $user->productOnboarding()->create(['status' => ProductOnboardingStatus::Completed]);
+        SocialAccount::factory()->for($user)->create([
+            'provider' => SocialProvider::Google,
+            'provider_user_id' => 'google-secondary',
+        ]);
+        DB::table('sessions')->insert([
+            'id' => 'social-session',
+            'user_id' => $user->id,
+            'ip_address' => null,
+            'user_agent' => null,
+            'payload' => '',
+            'last_activity' => now()->timestamp,
+        ]);
+
+        $this->actingAs($user)
+            ->delete(route('account.destroy'), ['confirm_deletion' => '1'])
+            ->assertSessionHasNoErrors()
+            ->assertRedirect(route('home'));
+
+        $fresh = $user->fresh();
+        $this->assertGuest();
+        $this->assertNull($fresh->password);
+        $this->assertSame(UserStatus::PendingDeletion, $fresh->status);
+        $this->assertFalse(DB::table('sessions')->where('user_id', $user->id)->exists());
+        $this->assertFalse($user->socialAccounts()->exists());
+        Queue::assertPushed(PurgeDeletedUser::class, 1);
+    }
+
+    public function test_password_member_cannot_bypass_password_confirmation(): void
+    {
+        Queue::fake();
+        $user = User::factory()->withProfile()->create();
+        SocialAccount::factory()->for($user)->create();
+
+        $this->actingAs($user)
+            ->from(route('account.edit'))
+            ->delete(route('account.destroy'), ['confirm_deletion' => '1'])
+            ->assertSessionHasErrors('password')
+            ->assertRedirect(route('account.edit'));
+
+        $this->assertAuthenticatedAs($user);
+        $this->assertSame(UserStatus::Active, $user->fresh()->status);
+        $this->assertTrue($user->socialAccounts()->exists());
+        Queue::assertNothingPushed();
+    }
+
+    public function test_social_deletion_without_explicit_confirmation_has_no_effect(): void
+    {
+        Queue::fake();
+        $user = app(CreateSocialUser::class)->execute(new PendingSocialIdentity(
+            SocialProvider::Google,
+            'google-unconfirmed',
+            'unconfirmed@example.com',
+        ), '2000-01-01');
+        Profile::factory()->complete()->for($user)->create();
+        $user->productOnboarding()->create(['status' => ProductOnboardingStatus::Completed]);
+
+        $this->actingAs($user)
+            ->from(route('account.edit'))
+            ->delete(route('account.destroy'))
+            ->assertSessionHasErrors('confirm_deletion')
+            ->assertRedirect(route('account.edit'));
+
+        $this->assertAuthenticatedAs($user);
+        $this->assertSame(UserStatus::Active, $user->fresh()->status);
+        $this->assertTrue($user->socialAccounts()->exists());
+        Queue::assertNothingPushed();
     }
 
     public function test_repeated_deletion_request_keeps_the_original_deadline(): void

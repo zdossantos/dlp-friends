@@ -84,6 +84,24 @@ class UserFactory extends Factory
         });
     }
 
+    public function partner(): static
+    {
+        return $this->afterCreating(function (User $user): void {
+            $role = Role::query()->where('name', RoleName::Partner)->firstOrFail();
+
+            $user->roles()->syncWithoutDetaching($role);
+        });
+    }
+
+    public function partnerOnly(): static
+    {
+        return $this->afterCreating(function (User $user): void {
+            $role = Role::query()->where('name', RoleName::Partner)->firstOrFail();
+
+            $user->roles()->sync([$role->id]);
+        });
+    }
+
     /**
      * Indicate that the model has two-factor authentication configured.
      */

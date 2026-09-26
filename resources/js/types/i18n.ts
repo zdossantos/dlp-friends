@@ -15,6 +15,7 @@ export type TranslationMessages = {
     events: TranslationTree;
     blocking: TranslationTree;
     administration: TranslationTree;
+    partners: TranslationTree;
 };
 
 export type I18n = {

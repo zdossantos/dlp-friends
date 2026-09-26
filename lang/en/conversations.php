@@ -11,6 +11,7 @@ return [
         'list_label' => 'Chats',
         'archived' => 'Archived',
         'new_exchange' => 'New chat',
+        'start_exchange' => 'Start the conversation.',
         'current_user_prefix' => 'You: ',
         'unread_message' => ':count unread message',
         'unread_messages' => ':count unread messages',
@@ -39,6 +40,10 @@ return [
         'timeline' => 'Message history',
         'received' => 'New message received',
         'loading_previous' => 'Loading previous messages…',
+        'empty' => 'Start your friendly chat with a first message.',
+        'you' => 'You',
+        'today' => 'Today',
+        'yesterday' => 'Yesterday',
     ],
     'realtime' => [
         'unavailable' => 'Live updates are unavailable. Your messages remain visible.',

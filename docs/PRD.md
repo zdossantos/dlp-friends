@@ -7,7 +7,7 @@ vision, la cible du MVP, les règles métier, les critères de succès et les
 évolutions envisagées. Il distingue volontairement le produit attendu de ce
 qui est déjà livré.
 
-La matrice d’implémentation est un instantané du dépôt au 30 août 2026. Elle
+La matrice d’implémentation est mise à jour au fil des capacités livrées. Elle
 doit être mise à jour dès qu’une capacité change de statut. Les détails de
 stockage, d’architecture, de sécurité et d’interface appartiennent aux
 références spécialisées liées en fin de document.
@@ -114,6 +114,8 @@ Paris.
 - Chaque match possède une conversation privée textuelle.
 - Les messages sont limités à 2 000 caractères. Pièces jointes, GIF, réactions,
   édition et suppression de message sont hors MVP.
+- Le fil identifie visiblement l’expéditeur, sépare les jours dans le fuseau de
+  l’application et utilise un fond décoratif Lucide adapté au thème saisonnier.
 - Seuls les deux membres du match peuvent lire et envoyer des messages.
 - Les compteurs associés à une liste de conversations ignorent les échanges
   dont l’autre profil est masqué. Le masquage ne désactive ni l’accès direct,
@@ -123,7 +125,7 @@ Paris.
   inaccessible aux deux membres, sans notifier explicitement la personne
   bloquée.
 - Un administrateur ne peut pas être bloqué.
-- Le signalement et les outils de modération ne font pas partie du MVP.
+- Le signalement et la modération des profils/messages sociaux restent hors MVP.
 
 ### Événements amicaux et notifications
 
@@ -187,6 +189,51 @@ Paris.
 - Les profils administrateurs sont identifiés dans l’application par le badge
   « Administrateur » et une bordure dorée sur leurs cartes et pages profil.
 
+### Espace partenaire (issue 199)
+
+- Les rôles `user`, `partner` et `admin` sont cumulables. L’administration peut
+  attribuer ou retirer `user` et `partner` depuis la liste des membres après
+  confirmation, avec audit ; `admin` reste attribué par la console. Un compte
+  partenaire seul n’accède ni aux fonctions sociales ni à l’administration et
+  arrive directement dans son espace après authentification. Un compte admin
+  sans rôle membre arrive directement dans l’administration.
+- Un compte cumulant les rôles membre et partenaire peut changer d’espace
+  depuis un bouton dédié ajouté à la navigation basse, sans remplacer l’accès
+  direct au profil membre. Le sélecteur indique l’espace courant, sans modifier
+  ni mémoriser les rôles du compte.
+- L’administration regroupe les fiches, les annonces et les statistiques dans
+  un sous-menu « Partenaires » distinct de l’espace de travail du partenaire.
+  Les soumissions de fiche et d’annonce créent aussi une notification persistante
+  pour chaque administrateur actif, dans la catégorie « Administration », avec
+  un accès direct à la file de validation concernée.
+- Le partenaire enregistre une fiche avec noms et descriptions obligatoires
+  français/anglais et une image contrôlée. L’enregistrement modifie le brouillon,
+  pas la version publique ; la soumission fige une révision. L’administrateur
+  approuve ou refuse avec motif. Seule la version approuvée est publiée.
+- Les accueils SSR `/fr` et `/en` affichent au plus six fiches publiées, dans
+  l’ordre manuel administrateur. La section disparaît lorsqu’il n’y en a aucune.
+- Les annonces suivent une modération distincte : brouillon, attente,
+  approbation ou refus, puis envoi et état envoyé ; une annulation est possible
+  avant le début de l’envoi. Le texte et le lien HTTPS sont validés côté serveur.
+  Une annonce soumise n’est plus éditable ; après un refus, sa nouvelle version
+  repart en brouillon et doit être approuvée.
+- L’approbation administrative lance immédiatement l’envoi de l’annonce. La
+  relance manuelle reste disponible pour reprendre un traitement interrompu.
+  Le délai entre deux envois d’un même partenaire vaut 30 jours par défaut et
+  est configurable. La reprise d’une livraison échouée ne renvoie pas les
+  notifications déjà livrées ou ignorées.
+- Les annonces sont exclusivement des notifications dans l’application. Leur
+  réception est activée par défaut et le membre peut se désinscrire à tout moment,
+  lire le contenu figé reçu, ouvrir le lien et retirer une annonce avec
+  confirmation. Le partenaire ne choisit aucun segment ni destinataire.
+- Les statistiques exposent uniquement les volumes et taux agrégés : livraisons,
+  lectures, retraits, clics uniques et totaux ; l’administrateur dispose en plus
+  des compteurs opérationnels et de la relance. Aucune liste de destinataires
+  ni histoire individuelle n’est accessible au partenaire ou à l’administrateur.
+- Export, suppression, historique reçu et conservation de deux ans des données
+  historiques sont décrits dans [`security-privacy.md`](security-privacy.md).
+  Aucun envoi e-mail/push partenaire, paiement ou système publicitaire n’est livré.
+
 ### Contrôle des données
 
 - Le membre peut modifier son profil et ses intérêts actifs.
@@ -203,6 +250,10 @@ Paris.
 - Le français est la langue par défaut et de repli ; l’anglais est également
   pris en charge.
 - Les thèmes clair, sombre et système sont persistés.
+- Les ambiances saisonnières `halloween` et `christmas` complètent cette
+  préférence sans la remplacer. Un administrateur peut les planifier ou les
+  activer manuellement ; l’activation manuelle reste prioritaire jusqu’à sa
+  désactivation explicite.
 - Les parcours sont responsive, utilisables au clavier et compréhensibles sans
   dépendre uniquement de la couleur.
 - Le langage visuel et les règles de composants sont définis dans
@@ -222,9 +273,13 @@ Paris.
 | Centre de notifications persistant | **Implémenté** | Matches, messages et événements sont regroupés, filtrables et ouvrent leur élément cible. |
 | Tutoriel produit obligatoire | **Implémenté** | Progression persistée et statistiques admin sont livrées. |
 | Gestion administrative des membres | **Implémenté** | Recherche et compteurs, suppression confirmée, échange privé admin/membre et identification visuelle des admins sont livrés sans accès au contenu des messages. |
+| Espace partenaire et annonces modérées (issue 199) | **Implémenté** | Rôles cumulables et audités, fiches bilingues révisées, six cartes SSR au maximum, envoi automatique après approbation, préférence membre révocable activée par défaut, interactions et statistiques agrégées, export/suppression/rétention et tests sont livrés. |
 | Français et anglais | **Implémenté** | Résolution de locale et catalogues backend/frontend sont présents. |
 | Univers éditorial | **Implémenté** | Tutoiement, vocabulaire canonique et catalogues par feature sont contrôlés automatiquement. |
 | Thèmes clair, sombre et système | **Implémenté** | Préférence persistée et interface correspondante sont présentes. |
+| Ambiances saisonnières Halloween et Noël (issue 189) | **Implémenté** | Planification administrative, priorité manuelle, palettes claire/sombre, décorations Lucide et célébrations de match dédiées sont livrées. |
+| Ambiance enrichie des conversations (issue 185) | **Implémenté** | Expéditeurs, séparateurs de jour locaux, bulles distinctes et fonds Lucide standard/Halloween/Noël sont couverts à partir de 320 px. |
+| Logo coloré et favicon multi-support (issue 209) | **Implémenté** | Variantes de logo clair/sombre et favicon arrondi SVG, ICO 16/32/48 px et Apple Touch Icon 180 px sont harmonisés sur les surfaces publiques, membres et légales. |
 | Accueil public et référencement bilingue | **Implémenté** | Landing pages françaises et anglaises, métadonnées SEO, données structurées, sitemap public et exclusion des parcours privés sont livrés. |
 | Explication publique du classement et du matching | **Implémenté** | Pages françaises et anglaises indexables, liées depuis l’accueil, décrivant l’éligibilité, les priorités, le bonus de fréquence, le départage et la réciprocité. |
 | Mesure d’audience et suivi d’indexation | **Implémenté** | GA4 ne charge qu’après consentement explicite, avec refus et retrait accessibles, choix conservé six mois, Consent Mode basic et chemins normalisés ; Search Console s’appuie sur une validation configurable, le sitemap et robots.txt. |
@@ -232,8 +287,8 @@ Paris.
 | Connexion Google | **Implémenté** | Socialite fournit le parcours Google, avec liens uniques sans stockage de jetons, contrôle de majorité et tests automatisés. |
 | Photo personnelle facultative | **Planifié** | Aucun flux de téléversement membre n’existe. |
 | Export des données | **Implémenté** | Les réglages génèrent à la demande un export JSON authentifié, téléchargé directement sans fichier conservé côté serveur. |
-| Suppression différée sous 30 jours | **Implémenté** | L’accès, les sessions et les liens sociaux sont révoqués immédiatement ; un job gardé purge les données après 30 jours et le scheduler récupère les échéances manquées. |
-| Signalement et console de modération | **Planifié après le MVP** | Le blocage existe ; aucun signalement ou workflow de modération n’est livré. |
+| Suppression différée sous 30 jours | **Implémenté** | La confirmation exige le mot de passe lorsqu’il est utilisable et une acceptation explicite pour un compte exclusivement social. L’accès, les sessions et les liens sociaux sont révoqués immédiatement ; un job gardé purge les données après 30 jours et le scheduler récupère les échéances manquées. |
+| Signalement et modération des profils/messages sociaux | **Planifié après le MVP** | Le blocage existe ; la modération partenaire est livrée séparément, sans signalement social. |
 
 Les preuves détaillées de cet instantané sont consignées dans
 [`documentation-inventory.md`](documentation-inventory.md).
@@ -245,7 +300,8 @@ Les preuves détaillées de cet instantané sont consignées dans
 - Recherche par ville, distance ou tranche d’âge.
 - Limites quotidiennes, annulation de swipe et filtres avancés.
 - Signalement, équipe de modération et outils de modération avancés.
-- Paiement, abonnement et publicité.
+- Paiement, abonnement et moteur publicitaire ; les annonces partenaires
+  modérées avec désinscription membre constituent le seul parcours partenaire livré.
 
 ## Évolutions envisagées
 

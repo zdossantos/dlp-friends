@@ -95,6 +95,7 @@ final class ConversationController extends Controller
                 'presence' => $presence->forViewer($participant),
             ],
             'currentUserId' => $member->id,
+            'timezone' => config('app.timezone'),
             'messages' => Inertia::scroll($messages),
         ]);
     }

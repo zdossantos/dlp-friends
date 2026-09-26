@@ -61,6 +61,7 @@ class DashboardTest extends TestCase
                         'id',
                         'email',
                         'email_verified_at',
+                        'has_usable_password',
                         'locale',
                         'profile',
                         'roles',
@@ -97,13 +98,13 @@ class DashboardTest extends TestCase
                 ->where('stats.completedProfiles', 1));
     }
 
-    public function test_incomplete_users_are_redirected_to_profile_onboarding(): void
+    public function test_incomplete_members_cannot_visit_the_admin_dashboard(): void
     {
         $user = User::factory()->create();
 
         $this->actingAs($user)
             ->get(route('dashboard'))
-            ->assertRedirect(route('member-profile.create'));
+            ->assertForbidden();
     }
 
     public function test_unverified_users_are_redirected_to_the_verification_notice(): void

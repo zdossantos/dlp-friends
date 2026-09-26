@@ -1,11 +1,15 @@
 <?php
 
 use App\Enums\ProductOnboardingStatus;
+use App\Enums\RoleName;
+use App\Enums\UserStatus;
 use App\Http\Middleware\EnsureProfileIsComplete;
 use App\Models\Avatar;
 use App\Models\Interest;
 use App\Models\InterestSetting;
 use App\Models\ProductOnboardingSetting;
+use App\Models\Role;
+use App\Models\SocialAccount;
 use App\Models\User;
 use Illuminate\Support\Facades\Storage;
 
@@ -504,6 +508,33 @@ test('account deletion explains immediate access loss and the purge deadline in 
         ->assertSee('within 30 days');
 });
 
+test('social only member can cancel then explicitly confirm account deletion', function () {
+    $user = User::factory()->withProfile()->create([
+        'locale' => 'fr',
+        'password' => null,
+    ]);
+    SocialAccount::factory()->for($user)->create();
+    $this->actingAs($user);
+
+    $page = visit('/settings/account')
+        ->on()->mobile()
+        ->click('[data-test="delete-user-button"]')
+        ->assertPresent('[data-slot="drawer-content"]')
+        ->assertSee('Confirme que tu comprends')
+        ->assertPresent('#confirm_deletion[data-state="unchecked"]')
+        ->click('[data-test="cancel-delete-user-button"]')
+        ->assertMissing('[data-slot="drawer-content"]')
+        ->click('[data-test="delete-user-button"]')
+        ->click('#confirm_deletion')
+        ->assertAttribute('#confirm_deletion', 'data-state', 'checked')
+        ->click('[data-test="confirm-delete-user-button"]')
+        ->assertPathIsNot('/settings/account');
+
+    expect($user->fresh()->status)->toBe(UserStatus::PendingDeletion);
+    expect($user->socialAccounts()->exists())->toBeFalse();
+    $page->assertNoJavaScriptErrors();
+});
+
 test('member layout fixes navigation above reserved content space', function () {
     $user = User::factory()->withProfile()->create();
     $this->actingAs($user);
@@ -541,4 +572,121 @@ test('logging out removes access to the private profile', function () {
         ->assertScript("localStorage.getItem('appearance')", 'dark');
 
     $this->assertGuest();
+});
+
+test('partner notification consent is explicit accessible and bilingual', function () {
+    $french = User::factory()->withProfile()->create(['locale' => 'fr']);
+    $this->actingAs($french);
+
+    visit('/settings/notifications')
+        ->on()->mobile()
+        ->assertSee('Notifications partenaires')
+        ->assertSee('Cette préférence est activée par défaut.')
+        ->assertAttribute(
+            '[data-test="partner-announcements-switch"]',
+            'role',
+            'switch',
+        )
+        ->assertAttribute(
+            '[data-test="partner-announcements-switch"]',
+            'aria-checked',
+            'true',
+        )
+        ->click('[data-test="partner-announcements-switch"]')
+        ->click('[data-test="save-notification-preferences"]')
+        ->assertSee('Tes préférences de notifications ont été enregistrées.')
+        ->assertNoJavaScriptErrors();
+
+    expect($french->partnerNotificationPreference()->value('enabled'))->toBeFalse();
+
+    $english = User::factory()->withProfile()->create(['locale' => 'en']);
+    $this->actingAs($english);
+
+    visit('/settings/notifications')
+        ->assertSee('Partner notifications')
+        ->assertSee('This preference is enabled by default.')
+        ->assertSee('Receive partner announcements')
+        ->assertNoJavaScriptErrors();
+});
+
+test('partner mobile navigation exposes only implemented partner destinations', function () {
+    $partner = User::factory()->partnerOnly()->create();
+    $this->actingAs($partner);
+
+    visit('/partner/profile')
+        ->on()->mobile()
+        ->assertCount('[data-test="member-bottom-navigation"] a', 4)
+        ->assertPresent('[aria-label="Profil partenaire"][aria-current="page"]')
+        ->assertPresent('[aria-label="Annonces partenaire"]')
+        ->assertPresent('[aria-label="Statistiques partenaire"]')
+        ->assertPresent('[aria-label="Notifications"]')
+        ->assertNoJavaScriptErrors();
+
+    visit('/partner/announcements')
+        ->on()->mobile()
+        ->assertCount('[data-test="member-bottom-navigation"] a', 4)
+        ->assertPresent('[aria-label="Annonces partenaire"][aria-current="page"]')
+        ->assertNoJavaScriptErrors();
+});
+
+test('a member partner switches workspaces from the bottom navigation', function () {
+    $memberPartner = User::factory()->withProfile()->partner()->create();
+    $this->actingAs($memberPartner);
+
+    $page = visit('/discover')
+        ->on()->mobile()
+        ->assertCount('[data-test="member-bottom-navigation"] a', 5)
+        ->assertPresent('[data-test="workspace-switcher-trigger"]')
+        ->assertPresent('[aria-label="Profil"]')
+        ->click('[data-test="workspace-switcher-trigger"]')
+        ->assertSee('Changer d’espace')
+        ->assertSee('Espace membre')
+        ->assertSee('Espace partenaire')
+        ->assertDontSeeLink('Profil membre')
+        ->assertAttribute(
+            '[data-test="workspace-member-link"]',
+            'aria-current',
+            'page',
+        )
+        ->click('[data-test="workspace-partner-link"]')
+        ->assertPathIs('/partner/profile')
+        ->assertCount('[data-test="member-bottom-navigation"] a', 4)
+        ->assertPresent('[data-test="workspace-switcher-trigger"]')
+        ->assertNoJavaScriptErrors();
+
+    $page->click('[data-test="workspace-switcher-trigger"]')
+        ->assertAttribute(
+            '[data-test="workspace-partner-link"]',
+            'aria-current',
+            'page',
+        )
+        ->click('[data-test="workspace-member-link"]')
+        ->assertPathIs('/discover')
+        ->assertNoJavaScriptErrors();
+});
+
+test('partner sidebar navigation disappears on the first render after role removal', function () {
+    $admin = User::factory()->withProfile()->admin()->partner()->create();
+    $admin->profile?->update(['display_name' => 'Admin partenaire']);
+    $this->actingAs($admin);
+
+    $page = visit('/dashboard')
+        ->assertSee('Espace partenaire')
+        ->assertSeeLink('Profil partenaire')
+        ->assertSeeLink('Annonces partenaire')
+        ->assertPresent('a[href="/partner/statistics"]')
+        ->click('[data-test="admin-partners-menu-trigger"]')
+        ->assertPresent('a[href="/admin/partner-statistics"]');
+
+    $partnerRole = Role::query()->where('name', RoleName::Partner)->firstOrFail();
+    $admin->roles()->detach($partnerRole);
+
+    $page->navigate('/dashboard')
+        ->assertDontSee('Espace partenaire')
+        ->assertDontSeeLink('Profil partenaire')
+        ->assertDontSeeLink('Annonces partenaire')
+        ->assertMissing('a[href="/partner/statistics"]')
+        ->click('[data-test="admin-partners-menu-trigger"]')
+        ->assertPresent('a[href="/admin/partner-statistics"]')
+        ->assertNoJavaScriptErrors();
 });

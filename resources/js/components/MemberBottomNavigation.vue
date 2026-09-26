@@ -1,31 +1,73 @@
 <script setup lang="ts">
-import { Link, router } from '@inertiajs/vue3';
+import type { InertiaLinkProps } from '@inertiajs/vue3';
+import { Link, router, usePage } from '@inertiajs/vue3';
 import {
+    ArrowLeftRight,
     Bell,
+    Building2,
     CalendarDays,
+    ChartBar,
+    Check,
+    Megaphone,
     MessageCircle,
     Sparkles,
     UserRound,
 } from '@lucide/vue';
+import type { LucideIcon } from '@lucide/vue';
 import { computed, onBeforeUnmount, ref } from 'vue';
+import {
+    Sheet,
+    SheetClose,
+    SheetContent,
+    SheetDescription,
+    SheetHeader,
+    SheetTitle,
+    SheetTrigger,
+} from '@/components/ui/sheet';
 import { useCurrentUrl } from '@/composables/useCurrentUrl';
 import { useMemberNavigationVisibility } from '@/composables/useMemberNavigationVisibility';
 import { useMemberRealtimeContext } from '@/composables/useMemberRealtimeNotifications';
 import { useTranslations } from '@/composables/useTranslations';
+import { toUrl } from '@/lib/utils';
 import { index as conversations } from '@/routes/conversations';
 import { index as discovery } from '@/routes/discovery';
 import { index as events } from '@/routes/events';
 import { show as showProfile } from '@/routes/member-profile';
 import { index as notifications } from '@/routes/notifications';
+import { index as partnerAnnouncements } from '@/routes/partner/announcements';
+import { index as partnerNotifications } from '@/routes/partner/notifications';
+import { edit as editPartnerProfile } from '@/routes/partner/profile';
+import { index as partnerStatistics } from '@/routes/partner/statistics';
 
-const { isCurrentOrParentUrl } = useCurrentUrl();
+const { currentUrl, isCurrentOrParentUrl } = useCurrentUrl();
 const { t } = useTranslations();
 const { unreadNotificationsCount } = useMemberRealtimeContext();
+const page = usePage();
 
 const shouldShow = useMemberNavigationVisibility();
 const pendingPath = ref<string | null>(null);
+const hasPartnerRole = computed(() =>
+    page.props.auth.user.roles.some((role) => role.name === 'partner'),
+);
+const hasMemberRole = computed(() =>
+    page.props.auth.user.roles.some((role) => role.name === 'user'),
+);
+const canSwitchWorkspace = computed(
+    () => hasMemberRole.value && hasPartnerRole.value,
+);
+const isPartnerContext = computed(() =>
+    currentUrl.value.startsWith('/partner/'),
+);
 
-const items = computed(() => [
+type BottomNavigationItem = {
+    label: string;
+    href: NonNullable<InertiaLinkProps['href']>;
+    icon: LucideIcon;
+    activeParents?: string[];
+    unreadCount?: number;
+};
+
+const memberItems = computed<BottomNavigationItem[]>(() => [
     {
         label: t('discovery.bottom_navigation'),
         href: discovery(),
@@ -58,9 +100,40 @@ const items = computed(() => [
     },
 ]);
 
-type NavigationItem = (typeof items.value)[number];
+const partnerItems = computed<BottomNavigationItem[]>(() => [
+    {
+        label: t('partners.navigation.profile'),
+        href: editPartnerProfile(),
+        icon: Building2,
+    },
+    {
+        label: t('partners.navigation.announcements'),
+        href: partnerAnnouncements(),
+        icon: Megaphone,
+        activeParents: ['/partner/announcements'],
+    },
+    {
+        label: t('partners.navigation.statistics'),
+        href: partnerStatistics(),
+        icon: ChartBar,
+        activeParents: ['/partner/statistics'],
+    },
+    {
+        label: t('notifications.navigation'),
+        href: partnerNotifications(),
+        icon: Bell,
+        activeParents: ['/partner/notifications'],
+        unreadCount: unreadNotificationsCount.value,
+    },
+]);
 
-function isActive(item: NavigationItem): boolean {
+const items = computed<BottomNavigationItem[]>(() =>
+    isPartnerContext.value && hasPartnerRole.value
+        ? partnerItems.value
+        : memberItems.value,
+);
+
+function isActive(item: BottomNavigationItem): boolean {
     return (
         isCurrentOrParentUrl(item.href) ||
         item.activeParents?.some((parent) => isCurrentOrParentUrl(parent)) ===
@@ -68,8 +141,8 @@ function isActive(item: NavigationItem): boolean {
     );
 }
 
-function itemPath(item: NavigationItem): string {
-    return new URL(item.href.url, window.location.origin).pathname;
+function itemPath(item: BottomNavigationItem): string {
+    return new URL(toUrl(item.href), window.location.origin).pathname;
 }
 
 const stopStartListener = router.on('start', (event) => {
@@ -130,6 +203,80 @@ onBeforeUnmount(() => {
                     {{ item.unreadCount > 99 ? '99+' : item.unreadCount }}
                 </span>
             </Link>
+            <Sheet v-if="canSwitchWorkspace">
+                <SheetTrigger :as-child="true">
+                    <button
+                        type="button"
+                        data-test="workspace-switcher-trigger"
+                        :aria-label="t('common.workspace_switcher.trigger')"
+                        class="relative grid size-12 place-items-center rounded-2xl text-muted-foreground transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+                    >
+                        <ArrowLeftRight class="size-6" aria-hidden="true" />
+                    </button>
+                </SheetTrigger>
+                <SheetContent
+                    side="bottom"
+                    class="rounded-t-3xl px-4 pt-2 [padding-bottom:max(1.5rem,env(safe-area-inset-bottom))]"
+                >
+                    <SheetHeader class="px-0 text-left">
+                        <SheetTitle>
+                            {{ t('common.workspace_switcher.title') }}
+                        </SheetTitle>
+                        <SheetDescription>
+                            {{ t('common.workspace_switcher.description') }}
+                        </SheetDescription>
+                    </SheetHeader>
+
+                    <div class="grid gap-2">
+                        <SheetClose :as-child="true">
+                            <Link
+                                :href="discovery()"
+                                data-test="workspace-member-link"
+                                :aria-current="
+                                    !isPartnerContext ? 'page' : undefined
+                                "
+                                class="flex items-center gap-3 rounded-2xl border border-border p-4 transition-colors hover:bg-secondary focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+                            >
+                                <UserRound
+                                    class="size-5 shrink-0"
+                                    aria-hidden="true"
+                                />
+                                <span class="flex-1 font-medium">
+                                    {{ t('common.workspace_switcher.member') }}
+                                </span>
+                                <Check
+                                    v-if="!isPartnerContext"
+                                    class="size-5 text-primary"
+                                    aria-hidden="true"
+                                />
+                            </Link>
+                        </SheetClose>
+                        <SheetClose :as-child="true">
+                            <Link
+                                :href="editPartnerProfile()"
+                                data-test="workspace-partner-link"
+                                :aria-current="
+                                    isPartnerContext ? 'page' : undefined
+                                "
+                                class="flex items-center gap-3 rounded-2xl border border-border p-4 transition-colors hover:bg-secondary focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+                            >
+                                <Building2
+                                    class="size-5 shrink-0"
+                                    aria-hidden="true"
+                                />
+                                <span class="flex-1 font-medium">
+                                    {{ t('common.workspace_switcher.partner') }}
+                                </span>
+                                <Check
+                                    v-if="isPartnerContext"
+                                    class="size-5 text-primary"
+                                    aria-hidden="true"
+                                />
+                            </Link>
+                        </SheetClose>
+                    </div>
+                </SheetContent>
+            </Sheet>
         </nav>
     </div>
 </template>

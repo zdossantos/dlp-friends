@@ -9,10 +9,11 @@ export type User = {
     profile: Profile | null;
     roles: Array<{ name: RoleName }>;
     two_factor_enabled?: boolean;
+    has_usable_password: boolean;
     [key: string]: unknown;
 };
 
-export type RoleName = 'user' | 'admin';
+export type RoleName = 'user' | 'admin' | 'partner';
 export type VisitFrequency = 'rarely' | 'sometimes' | 'often' | 'very_often';
 export type ProfileVisibility = 'visible' | 'hidden';
 

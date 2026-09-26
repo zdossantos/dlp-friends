@@ -1,6 +1,7 @@
 import { createInertiaApp } from '@inertiajs/vue3';
 import { configureEcho } from '@laravel/echo-vue';
 import { initializeTheme } from '@/composables/useAppearance';
+import { initializeSeasonalTheme } from '@/composables/useSeasonalTheme';
 import { resolvePageLayout } from '@/layouts/resolvePageLayout';
 import { initializeAnalytics } from '@/lib/analytics';
 import { initializeFlashToast } from '@/lib/flashToast';
@@ -37,6 +38,7 @@ void initializeAnalytics(inertiaReady);
 
 // This will set light / dark mode on page load...
 initializeTheme();
+initializeSeasonalTheme();
 
 // This will listen for flash toast data from the server...
 initializeFlashToast();

@@ -2,20 +2,27 @@
 import { Head, Link, router } from '@inertiajs/vue3';
 import NotificationFilters from '@/components/notifications/NotificationFilters.vue';
 import NotificationItem from '@/components/notifications/NotificationItem.vue';
+import SeasonalDecorations from '@/components/seasonal/SeasonalDecorations.vue';
 import { Button } from '@/components/ui/button';
 import { useTranslations } from '@/composables/useTranslations';
 import type { NotificationCategory } from '@/lib/notificationFilters';
 import { readAll } from '@/routes/notifications';
 import type { NotificationPage } from '@/types/notification';
 
-defineProps<{
+const props = defineProps<{
+    canViewAdministrationNotifications: boolean;
+    indexUrl: string;
     filters: { category: NotificationCategory | null; unread: boolean };
     notifications: NotificationPage;
 }>();
 const { t } = useTranslations();
 
 function markAllRead(): void {
-    router.patch(readAll().url, {}, { preserveScroll: true });
+    router.patch(
+        readAll().url,
+        { context: props.indexUrl.startsWith('/admin/') ? 'admin' : null },
+        { preserveScroll: true },
+    );
 }
 </script>
 
@@ -45,14 +52,19 @@ function markAllRead(): void {
         </header>
 
         <NotificationFilters
+            :index-url="indexUrl"
             :category="filters.category"
             :unread="filters.unread"
+            :can-view-administration-notifications="
+                canViewAdministrationNotifications
+            "
         />
 
         <section
             v-if="notifications.data.length === 0"
-            class="rounded-3xl border bg-card p-8 text-center shadow-sm"
+            class="relative isolate overflow-hidden rounded-3xl border bg-card p-8 text-center shadow-sm"
         >
+            <SeasonalDecorations placement="panel" />
             <h2 class="font-semibold">
                 {{ t('notifications.page.empty_title') }}
             </h2>
@@ -63,9 +75,10 @@ function markAllRead(): void {
         <section
             v-else
             :aria-label="t('notifications.page.list_label')"
-            class="min-h-0 max-w-full min-w-0 flex-1 overflow-x-hidden overflow-y-auto rounded-3xl border bg-card shadow-sm"
+            class="relative isolate min-h-0 max-w-full min-w-0 flex-1 overflow-x-hidden overflow-y-auto rounded-3xl border bg-card shadow-sm"
         >
-            <ul role="list" class="max-w-full min-w-0 divide-y">
+            <SeasonalDecorations placement="panel" />
+            <ul role="list" class="relative z-10 max-w-full min-w-0 divide-y">
                 <NotificationItem
                     v-for="notification in notifications.data"
                     :key="notification.id"

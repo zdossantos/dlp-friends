@@ -220,8 +220,17 @@
     }
 }
 
-.landing-reveal {
-    animation: landing-reveal 600ms ease-out both;
+@keyframes motion-match-seasonal {
+    0%,
+    100% {
+        opacity: 0;
+        transform: translate3d(0, 0.75rem, 0) scale(0.7) rotate(-8deg);
+    }
+    35%,
+    70% {
+        opacity: 0.85;
+        transform: translate3d(0, -0.5rem, 0) scale(1) rotate(8deg);
+    }
 }
 
 .landing-drift {
@@ -230,20 +239,8 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .landing-reveal,
     .landing-drift {
         animation: none;
-    }
-}
-
-@keyframes landing-reveal {
-    from {
-        opacity: 0;
-        transform: translateY(0.75rem);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
     }
 }
 
@@ -327,6 +324,11 @@
             var(--motion-ease-expressive) both;
     }
 
+    .motion-match-seasonal {
+        animation: motion-match-seasonal var(--motion-duration-celebration)
+            var(--motion-ease-expressive) both;
+    }
+
     .motion-card-exit-right {
         animation: motion-card-exit-right 420ms var(--motion-ease-expressive)
             both;
@@ -368,6 +370,7 @@
     .motion-match-firework,
     .motion-match-ray,
     .motion-match-jewel,
+    .motion-match-seasonal,
     .motion-card-exit-right,
     .motion-card-exit-left,
     .motion-navigation-pending {
@@ -411,6 +414,190 @@
     --sidebar-border: hsl(258 15% 22%);
     --sidebar-ring: hsl(265 80% 72%);
     --sidebar: hsl(258 28% 10%);
+}
+
+.seasonal-halloween {
+    --background: hsl(34 55% 96%);
+    --foreground: hsl(275 32% 13%);
+    --card: hsl(34 65% 99%);
+    --card-foreground: hsl(275 32% 13%);
+    --popover: hsl(34 65% 99%);
+    --popover-foreground: hsl(275 32% 13%);
+    --primary: hsl(24 88% 38%);
+    --primary-foreground: hsl(36 100% 98%);
+    --secondary: hsl(42 70% 88%);
+    --secondary-foreground: hsl(276 34% 19%);
+    --muted: hsl(31 30% 90%);
+    --muted-foreground: hsl(275 16% 36%);
+    --accent: hsl(274 35% 88%);
+    --accent-foreground: hsl(275 38% 22%);
+    --destructive: hsl(2 72% 42%);
+    --destructive-foreground: hsl(36 100% 98%);
+    --border: hsl(29 31% 78%);
+    --input: hsl(29 31% 73%);
+    --ring: hsl(274 60% 38%);
+    --chart-1: hsl(24 88% 42%);
+    --chart-2: hsl(274 60% 42%);
+    --chart-3: hsl(44 82% 45%);
+    --chart-4: hsl(13 66% 55%);
+    --chart-5: hsl(301 35% 45%);
+    --sidebar-background: hsl(33 48% 92%);
+    --sidebar-foreground: hsl(275 32% 16%);
+    --sidebar-primary: hsl(24 88% 38%);
+    --sidebar-primary-foreground: hsl(36 100% 98%);
+    --sidebar-accent: hsl(274 30% 86%);
+    --sidebar-accent-foreground: hsl(275 38% 22%);
+    --sidebar-border: hsl(29 31% 76%);
+    --sidebar-ring: hsl(274 60% 38%);
+    --sidebar: hsl(33 48% 92%);
+}
+
+.dark.seasonal-halloween {
+    color-scheme: dark;
+    --background: hsl(276 28% 8%);
+    --foreground: hsl(35 65% 94%);
+    --card: hsl(276 24% 12%);
+    --card-foreground: hsl(35 65% 94%);
+    --popover: hsl(276 24% 12%);
+    --popover-foreground: hsl(35 65% 94%);
+    --primary: hsl(28 95% 64%);
+    --primary-foreground: hsl(278 38% 10%);
+    --secondary: hsl(275 28% 22%);
+    --secondary-foreground: hsl(35 65% 94%);
+    --muted: hsl(276 18% 18%);
+    --muted-foreground: hsl(34 25% 70%);
+    --accent: hsl(24 38% 22%);
+    --accent-foreground: hsl(35 65% 94%);
+    --destructive: hsl(3 78% 64%);
+    --destructive-foreground: hsl(278 38% 10%);
+    --border: hsl(276 18% 27%);
+    --input: hsl(276 18% 32%);
+    --ring: hsl(34 96% 68%);
+    --chart-1: hsl(28 95% 64%);
+    --chart-2: hsl(285 62% 70%);
+    --chart-3: hsl(44 90% 65%);
+    --chart-4: hsl(10 78% 67%);
+    --chart-5: hsl(314 48% 69%);
+    --sidebar-background: hsl(276 26% 10%);
+    --sidebar-foreground: hsl(35 65% 94%);
+    --sidebar-primary: hsl(28 95% 64%);
+    --sidebar-primary-foreground: hsl(278 38% 10%);
+    --sidebar-accent: hsl(276 20% 19%);
+    --sidebar-accent-foreground: hsl(35 65% 94%);
+    --sidebar-border: hsl(276 18% 25%);
+    --sidebar-ring: hsl(34 96% 68%);
+    --sidebar: hsl(276 26% 10%);
+}
+
+.seasonal-christmas {
+    --background: hsl(44 52% 96%);
+    --foreground: hsl(151 38% 12%);
+    --card: hsl(42 45% 99%);
+    --card-foreground: hsl(151 38% 12%);
+    --popover: hsl(42 45% 99%);
+    --popover-foreground: hsl(151 38% 12%);
+    --primary: hsl(351 72% 34%);
+    --primary-foreground: hsl(42 100% 98%);
+    --secondary: hsl(143 30% 86%);
+    --secondary-foreground: hsl(151 42% 17%);
+    --muted: hsl(43 24% 90%);
+    --muted-foreground: hsl(151 16% 34%);
+    --accent: hsl(43 68% 84%);
+    --accent-foreground: hsl(151 42% 17%);
+    --destructive: hsl(2 72% 42%);
+    --destructive-foreground: hsl(42 100% 98%);
+    --border: hsl(143 19% 76%);
+    --input: hsl(143 19% 71%);
+    --ring: hsl(148 48% 28%);
+    --chart-1: hsl(351 72% 38%);
+    --chart-2: hsl(148 48% 31%);
+    --chart-3: hsl(43 78% 44%);
+    --chart-4: hsl(8 65% 55%);
+    --chart-5: hsl(164 38% 43%);
+    --sidebar-background: hsl(45 42% 92%);
+    --sidebar-foreground: hsl(151 38% 14%);
+    --sidebar-primary: hsl(351 72% 34%);
+    --sidebar-primary-foreground: hsl(42 100% 98%);
+    --sidebar-accent: hsl(143 28% 84%);
+    --sidebar-accent-foreground: hsl(151 42% 17%);
+    --sidebar-border: hsl(143 19% 74%);
+    --sidebar-ring: hsl(148 48% 28%);
+    --sidebar: hsl(45 42% 92%);
+}
+
+.dark.seasonal-christmas {
+    color-scheme: dark;
+    --background: hsl(151 32% 7%);
+    --foreground: hsl(42 44% 94%);
+    --card: hsl(151 27% 11%);
+    --card-foreground: hsl(42 44% 94%);
+    --popover: hsl(151 27% 11%);
+    --popover-foreground: hsl(42 44% 94%);
+    --primary: hsl(352 74% 68%);
+    --primary-foreground: hsl(151 38% 9%);
+    --secondary: hsl(151 25% 21%);
+    --secondary-foreground: hsl(42 44% 94%);
+    --muted: hsl(151 18% 16%);
+    --muted-foreground: hsl(42 18% 70%);
+    --accent: hsl(43 30% 22%);
+    --accent-foreground: hsl(42 44% 94%);
+    --destructive: hsl(2 76% 66%);
+    --destructive-foreground: hsl(151 38% 9%);
+    --border: hsl(151 18% 25%);
+    --input: hsl(151 18% 30%);
+    --ring: hsl(44 72% 62%);
+    --chart-1: hsl(352 74% 68%);
+    --chart-2: hsl(146 50% 62%);
+    --chart-3: hsl(44 72% 62%);
+    --chart-4: hsl(8 72% 67%);
+    --chart-5: hsl(166 40% 62%);
+    --sidebar-background: hsl(151 30% 9%);
+    --sidebar-foreground: hsl(42 44% 94%);
+    --sidebar-primary: hsl(352 74% 68%);
+    --sidebar-primary-foreground: hsl(151 38% 9%);
+    --sidebar-accent: hsl(151 22% 18%);
+    --sidebar-accent-foreground: hsl(42 44% 94%);
+    --sidebar-border: hsl(151 18% 23%);
+    --sidebar-ring: hsl(44 72% 62%);
+    --sidebar: hsl(151 30% 9%);
+}
+
+@keyframes seasonal-decoration-drift {
+    from {
+        transform: translate3d(0, -0.25rem, 0) rotate(-1deg);
+    }
+    to {
+        transform: translate3d(-0.4rem, 0.35rem, 0) rotate(1deg);
+    }
+}
+
+.seasonal-decoration {
+    animation: seasonal-decoration-drift 8s ease-in-out infinite alternate;
+}
+
+.conversation-pattern {
+    color: var(--muted-foreground);
+    opacity: 0.075;
+}
+
+.seasonal-halloween .conversation-pattern {
+    color: var(--primary);
+    opacity: 0.1;
+}
+
+.seasonal-christmas .conversation-pattern {
+    color: var(--secondary-foreground);
+    opacity: 0.085;
+}
+
+.dark .conversation-pattern {
+    opacity: 0.09;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .seasonal-decoration {
+        animation: none;
+    }
 }
 
 @layer base {

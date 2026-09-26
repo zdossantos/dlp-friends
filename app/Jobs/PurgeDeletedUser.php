@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use App\Actions\PurgeDeletedPartnerData;
 use App\Enums\UserStatus;
 use App\Models\User;
 use Carbon\CarbonImmutable;
@@ -20,8 +21,9 @@ class PurgeDeletedUser implements ShouldQueue
     public function handle(): void
     {
         $requestedAt = CarbonImmutable::parse($this->requestedAt)->utc();
+        $purgeDeletedPartnerData = app(PurgeDeletedPartnerData::class);
 
-        DB::transaction(function () use ($requestedAt): void {
+        DB::transaction(function () use ($purgeDeletedPartnerData, $requestedAt): void {
             $user = User::query()->lockForUpdate()->find($this->userId);
 
             if ($user === null
@@ -32,6 +34,7 @@ class PurgeDeletedUser implements ShouldQueue
                 return;
             }
 
+            $purgeDeletedPartnerData->handle($user);
             $user->notifications()->delete();
             $user->delete();
         });

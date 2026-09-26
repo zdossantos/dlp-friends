@@ -1,13 +1,19 @@
 <script setup lang="ts">
-import { Link } from '@inertiajs/vue3';
+import { Link, usePage } from '@inertiajs/vue3';
 import {
+    Bell,
+    Building2,
+    ChartBar,
     GraduationCap,
     Images,
     LayoutDashboard,
+    Megaphone,
+    Sparkles,
     Tags,
     UserRound,
     Users,
 } from '@lucide/vue';
+import { computed } from 'vue';
 import AppLogo from '@/components/AppLogo.vue';
 import NavMain from '@/components/NavMain.vue';
 import NavUser from '@/components/NavUser.vue';
@@ -25,17 +31,34 @@ import { dashboard } from '@/routes';
 import { index as avatarIndex } from '@/routes/admin/avatars';
 import { index as interestIndex } from '@/routes/admin/interests';
 import { index as memberIndex } from '@/routes/admin/members';
+import { index as adminNotifications } from '@/routes/admin/notifications';
 import { index as onboardingIndex } from '@/routes/admin/onboarding';
+import { index as adminPartnerAnnouncements } from '@/routes/admin/partner-announcements';
+import { index as partnerProfileIndex } from '@/routes/admin/partner-profiles';
+import { index as adminPartnerStatistics } from '@/routes/admin/partner-statistics';
+import { index as seasonalThemeIndex } from '@/routes/admin/seasonal-themes';
 import { show as showProfile } from '@/routes/member-profile';
+import { index as partnerAnnouncements } from '@/routes/partner/announcements';
+import { edit as editPartnerProfile } from '@/routes/partner/profile';
+import { index as partnerStatistics } from '@/routes/partner/statistics';
 import type { NavItem } from '@/types';
 
 const { t } = useTranslations();
+const page = usePage();
+const hasPartnerRole = computed(() =>
+    page.props.auth.user.roles.some((role) => role.name === 'partner'),
+);
 
 const mainNavItems: NavItem[] = [
     {
         title: t('administration.navigation.dashboard'),
         href: dashboard(),
         icon: LayoutDashboard,
+    },
+    {
+        title: t('administration.navigation.notifications'),
+        href: adminNotifications({ query: { category: 'administration' } }),
+        icon: Bell,
     },
     {
         title: t('administration.navigation.members'),
@@ -58,9 +81,55 @@ const mainNavItems: NavItem[] = [
         icon: GraduationCap,
     },
     {
+        title: t('administration.navigation.seasonal_themes'),
+        href: seasonalThemeIndex(),
+        icon: Sparkles,
+    },
+    {
+        title: t('administration.navigation.partners'),
+        href: partnerProfileIndex(),
+        icon: Building2,
+        testId: 'admin-partners-menu-trigger',
+        items: [
+            {
+                title: t('administration.navigation.partner_profiles'),
+                href: partnerProfileIndex(),
+                icon: Building2,
+            },
+            {
+                title: t('administration.navigation.partner_announcements'),
+                href: adminPartnerAnnouncements(),
+                icon: Megaphone,
+            },
+            {
+                title: t('administration.navigation.partner_statistics'),
+                href: adminPartnerStatistics(),
+                icon: ChartBar,
+            },
+        ],
+    },
+    {
         title: t('administration.navigation.back_to_profile'),
         href: showProfile(),
         icon: UserRound,
+    },
+];
+
+const partnerNavItems: NavItem[] = [
+    {
+        title: t('partners.navigation.profile'),
+        href: editPartnerProfile(),
+        icon: Building2,
+    },
+    {
+        title: t('partners.navigation.announcements'),
+        href: partnerAnnouncements(),
+        icon: Megaphone,
+    },
+    {
+        title: t('partners.navigation.statistics'),
+        href: partnerStatistics(),
+        icon: ChartBar,
     },
 ];
 </script>
@@ -83,6 +152,11 @@ const mainNavItems: NavItem[] = [
             <NavMain
                 :items="mainNavItems"
                 :label="t('administration.navigation.label')"
+            />
+            <NavMain
+                v-if="hasPartnerRole"
+                :items="partnerNavItems"
+                :label="t('partners.navigation.label')"
             />
         </SidebarContent>
 

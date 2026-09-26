@@ -1,6 +1,55 @@
 <?php
 
+use App\Models\PartnerProfile;
 use App\Models\User;
+use Illuminate\Support\Facades\Storage;
+
+test('the localized landing displays six ordered partner cards accessibly in every viewport and theme', function (string $locale, int $width, int $height, string $theme) {
+    config()->set('filesystems.default', 's3');
+    Storage::fake('s3');
+    $profiles = PartnerProfile::factory()
+        ->count(7)
+        // Reverse the manual positions relative to creation IDs so this test
+        // cannot pass accidentally through primary-key ordering.
+        ->sequence(fn ($sequence) => ['position' => 7 - $sequence->index])
+        ->published()
+        ->create();
+
+    foreach ($profiles as $index => $profile) {
+        $revision = $profile->publishedRevision;
+        $revision?->update([
+            'name_fr' => "Partenaire accueil {$index}",
+            'name_en' => "Landing partner {$index}",
+            'description_fr' => "Description française {$index}",
+            'description_en' => "English description {$index}",
+        ]);
+        Storage::disk('s3')->put($revision->image_path, base64_decode(
+            'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScL8WQAAAABJRU5ErkJggg==',
+        ));
+    }
+
+    $page = visit('/'.$locale)->resize($width, $height);
+    $page->script("document.documentElement.classList.toggle('dark', '{$theme}' === 'dark')");
+    $name = $locale === 'fr' ? 'Partenaire accueil' : 'Landing partner';
+    $page->assertSee($locale === 'fr' ? 'Nos partenaires' : 'Our partners')
+        ->assertCount('[data-test="public-partner-card"]', 6)
+        ->assertSee($name.' 6')
+        ->assertSee($name.' 1')
+        ->assertDontSee($name.' 0')
+        ->assertDontSee(($locale === 'fr' ? 'Landing partner' : 'Partenaire accueil').' 6')
+        ->assertPresent('img[alt="'.__('common.welcome.partners.image_alt', ['name' => $name.' 6'], $locale).'"]')
+        ->assertScript('document.documentElement.scrollWidth <= window.innerWidth', true)
+        ->assertScript("document.querySelector('[data-test=public-partner-card]').textContent.includes('{$name} 6')", true)
+        ->keys('[data-test="landing-register"]', 'Tab')
+        ->assertScript('document.activeElement.tagName === "A"', true)
+        ->assertNoAccessibilityIssues()
+        ->assertNoJavaScriptErrors();
+})->with([
+    ['fr', 320, 700, 'light'], ['fr', 320, 700, 'dark'],
+    ['fr', 1440, 900, 'light'], ['fr', 1440, 900, 'dark'],
+    ['en', 320, 700, 'light'], ['en', 320, 700, 'dark'],
+    ['en', 1440, 900, 'light'], ['en', 1440, 900, 'dark'],
+]);
 
 test('the landing page presents the adult friendship service to guests', function () {
     visit('/fr', ['locale' => 'fr-FR'])

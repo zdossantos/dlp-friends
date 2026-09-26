@@ -30,8 +30,8 @@ final class ConversationIndexController extends Controller
             ->withCount(['messages as unread_count' => fn ($query) => $query
                 ->where('author_user_id', '!=', $member->id)
                 ->whereNull('read_at')])
-            ->orderByDesc('messages_max_created_at')
-            ->orderByDesc('created_at')
+            ->orderByRaw('COALESCE(messages_max_created_at, conversations.created_at) DESC')
+            ->orderByDesc('conversations.id')
             ->get()
             ->map(function (Conversation $conversation) use ($member, $presence): array {
                 $participant = $conversation->memberMatch->lowUser->is($member)
