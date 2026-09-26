@@ -55,6 +55,7 @@ return [
         'email' => 'adresse e-mail',
         'birth_date' => 'date de naissance',
         'password' => 'mot de passe',
+        'confirm_deletion' => 'confirmation de suppression',
         'pass_display_name' => 'nom français du profil à passer',
         'pass_display_name_en' => 'nom anglais du profil à passer',
         'pass_bio' => 'biographie française du profil à passer',

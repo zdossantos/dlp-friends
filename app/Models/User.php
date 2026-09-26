@@ -40,7 +40,7 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
  * @property CarbonImmutable|null $deletion_requested_at
  * @property Carbon|null $last_active_at
  * @property-read int|null $age
- * @property string $password
+ * @property string|null $password
  * @property string|null $two_factor_secret
  * @property string|null $two_factor_recovery_codes
  * @property Carbon|null $two_factor_confirmed_at
@@ -252,6 +252,11 @@ class User extends Authenticatable implements HasLocalePreference, MustVerifyEma
     public function preferredLocale(): string
     {
         return $this->locale ?? config('app.fallback_locale', 'fr');
+    }
+
+    public function hasUsablePassword(): bool
+    {
+        return $this->password !== null;
     }
 
     public function sendEmailVerificationNotification(): void

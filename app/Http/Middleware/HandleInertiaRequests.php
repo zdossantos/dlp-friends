@@ -87,6 +87,7 @@ class HandleInertiaRequests extends Middleware
                             ->values()
                             ->all(),
                         'two_factor_enabled' => $user->hasEnabledTwoFactorAuthentication(),
+                        'has_usable_password' => $user->hasUsablePassword(),
                     ];
                 },
             ],

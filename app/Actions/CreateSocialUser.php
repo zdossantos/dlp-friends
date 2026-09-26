@@ -12,7 +12,6 @@ use App\Models\User;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
 class CreateSocialUser
@@ -42,7 +41,7 @@ class CreateSocialUser
                 $user = new User([
                     'email' => $identity->email,
                     'birth_date' => $birthDate,
-                    'password' => Str::password(64),
+                    'password' => null,
                 ]);
                 $user->forceFill([
                     'email_verified_at' => now(),

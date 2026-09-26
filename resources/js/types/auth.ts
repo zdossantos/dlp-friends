@@ -9,6 +9,7 @@ export type User = {
     profile: Profile | null;
     roles: Array<{ name: RoleName }>;
     two_factor_enabled?: boolean;
+    has_usable_password: boolean;
     [key: string]: unknown;
 };
 

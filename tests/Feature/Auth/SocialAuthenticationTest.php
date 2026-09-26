@@ -12,7 +12,6 @@ use App\Models\SocialAccount;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\Hash;
 use Inertia\Testing\AssertableInertia as Assert;
 use Laravel\Socialite\Facades\Socialite;
 use Laravel\Socialite\Two\InvalidStateException;
@@ -313,7 +312,7 @@ class SocialAuthenticationTest extends TestCase
         $this->assertAuthenticatedAs($user);
         $this->assertSame(UserStatus::Active, $user->status);
         $this->assertNotNull($user->email_verified_at);
-        $this->assertFalse(Hash::needsRehash($user->getRawOriginal('password')));
+        $this->assertNull($user->getRawOriginal('password'));
         $this->assertTrue($user->load('roles')->hasRole(RoleName::User));
         $this->assertSame('google', $account->provider);
         $this->assertSame('google-123', $account->provider_user_id);
