@@ -162,6 +162,17 @@ final class BuildUserDataExport
                 'partner_announcements' => $partnerPreference->enabled ?? false,
                 'updated_at' => $partnerPreference?->updated_at?->toIso8601String(),
             ],
+            'push_devices' => $user->webPushSubscriptions()
+                ->orderBy('id')
+                ->get()
+                ->map(fn ($subscription): array => [
+                    'uuid' => $subscription->uuid,
+                    'device_name' => $subscription->device_name,
+                    'platform' => $subscription->platform,
+                    'last_used_at' => $subscription->last_used_at?->toIso8601String(),
+                    'revoked_at' => $subscription->revoked_at?->toIso8601String(),
+                    'created_at' => $subscription->created_at?->toIso8601String(),
+                ])->all(),
             'role_history' => RoleAudit::query()
                 ->where('target_user_id', $user->id)
                 ->orderBy('id')

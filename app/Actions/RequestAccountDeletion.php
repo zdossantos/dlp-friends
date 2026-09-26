@@ -41,6 +41,9 @@ final class RequestAccountDeletion
 
             DB::table('sessions')->where('user_id', $lockedUser->id)->delete();
             $lockedUser->socialAccounts()->delete();
+            $lockedUser->webPushSubscriptions()
+                ->whereNull('revoked_at')
+                ->update(['revoked_at' => now()]);
 
             DB::afterCommit(function () use ($lockedUser, $requestedAt): void {
                 PurgeDeletedUser::dispatch($lockedUser->id, $requestedAt->toISOString())
