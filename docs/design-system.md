@@ -270,6 +270,19 @@ autorisé n’est ajouté au produit. Une évocation de chaleur ou de magie repo
 sur la palette, la lumière, les formes et le mouvement, jamais sur la copie
 d’un univers graphique protégé.
 
+Le logo DLP Friends conserve sa géométrie d’origine. Un dégradé diagonal continu
+relie le violet `primary` au rose `secondary` sur toute la marque ; sa variante
+sombre emploie les mêmes tokens dans leurs valeurs sombres. Les surfaces de
+l’application sélectionnent la variante selon le thème sans recolorer le logo
+avec `currentColor`.
+
+Le favicon place la variante sombre au centre d’un carré arrondi utilisant le
+fond `hsl(258 30% 8%)`, avec une zone de sécurité de 64 px dans le canevas SVG
+de 512 px. Le SVG est la source ; les déclinaisons ICO 16/32/48 px et Apple
+Touch Icon 180 px reprennent exactement cette composition. Les futures icônes
+PWA installables et maskable doivent repartir de cette source et préserver sa
+zone de sécurité.
+
 Les images d’avatars administrables restent des contenus applicatifs privés et
 doivent respecter les exigences de [`security-privacy.md`](security-privacy.md).
 

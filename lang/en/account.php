@@ -101,6 +101,8 @@ return [
         'title' => 'Delete your account', 'description' => 'Request permanent deletion of your account and its data.', 'warning' => 'Warning',
         'irreversible' => 'Access to your account will end immediately. Your active data will be deleted within 30 days, with no restoration available.', 'question' => 'Do you really want to delete your account?',
         'confirmation' => 'This request is irreversible: access ends immediately and the purge will happen within 30 days. Enter your password to confirm.', 'submit' => 'Delete my account',
+        'social_confirmation' => 'This request is irreversible: access ends immediately and the purge will happen within 30 days. Confirm that you understand these consequences.',
+        'social_acknowledgement' => 'I understand that my access will end immediately and my account will be permanently deleted.',
     ],
     'passkeys' => [
         'title' => 'Passkeys', 'description' => 'Manage passwordless login.', 'empty' => 'No passkeys', 'empty_description' => 'Add one to log in without a password.',

@@ -47,6 +47,51 @@ test('a member sees only their conversations ordered by latest activity', functi
             ->where('conversations.1.id', $older->id));
 });
 
+test('a new conversation without messages is ordered by its creation activity', function () {
+    $member = User::factory()->withProfile()->create();
+    $olderPeer = User::factory()->withProfile()->create();
+    $newPeer = User::factory()->withProfile()->create();
+
+    $older = conversationBetween($member, $olderPeer);
+    $older->update(['created_at' => now()->subDay()]);
+    Message::factory()->for($older)->for($olderPeer, 'author')->create([
+        'created_at' => now()->subHour(),
+        'read_at' => now(),
+    ]);
+
+    $new = conversationBetween($member, $newPeer);
+    $new->update(['created_at' => now()]);
+
+    $this->actingAs($member)->get('/conversations')
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('conversations.0.id', $new->id)
+            ->where('conversations.0.latest_message', null)
+            ->where('conversations.0.unread_count', 0)
+            ->where('conversations.0.activity_at', $new->created_at->toISOString())
+            ->where('conversations.1.id', $older->id));
+});
+
+test('the latest message follows its timestamp before its identifier', function () {
+    $member = User::factory()->withProfile()->create();
+    $peer = User::factory()->withProfile()->create();
+    $conversation = conversationBetween($member, $peer);
+    $latestAt = now()->startOfSecond();
+
+    Message::factory()->for($conversation)->for($peer, 'author')->create([
+        'content' => 'Message le plus récent',
+        'created_at' => $latestAt,
+    ]);
+    Message::factory()->for($conversation)->for($peer, 'author')->create([
+        'content' => 'Identifiant supérieur mais date antérieure',
+        'created_at' => $latestAt->copy()->subMinute(),
+    ]);
+
+    $this->actingAs($member)->get('/conversations')
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('conversations.0.latest_message.content', 'Message le plus récent')
+            ->where('conversations.0.activity_at', $latestAt->toISOString()));
+});
+
 test('messages sent by the member never count as unread', function () {
     $member = User::factory()->withProfile()->create();
     $peer = User::factory()->withProfile()->create();

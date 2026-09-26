@@ -25,9 +25,7 @@
                 [data-test="legal-document-card"] { border: 0 !important; box-shadow: none !important; }
             }
         </style>
-        <link rel="icon" href="/favicon.svg" type="image/svg+xml" sizes="any">
-        <link rel="icon" href="/favicon.ico" type="image/x-icon" sizes="16x16 32x32 48x48">
-        <link rel="apple-touch-icon" href="/apple-touch-icon.png" type="image/png" sizes="180x180">
+        <x-brand-head />
         @fonts
         @vite('resources/css/app.css')
     </head>
@@ -38,8 +36,8 @@
             <div class="relative mx-auto flex min-h-svh w-full max-w-6xl flex-col px-4 pt-[max(1rem,env(safe-area-inset-top))] pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:px-6 lg:px-8">
                 <header data-print-hidden class="flex items-center justify-between gap-4 py-2">
                     <a href="{{ route('landing.show', ['locale' => $locale], false) }}" class="flex items-center gap-3 rounded-2xl focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-4 focus-visible:outline-none">
-                        <span class="grid size-11 place-items-center rounded-2xl bg-primary text-primary-foreground shadow-lg shadow-primary/20">
-                            <span aria-hidden="true" data-test="app-logo-icon" class="inline-block size-7 shrink-0 bg-current [mask-image:url('/brand/dlp-friends-logo.svg')] [mask-size:contain] [mask-position:center] [mask-repeat:no-repeat] [-webkit-mask-image:url('/brand/dlp-friends-logo.svg')] [-webkit-mask-position:center] [-webkit-mask-repeat:no-repeat] [-webkit-mask-size:contain]"></span>
+                        <span class="grid size-11 place-items-center rounded-2xl border border-border/70 bg-card shadow-lg shadow-primary/20">
+                            <span aria-hidden="true" data-test="app-logo-icon" class="inline-block size-7 shrink-0 bg-contain bg-center bg-no-repeat bg-[url('/brand/dlp-friends-logo.svg')] dark:bg-[url('/brand/dlp-friends-logo-dark.svg')]"></span>
                         </span>
                         <span class="font-accent text-lg font-bold tracking-tight">{{ __('common.brand.name') }}</span>
                     </a>

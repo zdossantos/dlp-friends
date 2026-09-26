@@ -279,6 +279,7 @@ Paris.
 | Thèmes clair, sombre et système | **Implémenté** | Préférence persistée et interface correspondante sont présentes. |
 | Ambiances saisonnières Halloween et Noël (issue 189) | **Implémenté** | Planification administrative, priorité manuelle, palettes claire/sombre, décorations Lucide et célébrations de match dédiées sont livrées. |
 | Ambiance enrichie des conversations (issue 185) | **Implémenté** | Expéditeurs, séparateurs de jour locaux, bulles distinctes et fonds Lucide standard/Halloween/Noël sont couverts à partir de 320 px. |
+| Logo coloré et favicon multi-support (issue 209) | **Implémenté** | Variantes de logo clair/sombre et favicon arrondi SVG, ICO 16/32/48 px et Apple Touch Icon 180 px sont harmonisés sur les surfaces publiques, membres et légales. |
 | Accueil public et référencement bilingue | **Implémenté** | Landing pages françaises et anglaises, métadonnées SEO, données structurées, sitemap public et exclusion des parcours privés sont livrés. |
 | Explication publique du classement et du matching | **Implémenté** | Pages françaises et anglaises indexables, liées depuis l’accueil, décrivant l’éligibilité, les priorités, le bonus de fréquence, le départage et la réciprocité. |
 | Mesure d’audience et suivi d’indexation | **Implémenté** | GA4 ne charge qu’après consentement explicite, avec refus et retrait accessibles, choix conservé six mois, Consent Mode basic et chemins normalisés ; Search Console s’appuie sur une validation configurable, le sitemap et robots.txt. |
@@ -286,7 +287,7 @@ Paris.
 | Connexion Google | **Implémenté** | Socialite fournit le parcours Google, avec liens uniques sans stockage de jetons, contrôle de majorité et tests automatisés. |
 | Photo personnelle facultative | **Planifié** | Aucun flux de téléversement membre n’existe. |
 | Export des données | **Implémenté** | Les réglages génèrent à la demande un export JSON authentifié, téléchargé directement sans fichier conservé côté serveur. |
-| Suppression différée sous 30 jours | **Implémenté** | L’accès, les sessions et les liens sociaux sont révoqués immédiatement ; un job gardé purge les données après 30 jours et le scheduler récupère les échéances manquées. |
+| Suppression différée sous 30 jours | **Implémenté** | La confirmation exige le mot de passe lorsqu’il est utilisable et une acceptation explicite pour un compte exclusivement social. L’accès, les sessions et les liens sociaux sont révoqués immédiatement ; un job gardé purge les données après 30 jours et le scheduler récupère les échéances manquées. |
 | Signalement et modération des profils/messages sociaux | **Planifié après le MVP** | Le blocage existe ; la modération partenaire est livrée séparément, sans signalement social. |
 
 Les preuves détaillées de cet instantané sont consignées dans

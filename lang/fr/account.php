@@ -142,6 +142,8 @@ return [
         'warning' => 'Attention', 'irreversible' => 'L’accès à ton compte cessera immédiatement. Tes données actives seront supprimées sous 30 jours, sans possibilité de restauration.',
         'question' => 'Veux-tu vraiment supprimer ton compte ?',
         'confirmation' => 'Cette demande est irréversible : ton accès sera révoqué immédiatement et la purge sera effectuée sous 30 jours. Saisis ton mot de passe pour confirmer.',
+        'social_confirmation' => 'Cette demande est irréversible : ton accès sera révoqué immédiatement et la purge sera effectuée sous 30 jours. Confirme que tu comprends ces conséquences.',
+        'social_acknowledgement' => 'Je comprends que mon accès cessera immédiatement et que mon compte sera définitivement supprimé.',
         'submit' => 'Supprimer mon compte',
     ],
     'passkeys' => [

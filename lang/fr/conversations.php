@@ -11,6 +11,7 @@ return [
         'list_label' => 'Échanges',
         'archived' => 'Archivé',
         'new_exchange' => 'Nouvel échange',
+        'start_exchange' => 'Commence la conversation.',
         'current_user_prefix' => 'Toi : ',
         'unread_message' => ':count message non lu',
         'unread_messages' => ':count messages non lus',
