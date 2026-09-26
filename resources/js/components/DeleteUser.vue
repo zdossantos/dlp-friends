@@ -1,17 +1,22 @@
 <script setup lang="ts">
-import { Form } from '@inertiajs/vue3';
-import { useTemplateRef } from 'vue';
+import { Form, usePage } from '@inertiajs/vue3';
+import { computed, useTemplateRef } from 'vue';
 import AccountController from '@/actions/App/Http/Controllers/Settings/AccountController';
 import Heading from '@/components/Heading.vue';
 import InputError from '@/components/InputError.vue';
 import PasswordInput from '@/components/PasswordInput.vue';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
 import { useResponsiveModal } from '@/composables/useResponsiveModal';
 import { useTranslations } from '@/composables/useTranslations';
 
 const passwordInput = useTemplateRef('passwordInput');
+const page = usePage();
+const requiresPassword = computed(
+    () => page.props.auth.user.has_usable_password,
+);
 const { t } = useTranslations();
 const { isDesktop, Modal } = useResponsiveModal();
 </script>
@@ -59,11 +64,17 @@ const { isDesktop, Modal } = useResponsiveModal();
                                 t('account.deletion.question')
                             }}</component>
                             <component :is="Modal.Description">
-                                {{ t('account.deletion.confirmation') }}
+                                {{
+                                    requiresPassword
+                                        ? t('account.deletion.confirmation')
+                                        : t(
+                                              'account.deletion.social_confirmation',
+                                          )
+                                }}
                             </component>
                         </component>
 
-                        <div class="grid gap-2">
+                        <div v-if="requiresPassword" class="grid gap-2">
                             <Label for="password" class="sr-only">{{
                                 t('account.fields.password')
                             }}</Label>
@@ -76,10 +87,32 @@ const { isDesktop, Modal } = useResponsiveModal();
                             <InputError :message="errors.password" />
                         </div>
 
+                        <div v-else class="grid gap-2">
+                            <div class="flex items-start gap-3">
+                                <Checkbox
+                                    id="confirm_deletion"
+                                    name="confirm_deletion"
+                                    value="1"
+                                />
+                                <Label
+                                    for="confirm_deletion"
+                                    class="text-sm leading-5 font-normal"
+                                >
+                                    {{
+                                        t(
+                                            'account.deletion.social_acknowledgement',
+                                        )
+                                    }}
+                                </Label>
+                            </div>
+                            <InputError :message="errors.confirm_deletion" />
+                        </div>
+
                         <component :is="Modal.Footer" class="gap-2">
                             <component :is="Modal.Close" as-child>
                                 <Button
                                     variant="secondary"
+                                    data-test="cancel-delete-user-button"
                                     @click="
                                         () => {
                                             clearErrors();

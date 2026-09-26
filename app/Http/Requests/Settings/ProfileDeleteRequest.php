@@ -17,8 +17,10 @@ class ProfileDeleteRequest extends FormRequest
      */
     public function rules(): array
     {
-        return [
-            'password' => $this->currentPasswordRules(),
-        ];
+        if ($this->user()?->hasUsablePassword() === true) {
+            return ['password' => $this->currentPasswordRules()];
+        }
+
+        return ['confirm_deletion' => ['accepted']];
     }
 }

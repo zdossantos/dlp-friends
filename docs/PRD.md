@@ -286,7 +286,7 @@ Paris.
 | Connexion Google | **Implémenté** | Socialite fournit le parcours Google, avec liens uniques sans stockage de jetons, contrôle de majorité et tests automatisés. |
 | Photo personnelle facultative | **Planifié** | Aucun flux de téléversement membre n’existe. |
 | Export des données | **Implémenté** | Les réglages génèrent à la demande un export JSON authentifié, téléchargé directement sans fichier conservé côté serveur. |
-| Suppression différée sous 30 jours | **Implémenté** | L’accès, les sessions et les liens sociaux sont révoqués immédiatement ; un job gardé purge les données après 30 jours et le scheduler récupère les échéances manquées. |
+| Suppression différée sous 30 jours | **Implémenté** | La confirmation exige le mot de passe lorsqu’il est utilisable et une acceptation explicite pour un compte exclusivement social. L’accès, les sessions et les liens sociaux sont révoqués immédiatement ; un job gardé purge les données après 30 jours et le scheduler récupère les échéances manquées. |
 | Signalement et modération des profils/messages sociaux | **Planifié après le MVP** | Le blocage existe ; la modération partenaire est livrée séparément, sans signalement social. |
 
 Les preuves détaillées de cet instantané sont consignées dans

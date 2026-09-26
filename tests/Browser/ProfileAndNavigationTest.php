@@ -2,12 +2,14 @@
 
 use App\Enums\ProductOnboardingStatus;
 use App\Enums\RoleName;
+use App\Enums\UserStatus;
 use App\Http\Middleware\EnsureProfileIsComplete;
 use App\Models\Avatar;
 use App\Models\Interest;
 use App\Models\InterestSetting;
 use App\Models\ProductOnboardingSetting;
 use App\Models\Role;
+use App\Models\SocialAccount;
 use App\Models\User;
 use Illuminate\Support\Facades\Storage;
 
@@ -504,6 +506,33 @@ test('account deletion explains immediate access loss and the purge deadline in 
     visit('/settings/account')
         ->assertSee('Access to your account will end immediately')
         ->assertSee('within 30 days');
+});
+
+test('social only member can cancel then explicitly confirm account deletion', function () {
+    $user = User::factory()->withProfile()->create([
+        'locale' => 'fr',
+        'password' => null,
+    ]);
+    SocialAccount::factory()->for($user)->create();
+    $this->actingAs($user);
+
+    $page = visit('/settings/account')
+        ->on()->mobile()
+        ->click('[data-test="delete-user-button"]')
+        ->assertPresent('[data-slot="drawer-content"]')
+        ->assertSee('Confirme que tu comprends')
+        ->assertPresent('#confirm_deletion[data-state="unchecked"]')
+        ->click('[data-test="cancel-delete-user-button"]')
+        ->assertMissing('[data-slot="drawer-content"]')
+        ->click('[data-test="delete-user-button"]')
+        ->click('#confirm_deletion')
+        ->assertAttribute('#confirm_deletion', 'data-state', 'checked')
+        ->click('[data-test="confirm-delete-user-button"]')
+        ->assertPathIsNot('/settings/account');
+
+    expect($user->fresh()->status)->toBe(UserStatus::PendingDeletion);
+    expect($user->socialAccounts()->exists())->toBeFalse();
+    $page->assertNoJavaScriptErrors();
 });
 
 test('member layout fixes navigation above reserved content space', function () {
