@@ -23,6 +23,7 @@ class ProductOnboardingTransitionTest extends TestCase
             ->and($action->advance($user, ProductOnboardingStep::PassDemo)->step)->toBe(ProductOnboardingStep::LikeDemo)
             ->and($action->advance($user, ProductOnboardingStep::LikeDemo)->step)->toBe(ProductOnboardingStep::MatchDemo)
             ->and($action->advance($user, ProductOnboardingStep::MatchDemo)->step)->toBe(ProductOnboardingStep::ConversationDemo)
+            ->and($action->advance($user, ProductOnboardingStep::ConversationDemo)->step)->toBe(ProductOnboardingStep::InstallApp)
             ->and($action->complete($user)->status)->toBe(ProductOnboardingStatus::Completed);
 
         $this->assertDatabaseCount('swipes', 0);
@@ -54,5 +55,18 @@ class ProductOnboardingTransitionTest extends TestCase
         $action->advance($user, ProductOnboardingStep::PassDemo);
 
         expect($action->start($user)->step)->toBe(ProductOnboardingStep::LikeDemo);
+    }
+
+    public function test_completed_historical_progress_remains_completed(): void
+    {
+        $user = User::factory()->create();
+        $progress = $user->productOnboarding()->create([
+            'status' => ProductOnboardingStatus::Completed,
+            'step' => null,
+        ]);
+
+        expect(app(AdvanceProductOnboarding::class)->start($user)->is($progress))->toBeTrue()
+            ->and($progress->fresh()->status)->toBe(ProductOnboardingStatus::Completed)
+            ->and($progress->fresh()->step)->toBeNull();
     }
 }

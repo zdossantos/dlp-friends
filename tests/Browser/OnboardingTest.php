@@ -29,11 +29,12 @@ test('onboarding continues the registration stepper at the persisted tutorial st
     $this->actingAs($member);
 
     visit('/onboarding')
-        ->assertSee('6 sur 8')
+        ->assertSee('6 sur 9')
         ->assertPresent('[aria-label="Étape 1 : Avatar"]')
         ->assertPresent('[aria-label="Étape 5 : Passer"]')
         ->assertPresent('[aria-label="Étape 6 : Découvrir"][aria-current="step"]')
         ->assertPresent('[aria-label="Étape 8 : Échange"]')
+        ->assertPresent('[aria-label="Étape 9 : Application"]')
         ->assertNoJavaScriptErrors();
 });
 
@@ -104,9 +105,9 @@ test('each swipe step disables and blocks the opposite decision', function () {
         card.dispatchEvent(new PointerEvent('pointerup', { pointerId: 31, clientX: 220, clientY: 200, bubbles: true }));
         card.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
     JS);
-    $page->assertSee('5 sur 8')
+    $page->assertSee('5 sur 9')
         ->click('[aria-label="Passer ce profil"]')
-        ->assertSee('6 sur 8')
+        ->assertSee('6 sur 9')
         ->assertPresent('[aria-label="Passer ce profil"][disabled]')
         ->assertNotPresent('[aria-label="Découvrir ce profil"][disabled]');
 
@@ -124,7 +125,7 @@ test('each swipe step disables and blocks the opposite decision', function () {
         card.dispatchEvent(new PointerEvent('pointerup', { pointerId: 32, clientX: 100, clientY: 200, bubbles: true }));
         card.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowLeft', bubbles: true }));
     JS);
-    $page->assertSee('6 sur 8')->assertNoJavaScriptErrors();
+    $page->assertSee('6 sur 9')->assertNoJavaScriptErrors();
 });
 
 test('onboarding uses the production match dialog without a discovery escape action', function () {
@@ -155,7 +156,7 @@ test('onboarding uses the production match dialog without a discovery escape act
         ->assertNoJavaScriptErrors();
 });
 
-test('onboarding uses the production conversation interface and completes on send', function () {
+test('onboarding uses the production conversation interface then offers app installation', function () {
     [$passAvatar, $likeAvatar] = Avatar::factory()->count(2)->create();
     ProductOnboardingSetting::query()->create([
         'id' => ProductOnboardingSetting::SINGLETON_ID,
@@ -182,11 +183,15 @@ test('onboarding uses the production conversation interface and completes on sen
         ->assertDontSee('fictif')
         ->type('#message-content', 'Bonjour !')
         ->click('[aria-label="Envoyer le message"]')
-        ->assertPathIs('/discover')
+        ->assertPathIs('/onboarding')
+        ->assertSee('DLP Friends, comme une vraie app')
+        ->assertSee('Passer cette étape')
         ->assertNoJavaScriptErrors();
 
     expect($member->productOnboarding()->firstOrFail()->status)
-        ->toBe(ProductOnboardingStatus::Completed);
+        ->toBe(ProductOnboardingStatus::InProgress)
+        ->and($member->productOnboarding()->firstOrFail()->step)
+        ->toBe(ProductOnboardingStep::InstallApp);
     $this->assertDatabaseCount('matches', 0);
     $this->assertDatabaseCount('conversations', 0);
     $this->assertDatabaseCount('messages', 0);
@@ -226,9 +231,14 @@ test('member completes the mandatory onboarding without escape actions or social
         ->assertSee('Lorsque deux membres choisissent Découvrir, leurs univers se croisent.')
         ->click('[data-test="open-match-conversation"]')
         ->assertSee('Échange privé')
-        ->assertSee('Envoie un premier message pour terminer ton inscription.')
+        ->assertSee('Envoie un premier message pour continuer.')
         ->type('#message-content', 'Bonjour !')
         ->click('[aria-label="Envoyer le message"]')
+        ->assertPathIs('/onboarding')
+        ->assertSee('DLP Friends, comme une vraie app');
+
+    $page->script('window.confirm = () => true');
+    $page->click('[data-test="skip-install-app"]')
         ->assertPathIs('/discover')
         ->assertNoJavaScriptErrors();
 

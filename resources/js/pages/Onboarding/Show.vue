@@ -8,6 +8,7 @@ import MessageComposer from '@/components/conversations/MessageComposer.vue';
 import MessageItems from '@/components/conversations/MessageItems.vue';
 import MatchDialog from '@/components/discovery/MatchDialog.vue';
 import SwipeCard from '@/components/discovery/SwipeCard.vue';
+import InstallAppStep from '@/components/onboarding/InstallAppStep.vue';
 import ProfileFormStepper from '@/components/profile/ProfileFormStepper.vue';
 import { useTranslations } from '@/composables/useTranslations';
 import { advance, complete } from '@/routes/onboarding';
@@ -17,7 +18,12 @@ import type {
     DiscoveryCardProfile,
 } from '@/types';
 
-type Step = 'pass_demo' | 'like_demo' | 'match_demo' | 'conversation_demo';
+type Step =
+    | 'pass_demo'
+    | 'like_demo'
+    | 'match_demo'
+    | 'conversation_demo'
+    | 'install_app';
 type DemoProfile = {
     displayName: string;
     bio: string;
@@ -57,6 +63,7 @@ const registrationStepLabels = computed(() => [
     t('onboarding.steps.discover'),
     t('onboarding.steps.crossed_worlds'),
     t('onboarding.steps.conversation'),
+    t('onboarding.steps.install_app'),
 ]);
 const currentRegistrationStep = computed(
     () =>
@@ -65,6 +72,7 @@ const currentRegistrationStep = computed(
             like_demo: 6,
             match_demo: 7,
             conversation_demo: 8,
+            install_app: 9,
         })[props.step],
 );
 const swipeProfiles = computed<[DiscoveryCardProfile, DiscoveryCardProfile]>(
@@ -115,6 +123,7 @@ const stepInstruction = computed<Record<Step, string>>(() => ({
     like_demo: t('onboarding.instructions.discover'),
     match_demo: t('onboarding.instructions.crossed_worlds'),
     conversation_demo: t('onboarding.instructions.conversation'),
+    install_app: t('onboarding.instructions.install_app'),
 }));
 
 watch(
@@ -170,9 +179,9 @@ function completeWithMessage(content: string): Promise<ConversationMessage> {
         };
 
         busy.value = true;
-        router.post(
-            complete().url,
-            {},
+        router.patch(
+            advance().url,
+            { step: 'conversation_demo' },
             {
                 onSuccess: () => resolve(message),
                 onError: () => {
@@ -185,6 +194,22 @@ function completeWithMessage(content: string): Promise<ConversationMessage> {
             },
         );
     });
+}
+
+function finishOnboarding(): void {
+    busy.value = true;
+    router.post(
+        complete().url,
+        {},
+        {
+            onFinish: () => {
+                busy.value = false;
+            },
+            onError: () => {
+                toast.error(t('onboarding.errors.step'));
+            },
+        },
+    );
 }
 </script>
 
@@ -250,7 +275,7 @@ function completeWithMessage(content: string): Promise<ConversationMessage> {
             @open-conversation="submitStep('match_demo')"
         />
         <section
-            v-else
+            v-else-if="step === 'conversation_demo'"
             class="flex min-h-[32rem] w-full flex-1 flex-col overflow-hidden rounded-3xl border bg-background shadow-sm"
         >
             <ConversationHeader :participant="tutorialParticipant" />
@@ -273,5 +298,6 @@ function completeWithMessage(content: string): Promise<ConversationMessage> {
                 :submit-message="completeWithMessage"
             />
         </section>
+        <InstallAppStep v-else @complete="finishOnboarding" />
     </main>
 </template>
