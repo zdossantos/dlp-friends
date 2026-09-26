@@ -279,6 +279,7 @@ Paris.
 | Thèmes clair, sombre et système | **Implémenté** | Préférence persistée et interface correspondante sont présentes. |
 | Ambiances saisonnières Halloween et Noël (issue 189) | **Implémenté** | Planification administrative, priorité manuelle, palettes claire/sombre, décorations Lucide et célébrations de match dédiées sont livrées. |
 | Ambiance enrichie des conversations (issue 185) | **Implémenté** | Expéditeurs, séparateurs de jour locaux, bulles distinctes et fonds Lucide standard/Halloween/Noël sont couverts à partir de 320 px. |
+| Logo coloré et favicon multi-support (issue 209) | **Implémenté** | Variantes de logo clair/sombre et favicon arrondi SVG, ICO 16/32/48 px et Apple Touch Icon 180 px sont harmonisés sur les surfaces publiques, membres et légales. |
 | Accueil public et référencement bilingue | **Implémenté** | Landing pages françaises et anglaises, métadonnées SEO, données structurées, sitemap public et exclusion des parcours privés sont livrés. |
 | Explication publique du classement et du matching | **Implémenté** | Pages françaises et anglaises indexables, liées depuis l’accueil, décrivant l’éligibilité, les priorités, le bonus de fréquence, le départage et la réciprocité. |
 | Mesure d’audience et suivi d’indexation | **Implémenté** | GA4 ne charge qu’après consentement explicite, avec refus et retrait accessibles, choix conservé six mois, Consent Mode basic et chemins normalisés ; Search Console s’appuie sur une validation configurable, le sitemap et robots.txt. |
