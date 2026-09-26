@@ -72,7 +72,10 @@ class Conversation extends Model
     /** @return HasOne<Message, $this> */
     public function latestMessage(): HasOne
     {
-        return $this->hasOne(Message::class)->latestOfMany();
+        return $this->hasOne(Message::class)->ofMany([
+            'created_at' => 'max',
+            'id' => 'max',
+        ]);
     }
 
     /** @return array<string, string> */
