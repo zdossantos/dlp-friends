@@ -34,6 +34,17 @@ const inertiaReady = createInertiaApp({
     },
 });
 
+if (
+    'serviceWorker' in navigator &&
+    (import.meta.env.PROD || import.meta.env.VITE_PWA_E2E === 'true')
+) {
+    void inertiaReady.then(() =>
+        navigator.serviceWorker
+            .register('/service-worker.js', { scope: '/' })
+            .catch(() => undefined),
+    );
+}
+
 void initializeAnalytics(inertiaReady);
 
 // This will set light / dark mode on page load...

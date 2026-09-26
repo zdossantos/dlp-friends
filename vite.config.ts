@@ -5,6 +5,7 @@ import vue from '@vitejs/plugin-vue';
 import laravel from 'laravel-vite-plugin';
 import { bunny } from 'laravel-vite-plugin/fonts';
 import { defineConfig } from 'vite';
+import { VitePWA } from 'vite-plugin-pwa';
 
 export default defineConfig({
     plugins: [
@@ -41,6 +42,22 @@ export default defineConfig({
         }),
         wayfinder({
             formVariants: true,
+        }),
+        VitePWA({
+            strategies: 'injectManifest',
+            srcDir: 'resources/js',
+            filename: 'service-worker.ts',
+            outDir: 'public',
+            injectRegister: null,
+            manifest: false,
+            injectManifest: {
+                globPatterns: [
+                    'build/assets/**/*.{css,js,woff,woff2}',
+                    'pwa/icon-*.png',
+                    'favicon.svg',
+                    'offline.html',
+                ],
+            },
         }),
     ],
 });
