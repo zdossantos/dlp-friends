@@ -14,6 +14,7 @@ use App\Models\PartnerProfile;
 use App\Models\PartnerProfileRevision;
 use App\Models\RoleAudit;
 use App\Models\User;
+use App\Models\WebPushSubscription;
 use Illuminate\Database\Eloquent\Builder;
 
 final class BuildUserDataExport
@@ -165,7 +166,7 @@ final class BuildUserDataExport
             'push_devices' => $user->webPushSubscriptions()
                 ->orderBy('id')
                 ->get()
-                ->map(fn ($subscription): array => [
+                ->map(fn (WebPushSubscription $subscription): array => [
                     'uuid' => $subscription->uuid,
                     'device_name' => $subscription->device_name,
                     'platform' => $subscription->platform,

@@ -15,6 +15,7 @@ class NotificationPreference extends Model
     /** @use HasFactory<NotificationPreferenceFactory> */
     use HasFactory;
 
+    /** @return BelongsTo<User, $this> */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
