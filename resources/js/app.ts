@@ -1,6 +1,10 @@
 import { createInertiaApp } from '@inertiajs/vue3';
 import { configureEcho } from '@laravel/echo-vue';
 import { initializeTheme } from '@/composables/useAppearance';
+import {
+    initializePwaLifecycle,
+    observePwaRegistration,
+} from '@/composables/usePwa';
 import { initializeSeasonalTheme } from '@/composables/useSeasonalTheme';
 import { resolvePageLayout } from '@/layouts/resolvePageLayout';
 import { initializeAnalytics } from '@/lib/analytics';
@@ -34,6 +38,8 @@ const inertiaReady = createInertiaApp({
     },
 });
 
+void initializePwaLifecycle();
+
 if (
     'serviceWorker' in navigator &&
     (import.meta.env.PROD || import.meta.env.VITE_PWA_E2E === 'true')
@@ -41,6 +47,7 @@ if (
     void inertiaReady.then(() =>
         navigator.serviceWorker
             .register('/service-worker.js', { scope: '/' })
+            .then(observePwaRegistration)
             .catch(() => undefined),
     );
 }

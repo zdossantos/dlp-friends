@@ -49,6 +49,11 @@ return [
         ],
     ],
     'actions' => ['cancel' => 'Cancel', 'close' => 'Close', 'delete' => 'Delete'],
+    'pwa' => [
+        'update_title' => 'An update is ready',
+        'update_description' => 'Reload DLP Friends when you are ready.',
+        'update_action' => 'Update now',
+    ],
     'workspace_switcher' => [
         'trigger' => 'Workspaces',
         'title' => 'Switch workspace',

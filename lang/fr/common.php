@@ -53,6 +53,11 @@ return [
         'close' => 'Fermer',
         'delete' => 'Supprimer',
     ],
+    'pwa' => [
+        'update_title' => 'Une mise à jour est prête',
+        'update_description' => 'Recharge DLP Friends quand tu es prêt·e.',
+        'update_action' => 'Mettre à jour',
+    ],
     'workspace_switcher' => [
         'trigger' => 'Espaces',
         'title' => 'Changer d’espace',

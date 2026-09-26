@@ -77,6 +77,10 @@
     }
 }
 
+.pwa-safe-toast {
+    bottom: max(1rem, env(safe-area-inset-bottom));
+}
+
 :root {
     color-scheme: light;
     --motion-duration-instant: 0ms;
