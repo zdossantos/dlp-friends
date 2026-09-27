@@ -612,6 +612,18 @@ test('notification consent is explicit accessible and bilingual', function () {
         ->assertNoJavaScriptErrors();
 });
 
+test('notification recovery guide opens from a member settings page', function () {
+    $member = User::factory()->withProfile()->create(['locale' => 'fr']);
+    $this->actingAs($member);
+
+    visit('/settings/notifications')
+        ->on()->mobile()
+        ->click('[data-test="enable-web-push"]')
+        ->assertPresent('[data-test="web-push-invitation"]')
+        ->assertSee('Réactiver les notifications')
+        ->assertNoJavaScriptErrors();
+});
+
 test('partner mobile navigation exposes only implemented partner destinations', function () {
     $partner = User::factory()->partnerOnly()->create();
     $this->actingAs($partner);
