@@ -17,7 +17,6 @@ use App\Support\WebPushResult;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Str;
-use RuntimeException;
 
 uses(RefreshDatabase::class);
 
