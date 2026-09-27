@@ -7,6 +7,7 @@ use App\Enums\SwipeDecision;
 use App\Models\Block;
 use App\Models\Event;
 use App\Models\EventChat;
+use App\Models\EventChatMessage;
 use App\Models\EventRegistration;
 use App\Models\Swipe;
 use App\Models\User;
@@ -128,6 +129,43 @@ test('event discussion opens as a full height drill down inside the constrained 
             })()
             JS, true)
         ->assertNoJavaScriptErrors();
+});
+
+test('event discussion likes another member message by double tap without zooming', function () {
+    $organizer = eventBrowserMember('Alice');
+    $participant = eventBrowserMember('Basile');
+    $event = Event::factory()->for($organizer, 'organizer')->create();
+    $chat = EventChat::factory()->for($event)->create();
+    EventRegistration::factory()->for($event)->for($participant)->accepted()->create();
+    $message = EventChatMessage::factory()->for($chat)->for($participant, 'author')->create();
+    EventChatMessage::factory()->for($chat)->for($organizer, 'author')->create();
+    $this->actingAs($organizer);
+
+    $page = visit("/events/{$event->id}/chat")->resize(390, 700)
+        ->assertPresent('[data-test="event-chat-message-like"]')
+        ->assertScript("document.querySelectorAll('[data-test=event-chat-message-like]').length", 1)
+        ->assertScript("getComputedStyle(document.querySelector('[data-test=event-chat-message-like]')).display", 'none');
+
+    $defaultPrevented = $page->script(<<<'JS'
+        (() => {
+            const message = document.querySelector('[data-test="event-chat-message-bubble"]');
+            message.dispatchEvent(new PointerEvent('pointerup', { bubbles: true, cancelable: true, pointerType: 'touch' }));
+            const secondTap = new PointerEvent('pointerup', { bubbles: true, cancelable: true, pointerType: 'touch' });
+            message.dispatchEvent(secondTap);
+
+            return secondTap.defaultPrevented;
+        })()
+    JS);
+
+    expect($defaultPrevented)->toBeTrue();
+    $page->assertPresent('[data-test="event-chat-message-like"][aria-pressed="true"]')
+        ->assertSeeIn('[data-test="event-chat-message-like"]', '1')
+        ->assertNoJavaScriptErrors();
+
+    $this->assertDatabaseHas('event_chat_message_reactions', [
+        'event_chat_message_id' => $message->id,
+        'user_id' => $organizer->id,
+    ]);
 });
 
 test('my events separates roles and keeps event details legible in dark theme', function () {

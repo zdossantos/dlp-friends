@@ -49,6 +49,18 @@ class MessageReactionTest extends TestCase
             && $event->reacted === false);
     }
 
+    public function test_a_member_cannot_like_their_own_message(): void
+    {
+        [$author, , $conversation] = $this->conversation();
+        $message = Message::factory()->for($conversation)->for($author, 'author')->create();
+
+        $this->actingAs($author)
+            ->postJson(route('conversations.messages.like', [$conversation, $message]))
+            ->assertForbidden();
+
+        $this->assertDatabaseCount('message_reactions', 0);
+    }
+
     public function test_reactions_require_the_message_to_belong_to_an_accessible_unblocked_conversation(): void
     {
         [$author, $reactor, $conversation] = $this->conversation();

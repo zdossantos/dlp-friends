@@ -134,7 +134,10 @@ async function toggleReaction(message: ConversationMessage): Promise<void> {
 }
 
 function likeMessage(message: ConversationMessage): void {
-    if (!message.reacted_by_current_user) {
+    if (
+        message.author_user_id !== props.currentUserId &&
+        !message.reacted_by_current_user
+    ) {
         void toggleReaction(message);
     }
 }
@@ -155,6 +158,7 @@ function handleMessagePointerUp(
         previousTap?.messageId === message.id &&
         occurredAt - previousTap.occurredAt <= 350
     ) {
+        event.preventDefault();
         lastTouchTap.value = null;
         likeMessage(message);
     }
@@ -294,8 +298,11 @@ watch(
                                     ? 'rounded-3xl rounded-br-md bg-primary text-primary-foreground'
                                     : 'rounded-2xl rounded-bl-sm border-l-4 border-l-secondary-foreground/35 bg-card text-card-foreground'
                             "
-                            @dblclick="likeMessage(message)"
-                            @pointerup="handleMessagePointerUp($event, message)"
+                            @dblclick.prevent="likeMessage(message)"
+                            @pointerup="
+                                message.author_user_id !== currentUserId &&
+                                handleMessagePointerUp($event, message)
+                            "
                         >
                             <p
                                 class="[overflow-wrap:anywhere] whitespace-pre-wrap"
@@ -304,6 +311,7 @@ watch(
                             </p>
                         </article>
                         <button
+                            v-if="message.author_user_id !== currentUserId"
                             type="button"
                             data-test="message-like"
                             class="mt-1 min-h-8 items-center gap-1 rounded-full px-2 text-xs font-medium text-muted-foreground hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"

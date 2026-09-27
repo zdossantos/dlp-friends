@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Notifications\MessageLikedNotification;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
+use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 
 final class SetMessageReaction
 {
@@ -36,6 +37,10 @@ final class SetMessageReaction
                 ->where('conversation_id', $lockedConversation->id)
                 ->lockForUpdate()
                 ->findOrFail($message->id);
+
+            if ($reacted && $lockedMessage->author_user_id === $reactor->id) {
+                throw new AccessDeniedHttpException;
+            }
 
             if ($reacted) {
                 $reaction = MessageReaction::query()->firstOrCreate([

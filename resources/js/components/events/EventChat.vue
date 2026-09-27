@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Link, router, usePage } from '@inertiajs/vue3';
 import { echo, useConnectionStatus, useEcho } from '@laravel/echo-vue';
-import { SendHorizontal } from '@lucide/vue';
+import { Heart, SendHorizontal } from '@lucide/vue';
 import { computed, nextTick, onMounted, ref, watch } from 'vue';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
@@ -9,7 +9,11 @@ import { Textarea } from '@/components/ui/textarea';
 import { useTranslations } from '@/composables/useTranslations';
 import { xsrfHeader } from '@/lib/csrf';
 import { mergeEventChatMessages } from '@/lib/eventChatState';
-import { store as storeMessage } from '@/routes/events/chat/messages';
+import {
+    like as likeMessageRoute,
+    store as storeMessage,
+    unlike as unlikeMessageRoute,
+} from '@/routes/events/chat/messages';
 import { store as storeRead } from '@/routes/events/chat/read';
 import type {
     EventChatInfo,
@@ -32,6 +36,10 @@ const visibleMessages = ref<EventChatMessage[]>([]);
 const content = ref('');
 const error = ref('');
 const pending = ref(false);
+const pendingReactionIds = ref(new Set<number>());
+const lastTouchTap = ref<{ messageId: number; occurredAt: number } | null>(
+    null,
+);
 const scroll = ref<HTMLElement | null>(null);
 const status = useConnectionStatus();
 
@@ -109,6 +117,74 @@ function keydown(event: KeyboardEvent): void {
     }
 }
 
+async function toggleReaction(message: EventChatMessage): Promise<void> {
+    if (
+        message.author_user_id === currentUserId.value ||
+        pendingReactionIds.value.has(message.id)
+    ) {
+        return;
+    }
+
+    pendingReactionIds.value.add(message.id);
+    pendingReactionIds.value = new Set(pendingReactionIds.value);
+
+    try {
+        const route = message.reacted_by_current_user
+            ? unlikeMessageRoute([props.event.id, message.id])
+            : likeMessageRoute([props.event.id, message.id]);
+        const response = await fetch(route.url, {
+            method: route.method.toUpperCase(),
+            credentials: 'same-origin',
+            headers: {
+                Accept: 'application/json',
+                ...xsrfHeader(document.cookie),
+            },
+        });
+        const payload = (await response.json()) as {
+            data?: {
+                reaction_count: number;
+                reacted: boolean;
+            };
+        };
+
+        if (response.ok && payload.data) {
+            message.reaction_count = payload.data.reaction_count;
+            message.reacted_by_current_user = payload.data.reacted;
+        }
+    } finally {
+        pendingReactionIds.value.delete(message.id);
+        pendingReactionIds.value = new Set(pendingReactionIds.value);
+    }
+}
+
+function likeMessage(message: EventChatMessage): void {
+    if (!message.reacted_by_current_user) {
+        void toggleReaction(message);
+    }
+}
+
+function handleMessagePointerUp(
+    event: PointerEvent,
+    message: EventChatMessage,
+): void {
+    if (event.pointerType !== 'touch') {
+        return;
+    }
+
+    const occurredAt = performance.now();
+    const previousTap = lastTouchTap.value;
+    lastTouchTap.value = { messageId: message.id, occurredAt };
+
+    if (
+        previousTap?.messageId === message.id &&
+        occurredAt - previousTap.occurredAt <= 350
+    ) {
+        event.preventDefault();
+        lastTouchTap.value = null;
+        likeMessage(message);
+    }
+}
+
 useEcho<EventChatMessage>(
     `event-chat.${props.chat.id}`,
     '.event-chat.message.sent',
@@ -120,6 +196,29 @@ useEcho<EventChatMessage>(
             behavior: 'smooth',
         });
         void markRead();
+    },
+);
+
+useEcho<{
+    message_id: number;
+    reactor_user_id: number;
+    reaction_count: number;
+    reacted: boolean;
+}>(
+    `event-chat.${props.chat.id}`,
+    '.event-chat.message.reaction.updated',
+    (update) => {
+        const message = visibleMessages.value.find(
+            (item) => item.id === update.message_id,
+        );
+
+        if (message) {
+            message.reaction_count = update.reaction_count;
+
+            if (update.reactor_user_id === currentUserId.value) {
+                message.reacted_by_current_user = update.reacted;
+            }
+        }
     },
 );
 
@@ -190,15 +289,57 @@ onMounted(async () => {
                             {{ message.author.display_name }}
                         </p>
                         <p
-                            class="rounded-3xl px-4 py-2.5 break-words whitespace-pre-wrap shadow-sm"
+                            data-test="event-chat-message-bubble"
+                            class="touch-manipulation rounded-3xl px-4 py-2.5 break-words whitespace-pre-wrap shadow-sm"
                             :class="
                                 message.author_user_id === currentUserId
                                     ? 'rounded-br-md bg-primary text-primary-foreground'
                                     : 'rounded-bl-md border bg-background'
                             "
+                            @dblclick.prevent="
+                                message.author_user_id !== currentUserId &&
+                                likeMessage(message)
+                            "
+                            @pointerup="
+                                message.author_user_id !== currentUserId &&
+                                handleMessagePointerUp($event, message)
+                            "
                         >
                             {{ message.content }}
                         </p>
+                        <button
+                            v-if="message.author_user_id !== currentUserId"
+                            type="button"
+                            data-test="event-chat-message-like"
+                            class="mt-1 min-h-8 items-center gap-1 rounded-full px-2 text-xs font-medium text-muted-foreground hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+                            :class="[
+                                message.reaction_count > 0
+                                    ? 'inline-flex'
+                                    : 'hidden sm:inline-flex',
+                                message.reacted_by_current_user
+                                    ? 'text-rose-600'
+                                    : undefined,
+                            ]"
+                            :aria-pressed="message.reacted_by_current_user"
+                            :aria-label="
+                                message.reacted_by_current_user
+                                    ? t('conversations.reactions.unlike')
+                                    : t('conversations.reactions.like')
+                            "
+                            :disabled="pendingReactionIds.has(message.id)"
+                            @click="toggleReaction(message)"
+                        >
+                            <Heart
+                                :class="[
+                                    'size-4',
+                                    message.reacted_by_current_user
+                                        ? 'fill-current'
+                                        : undefined,
+                                ]"
+                                aria-hidden="true"
+                            />
+                            <span>{{ message.reaction_count }}</span>
+                        </button>
                     </div>
                 </li>
             </ol>

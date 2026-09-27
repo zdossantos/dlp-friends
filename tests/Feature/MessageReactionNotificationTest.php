@@ -38,13 +38,13 @@ class MessageReactionNotificationTest extends TestCase
         });
     }
 
-    public function test_unliking_and_liking_ones_own_message_do_not_notify(): void
+    public function test_liking_ones_own_message_is_forbidden_and_unliking_does_not_notify(): void
     {
         [$author, $reactor, $conversation] = $this->conversation();
         $message = Message::factory()->for($conversation)->for($author, 'author')->create();
         Notification::fake();
 
-        $this->actingAs($author)->postJson(route('conversations.messages.like', [$conversation, $message]))->assertOk();
+        $this->actingAs($author)->postJson(route('conversations.messages.like', [$conversation, $message]))->assertForbidden();
         $this->actingAs($reactor)->deleteJson(route('conversations.messages.unlike', [$conversation, $message]))->assertOk();
 
         Notification::assertNothingSent();

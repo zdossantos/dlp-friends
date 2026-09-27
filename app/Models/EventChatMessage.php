@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * @property int $id
@@ -15,6 +16,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property string $content
  * @property-read EventChat $eventChat
  * @property-read User $author
+ * @property int $reactions_count
  */
 #[Fillable(['event_chat_id', 'author_user_id', 'content'])]
 class EventChatMessage extends Model
@@ -32,5 +34,11 @@ class EventChatMessage extends Model
     public function author(): BelongsTo
     {
         return $this->belongsTo(User::class, 'author_user_id');
+    }
+
+    /** @return HasMany<EventChatMessageReaction, $this> */
+    public function reactions(): HasMany
+    {
+        return $this->hasMany(EventChatMessageReaction::class);
     }
 }

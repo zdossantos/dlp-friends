@@ -30,7 +30,7 @@ final class EventChatMessageSent implements ShouldBroadcast, ShouldDispatchAfter
         return 'event-chat.message.sent';
     }
 
-    /** @return array<string, int|string|array{id: int, display_name: string}|null> */
+    /** @return array<string, bool|int|string|array{id: int, display_name: string}|null> */
     public function broadcastWith(): array
     {
         $this->message->loadMissing('author.profile');
@@ -42,6 +42,8 @@ final class EventChatMessageSent implements ShouldBroadcast, ShouldDispatchAfter
             'event_chat_id' => $this->message->event_chat_id,
             'author_user_id' => $this->message->author_user_id,
             'content' => $this->message->content,
+            'reaction_count' => 0,
+            'reacted_by_current_user' => false,
             'author' => [
                 'id' => $this->message->author->id,
                 'display_name' => $profile->display_name,

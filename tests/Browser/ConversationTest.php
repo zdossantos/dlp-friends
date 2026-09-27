@@ -101,13 +101,18 @@ test('a zero reaction stays hidden on mobile until a double tap likes the messag
     $page = visit("/conversations/{$conversation->id}")->on()->mobile()
         ->assertScript("getComputedStyle(document.querySelector('[data-test=message-like]')).display", 'none');
 
-    $page->script(<<<'JS'
+    $defaultPrevented = $page->script(<<<'JS'
         (() => {
             const message = document.querySelector('[data-test="message-bubble"]');
-            message.dispatchEvent(new PointerEvent('pointerup', { bubbles: true, pointerType: 'touch' }));
-            message.dispatchEvent(new PointerEvent('pointerup', { bubbles: true, pointerType: 'touch' }));
+            message.dispatchEvent(new PointerEvent('pointerup', { bubbles: true, cancelable: true, pointerType: 'touch' }));
+            const secondTap = new PointerEvent('pointerup', { bubbles: true, cancelable: true, pointerType: 'touch' });
+            message.dispatchEvent(secondTap);
+
+            return secondTap.defaultPrevented;
         })()
     JS);
+
+    expect($defaultPrevented)->toBeTrue();
 
     $page->assertPresent('[data-test="message-like"][aria-pressed="true"]')
         ->assertSeeIn('[data-test="message-like"]', '1')
@@ -118,6 +123,24 @@ test('a zero reaction stays hidden on mobile until a double tap likes the messag
         'message_id' => $message->id,
         'user_id' => $member->id,
     ]);
+});
+
+test('a member cannot react to their own message from the conversation', function () {
+    $member = conversationBrowserMember('Alice');
+    $peer = conversationBrowserMember('Basile');
+    $match = MemberMatch::factory()->create([
+        'user_low_id' => min($member->id, $peer->id),
+        'user_high_id' => max($member->id, $peer->id),
+    ]);
+    $conversation = $match->conversation()->create();
+    Message::factory()->for($conversation)->for($member, 'author')->create([
+        'content' => 'Mon propre message',
+    ]);
+    $this->actingAs($member);
+
+    visit("/conversations/{$conversation->id}")->on()->mobile()
+        ->assertMissing('[data-test="message-like"]')
+        ->assertNoJavaScriptErrors();
 });
 
 test('the conversation list links to a peer and previews its latest message', function () {
