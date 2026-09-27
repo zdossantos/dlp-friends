@@ -127,12 +127,12 @@ async function chooseStarter(starter: ConversationStarter): Promise<void> {
                 <p class="mb-2 text-sm font-medium">
                     {{ t('conversations.starters.title') }}
                 </p>
-                <div class="flex gap-2 overflow-x-auto pb-1 sm:flex-wrap">
+                <div class="flex flex-col gap-2 pb-1">
                     <button
                         v-for="starter in starters"
                         :key="starter.id"
                         type="button"
-                        class="shrink-0 rounded-2xl border bg-background px-3 py-2 text-left text-sm transition-colors hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+                        class="w-full rounded-2xl border bg-background px-3 py-2 text-left text-sm transition-colors hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
                         @click="chooseStarter(starter)"
                     >
                         {{ starter.text }}

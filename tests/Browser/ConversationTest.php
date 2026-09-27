@@ -49,7 +49,8 @@ test('an empty conversation offers three starters that fill an editable draft', 
     $this->actingAs($member);
 
     $page = visit("/conversations/{$conversation->id}")->on()->mobile()
-        ->assertScript("document.querySelectorAll('[data-test=conversation-starters] button').length", 3);
+        ->assertScript("document.querySelectorAll('[data-test=conversation-starters] button').length", 3)
+        ->assertScript("getComputedStyle(document.querySelector('[data-test=conversation-starters] > div')).flexDirection", 'column');
 
     $selected = $page->script("document.querySelector('[data-test=conversation-starters] button').textContent.trim()");
     $page->script("document.querySelector('[data-test=conversation-starters] button').click(); true;");
@@ -70,8 +71,9 @@ test('a member can like then unlike a message from the timeline', function () {
     Message::factory()->for($conversation)->for($peer, 'author')->create(['content' => 'Une belle journée']);
     $this->actingAs($member);
 
-    $page = visit("/conversations/{$conversation->id}")->on()->mobile()
+    $page = visit("/conversations/{$conversation->id}")->on()->desktop()
         ->assertPresent('[data-test="message-like"][aria-pressed="false"]')
+        ->assertScript("getComputedStyle(document.querySelector('[data-test=message-like]')).display !== 'none'", true)
         ->click('[data-test="message-like"]')
         ->assertPresent('[data-test="message-like"][aria-pressed="true"]')
         ->assertSeeIn('[data-test="message-like"]', '1')
@@ -81,6 +83,41 @@ test('a member can like then unlike a message from the timeline', function () {
         ->assertNoJavaScriptErrors();
 
     $this->assertDatabaseCount('message_reactions', 0);
+});
+
+test('a zero reaction stays hidden on mobile until a double tap likes the message', function () {
+    $member = conversationBrowserMember('Alice');
+    $peer = conversationBrowserMember('Basile');
+    $match = MemberMatch::factory()->create([
+        'user_low_id' => min($member->id, $peer->id),
+        'user_high_id' => max($member->id, $peer->id),
+    ]);
+    $conversation = $match->conversation()->create();
+    $message = Message::factory()->for($conversation)->for($peer, 'author')->create([
+        'content' => 'Une belle journée',
+    ]);
+    $this->actingAs($member);
+
+    $page = visit("/conversations/{$conversation->id}")->on()->mobile()
+        ->assertScript("getComputedStyle(document.querySelector('[data-test=message-like]')).display", 'none');
+
+    $page->script(<<<'JS'
+        (() => {
+            const message = document.querySelector('[data-test="message-bubble"]');
+            message.dispatchEvent(new PointerEvent('pointerup', { bubbles: true, pointerType: 'touch' }));
+            message.dispatchEvent(new PointerEvent('pointerup', { bubbles: true, pointerType: 'touch' }));
+        })()
+    JS);
+
+    $page->assertPresent('[data-test="message-like"][aria-pressed="true"]')
+        ->assertSeeIn('[data-test="message-like"]', '1')
+        ->assertScript("getComputedStyle(document.querySelector('[data-test=message-like]')).display !== 'none'", true)
+        ->assertNoJavaScriptErrors();
+
+    $this->assertDatabaseHas('message_reactions', [
+        'message_id' => $message->id,
+        'user_id' => $member->id,
+    ]);
 });
 
 test('the conversation list links to a peer and previews its latest message', function () {

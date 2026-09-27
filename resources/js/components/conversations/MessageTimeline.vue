@@ -32,6 +32,9 @@ const announcedMessage = ref('');
 const animatedMessageId = ref<number | null>(null);
 const pendingReactionIds = ref(new Set<number>());
 const reactionError = ref('');
+const lastTouchTap = ref<{ messageId: number; occurredAt: number } | null>(
+    null,
+);
 const latestMessage = computed<ConversationMessage | undefined>(() =>
     props.messages.data.at(-1),
 );
@@ -127,6 +130,33 @@ async function toggleReaction(message: ConversationMessage): Promise<void> {
         const next = new Set(pendingReactionIds.value);
         next.delete(message.id);
         pendingReactionIds.value = next;
+    }
+}
+
+function likeMessage(message: ConversationMessage): void {
+    if (!message.reacted_by_current_user) {
+        void toggleReaction(message);
+    }
+}
+
+function handleMessagePointerUp(
+    event: PointerEvent,
+    message: ConversationMessage,
+): void {
+    if (event.pointerType !== 'touch') {
+        return;
+    }
+
+    const occurredAt = performance.now();
+    const previousTap = lastTouchTap.value;
+    lastTouchTap.value = { messageId: message.id, occurredAt };
+
+    if (
+        previousTap?.messageId === message.id &&
+        occurredAt - previousTap.occurredAt <= 350
+    ) {
+        lastTouchTap.value = null;
+        likeMessage(message);
     }
 }
 
@@ -257,12 +287,15 @@ watch(
                             }}
                         </p>
                         <article
-                            class="max-w-full min-w-0 px-4 py-2.5 shadow-sm"
+                            data-test="message-bubble"
+                            class="max-w-full min-w-0 touch-manipulation px-4 py-2.5 shadow-sm"
                             :class="
                                 message.author_user_id === currentUserId
                                     ? 'rounded-3xl rounded-br-md bg-primary text-primary-foreground'
                                     : 'rounded-2xl rounded-bl-sm border-l-4 border-l-secondary-foreground/35 bg-card text-card-foreground'
                             "
+                            @dblclick="likeMessage(message)"
+                            @pointerup="handleMessagePointerUp($event, message)"
                         >
                             <p
                                 class="[overflow-wrap:anywhere] whitespace-pre-wrap"
@@ -273,12 +306,15 @@ watch(
                         <button
                             type="button"
                             data-test="message-like"
-                            class="mt-1 inline-flex min-h-8 items-center gap-1 rounded-full px-2 text-xs font-medium text-muted-foreground hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
-                            :class="
+                            class="mt-1 min-h-8 items-center gap-1 rounded-full px-2 text-xs font-medium text-muted-foreground hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+                            :class="[
+                                message.reaction_count > 0
+                                    ? 'inline-flex'
+                                    : 'hidden sm:inline-flex',
                                 message.reacted_by_current_user
                                     ? 'text-rose-600'
-                                    : undefined
-                            "
+                                    : undefined,
+                            ]"
                             :aria-pressed="message.reacted_by_current_user"
                             :aria-label="
                                 message.reacted_by_current_user
