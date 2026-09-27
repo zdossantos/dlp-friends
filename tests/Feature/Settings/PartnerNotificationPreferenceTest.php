@@ -4,8 +4,10 @@ namespace Tests\Feature\Settings;
 
 use App\Actions\UpdatePartnerNotificationPreference;
 use App\Enums\RoleName;
+use App\Enums\WebPushPreference;
 use App\Models\Role;
 use App\Models\User;
+use App\Models\WebPushSubscription;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Str;
 use Inertia\Testing\AssertableInertia as Assert;
@@ -83,19 +85,25 @@ class PartnerNotificationPreferenceTest extends TestCase
         ]);
     }
 
-    public function test_partner_notification_settings_require_the_user_role(): void
+    public function test_partner_only_accounts_can_manage_notification_settings(): void
     {
         $partner = User::factory()->partnerOnly()->create();
 
         $this->actingAs($partner)
             ->get(route('notification-preferences.edit'))
-            ->assertForbidden();
+            ->assertOk();
 
         $this->actingAs($partner)
             ->patch(route('notification-preferences.update'), [
                 'partner_announcements' => true,
             ])
-            ->assertForbidden();
+            ->assertRedirect(route('notification-preferences.edit'));
+
+        $this->assertDatabaseHas('notification_preferences', [
+            'user_id' => $partner->id,
+            'category' => WebPushPreference::PartnerAnnouncements->value,
+            'enabled' => true,
+        ]);
     }
 
     public function test_partner_announcement_consent_must_be_an_explicit_boolean(): void
@@ -110,6 +118,30 @@ class PartnerNotificationPreferenceTest extends TestCase
 
         $this->assertDatabaseMissing('partner_notification_preferences', [
             'user_id' => $member->id,
+        ]);
+    }
+
+    public function test_disabling_every_notification_revokes_devices_and_all_categories(): void
+    {
+        $member = User::factory()->withProfile()->create();
+        WebPushSubscription::factory()->count(2)->for($member)->create();
+
+        $this->actingAs($member)
+            ->delete(route('notification-preferences.disable-all'))
+            ->assertRedirect(route('notification-preferences.edit'));
+
+        foreach (WebPushPreference::cases() as $preference) {
+            $this->assertDatabaseHas('notification_preferences', [
+                'user_id' => $member->id,
+                'category' => $preference->value,
+                'enabled' => false,
+            ]);
+        }
+
+        expect($member->webPushSubscriptions()->whereNull('revoked_at')->count())->toBe(0);
+        $this->assertDatabaseHas('partner_notification_preferences', [
+            'user_id' => $member->id,
+            'enabled' => false,
         ]);
     }
 

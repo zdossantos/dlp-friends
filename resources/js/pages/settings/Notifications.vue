@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Form, Head, setLayoutProps } from '@inertiajs/vue3';
+import { Form, Head, router, setLayoutProps, usePage } from '@inertiajs/vue3';
 import { BellRing } from '@lucide/vue';
 import Heading from '@/components/Heading.vue';
 import InputError from '@/components/InputError.vue';
@@ -22,7 +22,8 @@ const props = defineProps<{
     vapidPublicKey: string;
 }>();
 const { t } = useTranslations();
-const push = useWebPush(props.vapidPublicKey);
+const page = usePage();
+const push = useWebPush(props.vapidPublicKey, page.props.auth.user.id);
 const categories = [
     'messages',
     'matches',
@@ -30,6 +31,18 @@ const categories = [
     'partner_announcements',
     'administration',
 ] as const;
+
+async function disableAll(): Promise<void> {
+    if (
+        window.confirm(t('account.settings.notifications.disable_all_confirm'))
+    ) {
+        try {
+            await push.disableCurrent();
+        } finally {
+            router.delete('/settings/notifications', { preserveScroll: true });
+        }
+    }
+}
 
 setLayoutProps({
     breadcrumbs: [
@@ -170,6 +183,15 @@ setLayoutProps({
                 class="min-h-11"
             >
                 <Spinner v-if="processing" />{{ t('account.settings.save') }}
+            </Button>
+            <Button
+                type="button"
+                variant="outline"
+                class="min-h-11"
+                data-test="disable-all-notifications"
+                @click="disableAll"
+            >
+                {{ t('account.settings.notifications.disable_all') }}
             </Button>
         </Form>
 

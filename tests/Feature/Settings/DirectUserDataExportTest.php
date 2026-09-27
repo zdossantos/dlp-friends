@@ -272,8 +272,11 @@ class DirectUserDataExportTest extends TestCase
         $payload = app(BuildUserDataExport::class)->handle($partner);
 
         $this->assertSame([
+            'messages' => true,
+            'matches' => true,
+            'events' => true,
             'partner_announcements' => true,
-            'updated_at' => $preference->updated_at?->toIso8601String(),
+            'administration' => true,
         ], $payload['notification_preferences']);
         $this->assertSame([$firstAudit->id, $secondAudit->id], array_column($payload['role_history'], 'id'));
         $this->assertSame(['administrator', 'system'], array_column($payload['role_history'], 'actor'));

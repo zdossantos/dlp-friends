@@ -4,6 +4,7 @@ export type PushPayload = {
     target: string;
     notificationId: string;
     unreadCount?: number;
+    locale: 'fr' | 'en';
 };
 
 const allowedPrefixes = [
@@ -41,11 +42,19 @@ export const safePushTarget = (value: unknown): string => {
         : '/notifications';
 };
 
-export const parsePushPayload = (value: unknown): PushPayload => {
+export const parsePushPayload = (
+    value: unknown,
+    defaultLocale: 'fr' | 'en' = 'fr',
+): PushPayload => {
     const payload =
         value !== null && typeof value === 'object'
             ? (value as Record<string, unknown>)
             : {};
+
+    const locale =
+        payload.locale === 'en' || payload.locale === 'fr'
+            ? payload.locale
+            : defaultLocale;
 
     return {
         title:
@@ -55,7 +64,9 @@ export const parsePushPayload = (value: unknown): PushPayload => {
         body:
             typeof payload.body === 'string' && payload.body.length <= 180
                 ? payload.body
-                : 'Tu as une nouvelle notification.',
+                : locale === 'en'
+                  ? 'You have a new notification.'
+                  : 'Tu as une nouvelle notification.',
         target: safePushTarget(payload.target),
         notificationId:
             typeof payload.notification_id === 'string'
@@ -66,5 +77,6 @@ export const parsePushPayload = (value: unknown): PushPayload => {
             payload.unread_count >= 0
                 ? payload.unread_count
                 : undefined,
+        locale,
     };
 };

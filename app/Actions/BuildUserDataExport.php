@@ -2,6 +2,7 @@
 
 namespace App\Actions;
 
+use App\Enums\WebPushPreference;
 use App\Models\Conversation;
 use App\Models\Event;
 use App\Models\EventChatMessage;
@@ -24,7 +25,7 @@ final class BuildUserDataExport
     {
         $user->loadMissing('profile.avatar', 'profile.interestHistory');
 
-        $partnerPreference = $user->partnerNotificationPreference()->first();
+        $preferences = $user->notificationPreferences()->pluck('enabled', 'category');
         $partnerProfile = PartnerProfile::query()
             ->where('user_id', $user->id)
             ->first();
@@ -159,10 +160,10 @@ final class BuildUserDataExport
                         'created_at' => $notification->created_at?->toIso8601String(),
                     ];
                 })->all(),
-            'notification_preferences' => [
-                'partner_announcements' => $partnerPreference->enabled ?? false,
-                'updated_at' => $partnerPreference?->updated_at?->toIso8601String(),
-            ],
+            'notification_preferences' => collect(WebPushPreference::cases())
+                ->mapWithKeys(fn (WebPushPreference $preference): array => [
+                    $preference->value => (bool) ($preferences->get($preference->value) ?? true),
+                ])->all(),
             'push_devices' => $user->webPushSubscriptions()
                 ->orderBy('id')
                 ->get()

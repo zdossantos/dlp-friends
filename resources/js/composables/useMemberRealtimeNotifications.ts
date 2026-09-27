@@ -211,6 +211,22 @@ export function useMemberRealtimeNotifications(
         },
     );
 
+    watch(
+        unreadNotificationsCount,
+        (count) => {
+            if (!('setAppBadge' in navigator)) {
+                return;
+            }
+
+            if (count > 0) {
+                void navigator.setAppBadge(count).catch(() => undefined);
+            } else {
+                void navigator.clearAppBadge().catch(() => undefined);
+            }
+        },
+        { immediate: true },
+    );
+
     let heartbeatTimer: ReturnType<typeof setInterval> | undefined;
     let initialHeartbeatTimer: ReturnType<typeof setTimeout> | undefined;
     const heartbeat = (): void => {

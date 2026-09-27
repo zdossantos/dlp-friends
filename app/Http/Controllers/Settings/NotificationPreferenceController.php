@@ -9,6 +9,7 @@ use App\Http\Requests\Settings\NotificationPreferenceUpdateRequest;
 use App\Models\WebPushSubscription;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -48,6 +49,27 @@ class NotificationPreferenceController extends Controller
         Inertia::flash('toast', [
             'type' => 'success',
             'message' => __('account.settings.notifications.saved'),
+        ]);
+
+        return to_route('notification-preferences.edit');
+    }
+
+    public function disableAll(Request $request, UpdatePartnerNotificationPreference $updatePartner): RedirectResponse
+    {
+        DB::transaction(function () use ($request, $updatePartner): void {
+            foreach (WebPushPreference::cases() as $preference) {
+                $request->user()->notificationPreferences()->updateOrCreate(
+                    ['category' => $preference], ['enabled' => false],
+                );
+            }
+
+            $updatePartner->handle($request->user(), false);
+            $request->user()->webPushSubscriptions()->whereNull('revoked_at')->update(['revoked_at' => now()]);
+        });
+
+        Inertia::flash('toast', [
+            'type' => 'success',
+            'message' => __('account.settings.notifications.disabled_all'),
         ]);
 
         return to_route('notification-preferences.edit');

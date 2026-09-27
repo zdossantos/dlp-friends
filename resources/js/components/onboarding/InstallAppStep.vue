@@ -1,21 +1,22 @@
 <script setup lang="ts">
+import { usePage } from '@inertiajs/vue3';
 import { Bell, Download, Share } from '@lucide/vue';
 import { computed, ref } from 'vue';
 import { Button } from '@/components/ui/button';
 import { usePwa } from '@/composables/usePwa';
 import { useTranslations } from '@/composables/useTranslations';
 import { useWebPush } from '@/composables/useWebPush';
+import { isIosDevice } from '@/lib/pwa/capabilities';
 
 const emit = defineEmits<{ complete: [] }>();
 const props = defineProps<{ vapidPublicKey: string }>();
 const { t } = useTranslations();
+const page = usePage();
 const { state, canInstall, install, isStandalone } = usePwa();
-const push = useWebPush(props.vapidPublicKey);
+const push = useWebPush(props.vapidPublicKey, page.props.auth.user.id);
 const busy = ref(false);
 const isIos = computed(
-    () =>
-        typeof navigator !== 'undefined' &&
-        /iPad|iPhone|iPod/.test(navigator.userAgent),
+    () => typeof navigator !== 'undefined' && isIosDevice(navigator),
 );
 
 async function requestInstall(): Promise<void> {

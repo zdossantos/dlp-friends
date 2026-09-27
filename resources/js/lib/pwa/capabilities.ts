@@ -51,3 +51,12 @@ export const isSafeExternalUrl = (url: string, origin: string): boolean => {
         return false;
     }
 };
+
+export const isIosDevice = (navigatorLike: {
+    userAgent: string;
+    platform?: string;
+    maxTouchPoints?: number;
+}): boolean =>
+    /iPad|iPhone|iPod/.test(navigatorLike.userAgent) ||
+    (navigatorLike.platform === 'MacIntel' &&
+        (navigatorLike.maxTouchPoints ?? 0) > 1);

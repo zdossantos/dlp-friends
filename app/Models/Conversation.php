@@ -57,6 +57,25 @@ class Conversation extends Model
                         ->where('blocker_user_id', $user->id)))));
     }
 
+    /** @param Builder<Conversation> $query */
+    public function scopeWithUnblockedParticipant(Builder $query, User $user): void
+    {
+        $query->whereHas('memberMatch', fn (Builder $match) => $match
+            ->where(fn (Builder $participants) => $participants
+                ->where(fn (Builder $memberIsLow) => $memberIsLow
+                    ->where('user_low_id', $user->id)
+                    ->whereDoesntHave('highUser.blocksCreated', fn (Builder $blocks) => $blocks
+                        ->where('blocked_user_id', $user->id))
+                    ->whereDoesntHave('highUser.blocksReceived', fn (Builder $blocks) => $blocks
+                        ->where('blocker_user_id', $user->id)))
+                ->orWhere(fn (Builder $memberIsHigh) => $memberIsHigh
+                    ->where('user_high_id', $user->id)
+                    ->whereDoesntHave('lowUser.blocksCreated', fn (Builder $blocks) => $blocks
+                        ->where('blocked_user_id', $user->id))
+                    ->whereDoesntHave('lowUser.blocksReceived', fn (Builder $blocks) => $blocks
+                        ->where('blocker_user_id', $user->id)))));
+    }
+
     /** @return BelongsTo<MemberMatch, $this> */
     public function memberMatch(): BelongsTo
     {

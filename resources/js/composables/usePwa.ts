@@ -19,6 +19,7 @@ const installPrompt = ref<BeforeInstallPromptEvent>();
 const installed = ref(false);
 const waitingWorker = ref<ServiceWorker>();
 let initialized = false;
+let updateActivationRequested = false;
 
 const standalone = (): boolean =>
     window.matchMedia('(display-mode: standalone)').matches ||
@@ -59,10 +60,16 @@ export const initializePwaLifecycle = async (): Promise<void> => {
     });
 
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.addEventListener(
-            'controllerchange',
-            createSingleReloadHandler(() => window.location.reload()),
+        const reloadOnce = createSingleReloadHandler(() =>
+            window.location.reload(),
         );
+        navigator.serviceWorker.addEventListener('controllerchange', () => {
+            if (!updateActivationRequested) {
+                return;
+            }
+
+            reloadOnce();
+        });
 
         const registration = await navigator.serviceWorker
             .getRegistration('/')
@@ -112,7 +119,10 @@ export function usePwa() {
     };
 
     const activateWaitingWorker = (): void => {
-        waitingWorker.value?.postMessage({ type: 'SKIP_WAITING' });
+        if (waitingWorker.value) {
+            updateActivationRequested = true;
+            waitingWorker.value.postMessage({ type: 'SKIP_WAITING' });
+        }
     };
 
     return {

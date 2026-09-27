@@ -2,6 +2,8 @@
 
 namespace Tests\Feature;
 
+use App\Enums\ProfileVisibility;
+use App\Models\Block;
 use App\Models\MemberMatch;
 use App\Models\Message;
 use App\Models\User;
@@ -51,6 +53,31 @@ class MemberNotificationTest extends TestCase
             'target_type' => 'conversation',
             'target_id' => $conversation->id,
         ]);
+    }
+
+    public function test_hidden_profiles_do_not_suppress_notifications_for_an_existing_unblocked_match(): void
+    {
+        [$author, $recipient, $match] = $this->matchedMembers();
+        $author->profile()->update(['visibility' => ProfileVisibility::Hidden]);
+        $conversation = $match->conversation()->create();
+        $message = Message::factory()->for($conversation)->for($author, 'author')->create();
+
+        expect((new NewMessageNotification($message))->webPushAccessAllowed($recipient))->toBeTrue()
+            ->and((new NewMatchNotification($match, $author))->webPushAccessAllowed($recipient))->toBeTrue();
+    }
+
+    public function test_a_block_suppresses_message_and_match_push_access(): void
+    {
+        [$author, $recipient, $match] = $this->matchedMembers();
+        $conversation = $match->conversation()->create();
+        $message = Message::factory()->for($conversation)->for($author, 'author')->create();
+        Block::factory()->create([
+            'blocker_user_id' => $author->id,
+            'blocked_user_id' => $recipient->id,
+        ]);
+
+        expect((new NewMessageNotification($message))->webPushAccessAllowed($recipient))->toBeFalse()
+            ->and((new NewMatchNotification($match, $author))->webPushAccessAllowed($recipient))->toBeFalse();
     }
 
     /** @return array{User, User, MemberMatch} */

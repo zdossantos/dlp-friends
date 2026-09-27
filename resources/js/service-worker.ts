@@ -46,7 +46,12 @@ self.addEventListener('push', (event) => {
                 raw = undefined;
             }
 
-            const payload = parsePushPayload(raw);
+            const payload = parsePushPayload(
+                raw,
+                self.navigator.language.toLowerCase().startsWith('en')
+                    ? 'en'
+                    : 'fr',
+            );
             await self.registration.showNotification(payload.title, {
                 body: payload.body,
                 icon: '/pwa/icon-192.png',

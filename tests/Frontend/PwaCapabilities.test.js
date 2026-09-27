@@ -2,6 +2,7 @@ import { describe, expect, test } from 'bun:test';
 import {
     createSingleReloadHandler,
     detectPwaState,
+    isIosDevice,
     isSafeExternalUrl,
 } from '../../resources/js/lib/pwa/capabilities';
 
@@ -61,6 +62,25 @@ describe('PWA capabilities', () => {
         ['/internal', false],
         ['javascript:alert(1)', false],
     ])('accepts only external HTTPS URLs', (url, expected) => {
-        expect(isSafeExternalUrl(url, 'https://dlp-friends.test')).toBe(expected);
+        expect(isSafeExternalUrl(url, 'https://dlp-friends.test')).toBe(
+            expected,
+        );
+    });
+
+    test('detects modern iPads reporting a desktop user agent', () => {
+        expect(
+            isIosDevice({
+                userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15)',
+                platform: 'MacIntel',
+                maxTouchPoints: 5,
+            }),
+        ).toBe(true);
+        expect(
+            isIosDevice({
+                userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15)',
+                platform: 'MacIntel',
+                maxTouchPoints: 0,
+            }),
+        ).toBe(false);
     });
 });

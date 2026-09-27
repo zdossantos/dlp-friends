@@ -63,6 +63,6 @@ final class NewMessageNotification extends Notification implements ShouldQueue, 
 
     public function webPushAccessAllowed(User $notifiable): bool
     {
-        return $this->message->conversation()->forMember($notifiable)->withVisibleParticipant($notifiable)->exists();
+        return $this->message->conversation()->forMember($notifiable)->withUnblockedParticipant($notifiable)->exists();
     }
 }

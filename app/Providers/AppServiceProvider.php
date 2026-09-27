@@ -3,6 +3,8 @@
 namespace App\Providers;
 
 use App\Contracts\DiscoveryTieBreaker;
+use App\Contracts\WebPushTransport;
+use App\Services\MinishlinkWebPushTransport;
 use App\Services\RandomDiscoveryTieBreaker;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Date;
@@ -18,6 +20,7 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->bind(DiscoveryTieBreaker::class, RandomDiscoveryTieBreaker::class);
+        $this->app->bind(WebPushTransport::class, fn (): MinishlinkWebPushTransport => MinishlinkWebPushTransport::fromConfig());
     }
 
     /**

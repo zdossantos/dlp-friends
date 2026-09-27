@@ -28,17 +28,22 @@ Route::middleware(['auth', 'verified', 'social', 'role:user', 'profile.complete'
 
     Route::inertia('settings/appearance', 'settings/Appearance')->name('appearance.edit');
 
+});
+
+Route::middleware(['auth', 'verified', 'social'])->group(function () {
     Route::get('settings/notifications', [NotificationPreferenceController::class, 'edit'])
         ->name('notification-preferences.edit');
     Route::patch('settings/notifications', [NotificationPreferenceController::class, 'update'])
         ->name('notification-preferences.update');
-});
+    Route::delete('settings/notifications', [NotificationPreferenceController::class, 'disableAll'])
+        ->name('notification-preferences.disable-all');
 
-Route::middleware(['auth', 'verified', 'social', 'role:user', 'profile.complete', 'throttle:30,1'])->group(function () {
-    Route::post('settings/notifications/devices', [WebPushSubscriptionController::class, 'store'])
-        ->name('notification-devices.store');
-    Route::delete('settings/notifications/devices/{uuid}', [WebPushSubscriptionController::class, 'destroy'])
-        ->name('notification-devices.destroy');
+    Route::middleware('throttle:30,1')->group(function () {
+        Route::post('settings/notifications/devices', [WebPushSubscriptionController::class, 'store'])
+            ->name('notification-devices.store');
+        Route::delete('settings/notifications/devices/{uuid}', [WebPushSubscriptionController::class, 'destroy'])
+            ->name('notification-devices.destroy');
+    });
 });
 
 Route::get('.well-known/passkey-endpoints', function () {

@@ -71,6 +71,6 @@ final class NewMatchNotification extends Notification implements ShouldQueue, We
         $this->match->loadMissing('conversation');
 
         return $this->match->conversation?->newQuery()->whereKey($this->match->conversation->id)
-            ->forMember($notifiable)->withVisibleParticipant($notifiable)->exists() ?? false;
+            ->forMember($notifiable)->withUnblockedParticipant($notifiable)->exists() ?? false;
     }
 }

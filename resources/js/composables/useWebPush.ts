@@ -1,6 +1,7 @@
 import { computed, onMounted, ref } from 'vue';
 import { usePwa } from '@/composables/usePwa';
 import { xsrfHeader } from '@/lib/csrf';
+import { isIosDevice } from '@/lib/pwa/capabilities';
 
 const busy = ref(false);
 const error = ref<string>();
@@ -19,7 +20,7 @@ const applicationServerKey = (value: string): Uint8Array<ArrayBuffer> => {
 };
 
 const platformName = (): string => {
-    if (/iPad|iPhone|iPod/.test(navigator.userAgent)) {
+    if (isIosDevice(navigator)) {
         return 'iOS';
     }
 
@@ -30,12 +31,10 @@ const platformName = (): string => {
     return 'Web';
 };
 
-export function useWebPush(vapidPublicKey: string) {
+export function useWebPush(vapidPublicKey: string, currentUserId?: number) {
     const { isStandalone } = usePwa();
     const isIos = computed(
-        () =>
-            typeof navigator !== 'undefined' &&
-            /iPad|iPhone|iPod/.test(navigator.userAgent),
+        () => typeof navigator !== 'undefined' && isIosDevice(navigator),
     );
     const supported = computed(
         () =>
@@ -47,6 +46,67 @@ export function useWebPush(vapidPublicKey: string) {
             vapidPublicKey.length > 0,
     );
 
+    const revokeStoredDevice = async (): Promise<void> => {
+        const uuid = localStorage.getItem('web-push-device-uuid');
+
+        if (!uuid) {
+            return;
+        }
+
+        const response = await fetch(
+            `/settings/notifications/devices/${encodeURIComponent(uuid)}`,
+            {
+                method: 'DELETE',
+                credentials: 'same-origin',
+                headers: {
+                    Accept: 'application/json',
+                    ...xsrfHeader(document.cookie),
+                },
+            },
+        );
+
+        if (response.ok || response.status === 404) {
+            localStorage.removeItem('web-push-device-uuid');
+        }
+    };
+
+    const syncSubscription = async (
+        subscription: PushSubscription,
+    ): Promise<boolean> => {
+        const json = subscription.toJSON();
+        const response = await fetch('/settings/notifications/devices', {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: {
+                Accept: 'application/json',
+                'Content-Type': 'application/json',
+                ...xsrfHeader(document.cookie),
+            },
+            body: JSON.stringify({
+                endpoint: json.endpoint,
+                keys: json.keys,
+                content_encoding: 'aes128gcm',
+                device_name: `${platformName()} · Browser`,
+                platform: platformName(),
+            }),
+        });
+
+        if (!response.ok) {
+            return false;
+        }
+
+        const device = (await response.json()) as { uuid: string };
+        localStorage.setItem('web-push-device-uuid', device.uuid);
+
+        if (currentUserId !== undefined) {
+            localStorage.setItem('web-push-user-id', String(currentUserId));
+        }
+
+        localStorage.removeItem('web-push-opted-out');
+
+        return true;
+    };
+
     onMounted(async () => {
         if (!supported.value) {
             subscribed.value = false;
@@ -54,10 +114,44 @@ export function useWebPush(vapidPublicKey: string) {
             return;
         }
 
-        const registration = await navigator.serviceWorker.getRegistration();
-        subscribed.value = Boolean(
-            await registration?.pushManager.getSubscription(),
-        );
+        const registration =
+            (await navigator.serviceWorker.getRegistration()) ??
+            (permission.value === 'granted'
+                ? await navigator.serviceWorker.ready
+                : undefined);
+        const subscription = await registration?.pushManager.getSubscription();
+        const storedUserId = localStorage.getItem('web-push-user-id');
+
+        if (
+            subscription &&
+            currentUserId !== undefined &&
+            storedUserId !== null &&
+            storedUserId !== String(currentUserId)
+        ) {
+            await subscription.unsubscribe();
+            localStorage.removeItem('web-push-device-uuid');
+            localStorage.removeItem('web-push-user-id');
+            subscribed.value = false;
+
+            return;
+        }
+
+        if (localStorage.getItem('web-push-opted-out') === 'true') {
+            await subscription?.unsubscribe();
+            await revokeStoredDevice();
+            subscribed.value = false;
+
+            return;
+        }
+
+        if (!subscription) {
+            subscribed.value = false;
+            await revokeStoredDevice();
+
+            return;
+        }
+
+        subscribed.value = await syncSubscription(subscription);
     });
 
     const enable = async (): Promise<boolean> => {
@@ -69,6 +163,7 @@ export function useWebPush(vapidPublicKey: string) {
         error.value = undefined;
 
         try {
+            localStorage.removeItem('web-push-opted-out');
             permission.value = await Notification.requestPermission();
 
             if (permission.value !== 'granted') {
@@ -82,30 +177,11 @@ export function useWebPush(vapidPublicKey: string) {
                     userVisibleOnly: true,
                     applicationServerKey: applicationServerKey(vapidPublicKey),
                 }));
-            const json = subscription.toJSON();
-            const response = await fetch('/settings/notifications/devices', {
-                method: 'POST',
-                credentials: 'same-origin',
-                headers: {
-                    Accept: 'application/json',
-                    'Content-Type': 'application/json',
-                    ...xsrfHeader(document.cookie),
-                },
-                body: JSON.stringify({
-                    endpoint: json.endpoint,
-                    keys: json.keys,
-                    content_encoding: 'aes128gcm',
-                    device_name: `${platformName()} · ${navigator.userAgent.includes('Safari') ? 'Safari' : 'Navigateur'}`,
-                    platform: platformName(),
-                }),
-            });
 
-            if (!response.ok) {
+            if (!(await syncSubscription(subscription))) {
                 throw new Error('subscription_sync_failed');
             }
 
-            const device = (await response.json()) as { uuid: string };
-            localStorage.setItem('web-push-device-uuid', device.uuid);
             subscribed.value = true;
 
             return true;
@@ -120,29 +196,21 @@ export function useWebPush(vapidPublicKey: string) {
 
     const disableCurrent = async (): Promise<void> => {
         busy.value = true;
+        localStorage.setItem('web-push-opted-out', 'true');
 
         try {
-            const registration = await navigator.serviceWorker.ready;
+            const registration =
+                'serviceWorker' in navigator
+                    ? await navigator.serviceWorker.getRegistration()
+                    : undefined;
             await (
-                await registration.pushManager.getSubscription()
+                await registration?.pushManager.getSubscription()
             )?.unsubscribe();
             subscribed.value = false;
-            const uuid = localStorage.getItem('web-push-device-uuid');
-
-            if (uuid) {
-                await fetch(
-                    `/settings/notifications/devices/${encodeURIComponent(uuid)}`,
-                    {
-                        method: 'DELETE',
-                        credentials: 'same-origin',
-                        headers: {
-                            Accept: 'application/json',
-                            ...xsrfHeader(document.cookie),
-                        },
-                    },
-                );
-                localStorage.removeItem('web-push-device-uuid');
-            }
+            await revokeStoredDevice();
+            localStorage.removeItem('web-push-user-id');
+        } catch {
+            error.value = 'subscription_failed';
         } finally {
             busy.value = false;
         }
