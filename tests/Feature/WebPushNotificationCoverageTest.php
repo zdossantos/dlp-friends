@@ -35,6 +35,20 @@ test('push targets accept only same-origin allowlisted paths', function () {
         ->and(WebPushTarget::isAllowed('/settings/security'))->toBeFalse();
 });
 
+test('partner moderation pushes open the matching admin review page', function (string $targetType, string $expectedUrl) {
+    $notification = new PartnerModerationRequestedNotification(
+        'notifications.items.partner_profile_review_requested',
+        [],
+        $targetType,
+        42,
+    );
+
+    expect($notification->webPushTarget(new User)->url)->toBe($expectedUrl);
+})->with([
+    'partner profile' => ['admin_partner_profile_review', '/admin/partner-profiles'],
+    'partner announcement' => ['admin_partner_announcement_review', '/admin/partner-announcements'],
+]);
+
 test('system push copy never exposes user or content placeholders', function (string $locale) {
     foreach (WebPushPreference::cases() as $preference) {
         $copy = trans('notifications.push.'.$preference->value, locale: $locale);

@@ -51,7 +51,10 @@ final class PartnerModerationRequestedNotification extends Notification implemen
 
     public function webPushTarget(User $notifiable): WebPushTarget
     {
-        return new WebPushTarget('/admin/partner-announcements');
+        return new WebPushTarget(match ($this->targetType) {
+            'admin_partner_profile_review' => '/admin/partner-profiles',
+            default => '/admin/partner-announcements',
+        });
     }
 
     public function webPushAccessAllowed(User $notifiable): bool
