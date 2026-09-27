@@ -34,6 +34,7 @@ const pushStatusView = computed(() =>
     notificationSettingsView({
         permission: push.permission.value,
         supported: push.supported.value,
+        secureContext: push.secureContext.value,
     }),
 );
 const categories = [
@@ -111,13 +112,23 @@ setLayoutProps({
                 {{ t('account.settings.notifications.permission_denied') }}
             </p>
             <p
+                v-else-if="pushStatusView === 'insecure-context'"
+                role="status"
+                class="text-sm text-destructive"
+            >
+                {{ t('account.settings.notifications.https_required') }}
+            </p>
+            <p
                 v-else-if="pushStatusView === 'unsupported'"
                 class="text-sm text-muted-foreground"
             >
                 {{ t('account.settings.notifications.push_unavailable') }}
             </p>
             <div
-                v-if="pushStatusView !== 'unsupported'"
+                v-if="
+                    pushStatusView === 'controls' ||
+                    pushStatusView === 'permission-denied'
+                "
                 class="flex flex-wrap gap-2"
             >
                 <Button

@@ -37,9 +37,12 @@ export function useWebPush(vapidPublicKey: string, currentUserId?: number) {
     const isIos = computed(
         () => typeof navigator !== 'undefined' && isIosDevice(navigator),
     );
+    const secureContext = computed(
+        () => typeof window !== 'undefined' && window.isSecureContext,
+    );
     const supported = computed(
         () =>
-            typeof window !== 'undefined' &&
+            secureContext.value &&
             'serviceWorker' in navigator &&
             'PushManager' in window &&
             'Notification' in window &&
@@ -224,6 +227,7 @@ export function useWebPush(vapidPublicKey: string, currentUserId?: number) {
 
     return {
         supported,
+        secureContext,
         initialized,
         subscribed,
         permission,

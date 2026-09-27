@@ -84,6 +84,7 @@ return [
             'push_enabled' => 'Notifications enabled',
             'push_disable_device' => 'Disable on this device',
             'push_unavailable' => 'Install the app on your home screen to enable notifications. On iPhone and iPad, then open that installed app.',
+            'https_required' => 'Notifications require an HTTPS connection. This version opened from a local HTTP address cannot ask iOS for permission.',
             'permission_denied' => 'Notifications are turned off on this device.',
             'invitation' => [
                 'title' => 'Stay informed, even when the app is closed',
@@ -92,7 +93,7 @@ return [
                 'decline' => 'No thanks',
                 'denied_title' => 'Turn notifications back on',
                 'denied_description' => 'DLP Friends cannot change this setting for you.',
-                'ios_steps' => 'Open Settings > Apps > DLP Friends > Notifications, then turn on Allow Notifications.',
+                'ios_steps' => 'Open Settings > Notifications > DLP Friends, then turn on Allow Notifications.',
                 'browser_steps' => 'Open your browser or device notification settings, allow DLP Friends, then return here.',
             ],
             'push_error' => 'This device could not be registered. Check your connection and try again.',

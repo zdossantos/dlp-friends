@@ -56,13 +56,16 @@ final class DeliverWebPushNotification
         $delivery->increment('attempts');
 
         try {
+            $locale = $user->preferredLocale();
+            $copyKey = 'notifications.push.'.$notification->webPushPreference()->value;
+
             $report = $this->transport->send($subscription, [
-                'title' => __('notifications.push.title', locale: $user->preferredLocale()),
-                'body' => __('notifications.push.'.$notification->webPushPreference()->value, locale: $user->preferredLocale()),
+                'title' => __("{$copyKey}.title", locale: $locale),
+                'body' => __("{$copyKey}.body", locale: $locale),
                 'target' => $notification->webPushTarget($user)->url,
                 'notification_id' => $notificationId,
                 'unread_count' => $user->unreadNotifications()->count(),
-                'locale' => $user->preferredLocale(),
+                'locale' => $locale,
             ], substr($notificationId, 0, 32));
 
             $status = $report->statusCode;

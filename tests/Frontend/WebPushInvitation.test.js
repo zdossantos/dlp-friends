@@ -59,13 +59,14 @@ describe('Web Push invitation', () => {
         },
     );
 
-    test('shows only recovery guidance when permission is denied and push support detection fails', () => {
+    test('does not mistake an insecure origin for a system refusal', () => {
         expect(
             notificationSettingsView({
                 permission: 'denied',
                 supported: false,
+                secureContext: false,
             }),
-        ).toBe('permission-denied');
+        ).toBe('insecure-context');
     });
 
     test('shows installation guidance only when permission has not been denied', () => {
@@ -73,8 +74,19 @@ describe('Web Push invitation', () => {
             notificationSettingsView({
                 permission: 'default',
                 supported: false,
+                secureContext: true,
             }),
         ).toBe('unsupported');
+    });
+
+    test('shows recovery guidance after a real refusal in a secure context', () => {
+        expect(
+            notificationSettingsView({
+                permission: 'denied',
+                supported: true,
+                secureContext: true,
+            }),
+        ).toBe('permission-denied');
     });
 
     test('scopes a refusal to one member on one device', () => {

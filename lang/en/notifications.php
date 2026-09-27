@@ -42,12 +42,26 @@ return [
     ],
     'accessibility' => ['unread_count' => ':count unread notifications'],
     'push' => [
-        'title' => 'DLP Friends',
-        'messages' => 'You received a new message.',
-        'matches' => 'A new friendly connection is waiting for you.',
-        'events' => 'There is an update about an event.',
-        'partner_announcements' => 'A new partner announcement is available.',
-        'administration' => 'An administration action needs your attention.',
+        'messages' => [
+            'title' => 'New message',
+            'body' => 'A new message is waiting for you.',
+        ],
+        'matches' => [
+            'title' => 'New friendly connection',
+            'body' => 'A new friendly connection is waiting for you.',
+        ],
+        'events' => [
+            'title' => 'Event update',
+            'body' => 'An update about an event is waiting for you.',
+        ],
+        'partner_announcements' => [
+            'title' => 'Partner update',
+            'body' => 'A new partner update is available.',
+        ],
+        'administration' => [
+            'title' => 'Action required',
+            'body' => 'An administration action needs your attention.',
+        ],
     ],
     'admin' => [
         'dispatch_started' => 'The partner announcement dispatch has started.',

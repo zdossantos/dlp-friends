@@ -79,6 +79,30 @@ test('a successful transport response records one delivery without private messa
     ]);
 });
 
+test('a push uses concise copy in the account language without repeating the app name', function (string $locale, string $title, string $body) {
+    [, $recipient, $message] = pushConversation();
+    $recipient->update(['locale' => $locale]);
+    $subscription = WebPushSubscription::factory()->for($recipient)->create();
+    $notification = new NewMessageNotification($message);
+    $notification->id = (string) Str::uuid();
+
+    $transport = Mockery::mock(WebPushTransport::class);
+    $transport->shouldReceive('send')->once()->withArgs(function ($device, array $payload) use ($subscription, $locale, $title, $body): bool {
+        expect($device->is($subscription))->toBeTrue()
+            ->and($payload['title'])->toBe($title)
+            ->and($payload['title'])->not->toBe('DLP Friends')
+            ->and($payload['body'])->toBe($body)
+            ->and($payload['locale'])->toBe($locale);
+
+        return true;
+    })->andReturn(new WebPushResult(true, false, 201));
+
+    (new DeliverWebPushNotification($transport))->handle($subscription, $notification);
+})->with([
+    'French account' => ['fr', 'Nouveau message', 'Un nouveau message t’attend.'],
+    'English account' => ['en', 'New message', 'A new message is waiting for you.'],
+]);
+
 test('an expired endpoint is revoked permanently', function () {
     [, $recipient, $message] = pushConversation();
     $subscription = WebPushSubscription::factory()->for($recipient)->create();

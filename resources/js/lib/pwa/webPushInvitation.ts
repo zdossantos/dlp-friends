@@ -11,7 +11,7 @@ export type NotificationSettingsAction =
     'invite' | 'subscribe' | 'instructions';
 
 export type NotificationSettingsView =
-    'permission-denied' | 'unsupported' | 'controls';
+    'permission-denied' | 'insecure-context' | 'unsupported' | 'controls';
 
 export const WEB_PUSH_INVITATION_OPEN_EVENT =
     'web-push-invitation:open' as const;
@@ -42,10 +42,16 @@ export const notificationSettingsAction = (
 export const notificationSettingsView = ({
     permission,
     supported,
+    secureContext,
 }: {
     permission: NotificationPermission;
     supported: boolean;
+    secureContext: boolean;
 }): NotificationSettingsView => {
+    if (!secureContext) {
+        return 'insecure-context';
+    }
+
     if (permission === 'denied') {
         return 'permission-denied';
     }

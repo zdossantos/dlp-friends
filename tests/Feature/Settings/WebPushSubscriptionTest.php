@@ -44,6 +44,20 @@ test('a partner-only account can register a notification device', function () {
     expect($partner->webPushSubscriptions()->count())->toBe(1);
 });
 
+test('registering a device stores the active language on a legacy account', function () {
+    $user = User::factory()->withProfile()->create(['locale' => null]);
+
+    $this->actingAs($user)
+        ->withCookie('locale', 'fr')
+        ->postJson('/settings/notifications/devices', [
+            'endpoint' => 'https://web.push.apple.com/device',
+            'keys' => ['p256dh' => str_repeat('a', 88), 'auth' => str_repeat('b', 22)],
+        ])
+        ->assertCreated();
+
+    expect($user->fresh()->locale)->toBe('fr');
+});
+
 test('push endpoints cannot target arbitrary or private servers', function (string $endpoint) {
     $user = User::factory()->withProfile()->create();
 

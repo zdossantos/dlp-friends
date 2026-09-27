@@ -14,6 +14,10 @@ class WebPushSubscriptionController extends Controller
 {
     public function store(WebPushSubscriptionStoreRequest $request, UpsertWebPushSubscription $upsert): JsonResponse
     {
+        if ($request->user()->locale === null) {
+            $request->user()->forceFill(['locale' => app()->getLocale()])->save();
+        }
+
         [$subscription, $created] = $upsert->handle($request->user(), $request->subscription());
 
         return response()->json($this->resource($subscription), $created ? 201 : 200);

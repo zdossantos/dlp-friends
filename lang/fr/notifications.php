@@ -42,12 +42,26 @@ return [
     ],
     'accessibility' => ['unread_count' => ':count notifications non lues'],
     'push' => [
-        'title' => 'DLP Friends',
-        'messages' => 'Tu as reçu un nouveau message.',
-        'matches' => 'Une nouvelle rencontre amicale t’attend.',
-        'events' => 'Il y a du nouveau concernant un événement.',
-        'partner_announcements' => 'Une nouvelle annonce partenaire est disponible.',
-        'administration' => 'Une action d’administration requiert ton attention.',
+        'messages' => [
+            'title' => 'Nouveau message',
+            'body' => 'Un nouveau message t’attend.',
+        ],
+        'matches' => [
+            'title' => 'Nouvelle rencontre amicale',
+            'body' => 'Une nouvelle mise en relation amicale t’attend.',
+        ],
+        'events' => [
+            'title' => 'Actualité sur un événement',
+            'body' => 'Une information concernant un événement t’attend.',
+        ],
+        'partner_announcements' => [
+            'title' => 'Actualité partenaire',
+            'body' => 'Une nouvelle information partenaire est disponible.',
+        ],
+        'administration' => [
+            'title' => 'Action requise',
+            'body' => 'Une action d’administration requiert ton attention.',
+        ],
     ],
     'admin' => [
         'dispatch_started' => 'La diffusion de l’annonce partenaire a démarré.',

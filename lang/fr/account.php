@@ -118,6 +118,7 @@ return [
             'push_enabled' => 'Notifications activées',
             'push_disable_device' => 'Désactiver sur cet appareil',
             'push_unavailable' => 'Installe l’application sur ton écran d’accueil pour activer les notifications. Sur iPhone et iPad, ouvre ensuite cette application installée.',
+            'https_required' => 'Les notifications nécessitent une connexion HTTPS. Cette version ouverte depuis une adresse locale en HTTP ne peut pas demander l’autorisation à iOS.',
             'permission_denied' => 'Les notifications sont désactivées sur cet appareil.',
             'invitation' => [
                 'title' => 'Reste au courant, même quand l’app est fermée',
@@ -126,7 +127,7 @@ return [
                 'decline' => 'Non merci',
                 'denied_title' => 'Réactiver les notifications',
                 'denied_description' => 'DLP Friends ne peut pas modifier ce réglage à ta place.',
-                'ios_steps' => 'Ouvre Réglages > Apps > DLP Friends > Notifications, puis active « Autoriser les notifications ».',
+                'ios_steps' => 'Ouvre Réglages > Notifications > DLP Friends, puis active « Autoriser les notifications ».',
                 'browser_steps' => 'Ouvre les réglages de notifications de ton navigateur ou de ton appareil, autorise DLP Friends, puis reviens ici.',
             ],
             'push_error' => 'L’appareil n’a pas pu être enregistré. Vérifie ta connexion puis réessaie.',
