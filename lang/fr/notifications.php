@@ -20,6 +20,7 @@ return [
         'unread_only' => 'Non lues uniquement',
     ],
     'actions' => [
+        'manage_settings' => 'Gérer les notifications',
         'mark_all_read' => 'Tout marquer comme lu',
         'open_partner_announcement' => 'Voir l’annonce partenaire',
         'dismiss_partner_announcement' => 'Supprimer cette annonce partenaire',
@@ -41,6 +42,28 @@ return [
         'unread' => 'Non lue',
     ],
     'accessibility' => ['unread_count' => ':count notifications non lues'],
+    'push' => [
+        'messages' => [
+            'title' => 'Nouveau message',
+            'body' => 'Un nouveau message t’attend.',
+        ],
+        'matches' => [
+            'title' => 'Nouveau match',
+            'body' => 'Une nouvelle mise en relation amicale t’attend.',
+        ],
+        'events' => [
+            'title' => 'Actualité sur un événement',
+            'body' => 'Une information concernant un événement t’attend.',
+        ],
+        'partner_announcements' => [
+            'title' => 'Actualité partenaire',
+            'body' => 'Une nouvelle information partenaire est disponible.',
+        ],
+        'administration' => [
+            'title' => 'Action requise',
+            'body' => 'Une action d’administration requiert ton attention.',
+        ],
+    ],
     'admin' => [
         'dispatch_started' => 'La diffusion de l’annonce partenaire a démarré.',
         'retry_started' => 'La reprise des livraisons en échec a démarré.',

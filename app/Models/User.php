@@ -91,6 +91,18 @@ class User extends Authenticatable implements HasLocalePreference, MustVerifyEma
         return $this->hasOne(ProductOnboarding::class);
     }
 
+    /** @return HasMany<WebPushSubscription, $this> */
+    public function webPushSubscriptions(): HasMany
+    {
+        return $this->hasMany(WebPushSubscription::class);
+    }
+
+    /** @return HasMany<NotificationPreference, $this> */
+    public function notificationPreferences(): HasMany
+    {
+        return $this->hasMany(NotificationPreference::class);
+    }
+
     /** @return BelongsToMany<Role, $this> */
     public function roles(): BelongsToMany
     {

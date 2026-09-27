@@ -100,6 +100,19 @@ sur un réseau privé externe et conserve Redis et MinIO dans la stack. Elle uti
 Resend pour les e-mails transactionnels. Les secrets
 et domaines ne sont jamais versionnés : ils sont renseignés dans Coolify.
 
+Les notifications Web Push nécessitent également `VAPID_PUBLIC_KEY`,
+`VAPID_PRIVATE_KEY` et `VAPID_SUBJECT`. Une paire peut être générée localement,
+sans la versionner, avec :
+
+```sh
+php -r "require 'vendor/autoload.php'; print_r(Minishlink\\WebPush\\VAPID::createVapidKeys());"
+```
+
+Sur iOS, les notifications sont proposées uniquement depuis la PWA ajoutée à
+l’écran d’accueil. Sur Android, elles sont activées après une action explicite
+du membre. La révocation reste disponible appareil par appareil dans les
+réglages de notifications.
+
 La procédure complète de premier déploiement, migration, santé, sauvegarde et
 restauration se trouve dans [`docs/operations.md`](docs/operations.md).
 

@@ -2,11 +2,16 @@
 
 namespace App\Notifications;
 
+use App\Contracts\WebPushNotification;
+use App\Enums\RoleName;
+use App\Enums\WebPushPreference;
 use App\Models\User;
+use App\Notifications\Channels\WebPushChannel;
+use App\Support\WebPushTarget;
 use Illuminate\Notifications\Messages\BroadcastMessage;
 use Illuminate\Notifications\Notification;
 
-final class PartnerModerationRequestedNotification extends Notification
+final class PartnerModerationRequestedNotification extends Notification implements WebPushNotification
 {
     /** @param array<string, string> $parameters */
     public function __construct(
@@ -19,7 +24,7 @@ final class PartnerModerationRequestedNotification extends Notification
     /** @return list<string> */
     public function via(User $notifiable): array
     {
-        return ['database', 'broadcast'];
+        return ['database', 'broadcast', WebPushChannel::class];
     }
 
     /** @return array<string, mixed> */
@@ -37,5 +42,23 @@ final class PartnerModerationRequestedNotification extends Notification
     public function toBroadcast(User $notifiable): BroadcastMessage
     {
         return new BroadcastMessage(['id' => $this->id, ...$this->toArray($notifiable)]);
+    }
+
+    public function webPushPreference(): WebPushPreference
+    {
+        return WebPushPreference::Administration;
+    }
+
+    public function webPushTarget(User $notifiable): WebPushTarget
+    {
+        return new WebPushTarget(match ($this->targetType) {
+            'admin_partner_profile_review' => '/admin/partner-profiles',
+            default => '/admin/partner-announcements',
+        });
+    }
+
+    public function webPushAccessAllowed(User $notifiable): bool
+    {
+        return $notifiable->hasRole(RoleName::Admin);
     }
 }

@@ -270,6 +270,33 @@ base ou corriger manuellement sa métrique. La relance est idempotente pour ces
 effets durables ; seule la projection temps réel peut être répétée avec le même
 UUID dans la fenêtre de crash décrite ci-dessus.
 
+## PWA et Web Push
+
+La PWA sert `/service-worker.js`, `/manifest.webmanifest` et `/offline.html`
+sans cache HTTP durable. Seuls les fichiers versionnés sous `/build/assets/`
+sont immuables. Après chaque déploiement, vérifier que le nouveau worker est
+téléchargé puis activé depuis un navigateur installé. Un retour arrière consiste
+à redéployer l’image précédente : son worker reprend la main au prochain cycle
+de mise à jour sans supprimer les données locales du membre.
+
+Le Web Push exige `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY` et `VAPID_SUBJECT`
+(URL HTTPS ou adresse `mailto:` de contact opérationnel). Générer une paire hors
+du dépôt avec
+`php -r "require 'vendor/autoload.php'; print_r(Minishlink\\WebPush\\VAPID::createVapidKeys());"`,
+puis conserver la clé privée exclusivement dans le gestionnaire de secrets.
+Les workers doivent pouvoir joindre en HTTPS les services push des navigateurs,
+notamment `*.push.apple.com` pour iOS. Après modification des variables,
+redémarrer les workers Laravel.
+
+Une rotation VAPID invalide les abonnements existants : déployer la nouvelle
+paire, révoquer les appareils enregistrés avec l’ancienne clé et demander aux
+membres de réactiver les notifications. Les réponses HTTP `404` et `410`
+révoquent automatiquement un abonnement ; `429` et les erreurs serveur sont
+rejouées par la file. Surveiller les jobs échoués et la table
+`web_push_deliveries`. Les journaux ne doivent contenir ni endpoint, ni clés
+d’abonnement, ni payload personnel : uniquement les UUID techniques, catégorie,
+identifiant de notification et code de résultat.
+
 ## Déploiement de la migration des conversations
 
 La migration qui crée `conversations` reprend tous les matches existants. Pour

@@ -2,6 +2,7 @@
 
 namespace App\Actions;
 
+use App\Enums\WebPushPreference;
 use App\Models\Conversation;
 use App\Models\Event;
 use App\Models\EventChatMessage;
@@ -14,6 +15,7 @@ use App\Models\PartnerProfile;
 use App\Models\PartnerProfileRevision;
 use App\Models\RoleAudit;
 use App\Models\User;
+use App\Models\WebPushSubscription;
 use Illuminate\Database\Eloquent\Builder;
 
 final class BuildUserDataExport
@@ -23,7 +25,7 @@ final class BuildUserDataExport
     {
         $user->loadMissing('profile.avatar', 'profile.interestHistory');
 
-        $partnerPreference = $user->partnerNotificationPreference()->first();
+        $preferences = $user->notificationPreferences()->pluck('enabled', 'category');
         $partnerProfile = PartnerProfile::query()
             ->where('user_id', $user->id)
             ->first();
@@ -158,10 +160,21 @@ final class BuildUserDataExport
                         'created_at' => $notification->created_at?->toIso8601String(),
                     ];
                 })->all(),
-            'notification_preferences' => [
-                'partner_announcements' => $partnerPreference->enabled ?? false,
-                'updated_at' => $partnerPreference?->updated_at?->toIso8601String(),
-            ],
+            'notification_preferences' => collect(WebPushPreference::cases())
+                ->mapWithKeys(fn (WebPushPreference $preference): array => [
+                    $preference->value => (bool) ($preferences->get($preference->value) ?? true),
+                ])->all(),
+            'push_devices' => $user->webPushSubscriptions()
+                ->orderBy('id')
+                ->get()
+                ->map(fn (WebPushSubscription $subscription): array => [
+                    'uuid' => $subscription->uuid,
+                    'device_name' => $subscription->device_name,
+                    'platform' => $subscription->platform,
+                    'last_used_at' => $subscription->last_used_at?->toIso8601String(),
+                    'revoked_at' => $subscription->revoked_at?->toIso8601String(),
+                    'created_at' => $subscription->created_at?->toIso8601String(),
+                ])->all(),
             'role_history' => RoleAudit::query()
                 ->where('target_user_id', $user->id)
                 ->orderBy('id')

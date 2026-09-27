@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import { Head, Link, router } from '@inertiajs/vue3';
+import { Settings } from '@lucide/vue';
 import NotificationFilters from '@/components/notifications/NotificationFilters.vue';
 import NotificationItem from '@/components/notifications/NotificationItem.vue';
 import SeasonalDecorations from '@/components/seasonal/SeasonalDecorations.vue';
 import { Button } from '@/components/ui/button';
 import { useTranslations } from '@/composables/useTranslations';
 import type { NotificationCategory } from '@/lib/notificationFilters';
+import { edit as editNotificationSettings } from '@/routes/notification-preferences';
 import { readAll } from '@/routes/notifications';
 import type { NotificationPage } from '@/types/notification';
 
@@ -40,15 +42,30 @@ function markAllRead(): void {
                     {{ t('notifications.page.description') }}
                 </p>
             </div>
-            <Button
-                v-if="notifications.data.some((item) => item.read_at === null)"
-                type="button"
-                variant="outline"
-                size="sm"
-                @click="markAllRead"
-            >
-                {{ t('notifications.actions.mark_all_read') }}
-            </Button>
+            <div class="flex shrink-0 items-center gap-2">
+                <Button variant="outline" size="sm" as-child>
+                    <Link
+                        :href="editNotificationSettings()"
+                        data-test="manage-notification-settings"
+                    >
+                        <Settings class="size-4" aria-hidden="true" />
+                        <span class="sr-only sm:not-sr-only">
+                            {{ t('notifications.actions.manage_settings') }}
+                        </span>
+                    </Link>
+                </Button>
+                <Button
+                    v-if="
+                        notifications.data.some((item) => item.read_at === null)
+                    "
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    @click="markAllRead"
+                >
+                    {{ t('notifications.actions.mark_all_read') }}
+                </Button>
+            </div>
         </header>
 
         <NotificationFilters

@@ -4,6 +4,8 @@
 /bootstrap/ssr
 /node_modules
 /public/build
+/public/service-worker.js
+/public/service-worker.mjs
 /public/fonts-manifest.dev.json
 /public/hot
 /public/storage

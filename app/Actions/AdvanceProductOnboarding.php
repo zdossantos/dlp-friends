@@ -48,7 +48,8 @@ class AdvanceProductOnboarding
                 ProductOnboardingStep::PassDemo => ProductOnboardingStep::LikeDemo,
                 ProductOnboardingStep::LikeDemo => ProductOnboardingStep::MatchDemo,
                 ProductOnboardingStep::MatchDemo => ProductOnboardingStep::ConversationDemo,
-                ProductOnboardingStep::ConversationDemo => null,
+                ProductOnboardingStep::ConversationDemo => ProductOnboardingStep::InstallApp,
+                ProductOnboardingStep::InstallApp => null,
             };
 
             if ($nextStep === null) {
@@ -67,7 +68,7 @@ class AdvanceProductOnboarding
             $onboarding = $this->lockProgress($user);
 
             if ($onboarding->status !== ProductOnboardingStatus::InProgress
-                || $onboarding->step !== ProductOnboardingStep::ConversationDemo) {
+                || $onboarding->step !== ProductOnboardingStep::InstallApp) {
                 $this->invalidTransition();
             }
 

@@ -109,7 +109,7 @@ class DirectUserDataExportTest extends TestCase
         );
 
         $this->assertSame(
-            ['format_version', 'generated_at', 'account', 'profile', 'interests', 'matches', 'messages', 'event_chat_messages', 'organized_events', 'event_registrations', 'notifications', 'notification_preferences', 'role_history', 'partner_profile', 'partner_profile_revisions', 'partner_announcements', 'received_partner_announcements'],
+            ['format_version', 'generated_at', 'account', 'profile', 'interests', 'matches', 'messages', 'event_chat_messages', 'organized_events', 'event_registrations', 'notifications', 'notification_preferences', 'push_devices', 'role_history', 'partner_profile', 'partner_profile_revisions', 'partner_announcements', 'received_partner_announcements'],
             array_keys($payload),
         );
         $this->assertSame('self@example.com', $payload['account']['email']);
@@ -272,8 +272,11 @@ class DirectUserDataExportTest extends TestCase
         $payload = app(BuildUserDataExport::class)->handle($partner);
 
         $this->assertSame([
+            'messages' => true,
+            'matches' => true,
+            'events' => true,
             'partner_announcements' => true,
-            'updated_at' => $preference->updated_at?->toIso8601String(),
+            'administration' => true,
         ], $payload['notification_preferences']);
         $this->assertSame([$firstAudit->id, $secondAudit->id], array_column($payload['role_history'], 'id'));
         $this->assertSame(['administrator', 'system'], array_column($payload['role_history'], 'actor'));

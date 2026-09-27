@@ -8,4 +8,5 @@ enum ProductOnboardingStep: string
     case LikeDemo = 'like_demo';
     case MatchDemo = 'match_demo';
     case ConversationDemo = 'conversation_demo';
+    case InstallApp = 'install_app';
 }

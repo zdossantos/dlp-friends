@@ -3,6 +3,8 @@ import { usePage } from '@inertiajs/vue3';
 import { watch } from 'vue';
 import MatchDialog from '@/components/discovery/MatchDialog.vue';
 import MemberBottomNavigation from '@/components/MemberBottomNavigation.vue';
+import PwaUpdatePrompt from '@/components/pwa/PwaUpdatePrompt.vue';
+import WebPushInvitation from '@/components/pwa/WebPushInvitation.vue';
 import SeasonalDecorations from '@/components/seasonal/SeasonalDecorations.vue';
 import { Toaster } from '@/components/ui/sonner';
 import { useMemberNavigationVisibility } from '@/composables/useMemberNavigationVisibility';
@@ -66,5 +68,7 @@ watch(
             @update:open="realtime.dismissMatch"
         />
         <Toaster />
+        <PwaUpdatePrompt />
+        <WebPushInvitation />
     </div>
 </template>

@@ -24,6 +24,7 @@ declare module '@inertiajs/core' {
             sidebarOpen: boolean;
             legal: { terms_url: string; privacy_url: string };
             seasonalTheme: SeasonalThemeState;
+            webPush: { vapidPublicKey: string };
             [key: string]: unknown;
         };
     }

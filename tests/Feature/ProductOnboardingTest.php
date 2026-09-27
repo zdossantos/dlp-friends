@@ -179,6 +179,7 @@ class ProductOnboardingTest extends TestCase
             ProductOnboardingStep::PassDemo,
             ProductOnboardingStep::LikeDemo,
             ProductOnboardingStep::MatchDemo,
+            ProductOnboardingStep::ConversationDemo,
         ] as $step) {
             $this->actingAs($user)->patch(route('onboarding.advance'), ['step' => $step->value])
                 ->assertRedirect(route('onboarding.show'));

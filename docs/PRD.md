@@ -222,8 +222,9 @@ Paris.
   Le délai entre deux envois d’un même partenaire vaut 30 jours par défaut et
   est configurable. La reprise d’une livraison échouée ne renvoie pas les
   notifications déjà livrées ou ignorées.
-- Les annonces sont exclusivement des notifications dans l’application. Leur
-  réception est activée par défaut et le membre peut se désinscrire à tout moment,
+- Les annonces créent une notification durable dans l’application et, lorsque
+  le membre l’a explicitement autorisé sur un appareil, une alerte Web Push
+  générique. Leur réception est activée par défaut et le membre peut se désinscrire à tout moment,
   lire le contenu figé reçu, ouvrir le lien et retirer une annonce avec
   confirmation. Le partenaire ne choisit aucun segment ni destinataire.
 - Les statistiques exposent uniquement les volumes et taux agrégés : livraisons,
@@ -232,7 +233,7 @@ Paris.
   ni histoire individuelle n’est accessible au partenaire ou à l’administrateur.
 - Export, suppression, historique reçu et conservation de deux ans des données
   historiques sont décrits dans [`security-privacy.md`](security-privacy.md).
-  Aucun envoi e-mail/push partenaire, paiement ou système publicitaire n’est livré.
+  Aucun e-mail partenaire, paiement ou système publicitaire n’est livré.
 
 ### Contrôle des données
 
@@ -271,6 +272,7 @@ Paris.
 | Blocage et déblocage | **Implémenté** | Effet immédiat sur découverte et conversation. |
 | Événements amicaux, inscriptions et discussion de groupe | **Implémenté** | Deux écrans principaux, panneaux adaptatifs, rôles distincts, participants avec profils intégrés, deux modes d’inscription, confidentialité, cycle de vie, notifications et chat temps réel avec non-lus sont couverts. |
 | Centre de notifications persistant | **Implémenté** | Matches, messages et événements sont regroupés, filtrables et ouvrent leur élément cible. |
+| PWA mobile et Web Push (issues 182 et 203) | **Implémenté** | Installation Android/iOS, fonctionnement hors ligne sûr, mise à jour contrôlée, consentement explicite, révocation par appareil et alertes génériques pour toutes les catégories sont couverts. |
 | Tutoriel produit obligatoire | **Implémenté** | Progression persistée et statistiques admin sont livrées. |
 | Gestion administrative des membres | **Implémenté** | Recherche et compteurs, suppression confirmée, échange privé admin/membre et identification visuelle des admins sont livrés sans accès au contenu des messages. |
 | Espace partenaire et annonces modérées (issue 199) | **Implémenté** | Rôles cumulables et audités, fiches bilingues révisées, six cartes SSR au maximum, envoi automatique après approbation, préférence membre révocable activée par défaut, interactions et statistiques agrégées, export/suppression/rétention et tests sont livrés. |

@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="fr">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta name="theme-color" content="#fdfaf7" />
+        <title>DLP Friends — Hors connexion</title>
+        <style>
+            :root { color-scheme: light dark; font-family: system-ui, sans-serif; }
+            body { min-height: 100svh; margin: 0; display: grid; place-items: center; background: #fdfaf7; color: #25153d; }
+            main { width: min(32rem, calc(100% - 3rem)); text-align: center; }
+            img { width: 6rem; height: 6rem; }
+            button { min-height: 44px; margin-top: 1rem; border: 0; border-radius: 999px; padding: .75rem 1.25rem; background: #7138b6; color: white; font: inherit; font-weight: 600; }
+            [lang="en"] { display: none; }
+            @media (prefers-color-scheme: dark) { body { background: #17111f; color: #fbf8ff; } }
+        </style>
+    </head>
+    <body>
+        <main>
+            <img src="/pwa/icon-192.png" alt="" />
+            <h1>DLP Friends</h1>
+            <div lang="fr"><p>Vous êtes hors connexion. Reconnectez-vous pour retrouver vos échanges.</p><button type="button" onclick="location.reload()">Réessayer</button></div>
+            <div lang="en"><p>You are offline. Reconnect to access your conversations.</p><button type="button" onclick="location.reload()">Try again</button></div>
+        </main>
+        <script>if (navigator.language.toLowerCase().startsWith('en')) { document.documentElement.lang = 'en'; document.querySelector('[lang="fr"]').style.display = 'none'; document.querySelector('[lang="en"]').style.display = 'block'; }</script>
+    </body>
+</html>

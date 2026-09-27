@@ -574,13 +574,14 @@ test('logging out removes access to the private profile', function () {
     $this->assertGuest();
 });
 
-test('partner notification consent is explicit accessible and bilingual', function () {
+test('notification consent is explicit accessible and bilingual', function () {
     $french = User::factory()->withProfile()->create(['locale' => 'fr']);
     $this->actingAs($french);
 
-    visit('/settings/notifications')
-        ->on()->mobile()
-        ->assertSee('Notifications partenaires')
+    $page = visit('/settings/notifications')->on()->mobile();
+    $page->assertSee('Notifications sur cet appareil');
+    $page->script("document.querySelector('[data-test=partner-announcements-switch]').scrollIntoView({ block: 'center' }); true;");
+    $page
         ->assertSee('Cette préférence est activée par défaut.')
         ->assertAttribute(
             '[data-test="partner-announcements-switch"]',
@@ -602,10 +603,24 @@ test('partner notification consent is explicit accessible and bilingual', functi
     $english = User::factory()->withProfile()->create(['locale' => 'en']);
     $this->actingAs($english);
 
-    visit('/settings/notifications')
-        ->assertSee('Partner notifications')
+    $page = visit('/settings/notifications');
+    $page->assertSee('Notifications on this device');
+    $page->script("document.querySelector('[data-test=partner-announcements-switch]').scrollIntoView({ block: 'center' }); true;");
+    $page
         ->assertSee('This preference is enabled by default.')
         ->assertSee('Receive partner announcements')
+        ->assertNoJavaScriptErrors();
+});
+
+test('notification recovery guide opens from a member settings page', function () {
+    $member = User::factory()->withProfile()->create(['locale' => 'fr']);
+    $this->actingAs($member);
+
+    visit('/settings/notifications')
+        ->on()->mobile()
+        ->click('[data-test="enable-web-push"]')
+        ->assertPresent('[data-test="web-push-invitation"]')
+        ->assertSee('Réactiver les notifications')
         ->assertNoJavaScriptErrors();
 });
 

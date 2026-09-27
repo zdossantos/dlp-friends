@@ -29,6 +29,7 @@ class ProductOnboardingController extends Controller
         return Inertia::render('Onboarding/Show', [
             'status' => $progress->status->value,
             'step' => $progress->step?->value,
+            'vapidPublicKey' => (string) config('services.web_push.public_key', ''),
             'demoProfiles' => [
                 $this->demoProfile($settings, $settings->passAvatar, 'pass'),
                 $this->demoProfile($settings, $settings->likeAvatar, 'like'),
