@@ -41,6 +41,14 @@ return [
         'unread' => 'Non lue',
     ],
     'accessibility' => ['unread_count' => ':count notifications non lues'],
+    'push' => [
+        'title' => 'DLP Friends',
+        'messages' => 'Tu as reçu un nouveau message.',
+        'matches' => 'Une nouvelle rencontre amicale t’attend.',
+        'events' => 'Il y a du nouveau concernant un événement.',
+        'partner_announcements' => 'Une nouvelle annonce partenaire est disponible.',
+        'administration' => 'Une action d’administration requiert ton attention.',
+    ],
     'admin' => [
         'dispatch_started' => 'La diffusion de l’annonce partenaire a démarré.',
         'retry_started' => 'La reprise des livraisons en échec a démarré.',

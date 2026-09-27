@@ -94,6 +94,13 @@ release.
 
 ## Production : image de release sur GHCR
 
+Le build frontend doit produire `public/service-worker.js`,
+`public/manifest.webmanifest` et `public/offline.html`. Le test d’infrastructure
+PWA vérifie aussi les en-têtes Nginx : worker et manifeste sans cache durable,
+assets Vite seuls en cache immuable. Toute modification du worker exige au
+minimum `bun run types:check`, `bun run build` et
+`php artisan test tests/Feature/Infrastructure/PwaProductionTest.php`.
+
 Le workflow `Release Please` conserve une concurrence unique et n’annule pas
 une livraison en cours. Il enchaîne :
 

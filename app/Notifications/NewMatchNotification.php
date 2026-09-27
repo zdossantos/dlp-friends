@@ -2,15 +2,19 @@
 
 namespace App\Notifications;
 
+use App\Contracts\WebPushNotification;
 use App\Enums\NotificationCategory;
+use App\Enums\WebPushPreference;
 use App\Models\MemberMatch;
 use App\Models\User;
+use App\Notifications\Channels\WebPushChannel;
+use App\Support\WebPushTarget;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\BroadcastMessage;
 use Illuminate\Notifications\Notification;
 
-final class NewMatchNotification extends Notification implements ShouldQueue
+final class NewMatchNotification extends Notification implements ShouldQueue, WebPushNotification
 {
     use Queueable;
 
@@ -22,7 +26,7 @@ final class NewMatchNotification extends Notification implements ShouldQueue
     /** @return list<string> */
     public function via(User $notifiable): array
     {
-        return ['database', 'broadcast'];
+        return ['database', 'broadcast', WebPushChannel::class];
     }
 
     /** @return array{category: string, translation_key: string, parameters: array{member: string|null}, target_type: string, target_id: int} */
@@ -46,5 +50,27 @@ final class NewMatchNotification extends Notification implements ShouldQueue
             'id' => $this->id,
             ...$this->toArray($notifiable),
         ]);
+    }
+
+    public function webPushPreference(): WebPushPreference
+    {
+        return WebPushPreference::Matches;
+    }
+
+    public function webPushTarget(User $notifiable): WebPushTarget
+    {
+        $this->match->loadMissing('conversation');
+
+        return $this->match->conversation === null
+            ? WebPushTarget::fallback()
+            : new WebPushTarget(route('conversations.show', $this->match->conversation, absolute: false));
+    }
+
+    public function webPushAccessAllowed(User $notifiable): bool
+    {
+        $this->match->loadMissing('conversation');
+
+        return $this->match->conversation?->newQuery()->whereKey($this->match->conversation->id)
+            ->forMember($notifiable)->withVisibleParticipant($notifiable)->exists() ?? false;
     }
 }

@@ -41,6 +41,14 @@ return [
         'unread' => 'Unread',
     ],
     'accessibility' => ['unread_count' => ':count unread notifications'],
+    'push' => [
+        'title' => 'DLP Friends',
+        'messages' => 'You received a new message.',
+        'matches' => 'A new friendly connection is waiting for you.',
+        'events' => 'There is an update about an event.',
+        'partner_announcements' => 'A new partner announcement is available.',
+        'administration' => 'An administration action needs your attention.',
+    ],
     'admin' => [
         'dispatch_started' => 'The partner announcement dispatch has started.',
         'retry_started' => 'Retrying failed deliveries has started.',

@@ -2,15 +2,19 @@
 
 namespace App\Notifications;
 
+use App\Contracts\WebPushNotification;
 use App\Enums\NotificationCategory;
+use App\Enums\WebPushPreference;
 use App\Models\Message;
 use App\Models\User;
+use App\Notifications\Channels\WebPushChannel;
+use App\Support\WebPushTarget;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\BroadcastMessage;
 use Illuminate\Notifications\Notification;
 
-final class NewMessageNotification extends Notification implements ShouldQueue
+final class NewMessageNotification extends Notification implements ShouldQueue, WebPushNotification
 {
     use Queueable;
 
@@ -22,7 +26,7 @@ final class NewMessageNotification extends Notification implements ShouldQueue
     /** @return list<string> */
     public function via(User $notifiable): array
     {
-        return ['database', 'broadcast'];
+        return ['database', 'broadcast', WebPushChannel::class];
     }
 
     /** @return array{category: string, translation_key: string, parameters: array{sender: string|null}, target_type: string, target_id: int} */
@@ -45,5 +49,20 @@ final class NewMessageNotification extends Notification implements ShouldQueue
             'id' => $this->id,
             ...$this->toArray($notifiable),
         ]);
+    }
+
+    public function webPushPreference(): WebPushPreference
+    {
+        return WebPushPreference::Messages;
+    }
+
+    public function webPushTarget(User $notifiable): WebPushTarget
+    {
+        return new WebPushTarget(route('conversations.show', $this->message->conversation_id, absolute: false));
+    }
+
+    public function webPushAccessAllowed(User $notifiable): bool
+    {
+        return $this->message->conversation()->forMember($notifiable)->withVisibleParticipant($notifiable)->exists();
     }
 }

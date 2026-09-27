@@ -2,13 +2,17 @@
 
 namespace App\Notifications;
 
+use App\Contracts\WebPushNotification;
+use App\Enums\WebPushPreference;
 use App\Models\PartnerAnnouncement;
 use App\Models\User;
+use App\Notifications\Channels\WebPushChannel;
+use App\Support\WebPushTarget;
 use Illuminate\Notifications\Messages\BroadcastMessage;
 use Illuminate\Notifications\Notification;
 use LogicException;
 
-final class PartnerAnnouncementNotification extends Notification
+final class PartnerAnnouncementNotification extends Notification implements WebPushNotification
 {
     /** @param array<string, mixed>|null $persistedData */
     public function __construct(
@@ -19,7 +23,7 @@ final class PartnerAnnouncementNotification extends Notification
     /** @return list<string> */
     public function via(User $notifiable): array
     {
-        return ['database', 'broadcast'];
+        return ['database', 'broadcast', WebPushChannel::class];
     }
 
     /** @return array<string, mixed> */
@@ -54,5 +58,21 @@ final class PartnerAnnouncementNotification extends Notification
     public function toBroadcast(User $notifiable): BroadcastMessage
     {
         return new BroadcastMessage(['id' => $this->id, ...$this->toArray($notifiable)]);
+    }
+
+    public function webPushPreference(): WebPushPreference
+    {
+        return WebPushPreference::PartnerAnnouncements;
+    }
+
+    public function webPushTarget(User $notifiable): WebPushTarget
+    {
+        return WebPushTarget::fallback();
+    }
+
+    public function webPushAccessAllowed(User $notifiable): bool
+    {
+        return $this->announcement === null
+            || $this->announcement->deliveries()->where('user_id', $notifiable->id)->exists();
     }
 }

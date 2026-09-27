@@ -32,6 +32,9 @@ Route::middleware(['auth', 'verified', 'social', 'role:user', 'profile.complete'
         ->name('notification-preferences.edit');
     Route::patch('settings/notifications', [NotificationPreferenceController::class, 'update'])
         ->name('notification-preferences.update');
+});
+
+Route::middleware(['auth', 'verified', 'social', 'role:user', 'profile.complete', 'throttle:30,1'])->group(function () {
     Route::post('settings/notifications/devices', [WebPushSubscriptionController::class, 'store'])
         ->name('notification-devices.store');
     Route::delete('settings/notifications/devices/{uuid}', [WebPushSubscriptionController::class, 'destroy'])

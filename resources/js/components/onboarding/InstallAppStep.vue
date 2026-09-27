@@ -4,10 +4,13 @@ import { computed, ref } from 'vue';
 import { Button } from '@/components/ui/button';
 import { usePwa } from '@/composables/usePwa';
 import { useTranslations } from '@/composables/useTranslations';
+import { useWebPush } from '@/composables/useWebPush';
 
 const emit = defineEmits<{ complete: [] }>();
+const props = defineProps<{ vapidPublicKey: string }>();
 const { t } = useTranslations();
 const { state, canInstall, install, isStandalone } = usePwa();
+const push = useWebPush(props.vapidPublicKey);
 const busy = ref(false);
 const isIos = computed(
     () =>
@@ -38,6 +41,7 @@ function skip(): void {
         >
             <Download class="size-8" aria-hidden="true" />
         </div>
+
         <div class="space-y-2">
             <h1
                 class="text-2xl font-semibold"
@@ -83,6 +87,41 @@ function skip(): void {
         </p>
 
         <div
+            v-if="isStandalone || state === 'installed'"
+            class="w-full space-y-3 rounded-2xl border p-4 text-left"
+        >
+            <p class="font-medium">
+                {{ t('onboarding.install.notifications_title') }}
+            </p>
+            <p class="text-sm text-muted-foreground">
+                {{ t('onboarding.install.notifications_preview') }}
+            </p>
+            <p
+                v-if="push.permission.value === 'denied'"
+                class="text-sm text-destructive"
+                role="status"
+            >
+                {{ t('onboarding.install.notifications_denied') }}
+            </p>
+            <Button
+                v-else-if="push.supported.value"
+                type="button"
+                variant="outline"
+                class="min-h-11 w-full"
+                :disabled="push.busy.value || push.subscribed.value"
+                data-test="enable-onboarding-push"
+                @click="push.enable"
+            >
+                <Bell aria-hidden="true" />
+                {{
+                    push.subscribed.value
+                        ? t('onboarding.install.notifications_enabled')
+                        : t('onboarding.install.notifications_action')
+                }}
+            </Button>
+        </div>
+        <div
+            v-else
             class="flex w-full items-start gap-3 rounded-2xl border p-4 text-left"
         >
             <Bell

@@ -23,6 +23,7 @@ class NotificationPreferenceController extends Controller
                 fn (WebPushPreference $preference): array => [$preference->value => (bool) ($preferences[$preference->value] ?? true)],
             ),
             'partnerAnnouncementsEnabled' => (bool) ($preferences[WebPushPreference::PartnerAnnouncements->value] ?? true),
+            'vapidPublicKey' => (string) config('services.web_push.public_key', ''),
             'devices' => $request->user()->webPushSubscriptions()->whereNull('revoked_at')->get()->map(fn (WebPushSubscription $device): array => [
                 'uuid' => $device->uuid, 'deviceName' => $device->device_name,
                 'platform' => $device->platform, 'lastUsedAt' => $device->last_used_at?->toIso8601String(),
@@ -43,6 +44,11 @@ class NotificationPreferenceController extends Controller
                 }
             }
         }
+
+        Inertia::flash('toast', [
+            'type' => 'success',
+            'message' => __('account.settings.notifications.saved'),
+        ]);
 
         return to_route('notification-preferences.edit');
     }

@@ -40,6 +40,7 @@ const props = defineProps<{
     status: 'in_progress';
     step: Step;
     demoProfiles: [DemoProfile, DemoProfile];
+    vapidPublicKey: string;
 }>();
 const { t } = useTranslations();
 
@@ -298,6 +299,10 @@ function finishOnboarding(): void {
                 :submit-message="completeWithMessage"
             />
         </section>
-        <InstallAppStep v-else @complete="finishOnboarding" />
+        <InstallAppStep
+            v-else
+            :vapid-public-key="vapidPublicKey"
+            @complete="finishOnboarding"
+        />
     </main>
 </template>
