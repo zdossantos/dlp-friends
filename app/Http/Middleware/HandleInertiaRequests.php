@@ -52,6 +52,9 @@ class HandleInertiaRequests extends Middleware
                 'terms_url' => PublicUrls::termsPath(app()->getLocale()),
                 'privacy_url' => PublicUrls::privacyPath(app()->getLocale()),
             ],
+            'webPush' => [
+                'vapidPublicKey' => (string) config('services.web_push.public_key', ''),
+            ],
             'seasonalTheme' => function () use ($seasonalThemeResolver): array {
                 $theme = $seasonalThemeResolver->handle();
 

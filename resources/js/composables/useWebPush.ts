@@ -32,6 +32,7 @@ const platformName = (): string => {
 };
 
 export function useWebPush(vapidPublicKey: string, currentUserId?: number) {
+    const initialized = ref(false);
     const { isStandalone } = usePwa();
     const isIos = computed(
         () => typeof navigator !== 'undefined' && isIosDevice(navigator),
@@ -108,50 +109,55 @@ export function useWebPush(vapidPublicKey: string, currentUserId?: number) {
     };
 
     onMounted(async () => {
-        if (!supported.value) {
-            subscribed.value = false;
+        try {
+            if (!supported.value) {
+                subscribed.value = false;
 
-            return;
+                return;
+            }
+
+            const registration =
+                (await navigator.serviceWorker.getRegistration()) ??
+                (permission.value === 'granted'
+                    ? await navigator.serviceWorker.ready
+                    : undefined);
+            const subscription =
+                await registration?.pushManager.getSubscription();
+            const storedUserId = localStorage.getItem('web-push-user-id');
+
+            if (
+                subscription &&
+                currentUserId !== undefined &&
+                storedUserId !== null &&
+                storedUserId !== String(currentUserId)
+            ) {
+                await subscription.unsubscribe();
+                localStorage.removeItem('web-push-device-uuid');
+                localStorage.removeItem('web-push-user-id');
+                subscribed.value = false;
+
+                return;
+            }
+
+            if (localStorage.getItem('web-push-opted-out') === 'true') {
+                await subscription?.unsubscribe();
+                await revokeStoredDevice();
+                subscribed.value = false;
+
+                return;
+            }
+
+            if (!subscription) {
+                subscribed.value = false;
+                await revokeStoredDevice();
+
+                return;
+            }
+
+            subscribed.value = await syncSubscription(subscription);
+        } finally {
+            initialized.value = true;
         }
-
-        const registration =
-            (await navigator.serviceWorker.getRegistration()) ??
-            (permission.value === 'granted'
-                ? await navigator.serviceWorker.ready
-                : undefined);
-        const subscription = await registration?.pushManager.getSubscription();
-        const storedUserId = localStorage.getItem('web-push-user-id');
-
-        if (
-            subscription &&
-            currentUserId !== undefined &&
-            storedUserId !== null &&
-            storedUserId !== String(currentUserId)
-        ) {
-            await subscription.unsubscribe();
-            localStorage.removeItem('web-push-device-uuid');
-            localStorage.removeItem('web-push-user-id');
-            subscribed.value = false;
-
-            return;
-        }
-
-        if (localStorage.getItem('web-push-opted-out') === 'true') {
-            await subscription?.unsubscribe();
-            await revokeStoredDevice();
-            subscribed.value = false;
-
-            return;
-        }
-
-        if (!subscription) {
-            subscribed.value = false;
-            await revokeStoredDevice();
-
-            return;
-        }
-
-        subscribed.value = await syncSubscription(subscription);
     });
 
     const enable = async (): Promise<boolean> => {
@@ -218,6 +224,7 @@ export function useWebPush(vapidPublicKey: string, currentUserId?: number) {
 
     return {
         supported,
+        initialized,
         subscribed,
         permission,
         busy,

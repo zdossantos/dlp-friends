@@ -9,6 +9,10 @@ import { Spinner } from '@/components/ui/spinner';
 import { Switch } from '@/components/ui/switch';
 import { useTranslations } from '@/composables/useTranslations';
 import { useWebPush } from '@/composables/useWebPush';
+import {
+    notificationSettingsAction,
+    WEB_PUSH_INVITATION_OPEN_EVENT,
+} from '@/lib/pwa/webPushInvitation';
 import { edit } from '@/routes/notification-preferences';
 
 const props = defineProps<{
@@ -42,6 +46,18 @@ async function disableAll(): Promise<void> {
             router.delete('/settings/notifications', { preserveScroll: true });
         }
     }
+}
+
+async function enableOrExplainPush(): Promise<void> {
+    const action = notificationSettingsAction(push.permission.value);
+
+    if (action === 'subscribe') {
+        await push.enable();
+
+        return;
+    }
+
+    window.dispatchEvent(new Event(WEB_PUSH_INVITATION_OPEN_EVENT));
 }
 
 setLayoutProps({
@@ -87,7 +103,7 @@ setLayoutProps({
                 {{ t('account.settings.notifications.permission_denied') }}
             </p>
             <p
-                v-else-if="!push.supported.value"
+                v-if="!push.supported.value"
                 class="text-sm text-muted-foreground"
             >
                 {{ t('account.settings.notifications.push_unavailable') }}
@@ -98,13 +114,17 @@ setLayoutProps({
                     class="min-h-11"
                     :disabled="push.busy.value || push.subscribed.value"
                     data-test="enable-web-push"
-                    @click="push.enable"
+                    @click="enableOrExplainPush"
                 >
                     <Spinner v-if="push.busy.value" />
                     {{
                         push.subscribed.value
                             ? t('account.settings.notifications.push_enabled')
-                            : t('account.settings.notifications.push_enable')
+                            : push.permission.value === 'denied'
+                              ? t(
+                                    'account.settings.notifications.show_instructions',
+                                )
+                              : t('account.settings.notifications.push_enable')
                     }}
                 </Button>
                 <Button

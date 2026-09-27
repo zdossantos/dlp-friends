@@ -6,6 +6,7 @@ import AppShell from '@/components/AppShell.vue';
 import AppSidebar from '@/components/AppSidebar.vue';
 import AppSidebarHeader from '@/components/AppSidebarHeader.vue';
 import PwaUpdatePrompt from '@/components/pwa/PwaUpdatePrompt.vue';
+import WebPushInvitation from '@/components/pwa/WebPushInvitation.vue';
 import { Toaster } from '@/components/ui/sonner';
 import type { BreadcrumbItem } from '@/types';
 
@@ -47,5 +48,6 @@ watch(
         </AppContent>
         <Toaster />
         <PwaUpdatePrompt />
+        <WebPushInvitation />
     </AppShell>
 </template>
