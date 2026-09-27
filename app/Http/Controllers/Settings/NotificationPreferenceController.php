@@ -3,9 +3,11 @@
 namespace App\Http\Controllers\Settings;
 
 use App\Actions\UpdatePartnerNotificationPreference;
+use App\Enums\RoleName;
 use App\Enums\WebPushPreference;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Settings\NotificationPreferenceUpdateRequest;
+use App\Models\User;
 use App\Models\WebPushSubscription;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -20,7 +22,7 @@ class NotificationPreferenceController extends Controller
         $preferences = $request->user()->notificationPreferences()->pluck('enabled', 'category')->all();
 
         return Inertia::render('settings/Notifications', [
-            'preferences' => collect(WebPushPreference::cases())->mapWithKeys(
+            'preferences' => collect($this->availablePreferences($request->user()))->mapWithKeys(
                 fn (WebPushPreference $preference): array => [$preference->value => (bool) ($preferences[$preference->value] ?? true)],
             ),
             'partnerAnnouncementsEnabled' => (bool) ($preferences[WebPushPreference::PartnerAnnouncements->value] ?? true),
@@ -34,7 +36,7 @@ class NotificationPreferenceController extends Controller
 
     public function update(NotificationPreferenceUpdateRequest $request, UpdatePartnerNotificationPreference $updatePartner): RedirectResponse
     {
-        foreach (WebPushPreference::cases() as $preference) {
+        foreach ($this->availablePreferences($request->user()) as $preference) {
             if ($request->has($preference->value)) {
                 $enabled = $request->boolean($preference->value);
                 $request->user()->notificationPreferences()->updateOrCreate(
@@ -57,7 +59,7 @@ class NotificationPreferenceController extends Controller
     public function disableAll(Request $request, UpdatePartnerNotificationPreference $updatePartner): RedirectResponse
     {
         DB::transaction(function () use ($request, $updatePartner): void {
-            foreach (WebPushPreference::cases() as $preference) {
+            foreach ($this->availablePreferences($request->user()) as $preference) {
                 $request->user()->notificationPreferences()->updateOrCreate(
                     ['category' => $preference], ['enabled' => false],
                 );
@@ -73,5 +75,15 @@ class NotificationPreferenceController extends Controller
         ]);
 
         return to_route('notification-preferences.edit');
+    }
+
+    /** @return list<WebPushPreference> */
+    private function availablePreferences(User $user): array
+    {
+        return array_filter(
+            WebPushPreference::cases(),
+            fn (WebPushPreference $preference): bool => $preference !== WebPushPreference::Administration
+                || $user->hasRole(RoleName::Admin),
+        );
     }
 }

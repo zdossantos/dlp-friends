@@ -14,6 +14,7 @@ test('a member can manage notification preferences and devices on mobile', funct
 
     $page = visit('/settings/notifications')->on()->mobile();
     $page->assertSee('iPhone de test')
+        ->assertDontSee('Administration')
         ->keys('[data-test="notification-messages-switch"]', 'Space')
         ->press('[data-test="save-notification-preferences"]')
         ->assertAttribute('[data-test="notification-messages-switch"]', 'aria-checked', 'false')

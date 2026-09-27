@@ -37,13 +37,7 @@ const pushStatusView = computed(() =>
         secureContext: push.secureContext.value,
     }),
 );
-const categories = [
-    'messages',
-    'matches',
-    'events',
-    'partner_announcements',
-    'administration',
-] as const;
+const categories = computed(() => Object.keys(props.preferences));
 
 async function disableAll(): Promise<void> {
     if (

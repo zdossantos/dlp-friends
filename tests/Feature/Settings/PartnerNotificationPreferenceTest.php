@@ -34,6 +34,61 @@ class PartnerNotificationPreferenceTest extends TestCase
         ]);
     }
 
+    public function test_members_do_not_receive_the_administration_preference(): void
+    {
+        $member = User::factory()->withProfile()->create();
+
+        $this->actingAs($member)
+            ->get(route('notification-preferences.edit'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->missing('preferences.administration'));
+    }
+
+    public function test_partners_do_not_receive_the_administration_preference(): void
+    {
+        $partner = User::factory()->partnerOnly()->create();
+
+        $this->actingAs($partner)
+            ->get(route('notification-preferences.edit'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->missing('preferences.administration'));
+    }
+
+    public function test_administrators_receive_the_administration_preference(): void
+    {
+        $admin = User::factory()->admin()->create();
+
+        $this->actingAs($admin)
+            ->get(route('notification-preferences.edit'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('preferences.administration', true));
+    }
+
+    public function test_members_cannot_force_an_administration_preference_update(): void
+    {
+        $member = User::factory()->withProfile()->create();
+        $member->notificationPreferences()->create([
+            'category' => WebPushPreference::Administration,
+            'enabled' => false,
+        ]);
+
+        $this->actingAs($member)
+            ->patch(route('notification-preferences.update'), [
+                'partner_announcements' => true,
+                'administration' => true,
+            ])
+            ->assertRedirect(route('notification-preferences.edit'));
+
+        $this->assertDatabaseHas('notification_preferences', [
+            'user_id' => $member->id,
+            'category' => WebPushPreference::Administration->value,
+            'enabled' => false,
+        ]);
+    }
+
     public function test_partner_announcement_consent_is_stored_independently_and_can_be_withdrawn(): void
     {
         $member = User::factory()->withProfile()->create(['show_presence' => true]);
@@ -130,13 +185,23 @@ class PartnerNotificationPreferenceTest extends TestCase
             ->delete(route('notification-preferences.disable-all'))
             ->assertRedirect(route('notification-preferences.edit'));
 
-        foreach (WebPushPreference::cases() as $preference) {
+        foreach ([
+            WebPushPreference::Messages,
+            WebPushPreference::Matches,
+            WebPushPreference::Events,
+            WebPushPreference::PartnerAnnouncements,
+        ] as $preference) {
             $this->assertDatabaseHas('notification_preferences', [
                 'user_id' => $member->id,
                 'category' => $preference->value,
                 'enabled' => false,
             ]);
         }
+
+        $this->assertDatabaseMissing('notification_preferences', [
+            'user_id' => $member->id,
+            'category' => WebPushPreference::Administration->value,
+        ]);
 
         expect($member->webPushSubscriptions()->whereNull('revoked_at')->count())->toBe(0);
         $this->assertDatabaseHas('partner_notification_preferences', [
