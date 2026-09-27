@@ -311,4 +311,3 @@ l'accessibilité et l'absence de régression significative des performances.
 - [Service worker lifecycle](https://web.dev/articles/service-worker-lifecycle)
 - [Precaching dos and don'ts](https://developer.chrome.com/docs/workbox/precaching-dos-and-donts)
 - [Push API](https://developer.mozilla.org/en-US/docs/Web/API/Push_API)
-
