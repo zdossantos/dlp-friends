@@ -48,6 +48,7 @@ use App\Http\Controllers\LikeMemberController;
 use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\MemberProfileController;
 use App\Http\Controllers\MessageController;
+use App\Http\Controllers\MessageReactionController;
 use App\Http\Controllers\MyEventController;
 use App\Http\Controllers\NotificationIndexController;
 use App\Http\Controllers\NotificationReadAllController;
@@ -230,6 +231,10 @@ Route::middleware(['auth', 'verified', 'social'])->group(function (): void {
                     ->name('conversations.show');
                 Route::post('conversations/{conversation}/messages', MessageController::class)
                     ->name('conversations.messages.store');
+                Route::post('conversations/{conversation}/messages/{message}/like', [MessageReactionController::class, 'store'])
+                    ->name('conversations.messages.like');
+                Route::delete('conversations/{conversation}/messages/{message}/like', [MessageReactionController::class, 'destroy'])
+                    ->name('conversations.messages.unlike');
                 Route::post('conversations/{conversation}/read', ConversationReadController::class)
                     ->name('conversations.read.store');
                 Route::get('notifications', NotificationIndexController::class)

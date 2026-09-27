@@ -18,6 +18,8 @@ et son état de livraison sont définis dans le [`PRD.md`](PRD.md).
 | `matches` | Paire unique créée après deux likes |
 | `conversations` | Conversation liée à un match |
 | `messages` | Messages d'une conversation |
+| `message_reactions` | J’aime uniques ajoutés par les membres aux messages |
+| `conversation_starters` | Catalogue bilingue actif des amorces de premier message |
 | `seasonal_themes` | Plages administrables et activation manuelle des ambiances Halloween et Noël |
 | `events` | Événement amical organisé par un membre, avec horaire, lieux, capacité, mode et annulation |
 | `event_registrations` | Demande et état d’inscription d’un membre à un événement |
@@ -133,7 +135,8 @@ même changement.
   `pass` peut uniquement être remplacé par un `like` depuis une surface membre
   qui propose cette action ; le `like` obtenu reste irréversible.
 - Un profil passé ou liké n'est plus reproposé au même membre.
-- La messagerie accepte uniquement du texte brut, limité à 2 000 caractères. Les pièces jointes, GIF, réactions, édition et suppression de message sont hors V1.
+- La messagerie accepte uniquement du texte brut, limité à 2 000 caractères. Un J’aime est unique par paire `(message_id, user_id)` et son retrait ne modifie ni le message ni son état de lecture. Les pièces jointes, GIF, autres réactions, édition et suppression de message sont hors V1.
+- Les amorces de conversation sont localisées en français et en anglais dans la base, activables individuellement et sélectionnées par trois sans répétition pour un échange encore vide.
 - Un membre ne peut lire ou envoyer un message que dans une conversation liée à son match et non affectée par un blocage.
 - L’inscription donne initialement `user`. L’administration peut ensuite modifier
   `user` et `partner` avec confirmation ; `admin` reste géré par console. Le rôle

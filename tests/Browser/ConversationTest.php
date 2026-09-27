@@ -4,6 +4,7 @@ use App\Actions\MarkConversationRead;
 use App\Actions\SendMessage;
 use App\Events\MatchCreated;
 use App\Events\MessageSent;
+use App\Models\ConversationStarter;
 use App\Models\MemberMatch;
 use App\Models\Message;
 use App\Models\SeasonalTheme;
@@ -34,6 +35,52 @@ test('a completed member can open the empty conversation list from mobile naviga
         ->assertPresent('[aria-label="Conversations"][aria-current="page"]')
         ->assertScript('document.documentElement.scrollWidth <= document.documentElement.clientWidth', true)
         ->assertNoJavaScriptErrors();
+});
+
+test('an empty conversation offers three starters that fill an editable draft', function () {
+    $member = conversationBrowserMember('Alice');
+    $peer = conversationBrowserMember('Basile');
+    $match = MemberMatch::factory()->create([
+        'user_low_id' => min($member->id, $peer->id),
+        'user_high_id' => max($member->id, $peer->id),
+    ]);
+    $conversation = $match->conversation()->create();
+    ConversationStarter::factory()->count(15)->create();
+    $this->actingAs($member);
+
+    $page = visit("/conversations/{$conversation->id}")->on()->mobile()
+        ->assertScript("document.querySelectorAll('[data-test=conversation-starters] button').length", 3);
+
+    $selected = $page->script("document.querySelector('[data-test=conversation-starters] button').textContent.trim()");
+    $page->script("document.querySelector('[data-test=conversation-starters] button').click(); true;");
+    $page->assertScript("document.querySelector('#message-content').value", $selected)
+        ->assertScript('document.activeElement.id', 'message-content')
+        ->assertNotPresent('[data-test="conversation-starters"]')
+        ->assertNoJavaScriptErrors();
+});
+
+test('a member can like then unlike a message from the timeline', function () {
+    $member = conversationBrowserMember('Alice');
+    $peer = conversationBrowserMember('Basile');
+    $match = MemberMatch::factory()->create([
+        'user_low_id' => min($member->id, $peer->id),
+        'user_high_id' => max($member->id, $peer->id),
+    ]);
+    $conversation = $match->conversation()->create();
+    Message::factory()->for($conversation)->for($peer, 'author')->create(['content' => 'Une belle journée']);
+    $this->actingAs($member);
+
+    $page = visit("/conversations/{$conversation->id}")->on()->mobile()
+        ->assertPresent('[data-test="message-like"][aria-pressed="false"]')
+        ->click('[data-test="message-like"]')
+        ->assertPresent('[data-test="message-like"][aria-pressed="true"]')
+        ->assertSeeIn('[data-test="message-like"]', '1')
+        ->click('[data-test="message-like"]')
+        ->assertPresent('[data-test="message-like"][aria-pressed="false"]')
+        ->assertSeeIn('[data-test="message-like"]', '0')
+        ->assertNoJavaScriptErrors();
+
+    $this->assertDatabaseCount('message_reactions', 0);
 });
 
 test('the conversation list links to a peer and previews its latest message', function () {

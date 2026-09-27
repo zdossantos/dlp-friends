@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Actions\MarkConversationRead;
 use App\Models\Avatar;
 use App\Models\Conversation;
+use App\Models\ConversationStarter;
 use App\Models\Message;
 use App\Models\User;
 use App\Support\MemberPresence;
@@ -46,6 +47,10 @@ final class ConversationController extends Controller
         $offset = max($messageCount - (($lastPage - $page + 1) * 10), 0);
         $limit = min(10, max($messageCount - (($lastPage - $page) * 10), 0));
         $messageRows = $historyQuery
+            ->withCount('reactions')
+            ->withExists([
+                'reactions as reacted_by_current_user' => fn ($query) => $query->where('user_id', $member->id),
+            ])
             ->oldest('id')
             ->offset($offset)
             ->limit($limit)
@@ -57,6 +62,8 @@ final class ConversationController extends Controller
                 'content' => $message->content,
                 'read_at' => $message->read_at?->toISOString(),
                 'created_at' => $message->created_at?->toISOString(),
+                'reaction_count' => $message->reactions_count,
+                'reacted_by_current_user' => (bool) $message->reacted_by_current_user,
             ]);
         $messages = new LengthAwarePaginator(
             items: $messageRows,
@@ -72,6 +79,18 @@ final class ConversationController extends Controller
                 ],
             ],
         );
+        $conversationStarters = $latestMessageId === 0
+            ? ConversationStarter::query()
+                ->where('is_active', true)
+                ->inRandomOrder()
+                ->limit(3)
+                ->get(['id', 'text_fr', 'text_en'])
+                ->map(fn (ConversationStarter $starter): array => [
+                    'id' => $starter->id,
+                    'text' => $member->locale === 'en' ? $starter->text_en : $starter->text_fr,
+                ])
+                ->values()
+            : collect();
 
         $profile = $participant->profile;
         /** @var Avatar $avatar */
@@ -97,6 +116,7 @@ final class ConversationController extends Controller
             'currentUserId' => $member->id,
             'timezone' => config('app.timezone'),
             'messages' => Inertia::scroll($messages),
+            'conversationStarters' => $conversationStarters,
         ]);
     }
 }

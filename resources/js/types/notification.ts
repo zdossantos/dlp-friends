@@ -6,6 +6,7 @@ export type MemberNotification = {
     translation_key:
         | 'notifications.items.new_match'
         | 'notifications.items.new_message'
+        | 'notifications.items.message_liked'
         | 'notifications.items.partner_announcement'
         | 'notifications.items.partner_profile_review_requested'
         | 'notifications.items.partner_announcement_review_requested'

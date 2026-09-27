@@ -45,6 +45,14 @@ return [
         'today' => 'Aujourd’hui',
         'yesterday' => 'Hier',
     ],
+    'starters' => [
+        'title' => 'Besoin d’une idée pour commencer ?',
+    ],
+    'reactions' => [
+        'like' => 'J’aime ce message',
+        'unlike' => 'Retirer mon J’aime',
+        'error' => 'La réaction n’a pas pu être enregistrée. Réessaie.',
+    ],
     'realtime' => [
         'unavailable' => 'Le temps réel est indisponible. Tes messages restent affichés.',
         'retry' => 'Réessayer',

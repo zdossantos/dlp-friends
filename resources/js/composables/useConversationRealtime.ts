@@ -1,12 +1,17 @@
 import { echo, useConnectionStatus, useEcho } from '@laravel/echo-vue';
 import { computed, watch } from 'vue';
 import type { ComputedRef } from 'vue';
-import type { ConversationMessage, MessagesReadReceipt } from '@/types';
+import type {
+    ConversationMessage,
+    MessageReactionUpdate,
+    MessagesReadReceipt,
+} from '@/types';
 
 export function useConversationRealtime(
     conversationId: number,
     onMessage: (message: ConversationMessage) => void,
     onMessagesRead: (receipt: MessagesReadReceipt) => void,
+    onReactionUpdated: (update: MessageReactionUpdate) => void,
     onReconnect: () => void,
 ): {
     connectionUnavailable: ComputedRef<boolean>;
@@ -24,6 +29,11 @@ export function useConversationRealtime(
         `conversation.${conversationId}`,
         '.messages.read',
         onMessagesRead,
+    );
+    useEcho<MessageReactionUpdate>(
+        `conversation.${conversationId}`,
+        '.message.reaction.updated',
+        onReactionUpdated,
     );
 
     const connectionUnavailable = computed(() =>

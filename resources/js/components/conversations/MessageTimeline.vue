@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { InfiniteScroll } from '@inertiajs/vue3';
+import { Heart } from '@lucide/vue';
 import { computed, nextTick, onMounted, ref, watch } from 'vue';
 import ConversationPattern from '@/components/conversations/ConversationPattern.vue';
 import { useTranslations } from '@/composables/useTranslations';
@@ -7,7 +8,13 @@ import {
     conversationDayLabel,
     shouldShowDaySeparator,
 } from '@/lib/conversationTimeline';
-import type { ConversationMessage, PaginatedMessages } from '@/types';
+import { xsrfHeader } from '@/lib/csrf';
+import { like, unlike } from '@/routes/conversations/messages';
+import type {
+    ConversationMessage,
+    MessageReactionUpdate,
+    PaginatedMessages,
+} from '@/types';
 
 const { locale, t } = useTranslations();
 
@@ -16,11 +23,15 @@ const props = defineProps<{
     currentUserId: number;
     participantName: string;
     timezone: string;
+    conversationId: number;
+    onReactionUpdated: (update: MessageReactionUpdate) => void;
 }>();
 
 const scrollContainer = ref<HTMLElement | null>(null);
 const announcedMessage = ref('');
 const animatedMessageId = ref<number | null>(null);
+const pendingReactionIds = ref(new Set<number>());
+const reactionError = ref('');
 const latestMessage = computed<ConversationMessage | undefined>(() =>
     props.messages.data.at(-1),
 );
@@ -79,6 +90,46 @@ function scrollToBottom(): void {
     });
 }
 
+async function toggleReaction(message: ConversationMessage): Promise<void> {
+    if (pendingReactionIds.value.has(message.id)) {
+        return;
+    }
+
+    pendingReactionIds.value = new Set(pendingReactionIds.value).add(
+        message.id,
+    );
+    reactionError.value = '';
+
+    try {
+        const route = message.reacted_by_current_user
+            ? unlike([props.conversationId, message.id])
+            : like([props.conversationId, message.id]);
+        const response = await fetch(route.url, {
+            method: route.method.toUpperCase(),
+            credentials: 'same-origin',
+            headers: {
+                Accept: 'application/json',
+                ...xsrfHeader(document.cookie),
+            },
+        });
+        const payload = (await response.json()) as {
+            data?: MessageReactionUpdate;
+        };
+
+        if (!response.ok || payload.data === undefined) {
+            throw new Error();
+        }
+
+        props.onReactionUpdated(payload.data);
+    } catch {
+        reactionError.value = t('conversations.reactions.error');
+    } finally {
+        const next = new Set(pendingReactionIds.value);
+        next.delete(message.id);
+        pendingReactionIds.value = next;
+    }
+}
+
 onMounted(() => nextTick(scrollToBottom));
 
 watch(
@@ -118,6 +169,9 @@ watch(
     >
         <ConversationPattern />
         <p class="sr-only" aria-live="polite">{{ announcedMessage }}</p>
+        <p v-if="reactionError" role="alert" class="sr-only">
+            {{ reactionError }}
+        </p>
 
         <p
             v-if="messages.data.length === 0"
@@ -216,6 +270,35 @@ watch(
                                 {{ message.content }}
                             </p>
                         </article>
+                        <button
+                            type="button"
+                            data-test="message-like"
+                            class="mt-1 inline-flex min-h-8 items-center gap-1 rounded-full px-2 text-xs font-medium text-muted-foreground hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+                            :class="
+                                message.reacted_by_current_user
+                                    ? 'text-rose-600'
+                                    : undefined
+                            "
+                            :aria-pressed="message.reacted_by_current_user"
+                            :aria-label="
+                                message.reacted_by_current_user
+                                    ? t('conversations.reactions.unlike')
+                                    : t('conversations.reactions.like')
+                            "
+                            :disabled="pendingReactionIds.has(message.id)"
+                            @click="toggleReaction(message)"
+                        >
+                            <Heart
+                                :class="[
+                                    'size-4',
+                                    message.reacted_by_current_user
+                                        ? 'fill-current'
+                                        : undefined,
+                                ]"
+                                aria-hidden="true"
+                            />
+                            <span>{{ message.reaction_count }}</span>
+                        </button>
                         <p
                             v-if="
                                 message.id === lastOutgoingMessageId &&

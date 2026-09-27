@@ -26,6 +26,7 @@ class DatabaseSeeder extends Seeder
     public function run(AssignRole $assignRole): void
     {
         $this->call(InterestCatalogSeeder::class);
+        $this->call(ConversationStarterSeeder::class);
 
         foreach (RoleName::cases() as $roleName) {
             Role::query()->firstOrCreate(['name' => $roleName]);

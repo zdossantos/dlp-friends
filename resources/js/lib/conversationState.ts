@@ -2,6 +2,7 @@ import type {
     ConversationMessage,
     ConversationSummary,
     MessagesReadReceipt,
+    MessageReactionUpdate,
 } from '@/types';
 
 export function sortConversationSummaries(
@@ -14,6 +15,25 @@ export function sortConversationSummaries(
 
         return activityOrder !== 0 ? activityOrder : second.id - first.id;
     });
+}
+
+export function applyMessageReaction(
+    messages: ConversationMessage[],
+    update: MessageReactionUpdate,
+    currentUserId: number,
+): ConversationMessage[] {
+    return messages.map((message) =>
+        message.id === update.message_id
+            ? {
+                  ...message,
+                  reaction_count: update.reaction_count,
+                  reacted_by_current_user:
+                      update.reactor_user_id === currentUserId
+                          ? update.reacted
+                          : message.reacted_by_current_user,
+              }
+            : message,
+    );
 }
 
 function compareConversationMessages(

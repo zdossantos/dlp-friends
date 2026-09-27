@@ -70,6 +70,8 @@ class MessageBroadcastTest extends TestCase
                 'read_at' => null,
                 'created_at' => $message->created_at?->toISOString(),
                 'updated_at' => $message->updated_at?->toISOString(),
+                'reaction_count' => 0,
+                'reacted_by_current_user' => false,
             ]);
     }
 

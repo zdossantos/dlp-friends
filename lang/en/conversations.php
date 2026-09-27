@@ -45,6 +45,14 @@ return [
         'today' => 'Today',
         'yesterday' => 'Yesterday',
     ],
+    'starters' => [
+        'title' => 'Need an idea to get started?',
+    ],
+    'reactions' => [
+        'like' => 'Like this message',
+        'unlike' => 'Remove my like',
+        'error' => 'The reaction could not be saved. Please try again.',
+    ],
     'realtime' => [
         'unavailable' => 'Live updates are unavailable. Your messages remain visible.',
         'retry' => 'Try again',

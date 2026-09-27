@@ -16,6 +16,8 @@ import { show as showMember } from '@/routes/members';
 import type {
     ConversationDetails,
     ConversationMessage,
+    ConversationStarter,
+    MessageReactionUpdate,
     ConversationParticipant,
     PaginatedMessages,
 } from '@/types';
@@ -26,6 +28,7 @@ const props = defineProps<{
     currentUserId: number;
     timezone: string;
     messages: PaginatedMessages;
+    conversationStarters: ConversationStarter[];
 }>();
 const { presenceChanged } = useMemberRealtimeContext();
 const participantPresence = ref(props.participant.presence);
@@ -42,7 +45,7 @@ const displayedParticipant = computed(() => ({
     presence: participantPresence.value,
 }));
 
-const { visibleMessages, mergeMessage, markMessagesRead } =
+const { visibleMessages, mergeMessage, markMessagesRead, updateReaction } =
     useConversationMessages(() => props.messages.data);
 const {
     peerTyping,
@@ -73,6 +76,7 @@ const { connectionUnavailable, reconnecting, retry } = useConversationRealtime(
     props.conversation.id,
     handleRealtimeMessage,
     (receipt) => markMessagesRead(receipt, props.currentUserId),
+    (update) => updateReaction(update, props.currentUserId),
     () =>
         router.reload({
             only: ['messages'],
@@ -113,6 +117,11 @@ const timelineMessages = computed<PaginatedMessages>(() => ({
             :current-user-id="currentUserId"
             :participant-name="participant.display_name"
             :timezone="timezone"
+            :conversation-id="conversation.id"
+            :on-reaction-updated="
+                (update: MessageReactionUpdate) =>
+                    updateReaction(update, currentUserId)
+            "
         />
         <MessageComposer
             :conversation-id="conversation.id"
@@ -120,6 +129,7 @@ const timelineMessages = computed<PaginatedMessages>(() => ({
             :on-sent="mergeMessage"
             :on-typing="signalInput"
             :on-typing-stopped="stopTyping"
+            :starters="conversationStarters"
         />
     </main>
 </template>
