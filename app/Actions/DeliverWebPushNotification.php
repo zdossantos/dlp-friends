@@ -2,6 +2,7 @@
 
 namespace App\Actions;
 
+use App\Contracts\PersonalizedWebPushNotification;
 use App\Contracts\WebPushNotification;
 use App\Contracts\WebPushTransport;
 use App\Enums\UserStatus;
@@ -58,10 +59,16 @@ final class DeliverWebPushNotification
         try {
             $locale = $user->preferredLocale();
             $copyKey = 'notifications.push.'.$notification->webPushPreference()->value;
+            $copy = $notification instanceof PersonalizedWebPushNotification
+                ? $notification->webPushCopy($user, $locale)
+                : [
+                    'title' => __("{$copyKey}.title", locale: $locale),
+                    'body' => __("{$copyKey}.body", locale: $locale),
+                ];
 
             $report = $this->transport->send($subscription, [
-                'title' => __("{$copyKey}.title", locale: $locale),
-                'body' => __("{$copyKey}.body", locale: $locale),
+                'title' => $copy['title'],
+                'body' => $copy['body'],
                 'target' => $notification->webPushTarget($user)->url,
                 'notification_id' => $notificationId,
                 'unread_count' => $user->unreadNotifications()->count(),

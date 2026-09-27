@@ -52,8 +52,10 @@ test('missing vapid configuration never queues a delivery', function () {
     Queue::assertNothingPushed();
 });
 
-test('a successful transport response records one delivery without private message content', function () {
-    [, $recipient, $message] = pushConversation();
+test('a message push shows the sender and a bounded preview', function () {
+    [$sender, $recipient, $message] = pushConversation();
+    $sender->profile()->update(['display_name' => 'Zacharie']);
+    $message->update(['content' => "  Salut, est-ce que tu veux venir au parc avec nous demain ?\n".str_repeat('Très bonne idée ! ', 8)]);
     $subscription = WebPushSubscription::factory()->for($recipient)->create();
     $notification = new NewMessageNotification($message);
     $notification->id = (string) Str::uuid();
@@ -62,7 +64,11 @@ test('a successful transport response records one delivery without private messa
     $transport->shouldReceive('send')->once()->withArgs(function ($device, array $payload, string $topic) use ($subscription, $message): bool {
         expect($device->is($subscription))->toBeTrue()
             ->and($payload['notification_id'])->toBeString()
-            ->and(json_encode($payload))->not->toContain($message->content)
+            ->and($payload['title'])->toBe('Zacharie')
+            ->and($payload['body'])->toStartWith('Salut, est-ce que tu veux venir au parc avec nous demain ?')
+            ->and($payload['body'])->toEndWith('…')
+            ->and(mb_strlen($payload['body']))->toBeLessThanOrEqual(100)
+            ->and($payload['body'])->not->toBe($message->content)
             ->and($topic)->toHaveLength(32);
 
         return true;
@@ -79,19 +85,21 @@ test('a successful transport response records one delivery without private messa
     ]);
 });
 
-test('a push uses concise copy in the account language without repeating the app name', function (string $locale, string $title, string $body) {
-    [, $recipient, $message] = pushConversation();
+test('a message push keeps its conversation copy while carrying the account language', function (string $locale) {
+    [$sender, $recipient, $message] = pushConversation();
+    $sender->profile()->update(['display_name' => 'Zacharie']);
+    $message->update(['content' => 'Salut !']);
     $recipient->update(['locale' => $locale]);
     $subscription = WebPushSubscription::factory()->for($recipient)->create();
     $notification = new NewMessageNotification($message);
     $notification->id = (string) Str::uuid();
 
     $transport = Mockery::mock(WebPushTransport::class);
-    $transport->shouldReceive('send')->once()->withArgs(function ($device, array $payload) use ($subscription, $locale, $title, $body): bool {
+    $transport->shouldReceive('send')->once()->withArgs(function ($device, array $payload) use ($subscription, $locale): bool {
         expect($device->is($subscription))->toBeTrue()
-            ->and($payload['title'])->toBe($title)
+            ->and($payload['title'])->toBe('Zacharie')
             ->and($payload['title'])->not->toBe('DLP Friends')
-            ->and($payload['body'])->toBe($body)
+            ->and($payload['body'])->toBe('Salut !')
             ->and($payload['locale'])->toBe($locale);
 
         return true;
@@ -99,8 +107,8 @@ test('a push uses concise copy in the account language without repeating the app
 
     (new DeliverWebPushNotification($transport))->handle($subscription, $notification);
 })->with([
-    'French account' => ['fr', 'Nouveau message', 'Un nouveau message t’attend.'],
-    'English account' => ['en', 'New message', 'A new message is waiting for you.'],
+    'French account' => ['fr'],
+    'English account' => ['en'],
 ]);
 
 test('an expired endpoint is revoked permanently', function () {

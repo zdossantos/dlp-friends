@@ -2,6 +2,7 @@
 
 namespace App\Notifications;
 
+use App\Contracts\PersonalizedWebPushNotification;
 use App\Contracts\WebPushNotification;
 use App\Enums\NotificationCategory;
 use App\Enums\WebPushPreference;
@@ -13,8 +14,9 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\BroadcastMessage;
 use Illuminate\Notifications\Notification;
+use Illuminate\Support\Str;
 
-final class NewMessageNotification extends Notification implements ShouldQueue, WebPushNotification
+final class NewMessageNotification extends Notification implements PersonalizedWebPushNotification, ShouldQueue, WebPushNotification
 {
     use Queueable;
 
@@ -54,6 +56,22 @@ final class NewMessageNotification extends Notification implements ShouldQueue, 
     public function webPushPreference(): WebPushPreference
     {
         return WebPushPreference::Messages;
+    }
+
+    /** @return array{title: string, body: string} */
+    public function webPushCopy(User $notifiable, string $locale): array
+    {
+        $this->message->loadMissing('author.profile');
+
+        $sender = trim((string) $this->message->author->profile?->display_name);
+        $preview = Str::squish($this->message->content);
+
+        return [
+            'title' => $sender !== '' ? $sender : __('notifications.push.messages.title', locale: $locale),
+            'body' => $preview !== ''
+                ? Str::limit($preview, 100, '…')
+                : __('notifications.push.messages.body', locale: $locale),
+        ];
     }
 
     public function webPushTarget(User $notifiable): WebPushTarget
