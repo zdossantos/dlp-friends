@@ -2,6 +2,7 @@ import { describe, expect, test } from 'bun:test';
 import {
     invitationStorageKey,
     notificationSettingsAction,
+    notificationSettingsView,
     shouldOpenWebPushInvitation,
 } from '../../resources/js/lib/pwa/webPushInvitation';
 
@@ -57,6 +58,24 @@ describe('Web Push invitation', () => {
             ).toBe(false);
         },
     );
+
+    test('shows only recovery guidance when permission is denied and push support detection fails', () => {
+        expect(
+            notificationSettingsView({
+                permission: 'denied',
+                supported: false,
+            }),
+        ).toBe('permission-denied');
+    });
+
+    test('shows installation guidance only when permission has not been denied', () => {
+        expect(
+            notificationSettingsView({
+                permission: 'default',
+                supported: false,
+            }),
+        ).toBe('unsupported');
+    });
 
     test('scopes a refusal to one member on one device', () => {
         expect(invitationStorageKey(42)).toBe(

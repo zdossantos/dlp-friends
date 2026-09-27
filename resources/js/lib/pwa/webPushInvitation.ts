@@ -10,6 +10,9 @@ export type WebPushInvitationState = {
 export type NotificationSettingsAction =
     'invite' | 'subscribe' | 'instructions';
 
+export type NotificationSettingsView =
+    'permission-denied' | 'unsupported' | 'controls';
+
 export const WEB_PUSH_INVITATION_OPEN_EVENT =
     'web-push-invitation:open' as const;
 
@@ -34,4 +37,18 @@ export const notificationSettingsAction = (
     }
 
     return permission === 'granted' ? 'subscribe' : 'invite';
+};
+
+export const notificationSettingsView = ({
+    permission,
+    supported,
+}: {
+    permission: NotificationPermission;
+    supported: boolean;
+}): NotificationSettingsView => {
+    if (permission === 'denied') {
+        return 'permission-denied';
+    }
+
+    return supported ? 'controls' : 'unsupported';
 };

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Form, Head, router, setLayoutProps, usePage } from '@inertiajs/vue3';
 import { BellRing } from '@lucide/vue';
+import { computed } from 'vue';
 import Heading from '@/components/Heading.vue';
 import InputError from '@/components/InputError.vue';
 import WebPushDevices from '@/components/settings/WebPushDevices.vue';
@@ -11,6 +12,7 @@ import { useTranslations } from '@/composables/useTranslations';
 import { useWebPush } from '@/composables/useWebPush';
 import {
     notificationSettingsAction,
+    notificationSettingsView,
     WEB_PUSH_INVITATION_OPEN_EVENT,
 } from '@/lib/pwa/webPushInvitation';
 import { edit } from '@/routes/notification-preferences';
@@ -28,6 +30,12 @@ const props = defineProps<{
 const { t } = useTranslations();
 const page = usePage();
 const push = useWebPush(props.vapidPublicKey, page.props.auth.user.id);
+const pushStatusView = computed(() =>
+    notificationSettingsView({
+        permission: push.permission.value,
+        supported: push.supported.value,
+    }),
+);
 const categories = [
     'messages',
     'matches',
@@ -96,19 +104,22 @@ setLayoutProps({
                 </div>
             </div>
             <p
-                v-if="push.permission.value === 'denied'"
+                v-if="pushStatusView === 'permission-denied'"
                 role="status"
                 class="text-sm text-destructive"
             >
                 {{ t('account.settings.notifications.permission_denied') }}
             </p>
             <p
-                v-if="!push.supported.value"
+                v-else-if="pushStatusView === 'unsupported'"
                 class="text-sm text-muted-foreground"
             >
                 {{ t('account.settings.notifications.push_unavailable') }}
             </p>
-            <div v-else class="flex flex-wrap gap-2">
+            <div
+                v-if="pushStatusView !== 'unsupported'"
+                class="flex flex-wrap gap-2"
+            >
                 <Button
                     type="button"
                     class="min-h-11"
