@@ -20,6 +20,7 @@ return [
         'unread_only' => 'Non lues uniquement',
     ],
     'actions' => [
+        'manage_settings' => 'Gérer les notifications',
         'mark_all_read' => 'Tout marquer comme lu',
         'open_partner_announcement' => 'Voir l’annonce partenaire',
         'dismiss_partner_announcement' => 'Supprimer cette annonce partenaire',
@@ -47,7 +48,7 @@ return [
             'body' => 'Un nouveau message t’attend.',
         ],
         'matches' => [
-            'title' => 'Nouvelle rencontre amicale',
+            'title' => 'Nouveau match',
             'body' => 'Une nouvelle mise en relation amicale t’attend.',
         ],
         'events' => [

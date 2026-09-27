@@ -11,6 +11,7 @@ use App\Models\User;
 use App\Models\WebPushDelivery;
 use App\Models\WebPushSubscription;
 use App\Notifications\Channels\WebPushChannel;
+use App\Notifications\NewMatchNotification;
 use App\Notifications\NewMessageNotification;
 use App\Support\WebPushResult;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -109,6 +110,38 @@ test('a message push keeps its conversation copy while carrying the account lang
 })->with([
     'French account' => ['fr'],
     'English account' => ['en'],
+]);
+
+test('a match push shows a concise localized title and the other member name', function (string $locale, string $title) {
+    $recipient = User::factory()->withProfile()->create(['locale' => $locale]);
+    $otherMember = User::factory()->withProfile()->create();
+    $otherMember->profile()->update(['display_name' => 'Zacharie']);
+    [$low, $high] = $recipient->id < $otherMember->id
+        ? [$recipient, $otherMember]
+        : [$otherMember, $recipient];
+    $match = MemberMatch::factory()->create([
+        'user_low_id' => $low->id,
+        'user_high_id' => $high->id,
+    ]);
+    $match->conversation()->create();
+    $subscription = WebPushSubscription::factory()->for($recipient)->create();
+    $notification = new NewMatchNotification($match, $otherMember);
+    $notification->id = (string) Str::uuid();
+
+    $transport = Mockery::mock(WebPushTransport::class);
+    $transport->shouldReceive('send')->once()->withArgs(function ($device, array $payload) use ($subscription, $locale, $title): bool {
+        expect($device->is($subscription))->toBeTrue()
+            ->and($payload['title'])->toBe($title)
+            ->and($payload['body'])->toBe('Zacharie')
+            ->and($payload['locale'])->toBe($locale);
+
+        return true;
+    })->andReturn(new WebPushResult(true, false, 201));
+
+    (new DeliverWebPushNotification($transport))->handle($subscription, $notification);
+})->with([
+    'French account' => ['fr', 'Nouveau match'],
+    'English account' => ['en', 'New match'],
 ]);
 
 test('an expired endpoint is revoked permanently', function () {

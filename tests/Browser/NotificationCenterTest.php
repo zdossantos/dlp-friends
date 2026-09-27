@@ -52,6 +52,18 @@ test('a member filters notifications and opens the related conversation', functi
     expect($conversationNotification->fresh()?->read_at)->not->toBeNull();
 });
 
+test('a member opens notification settings from the notification center', function () {
+    $member = notificationBrowserMember('Alice');
+    $this->actingAs($member);
+
+    visit('/notifications')->on()->mobile()
+        ->assertPresent('[data-test="manage-notification-settings"]')
+        ->click('[data-test="manage-notification-settings"]')
+        ->assertPathIs('/settings/notifications')
+        ->assertSee('Notifications sur cet appareil')
+        ->assertNoJavaScriptErrors();
+});
+
 test('administration notifications and their filter stay exclusive to administrators', function () {
     $member = notificationBrowserMember('Alice');
     $notification = notificationBrowserNotice(

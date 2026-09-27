@@ -20,6 +20,7 @@ return [
         'unread_only' => 'Unread only',
     ],
     'actions' => [
+        'manage_settings' => 'Manage notifications',
         'mark_all_read' => 'Mark all as read',
         'open_partner_announcement' => 'View partner announcement',
         'dismiss_partner_announcement' => 'Remove this partner announcement',
@@ -47,7 +48,7 @@ return [
             'body' => 'A new message is waiting for you.',
         ],
         'matches' => [
-            'title' => 'New friendly connection',
+            'title' => 'New match',
             'body' => 'A new friendly connection is waiting for you.',
         ],
         'events' => [

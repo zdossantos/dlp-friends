@@ -2,6 +2,7 @@
 
 namespace App\Notifications;
 
+use App\Contracts\PersonalizedWebPushNotification;
 use App\Contracts\WebPushNotification;
 use App\Enums\NotificationCategory;
 use App\Enums\WebPushPreference;
@@ -14,7 +15,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\BroadcastMessage;
 use Illuminate\Notifications\Notification;
 
-final class NewMatchNotification extends Notification implements ShouldQueue, WebPushNotification
+final class NewMatchNotification extends Notification implements PersonalizedWebPushNotification, ShouldQueue, WebPushNotification
 {
     use Queueable;
 
@@ -55,6 +56,20 @@ final class NewMatchNotification extends Notification implements ShouldQueue, We
     public function webPushPreference(): WebPushPreference
     {
         return WebPushPreference::Matches;
+    }
+
+    /** @return array{title: string, body: string} */
+    public function webPushCopy(User $notifiable, string $locale): array
+    {
+        $this->otherMember->loadMissing('profile');
+        $member = trim((string) $this->otherMember->profile?->display_name);
+
+        return [
+            'title' => __('notifications.push.matches.title', locale: $locale),
+            'body' => $member !== ''
+                ? $member
+                : __('notifications.push.matches.body', locale: $locale),
+        ];
     }
 
     public function webPushTarget(User $notifiable): WebPushTarget
