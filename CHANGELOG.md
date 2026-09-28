@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.9.2](https://github.com/zdossantos/dlp-friends/compare/v1.9.1...v1.9.2) (2026-09-28)
+
+
+### Fixes
+
+* hide cookie settings after consent ([#220](https://github.com/zdossantos/dlp-friends/issues/220)) ([85eb3f7](https://github.com/zdossantos/dlp-friends/commit/85eb3f78f1734c5d87966e29e3de4ced3a855e9f))
+
 ## [1.9.1](https://github.com/zdossantos/dlp-friends/compare/v1.9.0...v1.9.1) (2026-09-28)
 
 
