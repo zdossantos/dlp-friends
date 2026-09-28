@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.9.1](https://github.com/zdossantos/dlp-friends/compare/v1.9.0...v1.9.1) (2026-09-28)
+
+
+### Fixes
+
+* **deploy:** inject web push credentials ([#218](https://github.com/zdossantos/dlp-friends/issues/218)) ([68ac739](https://github.com/zdossantos/dlp-friends/commit/68ac739d0119c6591d6fb16fab57e3c9e1f03974))
+
 ## [1.9.0](https://github.com/zdossantos/dlp-friends/compare/v1.8.2...v1.9.0) (2026-09-28)
 
 
