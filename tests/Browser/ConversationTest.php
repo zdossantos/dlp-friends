@@ -104,8 +104,8 @@ test('a zero reaction stays hidden on mobile until a double tap likes the messag
     $defaultPrevented = $page->script(<<<'JS'
         (() => {
             const message = document.querySelector('[data-test="message-bubble"]');
-            message.dispatchEvent(new PointerEvent('pointerup', { bubbles: true, cancelable: true, pointerType: 'touch' }));
-            const secondTap = new PointerEvent('pointerup', { bubbles: true, cancelable: true, pointerType: 'touch' });
+            message.dispatchEvent(new TouchEvent('touchend', { bubbles: true, cancelable: true }));
+            const secondTap = new TouchEvent('touchend', { bubbles: true, cancelable: true });
             message.dispatchEvent(secondTap);
 
             return secondTap.defaultPrevented;

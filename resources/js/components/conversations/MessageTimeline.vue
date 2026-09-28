@@ -142,14 +142,10 @@ function likeMessage(message: ConversationMessage): void {
     }
 }
 
-function handleMessagePointerUp(
-    event: PointerEvent,
+function handleMessageTouchEnd(
+    event: TouchEvent,
     message: ConversationMessage,
 ): void {
-    if (event.pointerType !== 'touch') {
-        return;
-    }
-
     const occurredAt = performance.now();
     const previousTap = lastTouchTap.value;
     lastTouchTap.value = { messageId: message.id, occurredAt };
@@ -299,9 +295,9 @@ watch(
                                     : 'rounded-2xl rounded-bl-sm border-l-4 border-l-secondary-foreground/35 bg-card text-card-foreground'
                             "
                             @dblclick.prevent="likeMessage(message)"
-                            @pointerup="
+                            @touchend="
                                 message.author_user_id !== currentUserId &&
-                                handleMessagePointerUp($event, message)
+                                handleMessageTouchEnd($event, message)
                             "
                         >
                             <p
