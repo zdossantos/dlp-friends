@@ -23,6 +23,7 @@ return [
         'administration' => 'Administration',
         'logout' => 'Se déconnecter',
         'edit' => 'Modifier mon profil',
+        'cookies' => 'Gérer les cookies',
         'back' => 'Retour',
         'previous' => 'Retour',
         'next' => 'Suivant',

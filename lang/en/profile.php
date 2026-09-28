@@ -12,7 +12,7 @@ return [
     'edit' => ['title' => 'Edit my profile', 'breadcrumb' => 'Edit', 'submit' => 'Save'],
     'actions' => [
         'label' => 'Profile actions', 'settings' => 'Settings', 'administration' => 'Administration',
-        'logout' => 'Log out', 'edit' => 'Edit my profile', 'back' => 'Back', 'previous' => 'Back', 'next' => 'Next',
+        'logout' => 'Log out', 'edit' => 'Edit my profile', 'cookies' => 'Manage cookies', 'back' => 'Back', 'previous' => 'Back', 'next' => 'Next',
     ],
     'details' => [
         'age' => ':age years old', 'about' => 'About', 'interests' => 'Favorite worlds',

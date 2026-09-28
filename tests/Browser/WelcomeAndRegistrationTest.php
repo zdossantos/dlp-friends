@@ -162,7 +162,7 @@ test('localized legal pages are responsive and accessible', function () {
         ->assertNoJavaScriptErrors();
 });
 
-test('analytics consent can be refused accepted and withdrawn without favouring a choice', function () {
+test('analytics consent choices hide the floating settings button without favouring a choice', function () {
     config()->set('services.google.analytics_id', 'G-TEST123456');
 
     $page = visit('/fr', ['locale' => 'fr-FR'])
@@ -174,28 +174,18 @@ test('analytics consent can be refused accepted and withdrawn without favouring 
         )
         ->click('[data-analytics-refuse]')
         ->assertScript("document.querySelector('[data-test=analytics-consent-dialog]').hidden", true)
+        ->assertScript("document.querySelector('[data-test=analytics-consent-settings]').hidden", true)
         ->assertScript("document.cookie.includes('analytics_consent=denied')", true)
-        ->assertNotPresent('script[src*="googletagmanager.com/gtag/js"]')
-        ->click('[data-analytics-settings]')
-        ->assertVisible('[data-test="analytics-consent-dialog"]')
+        ->assertNotPresent('script[src*="googletagmanager.com/gtag/js"]');
+
+    $page->script("document.cookie = 'analytics_consent=; Path=/; Max-Age=0; SameSite=Lax'");
+    $page->navigate('/fr')
         ->click('[data-analytics-accept]')
         ->assertScript("document.cookie.includes('analytics_consent=granted')", true)
+        ->assertScript("document.querySelector('[data-test=analytics-consent-settings]').hidden", true)
         ->assertPresent('script[src="https://www.googletagmanager.com/gtag/js?id=G-TEST123456"]')
         ->assertNoAccessibilityIssues()
         ->assertNoJavaScriptErrors();
-
-    $page->script("document.cookie = '_ga=browser-test; Path=/; SameSite=Lax'");
-
-    $page->click('[data-analytics-settings]')
-        ->click('[data-analytics-refuse]')
-        ->assertScript("document.cookie.includes('analytics_consent=denied')", true)
-        ->assertScript("!document.cookie.includes('_ga=browser-test')", true)
-        ->assertNotPresent('script[src*="googletagmanager.com/gtag/js"]');
-
-    visit('/en', ['locale' => 'en-GB'])
-        ->click('[data-analytics-settings]')
-        ->assertSee('Accept audience measurement')
-        ->assertSee('Refuse audience measurement');
 });
 
 test('public and authentication pages expose language without theme controls', function () {

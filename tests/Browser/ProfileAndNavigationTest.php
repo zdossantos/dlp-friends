@@ -316,6 +316,8 @@ test('a refreshed catalog drops an archived selected interest', function () {
 });
 
 test('a completed member sees their public profile and member actions', function () {
+    config()->set('services.google.analytics_id', 'G-TEST123456');
+
     Storage::fake('local');
     $interests = Interest::factory()->count(5)->sequence(
         ['name' => 'Chill'],
@@ -347,6 +349,7 @@ test('a completed member sees their public profile and member actions', function
         ->assertSee('Visible')
         ->assertSee('Chill')
         ->assertSeeLink('Modifier mon profil')
+        ->assertPresent('[data-test="profile-analytics-consent-settings"]')
         ->assertPresent('[data-test="profile-avatar-hero"]')
         ->assertPresent('[data-test="profile-information-sheet"]')
         ->assertScript(
@@ -388,6 +391,12 @@ test('a completed member sees their public profile and member actions', function
         ->assertPresent('[aria-label="Réglages"]')
         ->assertNotPresent('[aria-label="Administration"]')
         ->assertPresent('[aria-label="Se déconnecter"]');
+
+    $page->click('[data-analytics-refuse]')
+        ->assertScript("document.querySelector('[data-test=analytics-consent-settings]').hidden", true)
+        ->assertVisible('[data-test="profile-analytics-consent-settings"]')
+        ->click('[data-test="profile-analytics-consent-settings"]')
+        ->assertVisible('[data-test="analytics-consent-dialog"]');
 
     $page->script("localStorage.setItem('appearance', 'dark')");
     $page->navigate('/profile')

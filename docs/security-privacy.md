@@ -134,10 +134,11 @@ Le tag Google reste totalement bloqué avant acceptation : aucun appel, ping ou
 sont proposés au même niveau, puis mémorisés six mois dans le cookie fonctionnel
 `analytics_consent`. Un refus ne modifie aucune fonction essentielle.
 
-Le bouton « Gérer les cookies » reste disponible sur chaque page. Il permet de
-modifier le choix ou de retirer l’accord ; le retrait remplace le choix par un
-refus, supprime les cookies GA4 accessibles au site et recharge le document afin
-d’arrêter toute mesure suivante. Le Consent Mode v2 est utilisé en mode basic :
+Avant le choix, le bouton « Gérer les cookies » accompagne la bannière. Après
+acceptation ou refus, il disparaît des pages et reste accessible depuis le profil
+du membre. Il permet de modifier le choix ou de retirer l’accord ; le retrait
+remplace le choix par un refus, supprime les cookies GA4 accessibles au site et
+recharge le document afin d’arrêter toute mesure suivante. Le Consent Mode v2 est utilisé en mode basic :
 `analytics_storage` n’est accordé qu’après consentement et les finalités
 publicitaires restent refusées.
 
