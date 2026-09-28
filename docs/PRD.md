@@ -112,8 +112,14 @@ Paris.
 ### Messagerie et blocage
 
 - Chaque match possède une conversation privée textuelle.
-- Les messages sont limités à 2 000 caractères. Pièces jointes, GIF, réactions,
-  édition et suppression de message sont hors MVP.
+- Les messages sont limités à 2 000 caractères. Chaque membre peut ajouter ou
+  retirer un unique « J’aime » par message ; le total est synchronisé en temps
+  réel et l’auteur reçoit une notification dédiée lorsque l’autre membre aime
+  son message. Pièces jointes, GIF, autres réactions, édition et suppression de
+  message sont hors MVP.
+- Une conversation vide propose trois amorces aléatoires parmi un catalogue
+  bilingue actif stocké en base. Leur sélection préremplit un brouillon qui
+  reste modifiable avant un envoi explicite.
 - Le fil identifie visiblement l’expéditeur, sépare les jours dans le fuseau de
   l’application et utilise un fond décoratif Lucide adapté au thème saisonnier.
 - Seuls les deux membres du match peuvent lire et envoyer des messages.
@@ -268,7 +274,7 @@ Paris.
 | Majorité, compte actif et contrôle d’accès social | **Implémenté** | Stockage, middlewares et tests sont présents. |
 | Profil, avatar obligatoire et intérêts | **Implémenté** | Parcours membre et catalogues administrables sont livrés. |
 | Découverte, swipes et match réciproque | **Implémenté** | Service de classement, actions et tests sont présents. |
-| Conversations, messages temps réel, saisie, présence et état de lecture | **Implémenté** | Stockage, diffusion privée, annonces globales, indicateur de saisie éphémère, présence confidentielle avec dernière activité relative, recherche locale et tests sont présents. |
+| Conversations, amorces, messages, réactions, saisie, présence et état de lecture | **Implémenté** | Trois amorces aléatoires issues d’un catalogue bilingue en base facilitent le premier message. Le stockage, la diffusion privée, les J’aime uniques synchronisés en temps réel, leurs notifications in-app/PWA, l’indicateur de saisie éphémère, la présence confidentielle, la recherche locale et les tests sont présents. |
 | Blocage et déblocage | **Implémenté** | Effet immédiat sur découverte et conversation. |
 | Événements amicaux, inscriptions et discussion de groupe | **Implémenté** | Deux écrans principaux, panneaux adaptatifs, rôles distincts, participants avec profils intégrés, deux modes d’inscription, confidentialité, cycle de vie, notifications et chat temps réel avec non-lus sont couverts. |
 | Centre de notifications persistant | **Implémenté** | Matches, messages et événements sont regroupés, filtrables et ouvrent leur élément cible. |

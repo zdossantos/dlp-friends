@@ -36,7 +36,7 @@ final class MessageSent implements ShouldBroadcast, ShouldDispatchAfterCommit
         return 'message.sent';
     }
 
-    /** @return array<string, int|string|array{id: int, display_name: string}|null> */
+    /** @return array<string, int|string|bool|array{id: int, display_name: string}|null> */
     public function broadcastWith(): array
     {
         $this->message->loadMissing('author.profile');
@@ -55,6 +55,8 @@ final class MessageSent implements ShouldBroadcast, ShouldDispatchAfterCommit
             'read_at' => $this->message->read_at?->toISOString(),
             'created_at' => $this->message->created_at?->toISOString(),
             'updated_at' => $this->message->updated_at?->toISOString(),
+            'reaction_count' => 0,
+            'reacted_by_current_user' => false,
         ];
     }
 }

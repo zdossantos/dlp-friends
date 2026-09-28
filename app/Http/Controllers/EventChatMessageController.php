@@ -26,7 +26,7 @@ final class EventChatMessageController extends Controller
         );
 
         return response()->json([
-            'data' => EventChatData::message($message),
+            'data' => EventChatData::message($message, $author),
         ], Response::HTTP_CREATED);
     }
 }

@@ -31,6 +31,8 @@ export type EventChatMessage = {
     event_chat_id: number;
     author_user_id: number;
     content: string;
+    reaction_count: number;
+    reacted_by_current_user: boolean;
     author: { id: number; display_name: string };
     created_at: string;
     updated_at?: string;

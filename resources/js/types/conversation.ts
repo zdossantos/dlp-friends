@@ -7,6 +7,17 @@ export type ConversationMessage = {
     content: string;
     read_at: string | null;
     created_at: string | null;
+    reaction_count: number;
+    reacted_by_current_user: boolean;
+};
+
+export type ConversationStarter = { id: number; text: string };
+
+export type MessageReactionUpdate = {
+    message_id: number;
+    reactor_user_id: number;
+    reaction_count: number;
+    reacted: boolean;
 };
 
 export type RealtimeConversationMessage = ConversationMessage & {

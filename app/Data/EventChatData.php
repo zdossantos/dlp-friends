@@ -19,7 +19,7 @@ final readonly class EventChatData
     }
 
     /** @return array<string, mixed> */
-    public static function message(EventChatMessage $message): array
+    public static function message(EventChatMessage $message, ?User $viewer = null): array
     {
         $message->loadMissing('author.profile');
 
@@ -28,6 +28,10 @@ final readonly class EventChatData
             'event_chat_id' => $message->event_chat_id,
             'author_user_id' => $message->author_user_id,
             'content' => $message->content,
+            'reaction_count' => $message->reactions_count ?? $message->reactions()->count(),
+            'reacted_by_current_user' => $viewer !== null
+                ? $message->reactions()->where('user_id', $viewer->id)->exists()
+                : false,
             'author' => [
                 'id' => $message->author->id,
                 'display_name' => $message->author->profile?->display_name,

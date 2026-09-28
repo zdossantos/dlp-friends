@@ -21,12 +21,12 @@ création du compte ; la suppression du compte supprime aussi cette preuve.
 - Redis pour le cache, les sessions et les files ;
 - Laravel Reverb et Echo pour le temps réel ;
 - le canal privé personnel diffuse les nouveaux univers croisés, les aperçus
-  de messages et les notifications d’événement dans tout l’espace membre,
+  de messages, de réactions et les notifications d’événement dans tout l’espace membre,
   tandis que le canal de conversation
   conserve la synchronisation du fil et des états de lecture ;
 - les heartbeats de présence maintiennent une clé Redis expirant après 45
   secondes et limitent la mise à jour de `last_active_at` à une fois par minute ;
-  les changements sont diffusés uniquement aux interlocuteurs de conversations
+  les messages, totaux absolus de réactions et états de lecture sont diffusés uniquement aux interlocuteurs de conversations
   actives, tandis que la saisie utilise un événement client privé sans contenu ;
 - Pest, Pest Browser, Playwright, PHPStan/Larastan, Pint, ESLint et Prettier
   pour la qualité.

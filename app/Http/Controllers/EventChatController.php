@@ -22,9 +22,10 @@ final class EventChatController extends Controller
         $chat = $event->chat;
         $messages = $chat->messages()
             ->with('author.profile')
+            ->withCount('reactions')
             ->orderByDesc('id')
             ->simplePaginate(10, ['*'], 'messages')
-            ->through(fn (EventChatMessage $message): array => EventChatData::message($message));
+            ->through(fn (EventChatMessage $message): array => EventChatData::message($message, $viewer));
         $messages->setCollection($messages->getCollection()->reverse()->values());
 
         return $this->workspace->render($viewer, 'mine', [

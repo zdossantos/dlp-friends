@@ -2,6 +2,7 @@ import { describe, expect, test } from 'bun:test';
 import {
     applyConversationMessage,
     applyReadReceipt,
+    applyMessageReaction,
     conversationPreview,
     sortConversationSummaries,
 } from '../../resources/js/lib/conversationState';
@@ -14,6 +15,19 @@ const message = (overrides = {}) => ({
     read_at: null,
     created_at: '2026-08-28T20:00:00.000Z',
     ...overrides,
+});
+
+describe('message reaction state', () => {
+    test('applies absolute totals idempotently and only mirrors the current member state', () => {
+        const messages = [message({ reaction_count: 0, reacted_by_current_user: false })];
+        const event = { message_id: 10, reactor_user_id: 7, reaction_count: 1, reacted: true };
+
+        const once = applyMessageReaction(messages, event, 7);
+        const twice = applyMessageReaction(once, event, 7);
+        const peerUpdate = applyMessageReaction(twice, { ...event, reactor_user_id: 8, reaction_count: 2, reacted: true }, 7);
+
+        expect(peerUpdate[0]).toMatchObject({ reaction_count: 2, reacted_by_current_user: true });
+    });
 });
 
 const summary = (overrides = {}) => ({

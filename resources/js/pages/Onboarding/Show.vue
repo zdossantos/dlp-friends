@@ -53,6 +53,8 @@ const tutorialMessages = ref<ConversationMessage[]>([
         content: t('onboarding.initial_message'),
         read_at: null,
         created_at: null,
+        reaction_count: 0,
+        reacted_by_current_user: false,
     },
 ]);
 const registrationStepLabels = computed(() => [
@@ -177,6 +179,8 @@ function completeWithMessage(content: string): Promise<ConversationMessage> {
             content,
             read_at: null,
             created_at: null,
+            reaction_count: 0,
+            reacted_by_current_user: false,
         };
 
         busy.value = true;

@@ -29,6 +29,7 @@ return [
     'items' => [
         'new_match' => 'New match with :member.',
         'new_message' => ':sender sent you a new message.',
+        'message_liked' => ':member liked your message.',
         'event_accepted' => 'Your registration for “:event” was accepted.',
         'event_refused' => 'Your request for “:event” was refused.',
         'event_removed' => 'You are no longer attending “:event”.',
@@ -46,6 +47,10 @@ return [
         'messages' => [
             'title' => 'New message',
             'body' => 'A new message is waiting for you.',
+        ],
+        'reactions' => [
+            'title' => 'New reaction',
+            'body' => 'Someone liked your message.',
         ],
         'matches' => [
             'title' => 'New match',

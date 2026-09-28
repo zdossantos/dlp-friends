@@ -35,6 +35,7 @@ use App\Http\Controllers\DiscoveryController;
 use App\Http\Controllers\EventCancellationController;
 use App\Http\Controllers\EventChatController;
 use App\Http\Controllers\EventChatMessageController;
+use App\Http\Controllers\EventChatMessageReactionController;
 use App\Http\Controllers\EventChatReadController;
 use App\Http\Controllers\EventController;
 use App\Http\Controllers\EventParticipantController;
@@ -48,6 +49,7 @@ use App\Http\Controllers\LikeMemberController;
 use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\MemberProfileController;
 use App\Http\Controllers\MessageController;
+use App\Http\Controllers\MessageReactionController;
 use App\Http\Controllers\MyEventController;
 use App\Http\Controllers\NotificationIndexController;
 use App\Http\Controllers\NotificationReadAllController;
@@ -215,6 +217,10 @@ Route::middleware(['auth', 'verified', 'social'])->group(function (): void {
                     ->name('events.registrations.destroy');
                 Route::post('events/{event}/chat/messages', EventChatMessageController::class)
                     ->name('events.chat.messages.store');
+                Route::post('events/{event}/chat/messages/{message}/like', [EventChatMessageReactionController::class, 'store'])
+                    ->name('events.chat.messages.like');
+                Route::delete('events/{event}/chat/messages/{message}/like', [EventChatMessageReactionController::class, 'destroy'])
+                    ->name('events.chat.messages.unlike');
                 Route::get('events/{event}/chat', EventChatController::class)
                     ->name('events.chat.show');
                 Route::post('events/{event}/chat/read', EventChatReadController::class)
@@ -230,6 +236,10 @@ Route::middleware(['auth', 'verified', 'social'])->group(function (): void {
                     ->name('conversations.show');
                 Route::post('conversations/{conversation}/messages', MessageController::class)
                     ->name('conversations.messages.store');
+                Route::post('conversations/{conversation}/messages/{message}/like', [MessageReactionController::class, 'store'])
+                    ->name('conversations.messages.like');
+                Route::delete('conversations/{conversation}/messages/{message}/like', [MessageReactionController::class, 'destroy'])
+                    ->name('conversations.messages.unlike');
                 Route::post('conversations/{conversation}/read', ConversationReadController::class)
                     ->name('conversations.read.store');
                 Route::get('notifications', NotificationIndexController::class)
