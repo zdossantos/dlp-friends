@@ -32,6 +32,9 @@ function productionComposeEnvironment(array $overrides = []): array
         'GOOGLE_CLIENT_ID' => 'google-client-id',
         'GOOGLE_CLIENT_SECRET' => 'google-client-secret',
         'GOOGLE_REDIRECT_URI' => 'https://dlpfriends.example/auth/google/callback',
+        'VAPID_SUBJECT' => 'mailto:notifications@dlpfriends.example',
+        'VAPID_PUBLIC_KEY' => 'vapid-public-key',
+        'VAPID_PRIVATE_KEY' => 'vapid-private-key',
     ], $overrides);
 }
 
@@ -146,6 +149,20 @@ it('provides Google OAuth credentials to every Laravel process', function () {
     }
 });
 
+it('provides VAPID credentials to every Laravel process', function () {
+    $result = resolveProductionCompose();
+
+    expect($result->successful())->toBeTrue($result->errorOutput());
+
+    $services = json_decode($result->output(), true, flags: JSON_THROW_ON_ERROR)['services'];
+
+    foreach (['web', 'worker', 'scheduler', 'reverb'] as $service) {
+        expect($services[$service]['environment']['VAPID_SUBJECT'])->toBe('mailto:notifications@dlpfriends.example')
+            ->and($services[$service]['environment']['VAPID_PUBLIC_KEY'])->toBe('vapid-public-key')
+            ->and($services[$service]['environment']['VAPID_PRIVATE_KEY'])->toBe('vapid-private-key');
+    }
+});
+
 it('rejects a production deployment when a critical variable is missing', function (string $variable) {
     $result = resolveProductionCompose([$variable => '']);
 
@@ -164,6 +181,9 @@ it('rejects a production deployment when a critical variable is missing', functi
     'Google client ID' => 'GOOGLE_CLIENT_ID',
     'Google client secret' => 'GOOGLE_CLIENT_SECRET',
     'Google redirect URI' => 'GOOGLE_REDIRECT_URI',
+    'VAPID subject' => 'VAPID_SUBJECT',
+    'VAPID public key' => 'VAPID_PUBLIC_KEY',
+    'VAPID private key' => 'VAPID_PRIVATE_KEY',
 ]);
 
 it('builds the Laravel Resend transport used in production', function () {
