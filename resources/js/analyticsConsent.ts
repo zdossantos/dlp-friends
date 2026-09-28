@@ -28,16 +28,21 @@ if (root) {
     const measurementId = root.dataset.analyticsMeasurementId;
     const spa = root.dataset.analyticsSpa === 'true';
     let activated = false;
+    let dialogTrigger: HTMLElement | null = null;
 
     if (dialog && accept && refuse && settings && measurementId) {
-        const showDialog = () => {
+        const showDialog = (trigger?: HTMLElement) => {
+            dialogTrigger = trigger ?? null;
             dialog.hidden = false;
             settings.setAttribute('aria-expanded', 'true');
             accept.focus();
         };
         const hideDialog = () => {
             dialog.hidden = true;
+            settings.hidden = true;
             settings.setAttribute('aria-expanded', 'false');
+            dialogTrigger?.focus();
+            dialogTrigger = null;
         };
         const clearAnalyticsCookies = () => {
             const domainParts = window.location.hostname.split('.');
@@ -93,18 +98,30 @@ if (root) {
 
         if (controller.current() === null) {
             showDialog();
+        } else {
+            settings.hidden = true;
         }
 
         accept.addEventListener('click', () => {
             controller.accept();
             hideDialog();
-            settings.focus();
         });
         refuse.addEventListener('click', () => {
             controller.refuse();
             hideDialog();
-            settings.focus();
         });
-        settings.addEventListener('click', showDialog);
+        settings.addEventListener('click', () => showDialog(settings));
+        document.addEventListener('click', (event) => {
+            const target =
+                event.target instanceof Element
+                    ? event.target.closest<HTMLElement>(
+                          '[data-analytics-settings-trigger]',
+                      )
+                    : null;
+
+            if (target) {
+                showDialog(target);
+            }
+        });
     }
 }

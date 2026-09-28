@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Head, Link, router, usePage } from '@inertiajs/vue3';
 import {
+    Cookie,
     Eye,
     EyeOff,
     LayoutDashboard,
@@ -162,16 +163,28 @@ function handleLogout(): void {
                     </span>
                 </template>
                 <template #summary-actions>
-                    <Button
-                        as-child
-                        variant="outline"
-                        class="min-h-10 rounded-full"
-                    >
-                        <Link :href="editProfile()">
-                            <Pencil class="size-4" aria-hidden="true" />
-                            {{ t('profile.actions.edit') }}
-                        </Link>
-                    </Button>
+                    <div class="flex flex-wrap justify-end gap-2">
+                        <Button
+                            as-child
+                            variant="outline"
+                            class="min-h-10 rounded-full"
+                        >
+                            <Link :href="editProfile()">
+                                <Pencil class="size-4" aria-hidden="true" />
+                                {{ t('profile.actions.edit') }}
+                            </Link>
+                        </Button>
+                        <Button
+                            type="button"
+                            variant="outline"
+                            data-analytics-settings-trigger
+                            data-test="profile-analytics-consent-settings"
+                            class="min-h-10 rounded-full"
+                        >
+                            <Cookie class="size-4" aria-hidden="true" />
+                            {{ t('profile.actions.cookies') }}
+                        </Button>
+                    </div>
                 </template>
             </ProfilePresentation>
         </section>
