@@ -131,6 +131,32 @@ class BrandAssetsTest extends TestCase
         $this->assertSame([18, 14, 27], [$background['red'], $background['green'], $background['blue']]);
     }
 
+    public function test_pwa_icons_use_the_dark_brand_background_and_safe_maskable_geometry(): void
+    {
+        foreach ([192, 512] as $size) {
+            foreach (["icon-{$size}.png", "icon-maskable-{$size}.png"] as $filename) {
+                $path = public_path("pwa/{$filename}");
+                $image = getimagesize($path);
+
+                $this->assertNotFalse($image);
+                $this->assertSame([$size, $size, IMAGETYPE_PNG], [$image[0], $image[1], $image[2]]);
+
+                $png = imagecreatefrompng($path);
+                $this->assertNotFalse($png);
+                $corner = imagecolorsforindex($png, imagecolorat($png, 0, 0));
+                $this->assertSame([18, 14, 27, 0], [$corner['red'], $corner['green'], $corner['blue'], $corner['alpha']]);
+            }
+
+            $maskable = imagecreatefrompng(public_path("pwa/icon-maskable-{$size}.png"));
+            $margin = (int) floor($size * 0.1);
+
+            foreach ([[0, 0], [$margin - 1, (int) ($size / 2)], [$size - $margin, (int) ($size / 2)], [$size - 1, $size - 1]] as [$x, $y]) {
+                $pixel = imagecolorsforindex($maskable, imagecolorat($maskable, $x, $y));
+                $this->assertSame([18, 14, 27], [$pixel['red'], $pixel['green'], $pixel['blue']]);
+            }
+        }
+    }
+
     public function test_ico_contains_intact_png_variants_for_common_browser_sizes(): void
     {
         $contents = file_get_contents(public_path('favicon.ico'));
