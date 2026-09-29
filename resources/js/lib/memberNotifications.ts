@@ -9,6 +9,8 @@ type MatchNotice = {
 
 type PersistentNotice = {
     id: string;
+    target_type?: string;
+    target_id?: number;
 };
 
 export function registerNotification(
@@ -36,6 +38,16 @@ export function activeConversationId(url: string): number | null {
     const match = path.match(/^\/conversations\/(\d+)\/?$/);
 
     return match ? Number(match[1]) : null;
+}
+
+export function shouldAcknowledgePersistentNotification(
+    notification: PersistentNotice,
+    currentUrl: string,
+): boolean {
+    return (
+        notification.target_type === 'conversation' &&
+        activeConversationId(currentUrl) === notification.target_id
+    );
 }
 
 export function shouldShowMessageToast(

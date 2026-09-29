@@ -63,6 +63,54 @@ class NotificationCenterTest extends TestCase
         expect($notification->fresh()?->read_at)->not->toBeNull();
     }
 
+    public function test_opening_a_conversation_marks_only_its_conversation_notifications_as_read(): void
+    {
+        [$member, , $conversation] = $this->conversationMembers();
+        $otherConversation = $this->conversationFor($member);
+        $message = $this->notification($member, 'conversations', $conversation);
+        $match = $this->notification($member, 'conversations', $conversation, 'notifications.items.new_match');
+        $other = $this->notification($member, 'conversations', $otherConversation);
+        $event = $this->notification($member, 'events', $conversation, 'notifications.items.event_changed');
+
+        $this->actingAs($member)
+            ->get(route('conversations.show', $conversation))
+            ->assertOk();
+
+        expect($message->fresh()?->read_at)->not->toBeNull()
+            ->and($match->fresh()?->read_at)->not->toBeNull()
+            ->and($other->fresh()?->read_at)->toBeNull()
+            ->and($event->fresh()?->read_at)->toBeNull();
+    }
+
+    public function test_conversation_read_is_idempotent_and_ignores_legacy_notifications_without_a_target(): void
+    {
+        [$member, , $conversation] = $this->conversationMembers();
+        $targeted = $this->notification($member, 'conversations', $conversation);
+        $legacy = $member->notifications()->create([
+            'id' => (string) Str::uuid(),
+            'type' => 'test',
+            'data' => [
+                'category' => 'conversations',
+                'translation_key' => 'notifications.items.new_message',
+                'parameters' => ['sender' => 'Ami'],
+            ],
+        ]);
+
+        $this->actingAs($member)
+            ->post(route('conversations.read.store', $conversation))
+            ->assertNoContent();
+        $firstReadAt = $targeted->fresh()?->read_at;
+
+        $this->travel(1)->second();
+        $this->actingAs($member)
+            ->post(route('conversations.read.store', $conversation))
+            ->assertNoContent();
+
+        expect($firstReadAt)->not->toBeNull()
+            ->and($targeted->fresh()?->read_at?->equalTo($firstReadAt))->toBeTrue()
+            ->and($legacy->fresh()?->read_at)->toBeNull();
+    }
+
     public function test_reading_an_event_notification_opens_the_canonical_event_panel_workspace(): void
     {
         $member = User::factory()->withProfile()->create();
@@ -152,14 +200,19 @@ class NotificationCenterTest extends TestCase
             ->assertRedirect(route('notifications.index'));
     }
 
-    private function notification(User $user, string $category, Conversation $conversation): DatabaseNotification
+    private function notification(
+        User $user,
+        string $category,
+        Conversation $conversation,
+        string $translationKey = 'notifications.items.new_message',
+    ): DatabaseNotification
     {
         return $user->notifications()->create([
             'id' => (string) Str::uuid(),
             'type' => 'test',
             'data' => [
                 'category' => $category,
-                'translation_key' => 'notifications.items.new_message',
+                'translation_key' => $translationKey,
                 'parameters' => ['sender' => 'Ami'],
                 'target_type' => 'conversation',
                 'target_id' => $conversation->id,
@@ -181,5 +234,19 @@ class NotificationCenterTest extends TestCase
         ]);
 
         return [$lowUser, $highUser, $match->conversation()->create()];
+    }
+
+    private function conversationFor(User $member): Conversation
+    {
+        $peer = User::factory()->withProfile()->create();
+        [$lowUser, $highUser] = $member->id < $peer->id
+            ? [$member, $peer]
+            : [$peer, $member];
+        $match = MemberMatch::factory()->create([
+            'user_low_id' => $lowUser->id,
+            'user_high_id' => $highUser->id,
+        ]);
+
+        return $match->conversation()->create();
     }
 }

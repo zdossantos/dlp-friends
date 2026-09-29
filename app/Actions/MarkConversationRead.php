@@ -15,6 +15,14 @@ final class MarkConversationRead
         Gate::forUser($reader)->authorize('view', $conversation);
 
         DB::transaction(function () use ($reader, $conversation): void {
+            $readAt = now();
+            $reader->notifications()
+                ->whereNull('read_at')
+                ->where('data->category', 'conversations')
+                ->where('data->target_type', 'conversation')
+                ->where('data->target_id', $conversation->id)
+                ->update(['read_at' => $readAt]);
+
             $query = $conversation->messages()
                 ->where('author_user_id', '!=', $reader->id)
                 ->whereNull('read_at');
@@ -24,7 +32,6 @@ final class MarkConversationRead
                 return;
             }
 
-            $readAt = now();
             $query->update(['read_at' => $readAt]);
 
             MessagesRead::dispatch(

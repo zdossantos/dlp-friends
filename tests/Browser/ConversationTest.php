@@ -489,6 +489,8 @@ test('a pushed message is announced without moving a member who is reading older
         ->assertScript("Math.abs(document.querySelector('[data-test=message-scroll]').scrollTop - window.__scrollBeforePushedMessage) < 2", true);
 
     expect($pushed->fresh()?->read_at)->not->toBeNull();
+    expect($member->notifications()->where('data->target_id', $conversation->id)->sole()->read_at)
+        ->not->toBeNull();
 
     event(new MessageSent($pushed));
     $page->assertScript("document.querySelectorAll('[data-message-id]').length", 11)
