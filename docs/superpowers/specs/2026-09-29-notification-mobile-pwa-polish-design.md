@@ -33,10 +33,10 @@ de conversation, de match ou d’événement.
 ### Identité d’une conversation
 
 Les notifications de match et de nouveau message contiennent déjà leur cible
-de conversation dans leurs données persistées. Le serveur utilise cet
-identifiant canonique, et non une comparaison d’URL, de texte traduit ou de
-type de classe, pour retrouver les notifications appartenant à la conversation
-ouverte.
+de conversation dans leurs données persistées sous la forme canonique
+`target_type: conversation` et `target_id`. Le serveur utilise cet identifiant,
+et non une comparaison d’URL, de texte traduit ou de type de classe, pour
+retrouver les notifications appartenant à la conversation ouverte.
 
 Une Action métier dédiée reçoit le membre et la conversation autorisée. Elle
 marque comme lues toutes les notifications non lues de catégories
@@ -143,9 +143,9 @@ dépendance d’exécution.
 ## Données, sécurité et erreurs
 
 Aucune migration n’est nécessaire : les notifications de conversation
-persistantes possèdent déjà `conversation_id`. Une notification historique ou
-malformée qui ne le possède pas est ignorée par la lecture groupée et reste
-traitable individuellement.
+persistantes possèdent déjà `target_type` et `target_id`. Une notification
+historique ou malformée qui ne les possède pas est ignorée par la lecture
+groupée et reste traitable individuellement.
 
 Toutes les routes de mutation utilisent l’authentification, la relation
 `notifications()` du membre et la protection CSRF Laravel. Une ressource absente
