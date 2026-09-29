@@ -20,7 +20,7 @@ import type { SwipePoint } from '@/lib/notificationSwipe';
 import { read } from '@/routes/notifications';
 import type { MemberNotification } from '@/types/notification';
 
-const actionWidth = 112;
+const actionWidth = 144;
 const props = withDefaults(
     defineProps<{ notification: MemberNotification; open?: boolean }>(),
     { open: false },
@@ -166,39 +166,47 @@ function handleKeydown(event: KeyboardEvent): void {
         @keydown="handleKeydown"
     >
         <div
-            class="absolute inset-y-0 right-0 z-0 flex w-28 items-stretch"
+            class="absolute inset-y-0 right-0 z-0 flex w-36 items-stretch"
             :aria-label="t('notifications.actions.item_actions')"
         >
             <Button
                 type="button"
                 variant="secondary"
-                class="h-full min-w-0 flex-1 rounded-none px-0"
+                class="h-full min-w-0 flex-1 flex-col gap-1 rounded-none px-1 text-[0.625rem]"
                 :data-test="`notification-mark-read-${notification.id}`"
                 :disabled="notification.read_at !== null || readProcessing"
                 :aria-busy="readProcessing"
                 :aria-label="t('notifications.actions.mark_read')"
                 @focus="emit('requestOpen', true)"
                 @click="markRead"
-                ><Check class="size-5" aria-hidden="true"
-            /></Button>
+            >
+                <Check class="size-5" aria-hidden="true" />
+                <span aria-hidden="true">{{
+                    t('notifications.actions.read_short')
+                }}</span>
+            </Button>
             <Button
                 type="button"
                 variant="destructive"
-                class="h-full min-w-0 flex-1 rounded-none px-0"
+                class="h-full min-w-0 flex-1 flex-col gap-1 rounded-none px-1 text-[0.625rem]"
                 :data-test="`notification-delete-${notification.id}`"
                 :disabled="deleteProcessing"
                 :aria-busy="deleteProcessing"
                 :aria-label="t('notifications.actions.delete')"
                 @focus="emit('requestOpen', true)"
                 @click="deleteNotification"
-                ><Trash2 class="size-5" aria-hidden="true"
-            /></Button>
+            >
+                <Trash2 class="size-5" aria-hidden="true" />
+                <span aria-hidden="true">{{
+                    t('notifications.actions.delete_short')
+                }}</span>
+            </Button>
         </div>
 
         <div
-            class="relative z-10 flex min-w-0 touch-pan-y bg-card will-change-transform"
+            class="relative z-10 flex max-w-full min-w-0 touch-pan-y overflow-hidden bg-card will-change-transform"
             :data-test="`notification-foreground-${notification.id}`"
-            :class="notification.read_at === null ? 'bg-primary/8' : ''"
+            :class="notification.read_at === null ? 'bg-secondary' : 'bg-card'"
             :style="foregroundStyle"
             @pointerdown="startSwipe"
             @pointermove="moveSwipe"

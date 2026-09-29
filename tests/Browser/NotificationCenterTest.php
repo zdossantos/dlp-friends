@@ -99,6 +99,7 @@ test('mobile notifications stay within the viewport and keep the active filter l
     $this->actingAs($member);
 
     $page = visit('/notifications')->on()->mobile()->inDarkMode();
+    $page->resize(320, 700);
     $page->script("localStorage.setItem('appearance', 'dark')");
     $page->navigate('/notifications')
         ->assertSee('Nouveau match avec Un membre')
@@ -106,7 +107,7 @@ test('mobile notifications stay within the viewport and keep the active filter l
         ->assertScript(<<<'JS'
             (() => {
                 const root = document.documentElement;
-                const item = document.querySelector('li [data-test^="notification-"]');
+                const item = document.querySelector('[data-test^="notification-foreground-"]');
                 if (!item) return false;
                 const title = item.querySelector('[data-test="notification-title"]');
                 if (!title) return false;

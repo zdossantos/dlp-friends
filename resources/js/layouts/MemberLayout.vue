@@ -38,7 +38,7 @@ watch(
 
 <template>
     <div
-        class="relative flex h-svh w-full flex-col overflow-hidden bg-background text-foreground"
+        class="relative flex h-svh w-full max-w-full min-w-0 flex-col overflow-hidden bg-background text-foreground"
     >
         <div
             aria-hidden="true"
@@ -48,7 +48,7 @@ watch(
         <div
             data-test="member-shell-content"
             scroll-region
-            class="relative flex min-h-0 w-full flex-1 flex-col overflow-y-auto overscroll-contain"
+            class="relative flex min-h-0 w-full max-w-full min-w-0 flex-1 flex-col overflow-y-auto overscroll-contain"
             :class="
                 reservesMemberNavigation
                     ? '[padding-bottom:calc(5.5rem+env(safe-area-inset-bottom))]'

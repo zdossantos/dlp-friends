@@ -17,12 +17,16 @@ const { t } = useTranslations();
 </script>
 
 <template>
-    <ul data-test="participant-list" class="space-y-2" role="list">
+    <ul
+        data-test="participant-list"
+        class="max-w-full min-w-0 space-y-2"
+        role="list"
+    >
         <li
             v-for="participant in participants"
             :key="participant.id"
             data-test="participant-row"
-            class="overflow-hidden rounded-2xl border border-border bg-card"
+            class="max-w-full min-w-0 overflow-hidden rounded-2xl border border-border bg-card"
             :class="
                 participant.isBlocked ? 'bg-muted text-muted-foreground' : ''
             "
@@ -35,7 +39,7 @@ const { t } = useTranslations();
                         ? `participant-self-${participant.id}`
                         : `participant-link-${participant.id}`
                 "
-                class="flex min-h-16 items-center gap-3 px-4 py-3 text-card-foreground transition-colors hover:bg-muted focus-visible:bg-muted focus-visible:outline-none"
+                class="flex min-h-16 max-w-full min-w-0 items-center gap-3 px-4 py-3 text-card-foreground transition-colors hover:bg-muted focus-visible:bg-muted focus-visible:outline-none"
             >
                 <span
                     v-if="participant.isBlocked"

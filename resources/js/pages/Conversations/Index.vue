@@ -104,7 +104,7 @@ watch(presenceChanged, (event) => {
     <Head :title="t('conversations.page.title')" />
 
     <main
-        class="mx-auto flex h-full min-h-0 w-full max-w-2xl flex-col gap-6 overflow-hidden px-4 pt-[max(1rem,env(safe-area-inset-top))] sm:px-6 sm:pt-8"
+        class="mx-auto flex h-full min-h-0 w-full max-w-2xl min-w-0 flex-col gap-6 overflow-hidden px-4 pt-[max(1rem,env(safe-area-inset-top))] sm:px-6 sm:pt-8"
     >
         <header class="space-y-1">
             <h1 class="text-2xl font-semibold tracking-tight sm:text-3xl">
@@ -160,10 +160,10 @@ watch(presenceChanged, (event) => {
         <section
             v-else
             :aria-label="t('conversations.page.list_label')"
-            class="relative isolate min-h-0 flex-1 overflow-y-auto overscroll-contain rounded-3xl border bg-card shadow-sm"
+            class="relative isolate min-h-0 max-w-full min-w-0 flex-1 overflow-y-auto overscroll-contain rounded-3xl border bg-card shadow-sm"
         >
             <SeasonalDecorations placement="panel" />
-            <ul role="list" class="relative z-10 divide-y">
+            <ul role="list" class="relative z-10 max-w-full min-w-0 divide-y">
                 <li
                     v-for="conversation in filteredConversations"
                     :key="conversation.id"
@@ -171,7 +171,7 @@ watch(presenceChanged, (event) => {
                     <Link
                         :href="showConversation(conversation.id)"
                         :data-unread="conversation.unread_count > 0"
-                        class="flex min-h-20 items-center gap-3 px-4 py-3 transition-colors hover:bg-muted/60 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none focus-visible:ring-inset motion-reduce:transition-none"
+                        class="flex min-h-20 max-w-full min-w-0 items-center gap-3 px-4 py-3 transition-colors hover:bg-muted/60 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none focus-visible:ring-inset motion-reduce:transition-none"
                         :class="
                             conversation.unread_count > 0 ? 'bg-primary/8' : ''
                         "

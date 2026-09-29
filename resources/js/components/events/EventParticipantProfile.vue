@@ -33,7 +33,10 @@ const visitFrequency = computed(() =>
 </script>
 
 <template>
-    <section data-test="event-participant-profile" class="h-full bg-card">
+    <section
+        data-test="event-participant-profile"
+        class="h-full max-w-full min-w-0 bg-card"
+    >
         <div
             v-if="profile.isBlocked"
             data-test="blocked-participant-profile"
