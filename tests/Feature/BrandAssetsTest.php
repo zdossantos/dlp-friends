@@ -50,12 +50,18 @@ class BrandAssetsTest extends TestCase
     {
         $light = $this->loadSvg(public_path('brand/dlp-friends-logo.svg'));
         $dark = $this->loadSvg(public_path('brand/dlp-friends-logo-dark.svg'));
+        $halloween = $this->loadSvg(public_path('brand/dlp-friends-logo-halloween.svg'));
 
         $this->assertSame('0 0 512 418.648', $light->documentElement->getAttribute('viewBox'));
         $this->assertSame('0 0 512 418.648', $dark->documentElement->getAttribute('viewBox'));
+        $this->assertSame('0 0 512 418.648', $halloween->documentElement->getAttribute('viewBox'));
         $this->assertSame(
             $this->pathData($light, '//*[local-name()="path"]'),
             $this->pathData($dark, '//*[local-name()="path"]'),
+        );
+        $this->assertSame(
+            $this->pathData($light, '//*[local-name()="path"]'),
+            $this->pathData($halloween, '//*[local-name()="path"]'),
         );
         $this->assertSame(
             ['url(#brand-gradient)'],
@@ -72,6 +78,10 @@ class BrandAssetsTest extends TestCase
         $this->assertSame(
             ['hsl(265 80% 72%)', '#F3C8DE'],
             $this->gradientStops($dark),
+        );
+        $this->assertSame(
+            ['hsl(24 88% 38%)', 'hsl(274 60% 38%)'],
+            $this->gradientStops($halloween),
         );
     }
 
