@@ -13,7 +13,7 @@ use LogicException;
 
 final class MemberNotificationPresenter
 {
-    /** @return array{id: string, category: string, translation_key: string, parameters: array<string, string|int|null>, target_url: string, read_at: string|null, created_at: string|null, dismiss_url?: string, action_label?: string, content?: string, image_url?: string} */
+    /** @return array{id: string, category: string, translation_key: string, parameters: array<string, string|int|null>, target_url: string, read_url: string, delete_url: string, read_at: string|null, created_at: string|null, dismiss_url?: string, action_label?: string, content?: string, image_url?: string} */
     public function present(DatabaseNotification $notification, User $viewer): array
     {
         $data = $notification->data;
@@ -25,6 +25,8 @@ final class MemberNotificationPresenter
             'translation_key' => (string) ($data['translation_key'] ?? ''),
             'parameters' => is_array($data['parameters'] ?? null) ? $data['parameters'] : [],
             'target_url' => $this->targetUrl($data, $viewer, $notification, $partnerDelivery),
+            'read_url' => route('notifications.mark-read', $notification, absolute: false),
+            'delete_url' => route('notifications.destroy', $notification, absolute: false),
             'read_at' => $notification->read_at?->toISOString(),
             'created_at' => $notification->created_at?->toISOString(),
         ];

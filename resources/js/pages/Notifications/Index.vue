@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Head, Link, router } from '@inertiajs/vue3';
 import { Settings } from '@lucide/vue';
+import { ref } from 'vue';
 import NotificationFilters from '@/components/notifications/NotificationFilters.vue';
 import NotificationItem from '@/components/notifications/NotificationItem.vue';
 import SeasonalDecorations from '@/components/seasonal/SeasonalDecorations.vue';
@@ -18,6 +19,7 @@ const props = defineProps<{
     notifications: NotificationPage;
 }>();
 const { t } = useTranslations();
+const openNotificationId = ref<string | null>(null);
 
 function markAllRead(): void {
     router.patch(
@@ -100,6 +102,10 @@ function markAllRead(): void {
                     v-for="notification in notifications.data"
                     :key="notification.id"
                     :notification="notification"
+                    :open="openNotificationId === notification.id"
+                    @request-open="
+                        openNotificationId = $event ? notification.id : null
+                    "
                 />
             </ul>
         </section>

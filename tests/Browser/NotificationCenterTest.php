@@ -140,6 +140,30 @@ test('mobile notifications stay within the viewport and keep the active filter l
     expect($notification)->not->toBeNull();
 });
 
+test('a member reveals accessible notification actions and can read or delete an item', function () {
+    $member = notificationBrowserMember('Alice');
+    $readNotification = notificationBrowserNotice($member, 'conversations', 'Basile', 901);
+    $deletedNotification = notificationBrowserNotice($member, 'events', 'Camille', 902);
+    $this->actingAs($member);
+
+    $page = visit('/notifications')->on()->mobile()->assertNoJavaScriptErrors();
+    $foreground = "document.querySelector('[data-test=\"notification-foreground-{$readNotification->id}\"]')";
+    $page->script("{$foreground}.dispatchEvent(new PointerEvent('pointerdown', { pointerId: 41, clientX: 220, clientY: 100, bubbles: true })); {$foreground}.dispatchEvent(new PointerEvent('pointermove', { pointerId: 41, clientX: 150, clientY: 100, bubbles: true })); {$foreground}.dispatchEvent(new PointerEvent('pointerup', { pointerId: 41, clientX: 150, clientY: 100, bubbles: true }));");
+    $page->assertAttribute("[data-test=notification-row-{$readNotification->id}]", 'data-swipe-open', 'true')
+        ->press("[data-test=notification-mark-read-{$readNotification->id}]")
+        ->assertNoJavaScriptErrors();
+
+    expect($readNotification->fresh()?->read_at)->not->toBeNull();
+
+    $page->script('window.confirm = () => true');
+    $page->script("document.querySelector('[data-test=notification-delete-{$deletedNotification->id}]').focus()");
+    $page->press("[data-test=notification-delete-{$deletedNotification->id}]")
+        ->assertMissing("[data-test=notification-row-{$deletedNotification->id}]")
+        ->assertNoJavaScriptErrors();
+
+    expect($member->notifications()->whereKey($deletedNotification->id)->exists())->toBeFalse();
+});
+
 test('the conversation list shows online presence only beside the label', function () {
     $member = notificationBrowserMember('Alice');
     $peer = notificationBrowserMember('Basile');

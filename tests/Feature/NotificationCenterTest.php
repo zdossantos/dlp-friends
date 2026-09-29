@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Conversation;
 use App\Models\Event;
 use App\Models\MemberMatch;
+use App\Models\Message;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Notifications\DatabaseNotification;
@@ -174,6 +175,54 @@ class NotificationCenterTest extends TestCase
 
         expect($mine->fresh()?->read_at)->not->toBeNull()
             ->and($theirs->fresh()?->read_at)->toBeNull();
+    }
+
+    public function test_a_member_can_mark_their_notification_read_without_navigation(): void
+    {
+        [$member, , $conversation] = $this->conversationMembers();
+        $notification = $this->notification($member, 'conversations', $conversation);
+
+        $this->actingAs($member)
+            ->from(route('notifications.index'))
+            ->patch(route('notifications.mark-read', $notification))
+            ->assertRedirect(route('notifications.index'));
+
+        expect($notification->fresh()?->read_at)->not->toBeNull();
+    }
+
+    public function test_notification_mutations_are_scoped_to_the_owner(): void
+    {
+        [$member, , $conversation] = $this->conversationMembers();
+        $other = User::factory()->withProfile()->create();
+        $notification = $this->notification($member, 'conversations', $conversation);
+
+        $this->actingAs($other)
+            ->patch(route('notifications.mark-read', $notification))
+            ->assertNotFound();
+        $this->actingAs($other)
+            ->delete(route('notifications.destroy', $notification))
+            ->assertNotFound();
+
+        expect($notification->fresh())->not->toBeNull()
+            ->and($notification->fresh()?->read_at)->toBeNull();
+    }
+
+    public function test_deleting_a_notification_keeps_its_conversation_message_and_match(): void
+    {
+        [$member, $peer, $conversation] = $this->conversationMembers();
+        $message = Message::factory()->for($conversation)->for($peer, 'author')->create();
+        $matchId = $conversation->match_id;
+        $notification = $this->notification($member, 'conversations', $conversation);
+
+        $this->actingAs($member)
+            ->from(route('notifications.index'))
+            ->delete(route('notifications.destroy', $notification))
+            ->assertRedirect(route('notifications.index'));
+
+        expect($notification->fresh())->toBeNull()
+            ->and($conversation->fresh())->not->toBeNull()
+            ->and($message->fresh())->not->toBeNull()
+            ->and(MemberMatch::find($matchId))->not->toBeNull();
     }
 
     public function test_the_shared_auth_payload_contains_the_member_unread_count(): void

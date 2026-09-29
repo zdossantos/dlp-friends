@@ -22,6 +22,10 @@ return [
     'actions' => [
         'manage_settings' => 'Gérer les notifications',
         'mark_all_read' => 'Tout marquer comme lu',
+        'mark_read' => 'Marquer comme lue',
+        'delete' => 'Supprimer la notification',
+        'confirm_delete' => 'Supprimer cette notification ?',
+        'item_actions' => 'Actions de la notification',
         'open_partner_announcement' => 'Voir l’annonce partenaire',
         'dismiss_partner_announcement' => 'Supprimer cette annonce partenaire',
         'confirm_dismiss_partner_announcement' => 'Supprimer cette annonce partenaire de tes notifications ?',

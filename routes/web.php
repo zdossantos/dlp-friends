@@ -52,6 +52,8 @@ use App\Http\Controllers\MessageController;
 use App\Http\Controllers\MessageReactionController;
 use App\Http\Controllers\MyEventController;
 use App\Http\Controllers\NotificationIndexController;
+use App\Http\Controllers\NotificationDestroyController;
+use App\Http\Controllers\NotificationMarkReadController;
 use App\Http\Controllers\NotificationReadAllController;
 use App\Http\Controllers\NotificationReadController;
 use App\Http\Controllers\Partner\AnnouncementController as PartnerAnnouncementController;
@@ -157,6 +159,10 @@ Route::middleware(['auth', 'verified', 'social'])->group(function (): void {
         ->name('notifications.read-all');
     Route::patch('notifications/{notification}/read', NotificationReadController::class)
         ->name('notifications.read');
+    Route::patch('notifications/{notification}/mark-read', NotificationMarkReadController::class)
+        ->name('notifications.mark-read');
+    Route::delete('notifications/{notification}', NotificationDestroyController::class)
+        ->name('notifications.destroy');
 
     Route::middleware('role:user')->group(function (): void {
         Route::get('app', LandingController::class)->name('app');

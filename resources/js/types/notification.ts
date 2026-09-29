@@ -13,6 +13,8 @@ export type MemberNotification = {
         | `notifications.items.event_${string}`;
     parameters: Record<string, string | number>;
     target_url: string;
+    read_url: string;
+    delete_url: string;
     dismiss_url?: string;
     action_label?: string;
     content?: string;

@@ -56,14 +56,17 @@ const {
 } = useConversationTyping(props.conversation.id, props.currentUserId);
 
 async function markConversationAsRead(): Promise<void> {
-    const response = await fetch(storeConversationRead(props.conversation.id).url, {
-        method: 'POST',
-        credentials: 'same-origin',
-        headers: {
-            Accept: 'application/json',
-            ...xsrfHeader(document.cookie),
+    const response = await fetch(
+        storeConversationRead(props.conversation.id).url,
+        {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: {
+                Accept: 'application/json',
+                ...xsrfHeader(document.cookie),
+            },
         },
-    });
+    );
 
     if (!response.ok) {
         throw new Error('Unable to mark the conversation as read.');
