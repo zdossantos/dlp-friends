@@ -222,6 +222,6 @@
                 </main>
             </div>
         </div>
-        <x-analytics-consent />
+        <x-analytics-consent page-type="landing" :page-title="$seo['title']" :locale="$seo['locale']" />
     </body>
 </html>

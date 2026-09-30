@@ -4,6 +4,7 @@ import {
     activateGoogleAnalytics,
     createAnalyticsConsentController,
     readAnalyticsConsent,
+    sendPublicPageView,
 } from '../../resources/js/lib/analyticsConsent';
 
 function consentRuntime(cookie = '') {
@@ -86,6 +87,42 @@ describe('analytics consent', () => {
 });
 
 describe('Google Analytics activation', () => {
+    test('sends one explicit sanitized public page view after activation', () => {
+        const commands = [];
+
+        sendPublicPageView(
+            {
+                locale: 'fr',
+                pageTitle: 'DLP Friends — Rencontres amicales à Disneyland Paris',
+                pageType: 'landing',
+            },
+            {
+                appMode: 'pwa',
+                location: {
+                    origin: 'https://dlp-friends.example',
+                    pathname: '/fr',
+                },
+                queue: (...command) => commands.push(command),
+            },
+        );
+
+        expect(commands).toEqual([
+            [
+                'event',
+                'page_view',
+                {
+                    app_mode: 'pwa',
+                    language: 'fr',
+                    page_location: 'https://dlp-friends.example/fr',
+                    page_path: '/fr',
+                    page_title:
+                        'DLP Friends — Rencontres amicales à Disneyland Paris',
+                    page_type: 'landing',
+                },
+            ],
+        ]);
+    });
+
     test('loads Consent Mode only after activation and keeps advertising denied', () => {
         const commands = [];
         const scripts = [];

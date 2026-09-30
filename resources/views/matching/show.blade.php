@@ -119,6 +119,6 @@
                 <footer class="border-t border-border/70 py-6 text-center text-xs leading-5 text-muted-foreground">{{ $content['footer'] }}</footer>
             </div>
         </div>
-        <x-analytics-consent />
+        <x-analytics-consent page-type="matching_explainer" :page-title="$content['meta']['title']" :locale="$locale" />
     </body>
 </html>

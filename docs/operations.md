@@ -97,10 +97,11 @@ construction de l’image, car ces valeurs sont intégrées aux assets frontend.
    `analytics_storage=granted`, tandis que les trois consentements publicitaires
    restent `denied`. Le choix est conservé six mois.
 3. Dans **Flux de données > Web > Mesure améliorée > Pages vues > Paramètres
-   avancés**, conserver les pages vues au chargement mais désactiver les
-   changements de page fondés sur les événements d’historique. Les navigations
-   Inertia envoient déjà leurs propres événements ; activer les deux mécanismes
-   créerait des doublons.
+   avancés**, désactiver les changements de page fondés sur les événements
+   d’historique. L’application désactive aussi la page vue automatique du tag :
+   les pages publiques et les navigations Inertia envoient chacune leur propre
+   événement explicite, afin d’éviter les doublons et de garantir des titres
+   génériques sans nom de membre.
 4. Activer le mode debug du tag, puis ouvrir une page Inertia et effectuer une
    navigation cliente. Dans DebugView, vérifier exactement une page vue
    initiale puis une page vue supplémentaire. Contrôler `page_location` et
@@ -113,21 +114,28 @@ construction de l’image, car ces valeurs sont intégrées aux assets frontend.
    des adresses e-mail et déclarer les paramètres d’URL susceptibles de
    contenir des données personnelles. Cette défense complète la normalisation
    applicative sans la remplacer.
-7. Dans Search Console, créer de préférence une propriété de type Domaine et
+7. Dans **Administration > Définitions personnalisées**, créer deux dimensions
+   personnalisées de portée Événement : `Mode d’application` associée au
+   paramètre `app_mode`, et `Type de page` associée à `page_type`. Les valeurs
+   de `app_mode` sont `pwa` et `browser`. Après collecte, créer une exploration
+   libre avec `Mode d’application` en lignes et `Vues` en valeurs pour comparer
+   la PWA au site. Ces dimensions ne sont pas rétroactives : elles n’enrichissent
+   que les événements reçus après leur création.
+8. Dans Search Console, créer de préférence une propriété de type Domaine et
    publier l’enregistrement TXT fourni dans le DNS. La variable
    `GOOGLE_SITE_VERIFICATION` reste disponible pour une propriété de type
    Préfixe d’URL validée par balise HTML.
    Une propriété Domaine couvre `/fr` et `/en`; des propriétés de préfixe
    séparées ne sont utiles que si des rapports autonomes par langue sont
    nécessaires.
-8. Après validation, soumettre `https://<domaine>/sitemap.xml`. Contrôler que
+9. Après validation, soumettre `https://<domaine>/sitemap.xml`. Contrôler que
    `/fr`, `/en`, les pages de matching et les documents légaux sont détectés,
    tandis que les routes d’authentification et membres restent exclues.
-9. Avec l’inspection d’URL, lancer un test en direct de `/` et vérifier que
+10. Avec l’inspection d’URL, lancer un test en direct de `/` et vérifier que
    Google peut suivre la redirection vers la landing localisée. Tester aussi
    une URL canonique française et anglaise et contrôler leurs annotations
    `hreflang` réciproques.
-10. Demander l’indexation des pages principales avec l’inspection d’URL. Une
+11. Demander l’indexation des pages principales avec l’inspection d’URL. Une
    soumission ne garantit ni l’indexation immédiate ni une position dans les
    résultats ; surveiller les rapports Pages et Sitemaps après exploration.
 

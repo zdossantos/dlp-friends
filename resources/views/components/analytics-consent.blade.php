@@ -1,10 +1,18 @@
-@props(['spa' => false])
+@props([
+    'spa' => false,
+    'pageType' => 'public_page',
+    'pageTitle' => null,
+    'locale' => null,
+])
 
 @if (config('services.google.analytics_id'))
     <div
         data-analytics-consent
         data-analytics-measurement-id="{{ config('services.google.analytics_id') }}"
         data-analytics-spa="{{ $spa ? 'true' : 'false' }}"
+        data-analytics-page-type="{{ $spa ? 'application' : $pageType }}"
+        data-analytics-page-title="{{ $pageTitle ?? config('app.name') }}"
+        data-analytics-locale="{{ $locale ?? app()->getLocale() }}"
     >
         <section
             hidden
