@@ -34,6 +34,14 @@ return [
         'algorithm_description' => 'Les profils avec lesquels tu partages le plus d’univers favoris apparaissent d’abord. En cas d’égalité, une fréquence de visite commune peut faire la différence si cette option est activée.',
         'algorithm_note' => 'Ton âge n’est jamais pris en compte par l’algorithme pour te proposer des profils.',
         'algorithm_action' => 'Comprendre nos suggestions',
+        'guides' => [
+            'title' => 'Des conseils pour créer des liens entre fans',
+            'description' => 'Prépare tes échanges et tes visites avec des repères concrets, toujours entre adultes et dans un cadre strictement amical.',
+            'friendships' => 'Rencontrer des amis fans',
+            'friendships_description' => 'Construire un profil utile et commencer une conversation autour de passions communes.',
+            'solo_visit' => 'Préparer une visite solo',
+            'solo_visit_description' => 'Profiter de sa liberté tout en gardant la possibilité de partager un moment au parc.',
+        ],
         'steps_title' => 'Comment ça marche ?',
         'steps' => [
             'profile' => ['title' => 'Crée ton profil', 'description' => 'Choisis ton avatar et les univers que tu préfères.'],

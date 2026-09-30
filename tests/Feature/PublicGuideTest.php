@@ -107,3 +107,16 @@ test('unknown guide locale and slug combinations are not indexable pages', funct
     '/en/rencontres-amicales-disneyland-paris',
     '/fr/guide-invente',
 ]);
+
+test('each guide links to the landing matching sibling guide and legal pages', function (string $path, array $expectedLinks) {
+    $response = $this->get($path)->assertOk();
+
+    foreach ($expectedLinks as $expectedLink) {
+        $response->assertSee('href="'.$expectedLink.'"', false);
+    }
+})->with([
+    'French friendship guide' => ['/fr/rencontres-amicales-disneyland-paris', ['/fr', '/fr/matching', '/fr/aller-seul-disneyland-paris', '/fr/politique-confidentialite']],
+    'English friendship guide' => ['/en/disneyland-paris-friendships', ['/en', '/en/matching', '/en/visiting-disneyland-paris-solo', '/en/privacy-policy']],
+    'French solo guide' => ['/fr/aller-seul-disneyland-paris', ['/fr', '/fr/matching', '/fr/rencontres-amicales-disneyland-paris', '/fr/politique-confidentialite']],
+    'English solo guide' => ['/en/visiting-disneyland-paris-solo', ['/en', '/en/matching', '/en/disneyland-paris-friendships', '/en/privacy-policy']],
+]);

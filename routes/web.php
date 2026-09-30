@@ -101,6 +101,8 @@ Route::get('sitemap.xml', function () {
         ->view('sitemap', ['groups' => [
             ['fr' => PublicUrls::landing('fr'), 'en' => PublicUrls::landing('en')],
             ['fr' => PublicUrls::matching('fr'), 'en' => PublicUrls::matching('en')],
+            ['fr' => PublicUrls::friendships('fr'), 'en' => PublicUrls::friendships('en')],
+            ['fr' => PublicUrls::soloVisit('fr'), 'en' => PublicUrls::soloVisit('en')],
             ['fr' => PublicUrls::terms('fr'), 'en' => PublicUrls::terms('en')],
             ['fr' => PublicUrls::privacy('fr'), 'en' => PublicUrls::privacy('en')],
         ]])

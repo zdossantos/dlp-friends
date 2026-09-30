@@ -34,6 +34,14 @@ return [
         'algorithm_description' => 'Profiles with the most favourite worlds in common with you appear first. When tied, a shared visit frequency can make the difference if that option is enabled.',
         'algorithm_note' => 'Your age is never used by the algorithm to suggest profiles.',
         'algorithm_action' => 'Understand our suggestions',
+        'guides' => [
+            'title' => 'Practical ways to connect with other fans',
+            'description' => 'Prepare conversations and park visits with useful guidance for adults in a strictly friendly setting.',
+            'friendships' => 'Meet other Disneyland Paris fans',
+            'friendships_description' => 'Build a useful profile and start a conversation through genuine shared interests.',
+            'solo_visit' => 'Plan a solo visit',
+            'solo_visit_description' => 'Keep the freedom of going alone while leaving room to share part of your park day.',
+        ],
         'steps_title' => 'How does it work?',
         'steps' => [
             'profile' => ['title' => 'Create your profile', 'description' => 'Choose your avatar and the worlds you enjoy most.'],

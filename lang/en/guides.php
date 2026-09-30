@@ -4,6 +4,9 @@ return [
     'common' => [
         'brand_home' => 'DLP Friends home',
         'matching' => 'How suggestions work',
+        'continue' => 'Keep exploring',
+        'friendships' => 'Meet other fans',
+        'solo_visit' => 'Plan a solo visit',
         'cta' => 'Create my friendly profile',
         'independence' => 'DLP Friends is independent from Disney and Disneyland Paris. It is for adults aged 18 and over and supports strictly friendly connections.',
     ],

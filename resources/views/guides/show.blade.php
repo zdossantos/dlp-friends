@@ -81,6 +81,12 @@
                             <a href="{{ \App\Support\PublicUrls::matchingPath($locale) }}" class="rounded-2xl border border-current px-5 py-3 font-semibold">{{ __('guides.common.matching') }}</a>
                         </div>
                     </aside>
+
+                    <nav aria-label="{{ __('guides.common.continue') }}" class="mt-8 flex flex-wrap gap-x-5 gap-y-3 text-sm">
+                        <a class="font-semibold underline underline-offset-4" href="{{ $guide === 'friendships' ? \App\Support\PublicUrls::soloVisitPath($locale) : \App\Support\PublicUrls::friendshipsPath($locale) }}">{{ $guide === 'friendships' ? __('guides.common.solo_visit') : __('guides.common.friendships') }}</a>
+                        <a class="underline underline-offset-4" href="{{ \App\Support\PublicUrls::privacyPath($locale) }}">{{ __('common.legal.privacy') }}</a>
+                        <a class="underline underline-offset-4" href="{{ \App\Support\PublicUrls::termsPath($locale) }}">{{ __('common.legal.terms') }}</a>
+                    </nav>
                 </article>
             </main>
         </div>

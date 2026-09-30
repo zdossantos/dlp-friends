@@ -4,6 +4,9 @@ return [
     'common' => [
         'brand_home' => 'Accueil DLP Friends',
         'matching' => 'Comprendre les suggestions',
+        'continue' => 'Continuer la découverte',
+        'friendships' => 'Rencontrer des amis fans',
+        'solo_visit' => 'Préparer une visite solo',
         'cta' => 'Créer mon profil amical',
         'independence' => 'DLP Friends est un service indépendant de Disney et de Disneyland Paris. Il est réservé aux personnes majeures et aux rencontres strictement amicales.',
     ],

@@ -92,6 +92,21 @@ test('the public landing is server rendered without application javascript', fun
         ->assertDontSee('type="module"', false);
 });
 
+test('each landing links to its localized friendship guides with descriptive anchors', function (string $locale, array $paths, array $anchors) {
+    $response = $this->get("/{$locale}")->assertOk();
+
+    foreach ($paths as $path) {
+        $response->assertSee('href="'.$path.'"', false);
+    }
+
+    foreach ($anchors as $anchor) {
+        $response->assertSee($anchor);
+    }
+})->with([
+    'French' => ['fr', ['/fr/rencontres-amicales-disneyland-paris', '/fr/aller-seul-disneyland-paris'], ['Rencontrer des amis fans', 'Préparer une visite solo']],
+    'English' => ['en', ['/en/disneyland-paris-friendships', '/en/visiting-disneyland-paris-solo'], ['Meet other Disneyland Paris fans', 'Plan a solo visit']],
+]);
+
 test('the public landing renders the active seasonal art direction', function (string $theme) {
     SeasonalTheme::query()->update(['is_manually_active' => false]);
     SeasonalTheme::query()->where('theme', $theme)->update([
@@ -218,6 +233,10 @@ test('the sitemap contains localized public landing and legal pages', function (
         ->assertSee('https://dlp-friends.example/en', false)
         ->assertSee('https://dlp-friends.example/fr/matching', false)
         ->assertSee('https://dlp-friends.example/en/matching', false)
+        ->assertSee('https://dlp-friends.example/fr/rencontres-amicales-disneyland-paris', false)
+        ->assertSee('https://dlp-friends.example/en/disneyland-paris-friendships', false)
+        ->assertSee('https://dlp-friends.example/fr/aller-seul-disneyland-paris', false)
+        ->assertSee('https://dlp-friends.example/en/visiting-disneyland-paris-solo', false)
         ->assertSee('https://dlp-friends.example/fr/conditions-generales-utilisation', false)
         ->assertSee('https://dlp-friends.example/en/terms-of-use', false)
         ->assertSee('https://dlp-friends.example/fr/politique-confidentialite', false)

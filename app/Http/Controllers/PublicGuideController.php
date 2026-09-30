@@ -25,6 +25,7 @@ class PublicGuideController extends Controller
 
         return view('guides.show', [
             'content' => trans("guides.{$guide}"),
+            'guide' => $guide,
             'locale' => $locale,
             'canonical' => $urls['absolute']($locale),
             'alternates' => [
