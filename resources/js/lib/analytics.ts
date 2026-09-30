@@ -1,4 +1,7 @@
 import { router } from '@inertiajs/vue3';
+import { normalizeAnalyticsPath } from '@/lib/analyticsPage';
+
+export { normalizeAnalyticsPath } from '@/lib/analyticsPage';
 
 declare global {
     interface Window {
@@ -15,18 +18,6 @@ interface AnalyticsRuntime {
     onAnalyticsReady?: (listener: () => void) => void;
     onNavigate: (listener: (url: string) => void) => void;
     origin: string;
-}
-
-const identifierSegment =
-    /^\d+$|^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-
-export function normalizeAnalyticsPath(path: string): string {
-    const pathname = path.split(/[?#]/, 1)[0] || '/';
-
-    return pathname
-        .split('/')
-        .map((segment) => (identifierSegment.test(segment) ? '{id}' : segment))
-        .join('/');
 }
 
 function analyticsLocation(origin: string, url: string): string {
