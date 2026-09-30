@@ -1,8 +1,11 @@
 <?php
 
 use Illuminate\Contracts\Validation\UncompromisedVerifier;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Arr;
 use Illuminate\Validation\Rules\Password;
+
+uses(RefreshDatabase::class);
 
 test('registration validation is translated into the active locale', function (string $language, string $message) {
     $this->withHeader('Accept-Language', $language)

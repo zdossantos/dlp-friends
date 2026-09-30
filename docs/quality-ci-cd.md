@@ -48,8 +48,8 @@ Les six checks indépendants sont :
 
 1. `Conventional PR title` valide le futur message du commit squash ;
 2. `PHP quality` exécute Laravel Pint et PHPStan/Larastan ;
-3. `Pest tests` installe Chromium, construit les assets et exécute avec MySQL
-   les suites Pest unitaires, fonctionnelles et navigateur ;
+3. `Backend tests` agrège quatre shards fonctionnels/unitaires et quatre shards
+   navigateur Pest indépendants, exécutés chacun avec sa propre instance MySQL ;
 4. `Frontend quality` génère Wayfinder puis exécute ESLint, Prettier et
    TypeScript ;
 5. `Vite build` compile les assets de production ;
@@ -61,6 +61,21 @@ Les dépendances sont installées depuis `composer.lock` et `bun.lock` avec Bun
 1.3.14. GitHub Actions résout dynamiquement le répertoire de cache Composer,
 et met aussi en cache les téléchargements Bun et les couches Docker BuildKit.
 Aucun merge n'est possible tant qu'un check requis échoue.
+
+Pour Pest, un job de préparation installe Composer et Bun, génère Wayfinder,
+construit les assets Vite et télécharge Chromium une seule fois par commit. Son
+espace de travail, y compris le service worker produit hors de `public/build`,
+est ensuite restauré par les huit shards. Quatre shards exécutent uniquement
+`tests/Feature` et `tests/Unit` sans Bun ni dépendances système Playwright. Les
+quatre autres exécutent `tests/Browser` et sont les seuls à installer ces
+dépendances système, qui ne peuvent pas être transportées par le cache entre
+runners éphémères. Le fichier versionné `tests/.pest/shards.json`, régénéré avec
+`./vendor/bin/pest --update-shards`, répartit chaque groupe selon sa durée
+observée. Les shards restent séquentiels en interne : chaque runner dispose déjà
+de sa propre base, sans élargir les droits du compte MySQL pour autoriser la
+création de bases suffixées. `fail-fast` est désactivé afin que tous les échecs
+soient visibles, puis le check stable `Backend tests` agrège leur résultat pour
+la protection de `main`.
 
 ## Dependabot
 

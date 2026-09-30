@@ -35,6 +35,34 @@ it('uses the pinned Bun toolchain in automation and Docker', function () {
         ->and($dependabot)->not->toContain("package-ecosystem: 'npm'");
 });
 
+it('runs Pest in eight isolated time-balanced CI shards without Playwright on backend shards', function () {
+    $ci = file_get_contents(base_path('.github/workflows/ci.yml'));
+    $backendShards = str($ci)->between("  pest-tests:\n", "\n  pest-browser-tests:")->toString();
+    $browserShards = str($ci)->between("  pest-browser-tests:\n", "\n  pest-tests-result:")->toString();
+
+    expect($ci)
+        ->toContain('public/service-worker.js')
+        ->toContain('name: Pest backend (shard ${{ matrix.shard }}/4)')
+        ->toContain('name: Pest browser (shard ${{ matrix.shard }}/4)')
+        ->toContain('needs: [pest-tests, pest-browser-tests]')
+        ->not->toContain('--parallel --shard=')
+        ->toContain('fail-fast: false')
+        ->toContain('needs: pest-prepare')
+        ->toContain('fail-on-cache-miss: true')
+        ->toContain('name: Backend tests')
+        ->and($backendShards)
+        ->toContain('shard: [1, 2, 3, 4]')
+        ->toContain('./vendor/bin/pest tests/Feature tests/Unit --shard=${{ matrix.shard }}/4')
+        ->not->toContain('Install Playwright system dependencies')
+        ->not->toContain('Set up Bun')
+        ->and($browserShards)
+        ->toContain('shard: [1, 2, 3, 4]')
+        ->toContain('./vendor/bin/pest tests/Browser --shard=${{ matrix.shard }}/4')
+        ->toContain('Install Playwright system dependencies')
+        ->toContain('./node_modules/.bin/playwright install-deps chromium')
+        ->not->toContain('Set up Bun');
+});
+
 it('documents Bun without npm or Yarn residue in active project files', function () {
     $activeDocumentation = collect([
         'README.md',
