@@ -1,4 +1,4 @@
-import { createInertiaApp } from '@inertiajs/vue3';
+import { createInertiaApp, router } from '@inertiajs/vue3';
 import { configureEcho } from '@laravel/echo-vue';
 import { initializeTheme } from '@/composables/useAppearance';
 import {
@@ -6,7 +6,10 @@ import {
     observePwaRegistration,
 } from '@/composables/usePwa';
 import { initializeSeasonalTheme } from '@/composables/useSeasonalTheme';
-import { resolvePageLayout } from '@/layouts/resolvePageLayout';
+import {
+    resolvePageLayout,
+    usesAdminLayout,
+} from '@/layouts/resolvePageLayout';
 import { initializeAnalytics } from '@/lib/analytics';
 import { initializeFlashToast } from '@/lib/flashToast';
 import { resolvePageTitle } from '@/lib/pageTitle';
@@ -53,6 +56,13 @@ if (
 }
 
 void initializeAnalytics(inertiaReady);
+
+router.on('navigate', (event) => {
+    document.documentElement.classList.toggle(
+        'app-viewport',
+        !usesAdminLayout(event.detail.page.component),
+    );
+});
 
 // This will set light / dark mode on page load...
 initializeTheme();

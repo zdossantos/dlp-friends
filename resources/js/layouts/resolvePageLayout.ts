@@ -4,6 +4,10 @@ import AuthLayout from '@/layouts/AuthLayout.vue';
 import MemberLayout from '@/layouts/MemberLayout.vue';
 import SettingsLayout from '@/layouts/settings/Layout.vue';
 
+export function usesAdminLayout(name: string): boolean {
+    return name === 'Dashboard' || name.startsWith('Admin/');
+}
+
 export function resolvePageLayout(
     name: string,
 ): Component | Component[] | null {
@@ -11,7 +15,7 @@ export function resolvePageLayout(
         return AuthLayout;
     }
 
-    if (name === 'Dashboard' || name.startsWith('Admin/')) {
+    if (usesAdminLayout(name)) {
         return AdminLayout;
     }
 

@@ -416,17 +416,24 @@ test('an administrator sees administration and member return navigation', functi
     $admin->profile?->update(['display_name' => 'Admin Aurore']);
     $this->actingAs($admin);
 
-    visit('/profile')
+    $page = visit('/profile')
         ->assertPresent('[aria-label="Administration"]')
         ->assertCount('[data-test="profile-hero-action"]', 3)
         ->assertPresent('[data-test="admin-profile-badge"]')
         ->assertSee('Administrateur')
+        ->assertScript("document.documentElement.classList.contains('app-viewport')", true)
         ->assertScript(
             "document.querySelector('[data-test=profile-presentation]').classList.contains('border-amber-400') && getComputedStyle(document.querySelector('[data-test=profile-presentation]')).borderTopWidth === '2px'",
             true,
         );
 
-    visit('/dashboard')
+    $page->click('[aria-label="Administration"]')
+        ->assertPathIs('/dashboard')
+        ->assertScript("document.documentElement.classList.contains('app-viewport')", false)
+        ->assertScript(
+            "getComputedStyle(document.documentElement).overflowY !== 'hidden' && getComputedStyle(document.body).overflowY !== 'hidden'",
+            true,
+        )
         ->assertPresent('[data-test="app-logo-icon"]')
         ->assertAttribute('[data-test="app-logo-icon"]', 'aria-hidden', 'true')
         ->assertSeeLink('Univers favoris')
