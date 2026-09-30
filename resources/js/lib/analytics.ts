@@ -1,9 +1,9 @@
 import { router } from '@inertiajs/vue3';
-import { resolveAppMode } from '@/lib/appMode';
 import {
     normalizeAnalyticsPath,
     resolveAnalyticsPage,
 } from '@/lib/analyticsPage';
+import { resolveAppMode } from '@/lib/appMode';
 
 export { normalizeAnalyticsPath } from '@/lib/analyticsPage';
 
