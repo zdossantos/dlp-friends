@@ -157,6 +157,59 @@ function seasonalTokenDiffersFromDefaultScript(string $seasonalClass, string $to
     JS;
 }
 
+function mobileViewportOverflowDiagnosticScript(): string
+{
+    return <<<'JS'
+        (() => {
+            const viewportWidth = window.innerWidth;
+            const root = document.documentElement;
+            const shell = document.querySelector('[data-test="member-shell-content"]');
+            const seasonalLayer = document.querySelector('[data-seasonal-placement="global"]');
+            const seasonalRect = seasonalLayer?.getBoundingClientRect();
+            const candidates = [...document.querySelectorAll('body *')]
+                .map((element) => ({ element, rect: element.getBoundingClientRect() }))
+                .filter(({ rect }) => rect.left < -0.5 || rect.right > viewportWidth + 0.5)
+                .sort((left, right) =>
+                    Math.max(right.rect.right - viewportWidth, -right.rect.left)
+                    - Math.max(left.rect.right - viewportWidth, -left.rect.left),
+                );
+
+            if (
+                root.scrollWidth <= viewportWidth
+                && shell
+                && shell.scrollWidth <= shell.clientWidth
+                && shell.getBoundingClientRect().width <= viewportWidth
+                && (!seasonalRect
+                    || (seasonalRect.left >= -0.5 && seasonalRect.right <= viewportWidth + 0.5))
+            ) {
+                return 'ok';
+            }
+
+            if (
+                seasonalLayer
+                && seasonalRect
+                && (seasonalRect.left < -0.5 || seasonalRect.right > viewportWidth + 0.5)
+            ) {
+                return `[data-seasonal-placement="global"]:left=${seasonalRect.left.toFixed(1)};right=${seasonalRect.right.toFixed(1)};viewport=${viewportWidth}`;
+            }
+
+            const widest = candidates[0];
+            if (!widest) {
+                return `root=${root.scrollWidth}/${viewportWidth};shell=${shell?.scrollWidth}/${shell?.clientWidth}`;
+            }
+
+            const { element, rect } = widest;
+            const selector = [
+                element.tagName.toLowerCase(),
+                element.id ? `#${element.id}` : '',
+                ...[...element.classList].map((className) => `.${className}`),
+            ].join('');
+
+            return `${selector}:left=${rect.left.toFixed(1)};right=${rect.right.toFixed(1)};viewport=${viewportWidth}`;
+        })()
+    JS;
+}
+
 test('a stored appearance takes precedence over the system preference', function () {
     $user = User::factory()->withProfile()->create();
     $this->actingAs($user);
@@ -286,5 +339,38 @@ test('seasonal palettes remain distinct accessible and decorative in light and d
             ->assertScript(semanticContrastScript('background', 'ring'), true)
             ->assertPresent("{$selector}.seasonal-decoration-static")
             ->assertNoJavaScriptErrors();
+    }
+});
+
+test('member messaging surfaces stay within the narrow viewport in every theme and appearance', function () {
+    $user = User::factory()->withProfile()->create();
+    $this->actingAs($user);
+
+    SeasonalTheme::query()->update([
+        'is_manually_active' => false,
+        'starts_at' => null,
+        'ends_at' => null,
+    ]);
+
+    $page = visit('/conversations');
+    $page->resize(320, 700);
+
+    foreach ([null, 'halloween', 'christmas'] as $themeName) {
+        SeasonalTheme::query()->update(['is_manually_active' => false]);
+        if ($themeName !== null) {
+            SeasonalTheme::query()->where('theme', $themeName)->update([
+                'is_manually_active' => true,
+            ]);
+        }
+
+        foreach (['light', 'dark'] as $appearance) {
+            $page->script("localStorage.setItem('appearance', '{$appearance}')");
+
+            foreach (['/conversations', '/notifications'] as $path) {
+                $page->navigate($path)
+                    ->assertScript(mobileViewportOverflowDiagnosticScript(), 'ok')
+                    ->assertNoJavaScriptErrors();
+            }
+        }
     }
 });

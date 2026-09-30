@@ -583,7 +583,8 @@
     }
 }
 
-.seasonal-decoration {
+.seasonal-decoration:not(.seasonal-decoration-static),
+.seasonal-decoration-static > svg {
     animation: seasonal-decoration-drift 8s ease-in-out infinite alternate;
 }
 
@@ -607,7 +608,8 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .seasonal-decoration {
+    .seasonal-decoration:not(.seasonal-decoration-static),
+    .seasonal-decoration-static > svg {
         animation: none;
     }
 }
