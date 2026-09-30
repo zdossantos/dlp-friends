@@ -129,8 +129,9 @@ construction de l’image, car ces valeurs sont intégrées aux assets frontend.
    séparées ne sont utiles que si des rapports autonomes par langue sont
    nécessaires.
 9. Après validation, soumettre `https://<domaine>/sitemap.xml`. Contrôler que
-   `/fr`, `/en`, les pages de matching et les documents légaux sont détectés,
-   tandis que les routes d’authentification et membres restent exclues.
+   `/fr`, `/en`, les pages de matching, les quatre guides et les documents
+   légaux sont détectés, tandis que les routes d’authentification et membres
+   restent exclues.
 10. Avec l’inspection d’URL, lancer un test en direct de `/` et vérifier que
    Google peut suivre la redirection vers la landing localisée. Tester aussi
    une URL canonique française et anglaise et contrôler leurs annotations
@@ -142,6 +143,37 @@ construction de l’image, car ces valeurs sont intégrées aux assets frontend.
 L’absence de `GOOGLE_ANALYTICS_ID` désactive entièrement le script GA4.
 L’absence de `GOOGLE_SITE_VERIFICATION` retire uniquement la balise de
 validation et n’affecte ni le sitemap ni l’indexation.
+
+### Suivi du référencement public
+
+Après chaque déploiement qui touche le contenu public, contrôler ces six pages
+éditoriales en priorité : `/fr`, `/en`,
+`/fr/rencontres-amicales-disneyland-paris`,
+`/en/disneyland-paris-friendships`, `/fr/aller-seul-disneyland-paris` et
+`/en/visiting-disneyland-paris-solo`.
+
+1. Dans l’inspection d’URL de Search Console, lancer un test en direct pour
+   chaque URL. Vérifier le code `200`, la canonical choisie, la langue et
+   l’absence de directive `noindex`.
+2. Valider le HTML avec le test des résultats enrichis de Google ou le
+   validateur Schema.org. Les blocs `WebApplication`, `WebPage` et
+   `BreadcrumbList` doivent être du JSON valide ; un résultat enrichi n’est
+   toutefois ni requis ni garanti pour ces types.
+3. Soumettre à nouveau `/sitemap.xml`, puis demander l’indexation des pages
+   principales qui ont matériellement changé. Éviter les demandes répétées :
+   elles n’accélèrent pas nécessairement le traitement.
+4. Distinguer les problèmes : une URL non explorée relève de la découverte ou
+   de l’accès, une URL explorée mais non indexée relève surtout de la qualité,
+   de la duplication ou de la canonical, et une URL indexée mais peu visible
+   relève du classement et de l’adéquation aux requêtes.
+5. Chaque semaine durant le premier mois, relever par page et par requête les
+   impressions, clics, CTR et position moyenne, puis ventiler par pays et
+   appareil. Passer ensuite à une revue mensuelle, en comparant des périodes de
+   durée équivalente et en annotant les mises en production.
+6. Utiliser les requêtes réellement observées pour améliorer une page utile,
+   ses titres et son maillage. Ne pas créer de variantes minces pour chaque
+   mot-clé et ne pas interpréter une variation courte de position comme un
+   résultat durable.
 
 ## Déploiements suivants
 
