@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.11.1](https://github.com/zdossantos/dlp-friends/compare/v1.11.0...v1.11.1) (2026-09-30)
+
+
+### Fixes
+
+* **admin:** restore scrolling after member navigation ([#231](https://github.com/zdossantos/dlp-friends/issues/231)) ([fb6082f](https://github.com/zdossantos/dlp-friends/commit/fb6082f35a4a4460f8a28a53566c3061bbe49578))
+* **analytics:** queue valid gtag commands ([#229](https://github.com/zdossantos/dlp-friends/issues/229)) ([2a9e3d4](https://github.com/zdossantos/dlp-friends/commit/2a9e3d46849fb57c59203d091013ee229f2862a1))
+
 ## [1.11.0](https://github.com/zdossantos/dlp-friends/compare/v1.10.0...v1.11.0) (2026-09-30)
 
 
