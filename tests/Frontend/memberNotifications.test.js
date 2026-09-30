@@ -3,6 +3,7 @@ import {
     activeConversationId,
     registerNotification,
     selectMatchNotification,
+    shouldAcknowledgePersistentNotification,
     shouldShowMessageToast,
 } from '../../resources/js/lib/memberNotifications';
 
@@ -53,5 +54,35 @@ describe('member realtime notifications', () => {
             false,
         );
         expect(registerNotification(seen, { id: 'notification-2' })).toBe(true);
+    });
+
+    test('acknowledges only a persistent notification for the open conversation', () => {
+        const current = {
+            id: 'notification-1',
+            target_type: 'conversation',
+            target_id: 42,
+        };
+
+        expect(
+            shouldAcknowledgePersistentNotification(
+                current,
+                '/conversations/42',
+            ),
+        ).toBe(true);
+        expect(
+            shouldAcknowledgePersistentNotification(
+                { ...current, target_id: 43 },
+                '/conversations/42',
+            ),
+        ).toBe(false);
+        expect(
+            shouldAcknowledgePersistentNotification(
+                { ...current, target_type: 'event' },
+                '/conversations/42',
+            ),
+        ).toBe(false);
+        expect(
+            shouldAcknowledgePersistentNotification(current, '/discover'),
+        ).toBe(false);
     });
 });

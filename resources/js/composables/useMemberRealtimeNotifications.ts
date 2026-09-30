@@ -36,6 +36,7 @@ export type MemberMatchNotification = {
 type MemberRealtimeContext = {
     activeMatch: Ref<MemberMatchNotification | null>;
     latestMessage: ShallowRef<RealtimeConversationMessage | null>;
+    latestPersistentNotification: ShallowRef<PersistentMemberNotification | null>;
     presenceChanged: ShallowRef<MemberPresenceChanged | null>;
     unreadNotificationsCount: Ref<number>;
     presentMatch: (match: MemberMatchNotification) => void;
@@ -69,6 +70,8 @@ export function useMemberRealtimeNotifications(
     const { t } = useTranslations();
     const activeMatch = ref<MemberMatchNotification | null>(null);
     const latestMessage = shallowRef<RealtimeConversationMessage | null>(null);
+    const latestPersistentNotification =
+        shallowRef<PersistentMemberNotification | null>(null);
     const presenceChanged = shallowRef<MemberPresenceChanged | null>(null);
     const unreadNotificationsCount = ref(
         page.props.auth.unread_notifications_count,
@@ -194,6 +197,7 @@ export function useMemberRealtimeNotifications(
             }
 
             unreadNotificationsCount.value += 1;
+            latestPersistentNotification.value = notification;
 
             if (
                 new URL(page.url, window.location.origin).pathname ===
@@ -264,6 +268,7 @@ export function useMemberRealtimeNotifications(
     return {
         activeMatch,
         latestMessage,
+        latestPersistentNotification,
         presenceChanged,
         unreadNotificationsCount,
         presentMatch,

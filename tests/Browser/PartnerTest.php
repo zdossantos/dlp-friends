@@ -265,11 +265,11 @@ test('a member receives partner announcements by default reads dismisses and can
     $page->assertNoAccessibilityIssues();
     expect($delivery->fresh()->read_at)->not->toBeNull();
     $page->script('window.confirm = () => false');
-    $page->keys('[data-test="notification-dismiss-'.$notification->id.'"]', 'Enter')
+    $page->keys('[data-test="notification-delete-'.$notification->id.'"]', 'Enter')
         ->assertSee('Invitation partenaire navigateur');
     expect($notification->fresh())->not->toBeNull();
     $page->script('window.confirm = () => true');
-    $page->keys('[data-test="notification-dismiss-'.$notification->id.'"]', 'Enter')
+    $page->keys('[data-test="notification-delete-'.$notification->id.'"]', 'Enter')
         ->assertDontSee('Invitation partenaire navigateur')
         ->assertNoJavaScriptErrors();
     expect($delivery->fresh()->dismissed_at)->not->toBeNull()

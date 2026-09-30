@@ -143,9 +143,9 @@ test('a member cannot react to their own message from the conversation', functio
         ->assertNoJavaScriptErrors();
 });
 
-test('the conversation list links to a peer and previews its latest message', function () {
+test('the conversation list stays within the mobile viewport and opens a peer', function () {
     $member = conversationBrowserMember('Alice');
-    $peer = conversationBrowserMember('Basile');
+    $peer = conversationBrowserMember(str_repeat('BasileSansEspace', 5));
     [$lowId, $highId] = collect([$member->id, $peer->id])->sort()->values()->all();
     $match = MemberMatch::factory()->create([
         'user_low_id' => $lowId,
@@ -153,16 +153,18 @@ test('the conversation list links to a peer and previews its latest message', fu
     ]);
     $conversation = $match->conversation()->create();
     Message::factory()->for($conversation)->for($peer, 'author')->create([
-        'content' => 'On se retrouve devant le château.',
+        'content' => str_repeat('MessageSansEspace', 20),
     ]);
     $this->actingAs($member);
 
-    visit('/conversations')->on()->mobile()
-        ->assertSee('Basile')
-        ->assertSee('On se retrouve devant le château.')
+    $page = visit('/conversations')->on()->mobile();
+    $page->resize(320, 700);
+    $page
         ->assertPresent("a[href='/conversations/{$conversation->id}'][data-unread='true']")
         ->assertPresent('[aria-label="1 message non lu"]')
-        ->assertPresent("a[href='/conversations/{$conversation->id}']")
+        ->assertScript('document.documentElement.scrollWidth <= window.innerWidth', true)
+        ->click("a[href='/conversations/{$conversation->id}']")
+        ->assertPathIs("/conversations/{$conversation->id}")
         ->assertNoJavaScriptErrors();
 });
 
@@ -489,6 +491,8 @@ test('a pushed message is announced without moving a member who is reading older
         ->assertScript("Math.abs(document.querySelector('[data-test=message-scroll]').scrollTop - window.__scrollBeforePushedMessage) < 2", true);
 
     expect($pushed->fresh()?->read_at)->not->toBeNull();
+    expect($member->notifications()->where('data->target_id', $conversation->id)->sole()->read_at)
+        ->not->toBeNull();
 
     event(new MessageSent($pushed));
     $page->assertScript("document.querySelectorAll('[data-message-id]').length", 11)

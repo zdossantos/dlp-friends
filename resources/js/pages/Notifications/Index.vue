@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Head, Link, router } from '@inertiajs/vue3';
 import { Settings } from '@lucide/vue';
+import { ref } from 'vue';
 import NotificationFilters from '@/components/notifications/NotificationFilters.vue';
 import NotificationItem from '@/components/notifications/NotificationItem.vue';
 import SeasonalDecorations from '@/components/seasonal/SeasonalDecorations.vue';
@@ -18,6 +19,7 @@ const props = defineProps<{
     notifications: NotificationPage;
 }>();
 const { t } = useTranslations();
+const openNotificationId = ref<string | null>(null);
 
 function markAllRead(): void {
     router.patch(
@@ -31,9 +33,11 @@ function markAllRead(): void {
 <template>
     <Head :title="t('notifications.page.title')" />
     <main
-        class="mx-auto flex h-full min-h-0 w-full max-w-2xl flex-col gap-6 overflow-hidden px-4 pt-[max(1rem,env(safe-area-inset-top))] sm:px-6 sm:pt-8"
+        class="mx-auto flex h-full min-h-0 w-full max-w-2xl min-w-0 flex-col gap-6 overflow-hidden px-4 pt-[max(1rem,env(safe-area-inset-top))] sm:px-6 sm:pt-8"
     >
-        <header class="flex min-w-0 items-start justify-between gap-4">
+        <header
+            class="flex min-w-0 flex-wrap items-start justify-between gap-4"
+        >
             <div class="min-w-0 space-y-1">
                 <h1 class="text-2xl font-semibold tracking-tight sm:text-3xl">
                     {{ t('notifications.page.title') }}
@@ -42,7 +46,7 @@ function markAllRead(): void {
                     {{ t('notifications.page.description') }}
                 </p>
             </div>
-            <div class="flex shrink-0 items-center gap-2">
+            <div class="flex max-w-full shrink-0 flex-wrap items-center gap-2">
                 <Button variant="outline" size="sm" as-child>
                     <Link
                         :href="editNotificationSettings()"
@@ -100,6 +104,10 @@ function markAllRead(): void {
                     v-for="notification in notifications.data"
                     :key="notification.id"
                     :notification="notification"
+                    :open="openNotificationId === notification.id"
+                    @request-open="
+                        openNotificationId = $event ? notification.id : null
+                    "
                 />
             </ul>
         </section>

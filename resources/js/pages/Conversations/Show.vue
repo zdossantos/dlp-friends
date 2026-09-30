@@ -10,6 +10,7 @@ import { useConversationRealtime } from '@/composables/useConversationRealtime';
 import { useMemberRealtimeContext } from '@/composables/useMemberRealtimeNotifications';
 import { useConversationTyping } from '@/composables/useTypingSignals';
 import { xsrfHeader } from '@/lib/csrf';
+import { shouldAcknowledgePersistentNotification } from '@/lib/memberNotifications';
 import { index as conversationsIndex } from '@/routes/conversations';
 import { store as storeConversationRead } from '@/routes/conversations/read';
 import { show as showMember } from '@/routes/members';
@@ -30,7 +31,8 @@ const props = defineProps<{
     messages: PaginatedMessages;
     conversationStarters: ConversationStarter[];
 }>();
-const { presenceChanged } = useMemberRealtimeContext();
+const { latestPersistentNotification, presenceChanged } =
+    useMemberRealtimeContext();
 const participantPresence = ref(props.participant.presence);
 watch(presenceChanged, (event) => {
     if (event?.user_id === props.participant.id) {
@@ -54,15 +56,38 @@ const {
 } = useConversationTyping(props.conversation.id, props.currentUserId);
 
 async function markConversationAsRead(): Promise<void> {
-    await fetch(storeConversationRead(props.conversation.id).url, {
-        method: 'POST',
-        credentials: 'same-origin',
-        headers: {
-            Accept: 'application/json',
-            ...xsrfHeader(document.cookie),
+    const response = await fetch(
+        storeConversationRead(props.conversation.id).url,
+        {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: {
+                Accept: 'application/json',
+                ...xsrfHeader(document.cookie),
+            },
         },
-    });
+    );
+
+    if (!response.ok) {
+        throw new Error('Unable to mark the conversation as read.');
+    }
 }
+
+watch(latestPersistentNotification, (notification) => {
+    if (
+        !notification ||
+        !shouldAcknowledgePersistentNotification(
+            notification,
+            window.location.pathname,
+        )
+    ) {
+        return;
+    }
+
+    void markConversationAsRead()
+        .then(() => router.reload({ only: ['auth'] }))
+        .catch(() => undefined);
+});
 
 function handleRealtimeMessage(message: ConversationMessage): void {
     mergeMessage(message);

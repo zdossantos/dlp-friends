@@ -10,6 +10,44 @@ use Illuminate\Support\Str;
 
 beforeEach(fn () => Storage::fake('local'));
 
+test('the member shell owns vertical scrolling without letting the document rubber-band', function () {
+    $member = notificationBrowserMember('Alice');
+    foreach (range(1, 15) as $index) {
+        notificationBrowserNotice(
+            $member,
+            'events',
+            "Notification {$index}",
+            $index,
+        );
+    }
+    $this->actingAs($member);
+
+    visit('/notifications')->on()->mobile()
+        ->assertScript(<<<'JS'
+            (() => {
+                const html = getComputedStyle(document.documentElement);
+                const body = getComputedStyle(document.body);
+                const app = document.querySelector('#app');
+                const shell = document.querySelector('[data-test="member-shell-content"]');
+
+                if (!app || !shell) return false;
+
+                const appStyle = getComputedStyle(app);
+                const shellStyle = getComputedStyle(shell);
+
+                return html.overflowY === 'hidden'
+                    && html.overscrollBehaviorY === 'none'
+                    && body.overflowY === 'hidden'
+                    && body.overscrollBehaviorY === 'none'
+                    && appStyle.height === `${window.innerHeight}px`
+                    && appStyle.overflowY === 'hidden'
+                    && shellStyle.overflowY === 'auto'
+                    && shell.scrollHeight >= shell.clientHeight;
+            })()
+            JS, true)
+        ->assertNoJavaScriptErrors();
+});
+
 test('a member filters notifications and opens the related conversation', function () {
     $member = notificationBrowserMember('Alice');
     $peer = notificationBrowserMember('Basile');
@@ -99,6 +137,7 @@ test('mobile notifications stay within the viewport and keep the active filter l
     $this->actingAs($member);
 
     $page = visit('/notifications')->on()->mobile()->inDarkMode();
+    $page->resize(320, 700);
     $page->script("localStorage.setItem('appearance', 'dark')");
     $page->navigate('/notifications')
         ->assertSee('Nouveau match avec Un membre')
@@ -106,7 +145,7 @@ test('mobile notifications stay within the viewport and keep the active filter l
         ->assertScript(<<<'JS'
             (() => {
                 const root = document.documentElement;
-                const item = document.querySelector('li [data-test^="notification-"]');
+                const item = document.querySelector('[data-test^="notification-foreground-"]');
                 if (!item) return false;
                 const title = item.querySelector('[data-test="notification-title"]');
                 if (!title) return false;
@@ -138,6 +177,50 @@ test('mobile notifications stay within the viewport and keep the active filter l
         ->assertNoJavaScriptErrors();
 
     expect($notification)->not->toBeNull();
+});
+
+test('a member reveals accessible notification actions and can read or delete an item', function () {
+    $member = notificationBrowserMember('Alice');
+    $readNotification = notificationBrowserNotice($member, 'conversations', 'Basile', 901);
+    $deletedNotification = notificationBrowserNotice($member, 'events', 'Camille', 902);
+    $this->actingAs($member);
+
+    $page = visit('/notifications')->on()->mobile()->assertNoJavaScriptErrors();
+    $foreground = "document.querySelector('[data-test=\"notification-foreground-{$readNotification->id}\"]')";
+    $page->script("{$foreground}.dispatchEvent(new PointerEvent('pointerdown', { pointerId: 41, clientX: 220, clientY: 100, bubbles: true })); {$foreground}.dispatchEvent(new PointerEvent('pointermove', { pointerId: 41, clientX: 150, clientY: 100, bubbles: true })); {$foreground}.dispatchEvent(new PointerEvent('pointerup', { pointerId: 41, clientX: 150, clientY: 100, bubbles: true }));");
+    $page->assertAttribute("[data-test=notification-row-{$readNotification->id}]", 'data-swipe-open', 'true')
+        ->press("[data-test=notification-mark-read-{$readNotification->id}]")
+        ->assertNoJavaScriptErrors();
+
+    expect($readNotification->fresh()?->read_at)->not->toBeNull();
+
+    $page->script('window.confirm = () => true');
+    $page->script("document.querySelector('[data-test=notification-delete-{$deletedNotification->id}]').focus()");
+    $page->press("[data-test=notification-delete-{$deletedNotification->id}]")
+        ->assertMissing("[data-test=notification-row-{$deletedNotification->id}]")
+        ->assertNoJavaScriptErrors();
+
+    expect($member->notifications()->whereKey($deletedNotification->id)->exists())->toBeFalse();
+});
+
+test('closed mobile notification actions stay visually hidden while the list scrolls', function () {
+    $member = notificationBrowserMember('Alice');
+    $notification = notificationBrowserNotice($member, 'conversations', 'Basile', 903);
+    $this->actingAs($member);
+
+    $page = visit('/notifications')->on()->mobile()->assertNoJavaScriptErrors();
+    $actions = "document.querySelector('[data-test=notification-mark-read-{$notification->id}]').parentElement";
+    $foreground = "document.querySelector('[data-test=notification-foreground-{$notification->id}]')";
+
+    $page->assertScript("getComputedStyle({$actions}).opacity", '0')
+        ->assertScript("getComputedStyle({$actions}).pointerEvents", 'none');
+
+    $page->script("{$foreground}.dispatchEvent(new PointerEvent('pointerdown', { pointerId: 42, clientX: 220, clientY: 100, bubbles: true })); {$foreground}.dispatchEvent(new PointerEvent('pointermove', { pointerId: 42, clientX: 150, clientY: 100, bubbles: true })); {$foreground}.dispatchEvent(new PointerEvent('pointerup', { pointerId: 42, clientX: 150, clientY: 100, bubbles: true }));");
+
+    $page->assertAttribute("[data-test=notification-row-{$notification->id}]", 'data-swipe-open', 'true')
+        ->assertScript("getComputedStyle({$actions}).opacity", '1')
+        ->assertScript("getComputedStyle({$actions}).pointerEvents", 'auto')
+        ->assertNoJavaScriptErrors();
 });
 
 test('the conversation list shows online presence only beside the label', function () {

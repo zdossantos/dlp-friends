@@ -127,11 +127,13 @@ function updatePanel(open: boolean): void {
 <template>
     <main
         :data-test="context === 'discover' ? 'discover-events' : 'mine-events'"
-        class="mx-auto w-full max-w-5xl space-y-7 px-4 pt-[max(1rem,env(safe-area-inset-top))] pb-24 sm:px-6 sm:pt-8"
+        class="mx-auto w-full max-w-5xl min-w-0 space-y-7 px-4 pt-[max(1rem,env(safe-area-inset-top))] pb-24 sm:px-6 sm:pt-8"
     >
         <header class="flex flex-wrap items-start justify-between gap-4">
-            <div>
-                <h1 class="text-3xl font-semibold text-foreground">
+            <div class="max-w-full min-w-0">
+                <h1
+                    class="text-3xl font-semibold wrap-break-word text-foreground"
+                >
                     {{
                         t(
                             context === 'discover'

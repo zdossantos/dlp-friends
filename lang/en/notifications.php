@@ -22,6 +22,12 @@ return [
     'actions' => [
         'manage_settings' => 'Manage notifications',
         'mark_all_read' => 'Mark all as read',
+        'mark_read' => 'Mark as read',
+        'read_short' => 'Read',
+        'delete' => 'Delete notification',
+        'delete_short' => 'Delete',
+        'confirm_delete' => 'Delete this notification?',
+        'item_actions' => 'Notification actions',
         'open_partner_announcement' => 'View partner announcement',
         'dismiss_partner_announcement' => 'Remove this partner announcement',
         'confirm_dismiss_partner_announcement' => 'Remove this partner announcement from your notifications?',

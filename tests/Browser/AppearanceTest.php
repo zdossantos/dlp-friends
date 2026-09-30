@@ -181,6 +181,19 @@ test('the system appearance is used when no preference is stored', function () {
         ->assertNoJavaScriptErrors();
 });
 
+test('the application logo follows appearance and seasonal classes without reloading', function () {
+    $page = visit('/login')
+        ->assertPresent('[data-test="app-logo-icon"]')
+        ->assertScript("getComputedStyle(document.querySelector('[data-test=app-logo-icon]')).backgroundImage.includes('dlp-friends-logo.svg')", true);
+
+    $page->script("document.documentElement.classList.add('dark')");
+    $page->assertScript("getComputedStyle(document.querySelector('[data-test=app-logo-icon]')).backgroundImage.includes('dlp-friends-logo-dark.svg')", true);
+
+    $page->script("document.documentElement.classList.add('seasonal-halloween')");
+    $page->assertScript("getComputedStyle(document.querySelector('[data-test=app-logo-icon]')).backgroundImage.includes('dlp-friends-logo-halloween.svg')", true)
+        ->assertNoJavaScriptErrors();
+});
+
 test('appearance remains stable across repeated Inertia navigation', function () {
     $user = User::factory()->withProfile()->create();
     $this->actingAs($user);

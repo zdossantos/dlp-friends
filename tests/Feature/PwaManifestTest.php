@@ -22,6 +22,13 @@ it('publishes an installable manifest with safe brand assets', function () {
     foreach ([...$manifest['icons'], ...$manifest['screenshots']] as $asset) {
         expect(public_path(ltrim($asset['src'], '/')))->toBeFile();
     }
+
+    expect($manifest['icons'])->toBe([
+        ['src' => '/pwa/icon-192.png', 'sizes' => '192x192', 'type' => 'image/png', 'purpose' => 'any'],
+        ['src' => '/pwa/icon-512.png', 'sizes' => '512x512', 'type' => 'image/png', 'purpose' => 'any'],
+        ['src' => '/pwa/icon-maskable-192.png', 'sizes' => '192x192', 'type' => 'image/png', 'purpose' => 'maskable'],
+        ['src' => '/pwa/icon-maskable-512.png', 'sizes' => '512x512', 'type' => 'image/png', 'purpose' => 'maskable'],
+    ]);
 });
 
 it('links the pwa metadata once from application documents', function () {

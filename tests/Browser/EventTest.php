@@ -233,8 +233,8 @@ test('my events separates roles and keeps event details legible in dark theme', 
         ->assertNoJavaScriptErrors();
 });
 
-test('participant avatar stack opens the list and profiles inside the event panel', function () {
-    $organizer = eventBrowserMember('Alice');
+test('participant avatar stack stays within the mobile viewport and opens profiles', function () {
+    $organizer = eventBrowserMember(str_repeat('AliceSansEspace', 5));
     $viewer = eventBrowserMember('Basile');
     $second = eventBrowserMember('Camille');
     $third = eventBrowserMember('Dorian');
@@ -254,7 +254,9 @@ test('participant avatar stack opens the list and profiles inside the event pane
     $this->actingAs($viewer);
 
     $page = visit('/events/mine')->on()->mobile()
-        ->click("[data-test=\"event-link-{$event->id}\"]")
+        ->click("[data-test=\"event-link-{$event->id}\"]");
+    $page->resize(320, 700);
+    $page
         ->assertCount('[data-test="participant-stack-avatar"]', 3)
         ->assertScript(<<<'JS'
             Array.from(document.querySelectorAll('[data-test="participant-stack-avatar"]')).every(
@@ -269,6 +271,7 @@ test('participant avatar stack opens the list and profiles inside the event pane
         ->assertSee('Moi')
         ->assertPresent("[data-test=\"participant-self-{$viewer->id}\"]")
         ->assertPresent("[data-test=\"participant-organizer-{$organizer->id}\"]")
+        ->assertScript('document.documentElement.scrollWidth <= window.innerWidth', true)
         ->assertMissing('[data-test^="participant-like-"]')
         ->assertMissing('[data-test^="participant-discuss-"]')
         ->click("[data-test=\"participant-link-{$organizer->id}\"]")
