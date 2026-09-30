@@ -204,6 +204,22 @@ suivent le design system existant. Les audits Lighthouse français et anglais
 ne doivent pas introduire de régression significative en SEO, accessibilité,
 bonnes pratiques ou performance.
 
+## Régression de débordement horizontal des thèmes
+
+Le correctif mobile livré précédemment doit s'appliquer indépendamment du
+thème visuel actif. À 320 px comme aux largeurs supérieures, le document et le
+shell membre ne doivent présenter aucun défilement horizontal inutile avec le
+thème standard, Halloween ou Noël, en apparence claire comme sombre. Les zones
+qui ont volontairement leur propre défilement horizontal, telles que certains
+tableaux d'administration, restent inchangées.
+
+La correction porte sur la cause du débordement dans le composant ou le
+conteneur concerné ; elle ne repose pas sur un masquage global supplémentaire
+qui pourrait rendre du contenu ou un contrôle inaccessible. La couverture
+navigateur active successivement chaque thème saisonnier et vérifie la largeur
+du document sur les surfaces membre concernées, notamment les notifications et
+les conversations où des décorations saisonnières sont rendues.
+
 ## Search Console et exploitation
 
 La documentation d'exploitation décrit une vérification post-déploiement :
@@ -233,6 +249,10 @@ Les tests frontend couvrent :
 - la détection `pwa` sur Chromium et iOS, et `browser` autrement ;
 - une seule vue initiale puis une seule vue par navigation Inertia ;
 - l'absence complète de chargement ou d'événement sans consentement.
+
+Les tests navigateur couvrent aussi l'absence de débordement horizontal à
+320 px pour les thèmes standard, Halloween et Noël, chacun en apparence claire
+et sombre, sans supprimer les défilements internes intentionnels.
 
 Les tests Laravel couvrent :
 
