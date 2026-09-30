@@ -50,10 +50,74 @@ jobs:
       - name: Run static analysis
         run: composer analyse
 
-  pest-tests:
-    name: Backend tests
+  pest-prepare:
+    name: Prepare Pest tests
     if: github.event.pull_request.draft == false
     runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Set up PHP
+        uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # v2
+        with:
+          php-version: '8.4'
+          tools: composer:v2
+          coverage: none
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
+        with:
+          bun-version: '1.3.14'
+      - name: Cache Bun downloads
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.bun/install/cache
+          key: ${{ runner.os }}-bun-1.3.14-${{ hashFiles('bun.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-bun-1.3.14-
+      - name: Resolve Composer cache directory
+        id: composer-cache
+        run: echo "dir=$(composer config cache-files-dir)" >> "$GITHUB_OUTPUT"
+      - name: Cache Composer downloads
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-composer-
+      - name: Install Composer dependencies
+        run: composer install --no-interaction --no-progress --prefer-dist
+      - name: Install Bun dependencies
+        run: bun install --frozen-lockfile
+      - name: Generate Wayfinder modules
+        run: php artisan wayfinder:generate --with-form
+      - name: Build Vite assets
+        run: bun run build
+      - name: Install Playwright Chromium
+        run: bunx playwright install chromium
+      - name: Cache prepared Pest workspace
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            vendor
+            node_modules
+            public/build
+            resources/js/actions
+            resources/js/routes
+            resources/js/wayfinder
+            ~/.cache/ms-playwright
+          key: ${{ runner.os }}-pest-workspace-${{ github.sha }}
+
+  pest-tests:
+    name: Pest tests (shard ${{ matrix.shard }}/8)
+    if: github.event.pull_request.draft == false
+    needs: pest-prepare
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4, 5, 6, 7, 8]
     services:
       mysql:
         image: mysql:8.4.10
@@ -91,45 +155,43 @@ jobs:
         uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # v2
         with:
           php-version: '8.4'
-          tools: composer:v2
           coverage: none
       - name: Set up Bun
         uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
         with:
           bun-version: '1.3.14'
-      - name: Cache Bun downloads
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      - name: Restore prepared Pest workspace
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
-          path: ~/.bun/install/cache
-          key: ${{ runner.os }}-bun-1.3.14-${{ hashFiles('bun.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-bun-1.3.14-
-      - name: Resolve Composer cache directory
-        id: composer-cache
-        run: echo "dir=$(composer config cache-files-dir)" >> "$GITHUB_OUTPUT"
-      - name: Cache Composer downloads
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        with:
-          path: ${{ steps.composer-cache.outputs.dir }}
-          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-composer-
-      - name: Install Composer dependencies
-        run: composer install --no-interaction --no-progress --prefer-dist
-      - name: Install Bun dependencies
-        run: bun install --frozen-lockfile
+          path: |
+            vendor
+            node_modules
+            public/build
+            resources/js/actions
+            resources/js/routes
+            resources/js/wayfinder
+            ~/.cache/ms-playwright
+          key: ${{ runner.os }}-pest-workspace-${{ github.sha }}
+          fail-on-cache-miss: true
       - name: Verify test database driver
         run: php tests/Support/verify-test-database.php
       - name: Run database migrations
         run: php artisan migrate --force
-      - name: Generate Wayfinder modules
-        run: php artisan wayfinder:generate --with-form
-      - name: Build Vite assets
-        run: bun run build
-      - name: Install Playwright Chromium
-        run: bunx playwright install --with-deps chromium
+      - name: Install Playwright system dependencies
+        run: bunx playwright install-deps chromium
       - name: Run Pest
-        run: php artisan test --display-warnings
+        run: ./vendor/bin/pest --shard=${{ matrix.shard }}/8 --display-warnings
+
+  pest-tests-result:
+    name: Backend tests
+    if: always() && github.event.pull_request.draft == false
+    needs: pest-tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require every Pest shard
+        env:
+          PEST_RESULT: ${{ needs.pest-tests.result }}
+        run: test "$PEST_RESULT" = success
 
   frontend-quality:
     name: Frontend quality

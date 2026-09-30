@@ -35,6 +35,21 @@ it('uses the pinned Bun toolchain in automation and Docker', function () {
         ->and($dependabot)->not->toContain("package-ecosystem: 'npm'");
 });
 
+it('runs Pest in eight isolated time-balanced CI shards', function () {
+    $ci = file_get_contents(base_path('.github/workflows/ci.yml'));
+
+    expect($ci)
+        ->toContain('shard: [1, 2, 3, 4, 5, 6, 7, 8]')
+        ->toContain('name: Pest tests (shard ${{ matrix.shard }}/8)')
+        ->toContain('--shard=${{ matrix.shard }}/8')
+        ->not->toContain('--parallel --shard=')
+        ->toContain('fail-fast: false')
+        ->toContain('needs: pest-prepare')
+        ->toContain('fail-on-cache-miss: true')
+        ->toContain('needs: pest-tests')
+        ->toContain('name: Backend tests');
+});
+
 it('documents Bun without npm or Yarn residue in active project files', function () {
     $activeDocumentation = collect([
         'README.md',
