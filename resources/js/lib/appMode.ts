@@ -11,14 +11,18 @@ function browserRuntime(): AppModeRuntime {
     }
 
     return {
-        standaloneMedia: window.matchMedia('(display-mode: standalone)').matches,
+        standaloneMedia: window.matchMedia('(display-mode: standalone)')
+            .matches,
         iosStandalone: Boolean(
-            (window.navigator as Navigator & { standalone?: boolean }).standalone,
+            (window.navigator as Navigator & { standalone?: boolean })
+                .standalone,
         ),
     };
 }
 
-export function resolveAppMode(runtime: AppModeRuntime = browserRuntime()): AppMode {
+export function resolveAppMode(
+    runtime: AppModeRuntime = browserRuntime(),
+): AppMode {
     return runtime.standaloneMedia || runtime.iosStandalone === true
         ? 'pwa'
         : 'browser';
