@@ -42,6 +42,7 @@ const reducedMotion = window.matchMedia(
 const translateX = computed(
     () => dragOffset.value ?? (props.open ? -actionWidth : 0),
 );
+const actionsVisible = computed(() => translateX.value < 0);
 const foregroundStyle = computed(() => ({
     transform: `translateX(${translateX.value}px)`,
     transition: horizontalDrag.value
@@ -167,6 +168,11 @@ function handleKeydown(event: KeyboardEvent): void {
     >
         <div
             class="absolute inset-y-0 right-0 z-0 flex w-36 items-stretch"
+            :class="
+                actionsVisible
+                    ? 'pointer-events-auto opacity-100'
+                    : 'pointer-events-none opacity-0'
+            "
             :aria-label="t('notifications.actions.item_actions')"
         >
             <Button

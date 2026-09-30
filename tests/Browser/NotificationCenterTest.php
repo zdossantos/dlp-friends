@@ -165,6 +165,26 @@ test('a member reveals accessible notification actions and can read or delete an
     expect($member->notifications()->whereKey($deletedNotification->id)->exists())->toBeFalse();
 });
 
+test('closed mobile notification actions stay visually hidden while the list scrolls', function () {
+    $member = notificationBrowserMember('Alice');
+    $notification = notificationBrowserNotice($member, 'conversations', 'Basile', 903);
+    $this->actingAs($member);
+
+    $page = visit('/notifications')->on()->mobile()->assertNoJavaScriptErrors();
+    $actions = "document.querySelector('[data-test=notification-mark-read-{$notification->id}]').parentElement";
+    $foreground = "document.querySelector('[data-test=notification-foreground-{$notification->id}]')";
+
+    $page->assertScript("getComputedStyle({$actions}).opacity", '0')
+        ->assertScript("getComputedStyle({$actions}).pointerEvents", 'none');
+
+    $page->script("{$foreground}.dispatchEvent(new PointerEvent('pointerdown', { pointerId: 42, clientX: 220, clientY: 100, bubbles: true })); {$foreground}.dispatchEvent(new PointerEvent('pointermove', { pointerId: 42, clientX: 150, clientY: 100, bubbles: true })); {$foreground}.dispatchEvent(new PointerEvent('pointerup', { pointerId: 42, clientX: 150, clientY: 100, bubbles: true }));");
+
+    $page->assertAttribute("[data-test=notification-row-{$notification->id}]", 'data-swipe-open', 'true')
+        ->assertScript("getComputedStyle({$actions}).opacity", '1')
+        ->assertScript("getComputedStyle({$actions}).pointerEvents", 'auto')
+        ->assertNoJavaScriptErrors();
+});
+
 test('the conversation list shows online presence only beside the label', function () {
     $member = notificationBrowserMember('Alice');
     $peer = notificationBrowserMember('Basile');
