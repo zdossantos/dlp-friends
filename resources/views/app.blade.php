@@ -1,7 +1,6 @@
 @php($activeSeasonalTheme = data_get($page, 'props.seasonalTheme.active'))
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}" @class([
-    'app-viewport',
     'dark' => ($appearance ?? 'system') == 'dark',
     'seasonal-halloween' => $activeSeasonalTheme === 'halloween',
     'seasonal-christmas' => $activeSeasonalTheme === 'christmas',
