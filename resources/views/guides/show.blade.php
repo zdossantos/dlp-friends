@@ -44,7 +44,7 @@
         <div class="min-h-svh overflow-hidden bg-background">
             <header class="mx-auto flex w-full max-w-5xl items-center justify-between gap-4 px-4 py-5 sm:px-6">
                 <a href="/{{ $locale }}" class="font-accent text-lg font-bold">{{ __('common.brand.name') }}</a>
-                <nav aria-label="Language" class="flex gap-2">
+                <nav aria-label="{{ __('common.locale.label') }}" class="flex gap-2">
                     @foreach ($navigationAlternates as $language => $href)
                         <a href="{{ $href }}" hreflang="{{ $language }}" lang="{{ $language }}" class="rounded-lg px-3 py-2 font-semibold {{ $language === $locale ? 'bg-primary text-primary-foreground' : 'bg-card' }}">{{ strtoupper($language) }}</a>
                     @endforeach
@@ -52,7 +52,7 @@
             </header>
 
             <main class="mx-auto w-full max-w-5xl px-4 py-10 sm:px-6 sm:py-16">
-                <nav aria-label="Breadcrumb" class="mb-8 text-sm text-muted-foreground">
+                <nav aria-label="{{ __('common.accessibility.breadcrumb') }}" class="mb-8 text-sm text-muted-foreground">
                     <a href="/{{ $locale }}" class="underline underline-offset-4">{{ __('guides.common.brand_home') }}</a>
                     <span aria-hidden="true"> / </span>
                     <a href="{{ $canonical }}" aria-current="page">{{ $content['title'] }}</a>

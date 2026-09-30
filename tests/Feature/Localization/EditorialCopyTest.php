@@ -49,7 +49,7 @@ test('feature catalogues contain no forbidden romantic language', function () {
 test('visible interface copy is always translated explicitly', function () {
     $visiblePatterns = [
         '/>([^<>{}\n]*\p{L}[^<>{}\n]*)</u',
-        '/(?<![:@])(?:aria-label|placeholder|title|alt)="([^"@:]*\p{L}[^"@:]*)"/u',
+        '/(?<![-\w:@])(?:aria-label|placeholder|title|alt)="([^"@:]*\p{L}[^"@:]*)"/u',
         "/['\"](?:message|error|title|description)['\"]\s*=>\s*['\"]([^'\"]*\\p{L}[^'\"]*)['\"]/u",
     ];
 
@@ -65,6 +65,7 @@ test('visible interface copy is always translated explicitly', function () {
         $contents = $source->getContents();
         $contents = preg_replace('/<(script|style)\b[^>]*>.*?<\/\1>/su', '', $contents) ?? $contents;
         $contents = preg_replace('/<!--.*?-->/su', '', $contents) ?? $contents;
+        $contents = preg_replace('/\{\{.*?\}\}|\{!!.*?!!\}/su', '', $contents) ?? $contents;
 
         foreach (array_slice($visiblePatterns, 0, 2) as $pattern) {
             preg_match_all($pattern, $contents, $matches, PREG_OFFSET_CAPTURE);
