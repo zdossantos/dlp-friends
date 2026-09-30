@@ -31,6 +31,37 @@ describe('normalizeAnalyticsPath', () => {
 });
 
 describe('initializeAnalytics', () => {
+    test('sends generic analytics metadata instead of the visible member title', async () => {
+        const calls = [];
+
+        await initializeAnalytics(Promise.resolve(), {
+            appMode: 'pwa',
+            documentTitle: 'Alice — DLP Friends',
+            gtag: (...args) => calls.push(args),
+            initialReferrer: '',
+            initialUrl: '/conversations/42?from=Alice#latest',
+            locale: 'fr',
+            onNavigate: () => {},
+            origin: 'https://dlp-friends.example',
+        });
+
+        expect(calls).toEqual([
+            [
+                'event',
+                'page_view',
+                {
+                    app_mode: 'pwa',
+                    page_location:
+                        'https://dlp-friends.example/conversations/{id}',
+                    page_path: '/conversations/{id}',
+                    page_title: 'Conversation — DLP Friends',
+                    page_type: 'conversation_detail',
+                },
+            ],
+        ]);
+        expect(JSON.stringify(calls)).not.toContain('Alice');
+    });
+
     test('waits for Inertia before sending the initial page view', async () => {
         const calls = [];
         let resolveInertia;
@@ -62,7 +93,7 @@ describe('initializeAnalytics', () => {
             gtag: (...args) => calls.push(args),
             initialReferrer:
                 'https://www.google.com/search?q=private#sensitive',
-            initialUrl: '/settings/profile?tab=privacy#danger',
+            initialUrl: '/profile?tab=privacy#danger',
             onNavigate: (listener) => {
                 navigate = listener;
             },
@@ -74,10 +105,12 @@ describe('initializeAnalytics', () => {
                 'event',
                 'page_view',
                 {
-                    page_location:
-                        'https://dlp-friends.example/settings/profile',
-                    page_path: '/settings/profile',
+                    app_mode: 'browser',
+                    page_location: 'https://dlp-friends.example/profile',
+                    page_path: '/profile',
                     page_referrer: 'https://www.google.com/search',
+                    page_title: 'Mon profil — DLP Friends',
+                    page_type: 'own_profile',
                 },
             ],
         ]);
@@ -89,21 +122,25 @@ describe('initializeAnalytics', () => {
                 'event',
                 'page_view',
                 {
-                    page_location:
-                        'https://dlp-friends.example/settings/profile',
-                    page_path: '/settings/profile',
+                    app_mode: 'browser',
+                    page_location: 'https://dlp-friends.example/profile',
+                    page_path: '/profile',
                     page_referrer: 'https://www.google.com/search',
+                    page_title: 'Mon profil — DLP Friends',
+                    page_type: 'own_profile',
                 },
             ],
             [
                 'event',
                 'page_view',
                 {
+                    app_mode: 'browser',
                     page_location:
                         'https://dlp-friends.example/conversations/{id}',
                     page_path: '/conversations/{id}',
-                    page_referrer:
-                        'https://dlp-friends.example/settings/profile',
+                    page_referrer: 'https://dlp-friends.example/profile',
+                    page_title: 'Conversation — DLP Friends',
+                    page_type: 'conversation_detail',
                 },
             ],
         ]);
@@ -181,6 +218,7 @@ describe('initializeAnalytics', () => {
         expect(calls).toEqual([]);
 
         runtime.gtag = (...args) => calls.push(args);
+        analyticsReady();
         analyticsReady();
         navigate('/register');
 

@@ -36,11 +36,7 @@ export function activateGoogleAnalytics(
         analytics_storage: 'granted',
     });
     runtime.queue('js', new Date());
-    runtime.queue(
-        'config',
-        measurementId,
-        ...(spa ? [{ send_page_view: false }] : []),
-    );
+    runtime.queue('config', measurementId, { send_page_view: false });
     runtime.appendScript(
         `https://www.googletagmanager.com/gtag/js?id=${encodeURIComponent(measurementId)}`,
     );

@@ -118,7 +118,7 @@ describe('Google Analytics activation', () => {
                 },
             ],
             ['js', expect.any(Date)],
-            ['config', 'G-TEST123456'],
+            ['config', 'G-TEST123456', { send_page_view: false }],
         ]);
         expect(scripts).toEqual([
             'https://www.googletagmanager.com/gtag/js?id=G-TEST123456',
