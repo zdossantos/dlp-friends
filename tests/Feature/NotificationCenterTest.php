@@ -254,8 +254,7 @@ class NotificationCenterTest extends TestCase
         string $category,
         Conversation $conversation,
         string $translationKey = 'notifications.items.new_message',
-    ): DatabaseNotification
-    {
+    ): DatabaseNotification {
         return $user->notifications()->create([
             'id' => (string) Str::uuid(),
             'type' => 'test',

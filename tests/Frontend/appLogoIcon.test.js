@@ -1,5 +1,6 @@
-import { describe, expect, test } from 'bun:test';
 import { readFileSync } from 'node:fs';
+
+import { describe, expect, test } from 'bun:test';
 
 const source = readFileSync(
     new URL('../../resources/js/components/AppLogoIcon.vue', import.meta.url),
