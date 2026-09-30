@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.10.0](https://github.com/zdossantos/dlp-friends/compare/v1.9.2...v1.10.0) (2026-09-30)
+
+
+### Features
+
+* polish mobile notifications and PWA branding ([#225](https://github.com/zdossantos/dlp-friends/issues/225)) ([b836d8f](https://github.com/zdossantos/dlp-friends/commit/b836d8faeb5009ff061c203b31570b8cdad3caed))
+
 ## [1.9.2](https://github.com/zdossantos/dlp-friends/compare/v1.9.1...v1.9.2) (2026-09-28)
 
 
