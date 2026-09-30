@@ -75,6 +75,14 @@
     ::file-selector-button {
         border-color: var(--color-gray-200, currentColor);
     }
+
+    html.app-viewport,
+    html.app-viewport body,
+    html.app-viewport body > #app {
+        height: 100%;
+        overflow: hidden;
+        overscroll-behavior: none;
+    }
 }
 
 .pwa-safe-toast {
