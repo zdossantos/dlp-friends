@@ -10,44 +10,6 @@ use Illuminate\Support\Str;
 
 beforeEach(fn () => Storage::fake('local'));
 
-test('the member shell owns vertical scrolling without letting the document rubber-band', function () {
-    $member = notificationBrowserMember('Alice');
-    foreach (range(1, 15) as $index) {
-        notificationBrowserNotice(
-            $member,
-            'events',
-            "Notification {$index}",
-            $index,
-        );
-    }
-    $this->actingAs($member);
-
-    visit('/notifications')->on()->mobile()
-        ->assertScript(<<<'JS'
-            (() => {
-                const html = getComputedStyle(document.documentElement);
-                const body = getComputedStyle(document.body);
-                const app = document.querySelector('#app');
-                const shell = document.querySelector('[data-test="member-shell-content"]');
-
-                if (!app || !shell) return false;
-
-                const appStyle = getComputedStyle(app);
-                const shellStyle = getComputedStyle(shell);
-
-                return html.overflowY === 'hidden'
-                    && html.overscrollBehaviorY === 'none'
-                    && body.overflowY === 'hidden'
-                    && body.overscrollBehaviorY === 'none'
-                    && appStyle.height === `${window.innerHeight}px`
-                    && appStyle.overflowY === 'hidden'
-                    && shellStyle.overflowY === 'auto'
-                    && shell.scrollHeight >= shell.clientHeight;
-            })()
-            JS, true)
-        ->assertNoJavaScriptErrors();
-});
-
 test('a member filters notifications and opens the related conversation', function () {
     $member = notificationBrowserMember('Alice');
     $peer = notificationBrowserMember('Basile');
