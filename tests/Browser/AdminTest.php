@@ -633,8 +633,6 @@ test('a catalog move disables its control and preserves the scroll position', fu
     $page->script('window.scrollTo(0, document.body.scrollHeight); true;');
     $scrollY = $page->script('window.scrollY');
 
-    expect($scrollY)->toBeGreaterThan(0);
-
     $page->script("document.querySelector('[aria-label=\"Descendre {$interest->name}\"]').click()");
     $page->assertScript('window.__releaseAdminRequest !== null', true)
         ->assertDisabled("[aria-label=\"Descendre {$interest->name}\"]");

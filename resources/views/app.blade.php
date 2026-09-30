@@ -1,8 +1,7 @@
 @php($activeSeasonalTheme = data_get($page, 'props.seasonalTheme.active'))
-@php($usesAdminLayout = $page['component'] === 'Dashboard' || str_starts_with($page['component'], 'Admin/'))
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}" @class([
-    'app-viewport' => ! $usesAdminLayout,
+    'app-viewport',
     'dark' => ($appearance ?? 'system') == 'dark',
     'seasonal-halloween' => $activeSeasonalTheme === 'halloween',
     'seasonal-christmas' => $activeSeasonalTheme === 'christmas',
