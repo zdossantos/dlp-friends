@@ -14,6 +14,16 @@ use Illuminate\Support\Facades\Storage;
 
 uses(RefreshDatabase::class);
 
+function landingStructuredData(string $html): array
+{
+    preg_match_all('/<script type="application\/ld\+json">(.*?)<\/script>/s', $html, $matches);
+
+    return array_map(
+        fn (string $json): array => json_decode($json, true, flags: JSON_THROW_ON_ERROR),
+        $matches[1],
+    );
+}
+
 test('the public entry point redirects to the browser language landing page', function (string $language, string $path) {
     $this->withHeader('Accept-Language', $language)
         ->get('/')
@@ -185,6 +195,19 @@ test('each landing locale exposes localized indexable seo metadata', function (s
     'French' => ['fr', 'DLP Friends — Rencontre d’autres fans de Disneyland Paris', 'Rencontre d’autres fans de Disneyland Paris, découvre vos passions communes et échange simplement.'],
     'English' => ['en', 'DLP Friends — Meet other Disneyland Paris fans', 'Meet other Disneyland Paris fans, discover the passions you share, and chat with ease.'],
 ]);
+
+test('landing structured data renders as valid JSON without Blade directive corruption', function () {
+    config()->set('app.url', 'https://dlp-friends.example');
+
+    $response = $this->get('/fr')->assertOk();
+    $schemas = landingStructuredData($response->getContent());
+
+    expect($schemas)->toHaveCount(1)
+        ->and($schemas[0]['@context'])->toBe('https://schema.org')
+        ->and($schemas[0]['@type'])->toBe('WebApplication')
+        ->and($schemas[0]['url'])->toBe('https://dlp-friends.example/fr')
+        ->and($response->getContent())->not->toContain('<?php');
+});
 
 test('the sitemap contains localized public landing and legal pages', function () {
     config()->set('app.url', 'https://dlp-friends.example');
