@@ -6,6 +6,7 @@ import {
     readAnalyticsConsent,
     sendPublicPageView,
 } from '../../resources/js/lib/analyticsConsent';
+import * as analyticsConsent from '../../resources/js/lib/analyticsConsent';
 
 function consentRuntime(cookie = '') {
     const activations = [];
@@ -87,13 +88,30 @@ describe('analytics consent', () => {
 });
 
 describe('Google Analytics activation', () => {
+    test('queues commands with the arguments object expected by gtag.js', () => {
+        expect(typeof analyticsConsent.createGoogleTagQueue).toBe('function');
+
+        const dataLayer = [];
+        const gtag = analyticsConsent.createGoogleTagQueue(dataLayer);
+
+        gtag('event', 'page_view', { page_type: 'landing' });
+
+        expect(Array.isArray(dataLayer[0])).toBe(false);
+        expect(Array.from(dataLayer[0])).toEqual([
+            'event',
+            'page_view',
+            { page_type: 'landing' },
+        ]);
+    });
+
     test('sends one explicit sanitized public page view after activation', () => {
         const commands = [];
 
         sendPublicPageView(
             {
                 locale: 'fr',
-                pageTitle: 'DLP Friends — Rencontres amicales à Disneyland Paris',
+                pageTitle:
+                    'DLP Friends — Rencontres amicales à Disneyland Paris',
                 pageType: 'landing',
             },
             {

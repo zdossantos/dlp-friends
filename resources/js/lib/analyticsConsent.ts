@@ -28,6 +28,16 @@ interface GoogleAnalyticsRuntime {
     queue: (...command: unknown[]) => void;
 }
 
+export function createGoogleTagQueue(
+    dataLayer: IArguments[],
+): (...command: unknown[]) => void {
+    return function () {
+        // gtag.js requires the native Arguments object used by its official snippet.
+        // eslint-disable-next-line prefer-rest-params
+        dataLayer.push(arguments);
+    };
+}
+
 export function sendPublicPageView(
     page: PublicAnalyticsPage,
     runtime: PublicPageViewRuntime,

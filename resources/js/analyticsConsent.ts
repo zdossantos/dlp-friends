@@ -1,13 +1,14 @@
 import {
     activateGoogleAnalytics,
     createAnalyticsConsentController,
+    createGoogleTagQueue,
     sendPublicPageView,
 } from '@/lib/analyticsConsent';
 import { resolveAppMode } from '@/lib/appMode';
 
 declare global {
     interface Window {
-        dataLayer?: unknown[][];
+        dataLayer?: IArguments[];
         gtag?: (...args: unknown[]) => void;
     }
 }
@@ -76,9 +77,7 @@ if (root) {
 
                 activated = true;
                 window.dataLayer = window.dataLayer ?? [];
-                window.gtag = (...command: unknown[]) => {
-                    window.dataLayer?.push(command);
-                };
+                window.gtag = createGoogleTagQueue(window.dataLayer);
 
                 activateGoogleAnalytics(measurementId, spa, {
                     appendScript: (source) => {
