@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.11.0](https://github.com/zdossantos/dlp-friends/compare/v1.10.0...v1.11.0) (2026-09-30)
+
+
+### Features
+
+* restore analytics and strengthen public SEO ([#227](https://github.com/zdossantos/dlp-friends/issues/227)) ([40924a5](https://github.com/zdossantos/dlp-friends/commit/40924a5684074c820cd982d81a23c2b44fdc7f8d))
+
 ## [1.10.0](https://github.com/zdossantos/dlp-friends/compare/v1.9.2...v1.10.0) (2026-09-30)
 
 
