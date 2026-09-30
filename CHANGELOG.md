@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.11.2](https://github.com/zdossantos/dlp-friends/compare/v1.11.1...v1.11.2) (2026-09-30)
+
+
+### Fixes
+
+* revert viewport bounce lock ([#232](https://github.com/zdossantos/dlp-friends/issues/232)) ([0f7210a](https://github.com/zdossantos/dlp-friends/commit/0f7210abec39b1387c9cfd6c90c5e5a91fb8a6e6))
+
 ## [1.11.1](https://github.com/zdossantos/dlp-friends/compare/v1.11.0...v1.11.1) (2026-09-30)
 
 
