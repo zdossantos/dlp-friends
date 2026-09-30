@@ -1,7 +1,9 @@
 import {
     activateGoogleAnalytics,
     createAnalyticsConsentController,
+    sendPublicPageView,
 } from '@/lib/analyticsConsent';
+import { resolveAppMode } from '@/lib/appMode';
 
 declare global {
     interface Window {
@@ -27,6 +29,9 @@ if (root) {
     );
     const measurementId = root.dataset.analyticsMeasurementId;
     const spa = root.dataset.analyticsSpa === 'true';
+    const locale = root.dataset.analyticsLocale;
+    const pageTitle = root.dataset.analyticsPageTitle;
+    const pageType = root.dataset.analyticsPageType;
     let activated = false;
     let dialogTrigger: HTMLElement | null = null;
 
@@ -87,6 +92,17 @@ if (root) {
                     },
                     queue: (...command) => window.gtag?.(...command),
                 });
+
+                if (!spa && locale && pageTitle && pageType) {
+                    sendPublicPageView(
+                        { locale, pageTitle, pageType },
+                        {
+                            appMode: resolveAppMode(),
+                            location: window.location,
+                            queue: (...command) => window.gtag?.(...command),
+                        },
+                    );
+                }
             },
             clearAnalyticsCookies,
             cookie: () => document.cookie,

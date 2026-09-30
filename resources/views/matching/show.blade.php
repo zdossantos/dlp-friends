@@ -20,7 +20,7 @@
         <meta name="twitter:card" content="summary">
         <meta name="twitter:title" content="{{ $content['meta']['title'] }}">
         <meta name="twitter:description" content="{{ $content['meta']['description'] }}">
-        <script type="application/ld+json">{!! json_encode([
+        @php($schema = [
             '@context' => 'https://schema.org',
             '@type' => 'Article',
             'headline' => $content['meta']['title'],
@@ -29,7 +29,8 @@
             'inLanguage' => $locale,
             'isAccessibleForFree' => true,
             'publisher' => ['@type' => 'Organization', 'name' => config('app.name')],
-        ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) !!}</script>
+        ])
+        <x-structured-data :value="$schema" />
         <script>
             (function() {
                 if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
@@ -119,6 +120,6 @@
                 <footer class="border-t border-border/70 py-6 text-center text-xs leading-5 text-muted-foreground">{{ $content['footer'] }}</footer>
             </div>
         </div>
-        <x-analytics-consent />
+        <x-analytics-consent page-type="matching_explainer" :page-title="$content['meta']['title']" :locale="$locale" />
     </body>
 </html>

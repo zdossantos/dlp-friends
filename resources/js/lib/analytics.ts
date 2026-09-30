@@ -1,4 +1,11 @@
 import { router } from '@inertiajs/vue3';
+import {
+    normalizeAnalyticsPath,
+    resolveAnalyticsPage,
+} from '@/lib/analyticsPage';
+import { resolveAppMode } from '@/lib/appMode';
+
+export { normalizeAnalyticsPath } from '@/lib/analyticsPage';
 
 declare global {
     interface Window {
@@ -9,28 +16,19 @@ declare global {
 type Gtag = (...args: unknown[]) => void;
 
 interface AnalyticsRuntime {
+    appMode?: 'pwa' | 'browser';
+    documentTitle?: string;
     gtag: Gtag | undefined;
     initialReferrer: string;
     initialUrl: string;
+    locale?: string;
     onAnalyticsReady?: (listener: () => void) => void;
     onNavigate: (listener: (url: string) => void) => void;
     origin: string;
 }
 
-const identifierSegment =
-    /^\d+$|^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-
-export function normalizeAnalyticsPath(path: string): string {
-    const pathname = path.split(/[?#]/, 1)[0] || '/';
-
-    return pathname
-        .split('/')
-        .map((segment) => (identifierSegment.test(segment) ? '{id}' : segment))
-        .join('/');
-}
-
-function analyticsLocation(origin: string, url: string): string {
-    return `${origin}${normalizeAnalyticsPath(url)}`;
+function analyticsLocation(origin: string, path: string): string {
+    return `${origin}${path}`;
 }
 
 function normalizeAnalyticsReferrer(referrer: string): string | undefined {
@@ -41,7 +39,10 @@ function normalizeAnalyticsReferrer(referrer: string): string | undefined {
     try {
         const url = new URL(referrer);
 
-        return analyticsLocation(url.origin, url.pathname);
+        return analyticsLocation(
+            url.origin,
+            normalizeAnalyticsPath(url.pathname),
+        );
     } catch {
         return undefined;
     }
@@ -61,8 +62,11 @@ export async function initializeAnalytics(
         get gtag() {
             return window.gtag;
         },
+        appMode: resolveAppMode(),
+        documentTitle: window.document.title,
         initialReferrer: window.document.referrer,
         initialUrl: window.location.pathname,
+        locale: window.document.documentElement.lang,
         onAnalyticsReady: (listener: () => void) => {
             window.addEventListener('analytics:ready', listener, {
                 once: true,
@@ -74,32 +78,52 @@ export async function initializeAnalytics(
         origin: window.location.origin,
     };
 
+    let trackingStarted = false;
     const startTracking = () => {
-        if (!activeRuntime.gtag) {
+        if (!activeRuntime.gtag || trackingStarted) {
             return;
         }
 
+        trackingStarted = true;
+
+        const locale = activeRuntime.locale ?? 'fr';
+        const appMode = activeRuntime.appMode ?? 'browser';
+        const initialPage = resolveAnalyticsPage(
+            activeRuntime.initialUrl,
+            locale,
+        );
+
         let previousLocation = analyticsLocation(
             activeRuntime.origin,
-            activeRuntime.initialUrl,
+            initialPage.pagePath,
         );
         const initialReferrer = normalizeAnalyticsReferrer(
             activeRuntime.initialReferrer,
         );
 
         activeRuntime.gtag('event', 'page_view', {
+            app_mode: appMode,
             page_location: previousLocation,
-            page_path: normalizeAnalyticsPath(activeRuntime.initialUrl),
+            page_path: initialPage.pagePath,
+            page_title: initialPage.pageTitle,
+            page_type: initialPage.pageType,
             ...(initialReferrer ? { page_referrer: initialReferrer } : {}),
         });
 
         activeRuntime.onNavigate((url) => {
-            const pageLocation = analyticsLocation(activeRuntime.origin, url);
+            const page = resolveAnalyticsPage(url, locale);
+            const pageLocation = analyticsLocation(
+                activeRuntime.origin,
+                page.pagePath,
+            );
 
             activeRuntime.gtag?.('event', 'page_view', {
+                app_mode: appMode,
                 page_location: pageLocation,
-                page_path: normalizeAnalyticsPath(url),
+                page_path: page.pagePath,
                 page_referrer: previousLocation,
+                page_title: page.pageTitle,
+                page_type: page.pageType,
             });
 
             previousLocation = pageLocation;

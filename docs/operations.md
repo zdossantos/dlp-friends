@@ -97,10 +97,11 @@ construction de l’image, car ces valeurs sont intégrées aux assets frontend.
    `analytics_storage=granted`, tandis que les trois consentements publicitaires
    restent `denied`. Le choix est conservé six mois.
 3. Dans **Flux de données > Web > Mesure améliorée > Pages vues > Paramètres
-   avancés**, conserver les pages vues au chargement mais désactiver les
-   changements de page fondés sur les événements d’historique. Les navigations
-   Inertia envoient déjà leurs propres événements ; activer les deux mécanismes
-   créerait des doublons.
+   avancés**, désactiver les changements de page fondés sur les événements
+   d’historique. L’application désactive aussi la page vue automatique du tag :
+   les pages publiques et les navigations Inertia envoient chacune leur propre
+   événement explicite, afin d’éviter les doublons et de garantir des titres
+   génériques sans nom de membre.
 4. Activer le mode debug du tag, puis ouvrir une page Inertia et effectuer une
    navigation cliente. Dans DebugView, vérifier exactement une page vue
    initiale puis une page vue supplémentaire. Contrôler `page_location` et
@@ -113,27 +114,66 @@ construction de l’image, car ces valeurs sont intégrées aux assets frontend.
    des adresses e-mail et déclarer les paramètres d’URL susceptibles de
    contenir des données personnelles. Cette défense complète la normalisation
    applicative sans la remplacer.
-7. Dans Search Console, créer de préférence une propriété de type Domaine et
+7. Dans **Administration > Définitions personnalisées**, créer deux dimensions
+   personnalisées de portée Événement : `Mode d’application` associée au
+   paramètre `app_mode`, et `Type de page` associée à `page_type`. Les valeurs
+   de `app_mode` sont `pwa` et `browser`. Après collecte, créer une exploration
+   libre avec `Mode d’application` en lignes et `Vues` en valeurs pour comparer
+   la PWA au site. Ces dimensions ne sont pas rétroactives : elles n’enrichissent
+   que les événements reçus après leur création.
+8. Dans Search Console, créer de préférence une propriété de type Domaine et
    publier l’enregistrement TXT fourni dans le DNS. La variable
    `GOOGLE_SITE_VERIFICATION` reste disponible pour une propriété de type
    Préfixe d’URL validée par balise HTML.
    Une propriété Domaine couvre `/fr` et `/en`; des propriétés de préfixe
    séparées ne sont utiles que si des rapports autonomes par langue sont
    nécessaires.
-8. Après validation, soumettre `https://<domaine>/sitemap.xml`. Contrôler que
-   `/fr`, `/en`, les pages de matching et les documents légaux sont détectés,
-   tandis que les routes d’authentification et membres restent exclues.
-9. Avec l’inspection d’URL, lancer un test en direct de `/` et vérifier que
+9. Après validation, soumettre `https://<domaine>/sitemap.xml`. Contrôler que
+   `/fr`, `/en`, les pages de matching, les quatre guides et les documents
+   légaux sont détectés, tandis que les routes d’authentification et membres
+   restent exclues.
+10. Avec l’inspection d’URL, lancer un test en direct de `/` et vérifier que
    Google peut suivre la redirection vers la landing localisée. Tester aussi
    une URL canonique française et anglaise et contrôler leurs annotations
    `hreflang` réciproques.
-10. Demander l’indexation des pages principales avec l’inspection d’URL. Une
+11. Demander l’indexation des pages principales avec l’inspection d’URL. Une
    soumission ne garantit ni l’indexation immédiate ni une position dans les
    résultats ; surveiller les rapports Pages et Sitemaps après exploration.
 
 L’absence de `GOOGLE_ANALYTICS_ID` désactive entièrement le script GA4.
 L’absence de `GOOGLE_SITE_VERIFICATION` retire uniquement la balise de
 validation et n’affecte ni le sitemap ni l’indexation.
+
+### Suivi du référencement public
+
+Après chaque déploiement qui touche le contenu public, contrôler ces six pages
+éditoriales en priorité : `/fr`, `/en`,
+`/fr/rencontres-amicales-disneyland-paris`,
+`/en/disneyland-paris-friendships`, `/fr/aller-seul-disneyland-paris` et
+`/en/visiting-disneyland-paris-solo`.
+
+1. Dans l’inspection d’URL de Search Console, lancer un test en direct pour
+   chaque URL. Vérifier le code `200`, la canonical choisie, la langue et
+   l’absence de directive `noindex`.
+2. Valider le HTML avec le test des résultats enrichis de Google ou le
+   validateur Schema.org. Les blocs `WebApplication`, `WebPage` et
+   `BreadcrumbList` doivent être du JSON valide ; un résultat enrichi n’est
+   toutefois ni requis ni garanti pour ces types.
+3. Soumettre à nouveau `/sitemap.xml`, puis demander l’indexation des pages
+   principales qui ont matériellement changé. Éviter les demandes répétées :
+   elles n’accélèrent pas nécessairement le traitement.
+4. Distinguer les problèmes : une URL non explorée relève de la découverte ou
+   de l’accès, une URL explorée mais non indexée relève surtout de la qualité,
+   de la duplication ou de la canonical, et une URL indexée mais peu visible
+   relève du classement et de l’adéquation aux requêtes.
+5. Chaque semaine durant le premier mois, relever par page et par requête les
+   impressions, clics, CTR et position moyenne, puis ventiler par pays et
+   appareil. Passer ensuite à une revue mensuelle, en comparant des périodes de
+   durée équivalente et en annotant les mises en production.
+6. Utiliser les requêtes réellement observées pour améliorer une page utile,
+   ses titres et son maillage. Ne pas créer de variantes minces pour chaque
+   mot-clé et ne pas interpréter une variation courte de position comme un
+   résultat durable.
 
 ## Déploiements suivants
 

@@ -67,6 +67,7 @@ use App\Http\Controllers\PartnerAnnouncementClickController;
 use App\Http\Controllers\PartnerAnnouncementDismissController;
 use App\Http\Controllers\PresenceHeartbeatController;
 use App\Http\Controllers\ProductOnboardingController;
+use App\Http\Controllers\PublicGuideController;
 use App\Http\Controllers\PublicLandingController;
 use App\Http\Controllers\PublicMatchingController;
 use App\Http\Controllers\PublicMemberProfileController;
@@ -84,6 +85,10 @@ Route::get('partner-announcements/click/{token}', PartnerAnnouncementClickContro
 Route::get('matching', [PublicMatchingController::class, 'redirect'])->name('matching.redirect');
 Route::get('fr/matching', [PublicMatchingController::class, 'show'])->defaults('locale', 'fr')->name('matching.show.fr');
 Route::get('en/matching', [PublicMatchingController::class, 'show'])->defaults('locale', 'en')->name('matching.show.en');
+Route::get('fr/rencontres-amicales-disneyland-paris', [PublicGuideController::class, 'show'])->defaults('locale', 'fr')->defaults('guide', 'friendships')->name('guides.friendships.fr');
+Route::get('en/disneyland-paris-friendships', [PublicGuideController::class, 'show'])->defaults('locale', 'en')->defaults('guide', 'friendships')->name('guides.friendships.en');
+Route::get('fr/aller-seul-disneyland-paris', [PublicGuideController::class, 'show'])->defaults('locale', 'fr')->defaults('guide', 'solo_visit')->name('guides.solo-visit.fr');
+Route::get('en/visiting-disneyland-paris-solo', [PublicGuideController::class, 'show'])->defaults('locale', 'en')->defaults('guide', 'solo_visit')->name('guides.solo-visit.en');
 Route::get('fr/conditions-generales-utilisation', [LegalDocumentController::class, 'terms'])->defaults('locale', 'fr')->name('legal.terms.fr');
 Route::get('en/terms-of-use', [LegalDocumentController::class, 'terms'])->defaults('locale', 'en')->name('legal.terms.en');
 Route::get('fr/politique-confidentialite', [LegalDocumentController::class, 'privacy'])->defaults('locale', 'fr')->name('legal.privacy.fr');
@@ -96,6 +101,8 @@ Route::get('sitemap.xml', function () {
         ->view('sitemap', ['groups' => [
             ['fr' => PublicUrls::landing('fr'), 'en' => PublicUrls::landing('en')],
             ['fr' => PublicUrls::matching('fr'), 'en' => PublicUrls::matching('en')],
+            ['fr' => PublicUrls::friendships('fr'), 'en' => PublicUrls::friendships('en')],
+            ['fr' => PublicUrls::soloVisit('fr'), 'en' => PublicUrls::soloVisit('en')],
             ['fr' => PublicUrls::terms('fr'), 'en' => PublicUrls::terms('en')],
             ['fr' => PublicUrls::privacy('fr'), 'en' => PublicUrls::privacy('en')],
         ]])

@@ -2,6 +2,18 @@ export const ANALYTICS_CONSENT_MAX_AGE = 60 * 60 * 24 * 180;
 
 export type AnalyticsConsent = 'granted' | 'denied';
 
+interface PublicAnalyticsPage {
+    locale: string;
+    pageTitle: string;
+    pageType: string;
+}
+
+interface PublicPageViewRuntime {
+    appMode: 'browser' | 'pwa';
+    location: Pick<Location, 'origin' | 'pathname'>;
+    queue: (...command: unknown[]) => void;
+}
+
 interface AnalyticsConsentRuntime {
     activate: () => void;
     clearAnalyticsCookies: () => void;
@@ -14,6 +26,20 @@ interface GoogleAnalyticsRuntime {
     appendScript: (source: string) => void;
     notifyAnalyticsReady: () => void;
     queue: (...command: unknown[]) => void;
+}
+
+export function sendPublicPageView(
+    page: PublicAnalyticsPage,
+    runtime: PublicPageViewRuntime,
+): void {
+    runtime.queue('event', 'page_view', {
+        app_mode: runtime.appMode,
+        language: page.locale,
+        page_location: `${runtime.location.origin}${runtime.location.pathname}`,
+        page_path: runtime.location.pathname,
+        page_title: page.pageTitle,
+        page_type: page.pageType,
+    });
 }
 
 export function activateGoogleAnalytics(
@@ -36,11 +62,7 @@ export function activateGoogleAnalytics(
         analytics_storage: 'granted',
     });
     runtime.queue('js', new Date());
-    runtime.queue(
-        'config',
-        measurementId,
-        ...(spa ? [{ send_page_view: false }] : []),
-    );
+    runtime.queue('config', measurementId, { send_page_view: false });
     runtime.appendScript(
         `https://www.googletagmanager.com/gtag/js?id=${encodeURIComponent(measurementId)}`,
     );

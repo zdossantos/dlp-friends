@@ -1,5 +1,15 @@
 <?php
 
+function matchingStructuredData(string $html): array
+{
+    preg_match_all('/<script type="application\/ld\+json">(.*?)<\/script>/s', $html, $matches);
+
+    return array_map(
+        fn (string $json): array => json_decode($json, true, flags: JSON_THROW_ON_ERROR),
+        $matches[1],
+    );
+}
+
 test('the matching entry point redirects to the localized public page', function (string $language, string $path) {
     $this->withHeader('Accept-Language', $language)
         ->get('/matching')
@@ -53,6 +63,19 @@ test('localized matching pages expose canonical alternate and social metadata', 
     'French' => ['/fr/matching', 'fr', 'Comment fonctionne le matching de DLP Friends'],
     'English' => ['/en/matching', 'en', 'How DLP Friends matching works'],
 ]);
+
+test('matching structured data renders as valid JSON without Blade directive corruption', function () {
+    config()->set('app.url', 'https://dlp-friends.example');
+
+    $response = $this->get('/fr/matching')->assertOk();
+    $schemas = matchingStructuredData($response->getContent());
+
+    expect($schemas)->toHaveCount(1)
+        ->and($schemas[0]['@context'])->toBe('https://schema.org')
+        ->and($schemas[0]['@type'])->toBe('Article')
+        ->and($schemas[0]['url'])->toBe('https://dlp-friends.example/fr/matching')
+        ->and($response->getContent())->not->toContain('<?php');
+});
 
 test('matching explanations cover every eligibility exclusion and ranking rule', function (string $path, array $rules) {
     $response = $this->get($path)->assertOk();

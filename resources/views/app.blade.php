@@ -30,7 +30,7 @@
             <meta name="twitter:card" content="summary">
             <meta name="twitter:title" content="{{ $seo['title'] }}">
             <meta name="twitter:description" content="{{ $seo['description'] }}">
-            <script type="application/ld+json">{!! json_encode([
+            @php($schema = [
                 '@context' => 'https://schema.org',
                 '@type' => 'WebApplication',
                 'name' => config('app.name'),
@@ -39,7 +39,8 @@
                 'applicationCategory' => 'SocialNetworkingApplication',
                 'inLanguage' => $seo['locale'],
                 'isAccessibleForFree' => true,
-            ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) !!}</script>
+            ])
+            <x-structured-data :value="$schema" />
         @else
             <meta name="robots" content="noindex, nofollow">
         @endif

@@ -20,7 +20,7 @@
         <meta name="twitter:card" content="summary">
         <meta name="twitter:title" content="{{ $seo['title'] }}">
         <meta name="twitter:description" content="{{ $seo['description'] }}">
-        <script type="application/ld+json">{!! json_encode([
+        @php($schema = [
             '@context' => 'https://schema.org',
             '@type' => 'WebApplication',
             'name' => config('app.name'),
@@ -29,7 +29,8 @@
             'applicationCategory' => 'SocialNetworkingApplication',
             'inLanguage' => $seo['locale'],
             'isAccessibleForFree' => true,
-        ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) !!}</script>
+        ])
+        <x-structured-data :value="$schema" />
         <x-brand-head />
         @fonts
         @vite('resources/css/app.css')
@@ -179,6 +180,23 @@
                         </div>
                     </section>
 
+                    <section aria-labelledby="public-guides-title" class="mx-auto mt-24 w-full max-w-5xl">
+                        <div class="mx-auto max-w-2xl text-center">
+                            <h2 id="public-guides-title" class="text-3xl font-semibold tracking-tight">{{ __('common.welcome.guides.title') }}</h2>
+                            <p class="mt-4 leading-7 text-muted-foreground">{{ __('common.welcome.guides.description') }}</p>
+                        </div>
+                        <div class="mt-8 grid gap-5 sm:grid-cols-2">
+                            <a href="{{ \App\Support\PublicUrls::friendshipsPath($seo['locale']) }}" class="rounded-3xl border border-border/70 bg-card p-6 shadow-sm transition-transform hover:-translate-y-0.5">
+                                <h3 class="font-accent text-xl font-bold">{{ __('common.welcome.guides.friendships') }}</h3>
+                                <p class="mt-3 leading-7 text-muted-foreground">{{ __('common.welcome.guides.friendships_description') }}</p>
+                            </a>
+                            <a href="{{ \App\Support\PublicUrls::soloVisitPath($seo['locale']) }}" class="rounded-3xl border border-border/70 bg-card p-6 shadow-sm transition-transform hover:-translate-y-0.5">
+                                <h3 class="font-accent text-xl font-bold">{{ __('common.welcome.guides.solo_visit') }}</h3>
+                                <p class="mt-3 leading-7 text-muted-foreground">{{ __('common.welcome.guides.solo_visit_description') }}</p>
+                            </a>
+                        </div>
+                    </section>
+
                     @php($steps = ['profile', 'explore', 'exchange'])
                     <section class="mx-auto mt-24 w-full max-w-5xl">
                         <h2 class="text-center text-3xl font-semibold tracking-tight">{{ __('common.welcome.steps_title') }}</h2>
@@ -222,6 +240,6 @@
                 </main>
             </div>
         </div>
-        <x-analytics-consent />
+        <x-analytics-consent page-type="landing" :page-title="$seo['title']" :locale="$seo['locale']" />
     </body>
 </html>

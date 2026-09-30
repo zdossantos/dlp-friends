@@ -14,6 +14,16 @@ use Illuminate\Support\Facades\Storage;
 
 uses(RefreshDatabase::class);
 
+function landingStructuredData(string $html): array
+{
+    preg_match_all('/<script type="application\/ld\+json">(.*?)<\/script>/s', $html, $matches);
+
+    return array_map(
+        fn (string $json): array => json_decode($json, true, flags: JSON_THROW_ON_ERROR),
+        $matches[1],
+    );
+}
+
 test('the public entry point redirects to the browser language landing page', function (string $language, string $path) {
     $this->withHeader('Accept-Language', $language)
         ->get('/')
@@ -81,6 +91,21 @@ test('the public landing is server rendered without application javascript', fun
         ->assertSee('Comprendre nos suggestions')
         ->assertDontSee('type="module"', false);
 });
+
+test('each landing links to its localized friendship guides with descriptive anchors', function (string $locale, array $paths, array $anchors) {
+    $response = $this->get("/{$locale}")->assertOk();
+
+    foreach ($paths as $path) {
+        $response->assertSee('href="'.$path.'"', false);
+    }
+
+    foreach ($anchors as $anchor) {
+        $response->assertSee($anchor);
+    }
+})->with([
+    'French' => ['fr', ['/fr/rencontres-amicales-disneyland-paris', '/fr/aller-seul-disneyland-paris'], ['Rencontrer des amis fans', 'Préparer une visite solo']],
+    'English' => ['en', ['/en/disneyland-paris-friendships', '/en/visiting-disneyland-paris-solo'], ['Meet other Disneyland Paris fans', 'Plan a solo visit']],
+]);
 
 test('the public landing renders the active seasonal art direction', function (string $theme) {
     SeasonalTheme::query()->update(['is_manually_active' => false]);
@@ -186,6 +211,19 @@ test('each landing locale exposes localized indexable seo metadata', function (s
     'English' => ['en', 'DLP Friends — Meet other Disneyland Paris fans', 'Meet other Disneyland Paris fans, discover the passions you share, and chat with ease.'],
 ]);
 
+test('landing structured data renders as valid JSON without Blade directive corruption', function () {
+    config()->set('app.url', 'https://dlp-friends.example');
+
+    $response = $this->get('/fr')->assertOk();
+    $schemas = landingStructuredData($response->getContent());
+
+    expect($schemas)->toHaveCount(1)
+        ->and($schemas[0]['@context'])->toBe('https://schema.org')
+        ->and($schemas[0]['@type'])->toBe('WebApplication')
+        ->and($schemas[0]['url'])->toBe('https://dlp-friends.example/fr')
+        ->and($response->getContent())->not->toContain('<?php');
+});
+
 test('the sitemap contains localized public landing and legal pages', function () {
     config()->set('app.url', 'https://dlp-friends.example');
 
@@ -195,6 +233,10 @@ test('the sitemap contains localized public landing and legal pages', function (
         ->assertSee('https://dlp-friends.example/en', false)
         ->assertSee('https://dlp-friends.example/fr/matching', false)
         ->assertSee('https://dlp-friends.example/en/matching', false)
+        ->assertSee('https://dlp-friends.example/fr/rencontres-amicales-disneyland-paris', false)
+        ->assertSee('https://dlp-friends.example/en/disneyland-paris-friendships', false)
+        ->assertSee('https://dlp-friends.example/fr/aller-seul-disneyland-paris', false)
+        ->assertSee('https://dlp-friends.example/en/visiting-disneyland-paris-solo', false)
         ->assertSee('https://dlp-friends.example/fr/conditions-generales-utilisation', false)
         ->assertSee('https://dlp-friends.example/en/terms-of-use', false)
         ->assertSee('https://dlp-friends.example/fr/politique-confidentialite', false)
