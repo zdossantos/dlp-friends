@@ -185,7 +185,7 @@
                             <h2 id="public-guides-title" class="text-3xl font-semibold tracking-tight">{{ __('common.welcome.guides.title') }}</h2>
                             <p class="mt-4 leading-7 text-muted-foreground">{{ __('common.welcome.guides.description') }}</p>
                         </div>
-                        <div class="mt-8 grid gap-5 sm:grid-cols-2">
+                        <div class="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
                             <a href="{{ \App\Support\PublicUrls::friendshipsPath($seo['locale']) }}" class="rounded-3xl border border-border/70 bg-card p-6 shadow-sm transition-transform hover:-translate-y-0.5">
                                 <h3 class="font-accent text-xl font-bold">{{ __('common.welcome.guides.friendships') }}</h3>
                                 <p class="mt-3 leading-7 text-muted-foreground">{{ __('common.welcome.guides.friendships_description') }}</p>
@@ -193,6 +193,10 @@
                             <a href="{{ \App\Support\PublicUrls::soloVisitPath($seo['locale']) }}" class="rounded-3xl border border-border/70 bg-card p-6 shadow-sm transition-transform hover:-translate-y-0.5">
                                 <h3 class="font-accent text-xl font-bold">{{ __('common.welcome.guides.solo_visit') }}</h3>
                                 <p class="mt-3 leading-7 text-muted-foreground">{{ __('common.welcome.guides.solo_visit_description') }}</p>
+                            </a>
+                            <a href="{{ \App\Support\PublicUrls::faqPath($seo['locale']) }}" data-test="landing-faq" class="rounded-3xl border border-border/70 bg-card p-6 shadow-sm transition-transform hover:-translate-y-0.5">
+                                <h3 class="font-accent text-xl font-bold">{{ __('common.welcome.guides.faq') }}</h3>
+                                <p class="mt-3 leading-7 text-muted-foreground">{{ __('common.welcome.guides.faq_description') }}</p>
                             </a>
                         </div>
                     </section>

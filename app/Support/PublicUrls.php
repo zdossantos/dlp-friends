@@ -24,6 +24,16 @@ final class PublicUrls
         return route("matching.show.{$locale}", absolute: false);
     }
 
+    public static function faq(string $locale): string
+    {
+        return self::absolute(self::faqPath($locale));
+    }
+
+    public static function faqPath(string $locale): string
+    {
+        return route("faq.show.{$locale}", absolute: false);
+    }
+
     public static function friendships(string $locale): string
     {
         return self::absolute(self::friendshipsPath($locale));

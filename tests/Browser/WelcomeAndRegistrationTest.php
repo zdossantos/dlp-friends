@@ -84,6 +84,21 @@ test('the landing matching link opens an accessible localized explanation', func
         ->assertNoJavaScriptErrors();
 });
 
+test('the landing faq link opens the localized answers with keyboard navigation', function (string $locale, string $label, string $heading) {
+    visit('/'.$locale, ['locale' => $locale.'-'.$locale])
+        ->assertSeeLink($label)
+        ->assertAttribute('[data-test="landing-faq"]', 'href', '/'.$locale.'/faq')
+        ->keys('[data-test="landing-faq"]', 'Enter')
+        ->assertPathIs('/'.$locale.'/faq')
+        ->assertSee($heading)
+        ->assertScript('document.querySelectorAll("[data-test=faq-answer]").length === 7', true)
+        ->assertNoAccessibilityIssues()
+        ->assertNoJavaScriptErrors();
+})->with([
+    'French' => ['fr', 'Questions fréquentes', 'Questions fréquentes sur DLP Friends'],
+    'English' => ['en', 'Frequently asked questions', 'Frequently asked questions about DLP Friends'],
+]);
+
 test('the landing page sends a signed-in member directly to discovery', function () {
     $this->actingAs(User::factory()->withProfile()->create());
 
