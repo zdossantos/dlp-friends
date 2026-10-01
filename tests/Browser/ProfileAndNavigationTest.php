@@ -696,6 +696,28 @@ test('a member partner switches workspaces from the bottom navigation', function
         ->assertNoJavaScriptErrors();
 });
 
+test('shared workspace switcher exposes authorized destinations and marks the current workspace', function () {
+    $administrator = User::factory()->withProfile()->admin()->partner()->create();
+    $this->actingAs($administrator);
+
+    $page = visit('/discover')
+        ->on()->mobile()
+        ->assertPresent('[data-test="workspace-switcher-trigger"]')
+        ->click('[data-test="workspace-switcher-trigger"]')
+        ->assertSee('Changer d’espace')
+        ->assertAttribute('[data-test="workspace-member-link"]', 'aria-current', 'page')
+        ->assertPresent('[data-test="workspace-partner-link"]')
+        ->assertPresent('[data-test="workspace-admin-link"]')
+        ->assertAttribute('[data-test="workspace-admin-link"]', 'aria-label', 'Espace administration');
+
+    $page->keys('[data-test="workspace-admin-link"]', 'Escape')
+        ->assertScript(
+            "document.activeElement === document.querySelector('[data-test=workspace-switcher-trigger]')",
+            true,
+        )
+        ->assertNoJavaScriptErrors();
+});
+
 test('partner sidebar navigation disappears on the first render after role removal', function () {
     $admin = User::factory()->withProfile()->admin()->partner()->create();
     $admin->profile?->update(['display_name' => 'Admin partenaire']);
