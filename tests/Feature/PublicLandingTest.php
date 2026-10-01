@@ -86,7 +86,8 @@ test('the public landing is server rendered without application javascript', fun
         ->assertOk()
         ->assertViewIs('welcome')
         ->assertSee('<main', false)
-        ->assertSee('Vis la magie à plusieurs')
+        ->assertSee('Trouve des amis fans de Disneyland Paris')
+        ->assertSee('sorties strictement amicales')
         ->assertSee('href="/fr/matching"', false)
         ->assertSee('Comprendre nos suggestions')
         ->assertDontSee('type="module"', false);
@@ -207,8 +208,8 @@ test('each landing locale exposes localized indexable seo metadata', function (s
         ->assertSee('<script type="application/ld+json">', false)
         ->assertSee('SocialNetworkingApplication', false);
 })->with([
-    'French' => ['fr', 'DLP Friends — Rencontre d’autres fans de Disneyland Paris', 'Rencontre d’autres fans de Disneyland Paris, découvre vos passions communes et échange simplement.'],
-    'English' => ['en', 'DLP Friends — Meet other Disneyland Paris fans', 'Meet other Disneyland Paris fans, discover the passions you share, and chat with ease.'],
+    'French' => ['fr', 'DLP Friends — Trouver des amis fans de Disneyland Paris', 'Trouve des amis fans de Disneyland Paris pour échanger, organiser des sorties strictement amicales et partager tes passions entre adultes.'],
+    'English' => ['en', 'DLP Friends — Find friends who love Disneyland Paris', 'Find adult Disneyland Paris fans to chat, plan strictly friendship-focused park visits, and share your interests.'],
 ]);
 
 test('landing structured data renders as valid JSON without Blade directive corruption', function () {

@@ -6,11 +6,11 @@ test('a visitor changes locale from the public language selector', function () {
     visit('/')
         ->assertVisible('[data-test="locale-switcher"]')
         ->click('[data-test="locale-en"]')
-        ->assertSee('Enjoy the magic together')
+        ->assertSee('Meet friends who love Disneyland Paris')
         ->assertSee('Create my account')
         ->assertScript('document.documentElement.lang', 'en')
         ->click('[data-test="locale-fr"]')
-        ->assertSee('Vis la magie à plusieurs')
+        ->assertSee('Trouve des amis fans de Disneyland Paris')
         ->assertScript('document.documentElement.lang', 'fr')
         ->assertNoJavaScriptErrors();
 });

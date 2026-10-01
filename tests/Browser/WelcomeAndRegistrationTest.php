@@ -56,8 +56,8 @@ test('the landing page presents the adult friendship service to guests', functio
         ->assertSee('DLP Friends')
         ->assertPresent('[data-test="app-logo-icon"]')
         ->assertAttribute('[data-test="app-logo-icon"]', 'aria-hidden', 'true')
-        ->assertSee('Vis la magie à plusieurs')
-        ->assertSee('Rencontre d’autres fans de Disneyland Paris, découvre vos passions communes et échange simplement.')
+        ->assertSee('Trouve des amis fans de Disneyland Paris')
+        ->assertSee('Trouve des amis fans de Disneyland Paris pour échanger, organiser des sorties strictement amicales et partager tes passions entre adultes.')
         ->assertScript("document.body.innerText.includes('Vos passions communes passent en premier')", true)
         ->assertScript("document.body.innerText.includes('Ton âge n’est jamais pris en compte par l’algorithme pour te proposer des profils.')", true)
         ->assertSeeLink('Créer mon compte')
@@ -92,7 +92,7 @@ test('the landing faq link opens the localized answers with keyboard navigation'
         ->keys('[data-test="landing-faq-footer"]', 'Enter')
         ->assertPathIs('/'.$locale.'/faq')
         ->assertSee($heading)
-        ->assertScript('document.querySelectorAll("[data-test=faq-answer]").length === 7', true)
+        ->assertScript('document.querySelectorAll("[data-test=faq-answer]").length === 9', true)
         ->assertNoAccessibilityIssues()
         ->assertNoJavaScriptErrors();
 })->with([
@@ -106,7 +106,7 @@ test('a visitor can return to the localized landing from the not found page', fu
         ->assertAttribute('[data-test="not-found-home"]', 'href', '/fr')
         ->keys('[data-test="not-found-home"]', 'Enter')
         ->assertPathIs('/fr')
-        ->assertSee('Vis la magie à plusieurs')
+        ->assertSee('Trouve des amis fans de Disneyland Paris')
         ->assertNoAccessibilityIssues()
         ->assertNoJavaScriptErrors();
 });

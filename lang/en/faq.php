@@ -2,13 +2,21 @@
 
 return [
     'meta' => [
-        'title' => 'DLP Friends FAQ: how it works, safety and privacy',
-        'description' => 'Find essential answers about DLP Friends, strictly friendship-focused connections between adults, privacy, and safety.',
+        'title' => 'FAQ: find friends who love Disneyland Paris — DLP Friends',
+        'description' => 'Learn how to find adult Disneyland Paris fans, plan strictly friendship-focused park visits, and use DLP Friends safely.',
     ],
     'eyebrow' => 'Your questions, answered',
     'title' => 'Frequently asked questions about DLP Friends',
     'intro' => 'Learn how DLP Friends helps adult Disneyland Paris fans form strictly friendship-focused connections while protecting their privacy and safety.',
     'questions' => [
+        [
+            'question' => 'How can I find friends who love Disneyland Paris?',
+            'answer' => 'Build your profile around your Disneyland Paris interests, discover adult members who share them, and start chatting together.',
+        ],
+        [
+            'question' => 'How can I find companions for a Disneyland Paris visit?',
+            'answer' => 'You can create or join a strictly friendship-focused park visit to meet other adult fans in a clear and welcoming setting.',
+        ],
         [
             'question' => 'How does DLP Friends work?',
             'answer' => 'You create a friendly profile with an avatar, your favourite worlds and, if you choose, your visit frequency. DLP Friends then suggests members who share your interests.',
