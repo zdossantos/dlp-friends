@@ -38,6 +38,7 @@ return [
         'dashboard' => 'Dashboard',
         'notifications' => 'Notifications',
         'members' => 'Members',
+        'catalogues' => 'Catalogues',
         'interests' => 'Favorite worlds',
         'avatars' => 'Avatars',
         'onboarding' => 'Tutorial',

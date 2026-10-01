@@ -434,11 +434,14 @@ test('an administrator sees administration and member return navigation', functi
             "getComputedStyle(document.documentElement).overflowY !== 'hidden' && getComputedStyle(document.body).overflowY !== 'hidden'",
             true,
         )
-        ->assertPresent('[data-test="app-logo-icon"]')
-        ->assertAttribute('[data-test="app-logo-icon"]', 'aria-hidden', 'true')
-        ->assertSeeLink('Univers favoris')
-        ->assertSeeLink('Retour au profil')
-        ->assertSee('Admin Aurore');
+        ->assertPresent('[data-test="admin-bottom-navigation"]')
+        ->assertPresent('[data-test="admin-dashboard-link"][aria-current="page"]')
+        ->assertPresent('[data-test="workspace-switcher-trigger"]')
+        ->click('[data-test="workspace-switcher-trigger"]')
+        ->assertPresent('[data-test="workspace-member-link"]')
+        ->assertPresent('[data-test="workspace-admin-link"][aria-current="page"]')
+        ->assertSee('Espace administration')
+        ->assertNoJavaScriptErrors();
 });
 
 test('administration identity falls back to email without a profile', function () {

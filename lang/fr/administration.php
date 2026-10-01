@@ -38,6 +38,7 @@ return [
         'dashboard' => 'Tableau de bord',
         'notifications' => 'Notifications',
         'members' => 'Membres',
+        'catalogues' => 'Catalogues',
         'interests' => 'Univers favoris',
         'avatars' => 'Avatars',
         'onboarding' => 'Tutoriel',

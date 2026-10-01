@@ -18,6 +18,7 @@ use App\Models\PartnerProfile;
 use App\Models\PartnerProfileRevision;
 use App\Models\ProductOnboarding;
 use App\Models\ProductOnboardingSetting;
+use App\Models\Role;
 use App\Models\SeasonalTheme;
 use App\Models\User;
 use Illuminate\Contracts\Debug\ExceptionHandler as ExceptionHandlerContract;
@@ -60,26 +61,57 @@ test('admin schedules activates and disables seasonal themes on mobile', functio
         ->assertNoJavaScriptErrors();
 });
 
-test('admin without partner role opens partner management pages from its submenu', function () {
+test('admin navigation exposes grouped destinations without notifications or sidebar', function () {
     $admin = User::factory()->admin()->create(['locale' => 'en']);
 
     expect($admin->fresh('roles')->hasRole(RoleName::Partner))->toBeFalse();
 
     $this->actingAs($admin);
 
-    visit('/dashboard')
+    $page = visit('/admin/partner-statistics')->on()->mobile()
+        ->assertPresent('[data-test="admin-bottom-navigation"]')
+        ->assertMissing('[data-sidebar="sidebar"]')
+        ->assertPresent('[data-test="admin-dashboard-link"]')
+        ->assertPresent('[data-test="admin-members-link"]')
+        ->assertMissing('a[href="/admin/notifications"]')
         ->assertPresent('[data-test="admin-partners-menu-trigger"]')
+        ->assertAttribute('[data-test="admin-partners-menu-trigger"]', 'aria-current', 'page')
         ->click('[data-test="admin-partners-menu-trigger"]')
         ->assertSeeLink('Partner profiles')
-        ->assertPresent('a[href="/admin/partner-profiles"]')
+        ->assertPresent('[data-test="admin-partner-profiles-link"]')
         ->assertSeeLink('Partner announcements')
-        ->assertPresent('a[href="/admin/partner-announcements"]')
+        ->assertPresent('[data-test="admin-partner-announcements-link"]')
         ->assertSeeLink('Partner statistics')
-        ->assertPresent('a[href="/admin/partner-statistics"]')
-        ->click('Partner statistics')
-        ->assertPathIs('/admin/partner-statistics')
-        ->assertPresent('[data-test="admin-partners-menu-trigger"][data-state="open"]')
-        ->assertPresent('a[href="/admin/partner-statistics"][data-active="true"]')
+        ->assertAttribute('[data-test="admin-partner-statistics-link"]', 'aria-current', 'page');
+
+    $page->keys('[data-test="admin-partner-statistics-link"]', 'Escape')
+        ->assertScript(
+            "document.activeElement === document.querySelector('[data-test=admin-partners-menu-trigger]')",
+            true,
+        )
+        ->click('[data-test="admin-catalogues-menu-trigger"]')
+        ->assertSeeLink('Favorite worlds')
+        ->assertPresent('[data-test="admin-interests-link"]')
+        ->assertSeeLink('Avatars')
+        ->assertPresent('[data-test="admin-avatars-link"]')
+        ->assertSeeLink('Tutorial')
+        ->assertPresent('[data-test="admin-onboarding-link"]')
+        ->assertSeeLink('Seasonal themes')
+        ->assertPresent('[data-test="admin-seasonal-themes-link"]')
+        ->assertScript('document.documentElement.scrollWidth <= window.innerWidth', true)
+        ->assertNoJavaScriptErrors();
+});
+
+test('admin navigation hides the workspace switcher for a single-role administrator', function () {
+    $admin = User::factory()->admin()->create();
+    $adminRole = Role::query()->where('name', RoleName::Admin)->firstOrFail();
+    $admin->roles()->sync([$adminRole->id]);
+    $this->actingAs($admin);
+
+    visit('/dashboard')
+        ->assertPresent('[data-test="admin-bottom-navigation"]')
+        ->assertMissing('[data-test="workspace-switcher-trigger"]')
+        ->assertMissing('[data-sidebar="sidebar"]')
         ->assertNoJavaScriptErrors();
 });
 
