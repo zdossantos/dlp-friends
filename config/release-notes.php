@@ -2,6 +2,7 @@
 
 return [
     'items' => [
+        ['version' => '1.12.0', 'date' => '2026-10-01', 'fr' => ['FAQ publique bilingue accessible depuis l’accueil.', 'Notes de version publiques et page introuvable localisée.'], 'en' => ['Bilingual public FAQ accessible from the home page.', 'Public release notes and a localized not-found page.']],
         ['version' => '1.11.0', 'date' => '2026-09-30', 'fr' => ['Amélioration du référencement et de la mesure d’audience, dans le respect du consentement.'], 'en' => ['Improved search visibility and consent-aware audience measurement.']],
         ['version' => '1.10.0', 'date' => '2026-09-30', 'fr' => ['Installation de DLP Friends comme application et notifications mobiles.'], 'en' => ['Install DLP Friends as an app and receive mobile notifications.']],
         ['version' => '1.9.0', 'date' => '2026-09-28', 'fr' => ['Création et gestion de sorties entre membres.', 'Discussions de groupe, présence, réactions et suggestions pour démarrer une conversation.', 'Espace partenaires, thèmes saisonniers et contrôle renforcé des données personnelles.'], 'en' => ['Create and manage meetups with other members.', 'Group chats, presence, reactions, and conversation starters.', 'Partner space, seasonal themes, and stronger personal-data controls.']],

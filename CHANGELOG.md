@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.12.0](https://github.com/zdossantos/dlp-friends/compare/v1.11.2...v1.12.0) (2026-10-01)
+
+
+### Features
+
+* add bilingual public FAQ ([#236](https://github.com/zdossantos/dlp-friends/issues/236)) ([86608df](https://github.com/zdossantos/dlp-friends/commit/86608dffbd316e82eb4241a52db5b6a0c24fcfac))
+* add public release notes and localized 404 pages ([#238](https://github.com/zdossantos/dlp-friends/issues/238)) ([135d206](https://github.com/zdossantos/dlp-friends/commit/135d2061d960d8b2ab86d003e866d14ccda1b21c))
+
 ## [1.11.2](https://github.com/zdossantos/dlp-friends/compare/v1.11.1...v1.11.2) (2026-09-30)
 
 
