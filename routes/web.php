@@ -51,6 +51,7 @@ use App\Http\Controllers\MemberProfileController;
 use App\Http\Controllers\MessageController;
 use App\Http\Controllers\MessageReactionController;
 use App\Http\Controllers\MyEventController;
+use App\Http\Controllers\NotFoundController;
 use App\Http\Controllers\NotificationDestroyController;
 use App\Http\Controllers\NotificationIndexController;
 use App\Http\Controllers\NotificationMarkReadController;
@@ -72,6 +73,7 @@ use App\Http\Controllers\PublicGuideController;
 use App\Http\Controllers\PublicLandingController;
 use App\Http\Controllers\PublicMatchingController;
 use App\Http\Controllers\PublicMemberProfileController;
+use App\Http\Controllers\PublicReleaseNotesController;
 use App\Http\Controllers\SwipeController;
 use App\Http\Controllers\UnblockMemberController;
 use App\Support\PublicUrls;
@@ -88,6 +90,8 @@ Route::get('fr/matching', [PublicMatchingController::class, 'show'])->defaults('
 Route::get('en/matching', [PublicMatchingController::class, 'show'])->defaults('locale', 'en')->name('matching.show.en');
 Route::get('fr/faq', [PublicFaqController::class, 'show'])->defaults('locale', 'fr')->name('faq.show.fr');
 Route::get('en/faq', [PublicFaqController::class, 'show'])->defaults('locale', 'en')->name('faq.show.en');
+Route::get('fr/nouveautes', [PublicReleaseNotesController::class, 'show'])->defaults('locale', 'fr')->name('release-notes.show.fr');
+Route::get('en/whats-new', [PublicReleaseNotesController::class, 'show'])->defaults('locale', 'en')->name('release-notes.show.en');
 Route::get('fr/rencontres-amicales-disneyland-paris', [PublicGuideController::class, 'show'])->defaults('locale', 'fr')->defaults('guide', 'friendships')->name('guides.friendships.fr');
 Route::get('en/disneyland-paris-friendships', [PublicGuideController::class, 'show'])->defaults('locale', 'en')->defaults('guide', 'friendships')->name('guides.friendships.en');
 Route::get('fr/aller-seul-disneyland-paris', [PublicGuideController::class, 'show'])->defaults('locale', 'fr')->defaults('guide', 'solo_visit')->name('guides.solo-visit.fr');
@@ -105,6 +109,7 @@ Route::get('sitemap.xml', function () {
             ['fr' => PublicUrls::landing('fr'), 'en' => PublicUrls::landing('en')],
             ['fr' => PublicUrls::matching('fr'), 'en' => PublicUrls::matching('en')],
             ['fr' => PublicUrls::faq('fr'), 'en' => PublicUrls::faq('en')],
+            ['fr' => PublicUrls::releaseNotes('fr'), 'en' => PublicUrls::releaseNotes('en')],
             ['fr' => PublicUrls::friendships('fr'), 'en' => PublicUrls::friendships('en')],
             ['fr' => PublicUrls::soloVisit('fr'), 'en' => PublicUrls::soloVisit('en')],
             ['fr' => PublicUrls::terms('fr'), 'en' => PublicUrls::terms('en')],
@@ -332,3 +337,7 @@ Route::middleware(['auth', 'verified', 'social'])->group(function (): void {
 });
 
 require __DIR__.'/settings.php';
+
+Route::any('{fallbackPlaceholder}', NotFoundController::class)
+    ->where('fallbackPlaceholder', '.*')
+    ->fallback();

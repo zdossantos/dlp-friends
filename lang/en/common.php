@@ -11,6 +11,7 @@ return [
         'en' => 'English',
     ],
     'legal' => ['terms' => 'Terms of Use', 'privacy' => 'Privacy Policy'],
+    'release_notes' => 'What’s new',
     'welcome' => [
         'eyebrow' => 'Fans, together',
         'title' => 'Enjoy the magic together',
@@ -71,7 +72,12 @@ return [
         'member' => 'Member workspace',
         'partner' => 'Partner workspace',
     ],
-    'errors' => ['generic_title' => 'Something went wrong'],
+    'errors' => [
+        'generic_title' => 'Something went wrong',
+        'not_found_title' => 'Page not found',
+        'not_found_description' => 'The page you are looking for cannot be found or is no longer available.',
+        'not_found_action' => 'Return home',
+    ],
     'accessibility' => [
         'main_navigation' => 'Main navigation', 'menu_navigation' => 'Navigation menu', 'breadcrumb' => 'Breadcrumb',
         'more' => 'More', 'close' => 'Close', 'sidebar' => 'Sidebar', 'sidebar_description' => 'Displays the mobile sidebar.',

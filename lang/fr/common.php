@@ -11,6 +11,7 @@ return [
         'en' => 'English',
     ],
     'legal' => ['terms' => 'Conditions générales d’utilisation', 'privacy' => 'Politique de confidentialité'],
+    'release_notes' => 'Nouveautés',
     'welcome' => [
         'eyebrow' => 'Entre fans, tout simplement',
         'title' => 'Vis la magie à plusieurs',
@@ -77,6 +78,9 @@ return [
     ],
     'errors' => [
         'generic_title' => 'Une erreur est survenue',
+        'not_found_title' => 'Page introuvable',
+        'not_found_description' => 'La page que tu cherches est introuvable ou n’est plus disponible.',
+        'not_found_action' => 'Retourner à l’accueil',
     ],
     'accessibility' => [
         'main_navigation' => 'Navigation principale',

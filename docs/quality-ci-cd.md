@@ -100,6 +100,13 @@ de version. La publication est volontaire et intervient uniquement lors du
 merge de la Release PR. Aucun package npm ou Composer n'est publié : DLP Friends
 est une application web.
 
+La Release PR maintient également la page publique des nouveautés via
+`config/release-notes.php`. Une entrée française et anglaise est obligatoire
+pour chaque version dont `CHANGELOG.md` contient une section `### Features`.
+Les versions composées uniquement de correctifs n'ont pas d'entrée et ne sont
+pas affichées. Le test `PublicReleaseNotesTest` vérifie automatiquement cette
+correspondance avant le merge.
+
 Le workflow utilise `RELEASE_PLEASE_TOKEN`, jeton limité à ce dépôt, afin que sa
 pull request déclenche la CI normale. Il dispose seulement des permissions
 d’écriture nécessaires aux contenus, issues et pull requests. Les jobs de

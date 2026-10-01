@@ -11,6 +11,10 @@ export function usesAdminLayout(name: string): boolean {
 export function resolvePageLayout(
     name: string,
 ): Component | Component[] | null {
+    if (name.startsWith('Errors/')) {
+        return null;
+    }
+
     if (name.startsWith('auth/')) {
         return AuthLayout;
     }
