@@ -14,11 +14,11 @@ return [
     'release_notes' => 'What’s new',
     'welcome' => [
         'eyebrow' => 'Fans, together',
-        'title' => 'Enjoy the magic together',
-        'description' => 'Meet other Disneyland Paris fans, discover the passions you share, and chat with ease.',
+        'title' => 'Meet friends who love Disneyland Paris',
+        'description' => 'Find adult Disneyland Paris fans to chat, plan strictly friendship-focused park visits, and share your interests.',
         'seo' => [
-            'title' => 'DLP Friends — Meet other Disneyland Paris fans',
-            'description' => 'Meet other Disneyland Paris fans, discover the passions you share, and chat with ease.',
+            'title' => 'DLP Friends — Find friends who love Disneyland Paris',
+            'description' => 'Find adult Disneyland Paris fans to chat, plan strictly friendship-focused park visits, and share your interests.',
         ],
         'open_space' => 'Open my space',
         'create_account' => 'Create my account',

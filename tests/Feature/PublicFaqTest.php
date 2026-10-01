@@ -42,6 +42,8 @@ test('localized faq pages expose useful visible answers in server rendered html'
         'fr',
         'Questions fréquentes sur DLP Friends',
         [
+            'Comment trouver des amis fans de Disneyland Paris ?',
+            'Comment trouver des compagnons pour une sortie à Disneyland Paris ?',
             'Comment fonctionne DLP Friends ?',
             'Faut-il avoir 18 ans pour utiliser DLP Friends ?',
             'Les rencontres sont-elles strictement amicales ?',
@@ -51,6 +53,8 @@ test('localized faq pages expose useful visible answers in server rendered html'
             'DLP Friends est-il affilié à Disney ou à Disneyland Paris ?',
         ],
         [
+            'profil avec tes passions liées à Disneyland Paris',
+            'proposer ou rejoindre une sortie strictement amicale',
             'profil amical',
             'réservé aux personnes majeures',
             'aucune mécanique romantique',
@@ -65,6 +69,8 @@ test('localized faq pages expose useful visible answers in server rendered html'
         'en',
         'Frequently asked questions about DLP Friends',
         [
+            'How can I find friends who love Disneyland Paris?',
+            'How can I find companions for a Disneyland Paris visit?',
             'How does DLP Friends work?',
             'Do I need to be 18 to use DLP Friends?',
             'Are connections strictly friendship-focused?',
@@ -74,6 +80,8 @@ test('localized faq pages expose useful visible answers in server rendered html'
             'Is DLP Friends affiliated with Disney or Disneyland Paris?',
         ],
         [
+            'profile around your Disneyland Paris interests',
+            'create or join a strictly friendship-focused park visit',
             'friendly profile',
             'adults aged 18 and over',
             'no romantic mechanics',
@@ -110,14 +118,14 @@ test('faq pages self canonicalize and expose localized social metadata and recip
     'French' => [
         '/fr/faq',
         'fr',
-        'FAQ DLP Friends : fonctionnement, sécurité et confidentialité',
-        'Retrouve les réponses essentielles sur DLP Friends, les rencontres strictement amicales entre adultes, la confidentialité et la sécurité.',
+        'FAQ : trouver des amis fans de Disneyland Paris — DLP Friends',
+        'Découvre comment trouver des amis fans de Disneyland Paris, organiser des sorties strictement amicales entre adultes et utiliser DLP Friends en sécurité.',
     ],
     'English' => [
         '/en/faq',
         'en',
-        'DLP Friends FAQ: how it works, safety and privacy',
-        'Find essential answers about DLP Friends, strictly friendship-focused connections between adults, privacy, and safety.',
+        'FAQ: find friends who love Disneyland Paris — DLP Friends',
+        'Learn how to find adult Disneyland Paris fans, plan strictly friendship-focused park visits, and use DLP Friends safely.',
     ],
 ]);
 

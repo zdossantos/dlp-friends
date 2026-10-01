@@ -14,11 +14,11 @@ return [
     'release_notes' => 'Nouveautés',
     'welcome' => [
         'eyebrow' => 'Entre fans, tout simplement',
-        'title' => 'Vis la magie à plusieurs',
-        'description' => 'Rencontre d’autres fans de Disneyland Paris, découvre vos passions communes et échange simplement.',
+        'title' => 'Trouve des amis fans de Disneyland Paris',
+        'description' => 'Trouve des amis fans de Disneyland Paris pour échanger, organiser des sorties strictement amicales et partager tes passions entre adultes.',
         'seo' => [
-            'title' => 'DLP Friends — Rencontre d’autres fans de Disneyland Paris',
-            'description' => 'Rencontre d’autres fans de Disneyland Paris, découvre vos passions communes et échange simplement.',
+            'title' => 'DLP Friends — Trouver des amis fans de Disneyland Paris',
+            'description' => 'Trouve des amis fans de Disneyland Paris pour échanger, organiser des sorties strictement amicales et partager tes passions entre adultes.',
         ],
         'open_space' => 'Ouvrir mon espace',
         'create_account' => 'Créer mon compte',

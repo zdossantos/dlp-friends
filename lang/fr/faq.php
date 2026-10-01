@@ -2,13 +2,21 @@
 
 return [
     'meta' => [
-        'title' => 'FAQ DLP Friends : fonctionnement, sécurité et confidentialité',
-        'description' => 'Retrouve les réponses essentielles sur DLP Friends, les rencontres strictement amicales entre adultes, la confidentialité et la sécurité.',
+        'title' => 'FAQ : trouver des amis fans de Disneyland Paris — DLP Friends',
+        'description' => 'Découvre comment trouver des amis fans de Disneyland Paris, organiser des sorties strictement amicales entre adultes et utiliser DLP Friends en sécurité.',
     ],
     'eyebrow' => 'Tes questions, nos réponses',
     'title' => 'Questions fréquentes sur DLP Friends',
     'intro' => 'Découvre comment DLP Friends aide des fans adultes de Disneyland Paris à créer des liens strictement amicaux, tout en respectant leur vie privée et leur sécurité.',
     'questions' => [
+        [
+            'question' => 'Comment trouver des amis fans de Disneyland Paris ?',
+            'answer' => 'Crée un profil avec tes passions liées à Disneyland Paris, puis découvre des membres adultes qui partagent tes centres d’intérêt et commence à échanger avec eux.',
+        ],
+        [
+            'question' => 'Comment trouver des compagnons pour une sortie à Disneyland Paris ?',
+            'answer' => 'Tu peux proposer ou rejoindre une sortie strictement amicale à Disneyland Paris afin de rencontrer d’autres fans adultes dans un cadre clair et convivial.',
+        ],
         [
             'question' => 'Comment fonctionne DLP Friends ?',
             'answer' => 'Tu crées un profil amical avec un avatar, tes univers favoris et, si tu le souhaites, ta fréquence de visite. DLP Friends te propose ensuite des membres avec lesquels tu partages des passions.',
