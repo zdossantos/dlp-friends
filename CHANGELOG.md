@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.13.0](https://github.com/zdossantos/dlp-friends/compare/v1.12.0...v1.13.0) (2026-10-01)
+
+
+### Features
+
+* **seo:** target friendship search keywords ([#239](https://github.com/zdossantos/dlp-friends/issues/239)) ([bd13e70](https://github.com/zdossantos/dlp-friends/commit/bd13e70e5c84055e51eba8d3750c08209af8b22b))
+
 ## [1.12.0](https://github.com/zdossantos/dlp-friends/compare/v1.11.2...v1.12.0) (2026-10-01)
 
 
