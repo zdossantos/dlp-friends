@@ -34,6 +34,16 @@ final class PublicUrls
         return route("faq.show.{$locale}", absolute: false);
     }
 
+    public static function releaseNotes(string $locale): string
+    {
+        return self::absolute(self::releaseNotesPath($locale));
+    }
+
+    public static function releaseNotesPath(string $locale): string
+    {
+        return route("release-notes.show.{$locale}", absolute: false);
+    }
+
     public static function friendships(string $locale): string
     {
         return self::absolute(self::friendshipsPath($locale));

@@ -100,6 +100,29 @@ test('the landing faq link opens the localized answers with keyboard navigation'
     'English' => ['en', 'Frequently asked questions', 'Frequently asked questions about DLP Friends'],
 ]);
 
+test('a visitor can return to the localized landing from the not found page', function () {
+    visit('/fr/page-inexistante', ['locale' => 'fr-FR'])
+        ->assertSee('Page introuvable')
+        ->assertAttribute('[data-test="not-found-home"]', 'href', '/fr')
+        ->keys('[data-test="not-found-home"]', 'Enter')
+        ->assertPathIs('/fr')
+        ->assertSee('Vis la magie à plusieurs')
+        ->assertNoAccessibilityIssues()
+        ->assertNoJavaScriptErrors();
+});
+
+test('a signed-in member returns to the app from the not found page with Inertia', function () {
+    $this->actingAs(User::factory()->withProfile()->create());
+
+    visit('/page-inexistante')
+        ->assertSee('Page introuvable')
+        ->assertAttribute('[data-test="not-found-home"]', 'href', '/app')
+        ->keys('[data-test="not-found-home"]', 'Enter')
+        ->assertPathIs('/discover')
+        ->assertNoAccessibilityIssues()
+        ->assertNoJavaScriptErrors();
+});
+
 test('the landing page sends a signed-in member directly to discovery', function () {
     $this->actingAs(User::factory()->withProfile()->create());
 

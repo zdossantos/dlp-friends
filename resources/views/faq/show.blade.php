@@ -87,6 +87,7 @@
                     </aside>
 
                     <nav aria-label="{{ $content['continue'] }}" class="mt-8 flex flex-wrap gap-x-5 gap-y-3 text-sm">
+                        <a data-test="faq-release-notes" class="underline underline-offset-4" href="{{ \App\Support\PublicUrls::releaseNotesPath($locale) }}">{{ __('common.release_notes') }}</a>
                         <a class="underline underline-offset-4" href="{{ \App\Support\PublicUrls::privacyPath($locale) }}">{{ __('common.legal.privacy') }}</a>
                         <a class="underline underline-offset-4" href="{{ \App\Support\PublicUrls::termsPath($locale) }}">{{ __('common.legal.terms') }}</a>
                     </nav>

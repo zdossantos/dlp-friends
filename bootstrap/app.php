@@ -8,11 +8,14 @@ use App\Http\Middleware\HandleAppearance;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\PreventSearchIndexing;
 use App\Http\Middleware\SetLocale;
+use App\Support\AuthenticatedHome;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
 
 return Application::configure(basePath: dirname(__DIR__))
@@ -57,4 +60,23 @@ return Application::configure(basePath: dirname(__DIR__))
         $exceptions->shouldRenderJsonWhen(
             fn (Request $request) => $request->is('api/*') || $request->expectsJson(),
         );
+
+        $exceptions->respond(function (Response $response): Response {
+            $request = request();
+
+            if ($response->getStatusCode() !== 404 || $request->expectsJson()) {
+                return $response;
+            }
+
+            $homeUrl = $request->user() === null
+                ? route('landing.show', ['locale' => app()->getLocale()], false)
+                : route(AuthenticatedHome::routeName($request->user()), absolute: false);
+
+            return Inertia::render('Errors/NotFound', [
+                'homeUrl' => $homeUrl,
+                'inertiaHome' => $request->user() !== null,
+            ])
+                ->toResponse($request)
+                ->setStatusCode(404);
+        });
     })->create();

@@ -40,8 +40,8 @@ test('admin schedules activates and disables seasonal themes on mobile', functio
         ->assertScript('document.documentElement.scrollWidth <= window.innerWidth', true)
         ->assertNoJavaScriptErrors();
 
-    $page->type('#halloween-starts-at', '2026-10-01T08:00')
-        ->type('#halloween-ends-at', '2026-11-01T08:00')
+    $page->type('#halloween-starts-at', '2030-10-01T08:00')
+        ->type('#halloween-ends-at', '2030-11-01T08:00')
         ->press('Enregistrer la période Halloween')
         ->assertSee('La programmation du thème a été enregistrée.')
         ->assertNoJavaScriptErrors();
