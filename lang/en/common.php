@@ -44,6 +44,7 @@ return [
             'solo_visit_description' => 'Keep the freedom of going alone while leaving room to share part of your park day.',
             'faq' => 'Frequently asked questions',
             'faq_description' => 'Understand how DLP Friends works, how privacy is protected, and how to connect safely.',
+            'release_notes_description' => 'Discover the latest features available on DLP Friends.',
         ],
         'steps_title' => 'How does it work?',
         'steps' => [

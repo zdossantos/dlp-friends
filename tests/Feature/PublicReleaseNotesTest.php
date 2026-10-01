@@ -97,16 +97,24 @@ test('a feature release without both translations is rejected', function () {
         ->toThrow(LogicException::class);
 });
 
-test('the public navigation and sitemap expose both localized release note pages', function (string $locale, string $path) {
+test('the landing and faq expose each localized release note page', function (string $locale, string $path) {
     $this->get('/'.$locale)
         ->assertOk()
+        ->assertSee('data-test="landing-release-notes"', false)
         ->assertSee('href="'.$path.'"', false);
 
-    $this->get('/sitemap.xml')
+    $this->get('/'.$locale.'/faq')
         ->assertOk()
-        ->assertSee('/fr/nouveautes', false)
-        ->assertSee('/en/whats-new', false);
+        ->assertSee('data-test="faq-release-notes"', false)
+        ->assertSee('href="'.$path.'"', false);
 })->with([
     'French' => ['fr', '/fr/nouveautes'],
     'English' => ['en', '/en/whats-new'],
 ]);
+
+test('the sitemap exposes both localized release note pages', function () {
+    $this->get('/sitemap.xml')
+        ->assertOk()
+        ->assertSee('/fr/nouveautes', false)
+        ->assertSee('/en/whats-new', false);
+});
