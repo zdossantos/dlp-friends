@@ -61,29 +61,22 @@
                         </span>
                         <span class="font-accent text-lg font-bold tracking-tight">{{ __('common.brand.name') }}</span>
                     </div>
-                    <div class="flex items-center justify-end gap-3 self-end sm:self-auto">
-                        <a
-                            href="{{ \App\Support\PublicUrls::faqPath($seo['locale']) }}"
-                            data-test="landing-faq-header"
-                            class="inline-flex min-h-10 items-center rounded-lg px-2 text-sm font-semibold text-muted-foreground underline-offset-4 transition-colors hover:text-foreground hover:underline focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
-                        >{{ __('common.welcome.guides.faq') }}</a>
-                        <nav data-test="locale-switcher" aria-labelledby="landing-language-label" class="flex items-center gap-1 rounded-xl border bg-card p-1">
-                            <span id="landing-language-label" class="sr-only">{{ __('common.locale.label') }}</span>
-                            @foreach (['fr', 'en'] as $locale)
-                                <a
-                                    href="{{ route('landing.show', ['locale' => $locale], false) }}"
-                                    hreflang="{{ $locale }}"
-                                    lang="{{ $locale }}"
-                                    data-test="locale-{{ $locale }}"
-                                    @class([
-                                        'inline-flex min-h-10 min-w-10 items-center justify-center rounded-lg px-3 text-sm font-semibold transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none',
-                                        'bg-primary text-primary-foreground' => $seo['locale'] === $locale,
-                                        'text-muted-foreground hover:bg-muted hover:text-foreground' => $seo['locale'] !== $locale,
-                                    ])
-                                >{{ strtoupper($locale) }}</a>
-                            @endforeach
-                        </nav>
-                    </div>
+                    <nav data-test="locale-switcher" aria-labelledby="landing-language-label" class="flex items-center gap-1 self-end rounded-xl border bg-card p-1 sm:self-auto">
+                        <span id="landing-language-label" class="sr-only">{{ __('common.locale.label') }}</span>
+                        @foreach (['fr', 'en'] as $locale)
+                            <a
+                                href="{{ route('landing.show', ['locale' => $locale], false) }}"
+                                hreflang="{{ $locale }}"
+                                lang="{{ $locale }}"
+                                data-test="locale-{{ $locale }}"
+                                @class([
+                                    'inline-flex min-h-10 min-w-10 items-center justify-center rounded-lg px-3 text-sm font-semibold transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none',
+                                    'bg-primary text-primary-foreground' => $seo['locale'] === $locale,
+                                    'text-muted-foreground hover:bg-muted hover:text-foreground' => $seo['locale'] !== $locale,
+                                ])
+                            >{{ strtoupper($locale) }}</a>
+                        @endforeach
+                    </nav>
                 </header>
 
                 <main id="contenu-principal" class="flex flex-1 flex-col py-12 sm:py-16 lg:py-20">
@@ -244,7 +237,8 @@
                     </section>
 
                     <p class="mx-auto mt-10 max-w-2xl text-center text-xs leading-5 text-muted-foreground">{{ __('common.brand.disclaimer') }}</p>
-                    <footer class="mt-6 flex justify-center gap-4 text-xs text-muted-foreground">
+                    <footer class="mt-6 flex flex-wrap justify-center gap-x-4 gap-y-2 text-xs text-muted-foreground">
+                        <a data-test="landing-faq-footer" class="underline underline-offset-4" href="{{ \App\Support\PublicUrls::faqPath($seo['locale']) }}">{{ __('common.welcome.guides.faq') }}</a>
                         <a data-test="legal-terms" class="underline underline-offset-4" href="{{ \App\Support\PublicUrls::termsPath($seo['locale']) }}">{{ __('common.legal.terms') }}</a>
                         <a data-test="legal-privacy" class="underline underline-offset-4" href="{{ \App\Support\PublicUrls::privacyPath($seo['locale']) }}">{{ __('common.legal.privacy') }}</a>
                     </footer>

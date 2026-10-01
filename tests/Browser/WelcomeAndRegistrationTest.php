@@ -87,8 +87,9 @@ test('the landing matching link opens an accessible localized explanation', func
 test('the landing faq link opens the localized answers with keyboard navigation', function (string $locale, string $label, string $heading) {
     visit('/'.$locale, ['locale' => $locale.'-'.$locale])
         ->assertSeeLink($label)
-        ->assertAttribute('[data-test="landing-faq-header"]', 'href', '/'.$locale.'/faq')
-        ->keys('[data-test="landing-faq-header"]', 'Enter')
+        ->assertMissing('[data-test="landing-faq-header"]')
+        ->assertAttribute('[data-test="landing-faq-footer"]', 'href', '/'.$locale.'/faq')
+        ->keys('[data-test="landing-faq-footer"]', 'Enter')
         ->assertPathIs('/'.$locale.'/faq')
         ->assertSee($heading)
         ->assertScript('document.querySelectorAll("[data-test=faq-answer]").length === 7', true)
