@@ -41,6 +41,8 @@ return [
             'friendships_description' => 'Construire un profil utile et commencer une conversation autour de passions communes.',
             'solo_visit' => 'Préparer une visite solo',
             'solo_visit_description' => 'Profiter de sa liberté tout en gardant la possibilité de partager un moment au parc.',
+            'faq' => 'Questions fréquentes',
+            'faq_description' => 'Comprendre le fonctionnement, la confidentialité et les repères de sécurité de DLP Friends.',
         ],
         'steps_title' => 'Comment ça marche ?',
         'steps' => [

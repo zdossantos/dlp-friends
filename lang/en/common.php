@@ -41,6 +41,8 @@ return [
             'friendships_description' => 'Build a useful profile and start a conversation through genuine shared interests.',
             'solo_visit' => 'Plan a solo visit',
             'solo_visit_description' => 'Keep the freedom of going alone while leaving room to share part of your park day.',
+            'faq' => 'Frequently asked questions',
+            'faq_description' => 'Understand how DLP Friends works, how privacy is protected, and how to connect safely.',
         ],
         'steps_title' => 'How does it work?',
         'steps' => [

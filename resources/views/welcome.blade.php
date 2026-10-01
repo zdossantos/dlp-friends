@@ -185,7 +185,7 @@
                             <h2 id="public-guides-title" class="text-3xl font-semibold tracking-tight">{{ __('common.welcome.guides.title') }}</h2>
                             <p class="mt-4 leading-7 text-muted-foreground">{{ __('common.welcome.guides.description') }}</p>
                         </div>
-                        <div class="mt-8 grid gap-5 sm:grid-cols-2">
+                        <div class="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
                             <a href="{{ \App\Support\PublicUrls::friendshipsPath($seo['locale']) }}" class="rounded-3xl border border-border/70 bg-card p-6 shadow-sm transition-transform hover:-translate-y-0.5">
                                 <h3 class="font-accent text-xl font-bold">{{ __('common.welcome.guides.friendships') }}</h3>
                                 <p class="mt-3 leading-7 text-muted-foreground">{{ __('common.welcome.guides.friendships_description') }}</p>
@@ -193,6 +193,10 @@
                             <a href="{{ \App\Support\PublicUrls::soloVisitPath($seo['locale']) }}" class="rounded-3xl border border-border/70 bg-card p-6 shadow-sm transition-transform hover:-translate-y-0.5">
                                 <h3 class="font-accent text-xl font-bold">{{ __('common.welcome.guides.solo_visit') }}</h3>
                                 <p class="mt-3 leading-7 text-muted-foreground">{{ __('common.welcome.guides.solo_visit_description') }}</p>
+                            </a>
+                            <a href="{{ \App\Support\PublicUrls::faqPath($seo['locale']) }}" data-test="landing-faq" class="rounded-3xl border border-border/70 bg-card p-6 shadow-sm transition-transform hover:-translate-y-0.5">
+                                <h3 class="font-accent text-xl font-bold">{{ __('common.welcome.guides.faq') }}</h3>
+                                <p class="mt-3 leading-7 text-muted-foreground">{{ __('common.welcome.guides.faq_description') }}</p>
                             </a>
                         </div>
                     </section>
@@ -233,7 +237,8 @@
                     </section>
 
                     <p class="mx-auto mt-10 max-w-2xl text-center text-xs leading-5 text-muted-foreground">{{ __('common.brand.disclaimer') }}</p>
-                    <footer class="mt-6 flex justify-center gap-4 text-xs text-muted-foreground">
+                    <footer class="mt-6 flex flex-wrap justify-center gap-x-4 gap-y-2 text-xs text-muted-foreground">
+                        <a data-test="landing-faq-footer" class="underline underline-offset-4" href="{{ \App\Support\PublicUrls::faqPath($seo['locale']) }}">{{ __('common.welcome.guides.faq') }}</a>
                         <a data-test="legal-terms" class="underline underline-offset-4" href="{{ \App\Support\PublicUrls::termsPath($seo['locale']) }}">{{ __('common.legal.terms') }}</a>
                         <a data-test="legal-privacy" class="underline underline-offset-4" href="{{ \App\Support\PublicUrls::privacyPath($seo['locale']) }}">{{ __('common.legal.privacy') }}</a>
                     </footer>
