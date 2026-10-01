@@ -61,22 +61,29 @@
                         </span>
                         <span class="font-accent text-lg font-bold tracking-tight">{{ __('common.brand.name') }}</span>
                     </div>
-                    <nav data-test="locale-switcher" aria-labelledby="landing-language-label" class="flex items-center gap-1 self-end rounded-xl border bg-card p-1 sm:self-auto">
-                        <span id="landing-language-label" class="sr-only">{{ __('common.locale.label') }}</span>
-                        @foreach (['fr', 'en'] as $locale)
-                            <a
-                                href="{{ route('landing.show', ['locale' => $locale], false) }}"
-                                hreflang="{{ $locale }}"
-                                lang="{{ $locale }}"
-                                data-test="locale-{{ $locale }}"
-                                @class([
-                                    'inline-flex min-h-10 min-w-10 items-center justify-center rounded-lg px-3 text-sm font-semibold transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none',
-                                    'bg-primary text-primary-foreground' => $seo['locale'] === $locale,
-                                    'text-muted-foreground hover:bg-muted hover:text-foreground' => $seo['locale'] !== $locale,
-                                ])
-                            >{{ strtoupper($locale) }}</a>
-                        @endforeach
-                    </nav>
+                    <div class="flex items-center justify-end gap-3 self-end sm:self-auto">
+                        <a
+                            href="{{ \App\Support\PublicUrls::faqPath($seo['locale']) }}"
+                            data-test="landing-faq-header"
+                            class="inline-flex min-h-10 items-center rounded-lg px-2 text-sm font-semibold text-muted-foreground underline-offset-4 transition-colors hover:text-foreground hover:underline focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+                        >{{ __('common.welcome.guides.faq') }}</a>
+                        <nav data-test="locale-switcher" aria-labelledby="landing-language-label" class="flex items-center gap-1 rounded-xl border bg-card p-1">
+                            <span id="landing-language-label" class="sr-only">{{ __('common.locale.label') }}</span>
+                            @foreach (['fr', 'en'] as $locale)
+                                <a
+                                    href="{{ route('landing.show', ['locale' => $locale], false) }}"
+                                    hreflang="{{ $locale }}"
+                                    lang="{{ $locale }}"
+                                    data-test="locale-{{ $locale }}"
+                                    @class([
+                                        'inline-flex min-h-10 min-w-10 items-center justify-center rounded-lg px-3 text-sm font-semibold transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none',
+                                        'bg-primary text-primary-foreground' => $seo['locale'] === $locale,
+                                        'text-muted-foreground hover:bg-muted hover:text-foreground' => $seo['locale'] !== $locale,
+                                    ])
+                                >{{ strtoupper($locale) }}</a>
+                            @endforeach
+                        </nav>
+                    </div>
                 </header>
 
                 <main id="contenu-principal" class="flex flex-1 flex-col py-12 sm:py-16 lg:py-20">
