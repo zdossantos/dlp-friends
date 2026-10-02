@@ -287,7 +287,7 @@ test('admin configures tutorial avatars and sees member progress', function () {
         'like_display_name_en' => 'Browser Alex',
     ]);
 
-    visit('/admin/avatars')
+    visit('/admin/avatars')->on()->mobile()
         ->assertDisabled("[aria-label=\"Archiver {$passAvatar->name}\"]")
         ->assertDisabled("[aria-label=\"Supprimer {$likeAvatar->name}\"]")
         ->assertSee('Utilisé par le tutoriel');
@@ -323,6 +323,7 @@ test('the avatar catalog renders images color gradients and admin controls', fun
         )
         ->assertPresent('[aria-label="Archiver Aurore"]')
         ->assertPresent('[aria-label="Supprimer Aurore"]')
+        ->assertScript('document.documentElement.scrollWidth <= window.innerWidth', true)
         ->assertNoJavaScriptErrors();
 });
 
@@ -331,7 +332,7 @@ test('the admin dashboard renders account statistics and recent registrations', 
     $admin = User::factory()->withProfile()->admin()->create();
     $this->actingAs($admin);
 
-    visit('/dashboard')
+    visit('/dashboard')->on()->mobile()
         ->assertSee('Administration')
         ->assertSee('Comptes créés')
         ->assertSee('Comptes actifs')
@@ -339,6 +340,7 @@ test('the admin dashboard renders account statistics and recent registrations', 
         ->assertSee('Profils complétés')
         ->assertSee('recent@example.test')
         ->assertSee('Profil à compléter')
+        ->assertScript('document.documentElement.scrollWidth <= window.innerWidth', true)
         ->assertNoJavaScriptErrors();
 });
 
@@ -573,7 +575,8 @@ test('an admin manages interests through confirmations and generated actions', f
     $admin = User::factory()->withProfile()->admin()->create();
     $this->actingAs($admin);
 
-    $page = visit('/admin/interests')
+    $page = visit('/admin/interests')->on()->mobile()
+        ->assertScript('document.documentElement.scrollWidth <= window.innerWidth', true)
         ->clear('max_selections')
         ->fill('max_selections', '7')
         ->click('Enregistrer')

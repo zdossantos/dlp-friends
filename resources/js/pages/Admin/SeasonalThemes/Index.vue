@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Form, Head } from '@inertiajs/vue3';
 import { Moon, Sparkles, Sun } from '@lucide/vue';
+import AdminPageHeader from '@/components/admin/AdminPageHeader.vue';
 import InputError from '@/components/InputError.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -40,17 +41,10 @@ const hasManualTheme = (): boolean =>
     <Head :title="t('administration.seasonal_themes.title')" />
 
     <main class="flex min-w-0 flex-1 flex-col gap-6 p-4 sm:p-6">
-        <header>
-            <p class="text-sm font-medium text-primary">
-                {{ t('administration.title') }}
-            </p>
-            <h1 class="text-3xl font-semibold tracking-tight">
-                {{ t('administration.seasonal_themes.title') }}
-            </h1>
-            <p class="mt-1 max-w-3xl text-muted-foreground">
-                {{ t('administration.seasonal_themes.description') }}
-            </p>
-        </header>
+        <AdminPageHeader
+            :title="t('administration.seasonal_themes.title')"
+            :description="t('administration.seasonal_themes.description')"
+        />
 
         <Card>
             <CardHeader>
