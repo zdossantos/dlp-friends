@@ -721,6 +721,44 @@ test('shared workspace switcher exposes authorized destinations and marks the cu
         ->assertNoJavaScriptErrors();
 });
 
+test('workspace switcher exposes exactly the workspaces authorized by the role matrix', function (
+    array $roles,
+    string $path,
+    array $expectedDestinations,
+) {
+    $account = User::factory()->withProfile()->create();
+    $roleIds = Role::query()
+        ->whereIn('name', $roles)
+        ->pluck('id');
+    $account->roles()->sync($roleIds);
+    $account->refresh();
+    $this->actingAs($account);
+
+    $page = visit($path)->on()->mobile();
+
+    if (count($expectedDestinations) === 1) {
+        $page->assertMissing('[data-test="workspace-switcher-trigger"]')
+            ->assertNoJavaScriptErrors();
+
+        return;
+    }
+
+    $page->click('[data-test="workspace-switcher-trigger"]')
+        ->assertSee('Changer d’espace')
+        ->assertCount(
+            '[data-test^="workspace-"][data-test$="-link"]',
+            count($expectedDestinations),
+        )->assertNoJavaScriptErrors();
+})->with([
+    'member only' => [['user'], '/discover', ['member']],
+    'partner only' => [['partner'], '/partner/profile', ['partner']],
+    'administrator only' => [['admin'], '/dashboard', ['admin']],
+    'member and partner' => [['user', 'partner'], '/discover', ['member', 'partner']],
+    'member and administrator' => [['user', 'admin'], '/dashboard', ['member', 'admin']],
+    'partner and administrator' => [['partner', 'admin'], '/dashboard', ['partner', 'admin']],
+    'all workspaces' => [['user', 'partner', 'admin'], '/dashboard', ['member', 'partner', 'admin']],
+]);
+
 test('partner sidebar navigation disappears on the first render after role removal', function () {
     $admin = User::factory()->withProfile()->admin()->partner()->create();
     $admin->profile?->update(['display_name' => 'Admin partenaire']);
