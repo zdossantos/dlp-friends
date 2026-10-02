@@ -123,8 +123,12 @@ test('single-role administrator can open the account menu and log out with the k
 
     visit('/dashboard')->resize(320, 700)
         ->assertPresent('[data-test="admin-account-menu-trigger"]')
+        ->assertScript(
+            "document.querySelector('[data-test=admin-account-header]').getBoundingClientRect().bottom <= document.querySelector('[data-test=admin-shell-content]').getBoundingClientRect().top",
+            true,
+        )
         ->keys('[data-test="admin-account-menu-trigger"]', 'Enter')
-        ->assertSee('Réglages')
+        ->assertDontSee('Réglages')
         ->assertPresent('[data-test="logout-button"]')
         ->keys('[data-test="logout-button"]', 'Enter')
         ->assertPathIs('/en')

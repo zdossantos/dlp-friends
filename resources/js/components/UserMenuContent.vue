@@ -15,6 +15,7 @@ import type { User } from '@/types';
 
 type Props = {
     user: User;
+    showSettings?: boolean;
 };
 
 const handleLogout = () => {
@@ -22,7 +23,9 @@ const handleLogout = () => {
     router.flushAll();
 };
 
-defineProps<Props>();
+withDefaults(defineProps<Props>(), {
+    showSettings: true,
+});
 const { t } = useTranslations();
 </script>
 
@@ -33,7 +36,7 @@ const { t } = useTranslations();
         </div>
     </DropdownMenuLabel>
     <DropdownMenuSeparator />
-    <DropdownMenuGroup>
+    <DropdownMenuGroup v-if="showSettings">
         <DropdownMenuItem :as-child="true">
             <Link class="block w-full cursor-pointer" :href="edit()" prefetch>
                 <Settings class="mr-2 h-4 w-4" />
@@ -41,7 +44,7 @@ const { t } = useTranslations();
             </Link>
         </DropdownMenuItem>
     </DropdownMenuGroup>
-    <DropdownMenuSeparator />
+    <DropdownMenuSeparator v-if="showSettings" />
     <DropdownMenuItem :as-child="true">
         <Link
             class="block w-full cursor-pointer"
