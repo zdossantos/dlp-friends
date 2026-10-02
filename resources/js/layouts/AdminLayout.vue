@@ -34,7 +34,7 @@ watch(
 
 <template>
     <div
-        class="relative min-h-svh w-full max-w-full min-w-0 overflow-x-hidden bg-background text-foreground"
+        class="relative min-h-svh w-full max-w-full min-w-0 overflow-x-clip bg-background text-foreground"
     >
         <div
             aria-hidden="true"

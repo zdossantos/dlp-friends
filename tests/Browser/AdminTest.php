@@ -121,12 +121,24 @@ test('single-role administrator can open the account menu and log out with the k
     $admin->roles()->sync([$adminRole->id]);
     $this->actingAs($admin);
 
-    visit('/dashboard')->resize(320, 700)
+    $page = visit('/dashboard')->resize(320, 700)
         ->assertPresent('[data-test="admin-account-menu-trigger"]')
+        ->assertAttribute(
+            '[data-test="admin-account-menu-trigger"]',
+            'aria-label',
+            'Menu du compte',
+        )
         ->assertScript(
             "document.querySelector('[data-test=admin-account-header]').getBoundingClientRect().bottom <= document.querySelector('[data-test=admin-shell-content]').getBoundingClientRect().top",
             true,
-        )
+        );
+
+    $page->script("document.body.style.minHeight = '200vh'; window.scrollTo(0, 500)");
+
+    $page->assertScript(
+        "Math.round(document.querySelector('[data-test=admin-account-header]').getBoundingClientRect().top)",
+        0,
+    )
         ->keys('[data-test="admin-account-menu-trigger"]', 'Enter')
         ->assertDontSee('Réglages')
         ->assertPresent('[data-test="logout-button"]')

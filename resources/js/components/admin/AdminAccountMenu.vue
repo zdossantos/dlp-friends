@@ -33,7 +33,7 @@ const { t } = useTranslations();
                     size="icon"
                     class="size-11 rounded-full bg-card/95 p-1 shadow-md backdrop-blur"
                     data-test="admin-account-menu-trigger"
-                    :aria-label="t('account.settings.title')"
+                    :aria-label="t('account.menu')"
                 >
                     <Avatar class="size-8 overflow-hidden rounded-full">
                         <AvatarFallback
