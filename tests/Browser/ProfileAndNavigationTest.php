@@ -743,12 +743,25 @@ test('workspace switcher exposes exactly the workspaces authorized by the role m
         return;
     }
 
-    $page->click('[data-test="workspace-switcher-trigger"]')
-        ->assertSee('Changer d’espace')
-        ->assertCount(
-            '[data-test^="workspace-"][data-test$="-link"]',
-            count($expectedDestinations),
-        )->assertNoJavaScriptErrors();
+    $expectedTestIds = array_map(
+        fn (string $destination): string => 'workspace-'.$destination.'-link',
+        $expectedDestinations,
+    );
+    sort($expectedTestIds);
+
+    $currentWorkspace = str_starts_with($path, '/admin') || $path === '/dashboard'
+        ? 'admin'
+        : (str_starts_with($path, '/partner') ? 'partner' : 'member');
+
+    $page->assertAttribute(
+        '[data-test="workspace-switcher-trigger"]',
+        'data-workspaces',
+        implode(',', $expectedTestIds),
+    )->assertAttribute(
+        '[data-test="workspace-switcher-trigger"]',
+        'data-current-workspace',
+        'workspace-'.$currentWorkspace.'-link',
+    )->assertNoJavaScriptErrors();
 })->with([
     'member only' => [['user'], '/discover', ['member']],
     'partner only' => [['partner'], '/partner/profile', ['partner']],

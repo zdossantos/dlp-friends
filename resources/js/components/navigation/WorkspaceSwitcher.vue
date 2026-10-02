@@ -66,6 +66,18 @@ const destinations = computed<WorkspaceDestination[]>(() =>
         },
     ].filter((destination) => roles.value.includes(destination.role)),
 );
+const destinationTestIds = computed(() =>
+    destinations.value
+        .map((destination) => destination.testId)
+        .sort()
+        .join(','),
+);
+const currentDestinationTestId = computed(
+    () =>
+        destinations.value.find(
+            (destination) => destination.role === currentRole.value,
+        )?.testId,
+);
 </script>
 
 <template>
@@ -74,6 +86,8 @@ const destinations = computed<WorkspaceDestination[]>(() =>
             <button
                 type="button"
                 data-test="workspace-switcher-trigger"
+                :data-workspaces="destinationTestIds"
+                :data-current-workspace="currentDestinationTestId"
                 :aria-label="t('common.workspace_switcher.trigger')"
                 class="relative grid size-12 place-items-center rounded-2xl text-muted-foreground transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
             >

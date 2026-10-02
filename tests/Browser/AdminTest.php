@@ -115,6 +115,22 @@ test('admin navigation hides the workspace switcher for a single-role administra
         ->assertNoJavaScriptErrors();
 });
 
+test('single-role administrator can open the account menu and log out with the keyboard on mobile', function () {
+    $admin = User::factory()->withProfile()->admin()->create();
+    $adminRole = Role::query()->where('name', RoleName::Admin)->firstOrFail();
+    $admin->roles()->sync([$adminRole->id]);
+    $this->actingAs($admin);
+
+    visit('/dashboard')->resize(320, 700)
+        ->assertPresent('[data-test="admin-account-menu-trigger"]')
+        ->keys('[data-test="admin-account-menu-trigger"]', 'Enter')
+        ->assertSee('Réglages')
+        ->assertPresent('[data-test="logout-button"]')
+        ->keys('[data-test="logout-button"]', 'Enter')
+        ->assertPathIs('/en')
+        ->assertNoJavaScriptErrors();
+});
+
 test('partner statistics stay readable and private on a mobile screen', function () {
     $partner = User::factory()->partner()->create();
     $profile = PartnerProfile::factory()->for($partner)->published()->create();
