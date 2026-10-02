@@ -252,6 +252,8 @@ test('admin configures tutorial avatars and sees member progress', function () {
 
     visit('/admin/onboarding')
         ->assertSee('Tutoriel produit')
+        ->assertPresent('[data-test="onboarding-progress-table"]')
+        ->assertMissing('[data-test="onboarding-progress-cards"]')
         ->assertSee('Taux de complétion')
         ->assertSee('tutorial@example.test')
         ->assertSee('Carte à découvrir')
@@ -342,10 +344,13 @@ test('the member catalog exposes statistics and confirms immediate deletion', fu
 
     $page = visit('/admin/members')->on()->mobile()
         ->assertSee('Membres')
+        ->assertPresent('[data-test="admin-member-cards"]')
+        ->assertMissing('[data-test="admin-members-table"]')
         ->assertSee('member-to-delete@example.test')
         ->assertSee('personnes bloquées')
         ->assertCount('[data-test="delete-member-trigger"]', 1)
         ->assertCount('[data-test="start-member-conversation"]', 1)
+        ->assertScript('document.documentElement.scrollWidth <= window.innerWidth', true)
         ->assertNoJavaScriptErrors();
 
     $page->click('[data-test="delete-member-trigger"]')
@@ -369,6 +374,7 @@ test('an admin confirms partner roles assignment and removal from the member cat
 
     $page = visit('/admin/members')->resize($width, $height)
         ->assertSee('roles@example.test')
+        ->assertPresent($width >= 1024 ? '[data-test="admin-members-table"]' : '[data-test="admin-member-cards"]')
         ->assertCount('[data-test="manage-member-roles-trigger"]', 1)
         ->keys('[data-test="manage-member-roles-trigger"]', 'Enter')
         ->assertPresent('[role="dialog"]')

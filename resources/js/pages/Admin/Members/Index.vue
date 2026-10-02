@@ -1,7 +1,10 @@
 <script setup lang="ts">
 import { Head, Link, router } from '@inertiajs/vue3';
 import { MessageCircle } from '@lucide/vue';
+import { useMediaQuery } from '@vueuse/core';
 import { ref, watch } from 'vue';
+import AdminMemberCard from '@/components/admin/AdminMemberCard.vue';
+import AdminPageHeader from '@/components/admin/AdminPageHeader.vue';
 import DeleteMemberDialog from '@/components/admin/DeleteMemberDialog.vue';
 import ManageMemberRolesDialog from '@/components/admin/ManageMemberRolesDialog.vue';
 import MatchDialog from '@/components/discovery/MatchDialog.vue';
@@ -45,6 +48,7 @@ const props = defineProps<{
 }>();
 const { formatDate, t } = useTranslations();
 const search = ref(props.filters.search);
+const isDesktop = useMediaQuery('(min-width: 1024px)');
 const visibleCreatedMatch = ref(props.createdMatch);
 const matchDialogOpen = ref(props.createdMatch !== null);
 
@@ -78,17 +82,10 @@ function date(value: string | null): string {
 <template>
     <Head :title="t('administration.members.title')" />
     <main class="flex flex-1 flex-col gap-6 p-4 sm:p-6">
-        <header>
-            <p class="text-sm font-medium text-primary">
-                {{ t('administration.title') }}
-            </p>
-            <h1 class="text-3xl font-semibold tracking-tight">
-                {{ t('administration.members.title') }}
-            </h1>
-            <p class="mt-1 text-muted-foreground">
-                {{ t('administration.members.description') }}
-            </p>
-        </header>
+        <AdminPageHeader
+            :title="t('administration.members.title')"
+            :description="t('administration.members.description')"
+        />
         <Card>
             <CardHeader
                 ><CardTitle>{{
@@ -108,8 +105,23 @@ function date(value: string | null): string {
                         t('administration.members.search')
                     }}</Button>
                 </form>
-                <div class="overflow-x-auto">
-                    <table class="w-full min-w-[90rem] text-left text-sm">
+                <div
+                    v-if="!isDesktop"
+                    class="grid gap-3"
+                    data-test="admin-member-cards"
+                >
+                    <AdminMemberCard
+                        v-for="member in members.data"
+                        :key="member.id"
+                        :member="member"
+                        @start-conversation="startConversation"
+                    />
+                </div>
+                <div v-else class="overflow-x-auto">
+                    <table
+                        class="w-full min-w-[90rem] text-left text-sm"
+                        data-test="admin-members-table"
+                    >
                         <thead class="border-b text-muted-foreground">
                             <tr>
                                 <th class="p-2">
