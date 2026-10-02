@@ -171,15 +171,21 @@ test('admin partner statistics expose operational counts and retry in English', 
     }
     $this->actingAs($admin);
 
-    visit('/admin/partner-statistics')
-        ->assertSee('Partner statistics')
+    $page = visit('/admin/partner-statistics')->on()->mobile()
+        ->assertSee('Partner announcement statistics')
         ->assertSee('Operational campaign')
         ->assertSee('Pending')
         ->assertSee('Failed')
         ->assertSee('Skipped')
         ->assertPresent("[data-test=\"retry-partner-announcement-{$announcement->id}\"]")
-        ->assertPresent('a[href="/partner/statistics"]')
+        ->assertPresent('[data-test="partner-statistics-table"][data-layout="cards"]')
+        ->assertScript('document.documentElement.scrollWidth <= window.innerWidth', true)
+        ->assertPresent('[data-test="workspace-switcher-trigger"]')
         ->assertNoJavaScriptErrors();
+
+    $page->resize(1440, 900)
+        ->assertPresent('[data-test="partner-statistics-table"][data-layout="table"]')
+        ->assertMissing('[data-test="partner-statistics-card"]');
 });
 
 test('an admin reviews publishes orders and unpublishes partner profiles accessibly', function () {

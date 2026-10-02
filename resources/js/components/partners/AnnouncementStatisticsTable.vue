@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Form } from '@inertiajs/vue3';
 import { RotateCcw, Send } from '@lucide/vue';
+import { useMediaQuery } from '@vueuse/core';
 import InputError from '@/components/InputError.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -26,6 +27,7 @@ withDefaults(
 );
 
 const { formatDate, formatNumber, t } = useTranslations();
+const isDesktop = useMediaQuery('(min-width: 1024px)');
 
 const statusKeys: Record<PartnerAnnouncementStatus, TranslationKey> = {
     draft: 'partners.announcements.status.draft',
@@ -59,8 +61,157 @@ function canRetry(status: PartnerAnnouncementStatus): boolean {
     </p>
 
     <div
+        v-else-if="!isDesktop"
+        data-test="partner-statistics-table"
+        data-layout="cards"
+        class="grid min-w-0 gap-3"
+        :aria-label="caption"
+    >
+        <article
+            v-for="announcement in announcements"
+            :key="announcement.id"
+            data-test="partner-statistics-card"
+            class="min-w-0 rounded-xl border bg-card p-4 text-sm"
+        >
+            <p v-if="showOperations" class="break-words text-muted-foreground">
+                {{
+                    announcement.partner_name ??
+                    t('administration.partner_statistics.unknown_partner')
+                }}
+            </p>
+            <h3 class="text-base font-semibold break-words">
+                {{ announcement.title }}
+            </h3>
+            <Badge variant="secondary" class="mt-2">{{
+                t(statusKeys[announcement.status])
+            }}</Badge>
+            <dl class="mt-4 grid grid-cols-2 gap-3">
+                <div>
+                    <dt class="text-muted-foreground">
+                        {{ t('partners.statistics.prepared') }}
+                    </dt>
+                    <dd class="font-medium tabular-nums">
+                        {{ formatNumber(announcement.prepared) }}
+                    </dd>
+                </div>
+                <div>
+                    <dt class="text-muted-foreground">
+                        {{ t('partners.statistics.delivered') }}
+                    </dt>
+                    <dd class="font-medium tabular-nums">
+                        {{ formatNumber(announcement.delivered) }}
+                    </dd>
+                </div>
+                <div>
+                    <dt class="text-muted-foreground">
+                        {{ t('partners.statistics.read') }}
+                    </dt>
+                    <dd class="font-medium tabular-nums">
+                        {{ formatNumber(announcement.read) }} ·
+                        {{ formatRate(announcement.read_rate) }}
+                    </dd>
+                </div>
+                <div>
+                    <dt class="text-muted-foreground">
+                        {{ t('partners.statistics.dismissed') }}
+                    </dt>
+                    <dd class="font-medium tabular-nums">
+                        {{ formatNumber(announcement.dismissed) }} ·
+                        {{ formatRate(announcement.dismiss_rate) }}
+                    </dd>
+                </div>
+                <div>
+                    <dt class="text-muted-foreground">
+                        {{ t('partners.statistics.unique_clicks') }}
+                    </dt>
+                    <dd class="font-medium tabular-nums">
+                        {{ formatNumber(announcement.unique_clicks) }} ·
+                        {{ formatRate(announcement.unique_click_rate) }}
+                    </dd>
+                </div>
+                <div>
+                    <dt class="text-muted-foreground">
+                        {{ t('partners.statistics.total_clicks') }}
+                    </dt>
+                    <dd class="font-medium tabular-nums">
+                        {{ formatNumber(announcement.total_clicks) }}
+                    </dd>
+                </div>
+                <template v-if="showOperations">
+                    <div>
+                        <dt class="text-muted-foreground">
+                            {{ t('administration.partner_statistics.pending') }}
+                        </dt>
+                        <dd class="font-medium tabular-nums">
+                            {{ formatNumber(announcement.pending ?? 0) }}
+                        </dd>
+                    </div>
+                    <div>
+                        <dt class="text-muted-foreground">
+                            {{ t('administration.partner_statistics.failed') }}
+                        </dt>
+                        <dd class="font-medium tabular-nums">
+                            {{ formatNumber(announcement.failed ?? 0) }}
+                        </dd>
+                    </div>
+                    <div>
+                        <dt class="text-muted-foreground">
+                            {{ t('administration.partner_statistics.skipped') }}
+                        </dt>
+                        <dd class="font-medium tabular-nums">
+                            {{ formatNumber(announcement.skipped ?? 0) }}
+                        </dd>
+                    </div>
+                </template>
+            </dl>
+            <div v-if="showOperations" class="mt-4">
+                <Form
+                    v-if="announcement.status === 'approved'"
+                    v-bind="dispatch.form(announcement.id)"
+                    :options="{ preserveScroll: true }"
+                    v-slot="{ processing }"
+                >
+                    <Button
+                        type="submit"
+                        class="min-h-11 w-full"
+                        :data-test="`dispatch-partner-announcement-${announcement.id}`"
+                        :disabled="
+                            processing || Boolean(announcement.next_dispatch_at)
+                        "
+                    >
+                        <Spinner v-if="processing" /><Send
+                            v-else
+                            aria-hidden="true"
+                        />{{ t('administration.partner_statistics.dispatch') }}
+                    </Button>
+                </Form>
+                <Form
+                    v-else-if="canRetry(announcement.status)"
+                    v-bind="retry.form(announcement.id)"
+                    :options="{ preserveScroll: true }"
+                    v-slot="{ processing }"
+                >
+                    <Button
+                        type="submit"
+                        variant="outline"
+                        class="min-h-11 w-full"
+                        :data-test="`retry-partner-announcement-${announcement.id}`"
+                        :disabled="processing"
+                    >
+                        <Spinner v-if="processing" /><RotateCcw
+                            v-else
+                            aria-hidden="true"
+                        />{{ t('administration.partner_statistics.retry') }}
+                    </Button>
+                </Form>
+            </div>
+        </article>
+    </div>
+
+    <div
         v-else
         data-test="partner-statistics-table"
+        data-layout="table"
         role="region"
         :aria-label="caption"
         tabindex="0"
