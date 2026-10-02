@@ -169,7 +169,7 @@ function canRetry(status: PartnerAnnouncementStatus): boolean {
                     v-if="announcement.status === 'approved'"
                     v-bind="dispatch.form(announcement.id)"
                     :options="{ preserveScroll: true }"
-                    v-slot="{ processing }"
+                    v-slot="{ errors, processing }"
                 >
                     <Button
                         type="submit"
@@ -178,12 +178,52 @@ function canRetry(status: PartnerAnnouncementStatus): boolean {
                         :disabled="
                             processing || Boolean(announcement.next_dispatch_at)
                         "
+                        :aria-busy="processing ? 'true' : undefined"
+                        :aria-describedby="
+                            errors.announcement || errors.destination_url
+                                ? `dispatch-error-${announcement.id}`
+                                : undefined
+                        "
                     >
                         <Spinner v-if="processing" /><Send
                             v-else
                             aria-hidden="true"
-                        />{{ t('administration.partner_statistics.dispatch') }}
+                        />{{
+                            processing
+                                ? t(
+                                      'administration.partner_statistics.dispatching',
+                                  )
+                                : t(
+                                      'administration.partner_statistics.dispatch',
+                                  )
+                        }}
                     </Button>
+                    <InputError
+                        :id="`dispatch-error-${announcement.id}`"
+                        :message="errors.announcement || errors.destination_url"
+                        class="mt-2"
+                    />
+                    <p
+                        v-if="announcement.next_dispatch_at"
+                        class="mt-2 text-sm text-destructive"
+                        role="alert"
+                    >
+                        {{
+                            t(
+                                'administration.partner_statistics.dispatch_available_at',
+                                {
+                                    date: formatDate(
+                                        announcement.next_dispatch_at,
+                                        {
+                                            dateStyle: 'full',
+                                            timeStyle: 'short',
+                                            timeZone: 'Europe/Paris',
+                                        },
+                                    ),
+                                },
+                            )
+                        }}
+                    </p>
                 </Form>
                 <Form
                     v-else-if="canRetry(announcement.status)"

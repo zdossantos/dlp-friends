@@ -759,16 +759,15 @@ test('workspace switcher exposes exactly the workspaces authorized by the role m
     'all workspaces' => [['user', 'partner', 'admin'], '/dashboard', ['member', 'partner', 'admin']],
 ]);
 
-test('partner sidebar navigation disappears on the first render after role removal', function () {
+test('partner workspace navigation disappears on the first render after role removal', function () {
     $admin = User::factory()->withProfile()->admin()->partner()->create();
     $admin->profile?->update(['display_name' => 'Admin partenaire']);
     $this->actingAs($admin);
 
     $page = visit('/dashboard')
-        ->assertSee('Espace partenaire')
-        ->assertSeeLink('Profil partenaire')
-        ->assertSeeLink('Annonces partenaire')
-        ->assertPresent('a[href="/partner/statistics"]')
+        ->click('[data-test="workspace-switcher-trigger"]')
+        ->assertPresent('[data-test="workspace-partner-link"]')
+        ->keys('[data-test="workspace-partner-link"]', 'Escape')
         ->click('[data-test="admin-partners-menu-trigger"]')
         ->assertPresent('a[href="/admin/partner-statistics"]');
 
@@ -776,10 +775,9 @@ test('partner sidebar navigation disappears on the first render after role remov
     $admin->roles()->detach($partnerRole);
 
     $page->navigate('/dashboard')
-        ->assertDontSee('Espace partenaire')
-        ->assertDontSeeLink('Profil partenaire')
-        ->assertDontSeeLink('Annonces partenaire')
-        ->assertMissing('a[href="/partner/statistics"]')
+        ->click('[data-test="workspace-switcher-trigger"]')
+        ->assertMissing('[data-test="workspace-partner-link"]')
+        ->keys('[data-test="workspace-admin-link"]', 'Escape')
         ->click('[data-test="admin-partners-menu-trigger"]')
         ->assertPresent('a[href="/admin/partner-statistics"]')
         ->assertNoJavaScriptErrors();

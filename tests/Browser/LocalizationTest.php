@@ -78,7 +78,13 @@ test('an English administrator sees translated catalog navigation and dashboard 
     visit('/admin/interests')
         ->assertSee('Add a world')
         ->assertSee('Selection limit')
-        ->assertSee('Back to profile')
+        ->assertAttribute(
+            '[data-test="admin-catalogues-menu-trigger"]',
+            'aria-label',
+            'Catalogues',
+        )
+        ->click('[data-test="admin-catalogues-menu-trigger"]')
+        ->assertSee('Favorite worlds')
         ->assertDontSee('Retour au profil')
         ->assertDontSee('intérêts')
         ->assertScript(

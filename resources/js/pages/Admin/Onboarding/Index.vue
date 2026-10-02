@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { Form, Head, Link } from '@inertiajs/vue3';
 import { useMediaQuery } from '@vueuse/core';
-import InputError from '@/components/InputError.vue';
 import AdminPageHeader from '@/components/admin/AdminPageHeader.vue';
 import OnboardingProgressCard from '@/components/admin/OnboardingProgressCard.vue';
+import InputError from '@/components/InputError.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
