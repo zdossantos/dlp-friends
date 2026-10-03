@@ -66,6 +66,7 @@ use App\Http\Controllers\Partner\ProfileSubmissionController as PartnerProfileSu
 use App\Http\Controllers\Partner\StatisticsController as PartnerStatisticsController;
 use App\Http\Controllers\PartnerAnnouncementClickController;
 use App\Http\Controllers\PartnerAnnouncementDismissController;
+use App\Http\Controllers\PassedProfileController;
 use App\Http\Controllers\PresenceHeartbeatController;
 use App\Http\Controllers\ProductOnboardingController;
 use App\Http\Controllers\PublicFaqController;
@@ -219,6 +220,9 @@ Route::middleware(['auth', 'verified', 'social'])->group(function (): void {
 
                 Route::get('discover', DiscoveryController::class)
                     ->name('discovery.index');
+                Route::get('discover/passed', [PassedProfileController::class, 'index'])->name('discovery.passed.index');
+                Route::get('discover/passed/{member}', [PassedProfileController::class, 'show'])->name('discovery.passed.show');
+                Route::post('discover/passed/{member}/like', [PassedProfileController::class, 'store'])->name('discovery.passed.like');
                 Route::post('discover/{target}/swipe', SwipeController::class)
                     ->name('discovery.swipe');
 

@@ -4,6 +4,7 @@ import { computed } from 'vue';
 
 const memberNavigationPaths = new Set([
     '/discover',
+    '/discover/passed',
     '/events',
     '/conversations',
     '/notifications',

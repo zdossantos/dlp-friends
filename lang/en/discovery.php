@@ -1,6 +1,21 @@
 <?php
 
 return [
+    'passed' => [
+        'network_error' => 'Unable to load profiles. Check your connection and try again.',
+        'server_error' => 'Unable to load profiles right now. Try again.',
+
+        'title' => 'Passed profiles',
+        'description' => 'Revisit profiles you passed and choose to discover them.',
+        'empty' => 'No passed profiles available',
+        'empty_description' => 'Available profiles you pass will appear here.',
+        'back' => 'Back to Explore',
+        'loading' => 'Loading profiles…',
+        'pagination' => 'Passed profiles pagination',
+        'previous' => 'Previous',
+        'next' => 'Next',
+        'page' => 'Page :page of :total',
+    ],
     'navigation' => 'Explore',
     'bottom_navigation' => 'Discover',
     'errors' => [

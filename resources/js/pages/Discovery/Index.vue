@@ -15,6 +15,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useMemberRealtimeContext } from '@/composables/useMemberRealtimeNotifications';
 import { useTranslations } from '@/composables/useTranslations';
 import { swipe } from '@/routes/discovery';
+import { index as passedProfiles } from '@/routes/discovery/passed';
 import { show as showProfile } from '@/routes/member-profile';
 import { show as showMember } from '@/routes/members';
 import type { DiscoveryMatch, DiscoveryProfile, SwipeDecision } from '@/types';
@@ -306,9 +307,16 @@ function retry(): void {
         class="mx-auto flex h-full min-h-0 w-full max-w-md flex-1 flex-col gap-3 overflow-visible px-4 pt-[max(0.75rem,env(safe-area-inset-top))] pb-4 sm:px-6 sm:pt-6"
     >
         <section class="shrink-0 space-y-0.5">
-            <h1 class="text-2xl font-semibold tracking-tight sm:text-3xl">
-                {{ t('discovery.page.title') }}
-            </h1>
+            <div class="flex flex-wrap items-center justify-between gap-2">
+                <h1 class="text-2xl font-semibold tracking-tight sm:text-3xl">
+                    {{ t('discovery.page.title') }}
+                </h1>
+                <Link
+                    :href="passedProfiles()"
+                    class="inline-flex min-h-11 items-center rounded-md text-sm font-medium text-primary underline underline-offset-4 focus-visible:ring-2 focus-visible:ring-ring"
+                    >{{ t('discovery.passed.title') }}</Link
+                >
+            </div>
             <p class="text-sm leading-5 text-muted-foreground">
                 {{ t('discovery.page.description') }}
             </p>

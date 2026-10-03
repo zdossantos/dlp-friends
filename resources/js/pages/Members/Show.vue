@@ -13,6 +13,8 @@ import type { PublicMember, VisitFrequency } from '@/types';
 const props = defineProps<{
     member: PublicMember;
     backHref: string;
+    likeHref?: string;
+    likeLabel?: string;
     canBlock: boolean;
     canLike: boolean;
     canUnblock: boolean;
@@ -75,7 +77,13 @@ function goBack(): void {
             :is-admin="member.is_admin"
         >
             <template #summary-actions>
-                <LikeMemberButton v-if="canLike" :member-id="member.id" />
+                <LikeMemberButton
+                    v-if="canLike"
+                    :member-id="member.id"
+                    :action-href="likeHref"
+                    :label="likeLabel"
+                    :return-href="backHref"
+                />
                 <UnblockMemberButton
                     v-if="canUnblock"
                     :member-id="member.id"

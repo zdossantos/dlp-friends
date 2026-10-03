@@ -147,7 +147,14 @@ même changement.
 - Il n'y a ni limite quotidienne de swipes, ni annulation libre dans le MVP. Un
   `pass` peut uniquement être remplacé par un `like` depuis une surface membre
   qui propose cette action ; le `like` obtenu reste irréversible.
-- Un profil passé ou liké n'est plus reproposé au même membre.
+- Un profil passé ou liké n'est plus reproposé au même membre. L’historique
+  personnel des profils passés réutilise uniquement les lignes `swipes` du
+  membre dont la décision reste `pass`, filtrées selon la disponibilité et
+  les blocages dans les deux sens. Il est paginé par 20, ordonné par
+  `created_at` décroissant puis `id` décroissant. Puisqu’un refus ne peut pas
+  être réécrit en refus, la création représente cette décision initiale ;
+  aucune date de refus distincte n’est stockée ni affichée. La conversion
+  en `like` suffit à retirer la ligne de cet historique.
 - La messagerie accepte uniquement du texte brut, limité à 2 000 caractères. Un J’aime est unique par paire `(message_id, user_id)` et son retrait ne modifie ni le message ni son état de lecture. Les pièces jointes, GIF, autres réactions, édition et suppression de message sont hors V1.
 - Les amorces de conversation sont localisées en français et en anglais dans la base, activables individuellement et sélectionnées par trois sans répétition pour un échange encore vide.
 - Un membre ne peut lire ou envoyer un message que dans une conversation liée à son match et non affectée par un blocage.
