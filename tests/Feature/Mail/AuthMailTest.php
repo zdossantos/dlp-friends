@@ -2,6 +2,29 @@
 
 use App\Mail\ResetPasswordMail;
 use App\Mail\VerifyEmailMail;
+use Illuminate\Support\Facades\Mail;
+
+test('auth email MIME contains a bare copyable fallback URL in both parts', function (string $locale, string $kind) {
+    $url = 'https://example.test/auth/synthetic?expires=1234567890&signature=synthetic';
+    config()->set('mail.default', 'array');
+    $mail = $kind === 'verification'
+        ? new VerifyEmailMail($url)
+        : new ResetPasswordMail('synthetic', $url);
+    Mail::to('synthetic@example.test')->send($mail->locale($locale));
+    $message = Mail::mailer()->getSymfonyTransport()->messages()->last()->getOriginalMessage();
+
+    expect($message->getTextBody())->toContain("\n{$url}\n")
+        ->not->toContain("[{$url}]({$url})");
+    $document = new DOMDocument;
+    @$document->loadHTML($message->getHtmlBody());
+    $links = [];
+    foreach ($document->getElementsByTagName('a') as $link) {
+        if ($link->getAttribute('href') === $url) {
+            $links[] = trim($link->textContent);
+        }
+    }
+    expect($links)->toHaveCount(2)->toContain($url);
+})->with(['fr', 'en'])->with(['verification', 'reset']);
 
 test('the verification email renders the french content and accessible fallback link', function () {
     $url = 'https://dlp-friends.test/email/verify/42/example-signature';

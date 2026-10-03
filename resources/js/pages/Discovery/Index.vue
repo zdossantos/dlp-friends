@@ -48,6 +48,11 @@ const retryAttempt = ref<{
     decision: SwipeDecision;
 } | null>(null);
 const pendingProfiles = ref<Map<number, DiscoveryProfile>>(new Map());
+const sendingDecision = ref(false);
+const decisionQueue: Array<{
+    targetUserId: number;
+    decision: SwipeDecision;
+}> = [];
 const exitingCards = ref<
     Array<{
         id: number;
@@ -77,23 +82,56 @@ watch(
 watch(
     () => props.suggestions,
     (suggestions) => {
-        if (suggestions === undefined) {
+        if (suggestions === undefined || sendingDecision.value) {
             return;
         }
 
-        optimisticSuggestions.value = [...suggestions];
-
-        const targetUserId = suggestions[0]?.userId ?? null;
+        reconcileSuggestions(suggestions);
 
         if (
             retryAttempt.value !== null &&
-            retryAttempt.value.targetUserId !== targetUserId
+            !suggestions.some(
+                (profile) =>
+                    profile.userId === retryAttempt.value?.targetUserId,
+            )
         ) {
             retryAttempt.value = null;
             errorMessage.value = null;
         }
     },
 );
+
+function reconcileSuggestions(suggestions: DiscoveryProfile[]): void {
+    const available = new Map(
+        suggestions.map((profile) => [profile.userId, profile]),
+    );
+    const retained = optimisticSuggestions.value.flatMap((profile) => {
+        const updated = available.get(profile.userId);
+        available.delete(profile.userId);
+
+        return updated && !dismissedProfileIds.value.has(profile.userId)
+            ? [updated]
+            : pendingProfiles.value.has(profile.userId) && updated
+              ? [updated]
+              : [];
+    });
+    optimisticSuggestions.value = [
+        ...retained,
+        ...[...available.values()].filter(
+            (profile) => !dismissedProfileIds.value.has(profile.userId),
+        ),
+    ];
+
+    // A queued decision can become unavailable before its request is sent.
+    for (let index = decisionQueue.length - 1; index >= 0; index--) {
+        const targetUserId = decisionQueue[index].targetUserId;
+
+        if (!suggestions.some((profile) => profile.userId === targetUserId)) {
+            decisionQueue.splice(index, 1);
+            pendingProfiles.value.delete(targetUserId);
+        }
+    }
+}
 
 function restorePendingProfile(targetUserId: number): void {
     const profile = pendingProfiles.value.get(targetUserId) ?? null;
@@ -144,7 +182,7 @@ function submit(decision: SwipeDecision, targetUserId?: number): void {
         return;
     }
 
-    retryAttempt.value = { targetUserId: resolvedTargetUserId, decision };
+    retryAttempt.value = null;
     errorMessage.value = null;
     pendingProfiles.value.set(resolvedTargetUserId, profile);
     pendingProfiles.value = new Map(pendingProfiles.value);
@@ -153,10 +191,44 @@ function submit(decision: SwipeDecision, targetUserId?: number): void {
         resolvedTargetUserId,
     ]);
     showExitingCard(profile, decision);
+    decisionQueue.push({ targetUserId: resolvedTargetUserId, decision });
+    sendNextDecision();
+}
+
+function failDecision(
+    targetUserId: number,
+    decision: SwipeDecision,
+    message: string,
+): void {
+    restorePendingProfile(targetUserId);
+
+    for (const queued of decisionQueue.splice(0)) {
+        restorePendingProfile(queued.targetUserId);
+    }
+
+    retryAttempt.value = { targetUserId, decision };
+    errorMessage.value = message;
+}
+
+function sendNextDecision(): void {
+    if (sendingDecision.value || decisionQueue.length === 0) {
+        return;
+    }
+
+    const { targetUserId, decision } = decisionQueue.shift()!;
+    sendingDecision.value = true;
+    const queue = optimisticSuggestions.value
+        .filter(
+            (profile) =>
+                profile.userId !== targetUserId &&
+                (!dismissedProfileIds.value.has(profile.userId) ||
+                    pendingProfiles.value.has(profile.userId)),
+        )
+        .map((profile) => profile.userId);
 
     router.post(
-        swipe(resolvedTargetUserId).url,
-        { decision },
+        swipe(targetUserId).url,
+        { decision, queue },
         {
             only: ['suggestions', 'match'],
             preserveState: true,
@@ -164,33 +236,52 @@ function submit(decision: SwipeDecision, targetUserId?: number): void {
             replace: true,
             async: true,
             showProgress: false,
-            onSuccess: () => {
-                pendingProfiles.value.delete(resolvedTargetUserId);
+            onSuccess: (page) => {
+                pendingProfiles.value.delete(targetUserId);
                 pendingProfiles.value = new Map(pendingProfiles.value);
-
-                if (retryAttempt.value?.targetUserId === resolvedTargetUserId) {
-                    retryAttempt.value = null;
-                }
+                reconcileSuggestions(
+                    (page.props.suggestions ?? []) as DiscoveryProfile[],
+                );
             },
             onError: (errors) => {
-                restorePendingProfile(resolvedTargetUserId);
-                errorMessage.value = String(
-                    errors.decision ??
-                        errors.target ??
-                        t('discovery.page.generic_error'),
+                failDecision(
+                    targetUserId,
+                    decision,
+                    String(
+                        errors.decision ??
+                            errors.target ??
+                            t('discovery.page.generic_error'),
+                    ),
                 );
             },
             onHttpException: () => {
-                restorePendingProfile(resolvedTargetUserId);
-                errorMessage.value = t('discovery.page.server_error');
+                failDecision(
+                    targetUserId,
+                    decision,
+                    t('discovery.page.server_error'),
+                );
 
                 return false;
             },
             onNetworkError: () => {
-                restorePendingProfile(resolvedTargetUserId);
-                errorMessage.value = t('discovery.page.network_error');
+                failDecision(
+                    targetUserId,
+                    decision,
+                    t('discovery.page.network_error'),
+                );
 
                 return false;
+            },
+            onCancel: () => {
+                failDecision(
+                    targetUserId,
+                    decision,
+                    t('discovery.page.network_error'),
+                );
+            },
+            onFinish: () => {
+                sendingDecision.value = false;
+                sendNextDecision();
             },
         },
     );
@@ -244,7 +335,10 @@ function retry(): void {
         </Alert>
 
         <section
-            v-if="suggestions === undefined"
+            v-if="
+                suggestions === undefined ||
+                (displayedSuggestions.length === 0 && sendingDecision)
+            "
             class="grid w-full max-w-md gap-4"
             aria-busy="true"
         >

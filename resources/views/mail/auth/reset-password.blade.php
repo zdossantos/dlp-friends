@@ -14,6 +14,6 @@
 <x-slot:subcopy>
 {{ __('common.mail.fallback_link') }}
 
-<span class="break-all">[{{ $resetUrl }}]({{ $resetUrl }})</span>
+<x-mail::fallback-link :url="$resetUrl" />
 </x-slot:subcopy>
 </x-mail::message>

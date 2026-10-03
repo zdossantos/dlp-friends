@@ -4,7 +4,10 @@ use App\Enums\RoleName;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Models\Role;
 use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
+
+uses(RefreshDatabase::class);
 
 test('an unknown url returns the localized Inertia not found page with a real 404 status', function (string $locale, string $message, string $destination) {
     $this->withCookie('locale', $locale)
