@@ -4,20 +4,15 @@ namespace App\Http\Requests;
 
 use App\Enums\SwipeDecision;
 use Illuminate\Contracts\Validation\ValidationRule;
-use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
-class StoreSwipeRequest extends FormRequest
+class StoreSwipeRequest extends DiscoveryRequest
 {
-    public function authorize(): bool
-    {
-        return true;
-    }
-
     /** @return array<string, ValidationRule|array<mixed>|string> */
     public function rules(): array
     {
         return [
+            ...parent::rules(),
             'decision' => ['required', Rule::enum(SwipeDecision::class)],
         ];
     }

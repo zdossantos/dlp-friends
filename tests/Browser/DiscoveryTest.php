@@ -1,6 +1,7 @@
 <?php
 
 use App\Actions\CreateSwipe;
+use App\Contracts\DiscoveryTieBreaker;
 use App\Enums\SwipeDecision;
 use App\Models\Interest;
 use App\Models\MemberMatch;
@@ -47,6 +48,33 @@ function renderedContrastIsAtLeastScript(string $backgroundSelector, string $for
 }
 
 beforeEach(fn () => Storage::fake('local'));
+
+test('decisions preserve the loaded preview order and replenish without duplicates', function () {
+    $this->app->bind(DiscoveryTieBreaker::class, fn () => new class implements DiscoveryTieBreaker
+    {
+        public function rank(int $profileId): int
+        {
+            return Swipe::query()->exists() ? -$profileId : $profileId;
+        }
+    });
+    $actor = discoveryMember('Alice');
+    $actor->profile->update(['visit_frequency' => null]);
+    foreach (['Basile', 'Chloé', 'David', 'Emma', 'Farid', 'Gabriel', 'Hugo'] as $name) {
+        discoveryMember($name)->profile->update(['visit_frequency' => null]);
+    }
+    $this->actingAs($actor);
+
+    $page = visit('/discover')->assertCount('[data-test="discovery-card-stack-item"]', 5);
+    $page->assertScript("[...document.querySelectorAll('[data-test=discovery-card-stack-item] [data-test=discovery-identity] h2')].map(el => el.textContent.trim())", ['Basile', 'Chloé', 'David', 'Emma', 'Farid']);
+    $page->click('[aria-label="Passer ce profil"]');
+    $page->assertCount('[data-test="discovery-card-stack-item"]', 5)
+        ->assertScript("[...document.querySelectorAll('[data-test=discovery-card-stack-item] [data-test=discovery-identity] h2')].map(el => el.textContent.trim())", ['Chloé', 'David', 'Emma', 'Farid', 'Hugo']);
+    $page->click('[aria-label="Découvrir ce profil"]');
+    $page->assertCount('[data-test="discovery-card-stack-item"]', 5)
+        ->assertScript("[...document.querySelectorAll('[data-test=discovery-card-stack-item] [data-test=discovery-identity] h2')].map(el => el.textContent.trim())", ['David', 'Emma', 'Farid', 'Hugo', 'Gabriel'])
+        ->assertNoJavaScriptErrors();
+    $this->assertDatabaseCount('swipes', 2);
+});
 
 test('member pages do not expose public legal navigation', function () {
     $this->actingAs(discoveryMember('Alice'));
@@ -401,21 +429,27 @@ test('a discovery decision optimistically reveals the next card before the reque
             resolve(true);
         }));
     JS);
-    $page->assertScript('window.__swipeRequestCount', 2)
+    $page->assertScript('window.__swipeRequestCount', 1)
         ->assertScript('window.__optimisticCardChanged', true)
         ->assertScript('window.__optimisticNextCardLocked', false)
         ->assertScript('window.__likeExitCreated', true);
 
     $page->script(<<<'JS'
-        window.__pendingOptimisticSwipes.forEach(({ request, body }) => {
-            window.__realOptimisticXhrSend.call(request, body);
-        });
+        const { request, body } = window.__pendingOptimisticSwipes.shift();
+        window.__realOptimisticXhrSend.call(request, body);
+        true;
+    JS);
+    $page->assertScript('window.__swipeRequestCount', 2);
+    $page->script(<<<'JS'
+        const { request, body } = window.__pendingOptimisticSwipes.shift();
+        window.__realOptimisticXhrSend.call(request, body);
         true;
     JS);
     $page->assertNotPresent(
         '[data-test=discovery-card-stack-item]:not([aria-hidden])',
-    )
+    )->assertSee('Tu as exploré tous les profils disponibles')
         ->assertNoJavaScriptErrors();
+    expect(Swipe::query()->where('actor_user_id', $actor->id)->count())->toBe(2);
 });
 
 test('pointer gestures follow the card and enforce the horizontal threshold', function () {
@@ -877,6 +911,47 @@ test('a network failure keeps the original decision available for retry', functi
         'target_user_id' => $target->id,
         'decision' => SwipeDecision::Like->value,
     ]);
+});
+
+test('a failed request restores unsent rapid decisions in their original order', function () {
+    $actor = discoveryMember('Alice');
+    discoveryMember('Basile');
+    discoveryMember('Chloé');
+    discoveryMember('David');
+    $this->actingAs($actor);
+    $page = visit('/discover')->assertSee('Basile');
+    $page->script(<<<'JS'
+        window.__initialRapidOrder = [...document.querySelectorAll('[data-test=discovery-card-stack-item] [data-test=discovery-identity] h2')].map(el => el.textContent.trim());
+        window.__heldSwipe = null;
+        window.__rapidRequestCount = 0;
+        window.__rapidOpen = XMLHttpRequest.prototype.open;
+        window.__rapidSend = XMLHttpRequest.prototype.send;
+        XMLHttpRequest.prototype.open = function (method, url, ...rest) {
+            this.__rapidUrl = String(url);
+            return window.__rapidOpen.call(this, method, url, ...rest);
+        };
+        XMLHttpRequest.prototype.send = function (body) {
+            if (this.__rapidUrl.includes('/swipe')) {
+                window.__rapidRequestCount++;
+                window.__heldSwipe = this;
+                return;
+            }
+            return window.__rapidSend.call(this, body);
+        };
+        document.querySelector('[aria-label="Passer ce profil"]:not([disabled])').click();
+        new Promise(resolve => requestAnimationFrame(() => {
+            document.querySelector('[aria-label="Découvrir ce profil"]:not([disabled])').click();
+            resolve(true);
+        }));
+    JS);
+    $page->assertScript('window.__rapidRequestCount', 1);
+    $page->script("window.__heldSwipe.dispatchEvent(new ProgressEvent('error')); true;");
+    $page->assertPresent('[role="alert"]')
+        ->assertScript("JSON.stringify([...document.querySelectorAll('[data-test=discovery-card-stack-item] [data-test=discovery-identity] h2')].map(el => el.textContent.trim())) === JSON.stringify(window.__initialRapidOrder)", true)
+        ->assertScript('window.__rapidRequestCount', 1)
+        ->assertPresent('button[aria-label="Réessayer"]')
+        ->assertNoJavaScriptErrors();
+    $this->assertDatabaseCount('swipes', 0);
 });
 
 test('a validation response keeps the card and retries the same decision', function () {

@@ -12,6 +12,6 @@
 <x-slot:subcopy>
 {{ __('common.mail.fallback_link') }}
 
-<span class="break-all">[{{ $verificationUrl }}]({{ $verificationUrl }})</span>
+<x-mail::fallback-link :url="$verificationUrl" />
 </x-slot:subcopy>
 </x-mail::message>
