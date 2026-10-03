@@ -1,16 +1,36 @@
 <script setup lang="ts">
-import { Head, Link, router } from '@inertiajs/vue3';
-import { ref } from 'vue';
+import { Head, Link, router, usePage } from '@inertiajs/vue3';
+import { X } from '@lucide/vue';
+import { computed, ref, watch } from 'vue';
+import BlockMemberDialog from '@/components/members/BlockMemberDialog.vue';
+import LikeMemberButton from '@/components/members/LikeMemberButton.vue';
+import ProfilePresentation from '@/components/profile/ProfilePresentation.vue';
 import UserAvatar from '@/components/profile/UserAvatar.vue';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import {
+    Drawer,
+    DrawerClose,
+    DrawerContent,
+    DrawerDescription,
+    DrawerTitle,
+} from '@/components/ui/drawer';
 import { useTranslations } from '@/composables/useTranslations';
 import { index as explore } from '@/routes/discovery';
-import { show as showPassed } from '@/routes/discovery/passed';
+import {
+    index as passedProfiles,
+    like as likePassed,
+    show as showPassed,
+} from '@/routes/discovery/passed';
 import type { PublicMember } from '@/types';
 
 const props = defineProps<{
+    selectedProfile: {
+        member: PublicMember;
+        canLike: boolean;
+        canBlock: boolean;
+    } | null;
     profiles: {
         data: Pick<
             PublicMember,
@@ -23,9 +43,85 @@ const props = defineProps<{
     };
 }>();
 const { t } = useTranslations();
+const page = usePage();
 const loading = ref(false);
 const error = ref<string | null>(null);
 const retryUrl = ref<string | null>(null);
+const drawerOpen = ref(props.selectedProfile !== null);
+const profileLoading = ref(false);
+const profileError = ref<string | null>(null);
+const retryProfileId = ref<number | null>(null);
+const profileList = ref<HTMLElement | null>(null);
+let profileTrigger: HTMLElement | null = null;
+const historyHref = computed(
+    () => passedProfiles({ query: { page: props.profiles.current_page } }).url,
+);
+const visitFrequency = computed(() => {
+    const frequency = props.selectedProfile?.member.visit_frequency;
+
+    return t(
+        frequency
+            ? `profile.details.frequency_${frequency}`
+            : 'profile.details.frequency_unknown',
+    );
+});
+watch(
+    () => props.selectedProfile,
+    (profile) => {
+        if (profile === null) {
+            const message =
+                page.props.errors.target ?? page.props.errors.decision;
+            profileError.value = message ? String(message) : null;
+            drawerOpen.value = Boolean(message);
+        }
+    },
+);
+
+function openProfile(memberId: number, event?: MouseEvent): void {
+    if (event) {
+        profileTrigger = event.currentTarget as HTMLElement;
+    }
+
+    retryProfileId.value = memberId;
+    drawerOpen.value = true;
+    router.get(
+        showPassed(memberId).url,
+        { page: props.profiles.current_page },
+        {
+            only: ['selectedProfile'],
+            preserveState: true,
+            preserveScroll: true,
+            preserveUrl: true,
+            onStart: () => {
+                profileLoading.value = true;
+                profileError.value = null;
+            },
+            onFinish: () => (profileLoading.value = false),
+            onHttpException: (response) => {
+                profileError.value = t(
+                    response.status === 404
+                        ? 'discovery.errors.target_unavailable'
+                        : 'discovery.passed.server_error',
+                );
+
+                return false;
+            },
+            onNetworkError: () => {
+                profileError.value = t('discovery.passed.network_error');
+
+                return false;
+            },
+        },
+    );
+}
+
+function restoreProfileFocus(event: Event): void {
+    event.preventDefault();
+    const target = profileTrigger?.isConnected
+        ? profileTrigger
+        : profileList.value;
+    target?.focus({ preventScroll: true });
+}
 function navigate(url: string | null): void {
     if (!url || loading.value) {
         return;
@@ -103,13 +199,22 @@ function navigate(url: string | null): void {
                 {{ t('discovery.passed.empty_description') }}
             </p>
         </section>
-        <ul v-else class="min-h-0 flex-1 space-y-3 overflow-y-auto p-1">
+        <ul
+            v-else
+            ref="profileList"
+            data-test="passed-profile-list"
+            scroll-region
+            tabindex="-1"
+            class="min-h-0 flex-1 space-y-3 overflow-y-auto p-1"
+        >
             <li v-for="member in profiles.data" :key="member.id">
-                <Link
-                    :href="showPassed(member.id)"
+                <button
+                    type="button"
+                    :data-profile-id="member.id"
                     data-test="passed-profile"
-                    class="flex min-h-11 items-center gap-3 rounded-xl border bg-card p-4 focus-visible:ring-2 focus-visible:ring-ring"
+                    class="flex min-h-11 w-full items-center gap-3 rounded-xl border bg-card p-4 text-left focus-visible:ring-2 focus-visible:ring-ring"
                     :class="member.is_admin ? 'border-amber-400' : ''"
+                    @click="openProfile(member.id, $event)"
                 >
                     <UserAvatar
                         :avatar="member.avatar"
@@ -127,7 +232,7 @@ function navigate(url: string | null): void {
                             t('profile.details.administrator')
                         }}</Badge>
                     </div>
-                </Link>
+                </button>
             </li>
         </ul>
         <nav
@@ -154,5 +259,95 @@ function navigate(url: string | null): void {
                 >{{ t('discovery.passed.next') }}</Button
             >
         </nav>
+        <Drawer v-model:open="drawerOpen">
+            <DrawerContent
+                data-test="passed-profile-drawer"
+                class="mx-auto h-[85svh] max-h-[85svh] w-full max-w-lg overflow-hidden px-4 pb-[max(1rem,env(safe-area-inset-bottom))] [&>[data-slot=drawer-handle]]:hidden"
+                :class="{ 'pt-16': profileLoading || profileError }"
+                @close-auto-focus="restoreProfileFocus"
+            >
+                <DrawerTitle class="sr-only">{{
+                    profileLoading || profileError
+                        ? t('discovery.passed.title')
+                        : (selectedProfile?.member.display_name ??
+                          t('discovery.passed.title'))
+                }}</DrawerTitle>
+                <DrawerDescription class="sr-only">{{
+                    t('discovery.passed.description')
+                }}</DrawerDescription>
+                <DrawerClose as-child>
+                    <Button
+                        data-test="passed-profile-close"
+                        variant="outline"
+                        size="icon"
+                        class="absolute top-3 left-7 z-40 size-11 rounded-full bg-background/90"
+                        :aria-label="t('common.actions.close')"
+                    >
+                        <X aria-hidden="true" class="size-5" />
+                    </Button>
+                </DrawerClose>
+                <p v-if="profileLoading" role="status">
+                    {{ t('discovery.passed.loading') }}
+                </p>
+                <Alert
+                    v-else-if="profileError"
+                    variant="destructive"
+                    aria-live="assertive"
+                >
+                    <AlertDescription class="space-y-2">
+                        <p>{{ profileError }}</p>
+                        <Button
+                            variant="outline"
+                            @click="
+                                retryProfileId && openProfile(retryProfileId)
+                            "
+                            >{{ t('discovery.page.retry') }}</Button
+                        >
+                    </AlertDescription>
+                </Alert>
+                <ProfilePresentation
+                    v-else-if="selectedProfile"
+                    embedded
+                    :avatar="selectedProfile.member.avatar"
+                    :display-name="selectedProfile.member.display_name"
+                    :age-label="
+                        t('profile.details.age', {
+                            age: selectedProfile.member.age,
+                        })
+                    "
+                    :bio="
+                        selectedProfile.member.bio ??
+                        t('profile.details.empty_bio')
+                    "
+                    :visit-frequency="visitFrequency"
+                    :interests="selectedProfile.member.interests"
+                    :about-label="t('profile.details.about')"
+                    :interests-label="t('profile.details.interests')"
+                    :visit-frequency-label="
+                        t('profile.details.visit_frequency')
+                    "
+                    :is-admin="selectedProfile.member.is_admin"
+                    class="min-h-0 flex-1 rounded-[2rem]"
+                >
+                    <template #summary-actions>
+                        <LikeMemberButton
+                            v-if="selectedProfile.canLike"
+                            :member-id="selectedProfile.member.id"
+                            :action-href="
+                                likePassed(selectedProfile.member.id, {
+                                    query: { page: profiles.current_page },
+                                }).url
+                            "
+                            :label="t('discovery.actions.discover')"
+                        />
+                        <BlockMemberDialog
+                            v-if="selectedProfile.canBlock"
+                            :member-id="selectedProfile.member.id"
+                            :return-href="historyHref"
+                        />
+                    </template>
+                </ProfilePresentation>
+            </DrawerContent>
+        </Drawer>
     </main>
 </template>

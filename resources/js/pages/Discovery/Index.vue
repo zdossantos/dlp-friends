@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Head, Link, router, setLayoutProps } from '@inertiajs/vue3';
+import { History } from '@lucide/vue';
 import { computed, onBeforeUnmount, ref, watch } from 'vue';
 import SwipeCard from '@/components/discovery/SwipeCard.vue';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -311,11 +312,20 @@ function retry(): void {
                 <h1 class="text-2xl font-semibold tracking-tight sm:text-3xl">
                     {{ t('discovery.page.title') }}
                 </h1>
-                <Link
-                    :href="passedProfiles()"
-                    class="inline-flex min-h-11 items-center rounded-md text-sm font-medium text-primary underline underline-offset-4 focus-visible:ring-2 focus-visible:ring-ring"
-                    >{{ t('discovery.passed.title') }}</Link
+                <Button
+                    as-child
+                    variant="outline"
+                    size="icon"
+                    class="size-11 shrink-0 rounded-full text-primary"
                 >
+                    <Link
+                        :href="passedProfiles()"
+                        :aria-label="t('discovery.passed.title')"
+                        :title="t('discovery.passed.title')"
+                    >
+                        <History class="size-5" aria-hidden="true" />
+                    </Link>
+                </Button>
             </div>
             <p class="text-sm leading-5 text-muted-foreground">
                 {{ t('discovery.page.description') }}
