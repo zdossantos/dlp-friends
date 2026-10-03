@@ -34,6 +34,9 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
  * @property string $email
  * @property string|null $locale
  * @property bool $show_presence
+ * @property bool $admin_new_member_alerts
+ * @property Carbon|null $self_registered_at
+ * @property Carbon|null $new_member_announced_at
  * @property Carbon|null $email_verified_at
  * @property Carbon|null $birth_date
  * @property UserStatus $status
@@ -76,6 +79,9 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
 #[Hidden(['password', 'two_factor_secret', 'two_factor_recovery_codes', 'remember_token'])]
 class User extends Authenticatable implements HasLocalePreference, MustVerifyEmail, PasskeyUser
 {
+    /** @var array<string, mixed> */
+    protected $attributes = ['admin_new_member_alerts' => true];
+
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable, PasskeyAuthenticatable, TwoFactorAuthenticatable;
 
@@ -325,6 +331,9 @@ class User extends Authenticatable implements HasLocalePreference, MustVerifyEma
             'deletion_requested_at' => 'immutable_datetime',
             'last_active_at' => 'datetime',
             'show_presence' => 'boolean',
+            'admin_new_member_alerts' => 'boolean',
+            'self_registered_at' => 'datetime',
+            'new_member_announced_at' => 'datetime',
             'password' => 'hashed',
             'two_factor_confirmed_at' => 'datetime',
         ];

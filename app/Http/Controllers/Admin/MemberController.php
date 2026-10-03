@@ -3,7 +3,9 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Actions\DeleteMember;
+use App\Enums\RoleName;
 use App\Enums\SwipeDecision;
+use App\Enums\UserStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Conversation;
 use App\Models\Role;
@@ -34,6 +36,11 @@ final class MemberController extends Controller
         /** @var LengthAwarePaginator<int, User> $members */
         $members = User::query()
             ->select('users.*')
+            ->when($request->has('member'), fn (Builder $query): Builder => $query
+                ->whereKey($request->integer('member'))
+                ->where('status', UserStatus::Active)
+                ->whereNull('deletion_requested_at')
+                ->whereHas('roles', fn (Builder $roles): Builder => $roles->where('name', RoleName::User)))
             ->with(['profile.avatar', 'roles'])
             ->withCount([
                 'sentSwipes as likes_sent_count' => fn (Builder $query): Builder => $query->where('decision', SwipeDecision::Like),

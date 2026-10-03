@@ -73,6 +73,12 @@ expiration automatique, au plus 30 jours après leur création.
 - Les pages événements exigent le même accès membre protégé. Le lieu précis et la liste des participants ne sont transmis qu’à l’organisateur et aux inscriptions acceptées ; une demande en attente ou refusée ne reçoit que le lieu général.
 - Les discussions d’événement et leurs canaux Reverb privés appliquent la même autorisation. Le curseur de lecture reste individuel et aucun accusé de lecture nominatif n’est diffusé.
 - Les notifications persistantes contiennent une clé de traduction, des paramètres minimaux et une cible interne. Elles ne recopient ni message privé ni lieu précis et leur route cible est résolue côté serveur.
+- Les alertes de nouveaux membres ne stockent que leur identifiant cible,
+  leur catégorie et une clé de traduction sans paramètres personnels. Le Push
+  utilise un titre et un corps génériques. L’accès à la fiche est revérifié
+  côté serveur ; suppression, inactivation ou retrait du rôle admin ne donnent
+  aucun accès via l’ancienne alerte. Le réglage individuel figure dans l’export
+  et disparaît avec le compte ; le désactiver préserve les alertes déjà reçues.
 - La présence est facultative et visible uniquement par les interlocuteurs
   encore autorisés. Redis conserve seulement un état temporaire avec expiration,
   `last_active_at` est limité en fréquence et seule une activité relative est

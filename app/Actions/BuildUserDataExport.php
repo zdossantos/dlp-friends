@@ -164,6 +164,7 @@ final class BuildUserDataExport
                 ->mapWithKeys(fn (WebPushPreference $preference): array => [
                     $preference->value => (bool) ($preferences->get($preference->value) ?? true),
                 ])->all(),
+            'admin_new_member_alerts_enabled' => $user->admin_new_member_alerts,
             'push_devices' => $user->webPushSubscriptions()
                 ->orderBy('id')
                 ->get()

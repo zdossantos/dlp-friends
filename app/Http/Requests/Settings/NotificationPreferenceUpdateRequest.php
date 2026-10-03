@@ -14,9 +14,10 @@ class NotificationPreferenceUpdateRequest extends FormRequest
             ->mapWithKeys(fn (WebPushPreference $preference): array => [$preference->value => ['sometimes', 'boolean']])
             ->all();
         $rules[WebPushPreference::PartnerAnnouncements->value] = [
-            'required_without_all:messages,matches,events,administration',
+            'required_without_all:messages,matches,events,administration,admin_new_member_alerts',
             'boolean',
         ];
+        $rules['admin_new_member_alerts'] = ['sometimes', 'boolean'];
 
         return $rules;
     }

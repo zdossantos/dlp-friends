@@ -43,6 +43,7 @@ class CreateNewUser implements CreatesNewUsers
                 'birth_date' => $input['birth_date'],
                 'password' => $input['password'],
             ]);
+            $user->forceFill(['self_registered_at' => now()])->save();
 
             $role = Role::query()->where('name', RoleName::User)->firstOrFail();
             $user->roles()->attach($role);

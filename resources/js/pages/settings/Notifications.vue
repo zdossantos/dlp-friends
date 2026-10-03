@@ -19,6 +19,7 @@ import { edit } from '@/routes/notification-preferences';
 
 const props = defineProps<{
     preferences: Record<string, boolean>;
+    adminNewMemberAlertsEnabled: boolean | null;
     devices: Array<{
         uuid: string;
         deviceName: string | null;
@@ -171,6 +172,42 @@ setLayoutProps({
             class="space-y-4"
             v-slot="{ errors, processing }"
         >
+            <div
+                v-if="adminNewMemberAlertsEnabled !== null"
+                class="rounded-2xl border p-4"
+            >
+                <label class="flex min-h-11 items-start gap-3 text-sm">
+                    <input
+                        type="hidden"
+                        name="admin_new_member_alerts"
+                        value="0"
+                    />
+                    <Switch
+                        :key="String(adminNewMemberAlertsEnabled)"
+                        name="admin_new_member_alerts"
+                        value="1"
+                        :default-value="adminNewMemberAlertsEnabled"
+                        class="mt-0.5"
+                        data-test="admin-new-member-alerts-switch"
+                    />
+                    <span class="space-y-1">
+                        <span class="block font-medium">{{
+                            t(
+                                'account.settings.notifications.new_member_alerts',
+                            )
+                        }}</span>
+                        <span class="block text-muted-foreground">{{
+                            t(
+                                'account.settings.notifications.new_member_alerts_help',
+                            )
+                        }}</span>
+                    </span>
+                </label>
+                <InputError
+                    class="mt-2"
+                    :message="errors.admin_new_member_alerts"
+                />
+            </div>
             <div
                 v-for="category in categories"
                 :key="category"

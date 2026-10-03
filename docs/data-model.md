@@ -38,6 +38,12 @@ et son état de livraison sont définis dans le [`PRD.md`](PRD.md).
 
 - `users.status` vaut `active` ou `pending_deletion`. Un compte en suppression n'est jamais découvrable ni connectable.
 - `users` contient l'identité de connexion et la date de naissance, mais aucun `username` ni `first_name`.
+- `users.self_registered_at` marque les nouvelles inscriptions autonomes e-mail
+  et Google ; les comptes antérieurs ou créés administrativement restent sans
+  marqueur. `new_member_announced_at` clôt définitivement la première arrivée,
+  même sans destinataire, dans la transaction de complétion du profil.
+  `admin_new_member_alerts` est un booléen individuel activé par défaut,
+  indépendant des préférences Web Push et réservé aux administrateurs.
 - `social_accounts` contient `user_id`, `provider` et `provider_user_id`. La paire `(provider, provider_user_id)` est unique, le lien est supprimé en cascade avec l'utilisateur et aucun jeton OAuth n'est conservé.
 - `profiles.display_name` est obligatoire une fois l'onboarding terminé et n'est volontairement pas unique.
 - `profiles.onboarding_completed_at` indique qu'un membre a terminé le profil minimal requis.

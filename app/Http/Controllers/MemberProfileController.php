@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\NotifyAdminsOfNewMember;
 use App\Actions\SyncProfileInterests;
 use App\Enums\ProfileVisibility;
 use App\Enums\VisitFrequency;
@@ -10,6 +11,7 @@ use App\Models\Avatar;
 use App\Models\Interest;
 use App\Models\InterestSetting;
 use App\Models\Profile;
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -34,20 +36,21 @@ class MemberProfileController extends Controller
         ]);
     }
 
-    public function store(MemberProfileRequest $request): RedirectResponse
+    public function store(MemberProfileRequest $request, NotifyAdminsOfNewMember $notifyAdmins): RedirectResponse
     {
         $currentProfile = $request->user()->profile;
         $wasComplete = $currentProfile?->isComplete() ?? false;
-        $completedAt = $currentProfile?->onboarding_completed_at;
         $validated = $request->validated();
         $interestIds = $request->interestIds();
         unset($validated['interest_ids']);
 
-        $profile = DB::transaction(function () use ($request, $currentProfile, $completedAt, $validated, $interestIds): Profile {
+        $profile = DB::transaction(function () use ($request, $validated, $interestIds, $notifyAdmins): Profile {
+            $member = User::query()->whereKey($request->user()->id)->lockForUpdate()->firstOrFail();
+            $currentProfile = $member->profile;
             $this->lockActiveAvatar((int) $validated['avatar_id']);
             $profileFields = [
                 ...$validated,
-                'onboarding_completed_at' => $completedAt ?? now(),
+                'onboarding_completed_at' => $currentProfile->onboarding_completed_at ?? now(),
             ];
 
             if ($currentProfile === null) {
@@ -55,6 +58,7 @@ class MemberProfileController extends Controller
 
                 Gate::authorize('update', $profile);
                 $this->syncProfileInterests->handle($profile, $interestIds);
+                $notifyAdmins->handle($member);
 
                 return $profile;
             }
@@ -62,9 +66,10 @@ class MemberProfileController extends Controller
             Gate::authorize('update', $currentProfile);
             $this->syncProfileInterests->handle($currentProfile, $interestIds);
             $currentProfile->update($profileFields);
+            $notifyAdmins->handle($member);
 
             return $currentProfile;
-        });
+        }, 3);
         $request->user()->setRelation('profile', $profile);
 
         if (! $wasComplete && $profile->isComplete()) {

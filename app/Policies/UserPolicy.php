@@ -13,6 +13,11 @@ final class UserPolicy
         return $actor->hasRole(RoleName::Admin);
     }
 
+    public function updateNewMemberAlerts(User $actor, User $member): bool
+    {
+        return $actor->is($member) && $actor->hasRole(RoleName::Admin);
+    }
+
     public function delete(User $actor, User $member): bool
     {
         return $actor->hasRole(RoleName::Admin)
