@@ -107,7 +107,7 @@ test('closing and discovering a passed profile preserve the history page and scr
         ->assertPresent('[data-test="passed-profile-drawer"] [data-test="like-member"]')
         ->assertScript("window.location.pathname === '/discover/passed' && window.location.search === '?page=2'", true)
         ->assertNoAccessibilityIssues();
-    $page->keys('[data-test="passed-profile-close"]', 'Escape')
+    $page->keys('[data-test="passed-profile-drawer"]', 'Escape')
         ->assertMissing('[data-test="passed-profile-drawer"]')
         ->assertScript("document.querySelector('[data-test=passed-profile-list]').scrollTop === window.__passedScroll", true);
     $page->keys('[data-test="passed-profile-list"] li:nth-child(7) button', 'Enter')
@@ -135,7 +135,7 @@ test('a profile becoming unavailable in the drawer shows the conversion error', 
         ->assertSee(__('discovery.errors.target_unavailable'))
         ->assertPresent('[data-test="passed-profile-drawer"]')
         ->assertMissing('[data-test="like-member"]')
-        ->click('[data-test="passed-profile-close"]')
+        ->keys('[data-test="passed-profile-drawer"]', 'Escape')
         ->assertSee('Aucun profil passé disponible')
         ->assertNoJavaScriptErrors();
     expect(Swipe::query()->first()->decision)->toBe(SwipeDecision::Pass);
