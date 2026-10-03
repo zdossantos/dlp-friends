@@ -2,6 +2,7 @@
 
 return [
     'items' => [
+        ['version' => '1.14.0', 'date' => '2026-10-03', 'fr' => ['Administration repensée pour les petits écrans avec une navigation basse et des sous-menus dédiés.', 'Changement simplifié entre les espaces membre, partenaire et administration selon les rôles du compte.', 'Listes, statistiques, formulaires et actions d’administration adaptés à une utilisation mobile.'], 'en' => ['Administration redesigned for small screens with bottom navigation and dedicated submenus.', 'Easier switching between member, partner, and administration workspaces according to account roles.', 'Administration lists, statistics, forms, and actions adapted for mobile use.']],
         ['version' => '1.13.0', 'date' => '2026-10-01', 'fr' => ['Accueil et FAQ enrichis pour mieux trouver des amis fans de Disneyland Paris.'], 'en' => ['Enhanced home page and FAQ to help people find friends who love Disneyland Paris.']],
         ['version' => '1.12.0', 'date' => '2026-10-01', 'fr' => ['FAQ publique bilingue accessible depuis l’accueil.', 'Notes de version publiques et page introuvable localisée.'], 'en' => ['Bilingual public FAQ accessible from the home page.', 'Public release notes and a localized not-found page.']],
         ['version' => '1.11.0', 'date' => '2026-09-30', 'fr' => ['Amélioration du référencement et de la mesure d’audience, dans le respect du consentement.'], 'en' => ['Improved search visibility and consent-aware audience measurement.']],

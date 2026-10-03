@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.14.0](https://github.com/zdossantos/dlp-friends/compare/v1.13.0...v1.14.0) (2026-10-03)
+
+
+### Features
+
+* **admin:** refondre l’administration en expérience mobile-first ([#247](https://github.com/zdossantos/dlp-friends/issues/247)) ([6d53be6](https://github.com/zdossantos/dlp-friends/commit/6d53be6273bd0f2e0d451126e43c883fe3a34834))
+
 ## [1.13.0](https://github.com/zdossantos/dlp-friends/compare/v1.12.0...v1.13.0) (2026-10-01)
 
 
