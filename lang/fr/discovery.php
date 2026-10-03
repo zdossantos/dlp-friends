@@ -1,6 +1,21 @@
 <?php
 
 return [
+    'passed' => [
+        'network_error' => 'Impossible de charger les profils. Vérifie ta connexion puis réessaie.',
+        'server_error' => 'Impossible de charger les profils pour le moment. Réessaie.',
+
+        'title' => 'Profils passés',
+        'description' => 'Retrouve les profils que tu as passés et choisis de les découvrir.',
+        'empty' => 'Aucun profil passé disponible',
+        'empty_description' => 'Les profils disponibles que tu passes apparaîtront ici.',
+        'back' => 'Retour à Explorer',
+        'loading' => 'Chargement des profils…',
+        'pagination' => 'Pagination des profils passés',
+        'previous' => 'Précédent',
+        'next' => 'Suivant',
+        'page' => 'Page :page sur :total',
+    ],
     'navigation' => 'Explorer',
     'bottom_navigation' => 'Découvrir',
     'errors' => [

@@ -35,6 +35,12 @@ expiration automatique, au plus 30 jours après leur création.
 
 ## Données et contrôle utilisateur
 
+L’historique des profils passés est personnel : liste, consultation et conversion
+exigent un refus du membre connecté. Les profils masqués, incomplets,
+indisponibles ou bloqués dans l’un des deux sens n’y sont pas exposés. La
+conversion recontrôle disponibilité et blocages sous verrou côté serveur ;
+aucun nouveau journal historique n’est conservé.
+
 - Réglages : édition des données visibles et des intérêts actifs, dans la limite configurée.
 - Un intérêt archivé est retiré des sélections visibles et du matching. La sélection historique est conservée comme suspendue et ne consomme plus de capacité ; elle ne peut être restaurée à la réactivation que si le profil a alors une capacité disponible.
 - Masquage : suspend les nouvelles suggestions et retire les conversations du

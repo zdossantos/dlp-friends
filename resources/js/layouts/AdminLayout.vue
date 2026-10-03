@@ -34,7 +34,7 @@ watch(
 
 <template>
     <div
-        class="relative min-h-svh w-full max-w-full min-w-0 overflow-x-clip bg-background text-foreground"
+        class="relative flex h-svh w-full max-w-full min-w-0 flex-col overflow-hidden bg-background text-foreground"
     >
         <div
             aria-hidden="true"
@@ -43,13 +43,14 @@ watch(
         <SeasonalDecorations />
         <header
             data-test="admin-account-header"
-            class="sticky top-0 z-40 flex min-h-16 items-center justify-end border-b border-border/60 bg-background/90 px-4 pt-[env(safe-area-inset-top)] backdrop-blur"
+            class="sticky top-0 z-40 flex min-h-16 shrink-0 items-center justify-end border-b border-border/60 bg-background/90 px-4 pt-[env(safe-area-inset-top)] backdrop-blur"
         >
             <AdminAccountMenu />
         </header>
         <main
             data-test="admin-shell-content"
-            class="relative min-h-svh w-full max-w-full min-w-0 overflow-x-hidden [padding-bottom:calc(6rem+env(safe-area-inset-bottom))]"
+            scroll-region
+            class="relative min-h-0 w-full max-w-full min-w-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain [padding-bottom:calc(6rem+env(safe-area-inset-bottom))]"
         >
             <slot />
         </main>

@@ -51,6 +51,7 @@ const memberItems = computed<BottomNavigationItem[]>(() => [
         label: t('discovery.bottom_navigation'),
         href: discovery(),
         icon: Sparkles,
+        activeParents: ['/discover'],
     },
     {
         label: t('conversations.bottom_navigation'),

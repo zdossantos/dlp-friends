@@ -101,7 +101,11 @@ Paris.
   fréquence de visite commune lorsque ce bonus est activé.
 - Les profils déjà évalués, bloqués, masqués, incomplets ou indisponibles sont
   exclus.
-- Un profil passé ou liké n’est plus reproposé au même membre.
+- Un profil passé ou liké n’est plus reproposé au même membre. Depuis Explorer,
+  le membre peut consulter ses profils passés disponibles dans une liste
+  paginée, du refus le plus récent au plus ancien, puis choisir « Découvrir ».
+  La conversion retire le profil de cet historique. Les profils masqués,
+  incomplets, indisponibles ou bloqués dans un sens ou dans l’autre sont exclus.
 - Il n’existe ni limite quotidienne ni annulation libre de swipe dans le MVP.
   Depuis une surface membre qui propose le like, un refus antérieur peut
   toutefois être remplacé une seule fois par un like ; un like reste
@@ -283,7 +287,7 @@ Paris.
 | Inscription e-mail, vérification et récupération | **Implémenté** | Fortify, pages et tests couvrent le parcours. |
 | Majorité, compte actif et contrôle d’accès social | **Implémenté** | Stockage, middlewares et tests sont présents. |
 | Profil, avatar obligatoire et intérêts | **Implémenté** | Parcours membre et catalogues administrables sont livrés. |
-| Découverte, swipes et match réciproque | **Implémenté** | Service de classement, actions et tests sont présents. |
+| Découverte, swipes et match réciproque | **Implémenté** | Service de classement, historique personnel paginé des profils passés, conversion en like, actions et tests sont présents. |
 | Conversations, amorces, messages, réactions, saisie, présence et état de lecture | **Implémenté** | Trois amorces aléatoires issues d’un catalogue bilingue en base facilitent le premier message. Le stockage, la diffusion privée, les J’aime uniques synchronisés en temps réel, leurs notifications in-app/PWA, l’indicateur de saisie éphémère, la présence confidentielle, la recherche locale et les tests sont présents. |
 | Blocage et déblocage | **Implémenté** | Effet immédiat sur découverte et conversation. |
 | Événements amicaux, inscriptions et discussion de groupe | **Implémenté** | Deux écrans principaux, panneaux adaptatifs, rôles distincts, participants avec profils intégrés, deux modes d’inscription, confidentialité, cycle de vie, notifications et chat temps réel avec non-lus sont couverts. |
