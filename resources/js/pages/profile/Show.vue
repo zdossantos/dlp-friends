@@ -63,6 +63,7 @@ function handleLogout(): void {
                 :age-label="t('profile.details.age', { age })"
                 :bio="profile.bio || t('profile.details.empty_bio')"
                 :visit-frequency="visitFrequency"
+                :social-links="profile.social_links ?? []"
                 :interests="profile.interests ?? []"
                 :about-label="t('profile.details.about')"
                 :interests-label="t('profile.details.interests')"
@@ -163,11 +164,11 @@ function handleLogout(): void {
                     </span>
                 </template>
                 <template #summary-actions>
-                    <div class="flex flex-wrap justify-end gap-2">
+                    <div class="flex w-full gap-2">
                         <Button
                             as-child
                             variant="outline"
-                            class="min-h-10 rounded-full"
+                            class="h-auto min-h-11 min-w-0 flex-1 rounded-full px-2 text-xs whitespace-normal sm:text-sm"
                         >
                             <Link :href="editProfile()">
                                 <Pencil class="size-4" aria-hidden="true" />
@@ -179,7 +180,7 @@ function handleLogout(): void {
                             variant="outline"
                             data-analytics-settings-trigger
                             data-test="profile-analytics-consent-settings"
-                            class="min-h-10 rounded-full"
+                            class="h-auto min-h-11 min-w-0 flex-1 rounded-full px-2 text-xs whitespace-normal sm:text-sm"
                         >
                             <Cookie class="size-4" aria-hidden="true" />
                             {{ t('profile.actions.cookies') }}

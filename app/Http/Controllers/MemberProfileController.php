@@ -94,6 +94,8 @@ class MemberProfileController extends Controller
                     'secondary_color' => $profile->avatar->secondary_color,
                 ],
                 'bio' => $profile->bio,
+                'social_links' => $profile->social_links ?? [],
+                'social_links_visibility' => $profile->social_links_visibility->value,
                 'visit_frequency' => $profile->visit_frequency,
                 'visibility' => $profile->visibility,
                 'onboarding_completed_at' => $profile->onboarding_completed_at,

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\ProfileVisibility;
+use App\Enums\SocialLinksVisibility;
 use App\Enums\VisitFrequency;
 use Database\Factories\ProfileFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -18,6 +19,8 @@ use Illuminate\Support\Carbon;
  * @property int $user_id
  * @property int|null $avatar_id
  * @property string $display_name
+ * @property list<array{network: string, url: string}>|null $social_links
+ * @property SocialLinksVisibility $social_links_visibility
  * @property string|null $bio
  * @property VisitFrequency|null $visit_frequency
  * @property ProfileVisibility $visibility
@@ -29,7 +32,7 @@ use Illuminate\Support\Carbon;
  * @property-read Collection<int, Interest> $interests
  * @property-read Collection<int, Interest> $interestHistory
  */
-#[Fillable(['avatar_id', 'display_name', 'bio', 'visit_frequency', 'visibility', 'onboarding_completed_at'])]
+#[Fillable(['avatar_id', 'display_name', 'bio', 'social_links', 'social_links_visibility', 'visit_frequency', 'visibility', 'onboarding_completed_at'])]
 class Profile extends Model
 {
     /** @use HasFactory<ProfileFactory> */
@@ -81,6 +84,8 @@ class Profile extends Model
     protected function casts(): array
     {
         return [
+            'social_links' => 'array',
+            'social_links_visibility' => SocialLinksVisibility::class,
             'visit_frequency' => VisitFrequency::class,
             'visibility' => ProfileVisibility::class,
             'onboarding_completed_at' => 'datetime',

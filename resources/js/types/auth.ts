@@ -15,6 +15,11 @@ export type User = {
 
 export type RoleName = 'user' | 'admin' | 'partner';
 export type VisitFrequency = 'rarely' | 'sometimes' | 'often' | 'very_often';
+export type SocialNetwork =
+    'instagram' | 'facebook' | 'tiktok' | 'youtube' | 'x';
+export type SocialLink = { network: SocialNetwork; url: string };
+export type SocialLinksVisibility = 'hidden' | 'matches' | 'members';
+
 export type ProfileVisibility = 'visible' | 'hidden';
 
 export type AvatarOption = {
@@ -34,6 +39,8 @@ export type Profile = {
     visibility: ProfileVisibility;
     onboarding_completed_at: string | null;
     interests?: InterestOption[];
+    social_links?: SocialLink[];
+    social_links_visibility?: SocialLinksVisibility;
 };
 
 export type Auth = {

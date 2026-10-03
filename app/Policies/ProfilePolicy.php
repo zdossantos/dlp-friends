@@ -4,7 +4,10 @@ namespace App\Policies;
 
 use App\Enums\ProfileVisibility;
 use App\Enums\RoleName;
+use App\Enums\SocialLinksVisibility;
 use App\Enums\UserStatus;
+use App\Models\Block;
+use App\Models\MemberMatch;
 use App\Models\Profile;
 use App\Models\Swipe;
 use App\Models\User;
@@ -19,6 +22,26 @@ class ProfilePolicy
     public function viewPublic(User $user, Profile $profile): bool
     {
         return $this->isPublicTarget($user, $profile);
+    }
+
+    public function viewSocialLinks(User $user, Profile $profile): bool
+    {
+        if ($profile->user_id === $user->id) {
+            return true;
+        }
+
+        if (! $this->isPublicTarget($user, $profile)
+            || $profile->social_links_visibility === SocialLinksVisibility::Hidden
+            || Block::query()->whereIn('blocker_user_id', [$user->id, $profile->user_id])
+                ->whereIn('blocked_user_id', [$user->id, $profile->user_id])->exists()) {
+            return false;
+        }
+
+        return $profile->social_links_visibility === SocialLinksVisibility::Members
+            || MemberMatch::query()
+                ->where('user_low_id', min($user->id, $profile->user_id))
+                ->where('user_high_id', max($user->id, $profile->user_id))
+                ->exists();
     }
 
     public function viewPassed(User $user, Profile $profile): bool
