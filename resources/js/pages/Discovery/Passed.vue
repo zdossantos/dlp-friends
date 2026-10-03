@@ -14,7 +14,6 @@ import {
     DrawerClose,
     DrawerContent,
     DrawerDescription,
-    DrawerHeader,
     DrawerTitle,
 } from '@/components/ui/drawer';
 import { useTranslations } from '@/composables/useTranslations';
@@ -263,31 +262,30 @@ function navigate(url: string | null): void {
         <Drawer v-model:open="drawerOpen">
             <DrawerContent
                 data-test="passed-profile-drawer"
-                class="mx-auto h-[85svh] max-h-[85svh] w-full max-w-lg px-4 pb-[max(1rem,env(safe-area-inset-bottom))]"
+                class="mx-auto h-[85svh] max-h-[85svh] w-full max-w-lg px-4 pb-[max(1rem,env(safe-area-inset-bottom))] [&>[data-slot=drawer-handle]]:hidden"
+                :class="{ 'pt-16': profileLoading || profileError }"
                 @close-auto-focus="restoreProfileFocus"
             >
-                <DrawerHeader class="relative shrink-0 pr-14 text-left">
-                    <DrawerTitle>{{
-                        profileLoading || profileError
-                            ? t('discovery.passed.title')
-                            : (selectedProfile?.member.display_name ??
-                              t('discovery.passed.title'))
-                    }}</DrawerTitle>
-                    <DrawerDescription class="sr-only">{{
-                        t('discovery.passed.description')
-                    }}</DrawerDescription>
-                    <DrawerClose as-child>
-                        <Button
-                            data-test="passed-profile-close"
-                            variant="outline"
-                            size="icon"
-                            class="absolute top-2 right-0 size-11 rounded-full"
-                            :aria-label="t('common.actions.close')"
-                        >
-                            <X aria-hidden="true" class="size-5" />
-                        </Button>
-                    </DrawerClose>
-                </DrawerHeader>
+                <DrawerTitle class="sr-only">{{
+                    profileLoading || profileError
+                        ? t('discovery.passed.title')
+                        : (selectedProfile?.member.display_name ??
+                          t('discovery.passed.title'))
+                }}</DrawerTitle>
+                <DrawerDescription class="sr-only">{{
+                    t('discovery.passed.description')
+                }}</DrawerDescription>
+                <DrawerClose as-child>
+                    <Button
+                        data-test="passed-profile-close"
+                        variant="outline"
+                        size="icon"
+                        class="absolute top-3 left-7 z-10 size-11 rounded-full bg-background/90"
+                        :aria-label="t('common.actions.close')"
+                    >
+                        <X aria-hidden="true" class="size-5" />
+                    </Button>
+                </DrawerClose>
                 <p v-if="profileLoading" role="status">
                     {{ t('discovery.passed.loading') }}
                 </p>
