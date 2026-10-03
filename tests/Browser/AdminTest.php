@@ -18,6 +18,7 @@ use App\Models\PartnerProfile;
 use App\Models\PartnerProfileRevision;
 use App\Models\ProductOnboarding;
 use App\Models\ProductOnboardingSetting;
+use App\Models\Role;
 use App\Models\SeasonalTheme;
 use App\Models\User;
 use Illuminate\Contracts\Debug\ExceptionHandler as ExceptionHandlerContract;
@@ -60,26 +61,89 @@ test('admin schedules activates and disables seasonal themes on mobile', functio
         ->assertNoJavaScriptErrors();
 });
 
-test('admin without partner role opens partner management pages from its submenu', function () {
+test('admin navigation exposes grouped destinations without notifications or sidebar', function () {
     $admin = User::factory()->admin()->create(['locale' => 'en']);
 
     expect($admin->fresh('roles')->hasRole(RoleName::Partner))->toBeFalse();
 
     $this->actingAs($admin);
 
-    visit('/dashboard')
+    $page = visit('/admin/partner-statistics')->on()->mobile()
+        ->assertPresent('[data-test="admin-bottom-navigation"]')
+        ->assertMissing('[data-sidebar="sidebar"]')
+        ->assertPresent('[data-test="admin-dashboard-link"]')
+        ->assertPresent('[data-test="admin-members-link"]')
+        ->assertMissing('a[href="/admin/notifications"]')
         ->assertPresent('[data-test="admin-partners-menu-trigger"]')
+        ->assertAttribute('[data-test="admin-partners-menu-trigger"]', 'aria-current', 'page')
         ->click('[data-test="admin-partners-menu-trigger"]')
         ->assertSeeLink('Partner profiles')
-        ->assertPresent('a[href="/admin/partner-profiles"]')
+        ->assertPresent('[data-test="admin-partner-profiles-link"]')
         ->assertSeeLink('Partner announcements')
-        ->assertPresent('a[href="/admin/partner-announcements"]')
+        ->assertPresent('[data-test="admin-partner-announcements-link"]')
         ->assertSeeLink('Partner statistics')
-        ->assertPresent('a[href="/admin/partner-statistics"]')
-        ->click('Partner statistics')
-        ->assertPathIs('/admin/partner-statistics')
-        ->assertPresent('[data-test="admin-partners-menu-trigger"][data-state="open"]')
-        ->assertPresent('a[href="/admin/partner-statistics"][data-active="true"]')
+        ->assertAttribute('[data-test="admin-partner-statistics-link"]', 'aria-current', 'page');
+
+    $page->keys('[data-test="admin-partner-statistics-link"]', 'Escape')
+        ->assertScript(
+            "document.activeElement === document.querySelector('[data-test=admin-partners-menu-trigger]')",
+            true,
+        )
+        ->click('[data-test="admin-catalogues-menu-trigger"]')
+        ->assertSeeLink('Favorite worlds')
+        ->assertPresent('[data-test="admin-interests-link"]')
+        ->assertSeeLink('Avatars')
+        ->assertPresent('[data-test="admin-avatars-link"]')
+        ->assertSeeLink('Tutorial')
+        ->assertPresent('[data-test="admin-onboarding-link"]')
+        ->assertSeeLink('Seasonal themes')
+        ->assertPresent('[data-test="admin-seasonal-themes-link"]')
+        ->assertScript('document.documentElement.scrollWidth <= window.innerWidth', true)
+        ->assertNoJavaScriptErrors();
+});
+
+test('admin navigation hides the workspace switcher for a single-role administrator', function () {
+    $admin = User::factory()->admin()->create();
+    $adminRole = Role::query()->where('name', RoleName::Admin)->firstOrFail();
+    $admin->roles()->sync([$adminRole->id]);
+    $this->actingAs($admin);
+
+    visit('/dashboard')
+        ->assertPresent('[data-test="admin-bottom-navigation"]')
+        ->assertMissing('[data-test="workspace-switcher-trigger"]')
+        ->assertMissing('[data-sidebar="sidebar"]')
+        ->assertNoJavaScriptErrors();
+});
+
+test('single-role administrator can open the account menu and log out with the keyboard on mobile', function () {
+    $admin = User::factory()->withProfile()->admin()->create();
+    $adminRole = Role::query()->where('name', RoleName::Admin)->firstOrFail();
+    $admin->roles()->sync([$adminRole->id]);
+    $this->actingAs($admin);
+
+    $page = visit('/dashboard')->resize(320, 700)
+        ->assertPresent('[data-test="admin-account-menu-trigger"]')
+        ->assertAttribute(
+            '[data-test="admin-account-menu-trigger"]',
+            'aria-label',
+            'Menu du compte',
+        )
+        ->assertScript(
+            "document.querySelector('[data-test=admin-account-header]').getBoundingClientRect().bottom <= document.querySelector('[data-test=admin-shell-content]').getBoundingClientRect().top",
+            true,
+        );
+
+    $page->script("document.body.style.minHeight = '200vh'; window.scrollTo(0, 500)");
+
+    $page->assertScript(
+        "Math.round(document.querySelector('[data-test=admin-account-header]').getBoundingClientRect().top)",
+        0,
+    )
+        ->keys('[data-test="admin-account-menu-trigger"]', 'Enter')
+        ->assertDontSee('Réglages')
+        ->assertPresent('[data-test="logout-button"]')
+        ->keys('[data-test="logout-button"]', 'Enter')
+        ->assertPathIs('/en')
         ->assertNoJavaScriptErrors();
 });
 
@@ -139,15 +203,21 @@ test('admin partner statistics expose operational counts and retry in English', 
     }
     $this->actingAs($admin);
 
-    visit('/admin/partner-statistics')
-        ->assertSee('Partner statistics')
+    $page = visit('/admin/partner-statistics')->on()->mobile()
+        ->assertSee('Partner announcement statistics')
         ->assertSee('Operational campaign')
         ->assertSee('Pending')
         ->assertSee('Failed')
         ->assertSee('Skipped')
         ->assertPresent("[data-test=\"retry-partner-announcement-{$announcement->id}\"]")
-        ->assertPresent('a[href="/partner/statistics"]')
+        ->assertPresent('[data-test="partner-statistics-table"][data-layout="cards"]')
+        ->assertScript('document.documentElement.scrollWidth <= window.innerWidth', true)
+        ->assertPresent('[data-test="workspace-switcher-trigger"]')
         ->assertNoJavaScriptErrors();
+
+    $page->resize(1440, 900)
+        ->assertPresent('[data-test="partner-statistics-table"][data-layout="table"]')
+        ->assertMissing('[data-test="partner-statistics-card"]');
 });
 
 test('an admin reviews publishes orders and unpublishes partner profiles accessibly', function () {
@@ -220,6 +290,8 @@ test('admin configures tutorial avatars and sees member progress', function () {
 
     visit('/admin/onboarding')
         ->assertSee('Tutoriel produit')
+        ->assertPresent('[data-test="onboarding-progress-table"]')
+        ->assertMissing('[data-test="onboarding-progress-cards"]')
         ->assertSee('Taux de complétion')
         ->assertSee('tutorial@example.test')
         ->assertSee('Carte à découvrir')
@@ -247,7 +319,7 @@ test('admin configures tutorial avatars and sees member progress', function () {
         'like_display_name_en' => 'Browser Alex',
     ]);
 
-    visit('/admin/avatars')
+    visit('/admin/avatars')->on()->mobile()
         ->assertDisabled("[aria-label=\"Archiver {$passAvatar->name}\"]")
         ->assertDisabled("[aria-label=\"Supprimer {$likeAvatar->name}\"]")
         ->assertSee('Utilisé par le tutoriel');
@@ -283,6 +355,7 @@ test('the avatar catalog renders images color gradients and admin controls', fun
         )
         ->assertPresent('[aria-label="Archiver Aurore"]')
         ->assertPresent('[aria-label="Supprimer Aurore"]')
+        ->assertScript('document.documentElement.scrollWidth <= window.innerWidth', true)
         ->assertNoJavaScriptErrors();
 });
 
@@ -291,7 +364,7 @@ test('the admin dashboard renders account statistics and recent registrations', 
     $admin = User::factory()->withProfile()->admin()->create();
     $this->actingAs($admin);
 
-    visit('/dashboard')
+    visit('/dashboard')->on()->mobile()
         ->assertSee('Administration')
         ->assertSee('Comptes créés')
         ->assertSee('Comptes actifs')
@@ -299,6 +372,7 @@ test('the admin dashboard renders account statistics and recent registrations', 
         ->assertSee('Profils complétés')
         ->assertSee('recent@example.test')
         ->assertSee('Profil à compléter')
+        ->assertScript('document.documentElement.scrollWidth <= window.innerWidth', true)
         ->assertNoJavaScriptErrors();
 });
 
@@ -310,10 +384,13 @@ test('the member catalog exposes statistics and confirms immediate deletion', fu
 
     $page = visit('/admin/members')->on()->mobile()
         ->assertSee('Membres')
+        ->assertPresent('[data-test="admin-member-cards"]')
+        ->assertMissing('[data-test="admin-members-table"]')
         ->assertSee('member-to-delete@example.test')
         ->assertSee('personnes bloquées')
         ->assertCount('[data-test="delete-member-trigger"]', 1)
         ->assertCount('[data-test="start-member-conversation"]', 1)
+        ->assertScript('document.documentElement.scrollWidth <= window.innerWidth', true)
         ->assertNoJavaScriptErrors();
 
     $page->click('[data-test="delete-member-trigger"]')
@@ -337,6 +414,7 @@ test('an admin confirms partner roles assignment and removal from the member cat
 
     $page = visit('/admin/members')->resize($width, $height)
         ->assertSee('roles@example.test')
+        ->assertPresent($width >= 1024 ? '[data-test="admin-members-table"]' : '[data-test="admin-member-cards"]')
         ->assertCount('[data-test="manage-member-roles-trigger"]', 1)
         ->keys('[data-test="manage-member-roles-trigger"]', 'Enter')
         ->assertPresent('[role="dialog"]')
@@ -529,7 +607,8 @@ test('an admin manages interests through confirmations and generated actions', f
     $admin = User::factory()->withProfile()->admin()->create();
     $this->actingAs($admin);
 
-    $page = visit('/admin/interests')
+    $page = visit('/admin/interests')->on()->mobile()
+        ->assertScript('document.documentElement.scrollWidth <= window.innerWidth', true)
         ->clear('max_selections')
         ->fill('max_selections', '7')
         ->click('Enregistrer')

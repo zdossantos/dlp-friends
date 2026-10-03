@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Form, Head } from '@inertiajs/vue3';
 import { ref } from 'vue';
+import AdminPageHeader from '@/components/admin/AdminPageHeader.vue';
 import InputError from '@/components/InputError.vue';
 import AvatarPortrait from '@/components/profile/AvatarPortrait.vue';
 import { Badge } from '@/components/ui/badge';
@@ -49,18 +50,11 @@ function selectReplacementImage(avatarId: number, event: Event): void {
 <template>
     <Head :title="t('administration.avatars.title')" />
 
-    <main class="flex flex-1 flex-col gap-6 p-4 sm:p-6">
-        <header>
-            <p class="text-sm font-medium text-primary">
-                {{ t('administration.title') }}
-            </p>
-            <h1 class="text-3xl font-semibold tracking-tight">
-                {{ t('administration.avatars.title') }}
-            </h1>
-            <p class="mt-1 text-muted-foreground">
-                {{ t('administration.avatars.description') }}
-            </p>
-        </header>
+    <main class="flex min-w-0 flex-1 flex-col gap-6 p-4 sm:p-6">
+        <AdminPageHeader
+            :title="t('administration.avatars.title')"
+            :description="t('administration.avatars.description')"
+        />
 
         <Card>
             <CardHeader>
@@ -138,7 +132,7 @@ function selectReplacementImage(avatarId: number, event: Event): void {
                         >
                             {{ t('administration.avatars.choose_image') }}
                         </Label>
-                        <span class="text-sm text-muted-foreground">
+                        <span class="text-sm break-all text-muted-foreground">
                             {{
                                 newImageName ||
                                 t('administration.avatars.no_file')

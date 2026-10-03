@@ -1,6 +1,7 @@
 <?php
 
 return [
+    'menu' => 'Account menu',
     'email_delivery' => [
         'failed' => 'The email could not be sent. Please try again in a few moments.',
         'rate_limited' => 'Too many requests have been made. Please wait one minute before trying again.',

@@ -35,7 +35,7 @@ const { formatDate, t } = useTranslations();
 </script>
 
 <template>
-    <Card data-test="partner-moderation-card">
+    <Card class="min-w-0" data-test="partner-moderation-card">
         <CardHeader>
             <div class="flex flex-col gap-4 sm:flex-row sm:items-start">
                 <img
@@ -45,8 +45,12 @@ const { formatDate, t } = useTranslations();
                     class="aspect-video w-full rounded-xl object-cover sm:w-56"
                 />
                 <div class="min-w-0 space-y-1">
-                    <CardTitle>{{ revision.nameFr }}</CardTitle>
-                    <CardDescription>{{ revision.nameEn }}</CardDescription>
+                    <CardTitle class="break-words">{{
+                        revision.nameFr
+                    }}</CardTitle>
+                    <CardDescription class="break-words">{{
+                        revision.nameEn
+                    }}</CardDescription>
                     <p
                         v-if="revision.submittedAt"
                         class="text-xs text-muted-foreground"
@@ -69,7 +73,9 @@ const { formatDate, t } = useTranslations();
                     <h3 class="font-semibold">
                         {{ t('administration.partners.french_content') }}
                     </h3>
-                    <p class="mt-2 text-sm leading-6 text-muted-foreground">
+                    <p
+                        class="mt-2 text-sm leading-6 break-words text-muted-foreground"
+                    >
                         {{ revision.descriptionFr }}
                     </p>
                 </section>
@@ -77,7 +83,9 @@ const { formatDate, t } = useTranslations();
                     <h3 class="font-semibold">
                         {{ t('administration.partners.english_content') }}
                     </h3>
-                    <p class="mt-2 text-sm leading-6 text-muted-foreground">
+                    <p
+                        class="mt-2 text-sm leading-6 break-words text-muted-foreground"
+                    >
                         {{ revision.descriptionEn }}
                     </p>
                 </section>

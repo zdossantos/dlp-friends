@@ -1,13 +1,7 @@
 <script setup lang="ts">
 import { Form, Head } from '@inertiajs/vue3';
-import {
-    Ban,
-    CircleCheck,
-    CircleX,
-    ExternalLink,
-    Megaphone,
-    Save,
-} from '@lucide/vue';
+import { Ban, CircleCheck, CircleX, ExternalLink, Save } from '@lucide/vue';
+import AdminPageHeader from '@/components/admin/AdminPageHeader.vue';
 import InputError from '@/components/InputError.vue';
 import { Button } from '@/components/ui/button';
 import {
@@ -46,20 +40,10 @@ const { formatDate, t } = useTranslations();
     <Head :title="t('administration.partner_announcements.page_title')" />
 
     <main class="flex flex-1 flex-col gap-8 p-4 sm:p-6">
-        <header>
-            <p class="text-sm font-medium text-primary">
-                {{ t('administration.title') }}
-            </p>
-            <div class="mt-1 flex items-center gap-3">
-                <Megaphone class="size-7 text-primary" aria-hidden="true" />
-                <h1 class="text-3xl font-semibold tracking-tight">
-                    {{ t('administration.partner_announcements.title') }}
-                </h1>
-            </div>
-            <p class="mt-2 max-w-3xl text-muted-foreground">
-                {{ t('administration.partner_announcements.description') }}
-            </p>
-        </header>
+        <AdminPageHeader
+            :title="t('administration.partner_announcements.title')"
+            :description="t('administration.partner_announcements.description')"
+        />
 
         <Card>
             <CardHeader>
@@ -163,7 +147,9 @@ const { formatDate, t } = useTranslations();
                 data-test="partner-announcement-moderation-card"
             >
                 <CardHeader>
-                    <CardTitle>{{ announcement.title }}</CardTitle>
+                    <CardTitle class="break-words">{{
+                        announcement.title
+                    }}</CardTitle>
                     <CardDescription>
                         <span v-if="announcement.partnerName">
                             {{ announcement.partnerName }} ·
@@ -184,7 +170,9 @@ const { formatDate, t } = useTranslations();
                     </CardDescription>
                 </CardHeader>
                 <CardContent class="space-y-6">
-                    <p class="text-sm leading-6 whitespace-pre-line">
+                    <p
+                        class="text-sm leading-6 break-words whitespace-pre-line"
+                    >
                         {{ announcement.content }}
                     </p>
                     <a

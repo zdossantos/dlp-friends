@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Form, Head, router } from '@inertiajs/vue3';
-import { ArrowDown, ArrowUp, Building2, EyeOff } from '@lucide/vue';
+import { ArrowDown, ArrowUp, EyeOff } from '@lucide/vue';
+import AdminPageHeader from '@/components/admin/AdminPageHeader.vue';
 import PartnerModerationCard from '@/components/partners/PartnerModerationCard.vue';
 import type { ModeratedPartnerRevision } from '@/components/partners/PartnerModerationCard.vue';
 import { Button } from '@/components/ui/button';
@@ -46,20 +47,10 @@ function moveProfile(index: number, direction: -1 | 1): void {
     <Head :title="t('administration.partners.title')" />
 
     <main class="flex flex-1 flex-col gap-8 p-4 sm:p-6">
-        <header>
-            <p class="text-sm font-medium text-primary">
-                {{ t('administration.title') }}
-            </p>
-            <div class="mt-1 flex items-center gap-3">
-                <Building2 class="size-7 text-primary" aria-hidden="true" />
-                <h1 class="text-3xl font-semibold tracking-tight">
-                    {{ t('administration.partners.title') }}
-                </h1>
-            </div>
-            <p class="mt-2 max-w-3xl text-muted-foreground">
-                {{ t('administration.partners.description') }}
-            </p>
-        </header>
+        <AdminPageHeader
+            :title="t('administration.partners.title')"
+            :description="t('administration.partners.description')"
+        />
 
         <section aria-labelledby="pending-partners-title" class="space-y-4">
             <div>
@@ -120,10 +111,12 @@ function moveProfile(index: number, direction: -1 | 1): void {
                                 class="aspect-video w-full rounded-lg object-cover sm:w-28"
                             />
                             <div class="min-w-0 flex-1">
-                                <p class="font-semibold">
+                                <p class="font-semibold break-words">
                                     {{ profile.revision.nameFr }}
                                 </p>
-                                <p class="text-sm text-muted-foreground">
+                                <p
+                                    class="text-sm break-words text-muted-foreground"
+                                >
                                     {{ profile.revision.nameEn }}
                                 </p>
                             </div>

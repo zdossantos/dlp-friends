@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Form, Head } from '@inertiajs/vue3';
+import AdminPageHeader from '@/components/admin/AdminPageHeader.vue';
 import InputError from '@/components/InputError.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -47,18 +48,11 @@ const profileCountLabel = (count: number): string =>
 <template>
     <Head :title="t('administration.interests.title')" />
 
-    <main class="flex flex-1 flex-col gap-6 p-4 sm:p-6">
-        <header>
-            <p class="text-sm font-medium text-primary">
-                {{ t('administration.title') }}
-            </p>
-            <h1 class="text-3xl font-semibold tracking-tight">
-                {{ t('administration.interests.title') }}
-            </h1>
-            <p class="mt-1 text-muted-foreground">
-                {{ t('administration.interests.description') }}
-            </p>
-        </header>
+    <main class="flex min-w-0 flex-1 flex-col gap-6 p-4 sm:p-6">
+        <AdminPageHeader
+            :title="t('administration.interests.title')"
+            :description="t('administration.interests.description')"
+        />
 
         <section
             data-test="catalog-controls"

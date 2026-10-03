@@ -76,6 +76,10 @@ return [
         'description' => 'Choisis l’espace que tu souhaites utiliser.',
         'member' => 'Espace membre',
         'partner' => 'Espace partenaire',
+        'admin' => 'Espace administration',
+    ],
+    'grouped_navigation' => [
+        'description' => 'Choisis la page que tu souhaites ouvrir.',
     ],
     'errors' => [
         'generic_title' => 'Une erreur est survenue',

@@ -1,5 +1,8 @@
 <script setup lang="ts">
 import { Form, Head, Link } from '@inertiajs/vue3';
+import { useMediaQuery } from '@vueuse/core';
+import AdminPageHeader from '@/components/admin/AdminPageHeader.vue';
+import OnboardingProgressCard from '@/components/admin/OnboardingProgressCard.vue';
 import InputError from '@/components/InputError.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -65,6 +68,7 @@ const props = defineProps<{
     };
 }>();
 const { formatDate: formatLocalizedDate, t } = useTranslations();
+const isDesktop = useMediaQuery('(min-width: 1024px)');
 
 const statCards = [
     {
@@ -110,17 +114,10 @@ function formatDate(value: string): string {
     <Head :title="t('administration.onboarding.page_title')" />
 
     <main class="flex flex-1 flex-col gap-6 p-4 sm:p-6">
-        <header>
-            <p class="text-sm font-medium text-primary">
-                {{ t('administration.title') }}
-            </p>
-            <h1 class="text-3xl font-semibold tracking-tight">
-                {{ t('administration.onboarding.page_title') }}
-            </h1>
-            <p class="mt-1 text-muted-foreground">
-                {{ t('administration.onboarding.description') }}
-            </p>
-        </header>
+        <AdminPageHeader
+            :title="t('administration.onboarding.page_title')"
+            :description="t('administration.onboarding.description')"
+        />
 
         <section class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
             <Card v-for="stat in statCards" :key="stat.key">
@@ -385,71 +382,103 @@ function formatDate(value: string): string {
                     }}
                 </CardDescription>
             </CardHeader>
-            <CardContent class="overflow-x-auto">
-                <table class="w-full min-w-3xl text-left text-sm">
-                    <thead class="border-b text-muted-foreground">
-                        <tr>
-                            <th class="px-3 py-2 font-medium">
-                                {{ t('administration.onboarding.member') }}
-                            </th>
-                            <th class="px-3 py-2 font-medium">
-                                {{ t('administration.onboarding.status') }}
-                            </th>
-                            <th class="px-3 py-2 font-medium">
-                                {{ t('administration.onboarding.step') }}
-                            </th>
-                            <th class="px-3 py-2 font-medium">
-                                {{ t('administration.onboarding.updated_at') }}
-                            </th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr
-                            v-for="member in members.data"
-                            :key="member.id"
-                            class="border-b last:border-0"
-                        >
-                            <td class="px-3 py-3">
-                                <span class="block font-medium">{{
-                                    member.display_name
-                                }}</span>
-                                <span class="text-muted-foreground">{{
-                                    member.email
-                                }}</span>
-                            </td>
-                            <td class="px-3 py-3">
-                                <Badge
-                                    :variant="
-                                        member.status === 'completed'
-                                            ? 'default'
-                                            : 'secondary'
-                                    "
-                                >
-                                    {{ statusLabels[member.status] }}
-                                </Badge>
-                            </td>
-                            <td class="px-3 py-3">
-                                {{
-                                    member.step
-                                        ? (stepLabels[member.step] ??
-                                          member.step)
-                                        : '—'
-                                }}
-                            </td>
-                            <td class="px-3 py-3 text-muted-foreground">
-                                {{ formatDate(member.updated_at) }}
-                            </td>
-                        </tr>
-                        <tr v-if="members.data.length === 0">
-                            <td
-                                colspan="4"
-                                class="px-3 py-8 text-center text-muted-foreground"
+            <CardContent>
+                <div
+                    v-if="!isDesktop"
+                    class="grid gap-3"
+                    data-test="onboarding-progress-cards"
+                >
+                    <OnboardingProgressCard
+                        v-for="member in members.data"
+                        :key="member.id"
+                        :member="member"
+                        :status-label="statusLabels[member.status]"
+                        :step-label="
+                            member.step
+                                ? (stepLabels[member.step] ?? member.step)
+                                : '—'
+                        "
+                    />
+                    <p
+                        v-if="members.data.length === 0"
+                        class="py-8 text-center text-muted-foreground"
+                    >
+                        {{ t('administration.onboarding.empty') }}
+                    </p>
+                </div>
+                <div v-else class="overflow-x-auto">
+                    <table
+                        class="w-full min-w-3xl text-left text-sm"
+                        data-test="onboarding-progress-table"
+                    >
+                        <thead class="border-b text-muted-foreground">
+                            <tr>
+                                <th class="px-3 py-2 font-medium">
+                                    {{ t('administration.onboarding.member') }}
+                                </th>
+                                <th class="px-3 py-2 font-medium">
+                                    {{ t('administration.onboarding.status') }}
+                                </th>
+                                <th class="px-3 py-2 font-medium">
+                                    {{ t('administration.onboarding.step') }}
+                                </th>
+                                <th class="px-3 py-2 font-medium">
+                                    {{
+                                        t(
+                                            'administration.onboarding.updated_at',
+                                        )
+                                    }}
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr
+                                v-for="member in members.data"
+                                :key="member.id"
+                                class="border-b last:border-0"
                             >
-                                {{ t('administration.onboarding.empty') }}
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
+                                <td class="px-3 py-3">
+                                    <span class="block font-medium">{{
+                                        member.display_name
+                                    }}</span>
+                                    <span class="text-muted-foreground">{{
+                                        member.email
+                                    }}</span>
+                                </td>
+                                <td class="px-3 py-3">
+                                    <Badge
+                                        :variant="
+                                            member.status === 'completed'
+                                                ? 'default'
+                                                : 'secondary'
+                                        "
+                                    >
+                                        {{ statusLabels[member.status] }}
+                                    </Badge>
+                                </td>
+                                <td class="px-3 py-3">
+                                    {{
+                                        member.step
+                                            ? (stepLabels[member.step] ??
+                                              member.step)
+                                            : '—'
+                                    }}
+                                </td>
+                                <td class="px-3 py-3 text-muted-foreground">
+                                    {{ formatDate(member.updated_at) }}
+                                </td>
+                            </tr>
+                            <tr v-if="members.data.length === 0">
+                                <td
+                                    colspan="4"
+                                    class="px-3 py-8 text-center text-muted-foreground"
+                                >
+                                    {{ t('administration.onboarding.empty') }}
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
 
                 <nav
                     v-if="members.links.length > 3"

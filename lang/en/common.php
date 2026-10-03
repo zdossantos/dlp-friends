@@ -72,6 +72,10 @@ return [
         'description' => 'Choose the workspace you want to use.',
         'member' => 'Member workspace',
         'partner' => 'Partner workspace',
+        'admin' => 'Administration workspace',
+    ],
+    'grouped_navigation' => [
+        'description' => 'Choose the page you want to open.',
     ],
     'errors' => [
         'generic_title' => 'Something went wrong',

@@ -434,11 +434,14 @@ test('an administrator sees administration and member return navigation', functi
             "getComputedStyle(document.documentElement).overflowY !== 'hidden' && getComputedStyle(document.body).overflowY !== 'hidden'",
             true,
         )
-        ->assertPresent('[data-test="app-logo-icon"]')
-        ->assertAttribute('[data-test="app-logo-icon"]', 'aria-hidden', 'true')
-        ->assertSeeLink('Univers favoris')
-        ->assertSeeLink('Retour au profil')
-        ->assertSee('Admin Aurore');
+        ->assertPresent('[data-test="admin-bottom-navigation"]')
+        ->assertPresent('[data-test="admin-dashboard-link"][aria-current="page"]')
+        ->assertPresent('[data-test="workspace-switcher-trigger"]')
+        ->click('[data-test="workspace-switcher-trigger"]')
+        ->assertPresent('[data-test="workspace-member-link"]')
+        ->assertPresent('[data-test="workspace-admin-link"][aria-current="page"]')
+        ->assertSee('Espace administration')
+        ->assertNoJavaScriptErrors();
 });
 
 test('administration identity falls back to email without a profile', function () {
@@ -696,16 +699,88 @@ test('a member partner switches workspaces from the bottom navigation', function
         ->assertNoJavaScriptErrors();
 });
 
-test('partner sidebar navigation disappears on the first render after role removal', function () {
+test('shared workspace switcher exposes authorized destinations and marks the current workspace', function () {
+    $administrator = User::factory()->withProfile()->admin()->partner()->create();
+    $this->actingAs($administrator);
+
+    $page = visit('/discover')
+        ->on()->mobile()
+        ->assertPresent('[data-test="workspace-switcher-trigger"]')
+        ->click('[data-test="workspace-switcher-trigger"]')
+        ->assertSee('Changer d’espace')
+        ->assertAttribute('[data-test="workspace-member-link"]', 'aria-current', 'page')
+        ->assertPresent('[data-test="workspace-partner-link"]')
+        ->assertPresent('[data-test="workspace-admin-link"]')
+        ->assertAttribute('[data-test="workspace-admin-link"]', 'aria-label', 'Espace administration');
+
+    $page->keys('[data-test="workspace-admin-link"]', 'Escape')
+        ->assertScript(
+            "document.activeElement === document.querySelector('[data-test=workspace-switcher-trigger]')",
+            true,
+        )
+        ->assertNoJavaScriptErrors();
+});
+
+test('workspace switcher exposes exactly the workspaces authorized by the role matrix', function (
+    array $roles,
+    string $path,
+    array $expectedDestinations,
+) {
+    $account = User::factory()->withProfile()->create();
+    $roleIds = Role::query()
+        ->whereIn('name', $roles)
+        ->pluck('id');
+    $account->roles()->sync($roleIds);
+    $account->refresh();
+    $this->actingAs($account);
+
+    $page = visit($path)->on()->mobile();
+
+    if (count($expectedDestinations) === 1) {
+        $page->assertMissing('[data-test="workspace-switcher-trigger"]')
+            ->assertNoJavaScriptErrors();
+
+        return;
+    }
+
+    $expectedTestIds = array_map(
+        fn (string $destination): string => 'workspace-'.$destination.'-link',
+        $expectedDestinations,
+    );
+    sort($expectedTestIds);
+
+    $currentWorkspace = str_starts_with($path, '/admin') || $path === '/dashboard'
+        ? 'admin'
+        : (str_starts_with($path, '/partner') ? 'partner' : 'member');
+
+    $page->assertAttribute(
+        '[data-test="workspace-switcher-trigger"]',
+        'data-workspaces',
+        implode(',', $expectedTestIds),
+    )->assertAttribute(
+        '[data-test="workspace-switcher-trigger"]',
+        'data-current-workspace',
+        'workspace-'.$currentWorkspace.'-link',
+    )->assertNoJavaScriptErrors();
+})->with([
+    'member only' => [['user'], '/discover', ['member']],
+    'partner only' => [['partner'], '/partner/profile', ['partner']],
+    'administrator only' => [['admin'], '/dashboard', ['admin']],
+    'member and partner' => [['user', 'partner'], '/discover', ['member', 'partner']],
+    'member and administrator' => [['user', 'admin'], '/dashboard', ['member', 'admin']],
+    'partner and administrator' => [['partner', 'admin'], '/dashboard', ['partner', 'admin']],
+    'all workspaces' => [['user', 'partner', 'admin'], '/dashboard', ['member', 'partner', 'admin']],
+]);
+
+test('partner workspace navigation disappears on the first render after role removal', function () {
     $admin = User::factory()->withProfile()->admin()->partner()->create();
     $admin->profile?->update(['display_name' => 'Admin partenaire']);
     $this->actingAs($admin);
 
     $page = visit('/dashboard')
-        ->assertSee('Espace partenaire')
-        ->assertSeeLink('Profil partenaire')
-        ->assertSeeLink('Annonces partenaire')
-        ->assertPresent('a[href="/partner/statistics"]')
+        ->click('[data-test="workspace-switcher-trigger"]')
+        ->assertPresent('[data-test="workspace-partner-link"]')
+        ->keys('[data-test="workspace-partner-link"]', 'Escape')
         ->click('[data-test="admin-partners-menu-trigger"]')
         ->assertPresent('a[href="/admin/partner-statistics"]');
 
@@ -713,10 +788,9 @@ test('partner sidebar navigation disappears on the first render after role remov
     $admin->roles()->detach($partnerRole);
 
     $page->navigate('/dashboard')
-        ->assertDontSee('Espace partenaire')
-        ->assertDontSeeLink('Profil partenaire')
-        ->assertDontSeeLink('Annonces partenaire')
-        ->assertMissing('a[href="/partner/statistics"]')
+        ->click('[data-test="workspace-switcher-trigger"]')
+        ->assertMissing('[data-test="workspace-partner-link"]')
+        ->keys('[data-test="workspace-admin-link"]', 'Escape')
         ->click('[data-test="admin-partners-menu-trigger"]')
         ->assertPresent('a[href="/admin/partner-statistics"]')
         ->assertNoJavaScriptErrors();

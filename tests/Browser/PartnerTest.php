@@ -109,25 +109,22 @@ test('a partner authors an announcement and admin approves sends and checks aggr
     $this->actingAs($partner);
     visit('/partner/statistics')->resize(320, 700)
         ->assertSee('Une journée entre amis')
-        ->assertAttribute('[data-test="partner-statistics-table"]', 'tabindex', '0')
-        ->keys('[data-test="partner-statistics-table"]', 'ArrowRight')
-        ->assertScript('document.activeElement.matches("[data-test=partner-statistics-table]:focus-visible") && parseFloat(getComputedStyle(document.activeElement).outlineWidth) >= 2', true)
-        ->assertScript('document.querySelector("[data-test=partner-statistics-table]").scrollLeft > 0', true)
+        ->assertAttribute('[data-test="partner-statistics-table"]', 'data-layout', 'cards')
+        ->assertPresent('[data-test="partner-statistics-card"]')
         ->assertScript('document.documentElement.scrollWidth <= window.innerWidth', true)
         ->assertDontSee($recipient->email)
         ->assertNoAccessibilityIssues();
 });
 
-test('partner statistics can be scrolled with the keyboard without overflowing the document', function () {
+test('partner statistics use cards without overflowing the mobile document', function () {
     $partner = User::factory()->partnerOnly()->create();
     $profile = PartnerProfile::factory()->for($partner)->published()->create();
     PartnerAnnouncement::factory()->for($profile)->create(['title' => 'Résultats accessibles']);
     $this->actingAs($partner);
     visit('/partner/statistics')->resize(320, 700)
         ->assertSee('Résultats accessibles')
-        ->assertAttribute('[data-test="partner-statistics-table"]', 'tabindex', '0')
-        ->keys('[data-test="partner-statistics-table"]', 'ArrowRight')
-        ->assertScript('document.querySelector("[data-test=partner-statistics-table]").scrollLeft > 0', true)
+        ->assertAttribute('[data-test="partner-statistics-table"]', 'data-layout', 'cards')
+        ->assertPresent('[data-test="partner-statistics-card"]')
         ->assertScript('document.documentElement.scrollWidth <= window.innerWidth', true);
 });
 

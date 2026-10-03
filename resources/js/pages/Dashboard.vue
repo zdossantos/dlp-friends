@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Head } from '@inertiajs/vue3';
+import AdminPageHeader from '@/components/admin/AdminPageHeader.vue';
 import { Badge } from '@/components/ui/badge';
 import {
     Card,
@@ -36,18 +37,11 @@ const formatDate = (value: string | null): string =>
 <template>
     <Head :title="t('administration.title')" />
 
-    <main class="flex flex-1 flex-col gap-6 p-4 sm:p-6">
-        <div>
-            <p class="text-sm font-medium text-primary">
-                {{ t('administration.dashboard.eyebrow') }}
-            </p>
-            <h1 class="text-3xl font-semibold tracking-tight">
-                {{ t('administration.title') }}
-            </h1>
-            <p class="mt-1 text-muted-foreground">
-                {{ t('administration.dashboard.description') }}
-            </p>
-        </div>
+    <main class="flex min-w-0 flex-1 flex-col gap-6 p-4 sm:p-6">
+        <AdminPageHeader
+            :title="t('administration.title')"
+            :description="t('administration.dashboard.description')"
+        />
 
         <section class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
             <Card>
@@ -108,8 +102,10 @@ const formatDate = (value: string | null): string =>
                         :key="`${registration.email}-${registration.registered_at}`"
                         class="flex flex-col justify-between gap-3 py-4 sm:flex-row sm:items-center"
                     >
-                        <div>
-                            <p class="font-medium">{{ registration.email }}</p>
+                        <div class="min-w-0">
+                            <p class="font-medium break-all">
+                                {{ registration.email }}
+                            </p>
                             <p class="text-sm text-muted-foreground">
                                 {{ formatDate(registration.registered_at) }}
                             </p>

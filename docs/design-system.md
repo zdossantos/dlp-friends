@@ -159,10 +159,19 @@ Le contenu, l’état et les actions restent uniques entre les deux formats. Les
 - Concevoir mobile first à partir d’une largeur minimale de 320 px.
 - Les paliers Tailwind `sm`, `md`, `lg` et `xl` enrichissent la disposition sans
   modifier l’ordre logique du contenu.
-- Les parcours membres utilisent une navigation inférieure sur les petits
-  écrans, ordonnée Découvrir, Conversations, Événements, Notifications puis
-  Profil ; les surfaces administratives et de réglages peuvent employer une
-  navigation latérale ou une grille plus large.
+- Les espaces membre et administration utilisent une navigation inférieure sur
+  toutes les largeurs. L’administration présente au plus cinq actions : Tableau
+  de bord et Membres sont directs, Catalogues et Partenaires ouvrent une
+  `Sheet` remontant du bas, et le changement d’espace apparaît uniquement pour
+  les comptes cumulant plusieurs rôles. Une URL enfant active à la fois son
+  entrée et le bouton de son groupe.
+- Le sélecteur d’espace expose strictement les espaces autorisés par les rôles
+  `user`, `partner` et `admin`, et marque l’espace courant. Les notifications
+  restent une destination membre ou partenaire et ne figurent jamais dans la
+  navigation d’administration.
+- Les listes administratives détaillées utilisent des cartes sous `lg`, puis
+  une table à partir de `lg`, à partir des mêmes données et avec les mêmes
+  actions. Une seule variante interactive est montée à la fois.
 - Respecter les zones sûres avec `env(safe-area-inset-*)` pour les écrans
   concernés.
 - Limiter la largeur des formulaires, profils, cartes de découverte et
@@ -209,10 +218,11 @@ Le contenu, l’état et les actions restent uniques entre les deux formats. Les
   soumissions, décisions et envois désactivent le bouton pendant le traitement.
   Les actions principales des formulaires partenaire, de l’envoi, de la
   confirmation des rôles et du consentement mesurent au moins 44 px de haut.
-- Les statistiques gardent une vraie table avec légende et en-têtes. Sur petit
-  écran, seule sa région nommée et focalisable défile horizontalement ; le
-  document ne doit pas déborder. Le focus utilise le token `ring` et les
-  flèches du clavier permettent de parcourir les colonnes.
+- Les statistiques utilisent des cartes sémantiques sur petit écran et une
+  vraie table avec légende et en-têtes à partir de `lg`. Les deux variantes
+  proviennent des mêmes agrégats et conservent les mêmes actions autorisées,
+  sans jamais exposer l’identité des destinataires. Le document ne doit pas
+  déborder horizontalement.
 - L’envoi d’une annonce approuvée est une action administrative dans cette
   table, avec spinner, libellé de chargement et erreur reliée au bouton. Le
   partenaire ne voit pas ces contrôles opérationnels.

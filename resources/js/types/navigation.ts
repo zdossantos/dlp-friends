@@ -14,3 +14,21 @@ export type NavItem = {
     items?: NavItem[];
     testId?: string;
 };
+
+export type BottomNavigationItem = {
+    label: string;
+    href: NonNullable<InertiaLinkProps['href']>;
+    icon: LucideIcon;
+    activeParents?: string[];
+    unreadCount?: number;
+    unreadLabel?: string;
+    testId?: string;
+};
+
+export type WorkspaceDestination = {
+    role: 'user' | 'partner' | 'admin';
+    label: string;
+    href: NonNullable<InertiaLinkProps['href']>;
+    icon: LucideIcon;
+    testId: string;
+};
