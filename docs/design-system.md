@@ -310,3 +310,13 @@ doivent respecter les exigences de [`security-privacy.md`](security-privacy.md).
   et les libellés accessibles pour tout changement visuel transversal.
 - Ne pas utiliser le design system pour redéfinir un parcours ou une règle
   métier : ces décisions appartiennent au [`PRD.md`](PRD.md).
+
+### Bulles des réseaux sociaux
+
+Les profils détaillés réutilisent `ProfileSocialLinks` : bulles arrondies avec
+icône locale monochrome et nom du réseau, retour à la ligne à 320 px, cible
+de 44 px minimum, focus clavier et contraste fourni par les couleurs du thème.
+Une mention et le libellé accessible signalent le service externe et le nouvel
+onglet. Les cinq icônes proviennent de Simple Icons sous CC0 1.0 Universal ;
+la licence et la source sont conservées dans `components/profile/social-icons`.
+Aucun logo ou personnage Disney n’est ajouté.

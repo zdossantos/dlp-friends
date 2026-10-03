@@ -77,6 +77,14 @@ Paris.
 
 - Nom d’affichage public non unique, âge calculé depuis le compte, bio courte,
   fréquence de visite et visibilité. Aucun prénom n’est stocké.
+- Jusqu’à trois liens facultatifs, un par réseau : Instagram, Facebook, TikTok,
+  YouTube et X. Visibilité indépendante `hidden`, `matches` (par défaut) ou
+  `members`. Le propriétaire voit toujours ses liens ; les autres membres
+  autorisés les voient seulement dans les profils détaillés, y compris depuis
+  les événements. Aucun lien sur les cartes de découverte ni dans les listes.
+  Le blocage dans les deux sens et l’indisponibilité du profil priment.
+  Les liens s’ouvrent dans un nouvel onglet avec une indication de service
+  externe ; « Tous les membres » avertit du contact possible avant un match.
 - Avatar actif obligatoire, choisi dans un catalogue administrable. Chaque
   avatar associe une image à un fond dégradé défini par deux couleurs.
 - Photo personnelle facultative, distincte de l’avatar obligatoire. Les images
@@ -288,6 +296,7 @@ Paris.
 | --- | --- | --- |
 | Inscription e-mail, vérification et récupération | **Implémenté** | Fortify, pages et tests couvrent le parcours. |
 | Majorité, compte actif et contrôle d’accès social | **Implémenté** | Stockage, middlewares et tests sont présents. |
+| Liens de réseaux sociaux facultatifs | **Implémenté** | Cinq réseaux, trois liens maximum, visibilité serveur, export et purge, bulles accessibles FR/EN. |
 | Profil, avatar obligatoire et intérêts | **Implémenté** | Parcours membre et catalogues administrables sont livrés. |
 | Découverte, swipes et match réciproque | **Implémenté** | Service de classement, historique personnel paginé des profils passés, conversion en like, actions et tests sont présents. |
 | Conversations, amorces, messages, réactions, saisie, présence et état de lecture | **Implémenté** | Trois amorces aléatoires issues d’un catalogue bilingue en base facilitent le premier message. Le stockage, la diffusion privée, les J’aime uniques synchronisés en temps réel, leurs notifications in-app/PWA, l’indicateur de saisie éphémère, la présence confidentielle, la recherche locale et les tests sont présents. |

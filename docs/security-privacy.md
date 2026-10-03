@@ -167,3 +167,20 @@ publicitaires restent refusées.
 Le signalement de profils/messages sociaux, leur console de modération et les
 processus d’équipe sont prévus en V2. La modération des fiches et annonces
 partenaires est déjà livrée et ne constitue pas une modération sociale.
+
+### Liens externes du profil
+
+Les liens saisis par le membre sont distincts des identités OAuth de connexion.
+Le contrôle Laravel retire complètement `social_links` des réponses publiques
+non autorisées : visibilité cachée, absence de match avec le réglage par défaut,
+blocage dans un sens ou l’autre, profil indisponible. Le propriétaire conserve
+l’accès à ses propres liens. Les cartes de découverte et listes de participants
+n’exposent jamais ces données.
+
+La validation impose HTTPS et les domaines exacts du réseau sélectionné, refuse
+les identifiants embarqués, domaines trompeurs et ports non standard. Aucun appel
+aux services externes, aperçu distant ou widget n’est effectué. Les liens utilisent
+`target="_blank"` et `rel="noopener noreferrer"` avec une indication accessible.
+Le choix « Tous les membres » avertit du contact hors application avant un match.
+Les liens et leur visibilité figurent dans l’export personnel ; le profil devient
+inaccessible à la demande de suppression et est supprimé avec eux lors de la purge.

@@ -48,6 +48,13 @@ et son état de livraison sont définis dans le [`PRD.md`](PRD.md).
 - `profiles.display_name` est obligatoire une fois l'onboarding terminé et n'est volontairement pas unique.
 - `profiles.onboarding_completed_at` indique qu'un membre a terminé le profil minimal requis.
 - `profiles.avatar_id` référence l'avatar choisi. Le profil n'est complet que si cette référence désigne un avatar actif.
+- `profiles.social_links` est un JSON nullable contenant au plus trois paires
+  `{network, url}`, avec un réseau distinct parmi Instagram, Facebook, TikTok,
+  YouTube et X. Seules les URL HTTPS des domaines autorisés du réseau sont
+  acceptées, sans identifiants embarqués ni port autre que 443.
+- `profiles.social_links_visibility` vaut `hidden`, `matches` (valeur par défaut)
+  ou `members`. Ces champs facultatifs ne participent pas à la complétude.
+  Ils sont exportés avec le profil et supprimés en cascade à la purge du compte.
 - `profiles.visibility` vaut `visible` ou `hidden`. Seul un profil `visible` appartenant à un compte `active` est découvrable.
 - `avatars.image_path` référence un fichier du stockage privé. `primary_color` et `secondary_color` sont des couleurs hexadécimales utilisées pour générer le fond dégradé à l'affichage.
 - `interest_categories` sert uniquement à rattacher techniquement les intérêts ; aucune gestion de catégories n’est exposée dans le MVP.

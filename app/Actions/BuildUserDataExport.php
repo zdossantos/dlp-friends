@@ -76,6 +76,8 @@ final class BuildUserDataExport
             'profile' => $user->profile === null ? null : [
                 'display_name' => $user->profile->display_name,
                 'bio' => $user->profile->bio,
+                'social_links' => $user->profile->social_links ?? [],
+                'social_links_visibility' => $user->profile->social_links_visibility->value,
                 'visit_frequency' => $user->profile->visit_frequency?->value,
                 'visibility' => $user->profile->visibility->value,
                 'avatar' => $user->profile->avatar === null ? null : [

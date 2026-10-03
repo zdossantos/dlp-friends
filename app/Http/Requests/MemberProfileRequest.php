@@ -3,8 +3,11 @@
 namespace App\Http\Requests;
 
 use App\Enums\ProfileVisibility;
+use App\Enums\SocialLinksVisibility;
+use App\Enums\SocialNetwork;
 use App\Enums\VisitFrequency;
 use App\Models\InterestSetting;
+use App\Rules\SocialNetworkUrl;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -43,6 +46,11 @@ class MemberProfileRequest extends FormRequest
             'bio' => ['nullable', 'string', 'max:500'],
             'visit_frequency' => ['required', Rule::enum(VisitFrequency::class)],
             'visibility' => ['required', Rule::enum(ProfileVisibility::class)],
+            'social_links_visibility' => ['sometimes', 'required', Rule::enum(SocialLinksVisibility::class)],
+            'social_links' => ['sometimes', 'array', 'list', 'max:3'],
+            'social_links.*' => ['required', 'array:network,url'],
+            'social_links.*.network' => ['required', 'string', 'distinct', Rule::enum(SocialNetwork::class)],
+            'social_links.*.url' => ['required', 'string', 'max:2048', new SocialNetworkUrl],
             'interest_ids' => ['present', 'array'],
             'interest_ids.*' => [
                 'integer',
