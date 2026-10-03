@@ -69,7 +69,13 @@ withDefaults(
                     data-test="profile-avatar"
                 />
             </div>
-            <div class="absolute top-3 right-3 z-30 flex gap-2">
+            <ProfileSocialLinks
+                :links="socialLinks"
+                class="absolute top-3 left-3 z-30"
+            />
+            <div
+                class="absolute top-3 right-3 z-30 flex max-w-[calc(100%-4.5rem)] flex-wrap justify-end gap-2"
+            >
                 <Badge
                     v-if="isAdmin"
                     data-test="admin-profile-badge"
@@ -120,8 +126,6 @@ withDefaults(
                     {{ bio }}
                 </p>
             </section>
-
-            <ProfileSocialLinks :links="socialLinks" />
 
             <section>
                 <h2 class="mb-1 flex items-center gap-2 text-sm font-semibold">

@@ -311,12 +311,15 @@ doivent respecter les exigences de [`security-privacy.md`](security-privacy.md).
 - Ne pas utiliser le design system pour redéfinir un parcours ou une règle
   métier : ces décisions appartiennent au [`PRD.md`](PRD.md).
 
-### Bulles des réseaux sociaux
+### Boutons des réseaux sociaux
 
-Les profils détaillés réutilisent `ProfileSocialLinks` : bulles arrondies avec
-icône locale monochrome et nom du réseau, retour à la ligne à 320 px, cible
-de 44 px minimum, focus clavier et contraste fourni par les couleurs du thème.
-Une mention et le libellé accessible signalent le service externe et le nouvel
-onglet. Les cinq icônes proviennent de Simple Icons sous CC0 1.0 Universal ;
+Les profils détaillés réutilisent `ProfileSocialLinks` : boutons circulaires
+avec uniquement une icône locale monochrome, disposés en colonne en haut à
+gauche de l’avatar. Ils restent distincts des actions en haut à droite et de
+la description, avec une cible de 44 px minimum, un focus clavier et un
+contraste fourni par les couleurs du thème. Le nom du réseau, le service
+externe et le nouvel onglet sont indiqués dans le libellé accessible et
+l’infobulle. Les actions « Modifier mon profil » et « Gérer les cookies »
+partagent une ligne, y compris à 320 px. Les cinq icônes proviennent de Simple Icons sous CC0 1.0 Universal ;
 la licence et la source sont conservées dans `components/profile/social-icons`.
 Aucun logo ou personnage Disney n’est ajouté.

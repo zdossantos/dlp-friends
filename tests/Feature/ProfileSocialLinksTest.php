@@ -75,6 +75,44 @@ test('social links reject unsafe URLs and domains that do not belong to their ne
     'https://127.0.0.1/friend', 'https://instagram.com./friend', '<a href="https://instagram.com">friend</a>',
 ]);
 
+test('YouTube links copied from sharing are accepted without changing their URL', function (string $url) {
+    $owner = User::factory()->withProfile()->create();
+    $this->actingAs($owner)->patch(route('member-profile.update'), socialProfilePayload([
+        'social_links' => [['network' => 'youtube', 'url' => $url]],
+    ]))->assertSessionHasNoErrors();
+    expect($owner->profile->fresh()->social_links)->toEqual([['network' => 'youtube', 'url' => $url]]);
+})->with([
+    'https://youtu.be/HdtmCENYY1A?is=UKS',
+    'https://youtu.be/HdtmCENYY1A?si=shared-link&t=42',
+]);
+
+test('YouTube short domain cannot bypass the selected network or URL safety checks', function (string $network, string $url) {
+    $owner = User::factory()->withProfile()->create();
+    $this->actingAs($owner)->patch(route('member-profile.update'), socialProfilePayload([
+        'social_links' => [['network' => $network, 'url' => $url]],
+    ]))->assertSessionHasErrors('social_links.0.url');
+})->with([
+    ['instagram', 'https://youtu.be/HdtmCENYY1A'],
+    ['youtube', 'https://youtu.be.evil.test/HdtmCENYY1A'],
+    ['youtube', 'https://youtu.be@evil.test/HdtmCENYY1A'],
+    ['youtube', 'http://youtu.be/HdtmCENYY1A'],
+]);
+
+test('social URL errors explain the correction for the selected network in the member language', function (string $locale, string $network, string $url, string $message) {
+    $owner = User::factory()->withProfile()->create(['locale' => $locale]);
+    $this->actingAs($owner)->patch(route('member-profile.update'), socialProfilePayload([
+        'social_links' => [['network' => $network, 'url' => $url]],
+    ]))->assertSessionHasErrors(['social_links.0.url' => $message]);
+})->with([
+    'wrong YouTube domain in French' => ['fr', 'youtube', 'https://google.fr', 'Ce lien ne correspond pas à YouTube. Utilise une adresse sur youtube.com.'],
+    'wrong YouTube domain in English' => ['en', 'youtube', 'https://google.fr', 'This link does not belong to YouTube. Use an address on youtube.com.'],
+    'wrong Instagram domain' => ['fr', 'instagram', 'https://google.fr', 'Ce lien ne correspond pas à Instagram. Utilise une adresse sur instagram.com.'],
+    'missing scheme' => ['fr', 'instagram', 'instagram.com/friend', 'Saisis une adresse web complète, commençant par https://.'],
+    'HTTP scheme' => ['fr', 'instagram', 'http://instagram.com/friend', 'Saisis une adresse web complète, commençant par https://.'],
+    'embedded credentials' => ['fr', 'instagram', 'https://name:password@instagram.com/friend', 'Copie le lien public de ton profil, sans informations de connexion ni port personnalisé.'],
+    'custom port' => ['fr', 'instagram', 'https://instagram.com:444/friend', 'Copie le lien public de ton profil, sans informations de connexion ni port personnalisé.'],
+]);
+
 test('social visibility is validated and defaults to matches without making links mandatory', function () {
     $owner = User::factory()->withProfile()->create();
     $this->actingAs($owner)->patch(route('member-profile.update'), socialProfilePayload(['social_links_visibility' => 'public']))

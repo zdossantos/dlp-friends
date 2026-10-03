@@ -17,7 +17,7 @@ enum SocialNetwork: string
             self::Instagram => ['instagram.com', 'www.instagram.com'],
             self::Facebook => ['facebook.com', 'www.facebook.com', 'm.facebook.com'],
             self::TikTok => ['tiktok.com', 'www.tiktok.com'],
-            self::YouTube => ['youtube.com', 'www.youtube.com'],
+            self::YouTube => ['youtube.com', 'www.youtube.com', 'youtu.be'],
             self::X => ['x.com', 'www.x.com', 'twitter.com', 'www.twitter.com'],
         };
     }

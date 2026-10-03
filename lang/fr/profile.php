@@ -16,7 +16,9 @@ return [
         'warning' => 'Avec « Tous les membres », une personne peut te contacter hors application avant un match, y compris depuis un événement.',
         'external' => 'Service externe · nouvel onglet',
         'open' => ':network — service externe, nouvel onglet',
-        'invalid_url' => 'Utilise une URL HTTPS du réseau choisi, sans identifiants intégrés ni port non standard.',
+        'invalid_url' => 'Saisis une adresse web complète, commençant par https://.',
+        'unsafe_url' => 'Copie le lien public de ton profil, sans informations de connexion ni port personnalisé.',
+        'wrong_network' => 'Ce lien ne correspond pas à :network. Utilise une adresse sur :domain.',
         'networks' => [
             'instagram' => 'Instagram',
             'facebook' => 'Facebook',

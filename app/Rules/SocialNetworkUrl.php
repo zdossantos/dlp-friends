@@ -30,12 +30,29 @@ final class SocialNetworkUrl implements DataAwareRule, ValidationRule
             || filter_var($value, FILTER_VALIDATE_URL) === false
             || str_contains($value, '\\')
             || ! is_array($parts)
-            || strtolower($parts['scheme'] ?? '') !== 'https'
-            || isset($parts['user']) || isset($parts['pass'])
-            || (isset($parts['port']) && $parts['port'] !== 443)
-            || $network === null
-            || ! in_array(strtolower($parts['host'] ?? ''), $network->hosts(), true)) {
+            || strtolower($parts['scheme'] ?? '') !== 'https') {
             $fail(__('profile.social_links.invalid_url'));
+
+            return;
+        }
+
+        if (isset($parts['user']) || isset($parts['pass'])
+            || (isset($parts['port']) && $parts['port'] !== 443)) {
+            $fail(__('profile.social_links.unsafe_url'));
+
+            return;
+        }
+
+        // The network field has its own validation error when missing or unsupported.
+        if ($network === null) {
+            return;
+        }
+
+        if (! in_array(strtolower($parts['host'] ?? ''), $network->hosts(), true)) {
+            $fail(__('profile.social_links.wrong_network', [
+                'network' => __('profile.social_links.networks.'.$network->value),
+                'domain' => $network->hosts()[0],
+            ]));
         }
     }
 }

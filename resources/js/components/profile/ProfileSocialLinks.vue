@@ -14,46 +14,49 @@ const icons = { instagram, facebook, tiktok, youtube, x };
 </script>
 
 <template>
-    <section v-if="links.length" class="space-y-2">
-        <h2 class="text-sm font-semibold">
-            {{ t('profile.social_links.title') }}
-        </h2>
-        <p class="text-xs text-muted-foreground">
-            {{ t('profile.social_links.external') }}
-        </p>
-        <div class="flex flex-wrap gap-2">
-            <Button
-                v-for="link in links"
-                :key="link.network"
-                as-child
-                variant="secondary"
-                class="min-h-11 rounded-full px-3"
+    <nav
+        v-if="links.length"
+        :aria-label="t('profile.social_links.title')"
+        class="flex flex-col gap-1"
+    >
+        <Button
+            v-for="link in links"
+            :key="link.network"
+            as-child
+            variant="secondary"
+            size="icon"
+            class="size-11 rounded-full border border-white/50 bg-background/90 text-foreground shadow-lg backdrop-blur"
+        >
+            <a
+                :href="link.url"
+                target="_blank"
+                rel="noopener noreferrer"
+                :data-test="`social-link-${link.network}`"
+                :title="
+                    t('profile.social_links.open', {
+                        network: t(
+                            `profile.social_links.networks.${link.network}`,
+                        ),
+                    })
+                "
+                :aria-label="
+                    t('profile.social_links.open', {
+                        network: t(
+                            `profile.social_links.networks.${link.network}`,
+                        ),
+                    })
+                "
             >
-                <a
-                    :href="link.url"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    :data-test="`social-link-${link.network}`"
-                    :aria-label="
-                        t('profile.social_links.open', {
-                            network: t(
-                                `profile.social_links.networks.${link.network}`,
-                            ),
-                        })
-                    "
-                >
-                    <span
-                        aria-hidden="true"
-                        class="size-4 shrink-0 bg-current"
-                        :style="{
-                            maskImage: `url(${icons[link.network]})`,
-                            maskSize: 'contain',
-                            maskRepeat: 'no-repeat',
-                        }"
-                    />
-                    {{ t(`profile.social_links.networks.${link.network}`) }}
-                </a>
-            </Button>
-        </div>
-    </section>
+                <span
+                    aria-hidden="true"
+                    class="size-5 shrink-0 bg-current"
+                    :style="{
+                        maskImage: `url(${icons[link.network]})`,
+                        maskSize: 'contain',
+                        maskRepeat: 'no-repeat',
+                    }"
+                />
+            </a>
+        </Button>
+    </nav>
 </template>

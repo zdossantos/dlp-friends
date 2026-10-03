@@ -29,7 +29,7 @@ test('members add edit and remove social links in the existing profile journey',
         ->fill('#social-url-0', 'instagram.com/parkfriend')
         ->click('Suivant')->click('Suivant')->click('Enregistrer')
         ->assertSee('Ton identité')
-        ->assertSee('Utilise une URL HTTPS')
+        ->assertSee('Saisis une adresse web complète, commençant par https://.')
         ->fill('#social-url-0', 'https://www.instagram.com/parkfriend/')
         ->click('Suivant')->click('Suivant')->click('Enregistrer')
         ->assertPathIs('/profile')
@@ -50,6 +50,25 @@ test('members add edit and remove social links in the existing profile journey',
     expect($owner->profile->fresh()->social_links)->toBe([]);
 });
 
+test('a valid URL from another site explains which social network address is needed', function () {
+    $owner = User::factory()->withProfile()->create();
+    $owner->profile->update(['social_links' => [['network' => 'youtube', 'url' => 'https://youtube.com/@parkfriend']]]);
+    prepareSocialBrowserAvatars();
+    $this->actingAs($owner);
+
+    visit('/profile/edit')->on()->mobile()
+        ->click('Suivant')
+        ->fill('#social-url-0', 'https://google.fr')
+        ->click('Suivant')->click('Suivant')->click('Enregistrer')
+        ->assertSee('Ton identité')
+        ->assertSee('Ce lien ne correspond pas à YouTube. Utilise une adresse sur youtube.com.')
+        ->fill('#social-url-0', 'https://youtu.be/HdtmCENYY1A?si=shared-link')
+        ->click('Suivant')->click('Suivant')->click('Enregistrer')
+        ->assertPathIs('/profile')
+        ->assertAttribute('[data-test="social-link-youtube"]', 'href', 'https://youtu.be/HdtmCENYY1A?si=shared-link')
+        ->assertNoJavaScriptErrors();
+});
+
 test('public social bubbles are accessible and fit a 320 pixel viewport in both themes', function (string $theme) {
     $viewer = User::factory()->withProfile()->create(['locale' => 'en']);
     $owner = User::factory()->withProfile()->create();
@@ -63,7 +82,8 @@ test('public social bubbles are accessible and fit a 320 pixel viewport in both 
     $page = visit('/members/'.$owner->id);
     $page->script("localStorage.setItem('appearance', '$theme'); document.documentElement.classList.toggle('dark', '$theme' === 'dark'); true;");
     $page->page()->setViewportSize(320, 740);
-    $page->assertSee('Social links')
+    $page->assertCount('[data-test=profile-information-sheet] [data-test^=social-link-]', 0)
+        ->assertScript("(() => { const hero = document.querySelector('[data-test=profile-presentation-hero]').getBoundingClientRect(); const links = [...document.querySelectorAll('[data-test^=social-link-]')]; return links.every((link, i) => { const box = link.getBoundingClientRect(); return link.textContent.trim() === '' && box.width >= 44 && box.height >= 44 && box.left < hero.left + 24 && box.bottom <= hero.bottom && (i === 0 || box.top >= links[i - 1].getBoundingClientRect().bottom); }); })()", true)
         ->assertAttribute('[data-test="social-link-instagram"]', 'aria-label', 'Instagram — external service, new tab')
         ->assertScript('document.documentElement.scrollWidth <= 320', true)
         ->assertScript("[...document.querySelectorAll('[data-test^=social-link-]')].every(link => link.getBoundingClientRect().right <= 320)", true)
@@ -71,6 +91,17 @@ test('public social bubbles are accessible and fit a 320 pixel viewport in both 
     $page->script("document.querySelector('[data-test=social-link-instagram]').focus(); true;");
     $page->assertScript("document.activeElement.dataset.test === 'social-link-instagram'", true);
 })->with(['light', 'dark']);
+
+test('profile edit and cookies actions share one row on a narrow screen', function () {
+    $owner = User::factory()->withProfile()->admin()->create();
+    $owner->profile->update(['social_links' => [['network' => 'instagram', 'url' => 'https://instagram.com/friend']]]);
+    prepareSocialBrowserAvatars();
+    $this->actingAs($owner);
+    visit('/profile')->resize(320, 740)
+        ->assertScript("(() => { const edit = document.querySelector('a[href$=\"/profile/edit\"]').getBoundingClientRect(); const cookies = document.querySelector('[data-test=profile-analytics-consent-settings]').getBoundingClientRect(); return Math.abs(edit.top - cookies.top) < 1 && edit.right <= cookies.left && cookies.right <= 320; })()", true)
+        ->assertScript("(() => { const link = document.querySelector('[data-test=social-link-instagram]').getBoundingClientRect(); return [...document.querySelectorAll('[data-test=profile-hero-action], [data-test=admin-profile-badge]')].every((action) => link.right <= action.getBoundingClientRect().left); })()", true)
+        ->assertNoJavaScriptErrors();
+});
 
 test('passed profile details show authorized links while the list does not', function () {
     $viewer = User::factory()->withProfile()->create();
