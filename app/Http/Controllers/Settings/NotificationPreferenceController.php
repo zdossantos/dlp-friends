@@ -12,6 +12,7 @@ use App\Models\WebPushSubscription;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -27,6 +28,8 @@ class NotificationPreferenceController extends Controller
             ),
             'partnerAnnouncementsEnabled' => (bool) ($preferences[WebPushPreference::PartnerAnnouncements->value] ?? true),
             'vapidPublicKey' => (string) config('services.web_push.public_key', ''),
+            'adminNewMemberAlertsEnabled' => $request->user()->hasRole(RoleName::Admin)
+                ? $request->user()->admin_new_member_alerts : null,
             'devices' => $request->user()->webPushSubscriptions()->whereNull('revoked_at')->get()->map(fn (WebPushSubscription $device): array => [
                 'uuid' => $device->uuid, 'deviceName' => $device->device_name,
                 'platform' => $device->platform, 'lastUsedAt' => $device->last_used_at?->toIso8601String(),
@@ -36,6 +39,14 @@ class NotificationPreferenceController extends Controller
 
     public function update(NotificationPreferenceUpdateRequest $request, UpdatePartnerNotificationPreference $updatePartner): RedirectResponse
     {
+        if ($request->has('admin_new_member_alerts')) {
+            DB::transaction(function () use ($request): void {
+                $user = User::query()->lockForUpdate()->findOrFail($request->user()->id);
+                Gate::forUser($user)->authorize('updateNewMemberAlerts', $user);
+                $user->forceFill(['admin_new_member_alerts' => $request->boolean('admin_new_member_alerts')])->save();
+            });
+            $request->user()->refresh();
+        }
         foreach ($this->availablePreferences($request->user()) as $preference) {
             if ($request->has($preference->value)) {
                 $enabled = $request->boolean($preference->value);
@@ -59,6 +70,10 @@ class NotificationPreferenceController extends Controller
     public function disableAll(Request $request, UpdatePartnerNotificationPreference $updatePartner): RedirectResponse
     {
         DB::transaction(function () use ($request, $updatePartner): void {
+            $user = User::query()->lockForUpdate()->findOrFail($request->user()->id);
+            if ($user->hasRole(RoleName::Admin)) {
+                $user->forceFill(['admin_new_member_alerts' => false])->save();
+            }
             foreach ($this->availablePreferences($request->user()) as $preference) {
                 $request->user()->notificationPreferences()->updateOrCreate(
                     ['category' => $preference], ['enabled' => false],

@@ -44,6 +44,7 @@ class CreateSocialUser
                     'password' => null,
                 ]);
                 $user->forceFill([
+                    'self_registered_at' => now(),
                     'email_verified_at' => now(),
                     'status' => UserStatus::Active,
                 ])->save();

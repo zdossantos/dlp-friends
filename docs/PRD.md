@@ -175,6 +175,16 @@ Paris.
 
 - Le rôle `admin` donne accès à un tableau de bord et aux catalogues d’intérêts
   et d’avatars, jamais aux messages privés.
+- À la première complétion d’un profil après vérification de l’e-mail, une
+  inscription autonome par e-mail ou Google produit une alerte persistante
+  « Administration » pour chaque administrateur actif ayant activé ce réglage.
+  Le réglage individuel est activé par défaut et ne supprime pas l’historique
+  ni les alertes de modération partenaire. Les comptes créés administrativement
+  et les attributions ultérieures de rôle ne déclenchent aucune arrivée.
+  L’alerte ouvre la fiche administrative du membre, avec repli vers le centre
+  de notifications si la cible devient indisponible. Le Web Push reste
+  générique et dépend du consentement de l’appareil et de la préférence
+  « Administration » ; une arrivée ne se rejoue pas après une modification.
 - Le catalogue d’intérêts permet création, traduction, renommage,
   réordonnancement, archivage, réactivation et suppression selon les règles
   d’usage historique.
@@ -278,6 +288,7 @@ Paris.
 | Blocage et déblocage | **Implémenté** | Effet immédiat sur découverte et conversation. |
 | Événements amicaux, inscriptions et discussion de groupe | **Implémenté** | Deux écrans principaux, panneaux adaptatifs, rôles distincts, participants avec profils intégrés, deux modes d’inscription, confidentialité, cycle de vie, notifications et chat temps réel avec non-lus sont couverts. |
 | Centre de notifications persistant | **Implémenté** | Matches, messages et événements sont regroupés, filtrables et ouvrent leur élément cible. |
+| Alertes administratives de nouveaux membres (issue 245) | **Implémenté** | Première complétion vérifiée e-mail/Google, réglage individuel, notification persistante unique, cible administrative protégée et Push générique bilingue sont couverts. |
 | PWA mobile et Web Push (issues 182 et 203) | **Implémenté** | Installation Android/iOS, fonctionnement hors ligne sûr, mise à jour contrôlée, consentement explicite, révocation par appareil et alertes génériques pour toutes les catégories sont couverts. |
 | Tutoriel produit obligatoire | **Implémenté** | Progression persistée et statistiques admin sont livrées. |
 | Gestion administrative des membres | **Implémenté** | Recherche et compteurs, suppression confirmée, échange privé admin/membre et identification visuelle des admins sont livrés sans accès au contenu des messages. |

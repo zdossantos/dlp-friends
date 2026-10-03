@@ -33,6 +33,7 @@ return [
         'confirm_dismiss_partner_announcement' => 'Remove this partner announcement from your notifications?',
     ],
     'items' => [
+        'new_member' => 'A new member has joined DLP Friends.',
         'new_match' => 'New match with :member.',
         'new_message' => ':sender sent you a new message.',
         'message_liked' => ':member liked your message.',
@@ -50,6 +51,10 @@ return [
     ],
     'accessibility' => ['unread_count' => ':count unread notifications'],
     'push' => [
+        'new_member' => [
+            'title' => 'New member',
+            'body' => 'A new member has joined DLP Friends.',
+        ],
         'messages' => [
             'title' => 'New message',
             'body' => 'A new message is waiting for you.',

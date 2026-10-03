@@ -71,6 +71,17 @@ paramètres et la cible. Le centre Inertia filtre ce flux ; l’ouverture marque
 la notification comme lue avant de rediriger vers l’événement ou la
 conversation autorisée.
 
+L’arrivée d’un membre autonome est annoncée lors de sa première complétion de
+profil vérifiée. La transaction verrouille le membre, les administrateurs
+éligibles et leurs réglages, écrit les notifications persistantes et le marqueur
+définitif `new_member_announced_at`. Les modifications de préférence verrouillent
+la même ligne utilisateur. Broadcast et Web Push ne sont déclenchés qu’après
+commit, avec revérification du destinataire ; les workers de diffusion et Push
+revérifient aussi son rôle et son réglage avant livraison. Une panne de mise en
+file est signalée sans annuler le profil ni sa notification persistante, et
+les autres canaux et destinataires continuent. Aucun rejeu n’est déclenché par une
+connexion, un changement de préférence ou une nouvelle attribution de rôle.
+
 ## Internationalisation
 
 Le français est la langue par défaut et de repli. Le choix de langue suit, dans

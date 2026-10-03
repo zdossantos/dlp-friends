@@ -109,7 +109,7 @@ class DirectUserDataExportTest extends TestCase
         );
 
         $this->assertSame(
-            ['format_version', 'generated_at', 'account', 'profile', 'interests', 'matches', 'messages', 'event_chat_messages', 'organized_events', 'event_registrations', 'notifications', 'notification_preferences', 'push_devices', 'role_history', 'partner_profile', 'partner_profile_revisions', 'partner_announcements', 'received_partner_announcements'],
+            ['format_version', 'generated_at', 'account', 'profile', 'interests', 'matches', 'messages', 'event_chat_messages', 'organized_events', 'event_registrations', 'notifications', 'notification_preferences', 'admin_new_member_alerts_enabled', 'push_devices', 'role_history', 'partner_profile', 'partner_profile_revisions', 'partner_announcements', 'received_partner_announcements'],
             array_keys($payload),
         );
         $this->assertSame('self@example.com', $payload['account']['email']);

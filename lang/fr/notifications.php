@@ -33,6 +33,7 @@ return [
         'confirm_dismiss_partner_announcement' => 'Supprimer cette annonce partenaire de tes notifications ?',
     ],
     'items' => [
+        'new_member' => 'Un nouveau membre a rejoint DLP Friends.',
         'new_match' => 'Nouveau match avec :member.',
         'new_message' => ':sender t’a envoyé un nouveau message.',
         'message_liked' => ':member a aimé ton message.',
@@ -50,6 +51,10 @@ return [
     ],
     'accessibility' => ['unread_count' => ':count notifications non lues'],
     'push' => [
+        'new_member' => [
+            'title' => 'Nouveau membre',
+            'body' => 'Un nouveau membre a rejoint DLP Friends.',
+        ],
         'messages' => [
             'title' => 'Nouveau message',
             'body' => 'Un nouveau message t’attend.',

@@ -3,6 +3,7 @@
 namespace App\Support;
 
 use App\Enums\RoleName;
+use App\Enums\UserStatus;
 use App\Models\Conversation;
 use App\Models\Event;
 use App\Models\PartnerAnnouncementDelivery;
@@ -102,6 +103,18 @@ final class MemberNotificationPresenter
         }
 
         $targetId = filter_var($data['target_id'] ?? null, FILTER_VALIDATE_INT);
+
+        if (($data['target_type'] ?? null) === 'admin_member'
+            && $viewer->hasRole(RoleName::Admin) && $targetId !== false) {
+            $available = User::query()->whereKey($targetId)
+                ->where('status', UserStatus::Active)->whereNull('deletion_requested_at')
+                ->whereHas('roles', fn ($query) => $query->where('name', RoleName::User))
+                ->exists();
+
+            if ($available) {
+                return route('admin.members.index', ['member' => $targetId], absolute: false);
+            }
+        }
 
         if (($data['target_type'] ?? null) === 'conversation' && $targetId !== false) {
             $conversation = Conversation::query()->forMember($viewer)->find($targetId);
