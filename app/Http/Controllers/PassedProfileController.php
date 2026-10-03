@@ -21,32 +21,42 @@ final class PassedProfileController extends Controller
     {
         /** @var User $viewer */
         $viewer = $request->user();
-        $profiles = Swipe::query()->availablePassesFor($viewer)
-            ->with(['target.profile.avatar', 'target.roles'])
-            ->orderByDesc('created_at')->orderByDesc('id')
-            ->paginate(20)
-            ->through(function (Swipe $swipe): array {
-                $member = $swipe->target;
-                $profile = $member->profile;
-                $avatar = $profile?->avatar;
-                abort_if($profile === null || $avatar === null, 404);
 
-                return [
-                    'id' => $member->id,
-                    'display_name' => $profile->display_name,
-                    'age' => $member->age,
-                    'is_admin' => $member->hasRole('admin'),
-                    'avatar' => [
-                        'id' => $avatar->id,
-                        'name' => $avatar->name,
-                        'image_url' => route('avatars.image', $avatar),
-                        'primary_color' => $avatar->primary_color,
-                        'secondary_color' => $avatar->secondary_color,
-                    ],
-                ];
-            });
+        return Inertia::render('Discovery/Passed', [
+            'selectedProfile' => null,
+            'profiles' => function () use ($viewer) {
+                $query = Swipe::query()->availablePassesFor($viewer)
+                    ->with(['target.profile.avatar', 'target.roles'])
+                    ->orderByDesc('created_at')->orderByDesc('id');
+                $profiles = $query->paginate(20);
+                if ($profiles->currentPage() > $profiles->lastPage()) {
+                    $profiles = $query->paginate(20, page: $profiles->lastPage());
+                }
 
-        return Inertia::render('Discovery/Passed', ['profiles' => $profiles]);
+                return $profiles
+                    ->withPath(route('discovery.passed.index', absolute: false))
+                    ->through(function (Swipe $swipe): array {
+                        $member = $swipe->target;
+                        $profile = $member->profile;
+                        $avatar = $profile?->avatar;
+                        abort_if($profile === null || $avatar === null, 404);
+
+                        return [
+                            'id' => $member->id,
+                            'display_name' => $profile->display_name,
+                            'age' => $member->age,
+                            'is_admin' => $member->hasRole('admin'),
+                            'avatar' => [
+                                'id' => $avatar->id,
+                                'name' => $avatar->name,
+                                'image_url' => route('avatars.image', $avatar),
+                                'primary_color' => $avatar->primary_color,
+                                'secondary_color' => $avatar->secondary_color,
+                            ],
+                        ];
+                    })->toArray();
+            },
+        ]);
     }
 
     public function show(Request $request, User $member): Response
@@ -54,12 +64,7 @@ final class PassedProfileController extends Controller
         $member->load(['profile.avatar', 'profile.interests', 'roles']);
         abort_unless($member->profile !== null && Gate::allows('viewPassed', $member->profile), 404);
 
-        return Inertia::render('Members/Show', [
-            ...PublicMemberData::from($request->user(), $member),
-            'backHref' => route('discovery.passed.index', absolute: false),
-            'likeHref' => route('discovery.passed.like', $member, absolute: false),
-            'likeLabel' => __('discovery.actions.discover'),
-        ]);
+        return $this->index($request)->with('selectedProfile', PublicMemberData::from($request->user(), $member));
     }
 
     public function store(Request $request, User $member, CreateSwipe $action, DiscoveryMatchFlash $flash): RedirectResponse
@@ -74,6 +79,8 @@ final class PassedProfileController extends Controller
             $flash->put($request->session(), $match, $member);
         }
 
-        return to_route('discovery.passed.index');
+        $page = max(1, $request->integer('page', 1));
+
+        return to_route('discovery.passed.index', $page > 1 ? ['page' => $page] : []);
     }
 }

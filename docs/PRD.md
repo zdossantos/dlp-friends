@@ -104,6 +104,8 @@ Paris.
 - Un profil passé ou liké n’est plus reproposé au même membre. Depuis Explorer,
   le membre peut consulter ses profils passés disponibles dans une liste
   paginée, du refus le plus récent au plus ancien, puis choisir « Découvrir ».
+  Un bouton à icône ouvre cet historique. Les profils s’y consultent dans un
+  panneau coulissant, en conservant la page et le défilement de la liste.
   La conversion retire le profil de cet historique. Les profils masqués,
   incomplets, indisponibles ou bloqués dans un sens ou dans l’autre sont exclus.
 - Il n’existe ni limite quotidienne ni annulation libre de swipe dans le MVP.
