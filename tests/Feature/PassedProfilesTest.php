@@ -1,6 +1,7 @@
 <?php
 
 use App\Enums\SwipeDecision;
+use App\Http\Middleware\HandleInertiaRequests;
 use App\Models\Block;
 use App\Models\Swipe;
 use App\Models\User;
@@ -82,7 +83,7 @@ test('a pass is converted once and reciprocal likes create a single match and co
         Swipe::factory()->create(['actor_user_id' => $target->id, 'target_user_id' => $actor->id, 'decision' => SwipeDecision::Like]);
     }
     $this->actingAs($actor)->get('/discover/passed/'.$target->id)->assertOk()
-        ->assertInertia(fn (Assert $page) => $page->component('Members/Show')->where('canLike', true));
+        ->assertInertia(fn (Assert $page) => $page->component('Discovery/Passed')->where('selectedProfile.canLike', true));
     $this->post('/discover/passed/'.$target->id.'/like')->assertRedirect('/discover/passed');
     $this->get('/discover/passed')->assertInertia(fn (Assert $page) => $page
         ->has('profiles.data', 0)
@@ -94,3 +95,41 @@ test('a pass is converted once and reciprocal likes create a single match and co
     $this->get('/discover')->assertInertia(fn (Assert $page) => $page
         ->loadDeferredProps(fn (Assert $deferred) => $deferred->where('suggestions', [])));
 })->with([false, true]);
+
+test('drawer requests expose only the authorized selected profile', function () {
+    $actor = User::factory()->withProfile()->create();
+    $target = passedProfile($actor);
+    $this->actingAs($actor)->get('/discover/passed/'.$target->id, [
+        'X-Inertia' => 'true',
+        'X-Inertia-Version' => app(HandleInertiaRequests::class)->version(request()),
+        'X-Inertia-Partial-Component' => 'Discovery/Passed',
+        'X-Inertia-Partial-Data' => 'selectedProfile',
+    ])->assertOk()
+        ->assertJsonPath('component', 'Discovery/Passed')
+        ->assertJsonPath('props.selectedProfile.member.id', $target->id)
+        ->assertJsonMissingPath('props.profiles')
+        ->assertJsonMissingPath('props.selectedProfile.member.email');
+});
+
+test('discovering from a later history page returns to that page', function () {
+    $actor = User::factory()->withProfile()->create();
+    for ($index = 0; $index < 39; $index++) {
+        $target = passedProfile($actor);
+    }
+    $this->actingAs($actor)->post('/discover/passed/'.$target->id.'/like?page=2')
+        ->assertRedirect('/discover/passed?page=2');
+    $this->get('/discover/passed?page=2')->assertInertia(fn (Assert $page) => $page
+        ->where('profiles.current_page', 2)->has('profiles.data', 18)->where('selectedProfile', null));
+});
+
+test('removing the last profile of a history page returns to the remaining page', function () {
+    $actor = User::factory()->withProfile()->create();
+    $oldest = passedProfile($actor);
+    for ($index = 0; $index < 20; $index++) {
+        passedProfile($actor);
+    }
+    $this->actingAs($actor)->post('/discover/passed/'.$oldest->id.'/like?page=2')
+        ->assertRedirect('/discover/passed?page=2');
+    $this->get('/discover/passed?page=2')->assertInertia(fn (Assert $page) => $page
+        ->where('profiles.current_page', 1)->has('profiles.data', 20));
+});
