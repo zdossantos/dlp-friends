@@ -107,7 +107,7 @@ test('closing and discovering a passed profile preserve the history page and scr
         ->assertPresent('[data-test="passed-profile-drawer"] [data-test="like-member"]')
         ->assertScript("window.location.pathname === '/discover/passed' && window.location.search === '?page=2'", true)
         ->assertNoAccessibilityIssues();
-    $page->keys('[data-test="passed-profile-drawer"]', 'Escape')
+    $page->click('[data-test="passed-profile-close"]')
         ->assertMissing('[data-test="passed-profile-drawer"]')
         ->assertScript("document.querySelector('[data-test=passed-profile-list]').scrollTop === window.__passedScroll", true);
     $page->keys('[data-test="passed-profile-list"] li:nth-child(7) button', 'Enter')

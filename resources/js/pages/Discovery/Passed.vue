@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Head, Link, router, usePage } from '@inertiajs/vue3';
+import { X } from '@lucide/vue';
 import { computed, ref, watch } from 'vue';
 import BlockMemberDialog from '@/components/members/BlockMemberDialog.vue';
 import LikeMemberButton from '@/components/members/LikeMemberButton.vue';
@@ -10,6 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
     Drawer,
+    DrawerClose,
     DrawerContent,
     DrawerDescription,
     DrawerTitle,
@@ -261,7 +263,7 @@ function navigate(url: string | null): void {
             <DrawerContent
                 data-test="passed-profile-drawer"
                 class="mx-auto h-[85svh] max-h-[85svh] w-full max-w-lg overflow-hidden px-4 pb-[max(1rem,env(safe-area-inset-bottom))] [&>[data-slot=drawer-handle]]:hidden"
-                :class="{ 'pt-4': profileLoading || profileError }"
+                :class="{ 'pt-16': profileLoading || profileError }"
                 @close-auto-focus="restoreProfileFocus"
             >
                 <DrawerTitle class="sr-only">{{
@@ -273,6 +275,17 @@ function navigate(url: string | null): void {
                 <DrawerDescription class="sr-only">{{
                     t('discovery.passed.description')
                 }}</DrawerDescription>
+                <DrawerClose as-child>
+                    <Button
+                        data-test="passed-profile-close"
+                        variant="outline"
+                        size="icon"
+                        class="absolute top-3 left-7 z-40 size-11 rounded-full bg-background/90"
+                        :aria-label="t('common.actions.close')"
+                    >
+                        <X aria-hidden="true" class="size-5" />
+                    </Button>
+                </DrawerClose>
                 <p v-if="profileLoading" role="status">
                     {{ t('discovery.passed.loading') }}
                 </p>
