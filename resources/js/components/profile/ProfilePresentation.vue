@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { CalendarDays, ShieldCheck, Sparkles } from '@lucide/vue';
+import ProfileSocialLinks from '@/components/profile/ProfileSocialLinks.vue';
 import SeasonalDecorations from '@/components/seasonal/SeasonalDecorations.vue';
 import { Badge } from '@/components/ui/badge';
 import { useTranslations } from '@/composables/useTranslations';
+import type { SocialLink } from '@/types';
 
 const { t } = useTranslations();
 
@@ -22,10 +24,11 @@ withDefaults(
         aboutLabel: string;
         interestsLabel: string;
         visitFrequencyLabel: string;
+        socialLinks?: SocialLink[];
         isAdmin?: boolean;
         embedded?: boolean;
     }>(),
-    { isAdmin: false, embedded: false },
+    { isAdmin: false, embedded: false, socialLinks: () => [] },
 );
 </script>
 
@@ -117,6 +120,8 @@ withDefaults(
                     {{ bio }}
                 </p>
             </section>
+
+            <ProfileSocialLinks :links="socialLinks" />
 
             <section>
                 <h2 class="mb-1 flex items-center gap-2 text-sm font-semibold">

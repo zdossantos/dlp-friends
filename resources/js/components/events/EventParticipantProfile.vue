@@ -70,6 +70,7 @@ const visitFrequency = computed(() =>
             :age-label="t('profile.details.age', { age: profile.member.age })"
             :bio="profile.member.bio ?? t('profile.details.empty_bio')"
             :visit-frequency="visitFrequency"
+            :social-links="profile.member.social_links ?? []"
             :interests="profile.member.interests"
             :about-label="t('profile.details.about')"
             :interests-label="t('profile.details.interests')"

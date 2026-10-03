@@ -1,6 +1,30 @@
 <?php
 
 return [
+    'social_links' => [
+        'title' => 'Réseaux sociaux',
+        'description' => 'Ajoute jusqu’à trois liens facultatifs, un par réseau.',
+        'add' => 'Ajouter un lien',
+        'remove' => 'Supprimer le lien :number',
+        'network' => 'Réseau :number',
+        'url' => 'Lien :number',
+        'placeholder' => 'https://…',
+        'visibility' => 'Qui peut voir tes liens ?',
+        'hidden' => 'Masqués',
+        'matches' => 'Après un match',
+        'members' => 'Tous les membres',
+        'warning' => 'Avec « Tous les membres », une personne peut te contacter hors application avant un match, y compris depuis un événement.',
+        'external' => 'Service externe · nouvel onglet',
+        'open' => ':network — service externe, nouvel onglet',
+        'invalid_url' => 'Utilise une URL HTTPS du réseau choisi, sans identifiants intégrés ni port non standard.',
+        'networks' => [
+            'instagram' => 'Instagram',
+            'facebook' => 'Facebook',
+            'tiktok' => 'TikTok',
+            'youtube' => 'YouTube',
+            'x' => 'X',
+        ],
+    ],
     'interest_limit' => 'Tu peux sélectionner au maximum un univers favori.|Tu peux sélectionner au maximum :max univers favoris.',
     'navigation' => 'Profil',
     'create' => [

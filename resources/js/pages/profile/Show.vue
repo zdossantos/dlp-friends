@@ -63,6 +63,7 @@ function handleLogout(): void {
                 :age-label="t('profile.details.age', { age })"
                 :bio="profile.bio || t('profile.details.empty_bio')"
                 :visit-frequency="visitFrequency"
+                :social-links="profile.social_links ?? []"
                 :interests="profile.interests ?? []"
                 :about-label="t('profile.details.about')"
                 :interests-label="t('profile.details.interests')"

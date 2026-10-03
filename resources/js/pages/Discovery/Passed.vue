@@ -320,6 +320,7 @@ function navigate(url: string | null): void {
                         t('profile.details.empty_bio')
                     "
                     :visit-frequency="visitFrequency"
+                    :social-links="selectedProfile.member.social_links ?? []"
                     :interests="selectedProfile.member.interests"
                     :about-label="t('profile.details.about')"
                     :interests-label="t('profile.details.interests')"

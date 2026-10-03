@@ -8,6 +8,7 @@ use App\Models\Interest;
 use App\Models\MemberMatch;
 use App\Models\Swipe;
 use App\Models\User;
+use Illuminate\Support\Facades\Gate;
 
 final readonly class PublicMemberData
 {
@@ -68,6 +69,9 @@ final readonly class PublicMemberData
                     'secondary_color' => $avatar->secondary_color,
                 ],
                 'bio' => $profile->bio,
+                ...(Gate::forUser($viewer)->allows('viewSocialLinks', $profile)
+                    ? ['social_links' => $profile->social_links ?? []]
+                    : []),
                 'visit_frequency' => $profile->visit_frequency?->value,
                 'interests' => $profile->interests
                     ->sortBy([['sort_order', 'asc'], ['id', 'asc']])

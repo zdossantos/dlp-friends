@@ -1,6 +1,30 @@
 <?php
 
 return [
+    'social_links' => [
+        'title' => 'Social links',
+        'description' => 'Add up to three optional links, one per network.',
+        'add' => 'Add a link',
+        'remove' => 'Remove link :number',
+        'network' => 'Network :number',
+        'url' => 'Link :number',
+        'placeholder' => 'https://…',
+        'visibility' => 'Who can see your links?',
+        'hidden' => 'Hidden',
+        'matches' => 'After a match',
+        'members' => 'All members',
+        'warning' => 'With “All members”, someone can contact you outside the app before a match, including from an event.',
+        'external' => 'External service · new tab',
+        'open' => ':network — external service, new tab',
+        'invalid_url' => 'Use an HTTPS URL for the selected network, without embedded credentials or a non-standard port.',
+        'networks' => [
+            'instagram' => 'Instagram',
+            'facebook' => 'Facebook',
+            'tiktok' => 'TikTok',
+            'youtube' => 'YouTube',
+            'x' => 'X',
+        ],
+    ],
     'interest_limit' => 'You can select one favorite world at most.|You can select up to :max favorite worlds.',
     'navigation' => 'Profile',
     'create' => [

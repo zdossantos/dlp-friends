@@ -8,6 +8,7 @@ import AvatarCarousel from '@/components/profile/AvatarCarousel.vue';
 import AvatarPortrait from '@/components/profile/AvatarPortrait.vue';
 import InterestTagSelector from '@/components/profile/InterestTagSelector.vue';
 import ProfileFormStepper from '@/components/profile/ProfileFormStepper.vue';
+import SocialLinksFields from '@/components/profile/SocialLinksFields.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -26,6 +27,8 @@ import type {
     DiscoveryProfile,
     InterestOption,
     Profile,
+    SocialLink,
+    SocialLinksVisibility,
     VisitFrequency,
 } from '@/types';
 
@@ -62,6 +65,12 @@ const displayName = ref(props.profile?.display_name ?? '');
 const bio = ref(props.profile?.bio ?? '');
 const visitFrequency = ref(props.profile?.visit_frequency ?? '');
 const visibility = ref(props.profile?.visibility ?? 'visible');
+const socialLinks = ref<SocialLink[]>(
+    (props.profile?.social_links ?? []).map((link) => ({ ...link })),
+);
+const socialLinksVisibility = ref<SocialLinksVisibility>(
+    props.profile?.social_links_visibility ?? 'matches',
+);
 const interestIds = ref([...props.selectedInterestIds]);
 
 const selectedAvatar = computed(
@@ -147,7 +156,11 @@ function previous(): void {
 function showInvalidStep(errors: Record<string, string>): void {
     if (errors.avatar_id) {
         goTo(1);
-    } else if (errors.display_name || errors.bio) {
+    } else if (
+        errors.display_name ||
+        errors.bio ||
+        Object.keys(errors).some((key) => key.startsWith('social_links'))
+    ) {
         goTo(2);
     } else if (errors.interest_ids || errors.visit_frequency) {
         goTo(3);
@@ -159,8 +172,16 @@ function showInvalidStep(errors: Record<string, string>): void {
 
 <template>
     <Form
+        novalidate
         :action="action"
         :method="method"
+        :transform="
+            (data) => ({
+                ...data,
+                social_links: socialLinks,
+                social_links_visibility: socialLinksVisibility,
+            })
+        "
         class="flex h-full min-h-0 flex-col gap-3"
         v-slot="{ errors, processing }"
         @error="showInvalidStep"
@@ -275,6 +296,11 @@ function showInvalidStep(errors: Record<string, string>): void {
                 />
                 <InputError :message="errors.bio" />
             </div>
+            <SocialLinksFields
+                v-model:links="socialLinks"
+                v-model:visibility="socialLinksVisibility"
+                :errors="errors"
+            />
         </section>
 
         <section

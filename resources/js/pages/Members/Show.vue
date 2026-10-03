@@ -70,6 +70,7 @@ function goBack(): void {
             :age-label="t('profile.details.age', { age: member.age })"
             :bio="member.bio ?? t('profile.details.empty_bio')"
             :visit-frequency="visitFrequency"
+            :social-links="member.social_links ?? []"
             :interests="member.interests"
             :about-label="t('profile.details.about')"
             :interests-label="t('profile.details.interests')"
