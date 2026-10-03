@@ -1,6 +1,9 @@
 <?php
 
 use App\Support\PublicReleaseNotes;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+
+uses(RefreshDatabase::class);
 
 test('localized release notes render only feature releases in newest first order', function (string $locale, string $path, string $heading) {
     config()->set('app.url', 'https://dlp-friends.example');
