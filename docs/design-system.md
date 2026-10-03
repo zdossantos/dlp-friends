@@ -172,6 +172,9 @@ Le contenu, l’état et les actions restent uniques entre les deux formats. Les
 - Les listes administratives détaillées utilisent des cartes sous `lg`, puis
   une table à partir de `lg`, à partir des mêmes données et avec les mêmes
   actions. Une seule variante interactive est montée à la fois.
+- Le shell admin reste à la hauteur du viewport. Seul son contenu défile dans
+  une région Inertia ; la navigation basse et le menu du compte restent ancrés,
+  y compris dans la PWA. La marge inférieure préserve les derniers contrôles.
 - Respecter les zones sûres avec `env(safe-area-inset-*)` pour les écrans
   concernés.
 - Limiter la largeur des formulaires, profils, cartes de découverte et
