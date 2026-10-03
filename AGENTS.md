@@ -91,6 +91,13 @@ php artisan test tests/Browser/AdminTest.php
 
 ## Conventions de code
 
+- Avant chaque ajout, rechercher dans le projet les composants, fonctions,
+  composables, actions, scopes, validations, traductions et tests qui peuvent
+  être réutilisés. Lire leurs usages et privilégier leur réutilisation ou une
+  adaptation ciblée avant de créer du code ou une dépendance supplémentaire.
+  Éviter les doublons sans complexifier les abstractions existantes ; expliquer
+  brièvement dans la pull request pourquoi un nouvel élément est nécessaire
+  si aucun élément existant ne convient.
 - Suivre les conventions Laravel, Eloquent, Inertia et Vue déjà présentes.
 - Garder la logique métier et les autorisations côté Laravel ; ne pas créer une
   API séparée sans besoin démontré.
