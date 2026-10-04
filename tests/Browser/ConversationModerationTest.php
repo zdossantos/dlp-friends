@@ -47,7 +47,7 @@ it('submits the chosen blocking option and keeps an administrator reportable', f
     $this->assertDatabaseCount('blocks', $block ? 1 : 0);
 })->with([['user', true], ['user', false], ['admin', false]]);
 
-it('lets the admin read close ban and lift a ban from the review page', function () {
+it('lets the admin read close ban and lift a ban from the review page', function (string $device) {
     $reporter = User::factory()->withProfile()->create();
     $target = User::factory()->withProfile()->create();
     $admin = User::factory()->withProfile()->admin()->create();
@@ -55,14 +55,23 @@ it('lets the admin read close ban and lift a ban from the review page', function
     $conversation->messages()->create(['author_user_id' => $target->id, 'content' => 'Message à examiner']);
     $report = app(ReportConversation::class)->handle($reporter, $conversation, ConversationReportReason::Other, null, false);
     $this->actingAs($admin);
-    $page = visit("/admin/conversation-reports/{$report->id}")->assertSee('Message à examiner');
-    $page->click('[data-test="member-ban-trigger"]')->fill("#ban-reason-{$target->id}", 'Sanction motivée')->click('[data-test="confirm-member-ban"]')->assertSee('Lever le bannissement');
-    expect($target->fresh()->status->value)->toBe('banned');
-    $page->click('[data-test="member-ban-trigger"]')->fill("#ban-reason-{$target->id}", 'Réexamen')->click('[data-test="confirm-member-ban"]')->assertSee('Bannir');
+    $page = visit("/admin/conversation-reports/{$report->id}")->on()->{$device}()->assertSee('Message à examiner');
+    $page->assertNotPresent('[data-test="member-ban-trigger"]')
+        ->assertScript("document.querySelector('[data-test=\"review-member-ban\"]').parentElement === document.querySelector('[data-test=\"close-report\"]').parentElement", true)
+        ->click('[data-test="review-member-ban"]');
     expect($target->fresh()->status->value)->toBe('active');
-    $page->fill('#close-decision', 'Examen terminé')->click('[data-test="close-report"]')->assertSee('Examen terminé')->assertNotPresent('#close-decision')->assertNoJavaScriptErrors();
+    $page->fill('#close-decision', 'Sanction motivée')->click('[data-test="review-member-ban"]')->assertSee('Lever le bannissement');
+    $this->assertDatabaseHas('moderation_audits', ['target_user_id' => $target->id, 'operation' => 'ban', 'reason' => 'Sanction motivée']);
+    expect($target->fresh()->status->value)->toBe('banned');
+    $page->fill('#close-decision', 'Réexamen')->click('[data-test="review-member-ban"]')->assertSee('Bannir');
+    expect($target->fresh()->status->value)->toBe('active');
+    $page->fill('#close-decision', 'Examen terminé')->click('[data-test="close-report"]')->assertSee('Examen terminé')->assertNotPresent('[data-test="close-report"]')->assertNoJavaScriptErrors();
     expect($report->fresh()->closed_at)->not->toBeNull();
-});
+    $page->fill('#close-decision', 'Sanction après clôture')->click('[data-test="review-member-ban"]')->assertSee('Lever le bannissement')
+        ->assertScript('document.documentElement.scrollWidth <= window.innerWidth', true)
+        ->assertNotPresent('[role="dialog"]');
+    $this->assertDatabaseHas('moderation_audits', ['target_user_id' => $target->id, 'operation' => 'ban', 'reason' => 'Sanction après clôture']);
+})->with(['desktop', 'mobile']);
 
 it('requires an initially unchecked explicit acceptance before continuing', function () {
     $member = User::factory()->withProfile()->create();

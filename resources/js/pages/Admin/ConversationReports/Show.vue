@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import AdminPageHeader from '@/components/admin/AdminPageHeader.vue';
-import SetMemberBanDialog from '@/components/admin/SetMemberBanDialog.vue';
 import InputError from '@/components/InputError.vue';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -9,6 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useTranslations } from '@/composables/useTranslations';
 import { close, index } from '@/routes/admin/conversation-reports';
 import { index as members } from '@/routes/admin/members';
+import { update as updateBan } from '@/routes/admin/members/ban';
 import type { ConversationReport, ModerationPage } from '@/types/moderation';
 const props = defineProps<{
     report: ConversationReport;
@@ -20,9 +20,30 @@ const props = defineProps<{
     }>;
 }>();
 const { t, formatDate } = useTranslations();
-const form = useForm({ decision: '', confirmed: true });
-function submit(): void {
-    form.patch(close(props.report.id).url);
+const form = useForm({
+    decision: props.report.decision ?? '',
+    confirmed: true,
+});
+const banForm = useForm({ reason: '', banned: false, confirmed: true });
+function submit(event: SubmitEvent): void {
+    form.clearErrors();
+    banForm.clearErrors();
+
+    if (event.submitter?.getAttribute('value') === 'ban') {
+        if (!props.report.target.id || !props.report.target.can_ban) {
+            return;
+        }
+
+        banForm.reason = form.decision;
+        banForm.banned = !props.report.target.banned;
+        banForm.patch(updateBan(props.report.target.id).url, {
+            preserveScroll: true,
+        });
+
+        return;
+    }
+
+    form.patch(close(props.report.id).url, { preserveScroll: true });
 }
 function author(id: number): string {
     return id === props.report.reporter.id
@@ -53,11 +74,7 @@ function author(id: number): string {
                     v-if="report.target.id"
                     :href="members({ query: { member: report.target.id } }).url"
                     >{{ report.target.name }}</Link
-                ><SetMemberBanDialog
-                    v-if="report.target.id && report.target.can_ban"
-                    :member-id="report.target.id"
-                    :banned="report.target.banned"
-                />
+                >
             </div>
         </section>
         <section
@@ -96,7 +113,13 @@ function author(id: number): string {
             <p>{{ t('moderation.closed') }}</p>
             <p class="whitespace-pre-wrap">{{ report.decision }}</p>
         </section>
-        <form v-else class="grid gap-3" @submit.prevent="submit">
+        <form
+            v-if="
+                !report.closed_at || (report.target.id && report.target.can_ban)
+            "
+            class="grid gap-3"
+            @submit.prevent="submit"
+        >
             <Label for="close-decision">{{
                 t('moderation.decision_reason')
             }}</Label
@@ -105,14 +128,51 @@ function author(id: number): string {
                 v-model="form.decision"
                 required
                 maxlength="1000"
-            /><InputError :message="form.errors.decision" /><InputError
-                :message="form.errors.confirmed"
-            /><Button
-                data-test="close-report"
-                :disabled="form.processing"
-                type="submit"
-                >{{ t('moderation.close_confirm') }}</Button
+            />
+            <InputError
+                :message="form.errors.decision || banForm.errors.reason"
+            />
+            <InputError
+                :message="form.errors.confirmed || banForm.errors.confirmed"
+            />
+            <InputError :message="banForm.errors.banned" />
+            <p
+                v-if="report.target.id && report.target.can_ban"
+                id="report-ban-warning"
+                class="text-sm text-muted-foreground"
             >
+                {{
+                    report.target.banned
+                        ? t('moderation.unban_warning')
+                        : t('moderation.ban_warning')
+                }}
+            </p>
+            <div class="flex gap-3">
+                <Button
+                    v-if="!report.closed_at"
+                    data-test="close-report"
+                    class="h-auto min-h-11 flex-1 px-3 py-2 whitespace-normal"
+                    :disabled="form.processing || banForm.processing"
+                    type="submit"
+                    value="close"
+                    >{{ t('moderation.close_confirm') }}</Button
+                >
+                <Button
+                    v-if="report.target.id && report.target.can_ban"
+                    data-test="review-member-ban"
+                    class="h-auto min-h-11 flex-1 px-3 py-2 whitespace-normal"
+                    :variant="report.target.banned ? 'outline' : 'destructive'"
+                    :disabled="form.processing || banForm.processing"
+                    aria-describedby="report-ban-warning"
+                    type="submit"
+                    value="ban"
+                    >{{
+                        report.target.banned
+                            ? t('moderation.unban')
+                            : t('moderation.ban')
+                    }}</Button
+                >
+            </div>
         </form>
     </main>
 </template>

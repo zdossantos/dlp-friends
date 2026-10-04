@@ -326,8 +326,12 @@ Aucun logo ou personnage Disney n’est ajouté.
 
 ## Modération des échanges
 
-Le signalement et la sanction utilisent `useResponsiveModal` : dialogue sur
-bureau, panneau inférieur sur mobile. Le signalement explique la consultation
+Le signalement et la sanction depuis la gestion des comptes utilisent
+`useResponsiveModal` : dialogue sur bureau, panneau inférieur sur mobile.
+Dans la fiche de signalement, clôture et bannissement sont côte à côte et
+utilisent le même champ de motif, sans second dialogue. L'avertissement de
+sanction est affiché avant les boutons ; la levée reste disponible après
+clôture. Le signalement explique la consultation
 intégrale avant validation, propose les six motifs, une précision limitée, puis
 Oui/Non pour le blocage avec Oui présélectionné. Une cible admin ne présente
 pas de blocage. La file admin et sa fiche paginent les messages en lecture seule ;
