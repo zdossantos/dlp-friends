@@ -36,7 +36,7 @@ et son état de livraison sont définis dans le [`PRD.md`](PRD.md).
 
 ## États et contraintes de stockage
 
-- `users.status` vaut `active` ou `pending_deletion`. Un compte en suppression n'est jamais découvrable ni connectable.
+- `users.status` vaut `active`, `pending_deletion` ou `banned`. Un compte en suppression n'est jamais découvrable ni connectable.
 - `users` contient l'identité de connexion et la date de naissance, mais aucun `username` ni `first_name`.
 - `users.self_registered_at` marque les nouvelles inscriptions autonomes e-mail
   et Google ; les comptes antérieurs ou créés administrativement restent sans
@@ -124,7 +124,7 @@ et son état de livraison sont définis dans le [`PRD.md`](PRD.md).
 - Un blocage est prioritaire sur un match ou une conversation existante.
 - Un administrateur ne peut pas être la cible d’un blocage.
 - La suppression de compte doit anonymiser ou supprimer les données conformément à la politique de conservation définie dans [`security-privacy.md`](security-privacy.md).
-- Un blocage transforme en `blocked` toute inscription active entre les deux membres. Une suppression organisateur annule puis purge ses événements ; une suppression participante purge ses inscriptions.
+- Un blocage transforme en `blocked` toute inscription active entre les deux membres. Une suppression organisateur annule puis purge ses événements, sauf ceux nécessaires aux données d’un compte banni, alors conservés sans organisateur ; une suppression participante purge ses propres inscriptions.
 
 ## Score de proposition V1
 
@@ -168,4 +168,22 @@ même changement.
 - L’inscription donne initialement `user`. L’administration peut ensuite modifier
   `user` et `partner` avec confirmation ; `admin` reste géré par console. Le rôle
   partenaire ne confère aucun droit social ni administrateur implicite.
-- Le rôle `admin` donne accès au dashboard, à la gestion des membres et aux catalogues d’intérêts et d’avatars. La gestion des membres agrège des compteurs directionnels sans charger le contenu des messages. Elle permet la suppression immédiate d’un membre et la création d’un échange privé avec lui, mais jamais ces actions sur un autre administrateur. La gestion des avatars reste accessible avant la complétion du profil afin de permettre l’ajout initial au catalogue. Ce rôle ne donne pas de droit de lecture des messages privés dans le MVP. Les catégories d’intérêts restent techniques et ne sont pas gérées dans cette interface.
+- Le rôle `admin` donne accès au dashboard, à la gestion des membres et aux catalogues d’intérêts et d’avatars. La gestion des membres agrège des compteurs directionnels sans charger le contenu des messages. Elle permet la suppression immédiate d’un membre et la création d’un échange privé avec lui, mais jamais ces actions sur un autre administrateur. La gestion des avatars reste accessible avant la complétion du profil afin de permettre l’ajout initial au catalogue. Ce rôle donne un droit de lecture en consultation dédiée aux échanges explicitement signalés, sans droits de participant. Les catégories d’intérêts restent techniques et ne sont pas gérées dans cette interface.
+
+## Modération des échanges (issue 256)
+
+`conversation_reports` référence la conversation originale, l’auteur et la cible
+(nullable après suppression), le motif enum, une précision nullable, le décideur
+nullable, la décision et `closed_at`. Une clé `open_key` unique et nullable
+`conversation_id:reporter_user_id` protège le rapport ouvert ; la clôture la
+libère. `moderation_audits` référence acteur, cible et rapport de façon nullable,
+avec opération `view`, `close`, `ban` ou `unban`, motif de décision et date.
+Aucun corps de message n’est stocké dans ces tables.
+
+Les comptes `banned` n’ont aucune date de fin. Les extrémités des matches, swipes
+et blocages, ainsi que l’organisateur d’un événement, deviennent nullables avec
+`nullOnDelete`. Les références de message des réactions privées et de groupe
+sont également nullables. Avant suppression, l’Action retire les relations
+ordinaires et conserve celles nécessaires aux données bannies ; une conversation
+détachée est archivée, un événement conservé est annulé. Ces graphes ne donnent
+aucun accès social. Les données du compte explicitement supprimé restent retirées.

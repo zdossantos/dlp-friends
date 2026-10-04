@@ -9,10 +9,10 @@ de livraison est suivi dans le [`PRD.md`](PRD.md).
 Zacharie Dos Santos, entrepreneur individuel (SIREN 104 531 819), est l’éditeur
 et responsable du traitement. L’adresse publique de contact est fournie par
 `LEGAL_CONTACT_EMAIL`; elle est obligatoire en production. Les CGU version
-`2026-09-01` sont acceptées explicitement à l’inscription et la preuve conserve
+`2026-10-04` sont acceptées explicitement à l’inscription et la preuve conserve
 uniquement l’utilisateur, la version et l’heure serveur.
 
-La demande de suppression révoque immédiatement l’accès, puis retire les
+La demande de suppression d’un compte actif révoque immédiatement l’accès, puis retire les
 données des systèmes actifs après 30 jours. Elles peuvent ensuite subsister
 dans les sauvegardes quotidiennes chiffrées MySQL et fichiers jusqu’à leur
 expiration automatique, au plus 30 jours après leur création.
@@ -49,7 +49,7 @@ aucun nouveau journal historique n’est conservé.
   les notifications d’une conversation existante ; ces échanges réapparaissent
   dans les listes lorsque le profil redevient visible. Le blocage reste le
   mécanisme qui interdit réellement l’accès et la messagerie.
-- Suppression : après confirmation explicite, le compte devient immédiatement inaccessible et invisible. Un compte disposant d’un mot de passe utilisable doit fournir son mot de passe actuel ; un compte créé exclusivement avec un fournisseur social doit accepter explicitement les conséquences irréversibles de la demande. Ce mode est déterminé côté serveur. Les sessions et tous les liens sociaux sont révoqués immédiatement. Un job asynchrone gardé par le statut et l’horodatage supprime le profil, les intérêts, swipes, matches, conversations, messages et autres données liées 30 jours après la demande. Une tâche horaire redispatche les purges échues manquées ; les reprises sont idempotentes. Aucun parcours de restauration n’est proposé.
+- Suppression d’un compte actif : après confirmation explicite, le compte devient immédiatement inaccessible et invisible. Un compte disposant d’un mot de passe utilisable doit fournir son mot de passe actuel ; un compte créé exclusivement avec un fournisseur social doit accepter explicitement les conséquences irréversibles de la demande. Ce mode est déterminé côté serveur. Les sessions et tous les liens sociaux sont révoqués immédiatement. Un job asynchrone gardé par le statut et l’horodatage supprime le profil, les intérêts, swipes, matches, conversations, messages et autres données liées 30 jours après la demande. Une tâche horaire redispatche les purges échues manquées ; les reprises sont idempotentes. Aucun parcours de restauration n’est proposé.
 - Documenter, avant mise en production, les durées de conservation et la politique de confidentialité applicable.
 - L’export JSON des données de compte, profil, intérêts, matches et messages est généré à la demande dans une réponse authentifiée téléchargée directement. Aucun fichier d’export n’est conservé côté serveur. Les messages exportés sont uniquement ceux envoyés par le membre dans les conversations visibles dans sa liste ; les profils masqués et toute relation bloquée dans un sens ou dans l’autre en sont exclus. Il exclut mots de passe, secrets, jetons et données inutiles sur les autres membres.
 - L’export inclut les événements organisés, les inscriptions du membre, les messages de discussion d’événement qu’il a lui-même envoyés et ses notifications persistantes, sans exposer les inscriptions privées ni les messages d’autrui.
@@ -164,9 +164,9 @@ publicitaires restent refusées.
 
 ## Différé
 
-Le signalement de profils/messages sociaux, leur console de modération et les
-processus d’équipe sont prévus en V2. La modération des fiches et annonces
-partenaires est déjà livrée et ne constitue pas une modération sociale.
+Le signalement de profils et les processus d’équipe avancés restent prévus en V2.
+Le signalement des échanges privés, leur revue et les sanctions sont livrés.
+La modération des fiches et annonces partenaires conserve son parcours distinct.
 
 ### Liens externes du profil
 
@@ -184,3 +184,36 @@ aux services externes, aperçu distant ou widget n’est effectué. Les liens ut
 Le choix « Tous les membres » avertit du contact hors application avant un match.
 Les liens et leur visibilité figurent dans l’export personnel ; le profil devient
 inaccessible à la demande de suppression et est supprimé avec eux lors de la purge.
+
+## Échanges signalés et comptes bannis
+
+La confirmation préalable informe l’auteur que les administrateurs actifs
+peuvent lire l’intégralité de l’échange et ses futurs messages, même après
+clôture, blocage, masquage ou bannissement. Le rapport ne duplique aucun message ;
+chaque consultation et clôture produit un audit réservé à l’administration.
+Le blocage reste facultatif, présélectionné sauf pour une cible administratrice.
+
+`banned` est un état sans expiration. La sanction n’est révélée qu’après
+vérification complète d’identité, y compris le second facteur. Sessions, remember,
+tokens de réinitialisation, Push, présence et canaux privés sont révoqués.
+Chaque abonnement Reverb exige une identité signée et un compte actif ; chaque
+diffusion revérifie les destinataires même si la terminaison HTTP échoue.
+Aucun nouveau journal technique n’expose message, motif libre, identité ou secret.
+
+Les données d’un compte actuellement banni ne sont soumises à aucune purge
+automatique, y compris l’historique partenaire et les audits de rôles. Une purge
+de compte déjà planifiée recontrôle le statut sous verrou. La suppression d’un
+autre compte conserve les relations nécessaires au compte banni avec extrémités
+nulles, retire les messages du compte supprimé et garde les réactions bannies
+détachées de ces messages. Les événements nécessaires sont conservés annulés
+sans organisateur ; leur accès privé reste fermé. La suppression administrative
+explicite reste effective, y compris sur un compte banni.
+
+La demande de suppression en application est refusée aux comptes bannis par
+la route et l’Action métier. Cette règle décrit le logiciel ; elle ne modifie
+pas les droits légaux ni le contact public. Les délais usuels de 30 jours et
+deux ans restent applicables aux comptes non bannis. La rotation des sauvegardes
+ne change pas. L’export contient les rapports soumis par le membre et ses
+sanctions, sans identité des autres auteurs, cibles ou décideurs, ni messages
+d’autrui. La version des CGU `2026-10-04` doit être réacceptée explicitement par
+tous les rôles avant l’accès privé ; déconnexion et textes publics restent ouverts.

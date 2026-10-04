@@ -1,0 +1,21 @@
+<?php
+
+namespace Laravel\Reverb\Protocols\Pusher\Managers;
+
+class ArrayChannelManager
+{
+    /** @var array<string, array<string, \Laravel\Reverb\Protocols\Pusher\Channels\Channel>> */
+    protected $applications;
+}
+
+namespace Laravel\Reverb\Protocols\Pusher\Channels;
+
+class Channel
+{
+    /** @var \Laravel\Reverb\Protocols\Pusher\Contracts\ChannelConnectionManager */
+    protected $connections;
+}
+
+namespace Laravel\Reverb\Protocols\Pusher\Contracts;
+
+interface ChannelConnectionManager {}

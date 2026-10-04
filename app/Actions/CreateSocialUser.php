@@ -56,6 +56,8 @@ class CreateSocialUser
                     'provider_user_id' => $identity->providerUserId,
                 ]);
 
+                $user->termsAcceptances()->create(['terms_version' => config('legal.terms.version'), 'accepted_at' => now()]);
+
                 return $user;
             });
         } catch (UniqueConstraintViolationException) {

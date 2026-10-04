@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Actions\CloseConversationReport;
+use App\Enums\UserStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\CloseConversationReportRequest;
 use App\Models\ConversationReport;
@@ -44,6 +45,6 @@ final class ConversationReportController extends Controller
     {
         $report->loadMissing(['reporter.profile', 'target.profile']);
 
-        return ['id' => $report->id, 'conversation_id' => $report->conversation_id, 'reason' => $report->reason->value, 'details' => $report->details, 'decision' => $report->decision, 'closed_at' => $report->closed_at?->toISOString(), 'created_at' => $report->created_at?->toISOString(), 'reporter' => ['id' => $report->reporter_user_id, 'name' => $report->reporter?->profile->display_name ?? __('moderation.deleted_member')], 'target' => ['id' => $report->target_user_id, 'name' => $report->target?->profile->display_name ?? __('moderation.deleted_member')]];
+        return ['id' => $report->id, 'conversation_id' => $report->conversation_id, 'reason' => $report->reason->value, 'details' => $report->details, 'decision' => $report->decision, 'closed_at' => $report->closed_at?->toISOString(), 'created_at' => $report->created_at?->toISOString(), 'reporter' => ['id' => $report->reporter_user_id, 'name' => $report->reporter?->profile->display_name ?? __('moderation.deleted_member')], 'target' => ['id' => $report->target_user_id, 'name' => $report->target?->profile->display_name ?? __('moderation.deleted_member'), 'banned' => $report->target?->status === UserStatus::Banned, 'can_ban' => $report->target !== null && Gate::allows('ban', $report->target)]];
     }
 }

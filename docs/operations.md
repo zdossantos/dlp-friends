@@ -367,3 +367,27 @@ cependant être réactivé tant que la nouvelle image n'est pas en service.
 2. Stopper le déploiement si une migration ou la santé échoue.
 3. Revenir à l'image applicative précédente uniquement après vérification de compatibilité de schéma.
 4. Restaurer une sauvegarde seulement si le problème est une perte/corruption de données; journaliser l'opération et prévenir les utilisateurs concernés si nécessaire.
+
+## Déploiement de la modération des échanges (issue 256)
+
+Appliquer explicitement les deux migrations de modération et conservation
+avec `docker compose exec web php artisan migrate --force`, après sauvegarde
+et déploiement du code. Ne pas ajouter de migration automatique aux entrypoints.
+Redémarrer tous les workers et tous les processus Reverb, sur chaque nœud,
+pour charger le manager et les canaux privés exigeant une identité signée.
+Les clients doivent se réauthentifier sur leurs canaux après reconnexion.
+Ne pas laisser coexister un nœud Reverb ancien acceptant des abonnements non signés.
+
+La version CGU `2026-10-04` déclenche une réacceptation de tous les comptes actifs
+dont la preuve actuelle manque. Vérifier le contact `LEGAL_CONTACT_EMAIL` en
+production. Le warning générique de révocation temps réel indisponible indique
+une terminaison HTTP échouée ; le filtrage des canaux reste fermé aux comptes
+inactifs et ne journalise aucune donnée privée.
+
+Les comptes bannis n’ont aucune purge automatique ; les purges partenaires les
+excluent sous verrou. La levée ne republie ni ne réinscrit automatiquement.
+La suppression administrative explicite demeure irréversible et supprime les
+données propres à la cible. Éviter un rollback des migrations de conservation
+après création de graphes détachés : leur `down` retire ces graphes avant de
+restaurer les contraintes non nulles et entraîne donc une perte de ces données.
+Préférer une migration corrective conservant les données.

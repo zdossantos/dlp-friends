@@ -2,6 +2,9 @@
 
 namespace App\Events;
 
+use App\Enums\UserStatus;
+use App\Models\EventChat;
+use App\Models\User;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
@@ -25,6 +28,11 @@ final class EventChatMessageReactionUpdated implements ShouldBroadcast, ShouldDi
     public function broadcastOn(): array
     {
         return [new PrivateChannel("event-chat.{$this->eventChatId}")];
+    }
+
+    public function broadcastWhen(): bool
+    {
+        return User::query()->whereKey($this->reactorUserId)->where('status', UserStatus::Active)->exists() && EventChat::query()->whereKey($this->eventChatId)->whereHas('event.organizer', fn ($q) => $q->where('status', UserStatus::Active))->exists();
     }
 
     public function broadcastAs(): string

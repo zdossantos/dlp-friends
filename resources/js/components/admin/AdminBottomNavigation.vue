@@ -8,6 +8,7 @@ import {
     Shapes,
     Store,
     Users,
+    Flag,
 } from '@lucide/vue';
 import { computed } from 'vue';
 import BottomNavigation from '@/components/navigation/BottomNavigation.vue';
@@ -16,6 +17,7 @@ import WorkspaceSwitcher from '@/components/navigation/WorkspaceSwitcher.vue';
 import { useTranslations } from '@/composables/useTranslations';
 import { dashboard } from '@/routes';
 import { index as avatars } from '@/routes/admin/avatars';
+import { index as reports } from '@/routes/admin/conversation-reports';
 import { index as interests } from '@/routes/admin/interests';
 import { index as members } from '@/routes/admin/members';
 import { index as onboarding } from '@/routes/admin/onboarding';
@@ -43,6 +45,12 @@ const directItems = computed<BottomNavigationItem[]>(() => [
     },
 ]);
 const catalogueItems = computed<BottomNavigationItem[]>(() => [
+    {
+        label: t('moderation.reports_title'),
+        href: reports(),
+        icon: Flag,
+        testId: 'admin-reports-link',
+    },
     {
         label: t('administration.navigation.interests'),
         href: interests(),

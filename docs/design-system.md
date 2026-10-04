@@ -323,3 +323,15 @@ l’infobulle. Les actions « Modifier mon profil » et « Gérer les cookies »
 partagent une ligne, y compris à 320 px. Les cinq icônes proviennent de Simple Icons sous CC0 1.0 Universal ;
 la licence et la source sont conservées dans `components/profile/social-icons`.
 Aucun logo ou personnage Disney n’est ajouté.
+
+## Modération des échanges
+
+Le signalement et la sanction utilisent `useResponsiveModal` : dialogue sur
+bureau, panneau inférieur sur mobile. Le signalement explique la consultation
+intégrale avant validation, propose les six motifs, une précision limitée, puis
+Oui/Non pour le blocage avec Oui présélectionné. Une cible admin ne présente
+pas de blocage. La file admin et sa fiche paginent les messages en lecture seule ;
+les boutons de décision attendent la réponse et affichent les erreurs du serveur.
+Le statut banni est visible dans la gestion des comptes ; suppression et sanction
+restent des commandes distinctes. La réacceptation comporte une case décochée
+et un bouton indisponible tant que le consentement explicite manque.

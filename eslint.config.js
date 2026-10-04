@@ -88,6 +88,8 @@ export default defineConfigWithVueTs(
     },
     {
         ignores: [
+            '.worktrees/**',
+            '.superpowers/**',
             'vendor',
             'node_modules',
             'public',

@@ -10,6 +10,7 @@ use App\Http\Controllers\Controller;
 use App\Models\SocialAccount;
 use App\Models\User;
 use App\Support\AuthenticatedHome;
+use App\Support\BannedAuthentication;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -50,12 +51,16 @@ class SocialAuthController extends Controller
                 ->first();
 
             if ($account !== null) {
+                if ($account->user->status === UserStatus::Banned) {
+                    return redirect()->route('login')->withErrors(['social_auth' => BannedAuthentication::message()]);
+                }
                 if ($account->user->status !== UserStatus::Active) {
                     throw new SocialAuthenticationException('social_auth.inactive');
                 }
 
                 Auth::login($account->user);
                 $request->session()->regenerate();
+                BannedAuthentication::rejectIfBanned($request, $account->user);
 
                 return redirect()->to(AuthenticatedHome::url($account->user));
             }

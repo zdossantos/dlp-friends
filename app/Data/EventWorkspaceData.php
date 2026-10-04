@@ -3,6 +3,7 @@
 namespace App\Data;
 
 use App\Enums\EventRegistrationStatus;
+use App\Enums\UserStatus;
 use App\Models\Block;
 use App\Models\Event;
 use App\Models\User;
@@ -56,7 +57,7 @@ final readonly class EventWorkspaceData
     {
         $blockedUserIds = $this->blockedUserIds($viewer);
 
-        return Event::query()
+        return Event::query()->whereHas('organizer', fn (Builder $q) => $q->where('status', UserStatus::Active))
             ->whereNull('cancelled_at')
             ->where('starts_at', '>', now())
             ->whereNotIn('organizer_user_id', $blockedUserIds)
@@ -88,7 +89,7 @@ final readonly class EventWorkspaceData
             ->orderByDesc('starts_at')
             ->get();
 
-        $participating = Event::query()
+        $participating = Event::query()->whereHas('organizer', fn (Builder $q) => $q->where('status', UserStatus::Active))
             ->whereNotIn('organizer_user_id', $blockedUserIds)
             ->whereHas('registrations', fn (Builder $registrations) => $registrations
                 ->where('user_id', $viewer->id)

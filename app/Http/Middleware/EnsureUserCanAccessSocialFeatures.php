@@ -3,8 +3,10 @@
 namespace App\Http\Middleware;
 
 use App\Enums\UserStatus;
+use App\Support\BannedAuthentication;
 use Closure;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Symfony\Component\HttpFoundation\Response;
 
 class EnsureUserCanAccessSocialFeatures
@@ -16,7 +18,13 @@ class EnsureUserCanAccessSocialFeatures
      */
     public function handle(Request $request, Closure $next): Response
     {
-        $user = $request->user();
+        $user = $request->user()?->fresh();
+        if ($user?->status === UserStatus::Banned) {
+            Auth::guard('web')->logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+            abort(403, BannedAuthentication::message());
+        }
 
         abort_unless(
             $user?->status === UserStatus::Active

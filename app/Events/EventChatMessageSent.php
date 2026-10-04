@@ -2,7 +2,9 @@
 
 namespace App\Events;
 
+use App\Enums\UserStatus;
 use App\Models\EventChatMessage;
+use App\Models\User;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
@@ -23,6 +25,11 @@ final class EventChatMessageSent implements ShouldBroadcast, ShouldDispatchAfter
     public function broadcastOn(): array
     {
         return [new PrivateChannel("event-chat.{$this->message->event_chat_id}")];
+    }
+
+    public function broadcastWhen(): bool
+    {
+        return User::query()->whereKey($this->message->author_user_id)->where('status', UserStatus::Active)->exists() && $this->message->eventChat()->whereHas('event.organizer', fn ($q) => $q->where('status', UserStatus::Active))->exists();
     }
 
     public function broadcastAs(): string

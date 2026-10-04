@@ -2,6 +2,7 @@
 
 namespace App\Support;
 
+use App\Enums\UserStatus;
 use App\Models\User;
 use Illuminate\Support\Facades\Cache;
 
@@ -13,7 +14,7 @@ final class MemberPresence
 
     public function touch(User $member): bool
     {
-        if ($member->show_presence === false) {
+        if ($member->fresh()?->status !== UserStatus::Active || $member->show_presence === false) {
             Cache::forget($this->onlineKey($member));
 
             return false;
@@ -37,7 +38,7 @@ final class MemberPresence
     /** @return array{online: bool, last_active_at: string|null}|null */
     public function forViewer(User $participant): ?array
     {
-        if ($participant->show_presence === false) {
+        if ($participant->status !== UserStatus::Active || $participant->show_presence === false) {
             return null;
         }
 

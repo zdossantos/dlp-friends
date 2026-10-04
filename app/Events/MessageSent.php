@@ -2,7 +2,9 @@
 
 namespace App\Events;
 
+use App\Enums\UserStatus;
 use App\Models\Message;
+use App\Models\User;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
@@ -29,6 +31,11 @@ final class MessageSent implements ShouldBroadcast, ShouldDispatchAfterCommit
             new PrivateChannel("App.Models.User.{$match->user_low_id}"),
             new PrivateChannel("App.Models.User.{$match->user_high_id}"),
         ];
+    }
+
+    public function broadcastWhen(): bool
+    {
+        return User::query()->whereKey([$this->message->conversation->memberMatch->user_low_id, $this->message->conversation->memberMatch->user_high_id])->where('status', UserStatus::Active)->count() === 2;
     }
 
     public function broadcastAs(): string

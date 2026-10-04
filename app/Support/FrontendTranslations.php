@@ -21,6 +21,7 @@ final class FrontendTranslations
             'notifications' => trans('notifications'),
             'events' => trans('events'),
             'blocking' => trans('blocking'),
+            'moderation' => trans('moderation'),
             'administration' => trans('administration'),
             'partners' => trans('partners'),
         ];

@@ -2,6 +2,7 @@
 import { MessageCircle } from '@lucide/vue';
 import DeleteMemberDialog from '@/components/admin/DeleteMemberDialog.vue';
 import ManageMemberRolesDialog from '@/components/admin/ManageMemberRolesDialog.vue';
+import SetMemberBanDialog from '@/components/admin/SetMemberBanDialog.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -26,6 +27,7 @@ type Member = {
     messages_sent_count: number;
     blocked_count: number;
     blocked_by_count: number;
+    can_ban: boolean;
     can_delete: boolean;
     can_start_conversation: boolean;
     can_manage_roles: boolean;
@@ -57,6 +59,12 @@ function date(value: string | null): string {
             <Badge v-if="member.is_admin" variant="outline" class="w-fit">
                 {{ t('profile.details.administrator') }}
             </Badge>
+            <Badge
+                v-if="member.status === 'banned'"
+                variant="destructive"
+                class="w-fit"
+                >{{ t('administration.members.status_banned') }}</Badge
+            >
         </CardHeader>
         <CardContent class="grid min-w-0 gap-4 text-sm">
             <dl class="grid min-w-0 grid-cols-2 gap-x-3 gap-y-3">
@@ -167,6 +175,11 @@ function date(value: string | null): string {
                     <MessageCircle class="size-4" aria-hidden="true" />
                     {{ t('administration.members.conversation') }}
                 </Button>
+                <SetMemberBanDialog
+                    v-if="member.can_ban"
+                    :member-id="member.id"
+                    :banned="member.status === 'banned'"
+                />
                 <DeleteMemberDialog
                     v-if="member.can_delete"
                     :member-id="member.id"

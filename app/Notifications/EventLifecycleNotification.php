@@ -5,6 +5,7 @@ namespace App\Notifications;
 use App\Contracts\WebPushNotification;
 use App\Enums\EventNotificationType;
 use App\Enums\NotificationCategory;
+use App\Enums\UserStatus;
 use App\Enums\WebPushPreference;
 use App\Models\Event;
 use App\Models\User;
@@ -22,6 +23,11 @@ final class EventLifecycleNotification extends Notification implements ShouldQue
     public function __construct(public Event $event, public EventNotificationType $type)
     {
         $this->afterCommit();
+    }
+
+    public function shouldSend(User $notifiable, string $channel): bool
+    {
+        return $notifiable->fresh()?->status === UserStatus::Active;
     }
 
     /** @return list<string> */

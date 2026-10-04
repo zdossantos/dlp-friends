@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\UserStatus;
 use App\Models\Conversation;
 use App\Models\EventChat;
 use App\Models\User;
@@ -7,7 +8,7 @@ use Illuminate\Support\Facades\Broadcast;
 use Illuminate\Support\Facades\Gate;
 
 Broadcast::channel('App.Models.User.{id}', function ($user, $id) {
-    return (int) $user->id === (int) $id;
+    return $user->fresh()?->status === UserStatus::Active && (int) $user->id === (int) $id;
 });
 
 Broadcast::channel(

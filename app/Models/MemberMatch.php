@@ -12,12 +12,12 @@ use Illuminate\Support\Carbon;
 
 /**
  * @property int $id
- * @property int $user_low_id
- * @property int $user_high_id
+ * @property int|null $user_low_id
+ * @property int|null $user_high_id
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
- * @property-read User $lowUser
- * @property-read User $highUser
+ * @property-read User|null $lowUser
+ * @property-read User|null $highUser
  * @property-read Conversation|null $conversation
  */
 #[Fillable(['user_low_id', 'user_high_id'])]

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\EnsureCurrentTermsAccepted;
 use App\Http\Middleware\EnsureProductOnboardingIsComplete;
 use App\Http\Middleware\EnsureProfileIsComplete;
 use App\Http\Middleware\EnsureUserCanAccessSocialFeatures;
@@ -33,6 +34,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'onboarding.complete' => EnsureProductOnboardingIsComplete::class,
             'role' => EnsureUserHasRole::class,
             'social' => EnsureUserCanAccessSocialFeatures::class,
+            'terms.current' => EnsureCurrentTermsAccepted::class,
         ]);
 
         $middleware->encryptCookies(except: ['appearance', 'sidebar_state']);

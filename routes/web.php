@@ -9,6 +9,7 @@ use App\Http\Controllers\Admin\InterestController;
 use App\Http\Controllers\Admin\InterestOrderController;
 use App\Http\Controllers\Admin\InterestSettingController;
 use App\Http\Controllers\Admin\InterestStatusController;
+use App\Http\Controllers\Admin\MemberBanController;
 use App\Http\Controllers\Admin\MemberController as AdminMemberController;
 use App\Http\Controllers\Admin\MemberConversationController;
 use App\Http\Controllers\Admin\MemberRoleController;
@@ -77,6 +78,7 @@ use App\Http\Controllers\PublicMatchingController;
 use App\Http\Controllers\PublicMemberProfileController;
 use App\Http\Controllers\PublicReleaseNotesController;
 use App\Http\Controllers\SwipeController;
+use App\Http\Controllers\TermsAcceptanceController;
 use App\Http\Controllers\UnblockMemberController;
 use App\Support\PublicUrls;
 use Illuminate\Support\Facades\Route;
@@ -146,6 +148,11 @@ Route::middleware('guest')->group(function (): void {
 });
 
 Route::middleware(['auth', 'verified', 'social'])->group(function (): void {
+    Route::get('terms/accept', [TermsAcceptanceController::class, 'show'])->name('terms.acceptance.show');
+    Route::post('terms/accept', [TermsAcceptanceController::class, 'store'])->name('terms.acceptance.store');
+});
+
+Route::middleware(['auth', 'verified', 'social', 'terms.current'])->group(function (): void {
     Route::get('avatars/{avatar}/image', AvatarImageController::class)
         ->name('avatars.image');
 
@@ -320,6 +327,7 @@ Route::middleware(['auth', 'verified', 'social'])->group(function (): void {
         Route::patch('conversation-reports/{report}', [App\Http\Controllers\Admin\ConversationReportController::class, 'close'])->name('conversation-reports.close');
         Route::get('members', [AdminMemberController::class, 'index'])
             ->name('members.index');
+        Route::patch('members/{member}/ban', MemberBanController::class)->name('members.ban.update');
         Route::patch('members/{member}/roles', MemberRoleController::class)
             ->name('members.roles.update');
         Route::delete('members/{member}', [AdminMemberController::class, 'destroy'])

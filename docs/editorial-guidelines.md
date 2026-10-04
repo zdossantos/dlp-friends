@@ -67,3 +67,13 @@ règle couvre aussi les placeholders, libellés accessibles, toasts, validations
 - Donner aux boutons icônes un libellé accessible cohérent avec l’action.
 - Vérifier le tutoiement et le vocabulaire canonique en français.
 - Vérifier que l’anglais reste naturel et expose les mêmes clés.
+
+## Signalements et sanctions
+
+Les catalogues `moderation` FR/EN portent les textes de signalement, revue,
+sanction et réacceptation. Expliquer avant confirmation que toute la conversation,
+ancienne et future, devient consultable par les administrateurs. Employer
+« Bannir », « Banni » et « Lever le bannissement » sans durée ou expiration.
+Distinguer suppression en application et droits légaux ; rappeler le contact
+public après vérification d’identité. Aucun message d’authentification ne révèle
+une sanction avant validation du mot de passe et du second facteur éventuel.

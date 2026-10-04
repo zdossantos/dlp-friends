@@ -28,6 +28,7 @@ class UserFactory extends Factory
             $role = Role::query()->where('name', RoleName::User)->firstOrFail();
 
             $user->roles()->syncWithoutDetaching($role);
+            $user->termsAcceptances()->firstOrCreate(['terms_version' => config('legal.terms.version')], ['accepted_at' => now()]);
         });
     }
 

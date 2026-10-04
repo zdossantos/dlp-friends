@@ -2,6 +2,8 @@
 
 namespace App\Events;
 
+use App\Enums\UserStatus;
+use App\Models\User;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
@@ -24,6 +26,11 @@ final class EventChatAccessChanged implements ShouldBroadcast, ShouldDispatchAft
     public function broadcastOn(): PrivateChannel
     {
         return new PrivateChannel("App.Models.User.{$this->userId}");
+    }
+
+    public function broadcastWhen(): bool
+    {
+        return User::query()->whereKey($this->userId)->where('status', UserStatus::Active)->exists();
     }
 
     public function broadcastAs(): string

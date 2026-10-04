@@ -9,7 +9,7 @@ Les quatre routes légales localisées sont rendues en Blade sans JavaScript,
 avec canonical, hreflang et sitemap. `PublicUrls` fournit leurs URL aux pages
 publiques et aux layouts Inertia. `terms_acceptances` enregistre de façon
 immuable `user_id`, `terms_version` et `accepted_at` dans la transaction de
-création du compte ; la suppression du compte supprime aussi cette preuve.
+création du compte et lors des réacceptations ; la suppression du compte supprime aussi cette preuve.
 
 ## Stack applicative
 
@@ -351,7 +351,7 @@ Les exports JSON sont construits à la demande par `BuildUserDataExport` et
 renvoyés directement au membre authentifié. Aucun fichier d’export ni état de
 préparation n’est conservé côté serveur.
 
-Une suppression confirmée inscrit `pending_deletion` et
+Une suppression confirmée d’un compte actif inscrit `pending_deletion` et
 `deletion_requested_at`, puis révoque sessions et liens sociaux avant
 la déconnexion. `PurgeDeletedUser` vérifie l’identité, le statut, l’horodatage
 immuable et l’échéance de 30 jours avant de supprimer l’utilisateur ; les clés
@@ -367,3 +367,33 @@ elle ne doit pas anticiper une extension hypothétique. Voir les
 [`engineering-principles.md`](engineering-principles.md). Le langage visuel et
 les règles de composants sont définis dans le
 [`design-system.md`](design-system.md).
+
+## Modération des échanges et révocation serveur
+
+Les Policies, Form Requests et Actions transactionnelles protègent signalement,
+consultation/clôture et sanction. `ReportConversation` verrouille les utilisateurs
+par ID puis la conversation, recontrôle l’appartenance et réutilise `BlockUser`.
+La consultation charge les messages originaux par `(created_at,id)` et produit
+un audit sans mutation du curseur de lecture. `SetMemberBan` verrouille acteur
+et cible, recontrôle leurs droits, applique `banned`/`active`, révoque les accès
+et réutilise annulation, retrait et dépublication.
+
+Le broadcaster Reverb signe une identité minimale `user_id` dans `channel_data`
+pour chaque canal privé. `IdentityAwareChannelManager` substitue le canal privé
+qui valide signature et activité à l’abonnement et recontrôle l’activité fraîche
+à chaque diffusion, y compris `broadcastToAll` utilisé en distribution. La
+terminaison signée des connexions intervient après commit ; son échec ne
+permet pas de livraison à un destinataire inactif. Événements et notifications
+différés recontrôlent aussi les participants. Aucun code vendor n’est modifié ;
+les stubs PHPStan corrigent uniquement les annotations du vendor Reverb.
+
+`PrepareMemberDataForDeletion` protège sous verrou les données des comptes bannis
+avant les cascades ; la purge de comptes vérifie toujours `pending_deletion`.
+La purge partenaire verrouille propriétaires et enregistrements avant de
+revérifier leur échéance et exclut les propriétaires bannis. Les graphes
+détachés sont fermés par les scopes et Policies.
+
+`EnsureCurrentTermsAccepted` garde les routes privées après les contrôles
+d’authentification, vérification et activité. La page d’acceptation et le logout
+restent hors de cette garde ; la version et l’heure sont déterminées au serveur
+et l’écriture est unique/idempotente sous verrou.

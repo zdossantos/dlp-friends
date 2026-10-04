@@ -30,8 +30,10 @@ final class DeleteMember
             $this->deactivateDeletedPartner->handle($lockedMember);
             $this->purgeDeletedPartnerData->handle($lockedMember);
             DB::table('sessions')->where('user_id', $lockedMember->id)->delete();
+            app(PrepareMemberDataForDeletion::class)->handle($lockedMember);
+            $lockedMember->notifications()->delete();
             $lockedMember->delete();
-        });
+        }, 3);
 
         try {
             Mail::to($email)->queue(
