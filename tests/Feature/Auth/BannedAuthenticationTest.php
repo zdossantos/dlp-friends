@@ -9,6 +9,7 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
+use Inertia\Testing\AssertableInertia as Assert;
 use Laravel\Socialite\Facades\Socialite;
 
 uses(RefreshDatabase::class);
@@ -30,6 +31,16 @@ it('does not reveal the sanction before a valid second factor', function () {
     expect(json_encode(session('errors')->getBag('default')->getMessages()))->not->toContain(__('moderation.banned'));
     $this->post('/two-factor-challenge', ['recovery_code' => 'recovery-code-1'])->assertSessionHasErrors('email');
     expect(session('errors')->first('email'))->toContain(__('moderation.banned'));
+    $this->assertGuest();
+});
+
+it('redirects directly to login with the ban message after a valid HTML second factor', function () {
+    $user = User::factory()->withTwoFactor()->create(['status' => 'banned']);
+    $this->post('/login', ['email' => $user->email, 'password' => 'password'])->assertRedirect('/two-factor-challenge');
+    $response = $this->from('/two-factor-challenge')->post('/two-factor-challenge', ['recovery_code' => 'recovery-code-1']);
+    expect($response->headers->get('Location'))->toBe(route('login'));
+    $this->get('/login')->assertInertia(fn (Assert $page) => $page
+        ->where('errors.email', fn (string $message): bool => str_contains($message, __('moderation.banned'))));
     $this->assertGuest();
 });
 

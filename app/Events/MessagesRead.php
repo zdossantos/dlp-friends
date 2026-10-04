@@ -21,8 +21,13 @@ final class MessagesRead implements ShouldBroadcast, ShouldDispatchAfterCommit
         public string $readAt,
     ) {}
 
-    public function broadcastOn(): PrivateChannel
+    /** @return PrivateChannel|array<never> */
+    public function broadcastOn(): PrivateChannel|array
     {
+        if (! $this->broadcastWhen()) {
+            return [];
+        }
+
         return new PrivateChannel("conversation.{$this->conversationId}");
     }
 

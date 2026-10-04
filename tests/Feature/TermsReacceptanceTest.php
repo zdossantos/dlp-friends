@@ -8,6 +8,21 @@ uses(RefreshDatabase::class);
 
 use Inertia\Testing\AssertableInertia as Assert;
 
+it('guards private package routes and realtime authorization until current terms are accepted', function (string $method, string $url) {
+    $user = User::factory()->withTwoFactor()->create();
+    $user->termsAcceptances()->delete();
+    $this->actingAs($user)->withSession(['auth.password_confirmed_at' => time()]);
+    $payload = ['channel_name' => "private-App.Models.User.{$user->id}", 'socket_id' => '1.2'];
+    $this->{$method}($url, $payload)->assertRedirect(route('terms.acceptance.show'));
+    $this->assertDatabaseCount('passkeys', 0);
+})->with([['post', '/broadcasting/auth'], ['get', '/user/confirmed-password-status'], ['get', '/user/passkeys/options'], ['get', '/user/two-factor-recovery-codes']]);
+
+it('refuses banned sessions on private package routes', function (string $url) {
+    $user = User::factory()->withTwoFactor()->create(['status' => 'banned']);
+    $this->actingAs($user)->withSession(['auth.password_confirmed_at' => time()])->get($url)->assertForbidden();
+    $this->assertGuest();
+})->with(['/user/confirmed-password-status', '/user/passkeys/options', '/user/two-factor-recovery-codes']);
+
 it('requires explicit current terms acceptance for every active role', function (string $role, string $url) {
     $user = User::factory()->withProfile()->{$role}()->create();
     $user->termsAcceptances()->delete();

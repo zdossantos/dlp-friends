@@ -4,6 +4,7 @@ use App\Actions\ReportConversation;
 use App\Enums\ConversationReportReason;
 use App\Models\MemberMatch;
 use App\Models\User;
+use App\Support\BannedAuthentication;
 use Illuminate\Support\Facades\Storage;
 
 it('offers blocking by default and cancels without reporting on desktop and mobile', function (string $device) {
@@ -70,4 +71,14 @@ it('requires an initially unchecked explicit acceptance before continuing', func
     $page = visit('/discover')->assertPathIs('/terms/accept')->assertAttribute('#accept-current-terms', 'data-state', 'unchecked');
     $page->click('#accept-current-terms')->click('Accepter et continuer')->assertPathIs('/discover')->assertNoJavaScriptErrors();
     expect($member->termsAcceptances()->where('terms_version', config('legal.terms.version'))->exists())->toBeTrue();
+});
+
+it('shows the ban explanation on login after a valid recovery code', function () {
+    $user = User::factory()->withTwoFactor()->create(['status' => 'banned', 'locale' => 'fr']);
+    visit('/login')->click('[data-test="locale-fr"]')->assertSee('Heureux de te revoir')->fill('#email', $user->email)->fill('#password', 'password')
+        ->press('[data-test="login-button"]')->assertPathIs('/two-factor-challenge')
+        ->click('utiliser un code de récupération')->fill('[name="recovery_code"]', 'recovery-code-1')
+        ->press('Continuer')->assertPathIs('/login')
+        ->assertSee(BannedAuthentication::message())->assertNoJavaScriptErrors();
+    $this->assertGuest();
 });

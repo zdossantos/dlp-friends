@@ -169,6 +169,12 @@ class User extends Authenticatable implements HasLocalePreference, MustVerifyEma
         return $this->hasMany(TermsAcceptance::class);
     }
 
+    /** @param Builder<User> $query */
+    public function scopeWithCurrentTerms(Builder $query): void
+    {
+        $query->whereHas('termsAcceptances', fn (Builder $acceptances) => $acceptances->where('terms_version', config('legal.terms.version')));
+    }
+
     /** @return HasMany<Event, $this> */
     public function organizedEvents(): HasMany
     {

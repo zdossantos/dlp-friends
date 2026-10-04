@@ -52,6 +52,6 @@ final class IdentityAwarePrivateChannel extends PrivateChannel
 
     private function active(mixed $id): bool
     {
-        return is_string($id) && ctype_digit($id) && User::query()->whereKey($id)->where('status', UserStatus::Active)->exists();
+        return is_string($id) && ctype_digit($id) && User::query()->whereKey($id)->where('status', UserStatus::Active)->withCurrentTerms()->exists();
     }
 }

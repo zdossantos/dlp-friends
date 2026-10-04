@@ -3,6 +3,7 @@
 use App\Actions\DeleteMember;
 use App\Enums\PartnerRevisionStatus;
 use App\Jobs\PurgeDeletedUser;
+use App\Models\Block;
 use App\Models\Conversation;
 use App\Models\Event;
 use App\Models\MemberMatch;
@@ -14,6 +15,18 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
 
 uses(RefreshDatabase::class);
+
+it('keeps detached blocks without breaking events after a ban is lifted', function () {
+    Mail::fake();
+    $other = User::factory()->withProfile()->create();
+    $target = User::factory()->withProfile()->create(['status' => 'banned']);
+    $block = Block::query()->create(['blocker_user_id' => $other->id, 'blocked_user_id' => $target->id]);
+    app(DeleteMember::class)->handle($other);
+    $target->forceFill(['status' => 'active'])->save();
+    $this->actingAs($target)->get('/events')->assertOk();
+    $this->get('/events/mine')->assertOk();
+    $this->assertDatabaseHas('blocks', ['id' => $block->id, 'blocker_user_id' => null]);
+});
 
 it('retains a banned members messages when another participant is deleted', function () {
     Mail::fake();

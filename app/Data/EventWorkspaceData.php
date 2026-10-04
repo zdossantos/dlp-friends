@@ -120,11 +120,12 @@ final readonly class EventWorkspaceData
     private function blockedUserIds(User $viewer): Collection
     {
         return Block::query()
-            ->where('blocker_user_id', $viewer->id)
-            ->orWhere('blocked_user_id', $viewer->id)
+            ->where(fn ($query) => $query->where('blocker_user_id', $viewer->id)->orWhere('blocked_user_id', $viewer->id))
+            ->whereNotNull('blocker_user_id')
+            ->whereNotNull('blocked_user_id')
             ->get()
             ->map(fn (Block $block): int => $block->blocker_user_id === $viewer->id
-                ? $block->blocked_user_id
-                : $block->blocker_user_id);
+                ? (int) $block->blocked_user_id
+                : (int) $block->blocker_user_id);
     }
 }

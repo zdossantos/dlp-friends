@@ -17,14 +17,14 @@ final class BannedAuthentication
         return __('moderation.banned').(is_string($contact) && $contact !== '' ? ' '.__('moderation.banned_contact', ['email' => $contact]) : '');
     }
 
-    public static function rejectIfBanned(Request $request, User $user): void
+    public static function rejectIfBanned(Request $request, ?User $user): void
     {
-        if (User::query()->whereKey($user->id)->value('status') !== UserStatus::Banned) {
+        if ($user === null || User::query()->whereKey($user->id)->value('status') !== UserStatus::Banned) {
             return;
         }
         Auth::guard('web')->logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
-        throw ValidationException::withMessages(['email' => self::message()]);
+        throw ValidationException::withMessages(['email' => self::message()])->redirectTo(route('login'));
     }
 }

@@ -20,6 +20,10 @@ final class PresenceChanged implements ShouldBroadcast
     /** @return array<int, PrivateChannel> */
     public function broadcastOn(): array
     {
+        if (! $this->broadcastWhen()) {
+            return [];
+        }
+
         return Conversation::query()
             ->forMember($this->member)
             ->withUnblockedParticipant($this->member)

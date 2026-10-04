@@ -12,7 +12,7 @@ final class IdentityAwareReverbBroadcaster extends PusherBroadcaster
     public function validAuthenticationResponse($request, $result)
     {
         $user = $request->user();
-        if (! $user instanceof User || $user->fresh()?->status !== UserStatus::Active) {
+        if (! $user instanceof User || ! User::query()->whereKey($user->id)->where('status', UserStatus::Active)->withCurrentTerms()->exists()) {
             throw new AccessDeniedHttpException;
         }
         if (str_starts_with($request->channel_name, 'private-')) {

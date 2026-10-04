@@ -26,6 +26,10 @@ final class MessageReactionUpdated implements ShouldBroadcast, ShouldDispatchAft
 
     public function broadcastOn(): array
     {
+        if (! $this->broadcastWhen()) {
+            return [];
+        }
+
         return [new PrivateChannel("conversation.{$this->conversationId}")];
     }
 

@@ -46,6 +46,8 @@ class ConversationSchemaTest extends TestCase
 
     public function test_the_migration_creates_conversations_for_existing_matches(): void
     {
+        $reportMigration = require database_path('migrations/2026_10_04_100000_create_conversation_reports_and_moderation_audits_tables.php');
+        $reportMigration->down();
         $conversationMigration = require database_path('migrations/2026_08_26_100000_create_conversations_table.php');
         $messageMigration = require database_path('migrations/2026_08_26_110000_create_messages_table.php');
         $reactionMigration = require database_path('migrations/2026_09_27_140000_create_message_reactions_table.php');
@@ -57,6 +59,7 @@ class ConversationSchemaTest extends TestCase
         $conversationMigration->up();
         $messageMigration->up();
         $reactionMigration->up();
+        $reportMigration->up();
 
         $this->assertDatabaseHas('conversations', [
             'match_id' => $existingMatch->id,

@@ -11,12 +11,12 @@ use Illuminate\Support\Carbon;
 
 /**
  * @property int $id
- * @property int $blocker_user_id
- * @property int $blocked_user_id
+ * @property int|null $blocker_user_id
+ * @property int|null $blocked_user_id
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
- * @property-read User $blocker
- * @property-read User $blocked
+ * @property-read User|null $blocker
+ * @property-read User|null $blocked
  */
 #[Fillable(['blocker_user_id', 'blocked_user_id'])]
 class Block extends Model

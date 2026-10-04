@@ -24,6 +24,10 @@ final class EventChatMessageSent implements ShouldBroadcast, ShouldDispatchAfter
     /** @return array<int, PrivateChannel> */
     public function broadcastOn(): array
     {
+        if (! $this->broadcastWhen()) {
+            return [];
+        }
+
         return [new PrivateChannel("event-chat.{$this->message->event_chat_id}")];
     }
 

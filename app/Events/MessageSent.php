@@ -24,6 +24,10 @@ final class MessageSent implements ShouldBroadcast, ShouldDispatchAfterCommit
     /** @return array<int, PrivateChannel> */
     public function broadcastOn(): array
     {
+        if (! $this->broadcastWhen()) {
+            return [];
+        }
+
         $match = $this->message->conversation->memberMatch;
 
         return [

@@ -25,8 +25,9 @@ final class PrepareMemberDataForDeletion
         $groupMessageIds = DB::table('event_chat_messages')->where('author_user_id', $member->id)->pluck('id');
         $ids = $ids->concat(DB::table('message_reactions')->whereIn('message_id', $messageIds)->pluck('user_id'))
             ->concat(DB::table('event_chat_message_reactions')->whereIn('event_chat_message_id', $groupMessageIds)->pluck('user_id'));
-        User::query()->whereKey($ids->filter()->unique()->sort()->values())->orderBy('id')->lockForUpdate()->get();
-        $banned = User::query()->whereKey($ids->filter()->unique())->where('status', UserStatus::Banned)->where('id', '!=', $member->id)->pluck('id');
+        // Locking reads see current committed statuses, unlike an earlier MySQL snapshot.
+        $participants = User::query()->whereKey($ids->filter()->unique()->sort()->values())->orderBy('id')->lockForUpdate()->get();
+        $banned = $participants->filter(fn (User $user): bool => $user->status === UserStatus::Banned && $user->id !== $member->id)->pluck('id');
         DB::table('message_reactions')->whereIn('message_id', $messageIds)->whereNotIn('user_id', $banned)->delete();
         DB::table('event_chat_message_reactions')->whereIn('event_chat_message_id', $groupMessageIds)->whereNotIn('user_id', $banned)->delete();
         foreach (['matches' => ['user_low_id', 'user_high_id'], 'swipes' => ['actor_user_id', 'target_user_id'], 'blocks' => ['blocker_user_id', 'blocked_user_id']] as $table => [$first, $second]) {

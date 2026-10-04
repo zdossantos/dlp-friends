@@ -24,8 +24,13 @@ final class MatchCreated implements ShouldBroadcast, ShouldDispatchAfterCommit
         public User $recipient,
     ) {}
 
-    public function broadcastOn(): PrivateChannel
+    /** @return PrivateChannel|array<never> */
+    public function broadcastOn(): PrivateChannel|array
     {
+        if (! $this->broadcastWhen()) {
+            return [];
+        }
+
         return new PrivateChannel("App.Models.User.{$this->recipient->id}");
     }
 

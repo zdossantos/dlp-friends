@@ -23,8 +23,13 @@ final class EventChatAccessChanged implements ShouldBroadcast, ShouldDispatchAft
         public string $access,
     ) {}
 
-    public function broadcastOn(): PrivateChannel
+    /** @return PrivateChannel|array<never> */
+    public function broadcastOn(): PrivateChannel|array
     {
+        if (! $this->broadcastWhen()) {
+            return [];
+        }
+
         return new PrivateChannel("App.Models.User.{$this->userId}");
     }
 

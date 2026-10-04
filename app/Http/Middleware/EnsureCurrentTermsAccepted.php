@@ -11,7 +11,7 @@ final class EnsureCurrentTermsAccepted
     public function handle(Request $request, Closure $next): Response
     {
         $user = $request->user();
-        if ($user !== null && ! $user->termsAcceptances()->where('terms_version', config('legal.terms.version'))->exists()) {
+        if ($user !== null && ! $user->newQuery()->whereKey($user->id)->withCurrentTerms()->exists()) {
             return redirect()->route('terms.acceptance.show');
         }
 

@@ -27,6 +27,10 @@ final class EventChatMessageReactionUpdated implements ShouldBroadcast, ShouldDi
 
     public function broadcastOn(): array
     {
+        if (! $this->broadcastWhen()) {
+            return [];
+        }
+
         return [new PrivateChannel("event-chat.{$this->eventChatId}")];
     }
 
