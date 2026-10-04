@@ -31,6 +31,7 @@ use App\Http\Controllers\BlockMemberController;
 use App\Http\Controllers\ConversationController;
 use App\Http\Controllers\ConversationIndexController;
 use App\Http\Controllers\ConversationReadController;
+use App\Http\Controllers\ConversationReportController;
 use App\Http\Controllers\DiscoveryController;
 use App\Http\Controllers\EventCancellationController;
 use App\Http\Controllers\EventChatController;
@@ -260,6 +261,7 @@ Route::middleware(['auth', 'verified', 'social'])->group(function (): void {
                     ->name('conversations.index');
                 Route::get('conversations/{conversation}', ConversationController::class)
                     ->name('conversations.show');
+                Route::post('conversations/{conversation}/reports', ConversationReportController::class)->name('conversations.reports.store');
                 Route::post('conversations/{conversation}/messages', MessageController::class)
                     ->name('conversations.messages.store');
                 Route::post('conversations/{conversation}/messages/{message}/like', [MessageReactionController::class, 'store'])
@@ -313,6 +315,9 @@ Route::middleware(['auth', 'verified', 'social'])->group(function (): void {
             ->name('onboarding.index');
         Route::patch('onboarding', [AdminProductOnboardingController::class, 'update'])
             ->name('onboarding.update');
+        Route::get('conversation-reports', [App\Http\Controllers\Admin\ConversationReportController::class, 'index'])->name('conversation-reports.index');
+        Route::get('conversation-reports/{report}', [App\Http\Controllers\Admin\ConversationReportController::class, 'show'])->name('conversation-reports.show');
+        Route::patch('conversation-reports/{report}', [App\Http\Controllers\Admin\ConversationReportController::class, 'close'])->name('conversation-reports.close');
         Route::get('members', [AdminMemberController::class, 'index'])
             ->name('members.index');
         Route::patch('members/{member}/roles', MemberRoleController::class)
