@@ -70,5 +70,6 @@ const { t } = useTranslations();
                 {{ t('conversations.header.private_exchange') }}
             </p>
         </div>
+        <slot />
     </header>
 </template>

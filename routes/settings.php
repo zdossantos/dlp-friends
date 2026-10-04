@@ -8,7 +8,7 @@ use App\Http\Controllers\Settings\WebPushSubscriptionController;
 use Illuminate\Auth\Middleware\RequirePassword;
 use Illuminate\Support\Facades\Route;
 
-Route::middleware(['auth', 'verified', 'social', 'role:user', 'profile.complete', 'onboarding.complete'])->group(function () {
+Route::middleware(['auth', 'verified', 'social', 'terms.current', 'role:user', 'profile.complete', 'onboarding.complete'])->group(function () {
     Route::redirect('settings', '/settings/account');
 
     Route::get('settings/account', [AccountController::class, 'edit'])->name('account.edit');
@@ -30,7 +30,7 @@ Route::middleware(['auth', 'verified', 'social', 'role:user', 'profile.complete'
 
 });
 
-Route::middleware(['auth', 'verified', 'social'])->group(function () {
+Route::middleware(['auth', 'verified', 'social', 'terms.current'])->group(function () {
     Route::get('settings/notifications', [NotificationPreferenceController::class, 'edit'])
         ->name('notification-preferences.edit');
     Route::patch('settings/notifications', [NotificationPreferenceController::class, 'update'])

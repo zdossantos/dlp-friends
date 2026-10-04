@@ -2,6 +2,7 @@
 
 namespace App\Events;
 
+use App\Enums\UserStatus;
 use App\Models\MemberMatch;
 use App\Models\User;
 use Illuminate\Broadcasting\InteractsWithSockets;
@@ -23,9 +24,19 @@ final class MatchCreated implements ShouldBroadcast, ShouldDispatchAfterCommit
         public User $recipient,
     ) {}
 
-    public function broadcastOn(): PrivateChannel
+    /** @return PrivateChannel|array<never> */
+    public function broadcastOn(): PrivateChannel|array
     {
+        if (! $this->broadcastWhen()) {
+            return [];
+        }
+
         return new PrivateChannel("App.Models.User.{$this->recipient->id}");
+    }
+
+    public function broadcastWhen(): bool
+    {
+        return User::query()->whereKey([$this->memberMatch->user_low_id, $this->memberMatch->user_high_id])->where('status', UserStatus::Active)->count() === 2;
     }
 
     public function broadcastAs(): string

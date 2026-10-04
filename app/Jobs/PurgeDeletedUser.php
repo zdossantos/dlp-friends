@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use App\Actions\PrepareMemberDataForDeletion;
 use App\Actions\PurgeDeletedPartnerData;
 use App\Enums\UserStatus;
 use App\Models\User;
@@ -36,7 +37,8 @@ class PurgeDeletedUser implements ShouldQueue
 
             $purgeDeletedPartnerData->handle($user);
             $user->notifications()->delete();
+            app(PrepareMemberDataForDeletion::class)->handle($user);
             $user->delete();
-        });
+        }, 3);
     }
 }

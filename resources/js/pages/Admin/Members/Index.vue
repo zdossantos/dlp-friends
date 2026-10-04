@@ -7,6 +7,7 @@ import AdminMemberCard from '@/components/admin/AdminMemberCard.vue';
 import AdminPageHeader from '@/components/admin/AdminPageHeader.vue';
 import DeleteMemberDialog from '@/components/admin/DeleteMemberDialog.vue';
 import ManageMemberRolesDialog from '@/components/admin/ManageMemberRolesDialog.vue';
+import SetMemberBanDialog from '@/components/admin/SetMemberBanDialog.vue';
 import MatchDialog from '@/components/discovery/MatchDialog.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -35,6 +36,7 @@ type Member = {
     messages_sent_count: number;
     blocked_count: number;
     blocked_by_count: number;
+    can_ban: boolean;
     can_delete: boolean;
     can_start_conversation: boolean;
     can_manage_roles: boolean;
@@ -285,6 +287,11 @@ function date(value: string | null): string {
                                                 )
                                             }}</Button
                                         >
+                                        <SetMemberBanDialog
+                                            v-if="member.can_ban"
+                                            :member-id="member.id"
+                                            :banned="member.status === 'banned'"
+                                        />
                                         <DeleteMemberDialog
                                             v-if="member.can_delete"
                                             :member-id="member.id"

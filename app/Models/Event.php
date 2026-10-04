@@ -17,7 +17,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 
 /**
  * @property int $id
- * @property int $organizer_user_id
+ * @property int|null $organizer_user_id
  * @property string $title
  * @property string $description
  * @property string $general_location
@@ -26,7 +26,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
  * @property int $capacity
  * @property EventRegistrationMode $registration_mode
  * @property CarbonImmutable|null $cancelled_at
- * @property-read User $organizer
+ * @property-read User|null $organizer
  * @property-read Collection<int, EventRegistration> $registrations
  * @property-read EventChat|null $chat
  */

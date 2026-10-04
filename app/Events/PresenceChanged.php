@@ -2,6 +2,7 @@
 
 namespace App\Events;
 
+use App\Enums\UserStatus;
 use App\Models\Conversation;
 use App\Models\User;
 use Illuminate\Broadcasting\InteractsWithSockets;
@@ -19,8 +20,13 @@ final class PresenceChanged implements ShouldBroadcast
     /** @return array<int, PrivateChannel> */
     public function broadcastOn(): array
     {
+        if (! $this->broadcastWhen()) {
+            return [];
+        }
+
         return Conversation::query()
             ->forMember($this->member)
+            ->withUnblockedParticipant($this->member)
             ->whereNull('archived_at')
             ->with(['memberMatch.lowUser', 'memberMatch.highUser'])
             ->get()
@@ -35,6 +41,11 @@ final class PresenceChanged implements ShouldBroadcast
             ->map(fn (User $peer): PrivateChannel => new PrivateChannel("App.Models.User.{$peer->id}"))
             ->values()
             ->all();
+    }
+
+    public function broadcastWhen(): bool
+    {
+        return User::query()->whereKey($this->member->id)->where('status', UserStatus::Active)->exists();
     }
 
     public function broadcastAs(): string

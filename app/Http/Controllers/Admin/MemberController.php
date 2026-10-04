@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Actions\DeleteMember;
-use App\Enums\RoleName;
 use App\Enums\SwipeDecision;
 use App\Enums\UserStatus;
 use App\Http\Controllers\Controller;
@@ -38,9 +37,8 @@ final class MemberController extends Controller
             ->select('users.*')
             ->when($request->has('member'), fn (Builder $query): Builder => $query
                 ->whereKey($request->integer('member'))
-                ->where('status', UserStatus::Active)
-                ->whereNull('deletion_requested_at')
-                ->whereHas('roles', fn (Builder $roles): Builder => $roles->where('name', RoleName::User)))
+                ->whereIn('status', [UserStatus::Active, UserStatus::Banned])
+                ->whereNull('deletion_requested_at'))
             ->with(['profile.avatar', 'roles'])
             ->withCount([
                 'sentSwipes as likes_sent_count' => fn (Builder $query): Builder => $query->where('decision', SwipeDecision::Like),
@@ -86,6 +84,7 @@ final class MemberController extends Controller
                     'messages_sent_count' => (int) $member->getAttribute('messages_sent_count'),
                     'blocked_count' => (int) $member->getAttribute('blocked_count'),
                     'blocked_by_count' => (int) $member->getAttribute('blocked_by_count'),
+                    'can_ban' => Gate::forUser($request->user())->allows('ban', $member),
                     'can_delete' => Gate::forUser($request->user())->allows('delete', $member),
                     'can_start_conversation' => Gate::forUser($request->user())->allows('startConversation', $member),
                     'can_manage_roles' => Gate::forUser($request->user())->allows('manageRoles', $member),

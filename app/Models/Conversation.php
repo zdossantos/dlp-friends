@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\ProfileVisibility;
+use App\Enums\UserStatus;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
@@ -38,6 +39,8 @@ class Conversation extends Model
     public function scopeWithVisibleParticipant(Builder $query, User $user): void
     {
         $query->whereHas('memberMatch', fn (Builder $match) => $match
+            ->whereHas('lowUser', fn (Builder $user) => $user->where('status', UserStatus::Active))
+            ->whereHas('highUser', fn (Builder $user) => $user->where('status', UserStatus::Active))
             ->where(fn (Builder $participants) => $participants
                 ->where(fn (Builder $memberIsLow) => $memberIsLow
                     ->where('user_low_id', $user->id)
@@ -61,6 +64,8 @@ class Conversation extends Model
     public function scopeWithUnblockedParticipant(Builder $query, User $user): void
     {
         $query->whereHas('memberMatch', fn (Builder $match) => $match
+            ->whereHas('lowUser', fn (Builder $user) => $user->where('status', UserStatus::Active))
+            ->whereHas('highUser', fn (Builder $user) => $user->where('status', UserStatus::Active))
             ->where(fn (Builder $participants) => $participants
                 ->where(fn (Builder $memberIsLow) => $memberIsLow
                     ->where('user_low_id', $user->id)

@@ -4,11 +4,13 @@ namespace App\Actions;
 
 use App\Enums\WebPushPreference;
 use App\Models\Conversation;
+use App\Models\ConversationReport;
 use App\Models\Event;
 use App\Models\EventChatMessage;
 use App\Models\EventRegistration;
 use App\Models\Interest;
 use App\Models\MemberMatch;
+use App\Models\ModerationAudit;
 use App\Models\PartnerAnnouncement;
 use App\Models\PartnerAnnouncementDelivery;
 use App\Models\PartnerProfile;
@@ -64,6 +66,10 @@ final class BuildUserDataExport
 
         return [
             'format_version' => 1,
+            'moderation' => [
+                'reports_submitted' => ConversationReport::query()->where('reporter_user_id', $user->id)->orderBy('id')->get()->map(fn ($report): array => ['reason' => $report->reason->value, 'details' => $report->details, 'created_at' => $report->created_at?->toISOString(), 'closed_at' => $report->closed_at?->toISOString(), 'decision' => $report->decision])->all(),
+                'decisions' => ModerationAudit::query()->where('target_user_id', $user->id)->whereIn('operation', ['ban', 'unban'])->orderBy('id')->get(['operation', 'reason', 'created_at'])->toArray(),
+            ],
             'generated_at' => now()->toIso8601String(),
             'account' => [
                 'email' => $user->email,
@@ -103,8 +109,8 @@ final class BuildUserDataExport
                 return [
                     'id' => $match->id,
                     'other_member' => [
-                        'id' => $other->id,
-                        'display_name' => $other->profile?->display_name,
+                        'id' => $other?->id,
+                        'display_name' => $other?->profile?->display_name,
                     ],
                     'created_at' => $match->created_at?->toIso8601String(),
                     'updated_at' => $match->updated_at?->toIso8601String(),

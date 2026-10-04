@@ -2,15 +2,20 @@
 
 namespace App\Providers;
 
+use App\Broadcasting\IdentityAwareReverbBroadcaster;
 use App\Contracts\DiscoveryTieBreaker;
 use App\Contracts\WebPushTransport;
+use App\Reverb\IdentityAwareChannelManager;
 use App\Services\MinishlinkWebPushTransport;
 use App\Services\RandomDiscoveryTieBreaker;
 use Carbon\CarbonImmutable;
+use Illuminate\Broadcasting\BroadcastManager;
+use Illuminate\Support\Facades\Broadcast;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
+use Laravel\Reverb\Protocols\Pusher\Contracts\ChannelManager;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -29,6 +34,10 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->configureDefaults();
+        Broadcast::extend('reverb', fn ($app, array $config) => new IdentityAwareReverbBroadcaster($app->make(BroadcastManager::class)->pusher($config)));
+        $this->app->booted(function (): void {
+            $this->app->singleton(ChannelManager::class, IdentityAwareChannelManager::class);
+        });
     }
 
     /**

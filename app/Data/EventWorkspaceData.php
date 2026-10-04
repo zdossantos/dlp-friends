@@ -3,6 +3,7 @@
 namespace App\Data;
 
 use App\Enums\EventRegistrationStatus;
+use App\Enums\UserStatus;
 use App\Models\Block;
 use App\Models\Event;
 use App\Models\User;
@@ -56,7 +57,7 @@ final readonly class EventWorkspaceData
     {
         $blockedUserIds = $this->blockedUserIds($viewer);
 
-        return Event::query()
+        return Event::query()->whereHas('organizer', fn (Builder $q) => $q->where('status', UserStatus::Active))
             ->whereNull('cancelled_at')
             ->where('starts_at', '>', now())
             ->whereNotIn('organizer_user_id', $blockedUserIds)
@@ -88,7 +89,7 @@ final readonly class EventWorkspaceData
             ->orderByDesc('starts_at')
             ->get();
 
-        $participating = Event::query()
+        $participating = Event::query()->whereHas('organizer', fn (Builder $q) => $q->where('status', UserStatus::Active))
             ->whereNotIn('organizer_user_id', $blockedUserIds)
             ->whereHas('registrations', fn (Builder $registrations) => $registrations
                 ->where('user_id', $viewer->id)
@@ -119,11 +120,12 @@ final readonly class EventWorkspaceData
     private function blockedUserIds(User $viewer): Collection
     {
         return Block::query()
-            ->where('blocker_user_id', $viewer->id)
-            ->orWhere('blocked_user_id', $viewer->id)
+            ->where(fn ($query) => $query->where('blocker_user_id', $viewer->id)->orWhere('blocked_user_id', $viewer->id))
+            ->whereNotNull('blocker_user_id')
+            ->whereNotNull('blocked_user_id')
             ->get()
             ->map(fn (Block $block): int => $block->blocker_user_id === $viewer->id
-                ? $block->blocked_user_id
-                : $block->blocker_user_id);
+                ? (int) $block->blocked_user_id
+                : (int) $block->blocker_user_id);
     }
 }

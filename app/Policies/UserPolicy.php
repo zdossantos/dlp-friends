@@ -8,6 +8,11 @@ use App\Models\User;
 
 final class UserPolicy
 {
+    public function ban(User $actor, User $member): bool
+    {
+        return $actor->status === UserStatus::Active && $actor->hasRole(RoleName::Admin) && ! $member->hasRole(RoleName::Admin);
+    }
+
     public function viewAny(User $actor): bool
     {
         return $actor->hasRole(RoleName::Admin);

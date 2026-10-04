@@ -109,7 +109,7 @@ class RegistrationTest extends TestCase
         $user = User::query()->where('email', 'accepted@example.com')->firstOrFail();
         $this->assertDatabaseHas('terms_acceptances', [
             'user_id' => $user->id,
-            'terms_version' => '2026-09-01',
+            'terms_version' => '2026-10-04',
             'accepted_at' => '2026-09-01 12:34:56',
         ]);
     }

@@ -91,7 +91,7 @@ test('Inertia shares the French frontend catalogue by default', function () {
 test('only business feature catalogues are shared with the frontend', function () {
     expect(array_keys(FrontendTranslations::messages()))->toBe([
         'common', 'account', 'profile', 'onboarding', 'discovery',
-        'conversations', 'notifications', 'events', 'blocking', 'administration',
+        'conversations', 'notifications', 'events', 'blocking', 'moderation', 'administration',
         'partners',
     ]);
 });

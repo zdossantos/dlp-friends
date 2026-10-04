@@ -2,6 +2,8 @@
 
 namespace App\Events;
 
+use App\Enums\UserStatus;
+use App\Models\Conversation;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
@@ -19,9 +21,19 @@ final class MessagesRead implements ShouldBroadcast, ShouldDispatchAfterCommit
         public string $readAt,
     ) {}
 
-    public function broadcastOn(): PrivateChannel
+    /** @return PrivateChannel|array<never> */
+    public function broadcastOn(): PrivateChannel|array
     {
+        if (! $this->broadcastWhen()) {
+            return [];
+        }
+
         return new PrivateChannel("conversation.{$this->conversationId}");
+    }
+
+    public function broadcastWhen(): bool
+    {
+        return Conversation::query()->whereKey($this->conversationId)->whereHas('memberMatch.lowUser', fn ($q) => $q->where('status', UserStatus::Active))->whereHas('memberMatch.highUser', fn ($q) => $q->where('status', UserStatus::Active))->exists();
     }
 
     public function broadcastAs(): string

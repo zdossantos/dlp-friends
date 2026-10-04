@@ -145,7 +145,7 @@ Paris.
   inaccessible aux deux membres, sans notifier explicitement la personne
   bloquée.
 - Un administrateur ne peut pas être bloqué.
-- Le signalement et la modération des profils/messages sociaux restent hors MVP.
+- Le signalement des échanges privés et leur examen administratif sont livrés ; le signalement de profils et les outils avancés restent différés.
 
 ### Événements amicaux et notifications
 
@@ -188,7 +188,7 @@ Paris.
 ### Administration
 
 - Le rôle `admin` donne accès à un tableau de bord et aux catalogues d’intérêts
-  et d’avatars, jamais aux messages privés.
+  et d’avatars, ainsi qu’à la lecture des échanges explicitement signalés.
 - À la première complétion d’un profil après vérification de l’e-mail, une
   inscription autonome par e-mail ou Google produit une alerte persistante
   « Administration » pour chaque administrateur actif ayant activé ce réglage.
@@ -208,8 +208,7 @@ Paris.
   puis consulte ses statistiques et la progression des membres éligibles.
 - La gestion des membres recherche par nom d’affichage ou e-mail et présente,
   par compte, les likes et refus envoyés/reçus, matches, messages envoyés,
-  personnes bloquées et blocages reçus. Elle n’expose jamais le contenu des
-  messages privés.
+  personnes bloquées et blocages reçus. Le contenu des messages est accessible uniquement dans la fiche d’un échange signalé.
 - Un administrateur peut supprimer immédiatement un compte membre après une
   confirmation explicite. Il ne peut jamais supprimer un autre administrateur.
 - Un administrateur peut créer ou rouvrir un échange privé classique avec un
@@ -262,14 +261,14 @@ Paris.
   des compteurs opérationnels et de la relance. Aucune liste de destinataires
   ni histoire individuelle n’est accessible au partenaire ou à l’administrateur.
 - Export, suppression, historique reçu et conservation de deux ans des données
-  historiques sont décrits dans [`security-privacy.md`](security-privacy.md).
+  historiques, avec suspension des purges pour les propriétaires bannis, sont décrits dans [`security-privacy.md`](security-privacy.md).
   Aucun e-mail partenaire, paiement ou système publicitaire n’est livré.
 
 ### Contrôle des données
 
 - Le membre peut modifier son profil et ses intérêts actifs.
 - Il peut masquer temporairement son profil des suggestions.
-- Il peut demander la suppression définitive de son compte. L’accès et la
+- Un membre actif peut demander la suppression définitive de son compte. L’accès et la
   visibilité cessent immédiatement ; une purge asynchrone idempotente supprime
   les données associées 30 jours après la demande.
 - Il peut exporter ses données de profil, intérêts, matches et messages.
@@ -306,7 +305,7 @@ Paris.
 | Alertes administratives de nouveaux membres (issue 245) | **Implémenté** | Première complétion vérifiée e-mail/Google, réglage individuel, notification persistante unique, cible administrative protégée et Push générique bilingue sont couverts. |
 | PWA mobile et Web Push (issues 182 et 203) | **Implémenté** | Installation Android/iOS, fonctionnement hors ligne sûr, mise à jour contrôlée, consentement explicite, révocation par appareil et alertes génériques pour toutes les catégories sont couverts. |
 | Tutoriel produit obligatoire | **Implémenté** | Progression persistée et statistiques admin sont livrées. |
-| Gestion administrative des membres | **Implémenté** | Recherche et compteurs, suppression confirmée, échange privé admin/membre et identification visuelle des admins sont livrés sans accès au contenu des messages. |
+| Gestion administrative des membres | **Implémenté** | Recherche et compteurs, suppression confirmée, échange privé admin/membre et identification visuelle des admins sont livrés ; les échanges signalés disposent d’une consultation dédiée. |
 | Espace partenaire et annonces modérées (issue 199) | **Implémenté** | Rôles cumulables et audités, fiches bilingues révisées, six cartes SSR au maximum, envoi automatique après approbation, préférence membre révocable activée par défaut, interactions et statistiques agrégées, export/suppression/rétention et tests sont livrés. |
 | Français et anglais | **Implémenté** | Résolution de locale et catalogues backend/frontend sont présents. |
 | Univers éditorial | **Implémenté** | Tutoiement, vocabulaire canonique et catalogues par feature sont contrôlés automatiquement. |
@@ -325,7 +324,7 @@ Paris.
 | Photo personnelle facultative | **Planifié** | Aucun flux de téléversement membre n’existe. |
 | Export des données | **Implémenté** | Les réglages génèrent à la demande un export JSON authentifié, téléchargé directement sans fichier conservé côté serveur. |
 | Suppression différée sous 30 jours | **Implémenté** | La confirmation exige le mot de passe lorsqu’il est utilisable et une acceptation explicite pour un compte exclusivement social. L’accès, les sessions et les liens sociaux sont révoqués immédiatement ; un job gardé purge les données après 30 jours et le scheduler récupère les échéances manquées. |
-| Signalement et modération des profils/messages sociaux | **Planifié après le MVP** | Le blocage existe ; la modération partenaire est livrée séparément, sans signalement social. |
+| Signalement des échanges et bannissement (issue 256) | **Implémenté** | Confirmation, blocage facultatif présélectionné, revue intégrale en lecture seule, clôture auditée, bannissement sans expiration et conservation protégée. Le signalement de profils reste différé. |
 
 Les preuves détaillées de cet instantané sont consignées dans
 [`documentation-inventory.md`](documentation-inventory.md).
@@ -336,7 +335,7 @@ Les preuves détaillées de cet instantané sont consignées dans
 - Groupes, fil communautaire et collections publiques.
 - Recherche par ville, distance ou tranche d’âge.
 - Limites quotidiennes, annulation de swipe et filtres avancés.
-- Signalement, équipe de modération et outils de modération avancés.
+- Signalement de profils, équipe de modération et outils avancés.
 - Paiement, abonnement et moteur publicitaire ; les annonces partenaires
   modérées avec désinscription membre constituent le seul parcours partenaire livré.
 
@@ -347,8 +346,7 @@ Les preuves détaillées de cet instantané sont consignées dans
 Permettre de trouver des amis pour une prochaine visite sans transformer le
 produit en réseau social généraliste : intention ou fenêtre de visite,
 découverte de membres compatibles sur une période proche, contrôle fin de la
-visibilité avant le match, puis signalement et traitement par une équipe de
-modération.
+visibilité avant le match, puis extension du traitement par une équipe de modération.
 
 ### Après V2 — À évaluer sur usage réel
 
@@ -377,6 +375,30 @@ modération.
 Les issues 42 et 43 sont implémentées par quatre documents SSR indexables :
 `/fr/conditions-generales-utilisation`, `/en/terms-of-use`,
 `/fr/politique-confidentialite` et `/en/privacy-policy`. L’inscription exige une
-case non précochée et conserve la version `2026-09-01` avec l’heure serveur.
-Cette livraison ne bloque pas les comptes existants et n’ajoute pas de parcours
-de réacceptation.
+case non précochée et conserve la version `2026-10-04` avec l’heure serveur.
+Les comptes existants de tous les rôles doivent accepter explicitement cette version avant de retrouver les routes privées ; la case est initialement décochée.
+
+## Signalement des échanges et sanction (issue 256)
+
+Un participant actif, majeur et vérifié peut signaler un échange, même archivé,
+bloqué ou masqué. Il confirme l’accès administratif à toute la conversation,
+y compris ses messages anciens et ultérieurs. Le blocage est proposé avec
+« Oui » sélectionné ; un administrateur reste signalable sans pouvoir être
+bloqué. Six motifs sont proposés ; précision et décision sont limitées à
+1 000 caractères. Un seul signalement ouvert par auteur et échange est permis,
+et un nouveau peut être envoyé après clôture.
+
+Les administrateurs actifs consultent une file et les messages originaux paginés
+en lecture seule. Consultation et clôture sont auditées sans copier les messages
+ni modifier leur lecture. L’accès subsiste après clôture, blocage, masquage ou
+bannissement. Un administrateur peut bannir ou réactiver tout compte non admin,
+quel que soit son rôle, avec motif et confirmation ; aucun terme n’est prévu.
+
+Le bannissement révoque les accès privés, sessions, Push et temps réel, annule
+les événements futurs organisés, retire les inscriptions futures et dépublie
+les contenus partenaires. La levée ne restaure pas ces états. Les données et
+identifiants du compte banni sont conservés sans échéance : les purges sont
+suspendues et la suppression d’un autre compte ne détruit pas ses données.
+La demande de suppression en application est interdite au compte banni ;
+la suppression administrative explicite reste disponible. Le contact légal
+reste accessible et les textes ne restreignent pas les droits légaux.

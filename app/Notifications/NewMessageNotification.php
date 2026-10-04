@@ -5,6 +5,7 @@ namespace App\Notifications;
 use App\Contracts\PersonalizedWebPushNotification;
 use App\Contracts\WebPushNotification;
 use App\Enums\NotificationCategory;
+use App\Enums\UserStatus;
 use App\Enums\WebPushPreference;
 use App\Models\Message;
 use App\Models\User;
@@ -23,6 +24,13 @@ final class NewMessageNotification extends Notification implements PersonalizedW
     public function __construct(public Message $message)
     {
         $this->afterCommit();
+    }
+
+    public function shouldSend(User $notifiable, string $channel): bool
+    {
+        $fresh = $notifiable->fresh();
+
+        return $fresh !== null && $fresh->status === UserStatus::Active && $this->webPushAccessAllowed($fresh);
     }
 
     /** @return list<string> */

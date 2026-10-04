@@ -114,6 +114,7 @@ final class ConversationController extends Controller
                 'presence' => $presence->forViewer($participant),
             ],
             'currentUserId' => $member->id,
+            'canBlock' => ! $participant->hasRole('admin'),
             'timezone' => config('app.timezone'),
             'messages' => Inertia::scroll($messages),
             'conversationStarters' => $conversationStarters,

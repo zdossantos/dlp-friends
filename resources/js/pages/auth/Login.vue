@@ -68,7 +68,9 @@ defineProps<{
                     autocomplete="email"
                     :placeholder="t('account.fields.email_placeholder')"
                 />
-                <InputError :message="errors.email" />
+                <InputError
+                    :message="errors.email || $page.props.errors.email"
+                />
             </div>
 
             <div class="grid gap-2">

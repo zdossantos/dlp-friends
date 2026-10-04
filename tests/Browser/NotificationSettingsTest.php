@@ -18,6 +18,7 @@ test('a member can manage notification preferences and devices on mobile', funct
         ->assertDontSee('Arrivée de nouveaux membres')
         ->keys('[data-test="notification-messages-switch"]', 'Space')
         ->press('[data-test="save-notification-preferences"]')
+        ->assertSee(__('account.settings.notifications.saved', [], 'fr'))
         ->assertAttribute('[data-test="notification-messages-switch"]', 'aria-checked', 'false')
         ->assertScript('document.documentElement.scrollWidth <= window.innerWidth', true)
         ->assertNoJavaScriptErrors();
@@ -36,7 +37,8 @@ test('an admin can disable new member alerts by keyboard independently of admini
         ->keys('[data-test="admin-new-member-alerts-switch"]', 'Space')
         ->assertAttribute('[data-test="admin-new-member-alerts-switch"]', 'aria-checked', 'false')
         ->assertScript("new FormData(document.querySelector('form')).getAll('admin_new_member_alerts')", ['0'])
-        ->press('[data-test="save-notification-preferences"]');
+        ->press('[data-test="save-notification-preferences"]')
+        ->assertSee(__('account.settings.notifications.saved', [], $locale));
     expect($admin->fresh()->admin_new_member_alerts)->toBeFalse();
     $page
         ->assertAttribute('[data-test="admin-new-member-alerts-switch"]', 'aria-checked', 'false')

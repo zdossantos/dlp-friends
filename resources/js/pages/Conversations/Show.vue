@@ -5,6 +5,7 @@ import ConversationHeader from '@/components/conversations/ConversationHeader.vu
 import MessageComposer from '@/components/conversations/MessageComposer.vue';
 import MessageTimeline from '@/components/conversations/MessageTimeline.vue';
 import RealtimeStatus from '@/components/conversations/RealtimeStatus.vue';
+import ReportConversationDialog from '@/components/members/ReportConversationDialog.vue';
 import { useConversationMessages } from '@/composables/useConversationMessages';
 import { useConversationRealtime } from '@/composables/useConversationRealtime';
 import { useMemberRealtimeContext } from '@/composables/useMemberRealtimeNotifications';
@@ -30,6 +31,7 @@ const props = defineProps<{
     timezone: string;
     messages: PaginatedMessages;
     conversationStarters: ConversationStarter[];
+    canBlock: boolean;
 }>();
 const { latestPersistentNotification, presenceChanged } =
     useMemberRealtimeContext();
@@ -129,7 +131,10 @@ const timelineMessages = computed<PaginatedMessages>(() => ({
                 }).url
             "
             :typing="peerTyping"
-        />
+            ><ReportConversationDialog
+                :conversation-id="conversation.id"
+                :can-block="canBlock"
+        /></ConversationHeader>
 
         <RealtimeStatus
             :unavailable="connectionUnavailable"

@@ -80,3 +80,11 @@ test('production legal pages require a public contact email', function () {
 
     $this->withoutExceptionHandling()->get('/fr/politique-confidentialite');
 })->throws(RuntimeException::class, 'LEGAL_CONTACT_EMAIL');
+
+it('discloses persistent review and indefinite ban retention while keeping legal rights', function () {
+    config(['legal.contact_email' => 'legal@example.test']);
+    $this->get('/fr/conditions-generales-utilisation')->assertOk()->assertSee('messages anciens et futurs inclus')->assertSee('sans date de fin')->assertSee('Un compte banni ne peut pas demander sa suppression')->assertSee('suppression administrative explicite');
+    $this->get('/en/terms-of-use')->assertOk()->assertSee('past and future messages')->assertSee('without an end date')->assertSee('A banned account cannot request deletion');
+    $this->get('/fr/politique-confidentialite')->assertOk()->assertSee('sans date limite')->assertSee('l’effacement')->assertSee('legal@example.test');
+    $this->get('/en/privacy-policy')->assertOk()->assertSee('without a time limit')->assertSee('erasure')->assertSee('legal@example.test');
+});
