@@ -116,6 +116,20 @@ publication et de déploiement utilisent le `GITHUB_TOKEN` éphémère avec les
 permissions décrites ci-dessous. Aucun autre mécanisme ne crée de tag ou de
 release.
 
+### Correctifs isolés sur la branche 1.14
+
+Pour publier un correctif sans les nouveautés accumulées sur `main`, la branche
+`release/1.14` part du tag `v1.14.0`. Les correctifs y sont repris via des PR
+avec Squash & Merge, sans fusionner `main` dans cette branche. La CI et le
+contrôle des titres s'appliquent aussi aux PR de maintenance.
+
+Le workflow Release Please cible la branche qui a déclenché son exécution.
+Il prépare donc une Release PR distincte sur `release/1.14` ; son merge publie
+la version patch et déclenche le même build, smoke test et déploiement Coolify.
+La Release PR 1.15.0 sur `main` reste en attente. Aucun tag ni aucune release
+ne sont créés manuellement, et forcer un numéro patch sur `main` n'exclurait
+pas les nouveautés de son image.
+
 ## Production : image de release sur GHCR
 
 Le build frontend doit produire `public/service-worker.js`,
