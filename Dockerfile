@@ -10,13 +10,14 @@ RUN apk add --no-cache \
         curl \
         git \
         icu-dev \
+        libjpeg-turbo-dev \
         libpng-dev \
         libwebp-dev \
         libzip-dev \
         linux-headers \
         oniguruma-dev \
         $PHPIZE_DEPS \
-    && docker-php-ext-configure gd --with-webp \
+    && docker-php-ext-configure gd --with-jpeg --with-webp \
     && docker-php-ext-install -j"$(nproc)" bcmath exif gd intl pcntl pdo_mysql sockets zip \
     && pecl install redis \
     && docker-php-ext-enable redis
@@ -48,6 +49,8 @@ WORKDIR /var/www/html
 RUN apk add --no-cache \
         curl \
         icu-libs \
+        libjpeg-turbo \
+        libjpeg-turbo-dev \
         libpng \
         libpng-dev \
         libwebp \
@@ -59,14 +62,15 @@ RUN apk add --no-cache \
         libzip-dev \
         linux-headers \
         oniguruma-dev \
-    && docker-php-ext-configure gd --with-webp \
+    && docker-php-ext-configure gd --with-jpeg --with-webp \
     && docker-php-ext-install -j"$(nproc)" bcmath exif gd intl opcache pcntl pdo_mysql sockets zip \
     && pecl install redis \
     && docker-php-ext-enable redis \
-    && apk del $PHPIZE_DEPS icu-dev libpng-dev libwebp-dev libzip-dev linux-headers oniguruma-dev \
+    && apk del $PHPIZE_DEPS icu-dev libjpeg-turbo-dev libpng-dev libwebp-dev libzip-dev linux-headers oniguruma-dev \
     && rm -rf /tmp/pear /var/cache/apk/* /var/lib/nginx/html
 
 COPY docker/nginx/default.conf /etc/nginx/http.d/default.conf
+COPY docker/php/uploads.ini /usr/local/etc/php/conf.d/uploads.ini
 COPY docker/php/entrypoint.sh /usr/local/bin/dlp-entrypoint
 COPY --from=build --chown=www-data:www-data /app /var/www/html
 
