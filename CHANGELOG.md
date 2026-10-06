@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.14.1](https://github.com/zdossantos/dlp-friends/compare/v1.14.0...v1.14.1) (2026-10-06)
+
+
+### Fixes
+
+* **partners:** corriger les uploads JPEG sur la branche 1.14 ([#261](https://github.com/zdossantos/dlp-friends/issues/261)) ([2a3b377](https://github.com/zdossantos/dlp-friends/commit/2a3b377f37bce9bf03ee80351e62b1743b1327b7))
+
 ## [1.14.0](https://github.com/zdossantos/dlp-friends/compare/v1.13.0...v1.14.0) (2026-10-03)
 
 
