@@ -55,6 +55,8 @@ Les six checks indépendants sont :
 5. `Vite build` compile les assets de production ;
 6. `Docker build` construit l’image runtime `linux/amd64` sans la publier, puis
    démarre un conteneur et vérifie `/up` et la présence des assets compilés.
+   Il vérifie aussi le réencodage et la lecture JPEG, PNG et WebP par GD, ainsi
+   que les limites PHP permettant l’envoi des images partenaires de 5 Mo.
    Ce contrôle s’applique aussi à la Release PR, via `RELEASE_PLEASE_TOKEN`.
 
 Les dépendances sont installées depuis `composer.lock` et `bun.lock` avec Bun
