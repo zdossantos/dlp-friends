@@ -4,6 +4,7 @@ on:
   pull_request_target:
     branches:
       - main
+      - release/1.14
     types:
       - opened
       - edited
