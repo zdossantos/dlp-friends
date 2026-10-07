@@ -2,7 +2,7 @@
 
 **Statut : première direction refusée ; révision en cours sur Explorer.** Aucun écran de production n’est modifié. Ce dossier est une étape de conception ; il ne constitue pas une décision d’intégration ni la clôture de [l’issue #259](https://github.com/zdossantos/dlp-friends/issues/259).
 
-Le brief révisé demande un imaginaire magique et une interface compacte, avec les pages bornées sans scroll de page. Les fonds figuratifs reconnaissables sont refusés ; une lumière très diffuse et discrète est expérimentée. Explorer est le seul écran témoin révisé. Les autres vues documentent encore la couverture V1, pas une direction approuvée.
+Le brief révisé demande un imaginaire magique et une interface compacte, avec les pages bornées sans scroll de page. Les fonds figuratifs reconnaissables sont refusés ; une lumière très diffuse et discrète est expérimentée. Explorer est l’écran témoin révisé : sa nouvelle carte remet un avatar illustré au premier plan, dans un cadre évoquant un carnet enchanté. L’avatar est un exemple original de revue ; le catalogue administrable reste la référence pour l’intégration. Les autres vues documentent encore la couverture V1, pas une direction approuvée.
 
 ## Consulter les maquettes
 
@@ -18,13 +18,13 @@ Puis ouvrir `http://127.0.0.1:8259/docs/design/issue-259/prototype/index.html`.
 
 | Pour commencer | Mobile                                                     | Desktop                                          |
 | -------------- | ---------------------------------------------------------- | ------------------------------------------------ |
-| Explorer V2    | [Petit navigateur](captures/revision-2/small-browser.png)  | Adapter la fenêtre du prototype à 1440 px        |
+| Explorer V3    | [Petit navigateur](captures/revision-3/small-browser.png)  | Adapter la fenêtre du prototype à 1440 px        |
 | Public         | Adapter la fenêtre à 320 px                                | [Accueil](captures/home-1440.png)                |
 | Administration | [Membres à 320 px](captures/members-320.png)               | Tableau disponible à partir de 1024 px           |
 | Partenaire     | [Profil, sombre](captures/partner-profile-390.png)         | Comparaison publié / brouillon sur deux colonnes |
 | Événement      | [Discussion Halloween sombre](captures/group-chat-390.png) | [Liste Noël sombre](captures/events-1440.png)    |
 
-Les captures V1 sont historiques et leur direction a été refusée. Les [captures Explorer V2](captures/revision-2/) montrent une révision provisoire, pas l’application en production. Les avatars abstraits évitent d’utiliser des images personnelles ou des personnages sous droits. Les polices et le logo proviennent du dépôt ; leur notice est conservée dans [assets](prototype/assets/THIRD_PARTY_FONTS.md).
+Les captures V1 sont historiques et leur direction a été refusée. Les [captures Explorer V3](captures/revision-2/) montrent une révision provisoire, pas l’application en production. Les avatars abstraits évitent d’utiliser des images personnelles ou des personnages sous droits. Les polices et le logo proviennent du dépôt ; leur notice est conservée dans [assets](prototype/assets/THIRD_PARTY_FONTS.md).
 
 ## Lire et décider
 

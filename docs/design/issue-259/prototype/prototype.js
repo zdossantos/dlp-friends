@@ -183,7 +183,7 @@ function check(label, id = 'consent', checked = false) {
     return `<label class="check"><input id="${id}" type="checkbox" ${checked ? 'checked' : ''}><span>${esc(label)}</span></label>`;
 }
 function avatar(initial = 'CA', rose = false) {
-    return `<span class="avatar ${rose ? 'rose' : ''}" aria-label="${esc(t('fictional'))}">${esc(initial)}</span>`;
+    return `<span class="avatar ${initial === 'CA' ? 'illustrated-avatar' : ''} ${rose ? 'rose' : ''}">${initial === 'CA' ? `<img src="assets/avatar-stargazer-v3.png" alt="${text('Avatar illustré fictif de Camille : renard des étoiles', 'Camille’s fictional illustrated avatar: stargazer fox')}" draggable="false">` : `<span aria-label="${esc(t('fictional'))}">${esc(initial)}</span>`}</span>`;
 }
 function pills() {
     return `<div class="pill-set">${['music', 'shows', 'food'].map((k) => badge(t(k), 'common')).join('')}</div>`;
@@ -469,7 +469,15 @@ function discovery() {
         return `<section class="discovery-shell">${heading}<div class="portal-scene" aria-hidden="true"></div><div class="discovery-status" ${state === 'loading' ? 'aria-busy="true"' : ''} role="${state === 'error' ? 'alert' : 'status'}">${icon('sparkle')}<h2>${titles[state]}</h2><p>${text('Tes univers sont le point de départ de nouvelles amitiés.', 'Your favourite worlds are where new friendships begin.')}</p>${state === 'empty' ? link('edit-profile', text('Mes univers favoris', 'My favourite worlds'), 'outline') : button(t('retry'), 'retry', 'outline')}</div>${tools}</section>`;
     }
 
-    return `<section class="discovery-shell">${heading}<div class="portal-scene" aria-hidden="true"></div><article class="discovery-profile"><div class="discovery-identity">${avatar('CA')}<div><h2>Camille <small>${text('28 ans', '28')}</small></h2><p>${icon('sparkle')} ${t('common')}</p></div></div>${pills()}<p class="discovery-bio" ${state === 'success' ? 'role="status"' : ''}>${state === 'success' ? text('Ton choix est enregistré.', 'Your choice is saved.') : t('bio')}</p><div class="discovery-footer"><span>${t('frequency')}</span>${link('member-profile', text('Profil complet', 'Full profile'), 'quiet')}</div></article><div class="decision-actions">${button(t('pass'), 'pass', 'outline', 'close')}${button(t('discover'), 'discover', '', 'sparkle')}</div>${tools}</section>`;
+    const emblem = icon(
+        season === 'halloween'
+            ? 'ghost'
+            : season === 'christmas'
+              ? 'snow'
+              : 'sparkle',
+    );
+
+    return `<section class="discovery-shell">${heading}<article class="discovery-profile enchanted-card"><div class="card-portrait"><span class="card-emblem" aria-hidden="true">${emblem}</span>${avatar('CA')}<div class="card-identity"><h2>Camille <small class="card-age">${text('28 ans', '28')}</small></h2><p>${icon('sparkle')} ${t('common')}</p></div></div><div class="card-story">${pills()}<p class="discovery-bio" ${state === 'success' ? 'role="status"' : ''}>${state === 'success' ? text('Ton choix est enregistré.', 'Your choice is saved.') : t('bio')}</p><div class="discovery-footer"><span>${t('frequency')}</span>${link('member-profile', text('Profil complet', 'Full profile'), 'quiet')}</div></div></article><div class="decision-actions">${button(t('pass'), 'pass', 'outline', 'close')}${button(t('discover'), 'discover', '', 'sparkle')}</div>${tools}</section>`;
 }
 function profile() {
     const own = current.id === 'profile';

@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { chromium } from 'playwright';
 const base = process.env.PROTOTYPE_URL || 'http://127.0.0.1:8260/index.html';
-const output = new URL('../captures/revision-2/', import.meta.url);
+const output = new URL('../captures/revision-3/', import.meta.url);
 await mkdir(output, { recursive: true });
 const browser = await chromium.launch();
 const page = await browser.newPage();
@@ -35,7 +35,31 @@ for (const viewport of [
                         `${base}?screen=explore&lang=${lang}&season=${season}&theme=${theme}&state=${state}`,
                     );
                     await page.evaluate(() => document.fonts.ready);
+                    await page
+                        .locator('#app img')
+                        .evaluateAll((images) =>
+                            Promise.all(images.map((image) => image.decode())),
+                        );
+                    await page.evaluate(() =>
+                        Promise.all(
+                            document
+                                .getAnimations()
+                                .map((animation) => animation.finished),
+                        ),
+                    );
                     const result = await page.evaluate(() => {
+                        const avatar = document.querySelector(
+                            '.card-portrait .avatar',
+                        );
+                        const picture = avatar?.querySelector('img');
+                        const avatarBounds = avatar?.getBoundingClientRect();
+                        const imageBounds = picture?.getBoundingClientRect();
+                        const avatarFits =
+                            !avatar ||
+                            (picture.naturalWidth > 0 &&
+                                imageBounds.top >= avatarBounds.top - 1 &&
+                                imageBounds.bottom <= avatarBounds.bottom + 1 &&
+                                imageBounds.height >= 48);
                         const nav = document
                             .querySelector('.bottom-nav')
                             .getBoundingClientRect();
@@ -59,6 +83,7 @@ for (const viewport of [
                         }));
 
                         return {
+                            avatarFits,
                             height: innerHeight,
                             scrollHeight: document.documentElement.scrollHeight,
                             width: innerWidth,
@@ -81,6 +106,7 @@ for (const viewport of [
                     });
 
                     if (
+                        !result.avatarFits ||
                         result.contentControlBottom > result.mainBottom + 1 ||
                         result.scrollHeight > result.height + 1 ||
                         result.scrollWidth > result.width + 1 ||
@@ -124,6 +150,16 @@ for (const [season, theme, width, height, name] of shots) {
     await page.setViewportSize({ width, height });
     await page.goto(`${base}?screen=explore&season=${season}&theme=${theme}`);
     await page.evaluate(() => document.fonts.ready);
+    await page
+        .locator('#app img')
+        .evaluateAll((images) =>
+            Promise.all(images.map((image) => image.decode())),
+        );
+    await page.evaluate(() =>
+        Promise.all(
+            document.getAnimations().map((animation) => animation.finished),
+        ),
+    );
     await page.screenshot({ path: new URL(`${name}.png`, output).pathname });
 }
 

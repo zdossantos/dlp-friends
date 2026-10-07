@@ -46,3 +46,5 @@ Ce retour définit le brief ; il n’approuve aucune maquette. La version révis
 La stratégie de hauteur doit vérifier le contenu réel, les actions et leur visibilité, pas simplement couper les dépassements avec `overflow: hidden`. Sur une page bornée, utiliser des étapes ou ouvrir le détail si nécessaire. Sur une liste/conversation, réserver une zone de défilement adaptée. Tester la hauteur utile avec les barres du navigateur ; le clavier ouvert et les safe areas requièrent aussi une vérification sur appareil.
 
 Les fonds figuratifs lisibles ont ensuite été refusés : une éventuelle image doit être très discrète et fortement floutée. La personnalité doit être définie avec le porteur du produit avant de propager la DA. Trois questions complémentaires portent sur les détails graphiques, l’ambiance claire/sombre et la force des thèmes saisonniers.
+
+Retour suivant : priorité aux cartes, toujours jugées impersonnelles ; l’avatar doit retrouver une présence importante. Une troisième proposition Explorer est présentée avec un avatar illustré original et un cadre de carnet enchanté. Cette révision ne vaut pas validation du personnage fictif, du catalogue ou de la DA.

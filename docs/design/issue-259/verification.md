@@ -42,3 +42,11 @@ La vérification initiale de hauteur à 320 × 568 px échouait : 1 416 px de co
 Le contrôle `verify-explorer.mjs` vérifie 360 rendus : cinq viewports (320 × 480, 320 × 568, 390 × 600, 390 × 844 et 1440 × 900), deux langues, six variantes d’apparence/saison et six états. Aucun scroll horizontal ou vertical du document ; chaque commande conserve au moins 44 px et reste dans sa zone, sans recouvrement par la navigation. Zéro erreur JavaScript. Les essais détectaient un recouvrement dans l’état succès à 320 × 480 ; sa confirmation remplace désormais temporairement le résumé au lieu d’ajouter un bloc. Le dialogue de découverte, Échap et le mouvement réduit passent.
 
 Les résultats sont dans [revision-2/checks.json](captures/revision-2/checks.json). Les captures de cette révision montrent une **composition provisoire**, avec seulement une lumière floutée discrète, conformément au dernier retour. La personnalité graphique reste à définir ; aucune validation de DA n’est revendiquée. Le contrôle des 67 surfaces et 504 rendus a également été réexécuté avec succès après ces changements. Les safe areas physiques, le clavier et la PWA installée restent à vérifier sur appareil.
+
+## Troisième proposition : avatar au premier plan
+
+Les contrôles des 67 surfaces / 504 rendus et des 360 variantes Explorer sont réexécutés avec succès. Le contrôle Explorer attend le décodage de l’image et la fin de l’entrée avant de mesurer ses limites ; il vérifie que l’avatar est chargé et entièrement contenu dans sa zone. Le mouvement réduit reste vérifié. Les captures sont dans [revision-3](captures/revision-3/), les captures V2 sont conservées séparément.
+
+L’inspection groupée mobile et desktop a révélé un cadrage incorrect de l’image dans les petites hauteurs ; une position absolue dans la zone d’avatar et `object-fit: contain` garantissent désormais sa silhouette entière. La confirmation visuelle porte sur un petit navigateur et une hauteur de PWA. La bio est volontairement un résumé de deux lignes avec accès au détail ; il ne s’agit pas d’un masque appliqué à l’ensemble de la page.
+
+L’avatar original est un asset de maquette. Aucune donnée privée du catalogue ni image de membre n’a été publiée. La DA, le personnage illustratif et les saisons ne sont pas considérés approuvés.

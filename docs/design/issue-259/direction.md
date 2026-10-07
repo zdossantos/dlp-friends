@@ -44,3 +44,13 @@ La demande utilisateur autorise une bibliothèque optimisée si elle améliore l
 Réponse de commande : 120–180 ms ; entrée d’un panneau : 180–240 ms ; célébration d’Univers croisés : une seule séquence courte, pouvant être ignorée. Animer `opacity` et `transform`, pas les dimensions/layout ; ne pas bloquer l’action ni différer une confirmation métier. Aucun fond en mouvement permanent ni effet sonore.
 
 Si une orchestration plus complexe est nécessaire, comparer une bibliothèque actuelle à ces primitives au moment de l’intégration : taille compressée du chunk, import à la demande, coût CPU sur téléphone, compatibilité Vue et `prefers-reduced-motion`. Documenter le gain avant ajout. La préférence de mouvement réduit supprime les transitions et conserve tous les retours d’état en texte. La performance et le confort priment sur la richesse d’un effet.
+
+## Carte avec avatar — troisième proposition
+
+Le retour suivant demande de retravailler surtout les cartes, jugées toujours impersonnelles, et de restaurer la présence de l’avatar. Explorer donne désormais le premier plan à un avatar illustré original de revue : un renard des étoiles. Sa silhouette est contenue entièrement, sans recadrage. Ce choix de personnage est un exemple de composition, pas une modification du catalogue ni une identité imposée aux membres.
+
+Le nom et l’âge restent près de l’avatar, les univers communs amorcent la lecture et une bordure fine, un filet intérieur et un emblème saisonnier donnent une signature de carnet enchanté. La carte conserve un fond de portrait en deux couleurs, conformément au modèle de catalogue existant. Il ne s’agit pas d’un décor de page. L’illustration est également réutilisée dans les emplacements fictifs de Camille afin que les profils et parcours de revue restent cohérents.
+
+Sur les petites hauteurs, la bio est limitée à deux lignes de résumé et demeure accessible en entier par « Profil complet ». Les commandes restent à 44 px. La carte s’adapte à l’espace disponible et sa hauteur maximale évite le grand vide de la deuxième version. L’entrée de l’avatar utilise uniquement `opacity` et `transform` pendant 220 ms, supprimée avec mouvement réduit. Aucun package n’est ajouté.
+
+Cette proposition reste à valider visuellement avant intégration. Les questions générales de DA restent ouvertes.

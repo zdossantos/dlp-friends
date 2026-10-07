@@ -1233,7 +1233,7 @@ dialog .timeline {
 [data-view='explore'] body {
     height: 100svh;
     display: grid;
-    grid-template-rows: 36px minmax(0, 1fr);
+    grid-template-rows: 32px minmax(0, 1fr);
 }
 [data-view='explore'] #review {
     padding: 0 12px;
@@ -1242,7 +1242,7 @@ dialog .timeline {
     z-index: 20;
 }
 [data-view='explore'] #review summary {
-    min-height: 36px;
+    min-height: 32px;
     display: flex;
     align-items: center;
     cursor: pointer;
@@ -1337,33 +1337,6 @@ dialog .timeline {
     border-radius: 16px;
     box-shadow: 0 8px 24px #17102428;
 }
-[data-view='explore'] .discovery-identity {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-[data-view='explore'] .discovery-identity h2 {
-    font-size: 20px;
-    line-height: 1.25;
-    margin: 0;
-}
-[data-view='explore'] .discovery-identity small {
-    font-size: 12px;
-    font-weight: 400;
-    color: var(--muted-foreground);
-}
-[data-view='explore'] .discovery-identity p {
-    font-size: 12px;
-    margin: 2px 0 0;
-    display: flex;
-    align-items: center;
-    gap: 3px;
-    color: var(--primary);
-}
-[data-view='explore'] .discovery-identity svg {
-    width: 14px;
-    height: 14px;
-}
 [data-view='explore'] .pill-set {
     margin: 8px 0 0;
     gap: 4px;
@@ -1432,10 +1405,6 @@ dialog .timeline {
     font-size: 14px;
     margin: 6px 0 12px;
 }
-[data-view='explore'] .discovery-feedback {
-    font-size: 12px;
-    margin: 0 0 8px;
-}
 [data-view='explore'] .bottom-nav {
     position: static;
     width: 100%;
@@ -1463,8 +1432,194 @@ dialog .timeline {
     [data-view='explore'] .discovery-bio {
         margin-top: 4px;
     }
-    [data-view='explore'] .discovery-identity .avatar {
-        width: 40px;
-        height: 40px;
+}
+
+/* Avatar-led card: original illustration, never a scenic background. */
+.illustrated-avatar {
+    overflow: hidden;
+    background: linear-gradient(145deg, #d8b3f2, #f3cfdf);
+}
+.illustrated-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+[data-view='explore'] .enchanted-card {
+    padding: 0;
+    flex: 1;
+    min-height: 0;
+    max-height: 380px;
+    margin-block: auto;
+    display: flex;
+    flex-direction: column;
+    border-color: var(--gold);
+    border-radius: 22px 22px 12px 12px;
+    box-shadow: 0 8px 28px #17102412;
+}
+[data-view='explore'] .card-portrait {
+    flex: 1;
+    min-height: 64px;
+    position: relative;
+    display: flex;
+    align-items: center;
+    padding: 8px 12px;
+    border-radius: 21px 21px 0 0;
+    background: linear-gradient(135deg, #ead8f4, #f9e6ef);
+    border-bottom: 1px solid var(--border);
+}
+[data-theme='dark'][data-view='explore'] .card-portrait {
+    background: linear-gradient(135deg, #332047, #442f42);
+}
+[data-season='halloween'][data-view='explore'] .card-portrait {
+    background: linear-gradient(135deg, #ead7f0, #ffe1c3);
+}
+[data-season='halloween'][data-theme='dark'][data-view='explore']
+    .card-portrait {
+    background: linear-gradient(135deg, #32203e, #4e3023);
+}
+[data-season='christmas'][data-view='explore'] .card-portrait {
+    background: linear-gradient(135deg, #dcebe2, #f8e3dc);
+}
+[data-season='christmas'][data-theme='dark'][data-view='explore']
+    .card-portrait {
+    background: linear-gradient(135deg, #1b3a31, #412c32);
+}
+[data-view='explore'] .card-portrait::after {
+    content: '';
+    position: absolute;
+    inset: 6px;
+    border: 1px solid var(--gold);
+    border-radius: 16px 16px 3px 3px;
+    opacity: 0.4;
+    pointer-events: none;
+}
+[data-view='explore'] .card-portrait .avatar {
+    align-self: stretch;
+    min-height: 48px;
+    width: 48%;
+    height: auto;
+    border-radius: 0;
+    background: none;
+}
+[data-view='explore'] .card-portrait img {
+    max-height: 290px;
+    object-position: center bottom;
+}
+[data-view='explore'] .card-identity {
+    flex: 1;
+    min-width: 0;
+    padding: 4px 0 4px 8px;
+    z-index: 1;
+}
+[data-view='explore'] .card-identity h2 {
+    font-size: 24px;
+    margin: 0;
+    letter-spacing: -0.04em;
+}
+[data-view='explore'] .card-age {
+    font-size: 12px;
+    color: var(--muted-foreground);
+}
+[data-view='explore'] .card-identity p {
+    margin: 8px 0 0;
+    font-size: 12px;
+    line-height: 1.3;
+    color: var(--primary);
+}
+[data-view='explore'] .card-identity p svg {
+    display: inline;
+    vertical-align: middle;
+    width: 14px;
+    height: 14px;
+}
+[data-view='explore'] .card-emblem {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    color: var(--gold);
+    z-index: 1;
+}
+[data-view='explore'] .card-emblem svg {
+    width: 18px;
+    height: 18px;
+}
+[data-view='explore'] .card-story {
+    padding: 8px 12px 0;
+    flex-shrink: 0;
+}
+[data-view='explore'] .card-story .pill-set {
+    margin: 0;
+}
+[data-view='explore'] .card-story .discovery-bio {
+    margin-top: 6px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+@media (max-height: 600px) {
+    [data-view='explore'] .card-identity h2 {
+        font-size: 20px;
     }
+    [data-view='explore'] .card-identity p {
+        margin-top: 2px;
+        font-size: 11px;
+    }
+    [data-view='explore'] .card-portrait {
+        padding: 6px 10px;
+    }
+    [data-view='explore'] .card-emblem {
+        top: 8px;
+        left: 8px;
+    }
+}
+
+@media (max-height: 600px) {
+    [data-view='explore'] .card-portrait {
+        min-height: 70px;
+        padding: 4px 10px;
+    }
+    [data-view='explore'] .card-identity {
+        padding-block: 0;
+    }
+    [data-view='explore'] .card-story {
+        padding-top: 6px;
+    }
+    [data-view='explore'] .card-story .badge {
+        padding-block: 2px;
+    }
+}
+@keyframes avatar-arrive {
+    from {
+        opacity: 0;
+        transform: translateY(4px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+[data-view='explore'] .card-portrait img {
+    animation: avatar-arrive 220ms ease-out both;
+}
+@media (prefers-reduced-motion: reduce) {
+    [data-view='explore'] .card-portrait img {
+        animation: none;
+    }
+}
+[data-view='explore'] .card-portrait .avatar {
+    position: relative;
+}
+[data-view='explore'] .card-portrait img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    max-height: none;
+    object-position: center;
+}
+[data-view='explore'] .card-age {
+    margin-left: 4px;
+    letter-spacing: normal;
+    font-weight: 400;
 }
