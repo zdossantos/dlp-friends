@@ -1,5 +1,23 @@
 # Changelog
 
+## [1.15.0](https://github.com/zdossantos/dlp-friends/compare/v1.14.0...v1.15.0) (2026-10-07)
+
+
+### Features
+
+* add passed profile history and stabilize admin scrolling ([#252](https://github.com/zdossantos/dlp-friends/issues/252)) ([9df32fb](https://github.com/zdossantos/dlp-friends/commit/9df32fbe94376dad7bc7cbc9cb5506e292586fff))
+* **admin:** notifier l’arrivée des nouveaux membres ([#249](https://github.com/zdossantos/dlp-friends/issues/249)) ([fd6c5f4](https://github.com/zdossantos/dlp-friends/commit/fd6c5f4b8c14d2cf4156dfe06abffb9c0622def7))
+* **discovery:** open passed profiles in a drawer ([#253](https://github.com/zdossantos/dlp-friends/issues/253)) ([6d6d52c](https://github.com/zdossantos/dlp-friends/commit/6d6d52c3b7b079a4011279917585f16779f494fa))
+* **moderation:** signaler un échange et bannir un compte ([#258](https://github.com/zdossantos/dlp-friends/issues/258)) ([e798e67](https://github.com/zdossantos/dlp-friends/commit/e798e6787044cdb1f9daa2c0fea5e66732420755))
+* **notifications:** activer les récapitulatifs du dimanche ([#265](https://github.com/zdossantos/dlp-friends/issues/265)) ([433dc8e](https://github.com/zdossantos/dlp-friends/commit/433dc8ed85f6e092d875eb983c5f6d7956c9353c))
+* **profile:** ajouter les liens de réseaux sociaux ([#255](https://github.com/zdossantos/dlp-friends/issues/255)) ([947f4e0](https://github.com/zdossantos/dlp-friends/commit/947f4e0f2c015eb38996864d8472673baedaf07e))
+
+
+### Fixes
+
+* **partners:** corriger les uploads JPEG dans Docker ([#260](https://github.com/zdossantos/dlp-friends/issues/260)) ([b33b537](https://github.com/zdossantos/dlp-friends/commit/b33b537d74b4dc1b8b1ca7e9b7ee299f4e6083ce))
+* stabilize discovery previews and auth mail fallback links ([#251](https://github.com/zdossantos/dlp-friends/issues/251)) ([43ac2b4](https://github.com/zdossantos/dlp-friends/commit/43ac2b4b0ed45e7843350c697002d8e962ab88ec))
+
 ## [1.14.0](https://github.com/zdossantos/dlp-friends/compare/v1.13.0...v1.14.0) (2026-10-03)
 
 
