@@ -1,0 +1,196 @@
+{
+    "surfaces": 67,
+    "renders": 504,
+    "interactions": [
+        "consent",
+        "onboarding",
+        "starter, send, read-only",
+        "event panels, browser back, Escape",
+        "passed profile",
+        "destructive confirmation, focus return",
+        "mark read",
+        "reduced motion"
+    ],
+    "contrast": [
+        {
+            "theme": "light",
+            "season": "standard",
+            "pair": "foreground/background",
+            "ratio": 16.15
+        },
+        {
+            "theme": "light",
+            "season": "standard",
+            "pair": "foreground/card",
+            "ratio": 16.82
+        },
+        {
+            "theme": "light",
+            "season": "standard",
+            "pair": "muted-foreground/card",
+            "ratio": 6.11
+        },
+        {
+            "theme": "light",
+            "season": "standard",
+            "pair": "on-primary/primary",
+            "ratio": 7.96
+        },
+        {
+            "theme": "light",
+            "season": "standard",
+            "pair": "on-secondary/secondary",
+            "ratio": 11.03
+        },
+        {
+            "theme": "light",
+            "season": "halloween",
+            "pair": "foreground/background",
+            "ratio": 16.15
+        },
+        {
+            "theme": "light",
+            "season": "halloween",
+            "pair": "foreground/card",
+            "ratio": 16.82
+        },
+        {
+            "theme": "light",
+            "season": "halloween",
+            "pair": "muted-foreground/card",
+            "ratio": 6.11
+        },
+        {
+            "theme": "light",
+            "season": "halloween",
+            "pair": "on-primary/primary",
+            "ratio": 7.62
+        },
+        {
+            "theme": "light",
+            "season": "halloween",
+            "pair": "on-secondary/secondary",
+            "ratio": 10.76
+        },
+        {
+            "theme": "light",
+            "season": "christmas",
+            "pair": "foreground/background",
+            "ratio": 16.15
+        },
+        {
+            "theme": "light",
+            "season": "christmas",
+            "pair": "foreground/card",
+            "ratio": 16.82
+        },
+        {
+            "theme": "light",
+            "season": "christmas",
+            "pair": "muted-foreground/card",
+            "ratio": 6.11
+        },
+        {
+            "theme": "light",
+            "season": "christmas",
+            "pair": "on-primary/primary",
+            "ratio": 7.3
+        },
+        {
+            "theme": "light",
+            "season": "christmas",
+            "pair": "on-secondary/secondary",
+            "ratio": 7.62
+        },
+        {
+            "theme": "dark",
+            "season": "standard",
+            "pair": "foreground/background",
+            "ratio": 17.5
+        },
+        {
+            "theme": "dark",
+            "season": "standard",
+            "pair": "foreground/card",
+            "ratio": 16.1
+        },
+        {
+            "theme": "dark",
+            "season": "standard",
+            "pair": "muted-foreground/card",
+            "ratio": 9.17
+        },
+        {
+            "theme": "dark",
+            "season": "standard",
+            "pair": "on-primary/primary",
+            "ratio": 6
+        },
+        {
+            "theme": "dark",
+            "season": "standard",
+            "pair": "on-secondary/secondary",
+            "ratio": 8.79
+        },
+        {
+            "theme": "dark",
+            "season": "halloween",
+            "pair": "foreground/background",
+            "ratio": 17.5
+        },
+        {
+            "theme": "dark",
+            "season": "halloween",
+            "pair": "foreground/card",
+            "ratio": 16.1
+        },
+        {
+            "theme": "dark",
+            "season": "halloween",
+            "pair": "muted-foreground/card",
+            "ratio": 9.17
+        },
+        {
+            "theme": "dark",
+            "season": "halloween",
+            "pair": "on-primary/primary",
+            "ratio": 8.96
+        },
+        {
+            "theme": "dark",
+            "season": "halloween",
+            "pair": "on-secondary/secondary",
+            "ratio": 9.16
+        },
+        {
+            "theme": "dark",
+            "season": "christmas",
+            "pair": "foreground/background",
+            "ratio": 17.5
+        },
+        {
+            "theme": "dark",
+            "season": "christmas",
+            "pair": "foreground/card",
+            "ratio": 16.1
+        },
+        {
+            "theme": "dark",
+            "season": "christmas",
+            "pair": "muted-foreground/card",
+            "ratio": 9.17
+        },
+        {
+            "theme": "dark",
+            "season": "christmas",
+            "pair": "on-primary/primary",
+            "ratio": 9.05
+        },
+        {
+            "theme": "dark",
+            "season": "christmas",
+            "pair": "on-secondary/secondary",
+            "ratio": 9.17
+        }
+    ]
+}
