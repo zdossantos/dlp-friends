@@ -23,6 +23,7 @@ et son état de livraison sont définis dans le [`PRD.md`](PRD.md).
 | `seasonal_themes` | Plages administrables et activation manuelle des ambiances Halloween et Noël |
 | `events` | Événement amical organisé par un membre, avec horaire, lieux, capacité, mode et annulation |
 | `event_registrations` | Demande et état d’inscription d’un membre à un événement |
+| `weekly_email_recap_deliveries` | Réservation et état de livraison du rappel hebdomadaire, sans contenu privé |
 | `notifications` | Notification persistante catégorisée, localisée et reliée à une cible applicative |
 | `blocks` | Blocage unidirectionnel entre deux membres |
 | `avatars` | Catalogue administrable : nom, image privée, deux couleurs de dégradé, activation et ordre |
@@ -44,6 +45,14 @@ et son état de livraison sont définis dans le [`PRD.md`](PRD.md).
   même sans destinataire, dans la transaction de complétion du profil.
   `admin_new_member_alerts` est un booléen individuel activé par défaut,
   indépendant des préférences Web Push et réservé aux administrateurs.
+- `users.weekly_recap_messages` et `weekly_recap_matches` sont des booléens à
+  `true` par défaut, y compris après migration des comptes existants. Le premier
+  contrôle l’envoi ; le second le compteur facultatif d’univers croisés.
+- `weekly_email_recap_deliveries` conserve `user_id`, `period_ends_at`, `sent_at`,
+  `skipped_at` et les horodatages. La paire `(user_id, period_ends_at)` est unique.
+  L’échéance est stockée en UTC et correspond au dimanche à 15 h Europe/Paris.
+  Préférences effectives et traces sont exportées ; les traces sont supprimées
+  en cascade à la purge du compte. Aucun nom, adresse ou message n’y est copié.
 - `social_accounts` contient `user_id`, `provider` et `provider_user_id`. La paire `(provider, provider_user_id)` est unique, le lien est supprimé en cascade avec l'utilisateur et aucun jeton OAuth n'est conservé.
 - `profiles.display_name` est obligatoire une fois l'onboarding terminé et n'est volontairement pas unique.
 - `profiles.onboarding_completed_at` indique qu'un membre a terminé le profil minimal requis.
