@@ -168,6 +168,10 @@ final class BuildUserDataExport
                         'created_at' => $notification->created_at?->toIso8601String(),
                     ];
                 })->all(),
+            'email_preferences' => [
+                'weekly_recap_messages' => $user->weekly_recap_messages,
+                'weekly_recap_matches' => $user->weekly_recap_matches,
+            ],
             'notification_preferences' => collect(WebPushPreference::cases())
                 ->mapWithKeys(fn (WebPushPreference $preference): array => [
                     $preference->value => (bool) ($preferences->get($preference->value) ?? true),

@@ -19,6 +19,7 @@ import { edit } from '@/routes/notification-preferences';
 
 const props = defineProps<{
     preferences: Record<string, boolean>;
+    emailPreferences: Record<string, boolean>;
     adminNewMemberAlertsEnabled: boolean | null;
     devices: Array<{
         uuid: string;
@@ -172,6 +173,44 @@ setLayoutProps({
             class="space-y-4"
             v-slot="{ errors, processing }"
         >
+            <section class="space-y-4" aria-labelledby="email-recap-title">
+                <div>
+                    <h2 id="email-recap-title" class="font-medium">
+                        {{ t('account.settings.notifications.email_title') }}
+                    </h2>
+                    <p class="text-sm text-muted-foreground">
+                        {{ t('account.settings.notifications.email_help') }}
+                    </p>
+                </div>
+                <div
+                    v-for="(enabled, category) in emailPreferences"
+                    :key="category"
+                    class="rounded-2xl border p-4"
+                >
+                    <label class="flex min-h-11 items-start gap-3 text-sm">
+                        <input type="hidden" :name="category" value="0" />
+                        <Switch
+                            :key="`${category}-${enabled}`"
+                            :name="category"
+                            value="1"
+                            :default-value="enabled"
+                            class="mt-0.5"
+                            :data-test="`email-${category}-switch`"
+                        />
+                        <span class="space-y-1">
+                            <span class="block font-medium">{{
+                                t(`account.settings.notifications.${category}`)
+                            }}</span>
+                            <span class="block text-muted-foreground">{{
+                                t(
+                                    `account.settings.notifications.${category}_help`,
+                                )
+                            }}</span>
+                        </span>
+                    </label>
+                    <InputError class="mt-2" :message="errors[category]" />
+                </div>
+            </section>
             <div
                 v-if="adminNewMemberAlertsEnabled !== null"
                 class="rounded-2xl border p-4"

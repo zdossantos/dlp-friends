@@ -26,6 +26,10 @@ class NotificationPreferenceController extends Controller
             'preferences' => collect($this->availablePreferences($request->user()))->mapWithKeys(
                 fn (WebPushPreference $preference): array => [$preference->value => (bool) ($preferences[$preference->value] ?? true)],
             ),
+            'emailPreferences' => [
+                'weekly_recap_messages' => $request->user()->weekly_recap_messages,
+                'weekly_recap_matches' => $request->user()->weekly_recap_matches,
+            ],
             'partnerAnnouncementsEnabled' => (bool) ($preferences[WebPushPreference::PartnerAnnouncements->value] ?? true),
             'vapidPublicKey' => (string) config('services.web_push.public_key', ''),
             'adminNewMemberAlertsEnabled' => $request->user()->hasRole(RoleName::Admin)
@@ -44,6 +48,13 @@ class NotificationPreferenceController extends Controller
                 $user = User::query()->lockForUpdate()->findOrFail($request->user()->id);
                 Gate::forUser($user)->authorize('updateNewMemberAlerts', $user);
                 $user->forceFill(['admin_new_member_alerts' => $request->boolean('admin_new_member_alerts')])->save();
+            });
+            $request->user()->refresh();
+        }
+        $emailPreferences = $request->safe()->only(['weekly_recap_messages', 'weekly_recap_matches']);
+        if ($emailPreferences !== []) {
+            DB::transaction(function () use ($request, $emailPreferences): void {
+                User::query()->lockForUpdate()->findOrFail($request->user()->id)->forceFill($emailPreferences)->save();
             });
             $request->user()->refresh();
         }
@@ -71,6 +82,7 @@ class NotificationPreferenceController extends Controller
     {
         DB::transaction(function () use ($request, $updatePartner): void {
             $user = User::query()->lockForUpdate()->findOrFail($request->user()->id);
+            $user->forceFill(['weekly_recap_messages' => false, 'weekly_recap_matches' => false])->save();
             if ($user->hasRole(RoleName::Admin)) {
                 $user->forceFill(['admin_new_member_alerts' => false])->save();
             }
@@ -84,6 +96,7 @@ class NotificationPreferenceController extends Controller
             $request->user()->webPushSubscriptions()->whereNull('revoked_at')->update(['revoked_at' => now()]);
         });
 
+        $request->user()->refresh();
         Inertia::flash('toast', [
             'type' => 'success',
             'message' => __('account.settings.notifications.disabled_all'),
