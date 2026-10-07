@@ -51,3 +51,40 @@ test('an admin can disable new member alerts by keyboard independently of admini
     ['fr', 'Arrivée de nouveaux membres'],
     ['en', 'New member arrivals'],
 ]);
+
+test('weekly email preferences can be disabled independently and persist after reload', function (string $locale, string $label) {
+    $member = User::factory()->withProfile()->create(['locale' => $locale]);
+    $this->actingAs($member);
+    $page = visit('/settings/notifications')->on()->mobile();
+    $page->assertSee($label)
+        ->assertAttribute('[data-test="email-weekly_recap_messages-switch"]', 'aria-checked', 'true')
+        ->assertAttribute('[data-test="email-weekly_recap_matches-switch"]', 'aria-checked', 'true')
+        ->keys('[data-test="email-weekly_recap_messages-switch"]', 'Space')
+        ->press('[data-test="save-notification-preferences"]')
+        ->assertSee(__('account.settings.notifications.saved', [], $locale));
+    expect($member->fresh()->weekly_recap_messages)->toBeFalse()
+        ->and($member->fresh()->weekly_recap_matches)->toBeTrue();
+    $page->refresh()
+        ->assertAttribute('[data-test="email-weekly_recap_messages-switch"]', 'aria-checked', 'false')
+        ->assertAttribute('[data-test="email-weekly_recap_matches-switch"]', 'aria-checked', 'true')
+        ->assertAttribute('[data-test="notification-messages-switch"]', 'aria-checked', 'true')
+        ->assertScript('document.documentElement.scrollWidth <= window.innerWidth', true)
+        ->assertNoJavaScriptErrors();
+})->with([
+    ['fr', 'Récapitulatif hebdomadaire par e-mail'],
+    ['en', 'Weekly email recap'],
+]);
+
+test('disable all turns off both weekly email preferences', function () {
+    $member = User::factory()->withProfile()->create();
+    $this->actingAs($member);
+    $page = visit('/settings/notifications');
+    $page->script('window.confirm = () => true');
+    $page->press('[data-test="disable-all-notifications"]')
+        ->assertSee(__('account.settings.notifications.disabled_all'));
+    expect($member->fresh()->weekly_recap_messages)->toBeFalse()
+        ->and($member->fresh()->weekly_recap_matches)->toBeFalse();
+    $page->refresh()
+        ->assertAttribute('[data-test="email-weekly_recap_messages-switch"]', 'aria-checked', 'false')
+        ->assertAttribute('[data-test="email-weekly_recap_matches-switch"]', 'aria-checked', 'false');
+});

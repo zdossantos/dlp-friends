@@ -185,6 +185,23 @@ Paris.
   avec filtres par catégorie et état non lu ; une notification de conversation
   ouvre la conversation correspondante.
 
+### Récapitulatif hebdomadaire par e-mail
+
+- Activé par défaut pour les comptes existants et les nouvelles inscriptions,
+  désactivable et réactivable dans Réglages → Notifications, indépendamment du
+  Web Push. « Tout désactiver » désactive également les e-mails.
+- Le dimanche à 15 h, heure de Paris, un membre actif, vérifié et disposant d’une
+  adresse utilisable reçoit un rappel uniquement si une conversation visible et
+  non archivée contient un message reçu non lu depuis strictement plus de trois
+  jours. Les blocages et interlocuteurs masqués ou inactifs sont exclus.
+- L’e-mail FR/EN contient le nombre de conversations avec des messages reçus
+  non lus et, selon un second réglage activé par défaut, le nombre de nouveaux
+  univers croisés depuis le dimanche précédent à 15 h. Les univers croisés seuls
+  ne déclenchent aucun envoi. Aucun nom ni contenu privé n’est repris.
+- La livraison est réservée une seule fois par membre et échéance. Le worker
+  vérifie à nouveau les non-lus, préférences et disponibilités avant l’envoi,
+  abandonne une période expirée et reprend les erreurs temporaires de transport.
+
 ### Administration
 
 - Le rôle `admin` donne accès à un tableau de bord et aux catalogues d’intérêts
@@ -301,6 +318,7 @@ Paris.
 | Conversations, amorces, messages, réactions, saisie, présence et état de lecture | **Implémenté** | Trois amorces aléatoires issues d’un catalogue bilingue en base facilitent le premier message. Le stockage, la diffusion privée, les J’aime uniques synchronisés en temps réel, leurs notifications in-app/PWA, l’indicateur de saisie éphémère, la présence confidentielle, la recherche locale et les tests sont présents. |
 | Blocage et déblocage | **Implémenté** | Effet immédiat sur découverte et conversation. |
 | Événements amicaux, inscriptions et discussion de groupe | **Implémenté** | Deux écrans principaux, panneaux adaptatifs, rôles distincts, participants avec profils intégrés, deux modes d’inscription, confidentialité, cycle de vie, notifications et chat temps réel avec non-lus sont couverts. |
+| Récapitulatif hebdomadaire par e-mail (issue 180) | **Implémenté** | Dimanche 15 h Paris, réglages activés par défaut et révocables, messages anciens non lus, compteurs bilingues sans contenu privé et livraison unique en file sont couverts. |
 | Centre de notifications persistant | **Implémenté** | Matches, messages et événements sont regroupés, filtrables et ouvrent leur élément cible. |
 | Alertes administratives de nouveaux membres (issue 245) | **Implémenté** | Première complétion vérifiée e-mail/Google, réglage individuel, notification persistante unique, cible administrative protégée et Push générique bilingue sont couverts. |
 | PWA mobile et Web Push (issues 182 et 203) | **Implémenté** | Installation Android/iOS, fonctionnement hors ligne sûr, mise à jour contrôlée, consentement explicite, révocation par appareil et alertes génériques pour toutes les catégories sont couverts. |

@@ -34,6 +34,8 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
  * @property string $email
  * @property string|null $locale
  * @property bool $show_presence
+ * @property bool $weekly_recap_messages
+ * @property bool $weekly_recap_matches
  * @property bool $admin_new_member_alerts
  * @property Carbon|null $self_registered_at
  * @property Carbon|null $new_member_announced_at
@@ -80,7 +82,7 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
 class User extends Authenticatable implements HasLocalePreference, MustVerifyEmail, PasskeyUser
 {
     /** @var array<string, mixed> */
-    protected $attributes = ['admin_new_member_alerts' => true];
+    protected $attributes = ['admin_new_member_alerts' => true, 'weekly_recap_messages' => true, 'weekly_recap_matches' => true];
 
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable, PasskeyAuthenticatable, TwoFactorAuthenticatable;
@@ -338,6 +340,8 @@ class User extends Authenticatable implements HasLocalePreference, MustVerifyEma
             'last_active_at' => 'datetime',
             'show_presence' => 'boolean',
             'admin_new_member_alerts' => 'boolean',
+            'weekly_recap_messages' => 'boolean',
+            'weekly_recap_matches' => 'boolean',
             'self_registered_at' => 'datetime',
             'new_member_announced_at' => 'datetime',
             'password' => 'hashed',

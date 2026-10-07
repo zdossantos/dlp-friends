@@ -261,6 +261,44 @@ release ne doit être créé manuellement pour revenir en arrière.
   vérifier sa remise sans afficher la clé API ni le contenu du message dans les
   journaux.
 
+## Récapitulatifs hebdomadaires par e-mail
+
+Appliquer explicitement les migrations avant d’activer le worker et le scheduler
+sur cette version (`php artisan migrate --force` dans le conteneur web).
+Les migrations activent les deux réglages pour les comptes existants ; les
+membres peuvent les modifier dans Réglages → Notifications.
+
+Le scheduler exécute `notifications:dispatch-weekly-recaps` chaque dimanche à
+15 h dans `Europe/Paris`, avec verrou de chevauchement et verrou multi-serveurs.
+Garder le scheduler actif et utiliser le cache partagé déjà configuré.
+Le worker consomme la file habituelle ; les jobs ont quatre tentatives avec
+reprises après 60, 300 et 900 secondes. Le transport Laravel existant est utilisé.
+Mailpit reste local ; cette fonctionnalité ne modifie pas le fournisseur de
+production configuré.
+
+Une relance manuelle de `php artisan notifications:dispatch-weekly-recaps`
+réutilise l’échéance du dernier dimanche à 15 h et ne réserve pas de doublon.
+Elle remet en file les réservations encore en attente, notamment après une panne
+entre leur création et la publication du job. Plusieurs jobs peuvent ainsi viser
+la même réservation ; le verrou et les états terminaux du job limitent l’envoi
+applicatif à un seul e-mail. Les livraisons envoyées ou abandonnées ne sont pas
+remises en file.
+Seuls les membres éligibles sont mis en file. Le job recalcule les compteurs et
+contrôle les préférences, l’adresse vérifiée et la disponibilité avant envoi.
+Une livraison réussie ou ignorée ne se rejoue pas ; une livraison encore en
+attente expire au dimanche suivant à 15 h. Inspecter les jobs échoués avant
+`php artisan queue:retry <id>` ; une reprise après expiration sera ignorée.
+L’unicité applicative ne résout pas l’ambiguïté d’un transport ayant accepté
+l’e-mail puis coupé la connexion avant son accusé de réception.
+
+Pour vérifier en local, utiliser uniquement des comptes de test et Mailpit :
+créer un échange reçu non lu de plus de trois jours, lancer la commande puis le
+worker. Inspecter le rendu FR/EN, les seuls compteurs et les liens vers `/app` et
+`/settings/notifications`. Lire le message ou désactiver le rappel avant la
+consommation du job doit supprimer l’envoi. Contrôler les traces minimales dans
+`weekly_email_recap_deliveries` ; elles sont exportées et supprimées à la purge.
+Ne pas journaliser les adresses ou le contenu privé pour ce contrôle.
+
 ## Fournisseurs de connexion sociale
 
 Configurer les secrets uniquement dans l'environnement d'exécution ou dans
