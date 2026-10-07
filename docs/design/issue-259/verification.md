@@ -7,7 +7,8 @@ Le dossier et son prototype sont les seuls ajouts. Aucune route, page Vue, tradu
 Commande reproductible avec le serveur local décrit dans le README :
 
 ```sh
-node docs/design/issue-259/prototype/verify.mjs
+PROTOTYPE_URL=http://127.0.0.1:8260/index.html node docs/design/issue-259/prototype/verify.mjs
+node docs/design/issue-259/prototype/verify-explorer.mjs
 bunx eslint docs/design/issue-259/prototype/*.js docs/design/issue-259/prototype/*.mjs
 bunx prettier --check docs/design/issue-259/
 ```
@@ -33,3 +34,11 @@ ESLint est exécuté sur l’ensemble du dépôt ; Prettier sur le nouveau dossi
 - Les captures historiques de l’audit ne décrivent pas toutes le code courant ; l’audit le signale.
 - Animation : pas de benchmark de production ni de nouvelle bibliothèque ; stratégie à évaluer après approbation.
 - **Approbation du porteur du produit encore attendue.** La refonte n’est pas intégrée et l’issue reste ouverte.
+
+## Révision Explorer après retour produit
+
+La vérification initiale de hauteur à 320 × 568 px échouait : 1 416 px de contenu. La nouvelle composition tient dans la hauteur, sans masquer le document avec `overflow: hidden`.
+
+Le contrôle `verify-explorer.mjs` vérifie 360 rendus : cinq viewports (320 × 480, 320 × 568, 390 × 600, 390 × 844 et 1440 × 900), deux langues, six variantes d’apparence/saison et six états. Aucun scroll horizontal ou vertical du document ; chaque commande conserve au moins 44 px et reste dans sa zone, sans recouvrement par la navigation. Zéro erreur JavaScript. Les essais détectaient un recouvrement dans l’état succès à 320 × 480 ; sa confirmation remplace désormais temporairement le résumé au lieu d’ajouter un bloc. Le dialogue de découverte, Échap et le mouvement réduit passent.
+
+Les résultats sont dans [revision-2/checks.json](captures/revision-2/checks.json). Les captures de cette révision montrent une **composition provisoire**, avec seulement une lumière floutée discrète, conformément au dernier retour. La personnalité graphique reste à définir ; aucune validation de DA n’est revendiquée. Le contrôle des 67 surfaces et 504 rendus a également été réexécuté avec succès après ces changements. Les safe areas physiques, le clavier et la PWA installée restent à vérifier sur appareil.

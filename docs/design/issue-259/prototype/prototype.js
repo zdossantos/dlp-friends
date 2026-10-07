@@ -449,7 +449,27 @@ function profileForm() {
     return `${head(text('Un avatar, une présentation, tes univers favoris.', 'An avatar, an introduction, your favourite worlds.'))}<div class="narrow"><div class="step-line" aria-label="${esc(steps[profileStep])}">${steps.map((_, i) => `<span class="${i <= profileStep ? 'done' : ''}"></span>`).join('')}</div><p class="muted">${profileStep + 1} / 4 · ${steps[profileStep]}</p><div class="section">${body}</div><div class="row section">${profileStep > 0 ? button(t('back'), 'profile-back', 'outline') : ''}${button(profileStep === 3 ? t('save') : t('continue'), 'profile-next')}</div></div>`;
 }
 function discovery() {
-    return `${head(text('Des personnes qui partagent tes univers favoris.', 'People who share your favourite worlds.'))}<div class="discovery-layout"><div>${profileCard()}<div class="decision-actions">${button(t('pass'), 'pass', 'outline', 'close')}${button(t('discover'), 'discover', '', 'sparkle')}</div>${link('member-profile', text('Voir le profil complet', 'View full profile'), 'quiet full')}</div><aside><h2>${text('La curiosité, à ton rythme', 'Curiosity, at your pace')}</h2><p class="muted">${text('Tes univers communs donnent un point de départ. L’échange s’ouvre seulement si l’envie de se découvrir est réciproque.', 'Your shared worlds offer a starting point. A conversation opens only when the wish to get to know each other is mutual.')}</p><div class="section">${link('passed', text('Voir les profils passés', 'View passed profiles'), 'outline')}</div>${link('matching', text('Comprendre le classement', 'Understand the ranking'), 'quiet')}</aside></div>`;
+    const heading = `<header class="discovery-heading"><h1 id="page-title" tabindex="-1">${t('explore')}</h1><p>${text('Des amitiés au détour de tes univers.', 'Friendship around every corner.')}</p></header>`;
+    const tools = `<div class="discovery-tools">${link('passed', text('Profils passés', 'Passed profiles'), 'quiet')}${link('matching', text('Comment ça marche ?', 'How does it work?'), 'quiet')}</div>`;
+
+    if (['empty', 'loading', 'error', 'disabled'].includes(state)) {
+        const titles = {
+            empty: text(
+                'Le prochain chapitre arrive bientôt',
+                'The next chapter is coming',
+            ),
+            loading: t('loadMessage'),
+            error: t('errorMessage'),
+            disabled: text(
+                'Ce profil n’est plus disponible',
+                'This profile is no longer available',
+            ),
+        };
+
+        return `<section class="discovery-shell">${heading}<div class="portal-scene" aria-hidden="true"></div><div class="discovery-status" ${state === 'loading' ? 'aria-busy="true"' : ''} role="${state === 'error' ? 'alert' : 'status'}">${icon('sparkle')}<h2>${titles[state]}</h2><p>${text('Tes univers sont le point de départ de nouvelles amitiés.', 'Your favourite worlds are where new friendships begin.')}</p>${state === 'empty' ? link('edit-profile', text('Mes univers favoris', 'My favourite worlds'), 'outline') : button(t('retry'), 'retry', 'outline')}</div>${tools}</section>`;
+    }
+
+    return `<section class="discovery-shell">${heading}<div class="portal-scene" aria-hidden="true"></div><article class="discovery-profile"><div class="discovery-identity">${avatar('CA')}<div><h2>Camille <small>${text('28 ans', '28')}</small></h2><p>${icon('sparkle')} ${t('common')}</p></div></div>${pills()}<p class="discovery-bio" ${state === 'success' ? 'role="status"' : ''}>${state === 'success' ? text('Ton choix est enregistré.', 'Your choice is saved.') : t('bio')}</p><div class="discovery-footer"><span>${t('frequency')}</span>${link('member-profile', text('Profil complet', 'Full profile'), 'quiet')}</div></article><div class="decision-actions">${button(t('pass'), 'pass', 'outline', 'close')}${button(t('discover'), 'discover', '', 'sparkle')}</div>${tools}</section>`;
 }
 function profile() {
     const own = current.id === 'profile';
@@ -662,6 +682,10 @@ function tutorial() {
     return `${head(text('Démonstration : aucune donnée sociale ne sera créée.', 'Demo: no social data will be created.'))}<div class="narrow"><div class="step-line">${steps.map((_, i) => `<span class="${i <= tutorialStep ? 'done' : ''}"></span>`).join('')}</div>${profileCard()}<div class="decision-actions">${button(t('pass'), 'tutorial-pass', 'outline')}${button(t('discover'), 'tutorial-like')}</div><p class="notice">${id === 'tutorial-pass' ? text('Commence par Passer pour essayer le geste de refus.', 'Start with Pass to try the rejection gesture.') : text('Choisis Découvrir pour exprimer ton envie d’échanger.', 'Choose Discover to express your wish to chat.')}</p></div>`;
 }
 function content() {
+    if (current.id === 'explore') {
+        return discovery();
+    }
+
     if (state === 'loading') {
         return `${head()}<div class="narrow" aria-busy="true"><div class="skeleton"></div><div class="skeleton line"></div><p role="status">${t('loadMessage')}</p>${button(t('continue'), 'retry', 'outline')}</div>`;
     }
@@ -749,6 +773,7 @@ function controls() {
 }
 function render(focus = false) {
     document.documentElement.lang = lang;
+    document.documentElement.dataset.view = current.id;
     document.documentElement.dataset.theme = theme;
     document.documentElement.dataset.season = season;
     document.title = `DLP Friends · ${current[lang]} · 259`;

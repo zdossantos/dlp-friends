@@ -1,0 +1,7 @@
+{
+    "renders": 360,
+    "failures": [],
+    "errors": [],
+    "flows": ["discover dialog / Escape", "reduced motion"],
+    "viewportScope": "320×480 to 1440×900; browser and PWA-sized viewports; no real device safe-area or keyboard verification"
+}

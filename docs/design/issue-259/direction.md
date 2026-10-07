@@ -1,16 +1,20 @@
-# Direction proposée : des univers partagés, une interface calme
+# Direction en cours — un univers magique, compact sur mobile
 
-## Choix argumenté
+## Brief révisé le 7 octobre 2026
 
-Trois directions ont été considérées : une interface très festive sur chaque écran ; une interface purement utilitaire ; une marque expressive sur le public et une application calme dans les tâches. La troisième est proposée : elle conserve la personnalité déjà documentée sans faire porter à un échange, un formulaire ou une décision de modération la densité d’une page promotionnelle. C’est une proposition à valider.
+La première proposition, calme et utilitaire, est refusée : elle manque de personnalité et ses éléments sont trop grands. Le nouveau brief demande le sentiment d’entrer dans un endroit magique, une place importante pour l’imaginaire et une utilisation confortable sur mobile, navigateur comme PWA installée.
 
-La marque garde son logo, son violet et son rose. Le rôle de Cinzel Decorative reste limité à la marque et au grand titre public. Instrument Sans assure les textes, chiffres, formulaires et titres fonctionnels. Les avatars de revue sont abstraits ; l’intégration réemploiera le catalogue existant, sans upload de photos ni asset Disney ajouté.
+**Les décors reconnaissables en fond sont également refusés.** Seule une ambiance très discrète, fortement floutée, est admissible. Explorer expérimente actuellement un voile de lumière à 12 % d’opacité avec 60 px de flou. Les illustrations originales ne sont jamais affichées nettes dans cette vue. Ce traitement est provisoire ; les questions sur les ornements, la lumière et la force des saisons restent ouvertes. Il ne constitue pas la DA validée.
+
+Explorer est l’écran témoin de cette révision. Les 66 autres surfaces restent la couverture fonctionnelle de la première proposition et doivent être revues après le choix de direction. Le logo, le violet, le rose et les polices restent provisoirement conservés. Le rôle de Cinzel Decorative reste limité à la marque et au grand titre public ; Instrument Sans assure la lecture et les commandes.
+
+Les pages à contenu borné doivent tenir dans la hauteur disponible sans scroll de page, avec accès au détail si nécessaire. Les listes, messages et autres contenus variables peuvent défiler. La maquette Explorer utilise `100svh`, garde la navigation dans le layout et conserve des cibles de 44 px malgré des textes et espacements plus compacts. Les tests incluent un viewport de 320 × 480 px pour simuler la hauteur utile réduite d’un navigateur mobile. Cela ne remplace pas la vérification sur appareil des safe areas, du clavier et de la PWA.
 
 ## Tokens et hiérarchie
 
 | Élément     | Proposition                                                                                                                                                          |
 | ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Texte       | Corps 16 px / 1,5 ; secondaire 13–14 px ; titres 28–40 px selon largeur ; poids 400 / 600                                                                            |
+| Texte       | Explorer révisé : corps 14 px / 1,4 ; secondaire 11–12 px ; titres 20 px ; cibles 44 px. Autres surfaces : valeurs V1 à reprendre                                    |
 | Couleur     | Fond ivoire, surfaces blanches, texte violet très sombre ; inversion calme en sombre. Violet pour l’action principale, rose pour l’affinité, rouge réservé au danger |
 | Saison      | Halloween : cuivre et accents chauds ; Noël : vert et accents rosés. La sémantique danger, succès, indisponibilité reste indépendante                                |
 | Espacement  | Base de 4 px ; groupes 8–12 px ; sections 24–32 px ; marge mobile 16 px                                                                                              |

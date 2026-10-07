@@ -1219,3 +1219,252 @@ dialog .timeline {
 .auth-aside h2 {
     font-family: Instrument, system-ui, sans-serif;
 }
+
+/* Revision 2: Explorer is the witness for the new product direction. */
+:root[data-view='explore'] {
+    --scene: url('assets/garden-standard.jpg');
+}
+:root[data-view='explore'][data-season='halloween'] {
+    --scene: url('assets/garden-halloween.jpg');
+}
+:root[data-view='explore'][data-season='christmas'] {
+    --scene: url('assets/garden-christmas.jpg');
+}
+[data-view='explore'] body {
+    height: 100svh;
+    display: grid;
+    grid-template-rows: 36px minmax(0, 1fr);
+}
+[data-view='explore'] #review {
+    padding: 0 12px;
+    font-size: 11px;
+    position: relative;
+    z-index: 20;
+}
+[data-view='explore'] #review summary {
+    min-height: 36px;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+}
+[data-view='explore'] #review details[open] {
+    position: absolute;
+    inset: 0 0 auto;
+    padding: 0 12px 12px;
+    background: var(--card);
+    border-bottom: 1px solid var(--border);
+    max-height: 100svh;
+    overflow: auto;
+}
+[data-view='explore'] #app {
+    min-height: 0;
+    display: grid;
+    grid-template-rows: 48px minmax(0, 1fr) auto;
+}
+[data-view='explore'] .app-header {
+    width: 100%;
+    max-width: none;
+    margin: 0;
+    padding: 0 12px;
+    background: var(--card);
+}
+[data-view='explore'] .brand {
+    min-height: 44px;
+    gap: 7px;
+}
+[data-view='explore'] .brand img {
+    width: 28px;
+    height: 28px;
+}
+[data-view='explore'] .brand span {
+    font-size: 15px;
+}
+[data-view='explore'] .app-header .btn {
+    font-size: 12px;
+    padding: 0 8px;
+}
+[data-view='explore'] .frame {
+    min-height: 0;
+    width: 100%;
+    max-width: none;
+    margin: 0;
+    padding: 8px 12px;
+    position: relative;
+    isolation: isolate;
+    background: var(--background);
+}
+[data-view='explore'] .frame::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: var(--scene) center / cover;
+    filter: blur(60px) saturate(0.65);
+    opacity: 0.12;
+    pointer-events: none;
+}
+[data-view='explore'] .discovery-shell {
+    height: 100%;
+    max-width: 420px;
+    margin: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+[data-view='explore'] .discovery-heading {
+    color: var(--foreground);
+    flex-shrink: 0;
+}
+[data-view='explore'] .discovery-heading h1 {
+    font-size: 20px;
+    line-height: 1.2;
+    margin: 0;
+}
+[data-view='explore'] .discovery-heading p {
+    font-size: 12px;
+    margin: 2px 0 0;
+}
+[data-view='explore'] .portal-scene {
+    flex: 1;
+    min-height: 0;
+}
+[data-view='explore'] .discovery-profile,
+[data-view='explore'] .discovery-status {
+    flex-shrink: 0;
+    padding: 12px 14px 0;
+    border: 1px solid var(--border);
+    background: var(--card);
+    border-radius: 16px;
+    box-shadow: 0 8px 24px #17102428;
+}
+[data-view='explore'] .discovery-identity {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+[data-view='explore'] .discovery-identity h2 {
+    font-size: 20px;
+    line-height: 1.25;
+    margin: 0;
+}
+[data-view='explore'] .discovery-identity small {
+    font-size: 12px;
+    font-weight: 400;
+    color: var(--muted-foreground);
+}
+[data-view='explore'] .discovery-identity p {
+    font-size: 12px;
+    margin: 2px 0 0;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    color: var(--primary);
+}
+[data-view='explore'] .discovery-identity svg {
+    width: 14px;
+    height: 14px;
+}
+[data-view='explore'] .pill-set {
+    margin: 8px 0 0;
+    gap: 4px;
+}
+[data-view='explore'] .badge {
+    font-size: 11px;
+    padding: 3px 8px;
+}
+[data-view='explore'] .discovery-bio {
+    font-size: 14px;
+    line-height: 1.4;
+    margin: 8px 0 0;
+}
+[data-view='explore'] .discovery-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 4px;
+    font-size: 11px;
+    color: var(--muted-foreground);
+}
+[data-view='explore'] .btn {
+    min-height: 44px;
+    min-width: 44px;
+    padding: 8px 12px;
+    font-size: 14px;
+}
+[data-view='explore'] .discovery-footer .btn {
+    padding: 0 4px;
+    font-size: 12px;
+}
+[data-view='explore'] .decision-actions {
+    margin: 0;
+    width: 100%;
+    position: static;
+    flex-shrink: 0;
+    padding: 0;
+    background: none;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+}
+[data-view='explore'] .decision-actions .outline {
+    background: var(--card);
+}
+[data-view='explore'] .discovery-tools {
+    display: flex;
+    flex-shrink: 0;
+    justify-content: space-between;
+    border-radius: 12px;
+    background: var(--card);
+    padding: 0 4px;
+}
+[data-view='explore'] .discovery-tools .btn {
+    font-size: 12px;
+    padding: 0 8px;
+}
+[data-view='explore'] .discovery-status {
+    padding-bottom: 12px;
+}
+[data-view='explore'] .discovery-status h2 {
+    font-size: 18px;
+    margin: 4px 0;
+}
+[data-view='explore'] .discovery-status p {
+    font-size: 14px;
+    margin: 6px 0 12px;
+}
+[data-view='explore'] .discovery-feedback {
+    font-size: 12px;
+    margin: 0 0 8px;
+}
+[data-view='explore'] .bottom-nav {
+    position: static;
+    width: 100%;
+    max-width: none;
+    border-radius: 0;
+    transform: none;
+    padding: 4px 6px max(4px, env(safe-area-inset-bottom));
+}
+[data-view='explore'] .bottom-nav a {
+    min-height: 48px;
+    font-size: 10px;
+}
+[data-view='explore'] .bottom-nav svg {
+    width: 19px;
+    height: 19px;
+}
+@media (max-height: 600px) {
+    [data-view='explore'] .discovery-heading p {
+        display: none;
+    }
+    [data-view='explore'] .discovery-profile {
+        padding-top: 8px;
+    }
+    [data-view='explore'] .pill-set,
+    [data-view='explore'] .discovery-bio {
+        margin-top: 4px;
+    }
+    [data-view='explore'] .discovery-identity .avatar {
+        width: 40px;
+        height: 40px;
+    }
+}
