@@ -278,6 +278,11 @@ production configuré.
 
 Une relance manuelle de `php artisan notifications:dispatch-weekly-recaps`
 réutilise l’échéance du dernier dimanche à 15 h et ne réserve pas de doublon.
+Elle remet en file les réservations encore en attente, notamment après une panne
+entre leur création et la publication du job. Plusieurs jobs peuvent ainsi viser
+la même réservation ; le verrou et les états terminaux du job limitent l’envoi
+applicatif à un seul e-mail. Les livraisons envoyées ou abandonnées ne sont pas
+remises en file.
 Seuls les membres éligibles sont mis en file. Le job recalcule les compteurs et
 contrôle les préférences, l’adresse vérifiée et la disponibilité avant envoi.
 Une livraison réussie ou ignorée ne se rejoue pas ; une livraison encore en

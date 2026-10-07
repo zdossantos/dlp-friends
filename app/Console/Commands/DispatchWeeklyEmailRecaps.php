@@ -34,13 +34,13 @@ class DispatchWeeklyEmailRecaps extends Command
                         continue;
                     }
                     DB::transaction(function () use ($user, $periodEnd): void {
-                        $inserted = WeeklyEmailRecapDelivery::query()->insertOrIgnore([
+                        WeeklyEmailRecapDelivery::query()->insertOrIgnore([
                             'user_id' => $user->id, 'period_ends_at' => $periodEnd,
                             'created_at' => now(), 'updated_at' => now(),
                         ]);
-                        if ($inserted === 1) {
-                            $delivery = WeeklyEmailRecapDelivery::query()->where('user_id', $user->id)
-                                ->where('period_ends_at', $periodEnd)->firstOrFail();
+                        $delivery = WeeklyEmailRecapDelivery::query()->where('user_id', $user->id)
+                            ->where('period_ends_at', $periodEnd)->firstOrFail();
+                        if ($delivery->sent_at === null && $delivery->skipped_at === null) {
                             SendWeeklyEmailRecap::dispatch($delivery->id)->afterCommit();
                         }
                     });

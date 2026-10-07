@@ -132,16 +132,34 @@ test('the match counter can be disabled without disabling the reminder', functio
     expect(recapSummaryFor($this))->toBe(['conversations' => 1, 'matches' => null]);
 });
 
-test('dispatching twice reserves and queues at most one delivery for the period', function () {
+test('a relaunch recovers a reservation left pending before queue publication', function () {
+    $delivery = reserveRecapFor($this);
+    Queue::fake();
+    Mail::fake();
+
+    $this->artisan('notifications:dispatch-weekly-recaps')->assertSuccessful();
+    Queue::assertPushed(SendWeeklyEmailRecap::class, fn ($job) => $job->deliveryId === $delivery->id);
+    expect(WeeklyEmailRecapDelivery::query()->count())->toBe(1);
+
+    (new SendWeeklyEmailRecap($delivery->id))->handle(app(BuildWeeklyEmailRecap::class));
+    (new SendWeeklyEmailRecap($delivery->id))->handle(app(BuildWeeklyEmailRecap::class));
+    Mail::assertSentCount(1);
+
+    Queue::fake();
+    $this->artisan('notifications:dispatch-weekly-recaps')->assertSuccessful();
+    Queue::assertNothingPushed();
+});
+
+test('relaunches reuse the same reservation and the next week reserves a new delivery', function () {
     Queue::fake();
     $this->artisan('notifications:dispatch-weekly-recaps')->assertSuccessful();
     $this->artisan('notifications:dispatch-weekly-recaps')->assertSuccessful();
     expect(WeeklyEmailRecapDelivery::query()->count())->toBe(1);
-    Queue::assertPushed(SendWeeklyEmailRecap::class, 1);
+    Queue::assertPushed(SendWeeklyEmailRecap::class, 2);
     $this->travelTo($this->periodEnd->setTimezone('Europe/Paris')->addWeek());
     $this->artisan('notifications:dispatch-weekly-recaps')->assertSuccessful();
     expect(WeeklyEmailRecapDelivery::query()->count())->toBe(2);
-    Queue::assertPushed(SendWeeklyEmailRecap::class, 2);
+    Queue::assertPushed(SendWeeklyEmailRecap::class, 3);
 });
 
 test('ineligible members are not queued and no mail is sent before the first Sunday deadline', function () {
@@ -155,7 +173,7 @@ test('ineligible members are not queued and no mail is sent before the first Sun
     Queue::assertNothingPushed();
 });
 
-test('the database rejects concurrent duplicate reservations', function () {
+test('the database rejects duplicate reservations', function () {
     reserveRecapFor($this);
     expect(fn () => reserveRecapFor($this))->toThrow(UniqueConstraintViolationException::class);
 });
