@@ -14,3 +14,9 @@ Schedule::command('partners:purge-expired-records')
     ->timezone('Europe/Paris')
     ->withoutOverlapping()
     ->onOneServer();
+
+Schedule::command('notifications:dispatch-weekly-recaps')
+    ->weeklyOn(0, '15:00')
+    ->timezone('Europe/Paris')
+    ->withoutOverlapping()
+    ->onOneServer();

@@ -18,6 +18,7 @@ use App\Models\PartnerProfileRevision;
 use App\Models\RoleAudit;
 use App\Models\User;
 use App\Models\WebPushSubscription;
+use App\Models\WeeklyEmailRecapDelivery;
 use Illuminate\Database\Eloquent\Builder;
 
 final class BuildUserDataExport
@@ -168,6 +169,13 @@ final class BuildUserDataExport
                         'created_at' => $notification->created_at?->toIso8601String(),
                     ];
                 })->all(),
+            'weekly_email_recap_deliveries' => WeeklyEmailRecapDelivery::query()->where('user_id', $user->id)
+                ->orderBy('id')->get()->map(fn (WeeklyEmailRecapDelivery $delivery): array => [
+                    'period_ends_at' => $delivery->period_ends_at->toIso8601String(),
+                    'sent_at' => $delivery->sent_at?->toIso8601String(),
+                    'skipped_at' => $delivery->skipped_at?->toIso8601String(),
+                    'created_at' => $delivery->created_at?->toIso8601String(),
+                ])->all(),
             'email_preferences' => [
                 'weekly_recap_messages' => $user->weekly_recap_messages,
                 'weekly_recap_matches' => $user->weekly_recap_matches,
