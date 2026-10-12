@@ -200,3 +200,32 @@ test('reverse blocks hide links and summaries never expose them', function () {
     $this->get(route('events.participants.show', [$event, $owner]))->assertOk()->assertInertia(fn (Assert $page) => $page
         ->where('panel.profile.isBlocked', true)->missing('panel.profile.member.social_links'));
 });
+
+test('the owner can open a profile loaded before social links were migrated', function () {
+    $owner = User::factory()->withProfile()->create();
+    $profile = $owner->profile;
+    $attributes = $profile->getAttributes();
+    unset($attributes['social_links'], $attributes['social_links_visibility']);
+    $profile->setRawAttributes($attributes, true);
+    $owner->setRelation('profile', $profile);
+
+    $this->actingAs($owner)->get(route('member-profile.show'))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('profile.social_links', [])
+            ->where('profile.social_links_visibility', 'matches'));
+});
+
+test('the owner can export a profile without a social links visibility value', function () {
+    $owner = User::factory()->withProfile()->create();
+    $profile = $owner->profile;
+    $attributes = $profile->getAttributes();
+    unset($attributes['social_links'], $attributes['social_links_visibility']);
+    $profile->setRawAttributes($attributes, true);
+    $owner->setRelation('profile', $profile);
+
+    $export = app(BuildUserDataExport::class)->handle($owner);
+
+    expect($export['profile']['social_links'])->toBe([])
+        ->and($export['profile']['social_links_visibility'])->toBe('matches');
+});

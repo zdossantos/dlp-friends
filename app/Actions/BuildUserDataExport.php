@@ -2,6 +2,7 @@
 
 namespace App\Actions;
 
+use App\Enums\SocialLinksVisibility;
 use App\Enums\WebPushPreference;
 use App\Models\Conversation;
 use App\Models\ConversationReport;
@@ -84,7 +85,7 @@ final class BuildUserDataExport
                 'display_name' => $user->profile->display_name,
                 'bio' => $user->profile->bio,
                 'social_links' => $user->profile->social_links ?? [],
-                'social_links_visibility' => $user->profile->social_links_visibility->value,
+                'social_links_visibility' => ($user->profile->social_links_visibility ?? SocialLinksVisibility::Matches)->value,
                 'visit_frequency' => $user->profile->visit_frequency?->value,
                 'visibility' => $user->profile->visibility->value,
                 'avatar' => $user->profile->avatar === null ? null : [
