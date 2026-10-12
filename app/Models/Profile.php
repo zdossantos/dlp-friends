@@ -20,7 +20,7 @@ use Illuminate\Support\Carbon;
  * @property int|null $avatar_id
  * @property string $display_name
  * @property list<array{network: string, url: string}>|null $social_links
- * @property SocialLinksVisibility $social_links_visibility
+ * @property SocialLinksVisibility|null $social_links_visibility
  * @property string|null $bio
  * @property VisitFrequency|null $visit_frequency
  * @property ProfileVisibility $visibility

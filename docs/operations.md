@@ -179,15 +179,39 @@ Après chaque déploiement qui touche le contenu public, contrôler ces six page
 
 Un merge ordinaire dans `main` ne déploie rien. Après le merge volontaire de la
 Release PR, le workflow publie l’image du commit de release, fixe son digest
-pour les quatre services et fixe le commit utilisé pour le Compose. Après la
-réussite du déploiement dans Coolify :
+pour les quatre services et fixe le commit utilisé pour le Compose. Le workflow
+ne lance pas les migrations. Un déploiement « Success » ou un `/up` à 200 ne
+prouve pas que le schéma attendu par cette version est installé.
 
-1. lire les notes de migration de la version ;
-2. activer une fenêtre de maintenance si la migration l’exige ;
-3. exécuter `php artisan migrate --force` dans `web` ;
-4. exécuter `php artisan queue:restart` ;
-5. vérifier `/up`, la connexion WebSocket, les files et les journaux des six
-   services applicatifs et du service MySQL indépendant.
+Avant le merge de la Release PR, lire les notes et les migrations ajoutées depuis
+la version en production. Si le nouveau code nécessite ces colonnes ou tables,
+préparer une fenêtre de maintenance avant la bascule et suspendre le worker et
+le scheduler pendant la mise à jour du schéma.
+
+Après le déploiement de la nouvelle image, avant de rouvrir le service :
+
+1. exécuter explicitement `php artisan migrate --force` dans le conteneur `web`
+   de la nouvelle version, après sauvegarde ;
+2. contrôler `php artisan migrate:status` : aucune migration de cette version
+   ne doit rester `Pending` ;
+3. reprendre le worker et le scheduler et exécuter `php artisan queue:restart` ;
+4. vérifier `/up`, le profil d’un compte existant authentifié (lecture et
+   modification), la connexion WebSocket, les files et les journaux des quatre
+   services applicatifs et du service MySQL indépendant. Pour le contrôle
+   authentifié, utiliser une session de contournement de maintenance opérateur ;
+5. terminer la fenêtre de maintenance uniquement après ces contrôles. Si une
+   migration ou un contrôle échoue, garder le service fermé et suivre le rollback.
+
+### Incident de profil après la 1.15.0
+
+Une erreur `Attempt to read property "value" on null` dans
+`MemberProfileController` peut signaler que la migration des liens sociaux
+n’a pas été appliquée. Vérifier le statut de toutes les migrations, notamment
+`2026_10_03_100000_add_social_links_to_profiles_table`, sans afficher les données
+des membres. La valeur de repli utilisée en lecture est `matches` ; elle ne
+remplace pas les migrations et ne permet pas d’enregistrer les nouveaux champs
+sur un ancien schéma. Appliquer les six migrations de la 1.15.0 avant toute
+remise en production de cette version, selon la procédure ci-dessus.
 
 ## Bascule d’une installation existante
 

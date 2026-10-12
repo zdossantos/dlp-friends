@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Actions\NotifyAdminsOfNewMember;
 use App\Actions\SyncProfileInterests;
 use App\Enums\ProfileVisibility;
+use App\Enums\SocialLinksVisibility;
 use App\Enums\VisitFrequency;
 use App\Http\Requests\MemberProfileRequest;
 use App\Models\Avatar;
@@ -95,7 +96,7 @@ class MemberProfileController extends Controller
                 ],
                 'bio' => $profile->bio,
                 'social_links' => $profile->social_links ?? [],
-                'social_links_visibility' => $profile->social_links_visibility->value,
+                'social_links_visibility' => ($profile->social_links_visibility ?? SocialLinksVisibility::Matches)->value,
                 'visit_frequency' => $profile->visit_frequency,
                 'visibility' => $profile->visibility,
                 'onboarding_completed_at' => $profile->onboarding_completed_at,
