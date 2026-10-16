@@ -29,6 +29,7 @@ return [
         'confirm_delete' => 'Supprimer cette notification ?',
         'item_actions' => 'Actions de la notification',
         'open_partner_announcement' => 'Voir l’annonce partenaire',
+        'open_partner_link' => 'Ouvrir le lien du partenaire',
         'dismiss_partner_announcement' => 'Supprimer cette annonce partenaire',
         'confirm_dismiss_partner_announcement' => 'Supprimer cette annonce partenaire de tes notifications ?',
     ],

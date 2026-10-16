@@ -192,35 +192,101 @@ test('a partner previews the selected profile image before saving', function () 
         ->assertNoJavaScriptErrors();
 });
 
-test('opening a partner notification exposes an opaque click route that records engagement before redirecting', function () {
+test('a member reads a full partner announcement without following its link', function (int $width, int $height, string $locale, string $theme) {
     Queue::fake();
-    $member = User::factory()->withProfile()->create();
-    $member->partnerNotificationPreference()->create(['enabled' => true]);
+    $member = User::factory()->withProfile()->create(['locale' => $locale]);
+    $content = "<strong>Message partenaire reçu</strong>\n".str_repeat("Une idée pour ta prochaine visite entre amis.\n", 60).'Dernière ligne du message.';
     $announcement = PartnerAnnouncement::factory()->create([
         'status' => PartnerAnnouncementStatus::Sending,
         'title' => 'Découvrir les idées de notre partenaire',
-        'destination_url' => 'https://example.org/',
+        'content' => $content,
+        'destination_url' => 'https://example.org/friends',
+    ]);
+    app(PreparePartnerAnnouncementAudience::class)->handle($announcement);
+    $delivery = $announcement->deliveries()->where('user_id', $member->id)->sole();
+    app(DeliverPartnerAnnouncement::class)->handle($delivery);
+    $notification = $member->notifications()->sole();
+    $announcement->updateQuietly(['content' => 'Contenu modifié après réception']);
+    $this->actingAs($member);
+
+    $page = visit('/notifications')->resize($width, $height);
+    $page->script("localStorage.setItem('appearance', '{$theme}')");
+    $page->navigate('/notifications')
+        ->keys('[data-test="notification-'.$notification->id.'"]', 'Enter')
+        ->assertPathIs('/notifications')
+        ->assertPresent('[data-test="partner-announcement-panel"]')
+        ->assertAttribute('[data-test="partner-announcement-panel"]', 'data-panel-mode', $width < 640 ? 'drawer' : 'dialog')
+        ->assertSee('Dernière ligne du message.')
+        ->assertDontSee('Contenu modifié après réception')
+        ->assertScript('document.querySelector("[data-test=partner-announcement-content]").textContent.trim()', $content)
+        ->assertMissing('[data-test="partner-announcement-content"] strong')
+        ->assertAttribute('[data-test="partner-announcement-link"]', 'href', route('partner-announcements.click', $delivery->click_token, absolute: false))
+        ->assertScript('document.documentElement.scrollWidth <= window.innerWidth', true)
+        ->assertScript(<<<'JS'
+            (() => {
+                const panel = document.querySelector('[data-test=partner-announcement-panel]');
+                const body = document.querySelector('[data-test=partner-announcement-content]').parentElement;
+                return body.scrollHeight > body.clientHeight
+                    && body.scrollWidth <= body.clientWidth
+                    && panel.getBoundingClientRect().bottom <= window.innerHeight + 1;
+            })()
+            JS, true);
+    $page->script('async () => { await Promise.all(document.getAnimations().map(animation => animation.finished)); }');
+    $page->assertNoAccessibilityIssues()->assertNoJavaScriptErrors();
+
+    expect($notification->fresh()->read_at)->not->toBeNull()
+        ->and($delivery->fresh()->read_at)->not->toBeNull()
+        ->and($announcement->metric()->sole()->read_count)->toBe(1)
+        ->and($announcement->metric()->sole()->total_click_count)->toBe(0)
+        ->and($delivery->fresh()->first_clicked_at)->toBeNull();
+
+    $page->keys('[data-test="partner-announcement-close"]', 'Enter')
+        ->assertMissing('[data-test="partner-announcement-panel"]')
+        ->assertScript('document.activeElement.dataset.test', 'notification-'.$notification->id)
+        ->keys('[data-test="notification-'.$notification->id.'"]', 'Enter')
+        ->assertPresent('[data-test="partner-announcement-panel"]');
+    $page->keys('[data-test="partner-announcement-close"]', 'Escape')
+        ->assertMissing('[data-test="partner-announcement-panel"]');
+
+    expect($announcement->metric()->sole()->read_count)->toBe(1)
+        ->and($delivery->fresh()->click_count)->toBe(0);
+
+    // Follow the real opaque link without loading the third-party site in Chromium.
+    $this->get(route('partner-announcements.click', $delivery->click_token))
+        ->assertRedirect('https://example.org/friends');
+    expect($announcement->metric()->sole()->unique_click_count)->toBe(1)
+        ->and($announcement->metric()->sole()->total_click_count)->toBe(1);
+})->with([
+    'mobile French dark' => [320, 700, 'fr', 'dark'],
+    'desktop English light' => [1440, 900, 'en', 'light'],
+]);
+
+test('a partner announcement stays open when reading removes it from the unread filter', function () {
+    Queue::fake();
+    $member = User::factory()->withProfile()->create();
+    $announcement = PartnerAnnouncement::factory()->create([
+        'status' => PartnerAnnouncementStatus::Sending,
+        'content' => 'Le message reste consultable après sa lecture.',
+        'destination_url' => 'https://example.org/friends',
     ]);
     app(PreparePartnerAnnouncementAudience::class)->handle($announcement);
     $delivery = $announcement->deliveries()->where('user_id', $member->id)->sole();
     app(DeliverPartnerAnnouncement::class)->handle($delivery);
     $notification = $member->notifications()->sole();
     $this->actingAs($member);
-    visit('/notifications')->resize(320, 700)
-        ->assertSee(__('notifications.actions.open_partner_announcement'));
 
-    // Exercise the same internal read and opaque click routes without asking
-    // Chromium to load the third-party destination, keeping this browser test
-    // network-independent.
-    $this->patch(route('notifications.read', $notification))
-        ->assertRedirect(route('partner-announcements.click', $delivery->click_token));
-    $this->get(route('partner-announcements.click', $delivery->click_token))
-        ->assertRedirect('https://example.org/');
+    visit('/notifications?category=partners&unread=1')->resize(320, 700)
+        ->click('[data-test="notification-'.$notification->id.'"]')
+        ->assertPresent('[data-test="partner-announcement-panel"]')
+        ->assertMissing('[data-test="notification-'.$notification->id.'"]')
+        ->assertSee('Le message reste consultable après sa lecture.')
+        ->keys('[data-test="partner-announcement-close"]', 'Enter')
+        ->assertMissing('[data-test="partner-announcement-panel"]')
+        ->assertScript('document.activeElement.dataset.test', 'notification-heading')
+        ->assertNoJavaScriptErrors();
 
-    expect($delivery->fresh()->read_at)->not->toBeNull()
-        ->and($delivery->fresh()->click_count)->toBe(1)
-        ->and($announcement->metric()->sole()->unique_click_count)->toBe(1)
-        ->and($announcement->metric()->sole()->total_click_count)->toBe(1);
+    expect($announcement->metric()->sole()->read_count)->toBe(1)
+        ->and($delivery->fresh()->click_count)->toBe(0);
 });
 
 test('a member receives partner announcements by default reads dismisses and can opt out', function () {

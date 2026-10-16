@@ -4,12 +4,14 @@ namespace Tests\Unit;
 
 use App\Contracts\DiscoveryTieBreaker;
 use App\Enums\ProfileVisibility;
+use App\Enums\RoleName;
 use App\Enums\SwipeDecision;
 use App\Enums\UserStatus;
 use App\Enums\VisitFrequency;
 use App\Models\Block;
 use App\Models\Interest;
 use App\Models\Profile;
+use App\Models\Role;
 use App\Models\Swipe;
 use App\Models\User;
 use App\Services\DiscoveryService;
@@ -54,6 +56,23 @@ class DiscoveryServiceTest extends TestCase
                 ['name' => 'Hotels', 'isCommon' => false],
             ])
             ->and($results[1]->frequencyBonus)->toBeTrue();
+    }
+
+    public function test_eligible_administrators_come_before_members_regardless_of_affinity(): void
+    {
+        [$attractions, $parades] = $this->interests('Attractions', 'Parades');
+        $actor = $this->member('Actor', VisitFrequency::Often, [$attractions, $parades]);
+        $member = $this->member('Member', VisitFrequency::Often, [$attractions, $parades]);
+        $admin = $this->member('Admin', VisitFrequency::Rarely, []);
+        $closerAdmin = $this->member('Closer admin', VisitFrequency::Often, [$attractions]);
+        foreach ([$admin, $closerAdmin] as $administrator) {
+            $administrator->roles()->attach(Role::query()->where('name', RoleName::Admin)->firstOrFail());
+        }
+
+        $results = (new DiscoveryService($this->ascendingTieBreaker()))->for($actor);
+
+        expect($results->pluck('userId')->all())->toBe([$closerAdmin->id, $admin->id, $member->id])
+            ->and($results->pluck('score')->all())->toBe([1.25, 0.0, 2.25]);
     }
 
     public function test_rank_only_orders_profiles_with_identical_common_interests_and_frequency_bonus(): void

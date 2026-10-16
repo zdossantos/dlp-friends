@@ -38,9 +38,11 @@ const optimisticSuggestions = ref<DiscoveryProfile[]>([
 ]);
 const dismissedProfileIds = ref<Set<number>>(new Set());
 const displayedSuggestions = computed(() =>
-    optimisticSuggestions.value.filter(
-        (suggestion) => !dismissedProfileIds.value.has(suggestion.userId),
-    ),
+    optimisticSuggestions.value
+        .filter(
+            (suggestion) => !dismissedProfileIds.value.has(suggestion.userId),
+        )
+        .sort((left, right) => Number(right.isAdmin) - Number(left.isAdmin)),
 );
 const activeSuggestion = computed(() => displayedSuggestions.value[0]);
 

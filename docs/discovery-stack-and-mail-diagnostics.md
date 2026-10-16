@@ -9,7 +9,9 @@ Chloé, David, Emma, Farid, Hugo et recevait Hugo, Gabriel, Farid, Emma, David.
 Le client transmet désormais les identifiants des cartes restantes (cinq au
 maximum). Le serveur conserve leur ordre uniquement après application de tous
 les filtres d’éligibilité existants, puis complète avec les résultats classés.
-Ce contexte ne change ni le score ni les droits d’accès. Les cartes déjà évaluées
+Ce contexte ne change ni le score ni les droits d’accès. Depuis l’ajout de la
+priorité administrateur, cet ordre est conservé au sein de chaque groupe : les
+administrateurs éligibles passent toujours avant les autres profils. Les cartes déjà évaluées
 ne sont pas réintroduites. Les clics restent immédiatement visibles ; les
 écritures sont envoyées une par une pour éviter les réponses désordonnées.
 Une erreur restaure la carte concernée et les décisions encore non envoyées.
