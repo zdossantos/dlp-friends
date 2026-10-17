@@ -383,15 +383,5 @@ jobs:
           cache-to: type=gha,mode=max,scope=runtime-image
       - name: Smoke test runtime image
         run: bash .github/scripts/smoke-image.sh dlp-friends:ci
-      - name: Set up PHP for runtime integration tests
-        uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # v2
-        with:
-          php-version: '8.4'
-          tools: composer:v2
-          coverage: none
-      - name: Install test dependencies
-        run: composer install --no-interaction --no-progress --prefer-dist
       - name: Test real maintenance and HTTP drainage
-        env:
-          DLP_RUNTIME_TEST_IMAGE: dlp-friends:ci
-        run: php artisan test tests/Feature/Infrastructure/ReleaseRuntimeIntegrationTest.php
+        run: python3 tests/Support/operations/runtime_integration.py dlp-friends:ci
