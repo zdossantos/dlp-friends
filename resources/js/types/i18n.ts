@@ -5,6 +5,7 @@ export type TranslationTree = {
 };
 
 export type TranslationMessages = {
+    brand: TranslationTree;
     common: TranslationTree;
     account: TranslationTree;
     profile: TranslationTree;
