@@ -474,7 +474,7 @@ bash scripts/operations/production-release.sh --config /srv/dlp-operations/priva
 Le premier passage applique explicitement les migrations, en mesure la durée,
 les relance et exige zéro nouvelle migration. Il écrit un rapport
 `awaiting_journeys`, puis échoue tant que l'attestation manque. Conserver la
-copie, ouvrir **seulement la bêta protégée par IP**, démarrer ses processus et
+copie, ouvrir **seulement la bêta réservée aux administrateurs actifs**, démarrer ses processus et
 tester connexion, profil existant, découverte, message temps réel, fichier,
 e-mail capturé et file. Refermer et arrêter proprement les processus après
 les essais. Remplir `beta-journeys.json` en `0600` : `snapshot_id`,

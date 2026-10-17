@@ -86,7 +86,9 @@ compte opérateur. Ne jamais publier le contenu des fichiers ou leurs erreurs.
 
 Les fichiers MySQL utilisent une section `[client]` avec hôte, port,
 utilisateur et mot de passe. La source utilise un compte d'export en lecture
-seule. La cible a des droits uniquement sur sa base. Le fichier rclone utilise
+seule. La cible a des droits uniquement sur sa base ; les `_` du nom doivent être
+échappés dans les droits MySQL afin de désigner des caractères littéraux,
+pas des jokers. Le fichier rclone utilise
 deux remotes S3 avec clés distinctes ; la clé bêta n'a accès qu'au bucket bêta.
 Le fichier curl Garage contient `header = "Authorization: Bearer …"` ; son
 jeton est limité aux lectures `GetBucketInfo` et `GetKeyInfo`. L'API attendue
