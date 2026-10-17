@@ -56,6 +56,17 @@ it('resolves the production service topology without local-only services', funct
         ->toEqualCanonicalizing(['web', 'worker', 'scheduler', 'reverb']);
 });
 
+it('shares persistent Redis maintenance between production images', function () {
+    $result = resolveProductionCompose();
+    expect($result->successful())->toBeTrue($result->errorOutput());
+    foreach (json_decode($result->output(), true, flags: JSON_THROW_ON_ERROR)['services'] as $service) {
+        expect($service['environment'])->toMatchArray([
+            'APP_MAINTENANCE_DRIVER' => 'cache', 'APP_MAINTENANCE_STORE' => 'redis',
+            'REDIS_PREFIX' => 'dlp_friends_production_', 'CACHE_PREFIX' => 'dlp_friends_production_cache_',
+        ]);
+    }
+});
+
 it('reuses one application image for every long-running Laravel process', function () {
     $result = resolveProductionCompose();
 
