@@ -1,7 +1,8 @@
 # Environnement bêta privé
 
 État : code préparé, activation et vérifications d'infrastructure à terminer ;
-aucune ressource bêta créée ni donnée de production copiée.
+application, MySQL et Redis bêta créés dans Coolify ; aucun déploiement
+applicatif ni copie de données de production effectué.
 La cible approuvée est décrite dans la [spécification](superpowers/specs/2026-10-17-isolated-release-beta-design.md).
 
 ## Capacité avant activation
@@ -39,16 +40,16 @@ d'hébergement n'a été effectué.
 
 Consommations instantanées observées (Mio, arrondies) :
 
-| Service | RAM |
-| --- | ---: |
-| Quatre MySQL, dont celui de DLP Friends | 1 784 |
-| Coolify, hors proxy/base/Redis | 395 |
-| Jellyfin | 351 |
-| RomM et sa base | 443 |
-| Streamystats, sa base et son worker | 499 |
-| Sonarr, Radarr, Bazarr, Prowlarr | 695 |
-| DLP Friends : web, worker, scheduler, Reverb | 241 |
-| DLP Friends : MySQL / Redis | 551 / 5 |
+| Service                                      |     RAM |
+| -------------------------------------------- | ------: |
+| Quatre MySQL, dont celui de DLP Friends      |   1 784 |
+| Coolify, hors proxy/base/Redis               |     395 |
+| Jellyfin                                     |     351 |
+| RomM et sa base                              |     443 |
+| Streamystats, sa base et son worker          |     499 |
+| Sonarr, Radarr, Bazarr, Prowlarr             |     695 |
+| DLP Friends : web, worker, scheduler, Reverb |     241 |
+| DLP Friends : MySQL / Redis                  | 551 / 5 |
 
 Les deux premières mesures MySQL ne sont pas simultanées (544 puis 551 Mio
 pour DLP Friends). Les lignes regroupées se recoupent et ne doivent pas être
@@ -59,7 +60,7 @@ Même limitée, la bêta partage CPU, disque et noyau avec la production : les
 plafonds réduisent le risque sans garantir une absence totale d'impact.
 
 Restent à vérifier sur l'infrastructure : ressources et secrets dédiés,
-restriction IP HTTP/médias/WebSocket/Mailpit depuis deux origines, DNS/TLS,
+contrôle applicatif administrateur sur HTTP/médias/canaux privés, Mailpit privé, DNS/TLS,
 configuration GitHub/Coolify, désactivation des anciens déclencheurs de
 livraison et transition de maintenance de production. La première copie,
 les migrations et les parcours réels restent à exécuter après ces contrôles.
@@ -90,9 +91,19 @@ jeton est limité aux lectures `GetBucketInfo` et `GetKeyInfo`. L'API attendue
 est l'[API administrative Garage v2](https://garagehq.deuxfleurs.fr/api/garage-admin-v2.html).
 Un format inconnu échoue avant toute suppression.
 
-Installer et vérifier en premier la restriction IP Traefik couvrant HTTP,
-médias, WebSocket et Mailpit. Vérifier le refus depuis un client hors liste,
-y compris avec un `X-Forwarded-For` forgé, **avant toute donnée réelle**.
+À la demande de l'opérateur, aucune restriction par adresse IP n'est prévue.
+En `APP_ENV=beta`, Laravel exige un compte actif avec le rôle `admin` pour
+les pages, médias servis par l'application et autorisations de canaux privés.
+La connexion, la double authentification et la récupération du mot de passe
+restent accessibles ; les inscriptions sont refusées. Les rôles et le statut
+sont relus à chaque requête. Reverb les recontrôle avant chaque livraison
+privée : retirer `admin` dans la base bêta révoque aussi les abonnements déjà
+ouverts. Les contrôles métier habituels restent applicables aux administrateurs.
+Les fichiers publics de l'interface, `robots.txt` et `/up` restent accessibles.
+Le bucket reste privé, sans URL publique contournant Laravel ; Mailpit reste
+sur le réseau interne sans port ni domaine public.
+Vérifier les refus visiteur/membre/partenaire, les accès administrateur et la
+révocation sur HTTP, médias et canaux privés **avant toute donnée réelle**.
 Fermer ensuite la bêta avec sa maintenance Redis persistante, arrêter ses
 trois processus de fond et attendre leur sortie propre. Le script refuse un
 processus encore actif ou tué brutalement. Ne pas arrêter la production pour
@@ -132,7 +143,6 @@ Les comptes uniquement OAuth nécessitent une réinitialisation reçue dans
 Mailpit ou un compte de test créé dans la bêta. Les URL de profils/partenaires
 restent des liens externes : un clic peut contacter leur destination ; aucune
 intégration sortante automatique additionnelle n'a été trouvée dans le code.
-
 
 Les fichiers `source-redis.password` et `beta-redis.password` contiennent chacun
 le seul mot de passe Redis, en `0600`. Le script compare les `run_id` des

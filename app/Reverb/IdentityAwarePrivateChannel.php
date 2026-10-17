@@ -4,6 +4,7 @@ namespace App\Reverb;
 
 use App\Enums\UserStatus;
 use App\Models\User;
+use Illuminate\Support\Facades\Gate;
 use Laravel\Reverb\Contracts\Connection;
 use Laravel\Reverb\Protocols\Pusher\Channels\PrivateChannel;
 use Laravel\Reverb\Protocols\Pusher\Exceptions\ConnectionUnauthorized;
@@ -52,6 +53,18 @@ final class IdentityAwarePrivateChannel extends PrivateChannel
 
     private function active(mixed $id): bool
     {
-        return is_string($id) && ctype_digit($id) && User::query()->whereKey($id)->where('status', UserStatus::Active)->withCurrentTerms()->exists();
+        if (! is_string($id) || ! ctype_digit($id)) {
+            return false;
+        }
+
+        $query = User::query()->whereKey($id)->where('status', UserStatus::Active)->withCurrentTerms();
+
+        if (! app()->environment('beta')) {
+            return $query->exists();
+        }
+
+        $user = $query->with('roles')->first();
+
+        return $user !== null && Gate::forUser($user)->allows('accessBeta', User::class);
     }
 }

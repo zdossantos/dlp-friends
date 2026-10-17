@@ -59,7 +59,7 @@ it('does not index or track beta even if analytics variables were accidentally c
     config()->set('services.google.analytics_id', 'G-TEST123');
     config()->set('services.google.site_verification', 'private-site-verification');
 
-    $this->get('/fr')->assertOk()->assertHeader('X-Robots-Tag', 'noindex, nofollow')
+    $this->get('/login')->assertOk()->assertHeader('X-Robots-Tag', 'noindex, nofollow')
         ->assertDontSee('G-TEST123')->assertDontSee('private-site-verification');
     $this->get('/robots.txt')->assertOk()->assertSee('Disallow: /');
 });

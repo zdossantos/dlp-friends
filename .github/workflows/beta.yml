@@ -105,7 +105,8 @@ jobs:
             VITE_REVERB_PORT=443
             VITE_REVERB_SCHEME=https
           cache-from: type=gha,scope=beta-runtime-image
-          cache-to: type=gha,mode=max,scope=beta-runtime-image
+          # Cache export may be read-only for this workflow event; publishing and smoke tests remain required.
+          cache-to: type=gha,mode=max,scope=beta-runtime-image,ignore-error=true
       - name: Smoke test the published digest using trusted script
         id: reference
         env:

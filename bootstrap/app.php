@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\EnsureBetaAccess;
 use App\Http\Middleware\EnsureCurrentTermsAccepted;
 use App\Http\Middleware\EnsureDeploymentReady;
 use App\Http\Middleware\EnsurePrivateAccountAccess;
@@ -45,6 +46,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->web(append: [
             HandleAppearance::class,
             SetLocale::class,
+            EnsureBetaAccess::class,
             EnsurePrivateAccountAccess::class,
             HandleInertiaRequests::class,
             AddLinkHeadersForPreloadedAssets::class,

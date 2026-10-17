@@ -2,7 +2,9 @@
 
 use App\Actions\RevokeMemberRealtimeAccess;
 use App\Broadcasting\IdentityAwareReverbBroadcaster;
+use App\Enums\RoleName;
 use App\Models\MemberMatch;
+use App\Models\Role;
 use App\Models\User;
 use App\Reverb\IdentityAwareChannelManager;
 use App\Reverb\IdentityAwarePrivateChannel;
@@ -19,9 +21,12 @@ use Laravel\Reverb\Protocols\Pusher\PusherPubSubIncomingMessageHandler;
 
 uses(RefreshDatabase::class);
 
-it('attaches signed identity and denies delivery and replay after a ban or outdated terms', function (bool $except, bool $outdatedTerms) {
+it('attaches signed identity and denies delivery and replay after a ban outdated terms or beta role revocation', function (bool $except, bool $outdatedTerms, bool $betaRoleRevoked) {
     $this->app->bind(ChannelConnectionManager::class, ArrayChannelConnectionManager::class);
-    $user = User::factory()->create();
+    if ($betaRoleRevoked) {
+        app()->instance('env', 'beta');
+    }
+    $user = $betaRoleRevoked ? User::factory()->admin()->create() : User::factory()->create();
     $app = new Application('test', 'key', 'secret', 60, 30, ['*'], 10000);
     $socket = new class($app) extends Connection
     {
@@ -62,7 +67,9 @@ it('attaches signed identity and denies delivery and replay after a ban or outda
     $channel->subscribe($socket, $auth, $data);
     $channel->broadcast(['event' => 'message', 'data' => 'before']);
     expect($socket->received)->toHaveCount(1);
-    if ($outdatedTerms) {
+    if ($betaRoleRevoked) {
+        $user->roles()->detach(Role::query()->where('name', RoleName::Admin)->firstOrFail());
+    } elseif ($outdatedTerms) {
         $user->termsAcceptances()->delete();
     } else {
         $user->forceFill(['status' => 'banned'])->save();
@@ -70,7 +77,7 @@ it('attaches signed identity and denies delivery and replay after a ban or outda
     $channel->broadcast(['event' => 'message', 'data' => 'after'], $except ? $socket : null);
     expect($socket->received)->toHaveCount(1)->and($socket->closed)->toBeTrue();
     expect(fn () => $channel->subscribe($socket, $auth, $data))->toThrow(ConnectionUnauthorized::class);
-})->with([[false, false], [true, false], [false, true], [true, true]]);
+})->with([[false, false, false], [true, false, false], [false, true, false], [true, true, false], [false, false, true], [true, false, true]]);
 
 it('requires identity and an intact signature on private subscriptions', function (string $variant) {
     $this->app->bind(ChannelConnectionManager::class, ArrayChannelConnectionManager::class);
