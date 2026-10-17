@@ -82,7 +82,7 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
 class User extends Authenticatable implements HasLocalePreference, MustVerifyEmail, PasskeyUser
 {
     /** @var array<string, mixed> */
-    protected $attributes = ['admin_new_member_alerts' => true, 'weekly_recap_messages' => true, 'weekly_recap_matches' => true];
+    protected $attributes = ['admin_new_member_alerts' => true, 'weekly_recap_messages' => false, 'weekly_recap_matches' => false];
 
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable, PasskeyAuthenticatable, TwoFactorAuthenticatable;

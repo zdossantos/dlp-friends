@@ -24,7 +24,7 @@ uses(RefreshDatabase::class);
 beforeEach(function () {
     $this->travelTo(CarbonImmutable::parse('2026-10-11 15:00', 'Europe/Paris'));
     $this->periodEnd = CarbonImmutable::now()->utc();
-    $this->member = User::factory()->withProfile()->create(['locale' => 'fr']);
+    $this->member = User::factory()->withProfile()->create(['locale' => 'fr', 'weekly_recap_messages' => true, 'weekly_recap_matches' => true]);
     $this->other = User::factory()->withProfile()->create();
     $match = MemberMatch::query()->create([
         'user_low_id' => $this->member->id,
@@ -297,4 +297,27 @@ test('purging a pending account also deletes reserved weekly deliveries', functi
     $this->member->forceFill(['status' => UserStatus::PendingDeletion, 'deletion_requested_at' => now()->subDays(31)])->save();
     (new PurgeDeletedUser($this->member->id, $this->member->deletion_requested_at->toISOString()))->handle();
     expect($delivery->fresh())->toBeNull()->and($this->member->fresh())->toBeNull();
+});
+
+test('a member without email opt in receives no recap despite old unread messages', function () {
+    $this->member->delete();
+    $member = User::factory()->withProfile()->create();
+    $match = MemberMatch::query()->create([
+        'user_low_id' => $this->other->id,
+        'user_high_id' => $member->id,
+    ]);
+    $conversation = $match->conversation()->create();
+    Message::factory()->create([
+        'conversation_id' => $conversation->id,
+        'author_user_id' => $this->other->id,
+        'created_at' => $this->periodEnd->subDays(4),
+    ]);
+    Mail::fake();
+    Queue::fake();
+
+    $this->artisan('notifications:dispatch-weekly-recaps')->assertSuccessful();
+
+    expect(WeeklyEmailRecapDelivery::query()->count())->toBe(0);
+    Queue::assertNothingPushed();
+    Mail::assertNothingSent();
 });
