@@ -85,11 +85,13 @@ ne pas déployer implicitement `main` ou une PR de fonctionnalité.
 - Ne copier ni sessions, ni jetons de réinitialisation, ni clés/API externes,
   ni tâches de file de production. Les paramètres externes copiés sont examinés
   et neutralisés avant l'ouverture, notamment les URL et actions sortantes.
-- Restreindre l'accès bêta aux testeurs autorisés avant l'import de données
-  privées. L'accès est protégé en amont de l'application, y compris médias,
-  WebSocket et Mailpit ; vérifier ce contrôle avec un client non autorisé.
-  Le compte opérateur actuel est le testeur initial. Les authentifications
-  natives restent testables derrière cette protection.
+- Décision opérateur mise à jour : aucune restriction IP. En `APP_ENV=beta`,
+  un contrôle Laravel réserve pages, médias et autorisations de canaux privés
+  aux comptes actifs ayant le rôle `admin`. Connexion et double authentification
+  restent accessibles ; les inscriptions sont refusées. Le retrait du rôle
+  révoque les requêtes suivantes et la livraison sur les WebSocket déjà ouverts.
+  Bucket privé et Mailpit interne uniquement, sans exposition publique directe.
+  Vérifier ce contrôle avant l'import de données privées.
 - Désactiver GA4, la vérification Search Console et l'indexation de toutes les
   pages bêta. `noindex` complète le contrôle d'accès ; il ne le remplace pas.
 
