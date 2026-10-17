@@ -24,3 +24,24 @@ test('the migration enables weekly email for existing accounts', function () {
         }
     }
 });
+
+test('weekly recap opt in migration disables existing preferences and database defaults', function () {
+    $migration = require database_path('migrations/2026_10_17_100000_disable_weekly_email_recaps_by_default.php');
+    $migration->down();
+    $member = User::factory()->create(['weekly_recap_messages' => true, 'weekly_recap_matches' => true]);
+    $disabled = User::factory()->create(['weekly_recap_messages' => false, 'weekly_recap_matches' => false]);
+
+    $migration->up();
+
+    expect($member->fresh()->weekly_recap_messages)->toBeFalse()
+        ->and($member->fresh()->weekly_recap_matches)->toBeFalse()
+        ->and($disabled->fresh()->weekly_recap_messages)->toBeFalse()
+        ->and($disabled->fresh()->weekly_recap_matches)->toBeFalse();
+
+    $attributes = User::factory()->make()->getAttributes();
+    unset($attributes['weekly_recap_messages'], $attributes['weekly_recap_matches']);
+    $id = DB::table('users')->insertGetId($attributes);
+
+    expect(User::query()->findOrFail($id)->weekly_recap_messages)->toBeFalse()
+        ->and(User::query()->findOrFail($id)->weekly_recap_matches)->toBeFalse();
+});

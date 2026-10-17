@@ -46,7 +46,8 @@ et son état de livraison sont définis dans le [`PRD.md`](PRD.md).
   `admin_new_member_alerts` est un booléen individuel activé par défaut,
   indépendant des préférences Web Push et réservé aux administrateurs.
 - `users.weekly_recap_messages` et `weekly_recap_matches` sont des booléens à
-  `true` par défaut, y compris après migration des comptes existants. Le premier
+  `false` par défaut. La migration de désactivation remet également les deux
+  préférences des comptes existants à `false`. Le premier
   contrôle l’envoi ; le second le compteur facultatif d’univers croisés.
 - `weekly_email_recap_deliveries` conserve `user_id`, `period_ends_at`, `sent_at`,
   `skipped_at` et les horodatages. La paire `(user_id, period_ends_at)` est unique.

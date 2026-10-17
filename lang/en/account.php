@@ -121,7 +121,7 @@ return [
             'email_title' => 'Weekly email recap',
             'email_help' => 'Sunday at 3 pm, Paris time, if you have received unread messages older than three days. No names or private content in the email.',
             'weekly_recap_messages' => 'Receive the weekly email recap',
-            'weekly_recap_messages_help' => 'Enabled by default. You can turn this email off at any time.',
+            'weekly_recap_messages_help' => 'Disabled by default. Turn this setting on if you want to receive this email.',
             'weekly_recap_matches' => 'Include new friendly connections',
             'weekly_recap_matches_help' => 'Adds the weekly count to the recap. Connections alone never trigger an email.',
             'new_member_alerts' => 'New member arrivals',
