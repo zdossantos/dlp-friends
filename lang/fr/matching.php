@@ -27,10 +27,11 @@ return [
             'id' => 'classement',
             'title' => '2. Comment les profils sont-ils classés ?',
             'paragraphs' => [
-                'Les profils éligibles sont ordonnés selon trois règles appliquées dans cet ordre.',
+                'Les profils éligibles sont ordonnés selon quatre règles appliquées dans cet ordre.',
             ],
             'items' => [
-                'Le nombre d’univers favoris actifs en commun passe en premier.',
+                'Les administrateurs éligibles apparaissent toujours en premier, même devant les autres cartes déjà chargées.',
+                'Dans chaque groupe, le nombre d’univers favoris actifs en commun est ensuite prioritaire.',
                 'À nombre égal, un bonus de 0,25 s’applique lorsque vous avez renseigné la même fréquence de visite.',
                 'Si ces deux critères sont encore identiques, un départage aléatoire détermine l’ordre.',
             ],

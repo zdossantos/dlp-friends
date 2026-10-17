@@ -177,8 +177,11 @@ métrique atomiquement, puis diffuse via Reverb après commit. La finalisation
 attend la fin de préparation et des livraisons non terminales ; les reprises
 conservent les lignes déjà livrées ou ignorées et réessaient les broadcasts manqués.
 
-Le centre de notifications résout l’annonce reçue côté serveur : lecture,
-retrait avec confirmation, puis redirection par jeton opaque pour l’ouverture.
+Le centre de notifications présente l’annonce reçue dans le panneau adaptatif
+`useResponsiveModal`. Son ouverture appelle la route authentifiée de lecture
+sans redirection ; le contenu reste consultable même après sa disparition du
+filtre des non-lues. Seul le lien explicite du panneau utilise la redirection
+par jeton opaque et enregistre un clic. Le retrait conserve sa confirmation.
 Les compteurs d’engagement sont atomiques ; `PartnerAnnouncementStatisticsData`
 ne transmet que les agrégats, avec compteurs opérationnels supplémentaires
 pour l’administration. Les taux sont rapportés aux livraisons effectives.

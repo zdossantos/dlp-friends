@@ -28,6 +28,7 @@ class DiscoveryController extends Controller
                         ->filter()
                         ->concat($profiles)
                         ->unique('userId')
+                        ->sortByDesc('isAdmin')
                         ->take(5)
                         ->map(fn (DiscoveryProfileData $profile): array => $profile->toArray())
                         ->values()

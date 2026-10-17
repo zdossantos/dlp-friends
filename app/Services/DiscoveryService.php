@@ -108,6 +108,7 @@ final readonly class DiscoveryService
                 );
             })
             ->sortBy([
+                ['isAdmin', 'desc'],
                 ['commonInterestCount', 'desc'],
                 ['frequencyBonus', 'desc'],
                 fn (DiscoveryProfileData $left, DiscoveryProfileData $right): int => $tieRanks[$left->profileId] <=> $tieRanks[$right->profileId],
