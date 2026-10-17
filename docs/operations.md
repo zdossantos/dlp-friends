@@ -300,8 +300,13 @@ et l’envoi de vérification. Ce mécanisme ne garantit pas la remise des messa
 
 Appliquer explicitement les migrations avant d’activer le worker et le scheduler
 sur cette version (`php artisan migrate --force` dans le conteneur web).
-Les migrations activent les deux réglages pour les comptes existants ; les
-membres peuvent les modifier dans Réglages → Notifications.
+La migration `2026_10_17_100000` désactive les deux réglages pour tous les comptes
+existants et les nouvelles inscriptions. Les membres peuvent les réactiver
+volontairement dans Réglages → Notifications. Les rappels déjà en file sont
+ignorés après désactivation, grâce au contrôle des préférences avant envoi.
+Un rollback rétablit les valeurs par défaut du schéma sans réabonner les comptes.
+Les e-mails de vérification, de récupération du mot de passe et de suppression
+de compte restent actifs.
 
 Le scheduler exécute `notifications:dispatch-weekly-recaps` chaque dimanche à
 15 h dans `Europe/Paris`, avec verrou de chevauchement et verrou multi-serveurs.
@@ -327,8 +332,8 @@ L’unicité applicative ne résout pas l’ambiguïté d’un transport ayant a
 l’e-mail puis coupé la connexion avant son accusé de réception.
 
 Pour vérifier en local, utiliser uniquement des comptes de test et Mailpit :
-créer un échange reçu non lu de plus de trois jours, lancer la commande puis le
-worker. Inspecter le rendu FR/EN, les seuls compteurs et les liens vers `/app` et
+activer le rappel, créer un échange reçu non lu de plus de trois jours, lancer
+la commande puis le worker. Inspecter le rendu FR/EN, les seuls compteurs et les liens vers `/app` et
 `/settings/notifications`. Lire le message ou désactiver le rappel avant la
 consommation du job doit supprimer l’envoi. Contrôler les traces minimales dans
 `weekly_email_recap_deliveries` ; elles sont exportées et supprimées à la purge.

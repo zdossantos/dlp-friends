@@ -46,7 +46,8 @@ et son état de livraison sont définis dans le [`PRD.md`](PRD.md).
   `admin_new_member_alerts` est un booléen individuel activé par défaut,
   indépendant des préférences Web Push et réservé aux administrateurs.
 - `users.weekly_recap_messages` et `weekly_recap_matches` sont des booléens à
-  `true` par défaut, y compris après migration des comptes existants. Le premier
+  `false` par défaut. La migration de désactivation remet également les deux
+  préférences des comptes existants à `false`. Le premier
   contrôle l’envoi ; le second le compteur facultatif d’univers croisés.
 - `weekly_email_recap_deliveries` conserve `user_id`, `period_ends_at`, `sent_at`,
   `skipped_at` et les horodatages. La paire `(user_id, period_ends_at)` est unique.
@@ -144,10 +145,15 @@ score = nombre d’intérêts communs
       + 0,25 si fréquence de visite identique
 ```
 
-Les résultats sont triés par score décroissant. Le bonus de fréquence ne peut donc jamais faire passer un profil avec moins d’intérêts communs devant un autre. À score égal, appliquer un tirage aléatoire contrôlé pour éviter de toujours favoriser les mêmes comptes. Les intérêts archivés sont exclus de ce score. Ce score ne crée jamais un match : il détermine seulement l'ordre des profils présentés.
+Les administrateurs éligibles sont présentés avant les autres membres, quel
+que soit leur score. Dans chacun de ces deux groupes, les résultats sont triés
+par score décroissant. Au sein d’un groupe, le bonus de fréquence ne peut donc
+jamais faire passer un profil avec moins d’intérêts communs devant un autre. À score égal, appliquer un tirage aléatoire contrôlé pour éviter de toujours favoriser les mêmes comptes. Les intérêts archivés sont exclus de ce score. Ce score ne crée jamais un match : il détermine seulement l'ordre des profils présentés.
 
 Dans la pile Découverte, l’ordre des profils déjà chargés est conservé après
-une décision tant qu’ils restent éligibles. Le serveur complète les places
+une décision tant qu’ils restent éligibles, au sein de chaque groupe
+administrateurs / autres membres. Les administrateurs éligibles passent toujours
+devant les autres cartes, même déjà chargées. Le serveur complète les places
 libérées selon ce classement ; le client peut transmettre au maximum cinq
 identifiants pour conserver les aperçus, sans contourner les filtres. Les
 écritures de clics rapides sont séquentielles ; une erreur restaure aussi les

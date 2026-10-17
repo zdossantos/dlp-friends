@@ -20,30 +20,26 @@ class PartnerAnnouncementEngagementTest extends TestCase
 {
     use DatabaseMigrations;
 
-    public function test_reading_a_partner_notification_counts_once_and_uses_the_opaque_click_route(): void
+    public function test_reading_a_partner_notification_counts_once_without_following_its_link(): void
     {
         [$member, $announcement, $notification, $delivery] = $this->deliveredNotification();
 
         $this->actingAs($member)
-            ->withHeader('X-Inertia', 'true')
-            ->patch(route('notifications.read', $notification))
-            ->assertStatus(409)
-            ->assertHeader(
-                'X-Inertia-Location',
-                route('partner-announcements.click', $delivery->click_token, absolute: false),
-            );
+            ->from(route('notifications.index', ['category' => 'partners', 'unread' => 1]))
+            ->patch(route('notifications.mark-read', $notification))
+            ->assertRedirect(route('notifications.index', ['category' => 'partners', 'unread' => 1]));
         $this->actingAs($member)
-            ->withHeader('X-Inertia', 'true')
-            ->patch(route('notifications.read', $notification))
-            ->assertStatus(409)
-            ->assertHeader(
-                'X-Inertia-Location',
-                route('partner-announcements.click', $delivery->click_token, absolute: false),
-            );
+            ->from(route('notifications.index'))
+            ->patch(route('notifications.mark-read', $notification))
+            ->assertRedirect(route('notifications.index'));
 
         expect($notification->fresh()?->read_at)->not->toBeNull()
             ->and($delivery->fresh()?->read_at)->not->toBeNull()
-            ->and($announcement->metric?->fresh()?->read_count)->toBe(1);
+            ->and($announcement->metric?->fresh()?->read_count)->toBe(1)
+            ->and($delivery->fresh()?->click_count)->toBe(0)
+            ->and($delivery->fresh()?->first_clicked_at)->toBeNull()
+            ->and($announcement->metric?->fresh()?->unique_click_count)->toBe(0)
+            ->and($announcement->metric?->fresh()?->total_click_count)->toBe(0);
     }
 
     public function test_mark_all_read_counts_each_unread_partner_delivery_once(): void

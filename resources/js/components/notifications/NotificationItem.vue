@@ -25,7 +25,10 @@ const props = withDefaults(
     defineProps<{ notification: MemberNotification; open?: boolean }>(),
     { open: false },
 );
-const emit = defineEmits<{ requestOpen: [open: boolean] }>();
+const emit = defineEmits<{
+    requestOpen: [open: boolean];
+    openAnnouncement: [notification: MemberNotification];
+}>();
 const openProcessing = ref(false);
 const readProcessing = ref(false);
 const deleteProcessing = ref(false);
@@ -51,6 +54,20 @@ const foregroundStyle = computed(() => ({
 }));
 
 function openNotification(): void {
+    if (
+        props.notification.content !== undefined &&
+        props.notification.dismiss_url
+    ) {
+        emit('requestOpen', false);
+        emit('openAnnouncement', props.notification);
+
+        if (props.notification.read_at === null && !readProcessing.value) {
+            markRead();
+        }
+
+        return;
+    }
+
     router.patch(
         read(props.notification.id).url,
         {},

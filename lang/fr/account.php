@@ -156,7 +156,7 @@ return [
             'email_title' => 'Récapitulatif hebdomadaire par e-mail',
             'email_help' => 'Le dimanche à 15 h, heure de Paris, si tu as des messages reçus non lus depuis plus de trois jours. Aucun nom ni contenu privé dans l’e-mail.',
             'weekly_recap_messages' => 'Recevoir le récapitulatif hebdomadaire',
-            'weekly_recap_messages_help' => 'Activé par défaut. Tu peux désactiver cet e-mail à tout moment.',
+            'weekly_recap_messages_help' => 'Désactivé par défaut. Active ce réglage si tu souhaites recevoir cet e-mail.',
             'weekly_recap_matches' => 'Inclure les nouvelles mises en relation amicales',
             'weekly_recap_matches_help' => 'Ajoute leur nombre sur la semaine au récapitulatif. Aucun e-mail n’est envoyé pour les seules mises en relation.',
             'new_member_alerts' => 'Arrivée de nouveaux membres',

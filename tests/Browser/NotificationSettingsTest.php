@@ -52,21 +52,21 @@ test('an admin can disable new member alerts by keyboard independently of admini
     ['en', 'New member arrivals'],
 ]);
 
-test('weekly email preferences can be disabled independently and persist after reload', function (string $locale, string $label) {
+test('weekly email preferences start disabled and can be enabled independently', function (string $locale, string $label) {
     $member = User::factory()->withProfile()->create(['locale' => $locale]);
     $this->actingAs($member);
     $page = visit('/settings/notifications')->on()->mobile();
     $page->assertSee($label)
-        ->assertAttribute('[data-test="email-weekly_recap_messages-switch"]', 'aria-checked', 'true')
-        ->assertAttribute('[data-test="email-weekly_recap_matches-switch"]', 'aria-checked', 'true')
+        ->assertAttribute('[data-test="email-weekly_recap_messages-switch"]', 'aria-checked', 'false')
+        ->assertAttribute('[data-test="email-weekly_recap_matches-switch"]', 'aria-checked', 'false')
         ->keys('[data-test="email-weekly_recap_messages-switch"]', 'Space')
         ->press('[data-test="save-notification-preferences"]')
         ->assertSee(__('account.settings.notifications.saved', [], $locale));
-    expect($member->fresh()->weekly_recap_messages)->toBeFalse()
-        ->and($member->fresh()->weekly_recap_matches)->toBeTrue();
+    expect($member->fresh()->weekly_recap_messages)->toBeTrue()
+        ->and($member->fresh()->weekly_recap_matches)->toBeFalse();
     $page->refresh()
-        ->assertAttribute('[data-test="email-weekly_recap_messages-switch"]', 'aria-checked', 'false')
-        ->assertAttribute('[data-test="email-weekly_recap_matches-switch"]', 'aria-checked', 'true')
+        ->assertAttribute('[data-test="email-weekly_recap_messages-switch"]', 'aria-checked', 'true')
+        ->assertAttribute('[data-test="email-weekly_recap_matches-switch"]', 'aria-checked', 'false')
         ->assertAttribute('[data-test="notification-messages-switch"]', 'aria-checked', 'true')
         ->assertScript('document.documentElement.scrollWidth <= window.innerWidth', true)
         ->assertNoJavaScriptErrors();
@@ -76,7 +76,7 @@ test('weekly email preferences can be disabled independently and persist after r
 ]);
 
 test('disable all turns off both weekly email preferences', function () {
-    $member = User::factory()->withProfile()->create();
+    $member = User::factory()->withProfile()->create(['weekly_recap_messages' => true, 'weekly_recap_matches' => true]);
     $this->actingAs($member);
     $page = visit('/settings/notifications');
     $page->script('window.confirm = () => true');

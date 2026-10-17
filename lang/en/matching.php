@@ -24,9 +24,10 @@ return [
         [
             'id' => 'ranking',
             'title' => '2. How are profiles ranked?',
-            'paragraphs' => ['Eligible profiles are ordered using three rules, applied in this order.'],
+            'paragraphs' => ['Eligible profiles are ordered using four rules, applied in this order.'],
             'items' => [
-                'The number of shared active favorite worlds comes first.',
+                'Eligible administrators always appear first, even before other cards that are already loaded.',
+                'Within each group, the number of shared active favorite worlds takes priority next.',
                 'When that number is tied, a 0.25 bonus applies if you both entered the same visit frequency.',
                 'If both criteria are still identical, a random tie-break determines the order.',
             ],
