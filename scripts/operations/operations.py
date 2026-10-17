@@ -77,7 +77,7 @@ class Operations:
     def mysql(self, side, sql, *, input=None):
         target = self.config[side]
         arguments = ["mysql", "--defaults-extra-file=" + target["mysql_client"],
-                     "--batch", "--skip-column-names", "--raw", target["database"]]
+                     "--default-character-set=utf8mb4", "--batch", "--skip-column-names", "--raw", target["database"]]
         return run(arguments + (["--execute", sql] if input is None else []), input=input)
 
     def inspect(self, container):

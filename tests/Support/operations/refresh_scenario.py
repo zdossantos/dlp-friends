@@ -23,6 +23,21 @@ if scenario == "private-error":
         assert "private-response" not in str(error)
     sys.exit(0)
 
+if scenario == "utf8-schema":
+    operation = object.__new__(ops.Operations)
+    operation.config = {"source": {"mysql_client": "/unused", "database": "source"}}
+    def mysql_result(arguments, **kwargs):
+        sql = arguments[-1]
+        if sql == "SHOW TABLES;":
+            content = b"users\n"
+        else:
+            encoding = "utf-8" if "--default-character-set=utf8mb4" in arguments else "latin-1"
+            content = "users\tCREATE TABLE `users` (`label` varchar(40) COMMENT 'amitié')\n".encode(encoding)
+        return SimpleNamespace(returncode=0, stdout=content, stderr=b"")
+    ops.subprocess.run = mysql_result
+    assert operation.schema_fingerprint("source") == ops.digest("CREATE TABLE `users` (`label` varchar(40) COMMENT 'amitié')")
+    sys.exit(0)
+
 if scenario == "schema-fingerprint":
     a = "CREATE TABLE `users` (\n `id` bigint NOT NULL AUTO_INCREMENT,\n PRIMARY KEY (`id`)\n) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=utf8mb4"
     b = a.replace("AUTO_INCREMENT=12", "AUTO_INCREMENT=400")
@@ -64,8 +79,8 @@ with tempfile.TemporaryDirectory() as temporary:
         global imported, copied
         calls.append(arguments)
         if arguments[0] == "mysql":
-            side = "beta" if arguments[5] == "beta_db" else arguments[5]
-            sql = arguments[7] if input is None else "IMPORT"
+            side = "beta" if arguments[6] == "beta_db" else arguments[6]
+            sql = arguments[8] if input is None else "IMPORT"
             if "server_uuid" in sql:
                 return ("source\tsource" if scenario == "mysql-alias" or side == "source" else "beta\tbeta") + "\n"
             if sql == "SHOW GRANTS;":
