@@ -45,9 +45,18 @@ def digest(value):
 
 
 def normalize_schema(definitions):
-    # Only a table's allocation counter is volatile; retain column AUTO_INCREMENT.
-    return "\n".join(re.sub(r"(\) ENGINE=[^\n]*?) AUTO_INCREMENT=\d+", r"\1", definition)
-                     for definition in sorted(definitions))
+    normalized = []
+    for definition in definitions:
+        # Only a table's allocation counter is volatile; retain column AUTO_INCREMENT.
+        definition = re.sub(r"(\) ENGINE=[^\n]*?) AUTO_INCREMENT=\d+", r"\1", definition)
+        # COLLATE already determines its charset. Server versions can spell out
+        # this redundant attribute differently. Never rewrite SQL string literals
+        # or identifiers, nor discard a distinct charset or collation.
+        parts = re.split(r"('(?:\\.|''|[^'\\])*'|`(?:``|[^`])*`)", definition)
+        for index in range(0, len(parts), 2):
+            parts[index] = re.sub(r" CHARACTER SET ([A-Za-z0-9]+) (?=COLLATE \1_[A-Za-z0-9_]+\b)", " ", parts[index])
+        normalized.append("".join(parts))
+    return "\n".join(sorted(normalized))
 
 
 def write_json(path, value):

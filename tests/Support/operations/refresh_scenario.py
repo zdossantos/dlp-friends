@@ -44,6 +44,12 @@ if scenario == "schema-fingerprint":
     assert ops.normalize_schema([a]) == ops.normalize_schema([b])
     assert ops.normalize_schema([a]) == a.replace(" AUTO_INCREMENT=12", "")
     assert ops.normalize_schema([a]) != ops.normalize_schema([a.replace("`id` bigint", "`id` int")])
+    implicit = "CREATE TABLE `users` (\n `name` varchar(255) COLLATE utf8mb4_unicode_ci COMMENT 'CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci'\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci"
+    explicit = implicit.replace("varchar(255) COLLATE", "varchar(255) CHARACTER SET utf8mb4 COLLATE")
+    assert ops.normalize_schema([implicit]) == ops.normalize_schema([explicit])
+    assert "COMMENT 'CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci'" in ops.normalize_schema([explicit])
+    assert ops.normalize_schema([explicit]) != ops.normalize_schema([explicit.replace("utf8mb4_unicode_ci", "utf8mb4_bin", 1)])
+    assert ops.normalize_schema([explicit]) != ops.normalize_schema([explicit.replace("CHARACTER SET utf8mb4 COLLATE", "CHARACTER SET latin1 COLLATE", 1)])
     sys.exit(0)
 
 with tempfile.TemporaryDirectory() as temporary:
