@@ -108,6 +108,8 @@ class Operations:
 
     def reset_beta_runtime(self):
         identity = self.redis_identity("beta")
+        lua = ('if redis.call("EXISTS",ARGV[1]) ~= 1 then return 0 end; '
+               'for _,key in ipairs(redis.call("KEYS","*")) do if key ~= ARGV[1] then redis.call("DEL",key) end end; return 1')
         # Only the dedicated beta server may be cleared. Retain maintenance atomically.
         php = ('require "vendor/autoload.php"; $app=require "bootstrap/app.php"; '
                '$app->make(Illuminate\\Contracts\\Console\\Kernel::class)->bootstrap(); '
@@ -120,8 +122,7 @@ class Operations:
                '$default->info("server")["run_id"]!==' + json.dumps(identity) + ' || '
                '$cache->info("server")["run_id"]!==' + json.dumps(identity) + ') exit(78); '
                '$key=$cache->client()->getOption(Redis::OPT_PREFIX).config("cache.prefix")."illuminate:foundation:down"; '
-               '$lua="if redis.call(\"EXISTS\",ARGV[1]) ~= 1 then return 0 end; '
-               'for _,key in ipairs(redis.call(\"KEYS\",\"*\")) do if key ~= ARGV[1] then redis.call(\"DEL\",key) end end; return 1"; '
+               '$lua=' + json.dumps(lua) + '; '
                'if ($cache->eval($lua,0,$key)!==1) exit(78); $default->flushdb(); '
                'if (!app()->isDownForMaintenance()) exit(78);')
         run(["docker", "exec", self.config["beta"]["web_container"], "php", "-r", php])
