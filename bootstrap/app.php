@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\EnsureCurrentTermsAccepted;
+use App\Http\Middleware\EnsureDeploymentReady;
 use App\Http\Middleware\EnsurePrivateAccountAccess;
 use App\Http\Middleware\EnsureProductOnboardingIsComplete;
 use App\Http\Middleware\EnsureProfileIsComplete;
@@ -29,6 +30,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withBroadcasting(__DIR__.'/../routes/channels.php', ['middleware' => ['web', 'social', 'terms.current']])
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->trustProxies(at: '*');
+        $middleware->prepend(EnsureDeploymentReady::class);
 
         $middleware->alias([
             'profile.complete' => EnsureProfileIsComplete::class,

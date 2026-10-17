@@ -52,7 +52,7 @@ Les nouveaux noms de fichiers sont des décisions de ce plan. Vérifier les fich
 
 Les scripts serveur consomment `--config /chemin/prive/config.json`, fichier opérateur `0600` hors dépôt. Il contient les UUID application/MySQL/Redis source et cible, noms des bases/buckets, chemins de fichiers clients MySQL/rclone, répertoire privé des rapports et référence au jeton Coolify. Aucun secret n'est un argument CLI, une sortie JSON ou une variable GitHub publique. `lib.sh` expose `validate_targets CONFIG`, `schema_fingerprint CONFIG source|beta`, `migration_fingerprint IMAGE`, `request_coolify METHOD PATH BODY_FILE` ; les fonctions renvoient leur résultat public sur stdout, échouent avec un code non nul sans corps API privé. L'empreinte de schéma trie les définitions et normalise noms de base et compteurs `AUTO_INCREMENT`, sans masquer colonnes/index/contraintes ; une simple insertion ne l'invalide pas. L'empreinte des migrations SHA-256 couvre chemins triés et octets de tous les fichiers de migration présents dans l'image.
 
-## Tâche 1 : fermer les parcours quand le schéma ou la configuration sont dangereux
+## Task 1 : fermer les parcours quand le schéma ou la configuration sont dangereux
 
 **Fichiers :** créer les quatre fichiers `DeploymentReadiness`/`CheckDeployment`/`EnsureDeploymentReady`/`config/deployment.php` de la carte et `tests/Feature/DeploymentReadinessTest.php`, `tests/Feature/BetaEnvironmentTest.php` ; modifier `bootstrap/app.php`, `app/Providers/AppServiceProvider.php`, `app/Http/Middleware/PreventSearchIndexing.php`, `config/services.php`, `routes/web.php`, les composants Blade `analytics-consent` et `google-tags`.
 
@@ -65,7 +65,7 @@ Les scripts serveur consomment `--config /chemin/prive/config.json`, fichier op�
 - [ ] Rejouer les deux fichiers de test ; attendu PASS. Vérifier aussi les tests existants d'authentification et d'indexation touchés, puis `composer lint:check` et `composer analyse`.
 - [ ] Commiter seulement ces fichiers : `feat: protéger les environnements déployés et vérifier leur schéma`.
 
-## Tâche 2 : identité bêta du logo, du navigateur et de la PWA
+## Task 2 : identité bêta du logo, du navigateur et de la PWA
 
 **Fichiers :** fichiers de marque de la carte, `vite.config.ts`, `docker/nginx/default.conf`, `tests/Feature/BrandAssetsTest.php`, `tests/Feature/PwaManifestTest.php`, `tests/Feature/Infrastructure/PwaProductionTest.php`, nouveau `tests/Browser/BetaBrandingTest.php`.
 
@@ -77,7 +77,7 @@ Les scripts serveur consomment `--config /chemin/prive/config.json`, fichier op�
 - [ ] Rejouer les tests ciblés et `php artisan test tests/Feature/Infrastructure/PwaProductionTest.php tests/Browser/AppearanceTest.php` ; attendu PASS. Inspecter visuellement les icônes à 16/32/180/192/512 px et les captures synthétiques.
 - [ ] Commiter : `feat: identifier la bêta dans les logos et la PWA`.
 
-## Tâche 3 : décrire les ressources bêta séparées et le démarrage fermé
+## Task 3 : décrire les ressources bêta séparées et le démarrage fermé
 
 **Fichiers :** `compose.beta.yaml`, `.env.beta.example`, `compose.production.yaml`, `docker/php/entrypoint.sh`, `tests/Feature/Infrastructure/BetaDeploymentTest.php`, `tests/Feature/Infrastructure/ProductionDeploymentTest.php`.
 
@@ -90,7 +90,7 @@ Les scripts serveur consomment `--config /chemin/prive/config.json`, fichier op�
 - [ ] Rejouer les tests ciblés ; attendu PASS. Exécuter `docker build --target runtime --tag dlp-friends:ci .` et `bash .github/scripts/smoke-image.sh dlp-friends:ci` ; attendu image saine sans base et assets présents.
 - [ ] Commiter : `feat: ajouter le déploiement bêta isolé`.
 
-## Tâche 4 : copier la production sans recopier ses effets de bord
+## Task 4 : copier la production sans recopier ses effets de bord
 
 **Fichiers :** `app/Console/Commands/SanitizeBetaCopy.php`, `tests/Feature/BetaCopySanitizationTest.php`, `scripts/operations/{beta-refresh.sh,lib.sh,config.example.json}`, `tests/Feature/Infrastructure/BetaRefreshTest.php`, fixtures `tests/Support/operations/`, `docs/beta-environment.md`.
 
@@ -103,7 +103,7 @@ Les scripts serveur consomment `--config /chemin/prive/config.json`, fichier op�
 - [ ] Rejouer les deux fichiers ; attendu PASS, y compris import incomplet, comparaison incorrecte, interruption et secret présent dans un corps d'erreur. La bêta reste fermée sur tous les échecs. Documenter la commande exacte et l'avertissement « remplace les essais bêta » avant usage réel.
 - [ ] Commiter : `feat: préparer une copie bêta contrôlée de la production`.
 
-## Tâche 5 : suivre exclusivement la Release PR courante
+## Task 5 : suivre exclusivement la Release PR courante
 
 **Fichiers :** `.github/workflows/beta.yml`, `.github/scripts/{select-beta-candidate.sh,deploy-beta.sh}`, tests `BetaDeploymentTest.php`, fixtures GitHub et Coolify de la carte.
 
@@ -116,7 +116,7 @@ Les scripts serveur consomment `--config /chemin/prive/config.json`, fichier op�
 - [ ] Rejouer les tests locaux et cas d'erreur API de `ReleaseDeploymentTest.php` ; attendu PASS. Vérifier les permissions minimales du workflow, sans secret production ni utilisation dangereuse de `pull_request_target`.
 - [ ] Commiter : `feat: déployer en bêta la Release PR validée`.
 
-## Tâche 6 : lier la répétition au contenu livré et empêcher la livraison implicite
+## Task 6 : lier la répétition au contenu livré et empêcher la livraison implicite
 
 **Fichiers :** `scripts/operations/{production-release.sh,lib.sh}`, `.github/workflows/release-please.yml`, `.github/scripts/deploy-release.sh`, tests `ProductionReleaseTest.php` et `ReleaseDeploymentTest.php`, `docs/operations.md`, `docs/quality-ci-cd.md`.
 
@@ -133,7 +133,7 @@ Rapport `rehearsal.json` protégé hors conteneur bêta : `snapshot_id`, `snapsh
 - [ ] Rejouer les deux fichiers ; attendu PASS. Revoir la procédure contre un incident « colonne attendue absente » : readiness ne remplace pas un test métier de migration oubliée ; inclure un test d'upgrade pertinent pour chaque futur changement de schéma, en réutilisant `tests/Feature/Database/`.
 - [ ] Commiter : `feat: conditionner les livraisons à une répétition des migrations`.
 
-## Tâche 7 : vérifier la branche et préparer une PR relisible
+## Task 7 : vérifier la branche et préparer une PR relisible
 
 **Fichiers :** uniquement les fichiers des tâches précédentes ; `docs/beta-environment.md` porte l'état « préparé, non activé » tant que tâche 8 inachevée.
 
@@ -141,7 +141,7 @@ Rapport `rehearsal.json` protégé hors conteneur bêta : `snapshot_id`, `snapsh
 - [ ] Relire le diff par rapport à `main`, les assertions de non-fuite des scripts et la couverture de chaque ligne de Review Focus. Faire la revue fraîche prévue par le mode d'exécution choisi ; corriger les constats avant intégration.
 - [ ] Ouvrir une PR Conventional Commits vers `main`, décrire copie séparée, impact sur les livraisons et vérifications ; attacher son URL au chat. Ne jamais inclure les modifications locales étrangères. Attendre les checks requis, résoudre les conversations. Le merge utilise Squash & Merge et respecte les autorisations Git déjà données ; aucune création de tag/release manuelle.
 
-## Tâche 8 : activer sur Coolify et contrôler les accès avant tout import
+## Task 8 : activer sur Coolify et contrôler les accès avant tout import
 
 **Fichiers :** `docs/beta-environment.md`, métadonnées vérifiées dans les docs d'exploitation ; aucun secret dans Git. Cette tâche dépend de code de confiance disponible et des checks réussis.
 
@@ -154,7 +154,7 @@ Rapport `rehearsal.json` protégé hors conteneur bêta : `snapshot_id`, `snapsh
 - [ ] Activer le workflow bêta sur la Release PR courante vérifiée ; confirmer checks/SHA/digest/commit Compose. Désactiver les anciens déclencheurs production qui contournent le script contrôlé et tester sans release réelle que la publication n'appelle plus Coolify production. La mise en place initiale des protections de production est une opération d'exploitation à préparer avec image précédente et fenêtre de maintenance explicite ; ne pas simuler un succès si elle n'a pas été exécutée.
 - [ ] Commiter la procédure et les métadonnées publiques vérifiées : `docs: documenter l'environnement bêta et les livraisons contrôlées`.
 
-## Tâche 9 : première répétition réelle et état final
+## Task 9 : première répétition réelle et état final
 
 **Fichiers :** `docs/beta-environment.md`, `docs/operations.md`, `docs/quality-ci-cd.md`, `docs/PRD.md`, modifications ciblées des règles de marque dans `docs/design-system.md` sans embarquer son diff préexistant.
 

@@ -48,10 +48,10 @@ class AppServiceProvider extends ServiceProvider
         Date::use(CarbonImmutable::class);
 
         DB::prohibitDestructiveCommands(
-            app()->isProduction(),
+            app()->environment('production', 'beta'),
         );
 
-        Password::defaults(fn (): ?Password => app()->isProduction()
+        Password::defaults(fn (): ?Password => app()->environment('production', 'beta')
             ? Password::min(12)
                 ->mixedCase()
                 ->letters()
