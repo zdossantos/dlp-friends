@@ -20,6 +20,7 @@ return [
 
     'resend' => [
         'key' => env('RESEND_API_KEY'),
+        'usage_key' => env('RESEND_USAGE_API_KEY', env('RESEND_API_KEY')),
     ],
 
     'google' => [

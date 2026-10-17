@@ -259,6 +259,43 @@ release ne doit être créé manuellement pour revenir en arrière.
   vérifier sa remise sans afficher la clé API ni le contenu du message dans les
   journaux.
 
+### Disponibilité de l’inscription par e-mail (issue 272)
+
+Avec le transport `resend`, l’application consulte `GET https://api.resend.com/usage`
+([API Usage officielle](https://www.resend.com/changelog/account-usage-api)).
+Configurer `RESEND_USAGE_API_KEY` avec une clé Resend **Full access** du même
+compte que la clé d’envoi, conservée uniquement côté serveur dans Coolify. La clé
+d’envoi `RESEND_API_KEY` peut ainsi rester limitée à l’envoi. Sans clé dédiée, `RESEND_API_KEY` est utilisée : elle
+doit alors avoir accès à Usage. Une clé limitée à l’envoi produit un refus de
+consultation et suspend l’inscription e-mail. Ne jamais afficher ces clés.
+
+Les périodes `emails.daily` et `emails.monthly` sont vérifiées ensemble ;
+`used >= limit` pour une seule période suspend l’inscription, et une limite
+`null` signifie illimitée. Les dates de réinitialisation proviennent de Resend,
+sans supposer une heure locale ou un jour calendaire de facturation.
+La page d’inscription utilise un état mis en cache au plus 60 secondes, limité
+également par la prochaine réinitialisation. Il n’y a pas de tâche planifiée :
+la première consultation après expiration actualise cet état.
+
+Chaque soumission valide du formulaire reconsulte Resend avant toute création
+de compte et tout envoi de vérification, même si la page a été ouverte avant
+l’épuisement. Les connexions existantes, Google, la récupération du mot de passe
+et les autres envois restent indépendants de ce contrôle. Mailpit et le transport
+de test `array` ne consultent jamais Resend.
+
+Une clé absente, une erreur HTTP (y compris 403/429), un délai dépassé (connexion
+2 secondes, total 5 secondes), une réponse incomplète ou une période déjà périmée
+suspendent aussi l’inscription e-mail. Aucun ancien état disponible n’est utilisé
+en repli. Le formulaire disparaît au prochain chargement et un message FR/EN
+invite à continuer avec Google. Le lien de connexion reste présent.
+L’inscription se réactive automatiquement dès qu’un contrôle confirme que les
+deux quotas sont disponibles ; pour la page, le délai de cache est au maximum
+60 secondes. Aucun corps de réponse fournisseur ni secret n’est journalisé.
+
+Ce contrôle lit l’état fournisseur sans réserver de crédit : un autre envoi
+sur le même compte Resend peut consommer le dernier crédit entre le contrôle
+et l’envoi de vérification. Ce mécanisme ne garantit pas la remise des messages.
+
 ## Récapitulatifs hebdomadaires par e-mail
 
 Appliquer explicitement les migrations avant d’activer le worker et le scheduler

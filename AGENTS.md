@@ -143,7 +143,7 @@ Les règles détaillées sont dans `docs/engineering-principles.md`.
   remplace jamais une autorisation Laravel.
 - Ne pas utiliser de personnage, logo ou illustration Disney sans droits
   d'utilisation démontrés.
-- Le SMTP de production reste à décider. Mailpit est le seul transport local.
+- Resend est le transport de production. Mailpit est le seul transport local.
 - En cas de contradiction documentaire ou de décision qui étend le périmètre,
   demander une validation produit avant d'implémenter.
 
