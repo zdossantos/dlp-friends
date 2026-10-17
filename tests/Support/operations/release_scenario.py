@@ -94,6 +94,12 @@ with tempfile.TemporaryDirectory() as temporary:
             ops.write_json(directory / "snapshot.json", {"snapshot_id": "snapshot", "created_at": int(time.time()),
                            "source_schema_sha256": schema, "tables_verified": True, "objects_verified": True, "sanitized": True})
             if scenario == "rehearse-success":
+                (directory / "beta-journeys.json").unlink(missing_ok=True)
+                try:
+                    gate.rehearse(image, commit)
+                    raise AssertionError("journeys must be attested after migrations")
+                except ops.OperationError as error:
+                    assert str(error) == "private_report_missing"
                 ops.write_json(directory / "beta-journeys.json", {"snapshot_id": "snapshot", "candidate_image": image,
                                "candidate_commit": commit, "completed_at": int(time.time()),
                                "checks": {key: True for key in release.JOURNEYS}})
