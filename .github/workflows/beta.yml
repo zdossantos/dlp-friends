@@ -1,0 +1,154 @@
+name: Beta Release PR
+
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  candidate:
+    name: Select validated Release PR
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+      checks: read
+    outputs:
+      json: ${{ steps.select.outputs.json }}
+      sha: ${{ steps.select.outputs.sha }}
+      tree: ${{ steps.select.outputs.tree }}
+    steps:
+      - name: Checkout trusted scripts
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: refs/heads/main
+          path: trusted
+          persist-credentials: false
+      - name: Select current candidate
+        id: select
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          bash trusted/.github/scripts/select-beta-candidate.sh > candidate.json
+          echo "json=$(jq -c . candidate.json)" >> "$GITHUB_OUTPUT"
+          echo "sha=$(jq -r '.sha // ""' candidate.json)" >> "$GITHUB_OUTPUT"
+          echo "tree=$(jq -r '.tree // ""' candidate.json)" >> "$GITHUB_OUTPUT"
+          if [ "$(jq -c . candidate.json)" = null ]; then
+            echo 'No validated Release PR; the last beta is retained.' >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+  build:
+    name: Publish beta candidate image
+    needs: candidate
+    if: ${{ needs.candidate.outputs.sha != '' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      image: ${{ steps.reference.outputs.image }}
+    env:
+      CANDIDATE_SHA: ${{ needs.candidate.outputs.sha }}
+      CANDIDATE_TREE: ${{ needs.candidate.outputs.tree }}
+    steps:
+      - name: Checkout trusted smoke test
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: refs/heads/main
+          path: trusted
+          persist-credentials: false
+      - name: Checkout exact candidate in separate build directory
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ needs.candidate.outputs.sha }}
+          path: candidate
+          persist-credentials: false
+      - name: Verify source and public beta configuration
+        id: metadata
+        env:
+          VITE_BETA_REVERB_APP_KEY: ${{ vars.VITE_BETA_REVERB_APP_KEY }}
+        run: |
+          test "$(git -C candidate rev-parse HEAD)" = "$CANDIDATE_SHA"
+          test "$(git -C candidate rev-parse 'HEAD^{tree}')" = "$CANDIDATE_TREE"
+          : "${VITE_BETA_REVERB_APP_KEY:?Set the dedicated public beta Reverb app key}"
+          echo "name=ghcr.io/${GITHUB_REPOSITORY,,}" >> "$GITHUB_OUTPUT"
+          migrations="$(cd candidate && find database/migrations -type f -print0 | sort -z | xargs -0 sha256sum | sha256sum | cut -d ' ' -f 1)"
+          echo "migrations=$migrations" >> "$GITHUB_OUTPUT"
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@594f3bf4285d9ea8dc53c9a0c9c4092420091003 # v4.4.0
+      - name: Authenticate to GHCR
+        env:
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: printf '%s' "$GHCR_TOKEN" | docker login ghcr.io --username "$GITHUB_ACTOR" --password-stdin
+      - name: Build and publish exact candidate
+        id: publish
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: candidate
+          file: candidate/Dockerfile
+          target: runtime
+          platforms: linux/amd64
+          push: true
+          tags: ${{ steps.metadata.outputs.name }}:beta-${{ env.CANDIDATE_SHA }}
+          labels: |
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+            org.opencontainers.image.revision=${{ env.CANDIDATE_SHA }}
+            fr.dlp-friends.source-tree=${{ env.CANDIDATE_TREE }}
+            fr.dlp-friends.migrations=${{ steps.metadata.outputs.migrations }}
+          build-args: |
+            VITE_REVERB_APP_KEY=${{ vars.VITE_BETA_REVERB_APP_KEY }}
+            VITE_REVERB_HOST=ws-beta.dlp-friends.fr
+            VITE_REVERB_PORT=443
+            VITE_REVERB_SCHEME=https
+          cache-from: type=gha,scope=beta-runtime-image
+          cache-to: type=gha,mode=max,scope=beta-runtime-image
+      - name: Smoke test the published digest using trusted script
+        id: reference
+        env:
+          IMAGE_NAME: ${{ steps.metadata.outputs.name }}
+          IMAGE_DIGEST: ${{ steps.publish.outputs.digest }}
+        run: |
+          [[ "$IMAGE_DIGEST" =~ ^sha256:[a-f0-9]{64}$ ]] || exit 1
+          image="$IMAGE_NAME@$IMAGE_DIGEST"
+          bash trusted/.github/scripts/smoke-image.sh "$image"
+          echo "image=$image" >> "$GITHUB_OUTPUT"
+      - name: Log out of GHCR
+        if: ${{ always() }}
+        run: docker logout ghcr.io
+
+  deploy:
+    name: Deploy current beta candidate
+    needs: [candidate, build]
+    runs-on: ubuntu-latest
+    concurrency:
+      group: beta-deploy
+      cancel-in-progress: false
+    permissions:
+      contents: read
+      pull-requests: read
+      checks: read
+    steps:
+      - name: Checkout trusted deployment scripts
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: refs/heads/main
+          path: trusted
+          persist-credentials: false
+      - name: Revalidate candidate and request only its beta deployment
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BETA_CANDIDATE_JSON: ${{ needs.candidate.outputs.json }}
+          APP_IMAGE: ${{ needs.build.outputs.image }}
+          COOLIFY_API_URL: ${{ vars.COOLIFY_API_URL }}
+          COOLIFY_BETA_APPLICATION_UUID: ${{ vars.COOLIFY_BETA_APPLICATION_UUID }}
+          COOLIFY_PRODUCTION_APPLICATION_UUID: ${{ vars.COOLIFY_APPLICATION_UUID }}
+          COOLIFY_TOKEN: ${{ secrets.COOLIFY_BETA_TOKEN }}
+        run: |
+          printf '%s' "$BETA_CANDIDATE_JSON" > candidate.json
+          export BETA_CANDIDATE_FILE="$PWD/candidate.json"
+          bash trusted/.github/scripts/deploy-beta.sh
+          echo 'Deployment requested; verify schema readiness separately. No migration or maintenance reopening was performed.' >> "$GITHUB_STEP_SUMMARY"
