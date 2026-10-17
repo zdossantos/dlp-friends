@@ -99,6 +99,9 @@ class Release(ops.Operations):
             report = previous
             ops.require(self.schema_fingerprint("beta") == report["beta_schema_sha256"], "rehearsed_schema_changed")
         else:
+            ops.require(self.schema_fingerprint("beta") == snapshot["source_schema_sha256"]
+                        and ops.digest(self.mysql("beta", "SELECT migration, batch FROM migrations ORDER BY migration;"))
+                        == snapshot.get("source_migrations_sha256"), "fresh_beta_snapshot_required")
             ops.write_json(path, report)
             before = self.mysql("beta", "SELECT migration, batch FROM migrations ORDER BY migration;")
             started = time.monotonic()
@@ -122,14 +125,34 @@ class Release(ops.Operations):
                'echo json_encode(["env"=>app()->environment(),"closed"=>app()->isDownForMaintenance(),'
                '"driver"=>config("app.maintenance.driver"),"store"=>config("app.maintenance.store"),'
                '"prefix"=>config("cache.prefix"),"database"=>config("database.connections.mysql.database"),'
-               '"mysql_server_uuid"=>Illuminate\\Support\\Facades\\DB::selectOne("SELECT @@server_uuid AS uuid")->uuid]);')
+               '"mysql_server_uuid"=>Illuminate\\Support\\Facades\\DB::selectOne("SELECT @@server_uuid AS uuid")->uuid,'
+               '"redis_server_id"=>Illuminate\\Support\\Facades\\Redis::connection("cache")->info("server")["run_id"],'
+               '"redis_database"=>Illuminate\\Support\\Facades\\Redis::connection("cache")->client()->getDBNum(),'
+               '"redis_prefix"=>Illuminate\\Support\\Facades\\Redis::connection("cache")->client()->getOption(Redis::OPT_PREFIX)]);')
         result = json.loads(ops.run(["docker", "exec", self.config["source"]["web_container"], "php", "-r", php]))
         actual_uuid = self.mysql("source", "SELECT @@server_uuid, DATABASE();").strip().split("\t")[0]
         ops.require(result["env"] == "production" and result["driver"] == "cache" and result["store"] == "redis"
                     and result["prefix"] == "dlp_friends_production_cache_"
                     and result["database"] == self.config["source"]["database"]
-                    and result["mysql_server_uuid"] == actual_uuid, "persistent_production_maintenance_required")
+                    and result["mysql_server_uuid"] == actual_uuid
+                    and result["redis_server_id"] == self.redis_identity("source")
+                    and result["redis_database"] == 1
+                    and result["redis_prefix"] == "dlp_friends_production_", "persistent_production_maintenance_required")
         return result
+
+    def drain_http(self):
+        # SIGQUIT closes FPM's listener and waits for every existing request and shutdown callback.
+        # Nginx and the container remain alive so private Artisan commands remain available.
+        script = ('set -eu; php-fpm -tt 2>&1 | grep -Eq "process_control_timeout = 86400s$"; '
+                  'masters=$(pgrep -f "^php-fpm: master process" || true); '
+                  'if [ -n "$masters" ]; then set -- $masters; [ "$#" -eq 1 ]; kill -QUIT "$1"; fi; '
+                  'for attempt in $(seq 1 150); do '
+                  'if ! pgrep -f "^php-fpm:" >/dev/null; then exit 0; fi; sleep 1; done; exit 78')
+        ops.run(["docker", "exec", self.config["source"]["web_container"], "sh", "-c", script])
+
+    def http_drained(self):
+        ops.run(["docker", "exec", self.config["source"]["web_container"], "sh", "-c",
+                 '! pgrep -f "^php-fpm:" >/dev/null'])
 
     def closed(self):
         ops.require(self.runtime()["closed"] is True, "production_not_closed")
@@ -179,6 +202,7 @@ class Release(ops.Operations):
             ops.require(backup["image"] == image and backup["commit"] == commit, "backup_candidate_mismatch")
             self.closed()
             self.drained()
+            self.http_drained()
         else:
             previous = self.running_image()
             ops.require(re.fullmatch(r"ghcr\.io/zdossantos/dlp-friends@sha256:[a-f0-9]{64}", previous), "previous_digest_required")
@@ -189,6 +213,8 @@ class Release(ops.Operations):
                 ops.run(["docker", "stop", "--time", "150", name])
             self.closed()
             self.drained()
+            self.drain_http()
+            self.http_drained()
             ops.require(self.schema_fingerprint("source") == report["source_schema_sha256"], "source_schema_changed")
             identifier = os.urandom(16).hex()
             sql = self.directory / (identifier + ".sql")
@@ -240,6 +266,7 @@ class Release(ops.Operations):
         ops.require(authorization["rehearsal_sha256"] == ops.digest(json.dumps(report, sort_keys=True)), "rehearsal_changed")
         self.closed()
         self.drained()
+        self.http_drained()
         self.verified_backup(authorization)
         app = self.config["source"]["application_uuid"]
         ops.require(re.fullmatch(r"[A-Za-z0-9_-]+", app) and app != self.config["beta"]["application_uuid"], "resource_alias")

@@ -13,6 +13,8 @@ it('enforces the production release gate at external boundaries', function (stri
     'squashed-equivalent-tree', 'migration-failed', 'readiness-failed',
     'coolify-timeout', 'resume-without-verification', 'resume-success',
     'rehearse-success', 'missing-journeys', 'deploy-success', 'old-background-image',
+    'runtime-valid', 'runtime-wrong-prefix', 'runtime-wrong-database', 'runtime-wrong-server',
+    'dirty-beta-schema', 'dirty-beta-migrations', 'http-drain',
 ]);
 
 it('publishes release metadata without deploying production', function () {

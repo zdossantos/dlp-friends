@@ -26,6 +26,7 @@ with tempfile.TemporaryDirectory() as temporary:
     gate = object.__new__(release.Release)
     gate.directory = directory
     gate.config = {"source": {"application_uuid": "production", "web_container": "web",
+                             "database": "production",
                              "process_containers": ["worker", "scheduler", "reverb"]},
                    "beta": {"application_uuid": "beta", "network": "beta-network", "database": "beta", "bucket": "beta", "storage_key_id": "beta-key", "env_file": str(directory / "beta.env")}}
     (directory / "beta.env").write_text("SYNTHETIC=true\n")
@@ -35,6 +36,9 @@ with tempfile.TemporaryDirectory() as temporary:
               "applied_migrations": ["create_users"], "second_run_noop": True,
               "journeys_passed": True, "completed_at": int(time.time())}
     if scenario == "failed-report": report["status"] = "failed"
+    # A new candidate after a passed rehearsal, or an interrupted previous run,
+    # must both start from the snapshot's original schema/migration register.
+    if scenario == "dirty-beta-migrations": report["status"] = "failed"
     if scenario == "expired-snapshot": report["snapshot_created_at"] -= 86400
     if scenario == "future-snapshot": report["snapshot_created_at"] += 60
     if scenario == "different-tree": report["candidate_tree"] = "0" * 40
@@ -42,6 +46,21 @@ with tempfile.TemporaryDirectory() as temporary:
     if scenario != "missing-report": ops.write_json(directory / "rehearsal.json", report)
     actual = {"tree": tree, "migrations": migrations, "commit": commit}
     def fake_run(args, **kwargs):
+        if args[:3] == ["docker", "exec", "web"]:
+            if args[3:5] == ["php", "-r"]:
+                lint = subprocess.run(["php", "-l"], input="<?php " + args[-1], text=True, capture_output=True)
+                assert lint.returncode == 0, lint.stderr + lint.stdout
+                return json.dumps({"env": "production", "closed": True, "driver": "cache", "store": "redis",
+                                   "prefix": "dlp_friends_production_cache_", "database": "production", "mysql_server_uuid": "mysql-server",
+                                   "redis_server_id": "other" if scenario == "runtime-wrong-server" else "redis-server",
+                                   "redis_database": 2 if scenario == "runtime-wrong-database" else 1,
+                                   "redis_prefix": "old-prefix" if scenario == "runtime-wrong-prefix" else "dlp_friends_production_"})
+            assert args[3:5] == ["sh", "-c"]
+            if args[-1].startswith('! pgrep'):
+                return ""
+            assert "QUIT" in args[-1] and "pgrep" in args[-1]
+            mutations.append("http-drained")
+            return ""
         if args[:3] == ["docker", "image", "inspect"]:
             return json.dumps([{"Os": "linux", "Architecture": "arm64" if scenario == "wrong-platform" else "amd64",
                                 "Config": {"Labels": {"org.opencontainers.image.revision": commit,
@@ -60,8 +79,10 @@ with tempfile.TemporaryDirectory() as temporary:
             return ""
         raise AssertionError(args)
     ops.run = fake_run
-    gate.mysql = lambda *args, **kwargs: "create_users\t1\n"
-    gate.schema_fingerprint = lambda side: "0" * 64 if scenario == "changed-schema" else schema
+    gate.mysql = lambda side, sql, **kwargs: ("mysql-server\tproduction\n" if "@@server_uuid" in sql else
+        "changed\t1\n" if scenario == "dirty-beta-migrations" else "create_users\t1\n")
+    gate.redis_identity = lambda side: "redis-server"
+    gate.schema_fingerprint = lambda side: "0" * 64 if scenario == "changed-schema" or (side == "beta" and scenario == "dirty-beta-schema") else schema
     gate.inspect = lambda name: {"Config": {"Image": "wrong-image" if scenario == "old-background-image" else image}, "State": {"Running": scenario == "active-process" or name in started, "ExitCode": 0}}
     gate.closed = lambda: ops.require(scenario != "maintenance-absent", "production_not_closed")
     def artisan(*args):
@@ -82,17 +103,27 @@ with tempfile.TemporaryDirectory() as temporary:
                 "maintenance-absent": "production_not_closed", "unverified-backup": "verified_backup_required",
                 "resume-without-verification": "verified_release_required", "coolify-timeout": "external_operation_failed",
                 "migration-failed": "external_operation_failed", "readiness-failed": "readiness_failed", "old-background-image": "process_image_mismatch"}
+    expected.update({key: "persistent_production_maintenance_required" for key in
+                     ("runtime-wrong-prefix", "runtime-wrong-database", "runtime-wrong-server")})
+    expected.update({"dirty-beta-schema": "fresh_beta_snapshot_required", "dirty-beta-migrations": "fresh_beta_snapshot_required"})
     try:
-        if scenario in ("resume-success", "old-background-image"):
+        if scenario.startswith("runtime-"):
+            gate.runtime()
+            assert scenario == "runtime-valid", "unsafe maintenance namespace accepted"
+        elif scenario == "http-drain":
+            gate.drain_http()
+            assert mutations == ["http-drained"]
+        elif scenario in ("resume-success", "old-background-image"):
             ops.write_json(directory / "authorization.json", {"status": "verified", "image": image, "commit": commit, "verified_at": int(time.time())})
             gate.running_image = lambda: image
             gate.resume(image, commit, True)
             assert mutations == ["start", "start", "start", "up"]
             assert json.loads((directory / "authorization.json").read_text())["status"] == "resumed"
-        elif scenario in ("rehearse-success", "missing-journeys"):
+        elif scenario in ("rehearse-success", "missing-journeys", "dirty-beta-schema", "dirty-beta-migrations"):
             gate.validate_targets = lambda: None
             ops.write_json(directory / "snapshot.json", {"snapshot_id": "snapshot", "created_at": int(time.time()),
-                           "source_schema_sha256": schema, "tables_verified": True, "objects_verified": True, "sanitized": True})
+                           "source_schema_sha256": schema, "source_migrations_sha256": ops.digest("create_users\t1\n"),
+                           "tables_verified": True, "objects_verified": True, "sanitized": True})
             if scenario == "rehearse-success":
                 (directory / "beta-journeys.json").unlink(missing_ok=True)
                 try:
@@ -108,6 +139,8 @@ with tempfile.TemporaryDirectory() as temporary:
                 assert scenario == "rehearse-success"
                 assert json.loads((directory / "rehearsal.json").read_text())["status"] == "passed"
             except ops.OperationError as error:
+                if scenario.startswith("dirty-beta-"):
+                    raise
                 assert scenario == "missing-journeys" and str(error) == "private_report_missing"
                 assert json.loads((directory / "rehearsal.json").read_text())["status"] == "awaiting_journeys"
             assert mutations == ["beta-migrate", "beta-migrate"]
@@ -124,7 +157,8 @@ with tempfile.TemporaryDirectory() as temporary:
             gate.validate_targets = lambda: None
             gate.image = lambda *args: actual
             ops.write_json(directory / "snapshot.json", {"snapshot_id": "snapshot", "created_at": int(time.time()),
-                           "source_schema_sha256": schema, "tables_verified": True, "objects_verified": True, "sanitized": True})
+                           "source_schema_sha256": schema, "source_migrations_sha256": ops.digest("create_users\t1\n"),
+                           "tables_verified": True, "objects_verified": True, "sanitized": True})
             gate.beta_command = lambda *args: (_ for _ in ()).throw(ops.OperationError("external_operation_failed"))
             gate.rehearse(image, commit)
         elif scenario == "readiness-failed":

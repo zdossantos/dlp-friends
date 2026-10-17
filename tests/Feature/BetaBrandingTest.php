@@ -1,7 +1,10 @@
 <?php
 
 use App\Http\Middleware\EnsureDeploymentReady;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
+
+uses(RefreshDatabase::class);
 
 it('selects beta branding at runtime in both languages', function (string $locale, string $name) {
     app()->instance('env', 'beta');

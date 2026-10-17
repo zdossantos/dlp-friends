@@ -13,6 +13,8 @@ x-app: &app
     APP_MAINTENANCE_STORE: redis
     CACHE_PREFIX: dlp_friends_beta_cache_
     REDIS_PREFIX: dlp_friends_beta_
+    REDIS_DB: 0
+    REDIS_CACHE_DB: 1
     LOG_CHANNEL: stack
     LOG_STACK: single
     LOG_LEVEL: ${BETA_LOG_LEVEL:-warning}
@@ -31,7 +33,7 @@ x-app: &app
     SESSION_SECURE_COOKIE: "true"
     CACHE_STORE: redis
     QUEUE_CONNECTION: redis
-    QUEUE_WORKER_MEMORY: 128
+    QUEUE_WORKER_MEMORY: 96
     REDIS_CLIENT: phpredis
     REDIS_HOST: ${BETA_REDIS_HOST:?REDIS_HOST is required}
     REDIS_PASSWORD: ${BETA_REDIS_PASSWORD:?REDIS_PASSWORD is required}
@@ -83,8 +85,8 @@ services:
     deploy:
       resources:
         limits:
-          cpus: "0.50"
-          memory: 256M
+          cpus: "0.35"
+          memory: 192M
 
   worker:
     <<: *app
@@ -98,8 +100,8 @@ services:
     deploy:
       resources:
         limits:
-          cpus: "0.25"
-          memory: 192M
+          cpus: "0.20"
+          memory: 128M
 
   scheduler:
     <<: *app
@@ -114,7 +116,7 @@ services:
       resources:
         limits:
           cpus: "0.10"
-          memory: 128M
+          memory: 80M
 
   reverb:
     <<: *app
@@ -134,5 +136,5 @@ services:
     deploy:
       resources:
         limits:
-          cpus: "0.25"
-          memory: 128M
+          cpus: "0.15"
+          memory: 80M
