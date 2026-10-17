@@ -2,8 +2,8 @@
 
 ## Statut et décision
 
-Conception fonctionnelle approuvée dans la conversation le 17 octobre 2026.
-Cette spécification est proposée à la revue avant le plan d'implémentation.
+Conception fonctionnelle et spécification écrite approuvées dans la
+conversation le 17 octobre 2026.
 Elle décrit une cible ; aucune ressource bêta ni protection nouvelle n'est
 encore livrée. La production reste inchangée pendant cette préparation.
 
