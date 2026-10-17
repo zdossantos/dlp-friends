@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.16.0](https://github.com/zdossantos/dlp-friends/compare/v1.15.0...v1.16.0) (2026-10-17)
+
+
+### Features
+
+* préparer une bêta isolée et sécuriser les mises en production ([#273](https://github.com/zdossantos/dlp-friends/issues/273)) ([eb22088](https://github.com/zdossantos/dlp-friends/commit/eb220885aeac3341292b87f08aa7c9246679c524))
+
+
+### Fixes
+
+* isolate beta Reverb network routing ([#277](https://github.com/zdossantos/dlp-friends/issues/277)) ([96b780c](https://github.com/zdossantos/dlp-friends/commit/96b780c93385dd90b4c745a792f15548e81ff6b0))
+* preserve pending release notes across release PR updates ([#276](https://github.com/zdossantos/dlp-friends/issues/276)) ([f363bcc](https://github.com/zdossantos/dlp-friends/commit/f363bcc0d462543fb3e9a07643b3d18dce5c7cd7))
+* **profile:** handle missing social links visibility ([#267](https://github.com/zdossantos/dlp-friends/issues/267)) ([f534c60](https://github.com/zdossantos/dlp-friends/commit/f534c60d059aa1bf4c05d88f3242c95ff2bf2717))
+* reserve beta access to administrators ([#274](https://github.com/zdossantos/dlp-friends/issues/274)) ([13112a7](https://github.com/zdossantos/dlp-friends/commit/13112a77be56103be3ae246419460f9c6d73d57b))
+
 ## [1.15.0](https://github.com/zdossantos/dlp-friends/compare/v1.14.0...v1.15.0) (2026-10-07)
 
 
