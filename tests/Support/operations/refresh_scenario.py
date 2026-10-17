@@ -1,6 +1,7 @@
 """Synthetic boundary fixtures for the server-only refresh command."""
 import importlib.util
 import sys
+import subprocess
 import json
 import tempfile
 from types import SimpleNamespace
@@ -36,13 +37,16 @@ with tempfile.TemporaryDirectory() as temporary:
     private = directory / "client"
     private.write_text("[source]\ntype=s3\nendpoint=https://s3.example.test\naccess_key_id=source-key\n[beta]\ntype=s3\nendpoint=https://s3.example.test\naccess_key_id=" + ("source-key" if scenario == "rclone-key-alias" else "beta-key") + "\n")
     private.chmod(0o600)
+    redis_password = directory / "redis-password"
+    redis_password.write_text("synthetic-password\n")
+    redis_password.chmod(0o600)
     config = {"report_dir": temporary, "rclone_config": str(private), "garage_curl_config": str(private),
               "garage_admin_url": "https://garage.example.test", "garage_s3_endpoint": "https://s3.example.test"}
     for side in ("source", "beta"):
         config[side] = {"application_uuid": side + "-app", "mysql_uuid": side + "-mysql", "redis_uuid": side + "-redis",
                         "mysql_container": side + "-mysql", "redis_container": side + "-redis", "web_container": side + "-web",
                         "process_containers": [side + "-worker", side + "-scheduler", side + "-reverb"],
-                        "database": side, "mysql_client": str(private), "bucket": side, "bucket_id": side + "-bucket",
+                        "database": side, "redis_password_file": str(redis_password), "mysql_client": str(private), "bucket": side, "bucket_id": side + "-bucket",
                         "storage_key_id": side + "-key", "rclone_remote": side}
     if scenario == "resource-alias":
         config["beta"]["redis_uuid"] = config["source"]["redis_uuid"]
@@ -86,6 +90,14 @@ with tempfile.TemporaryDirectory() as temporary:
                 return ""
             raise AssertionError(sql)
         if arguments[0] == "docker":
+            if "redis-cli" in " ".join(arguments):
+                return "run_id:" + ("source" if "source-redis" in arguments else "beta") + "\n"
+            if "-r" in arguments:
+                lint = subprocess.run(["php", "-l"], input="<?php " + arguments[-1], text=True, capture_output=True)
+                assert lint.returncode == 0, lint.stderr + lint.stdout
+            if "flushdb" in " ".join(arguments):
+                mutations.append("reset-beta-redis")
+                return ""
             if arguments[1] == "inspect":
                 name = arguments[2]
                 volume = "/volumes/" + name
@@ -96,6 +108,7 @@ with tempfile.TemporaryDirectory() as temporary:
                                     "State": {"Running": scenario == "active-process", "ExitCode": 0}}])
             if "-r" in arguments:
                 return json.dumps({"env": "beta", "closed": True, "database": "beta", "bucket": "beta", "key": "beta-key",
+                                   "redis_default_id": "source" if scenario == "runtime-redis-alias" else "beta", "redis_cache_id": "beta",
                                    "mysql_server_uuid": "source" if scenario == "runtime-mysql-alias" else "beta"})
             assert "beta:sanitize-copy" in arguments
             mutations.append("sanitize-beta")
@@ -127,19 +140,19 @@ with tempfile.TemporaryDirectory() as temporary:
                 "bucket-alias": "bucket_alias", "source-bucket-write": "beta_storage_permissions",
                 "missing-confirmation": "explicit_beta_replacement_required", "active-process": "beta_processes_not_drained",
                 "incomplete-import": "restored_count_mismatch", "object-disappeared": "objects_changed_during_copy",
-                "runtime-mysql-alias": "beta_closed_identity_required", "rclone-key-alias": "rclone_identity_mismatch"}
+                "runtime-mysql-alias": "beta_closed_identity_required", "runtime-redis-alias": "beta_closed_identity_required", "rclone-key-alias": "rclone_identity_mismatch"}
     try:
         operation.refresh(scenario != "missing-confirmation")
         assert scenario == "complete-copy", "unsafe refresh accepted"
         report = json.loads((directory / "snapshot.json").read_text())
         assert report["tables_verified"] and report["objects_verified"] and report["sanitized"]
-        assert mutations == ["drop-beta", "import-beta", "copy-beta-bucket", "sanitize-beta"]
+        assert mutations == ["drop-beta", "import-beta", "copy-beta-bucket", "reset-beta-redis", "sanitize-beta"]
     except ops.OperationError as error:
         assert str(error) == expected[scenario], str(error)
         assert not (directory / "snapshot.json").exists()
     except KeyboardInterrupt:
         assert scenario == "interrupted-copy"
         assert not (directory / "snapshot.json").exists()
-    if scenario in list(expected)[:7] or scenario in ("runtime-mysql-alias", "rclone-key-alias"):
+    if scenario in list(expected)[:7] or scenario in ("runtime-mysql-alias", "rclone-key-alias", "runtime-redis-alias"):
         assert not mutations, mutations
     assert not any("up" in call or "migrate" in call for call in calls)

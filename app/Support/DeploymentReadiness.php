@@ -39,7 +39,7 @@ final class DeploymentReadiness
         }
     }
 
-    private function assertBetaConfiguration(): void
+    public function assertBetaConfiguration(): void
     {
         $host = config('deployment.beta_mail_host');
         if (! is_string($host) || $host === ''

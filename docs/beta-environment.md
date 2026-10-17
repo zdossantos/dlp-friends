@@ -12,7 +12,7 @@ jusqu'à leur mesure sur le serveur. Les migrations restent explicites.
 
 ## Préparer l'opération serveur
 
-Prérequis Linux : Bash, Python 3 (bibliothèque standard), Docker, clients MySQL
+Prérequis Linux : Bash, Python 3.9 ou ultérieur (bibliothèque standard), Docker, clients MySQL
 8.4, rclone et curl. Le script ne s'exécute pas dans GitHub Actions.
 Copier `scripts/operations/config.example.json` hors du dépôt ; renseigner les
 identités réellement observées. Protéger le répertoire des rapports en `0700`
@@ -70,3 +70,16 @@ Les comptes uniquement OAuth nécessitent une réinitialisation reçue dans
 Mailpit ou un compte de test créé dans la bêta. Les URL de profils/partenaires
 restent des liens externes : un clic peut contacter leur destination ; aucune
 intégration sortante automatique additionnelle n'a été trouvée dans le code.
+
+
+Les fichiers `source-redis.password` et `beta-redis.password` contiennent chacun
+le seul mot de passe Redis, en `0600`. Le script compare les `run_id` des
+serveurs dédiés avec les connexions réelles de l'application. Il purge les
+anciennes sessions/files et le cache bêta en conservant atomiquement la clé
+de maintenance. Il n'efface jamais Redis production. `beta.env` contient les
+variables d'exécution Laravel résolues (pas les noms `BETA_*` du Compose),
+avec le réseau Docker bêta dans `beta.network`. Le lancement ponctuel de
+migration vérifie ses identités réelles avant d'agir.
+
+Les fichiers de preuve, phases de livraison et attestations opérateur sont
+décrits dans [la procédure de livraison](operations.md#livraisons-contrôlées-et-répétition-bêta).

@@ -96,6 +96,36 @@ class Operations:
                                "--silent", "--fail", "--connect-timeout", "10", "--max-time", "60",
                                endpoint + "/v2/" + operation + "?" + urlencode(query)]))
 
+    def redis_identity(self, side):
+        password = private_file(self.config[side]["redis_password_file"]).read_bytes()
+        require(b"\n" not in password.rstrip(b"\n") and password.strip(), "redis_password_file_required")
+        result = run(["docker", "exec", "-i", self.config[side]["redis_container"], "sh", "-c",
+                      'IFS= read -r REDISCLI_AUTH; export REDISCLI_AUTH; exec redis-cli --raw INFO server'],
+                     input=password.rstrip(b"\n") + b"\n")
+        match = re.search(r"^run_id:([A-Za-z0-9]+)\r?$", result, re.M)
+        require(match is not None, "redis_identity_unavailable")
+        return match[1]
+
+    def reset_beta_runtime(self):
+        identity = self.redis_identity("beta")
+        # Only the dedicated beta server may be cleared. Retain maintenance atomically.
+        php = ('require "vendor/autoload.php"; $app=require "bootstrap/app.php"; '
+               '$app->make(Illuminate\\Contracts\\Console\\Kernel::class)->bootstrap(); '
+               '$default=Illuminate\\Support\\Facades\\Redis::connection("default"); '
+               '$cache=Illuminate\\Support\\Facades\\Redis::connection("cache"); '
+               'if (!app()->environment("beta") || !app()->isDownForMaintenance() || '
+               'config("app.maintenance.driver")!=="cache" || config("app.maintenance.store")!=="redis" || '
+               'config("cache.prefix")!=="dlp_friends_beta_cache_" || '
+               '(string)config("database.redis.default.database")!=="0" || (string)config("database.redis.cache.database")!=="1" || '
+               '$default->info("server")["run_id"]!==' + json.dumps(identity) + ' || '
+               '$cache->info("server")["run_id"]!==' + json.dumps(identity) + ') exit(78); '
+               '$key=$cache->client()->getOption(Redis::OPT_PREFIX).config("cache.prefix")."illuminate:foundation:down"; '
+               '$lua="if redis.call(\"EXISTS\",ARGV[1]) ~= 1 then return 0 end; '
+               'for _,key in ipairs(redis.call(\"KEYS\",\"*\")) do if key ~= ARGV[1] then redis.call(\"DEL\",key) end end; return 1"; '
+               'if ($cache->eval($lua,0,$key)!==1) exit(78); $default->flushdb(); '
+               'if (!app()->isDownForMaintenance()) exit(78);')
+        run(["docker", "exec", self.config["beta"]["web_container"], "php", "-r", php])
+
     def validate_targets(self):
         source, beta = self.config["source"], self.config["beta"]
         for key in ("application_uuid", "mysql_uuid", "redis_uuid"):
@@ -139,16 +169,21 @@ class Operations:
             remote = remotes[self.config[side]["rclone_remote"]]
             require(remote["type"] == "s3" and remote["endpoint"].rstrip("/") == self.config["garage_s3_endpoint"].rstrip("/")
                     and remote["access_key_id"] == self.config[side]["storage_key_id"], "rclone_identity_mismatch")
+        redis = {side: self.redis_identity(side) for side in ("source", "beta")}
+        require(redis["source"] != redis["beta"], "redis_server_shared")
         # Check the actual running web configuration, not only operator declarations.
         php = ('require "vendor/autoload.php"; $app=require "bootstrap/app.php"; '
                '$app->make(Illuminate\\Contracts\\Console\\Kernel::class)->bootstrap(); '
                'echo json_encode(["env"=>app()->environment(),"closed"=>app()->isDownForMaintenance(),'
                '"database"=>config("database.connections.mysql.database"),'
                '"bucket"=>config("filesystems.disks.s3.bucket"),"key"=>config("filesystems.disks.s3.key"),'
+               '"redis_default_id"=>Illuminate\\Support\\Facades\\Redis::connection("default")->info("server")["run_id"],'
+               '"redis_cache_id"=>Illuminate\\Support\\Facades\\Redis::connection("cache")->info("server")["run_id"],'
                '"mysql_server_uuid"=>Illuminate\\Support\\Facades\\DB::selectOne("SELECT @@server_uuid AS uuid")->uuid]);')
         runtime = json.loads(run(["docker", "exec", beta["web_container"], "php", "-r", php]))
         require(runtime == {"env": "beta", "closed": True, "database": beta["database"],
                             "bucket": beta["bucket"], "key": beta["storage_key_id"],
+                            "redis_default_id": redis["beta"], "redis_cache_id": redis["beta"],
                             "mysql_server_uuid": identities[1].split("\t")[0]}, "beta_closed_identity_required")
         require(len(beta["process_containers"]) == 3, "all_processes_required")
         for container in beta["process_containers"]:
@@ -231,6 +266,7 @@ class Operations:
             run(["rclone", "--config", self.config["rclone_config"], "check", "--download", source["rclone_remote"] + ":" + source["bucket"],
                  beta["rclone_remote"] + ":" + beta["bucket"]])
             require(self.inventory("source") == before and self.inventory("beta") == before, "objects_changed_during_copy")
+            self.reset_beta_runtime()
             self.artisan("beta", "beta:sanitize-copy", "--force", "--no-interaction")
             write_json(snapshot_file, {"snapshot_id": snapshot_id, "created_at": created_at,
                                       "source_schema_sha256": source_schema, "source_migrations_sha256": digest(applied),

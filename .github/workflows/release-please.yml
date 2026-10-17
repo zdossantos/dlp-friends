@@ -45,6 +45,8 @@ jobs:
       packages: write
     outputs:
       image: ${{ steps.reference.outputs.image }}
+      tree: ${{ steps.metadata.outputs.tree }}
+      migrations: ${{ steps.metadata.outputs.migrations }}
     env:
       RELEASE_TAG: ${{ needs.release-please.outputs.tag_name }}
       RELEASE_SHA: ${{ needs.release-please.outputs.sha }}
@@ -69,6 +71,12 @@ jobs:
           : "${VITE_REVERB_HOST:?Set the public Reverb hostname in repository variables}"
           : "${VITE_REVERB_PORT:?Set the public Reverb port in repository variables}"
           : "${VITE_REVERB_SCHEME:?Set the public Reverb scheme in repository variables}"
+      - name: Record source and migration fingerprints
+        id: metadata
+        run: |
+          echo "tree=$(git rev-parse 'HEAD^{tree}')" >> "$GITHUB_OUTPUT"
+          migrations="$(find database/migrations -type f -print0 | sort -z | xargs -0 sha256sum | sha256sum | cut -d ' ' -f 1)"
+          echo "migrations=$migrations" >> "$GITHUB_OUTPUT"
       - name: Set image name
         id: image
         run: echo "name=ghcr.io/${GITHUB_REPOSITORY,,}" >> "$GITHUB_OUTPUT"
@@ -91,6 +99,8 @@ jobs:
             org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
             org.opencontainers.image.version=${{ env.RELEASE_TAG }}
             org.opencontainers.image.revision=${{ env.RELEASE_SHA }}
+            io.dlp-friends.source-tree=${{ steps.metadata.outputs.tree }}
+            io.dlp-friends.migrations-sha256=${{ steps.metadata.outputs.migrations }}
           build-args: |
             VITE_REVERB_APP_KEY=${{ vars.VITE_REVERB_APP_KEY }}
             VITE_REVERB_HOST=${{ vars.VITE_REVERB_HOST }}
@@ -112,8 +122,8 @@ jobs:
         if: ${{ always() }}
         run: docker logout ghcr.io
 
-  deploy-release:
-    name: Record image and deploy to Coolify
+  record-release-image:
+    name: Record published image for operator delivery
     needs: [release-please, publish-image]
     if: ${{ needs.release-please.outputs.release_created == 'true' && needs.publish-image.result == 'success' }}
     runs-on: ubuntu-latest
@@ -124,6 +134,8 @@ jobs:
       RELEASE_TAG: ${{ needs.release-please.outputs.tag_name }}
       RELEASE_SHA: ${{ needs.release-please.outputs.sha }}
       APP_IMAGE: ${{ needs.publish-image.outputs.image }}
+      SOURCE_TREE: ${{ needs.publish-image.outputs.tree }}
+      MIGRATIONS_SHA256: ${{ needs.publish-image.outputs.migrations }}
     steps:
       - name: Checkout exact release commit
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -134,13 +146,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          jq -n --arg version "$RELEASE_TAG" --arg commit "$RELEASE_SHA" --arg image "$APP_IMAGE" \
-            '{version: $version, commit: $commit, image: $image, platform: "linux/amd64"}' > container-image.json
+          jq -n --arg version "$RELEASE_TAG" --arg commit "$RELEASE_SHA" --arg image "$APP_IMAGE" --arg tree "$SOURCE_TREE" --arg migrations "$MIGRATIONS_SHA256" \
+            '{version: $version, commit: $commit, image: $image, tree: $tree, migrations_sha256: $migrations, platform: "linux/amd64"}' > container-image.json
           gh release upload "$RELEASE_TAG" container-image.json --clobber
           cat container-image.json >> "$GITHUB_STEP_SUMMARY"
-      - name: Deploy release to Coolify
-        env:
-          COOLIFY_API_URL: ${{ vars.COOLIFY_API_URL }}
-          COOLIFY_APPLICATION_UUID: ${{ vars.COOLIFY_APPLICATION_UUID }}
-          COOLIFY_TOKEN: ${{ secrets.COOLIFY_TOKEN }}
-        run: bash .github/scripts/deploy-release.sh

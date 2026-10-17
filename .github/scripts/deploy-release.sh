@@ -1,9 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
-
 if [[ "${RELEASE_CREATED:-false}" != true ]]; then
     echo 'No new release; skipping deployment.'
     exit 0
 fi
-
-bash "$(dirname "$0")/deploy-coolify-image.sh"
+echo 'Production requires the private server procedure: production-release.sh prepare, deploy, verify, resume.' >&2
+exit 1

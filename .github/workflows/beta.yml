@@ -97,8 +97,8 @@ jobs:
           labels: |
             org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
             org.opencontainers.image.revision=${{ env.CANDIDATE_SHA }}
-            fr.dlp-friends.source-tree=${{ env.CANDIDATE_TREE }}
-            fr.dlp-friends.migrations=${{ steps.metadata.outputs.migrations }}
+            io.dlp-friends.source-tree=${{ env.CANDIDATE_TREE }}
+            io.dlp-friends.migrations-sha256=${{ steps.metadata.outputs.migrations }}
           build-args: |
             VITE_REVERB_APP_KEY=${{ vars.VITE_BETA_REVERB_APP_KEY }}
             VITE_REVERB_HOST=ws-beta.dlp-friends.fr

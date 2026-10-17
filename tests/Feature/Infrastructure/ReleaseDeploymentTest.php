@@ -47,7 +47,7 @@ function recordedCoolifyRequests(string $directory): array
 }
 
 it('pins the image and Compose revision before requesting deployment', function () {
-    $result = Process::env($this->deploymentEnvironment)->run(['bash', base_path('.github/scripts/deploy-release.sh')]);
+    $result = Process::env($this->deploymentEnvironment)->run(['bash', base_path('.github/scripts/deploy-coolify-image.sh')]);
 
     expect($result->successful())->toBeTrue($result->errorOutput());
     $requests = recordedCoolifyRequests($this->directory);
@@ -83,7 +83,7 @@ it('does not contact Coolify without a new release', function () {
 
 it('refuses deployment without an immutable published image or exact revision', function (array $override) {
     $result = Process::env(array_merge($this->deploymentEnvironment, $override))
-        ->run(['bash', base_path('.github/scripts/deploy-release.sh')]);
+        ->run(['bash', base_path('.github/scripts/deploy-coolify-image.sh')]);
 
     expect($result->failed())->toBeTrue()
         ->and(recordedCoolifyRequests($this->directory))->toBe([]);
@@ -95,7 +95,7 @@ it('refuses deployment without an immutable published image or exact revision', 
 
 it('stops on a Coolify error without leaking its response', function (string $path, int $requestCount) {
     file_put_contents($this->directory.'/failure-path', $path);
-    $result = Process::env($this->deploymentEnvironment)->run(['bash', base_path('.github/scripts/deploy-release.sh')]);
+    $result = Process::env($this->deploymentEnvironment)->run(['bash', base_path('.github/scripts/deploy-coolify-image.sh')]);
 
     expect($result->failed())->toBeTrue()
         ->and(recordedCoolifyRequests($this->directory))->toHaveCount($requestCount)
@@ -105,3 +105,8 @@ it('stops on a Coolify error without leaking its response', function (string $pa
     'revision update rejected' => ['/api/v1/applications/application-test', 2],
     'deployment rejected' => ['/api/v1/deploy', 3],
 ]);
+
+it('refuses the legacy production deployment path without server authorization', function () {
+    $result = Process::env($this->deploymentEnvironment)->run(['bash', base_path('.github/scripts/deploy-release.sh')]);
+    expect($result->failed())->toBeTrue()->and(recordedCoolifyRequests($this->directory))->toBe([]);
+});
