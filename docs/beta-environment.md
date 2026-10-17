@@ -1,6 +1,6 @@
 # Environnement bêta privé
 
-État : code préparé, activation bloquée par la capacité observée du serveur ;
+État : code préparé, activation et vérifications d'infrastructure à terminer ;
 aucune ressource bêta créée ni donnée de production copiée.
 La cible approuvée est décrite dans la [spécification](superpowers/specs/2026-10-17-isolated-release-beta-design.md).
 
@@ -9,7 +9,18 @@ La cible approuvée est décrite dans la [spécification](superpowers/specs/2026
 Relevé en lecture seule le 17 octobre 2026 à 06:49 UTC sur le serveur Coolify
 prévu : 7 894 Mio de RAM totale, 1 120 Mio disponibles, aucun swap, 6 CPU,
 charge moyenne 8,49 / 5,13 / 4,73 et disque racine à 88 % (30 Gio libres).
-Les 43 conteneurs présents restent inchangés.
+Ce relevé précède le retrait des services médias demandé par l'opérateur.
+
+Le 17 octobre à 10:27 UTC, après arrêt de Bazarr, RomM et Streamystats avec
+leurs deux bases et le worker Streamystats, la mémoire disponible atteint
+2 190 Mio, soit 1 070 Mio de plus. La charge moyenne est de 1,07 / 2,35 /
+3,25. Les six conteneurs ont ensuite été retirés sans suppression de volumes ;
+les sept définitions Compose (dont le service ponctuel de migration
+Streamystats) sont retirées de la configuration Coolify enregistrée et relue.
+Les données restent dans `/opt/nas/{bazarr,romm,streamystats}` ; une copie
+privée du Compose précédent est conservée sur le serveur. Aucun redémarrage
+global de la stack médias n'a été nécessaire. Les quatre processus DLP Friends,
+MySQL et Redis sont restés sains, `/up` répond HTTP 200 et l'accueil HTTP 302.
 
 À la demande de l'opérateur (usage seul, lenteur acceptable), les limites
 applicatives bêta sont réduites à **480 Mio et 0,80 CPU cumulés** : web
@@ -21,9 +32,10 @@ automatiquement après un échec.
 
 MySQL 8.4, Redis 7.4, Mailpit, les imports et une réserve pour les services
 existants doivent encore tenir en mémoire. Moins de 500 Mio pour l'ensemble,
-base incluse, n'est pas démontré. Libérer de la capacité ou redimensionner
-l'hébergement, puis refaire les mesures en période de charge avant tout
-provisionnement. Aucun achat ni changement des services existants n'a été effectué.
+base incluse, n'est pas démontré. La capacité libérée permet de reprendre la
+préparation ; confirmer les budgets des ressources dédiées et la réserve
+observable avant leur démarrage, puis mesurer les parcours. Aucun achat
+d'hébergement n'a été effectué.
 
 Consommations instantanées observées (Mio, arrondies) :
 
@@ -41,8 +53,8 @@ Consommations instantanées observées (Mio, arrondies) :
 Les deux premières mesures MySQL ne sont pas simultanées (544 puis 551 Mio
 pour DLP Friends). Les lignes regroupées se recoupent et ne doivent pas être
 additionnées. Les conteneurs utilisent environ 5 459 Mio au total ; l'hôte et
-ses autres processus utilisent aussi de la mémoire. Les services médias sont
-des pistes à examiner avec l'opérateur, sans arrêt ou réduction implicite.
+ses autres processus utilisent aussi de la mémoire. Ce tableau précède le
+retrait explicite des services médias décrit ci-dessus.
 Même limitée, la bêta partage CPU, disque et noyau avec la production : les
 plafonds réduisent le risque sans garantir une absence totale d'impact.
 
