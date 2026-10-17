@@ -102,12 +102,15 @@ de version. La publication est volontaire et intervient uniquement lors du
 merge de la Release PR. Aucun package npm ou Composer n'est publié : DLP Friends
 est une application web.
 
-La Release PR maintient également la page publique des nouveautés via
-`config/release-notes.php`. Une entrée française et anglaise est obligatoire
+Les notes publiques sont préparées dans `config/release-notes.php` et intégrées
+à `main` avant la Release PR, afin que les mises à jour de Release Please les
+conservent. Une entrée française et anglaise est obligatoire
 pour chaque version dont `CHANGELOG.md` contient une section `### Features`.
 Les versions composées uniquement de correctifs n'ont pas d'entrée et ne sont
 pas affichées. Le test `PublicReleaseNotesTest` vérifie automatiquement cette
-correspondance avant le merge.
+correspondance avant le merge. Une entrée préparée pour une prochaine version
+reste masquée tant que cette version n'apparaît pas dans le changelog ; elle
+devient visible dans le candidat de la Release PR qui l'ajoute.
 
 Le workflow utilise `RELEASE_PLEASE_TOKEN`, jeton limité à ce dépôt, afin que sa
 pull request déclenche la CI normale. Il dispose seulement des permissions
@@ -143,7 +146,7 @@ Le workflow `Release Please` conserve une concurrence unique et n’annule pas
 une livraison en cours. Il enchaîne :
 
 1. Release Please crée ou actualise la Release PR ; seul `release_created ==
-   'true'` autorise la publication de l’image.
+'true'` autorise la publication de l’image.
 2. `Publish release image` extrait le **SHA retourné par Release Please**,
    vérifie que le tag et le manifeste de version désignent ce commit, puis
    construit et publie le runtime `linux/amd64` dans GHCR. L’architecture du VPS
@@ -181,13 +184,13 @@ le VPS ; cela ne les transmet pas au build GitHub ni à une couche de l’image.
 
 Dans GitHub, **Settings → Secrets and variables → Actions → Variables** :
 
-| Variable | Valeur |
-| --- | --- |
-| `VITE_REVERB_APP_KEY` | Clé publique, identique à `REVERB_APP_KEY` dans Coolify. |
-| `VITE_REVERB_HOST` | Hôte WebSocket public, sans protocole ni chemin. |
-| `VITE_REVERB_PORT` | `443` en production. |
-| `VITE_REVERB_SCHEME` | `https` en production. |
-| `COOLIFY_API_URL` | `https://coolify.zdossantos.fr/api/v1`. |
+| Variable                   | Valeur                                                                         |
+| -------------------------- | ------------------------------------------------------------------------------ |
+| `VITE_REVERB_APP_KEY`      | Clé publique, identique à `REVERB_APP_KEY` dans Coolify.                       |
+| `VITE_REVERB_HOST`         | Hôte WebSocket public, sans protocole ni chemin.                               |
+| `VITE_REVERB_PORT`         | `443` en production.                                                           |
+| `VITE_REVERB_SCHEME`       | `https` en production.                                                         |
+| `COOLIFY_API_URL`          | `https://coolify.zdossantos.fr/api/v1`.                                        |
 | `COOLIFY_APPLICATION_UUID` | Identifiant de l’application Docker Compose DLP Friends, visible dans son URL. |
 
 Les quatre `VITE_REVERB_*` sont obligatoires à la publication. La CI des PR
