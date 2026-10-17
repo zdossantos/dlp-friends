@@ -154,8 +154,10 @@ serveurs dédiés avec les connexions réelles de l'application. Il purge les
 anciennes sessions/files et le cache bêta en conservant atomiquement la clé
 de maintenance. Il n'efface jamais Redis production. `beta.env` contient les
 variables d'exécution Laravel résolues (pas les noms `BETA_*` du Compose),
-avec le réseau Docker bêta dans `beta.network`. Le lancement ponctuel de
-migration vérifie ses identités réelles avant d'agir.
+avec, dans `beta.network`, un réseau Docker déjà utilisé par l'application et
+permettant de joindre ses dépendances dédiées. Sur Coolify, le réseau Compose
+seul ne suffit pas lorsque MySQL et Redis sont rattachés uniquement à `coolify`.
+Le lancement ponctuel de migration vérifie ses identités réelles avant d'agir.
 
 Les fichiers de preuve, phases de livraison et attestations opérateur sont
 décrits dans [la procédure de livraison](operations.md#livraisons-contrôlées-et-répétition-bêta).
