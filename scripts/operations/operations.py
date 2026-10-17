@@ -148,7 +148,9 @@ class Operations:
         for line in grants.splitlines():
             require(" ON *.* " not in line or line.startswith("GRANT USAGE ON *.* "), "beta_global_privileges")
             if not line.startswith("GRANT USAGE ON *.* "):
-                require(" ON `" + beta["database"] + "`.* TO " in line and "WITH GRANT OPTION" not in line,
+                # Database-level grants use LIKE patterns: an underscore must be literal.
+                database_pattern = beta["database"].replace("_", "\\_")
+                require(" ON `" + database_pattern + "`.* TO " in line and "WITH GRANT OPTION" not in line,
                         "beta_database_privileges")
         require(bool(grants.strip()), "beta_database_privileges")
         buckets = {side: self.garage("GetBucketInfo", {"globalAlias": self.config[side]["bucket"]})

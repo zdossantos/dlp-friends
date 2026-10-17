@@ -48,6 +48,8 @@ with tempfile.TemporaryDirectory() as temporary:
                         "process_containers": [side + "-worker", side + "-scheduler", side + "-reverb"],
                         "database": side, "redis_password_file": str(redis_password), "mysql_client": str(private), "bucket": side, "bucket_id": side + "-bucket",
                         "storage_key_id": side + "-key", "rclone_remote": side}
+    if scenario in ("escaped-database-grants", "wildcard-database-grants"):
+        config["beta"]["database"] = "beta_db"
     if scenario == "resource-alias":
         config["beta"]["redis_uuid"] = config["source"]["redis_uuid"]
     path = directory / "config.json"
@@ -62,11 +64,14 @@ with tempfile.TemporaryDirectory() as temporary:
         global imported, copied
         calls.append(arguments)
         if arguments[0] == "mysql":
-            side = arguments[5]
+            side = "beta" if arguments[5] == "beta_db" else arguments[5]
             sql = arguments[7] if input is None else "IMPORT"
             if "server_uuid" in sql:
                 return ("source\tsource" if scenario == "mysql-alias" or side == "source" else "beta\tbeta") + "\n"
             if sql == "SHOW GRANTS;":
+                if scenario in ("escaped-database-grants", "wildcard-database-grants"):
+                    database = r"beta\_db" if scenario == "escaped-database-grants" else "beta_db"
+                    return "GRANT USAGE ON *.* TO 'beta'@'%'\nGRANT ALL PRIVILEGES ON `" + database + "`.* TO 'beta'@'%'\n"
                 return "GRANT USAGE ON *.* TO 'beta'@'%'\nGRANT ALL PRIVILEGES ON `beta`.* TO 'beta'@'%'\n"
             if "information_schema" in sql:
                 return "0\n"
@@ -107,7 +112,7 @@ with tempfile.TemporaryDirectory() as temporary:
                 return json.dumps([{"Id": name, "Mounts": [{"Source": volume, "Destination": destination}],
                                     "State": {"Running": scenario == "active-process", "ExitCode": 0}}])
             if "-r" in arguments:
-                return json.dumps({"env": "beta", "closed": True, "database": "beta", "bucket": "beta", "key": "beta-key",
+                return json.dumps({"env": "beta", "closed": True, "database": config["beta"]["database"], "bucket": "beta", "key": "beta-key",
                                    "redis_default_id": "source" if scenario == "runtime-redis-alias" else "beta", "redis_cache_id": "beta",
                                    "mysql_server_uuid": "source" if scenario == "runtime-mysql-alias" else "beta"})
             assert "beta:sanitize-copy" in arguments
@@ -136,14 +141,14 @@ with tempfile.TemporaryDirectory() as temporary:
 
     ops.run = fake
     operation = ops.Operations(path)
-    expected = {"mysql-alias": "mysql_alias", "resource-alias": "resource_alias", "volume-alias": "volume_alias",
+    expected = {"wildcard-database-grants": "beta_database_privileges", "mysql-alias": "mysql_alias", "resource-alias": "resource_alias", "volume-alias": "volume_alias",
                 "bucket-alias": "bucket_alias", "source-bucket-write": "beta_storage_permissions",
                 "missing-confirmation": "explicit_beta_replacement_required", "active-process": "beta_processes_not_drained",
                 "incomplete-import": "restored_count_mismatch", "object-disappeared": "objects_changed_during_copy",
                 "runtime-mysql-alias": "beta_closed_identity_required", "runtime-redis-alias": "beta_closed_identity_required", "rclone-key-alias": "rclone_identity_mismatch"}
     try:
         operation.refresh(scenario != "missing-confirmation")
-        assert scenario == "complete-copy", "unsafe refresh accepted"
+        assert scenario in ("complete-copy", "escaped-database-grants"), "unsafe refresh accepted"
         report = json.loads((directory / "snapshot.json").read_text())
         assert report["tables_verified"] and report["objects_verified"] and report["sanitized"]
         assert mutations == ["drop-beta", "import-beta", "copy-beta-bucket", "reset-beta-redis", "sanitize-beta"]
@@ -153,6 +158,6 @@ with tempfile.TemporaryDirectory() as temporary:
     except KeyboardInterrupt:
         assert scenario == "interrupted-copy"
         assert not (directory / "snapshot.json").exists()
-    if scenario in list(expected)[:7] or scenario in ("runtime-mysql-alias", "rclone-key-alias", "runtime-redis-alias"):
+    if scenario in expected and scenario not in ("incomplete-import", "object-disappeared"):
         assert not mutations, mutations
     assert not any("up" in call or "migrate" in call for call in calls)
