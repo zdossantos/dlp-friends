@@ -129,7 +129,7 @@ jobs:
       group: beta-deploy
       cancel-in-progress: false
     permissions:
-      contents: read
+      contents: write
       pull-requests: read
       checks: read
     steps:
@@ -148,6 +148,9 @@ jobs:
           COOLIFY_BETA_APPLICATION_UUID: ${{ vars.COOLIFY_BETA_APPLICATION_UUID }}
           COOLIFY_PRODUCTION_APPLICATION_UUID: ${{ vars.COOLIFY_APPLICATION_UUID }}
           COOLIFY_TOKEN: ${{ secrets.COOLIFY_BETA_TOKEN }}
+          BETA_SSH_HOST: ${{ vars.BETA_SSH_HOST }}
+          BETA_SSH_KNOWN_HOSTS: ${{ vars.BETA_SSH_KNOWN_HOSTS }}
+          BETA_SSH_PRIVATE_KEY: ${{ secrets.BETA_SSH_PRIVATE_KEY }}
         run: |
           printf '%s' "$BETA_CANDIDATE_JSON" > candidate.json
           export BETA_CANDIDATE_FILE="$PWD/candidate.json"

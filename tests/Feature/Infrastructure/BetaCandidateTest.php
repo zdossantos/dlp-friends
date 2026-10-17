@@ -100,3 +100,63 @@ it('separates candidate builds from trusted deployment scripts and never migrate
     expect($deploy)->toContain('secrets.COOLIFY_BETA_TOKEN', 'trusted/.github/scripts/deploy-beta.sh')
         ->not->toContain('path: candidate', 'packages: write');
 });
+
+it('deploys over a dedicated SSH key without a Coolify API credential', function () {
+    $ssh = $this->candidateDirectory.'/ssh';
+    file_put_contents($ssh, <<<'SH'
+#!/usr/bin/env bash
+set -euo pipefail
+printf '%s\n' "$@" > "$SSH_LOG"
+cat > "$SSH_PAYLOAD"
+# Check the client created private key files, without copying their contents.
+while (($#)); do
+    if [[ "$1" == -i ]]; then
+        "$TEST_PHP_BINARY" -r 'exit((fileperms($argv[1]) & 0777) === 0600 ? 0 : 1);' "$2"
+    fi
+    shift
+done
+printf '{"deployment_uuid":"beta-deployment-test"}\n'
+SH);
+    chmod($ssh, 0700);
+    $result = Process::env(array_merge($this->candidateEnvironment, [
+        'PATH' => $this->candidateDirectory.':'.getenv('PATH'),
+        'COOLIFY_TOKEN' => '', 'BETA_SSH_HOST' => '192.0.2.1',
+        'BETA_SSH_PRIVATE_KEY' => 'fixture-private-key',
+        'BETA_SSH_KNOWN_HOSTS' => '192.0.2.1 ssh-ed25519 fixture-public-host-key',
+        'SSH_LOG' => $this->candidateDirectory.'/ssh.log',
+        'SSH_PAYLOAD' => $this->candidateDirectory.'/ssh.json',
+        'TEST_PHP_BINARY' => PHP_BINARY,
+    ]))->run(['bash', base_path('.github/scripts/deploy-beta.sh')]);
+    expect($result->successful())->toBeTrue($result->errorOutput())
+        ->and(file_exists($this->candidateDirectory.'/requests.jsonl'))->toBeFalse()
+        ->and(json_decode(file_get_contents($this->candidateDirectory.'/ssh.json'), true))->toBe([
+            'application_uuid' => 'application-test',
+            'sha' => str_repeat('b', 40),
+            'image' => 'ghcr.io/zdossantos/dlp-friends@sha256:'.str_repeat('a', 64),
+        ]);
+    $references = array_map(fn ($line) => json_decode($line, true), file($this->candidateDirectory.'/scenario.json.refs'));
+    expect($references[0]['body'])->toBe(['ref' => 'refs/heads/chore/beta-candidates/'.str_repeat('b', 40), 'sha' => str_repeat('b', 40)])
+        ->and(array_column($references, 'method'))->toBe(['POST', 'GET']);
+    $arguments = file_get_contents($this->candidateDirectory.'/ssh.log');
+    expect($arguments)->toContain('StrictHostKeyChecking=yes', 'IdentitiesOnly=yes', 'BatchMode=yes', 'dlp-beta-deploy@192.0.2.1')
+        ->not->toContain('fixture-private-key', 'fixture-token');
+    expect($result->output().$result->errorOutput())->not->toContain('fixture-private-key');
+});
+
+it('reuses only an existing candidate branch that still points to the validated SHA', function (string $referenceSha, bool $allowed) {
+    file_put_contents($this->candidateDirectory.'/scenario.json', json_encode(['existing_ref' => true, 'ref_sha' => $referenceSha]));
+    file_put_contents($this->candidateDirectory.'/ssh', "#!/bin/sh\ntouch \"\$SSH_LOG\"\ncat >/dev/null\nprintf '{\"deployment_uuid\":\"beta-test\"}\\n'\n");
+    chmod($this->candidateDirectory.'/ssh', 0700);
+    $result = Process::env(array_merge($this->candidateEnvironment, [
+        'PATH' => $this->candidateDirectory.':'.getenv('PATH'),
+        'COOLIFY_TOKEN' => '', 'BETA_SSH_HOST' => '192.0.2.1',
+        'BETA_SSH_PRIVATE_KEY' => 'fixture-private-key', 'BETA_SSH_KNOWN_HOSTS' => 'fixture-host-key',
+        'SSH_LOG' => $this->candidateDirectory.'/ssh.log',
+    ]))->run(['bash', base_path('.github/scripts/deploy-beta.sh')]);
+    expect($result->successful())->toBe($allowed)
+        ->and(file_exists($this->candidateDirectory.'/ssh.log'))->toBe($allowed)
+        ->and(file_exists($this->candidateDirectory.'/requests.jsonl'))->toBeFalse();
+})->with([
+    'same SHA' => [str_repeat('b', 40), true],
+    'moved reference' => [str_repeat('a', 40), false],
+]);

@@ -15,7 +15,16 @@ $pr = ['number' => 268, 'state' => 'open', 'draft' => false, 'head' => $head,
 $pr = array_replace_recursive($pr, $scenario['pr'] ?? []);
 header('Content-Type: application/json');
 $path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
-if (str_ends_with($path, '/pulls')) {
+if (str_contains($path, '/git/ref') && ! str_contains($path, '/git/commits/')) {
+    $body = json_decode(file_get_contents('php://input'), true);
+    file_put_contents(getenv('SCENARIO_FILE').'.refs', json_encode(['method' => $_SERVER['REQUEST_METHOD'], 'path' => $path, 'body' => $body])."\n", FILE_APPEND);
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        http_response_code(($scenario['existing_ref'] ?? false) ? 422 : 201);
+        echo '{}';
+    } else {
+        echo json_encode(['object' => ['sha' => $scenario['ref_sha'] ?? $sha]]);
+    }
+} elseif (str_ends_with($path, '/pulls')) {
     echo json_encode(($scenario['no_pr'] ?? false) ? [] : [$pr]);
 } elseif (str_ends_with($path, '/check-runs')) {
     $names = ['Conventional PR title', 'PHP quality', 'Backend tests', 'Frontend quality', 'Vite build', 'Docker build'];

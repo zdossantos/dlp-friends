@@ -61,7 +61,7 @@ x-app: &app
     MAIL_SCHEME: smtp
     MAIL_USERNAME: ""
     MAIL_PASSWORD: ""
-    MAIL_URL: ""
+    MAIL_URL: "null"
     MAIL_FROM_ADDRESS: beta@dlp-friends.fr
     MAIL_FROM_NAME: DLP Friends Beta
     GOOGLE_CLIENT_ID: ${BETA_GOOGLE_CLIENT_ID:-}

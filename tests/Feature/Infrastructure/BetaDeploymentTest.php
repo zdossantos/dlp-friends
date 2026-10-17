@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Process;
+use Symfony\Component\Mailer\Transport\Smtp\EsmtpTransport;
 
 function betaComposeEnvironment(array $overrides = []): array
 {
@@ -53,6 +54,20 @@ it('refuses beta rendering with any missing critical isolated resource', functio
     $result = Process::env(betaComposeEnvironment([$variable => '']))->run('docker compose -f compose.beta.yaml config --format json');
     expect($result->failed())->toBeTrue()->and($result->errorOutput())->toContain($variable);
 })->with(['APP_IMAGE', 'BETA_APP_KEY', 'BETA_DB_HOST', 'BETA_DB_DATABASE', 'BETA_DB_PASSWORD', 'BETA_REDIS_HOST', 'BETA_REDIS_PASSWORD', 'BETA_AWS_BUCKET', 'BETA_AWS_SECRET_ACCESS_KEY', 'BETA_MAILPIT_HOST']);
+
+it('constructs the beta SMTP transport from the rendered environment', function () {
+    $rendered = Process::env(betaComposeEnvironment())->run('docker compose -f compose.beta.yaml config --format json');
+    expect($rendered->successful())->toBeTrue($rendered->errorOutput());
+    $environment = json_decode($rendered->output(), true, flags: JSON_THROW_ON_ERROR)['services']['web']['environment'];
+    $result = Process::env($environment)->run(['php', '-r', <<<'PHP'
+require 'vendor/autoload.php';
+$app = require 'bootstrap/app.php';
+$app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap();
+echo get_class($app->make('mail.manager')->mailer()->getSymfonyTransport());
+PHP]);
+    expect($result->successful())->toBeTrue($result->errorOutput().$result->output())
+        ->and($result->output())->toBe(EsmtpTransport::class);
+});
 
 it('blocks background processes until readiness succeeds without migrating', function (string $process, bool $ready) {
     $directory = sys_get_temp_dir().'/dlp-entrypoint-'.bin2hex(random_bytes(6));

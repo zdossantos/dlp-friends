@@ -45,9 +45,18 @@ def digest(value):
 
 
 def normalize_schema(definitions):
-    # Only a table's allocation counter is volatile; retain column AUTO_INCREMENT.
-    return "\n".join(re.sub(r"(\) ENGINE=[^\n]*?) AUTO_INCREMENT=\d+", r"\1", definition)
-                     for definition in sorted(definitions))
+    normalized = []
+    for definition in definitions:
+        # Only a table's allocation counter is volatile; retain column AUTO_INCREMENT.
+        definition = re.sub(r"(\) ENGINE=[^\n]*?) AUTO_INCREMENT=\d+", r"\1", definition)
+        # COLLATE already determines its charset. Server versions can spell out
+        # this redundant attribute differently. Never rewrite SQL string literals
+        # or identifiers, nor discard a distinct charset or collation.
+        parts = re.split(r"('(?:\\.|''|[^'\\])*'|`(?:``|[^`])*`)", definition)
+        for index in range(0, len(parts), 2):
+            parts[index] = re.sub(r" CHARACTER SET ([A-Za-z0-9]+) (?=COLLATE \1_[A-Za-z0-9_]+\b)", " ", parts[index])
+        normalized.append("".join(parts))
+    return "\n".join(sorted(normalized))
 
 
 def write_json(path, value):
@@ -77,7 +86,7 @@ class Operations:
     def mysql(self, side, sql, *, input=None):
         target = self.config[side]
         arguments = ["mysql", "--defaults-extra-file=" + target["mysql_client"],
-                     "--batch", "--skip-column-names", "--raw", target["database"]]
+                     "--default-character-set=utf8mb4", "--batch", "--skip-column-names", "--raw", target["database"]]
         return run(arguments + (["--execute", sql] if input is None else []), input=input)
 
     def inspect(self, container):
@@ -148,7 +157,9 @@ class Operations:
         for line in grants.splitlines():
             require(" ON *.* " not in line or line.startswith("GRANT USAGE ON *.* "), "beta_global_privileges")
             if not line.startswith("GRANT USAGE ON *.* "):
-                require(" ON `" + beta["database"] + "`.* TO " in line and "WITH GRANT OPTION" not in line,
+                # Database-level grants use LIKE patterns: an underscore must be literal.
+                database_pattern = beta["database"].replace("_", "\\_")
+                require(" ON `" + database_pattern + "`.* TO " in line and "WITH GRANT OPTION" not in line,
                         "beta_database_privileges")
         require(bool(grants.strip()), "beta_database_privileges")
         buckets = {side: self.garage("GetBucketInfo", {"globalAlias": self.config[side]["bucket"]})
