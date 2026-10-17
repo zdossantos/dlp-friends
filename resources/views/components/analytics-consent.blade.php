@@ -5,7 +5,7 @@
     'locale' => null,
 ])
 
-@if (config('services.google.analytics_id'))
+@if (! app()->environment('beta') && config('services.google.analytics_id'))
     <div
         data-analytics-consent
         data-analytics-measurement-id="{{ config('services.google.analytics_id') }}"

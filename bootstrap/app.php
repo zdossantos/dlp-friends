@@ -1,6 +1,8 @@
 <?php
 
+use App\Http\Middleware\EnsureBetaAccess;
 use App\Http\Middleware\EnsureCurrentTermsAccepted;
+use App\Http\Middleware\EnsureDeploymentReady;
 use App\Http\Middleware\EnsurePrivateAccountAccess;
 use App\Http\Middleware\EnsureProductOnboardingIsComplete;
 use App\Http\Middleware\EnsureProfileIsComplete;
@@ -29,6 +31,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withBroadcasting(__DIR__.'/../routes/channels.php', ['middleware' => ['web', 'social', 'terms.current']])
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->trustProxies(at: '*');
+        $middleware->prepend(EnsureDeploymentReady::class);
 
         $middleware->alias([
             'profile.complete' => EnsureProfileIsComplete::class,
@@ -43,6 +46,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->web(append: [
             HandleAppearance::class,
             SetLocale::class,
+            EnsureBetaAccess::class,
             EnsurePrivateAccountAccess::class,
             HandleInertiaRequests::class,
             AddLinkHeadersForPreloadedAssets::class,

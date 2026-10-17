@@ -177,30 +177,13 @@ Après chaque déploiement qui touche le contenu public, contrôler ces six page
 
 ## Déploiements suivants
 
-Un merge ordinaire dans `main` ne déploie rien. Après le merge volontaire de la
-Release PR, le workflow publie l’image du commit de release, fixe son digest
-pour les quatre services et fixe le commit utilisé pour le Compose. Le workflow
-ne lance pas les migrations. Un déploiement « Success » ou un `/up` à 200 ne
-prouve pas que le schéma attendu par cette version est installé.
-
-Avant le merge de la Release PR, lire les notes et les migrations ajoutées depuis
-la version en production. Si le nouveau code nécessite ces colonnes ou tables,
-préparer une fenêtre de maintenance avant la bascule et suspendre le worker et
-le scheduler pendant la mise à jour du schéma.
-
-Après le déploiement de la nouvelle image, avant de rouvrir le service :
-
-1. exécuter explicitement `php artisan migrate --force` dans le conteneur `web`
-   de la nouvelle version, après sauvegarde ;
-2. contrôler `php artisan migrate:status` : aucune migration de cette version
-   ne doit rester `Pending` ;
-3. reprendre le worker et le scheduler et exécuter `php artisan queue:restart` ;
-4. vérifier `/up`, le profil d’un compte existant authentifié (lecture et
-   modification), la connexion WebSocket, les files et les journaux des quatre
-   services applicatifs et du service MySQL indépendant. Pour le contrôle
-   authentifié, utiliser une session de contournement de maintenance opérateur ;
-5. terminer la fenêtre de maintenance uniquement après ces contrôles. Si une
-   migration ou un contrôle échoue, garder le service fermé et suivre le rollback.
+Un merge ordinaire dans `main` ne déploie rien. Le merge volontaire de la
+Release PR publie l’image et sa référence ; il ne livre plus la production.
+Suivre exclusivement la procédure
+[prepare → deploy → verify → resume](#livraisons-contrôlées-et-répétition-bêta),
+après sa transition initiale. Un déploiement « Success » ou un `/up` à 200 ne
+prouve pas que le schéma attendu est installé. Les migrations et la reprise
+restent des actions opérateur explicites après répétition et sauvegarde vérifiées.
 
 ### Incident de profil après la 1.15.0
 
@@ -215,19 +198,10 @@ remise en production de cette version, selon la procédure ci-dessus.
 
 ## Bascule d’une installation existante
 
-Avant le merge de l’issue 132, désactiver Auto Deploy dans Coolify pour éviter
-qu’un Compose exigeant `APP_IMAGE` ne soit lancé avant la première publication.
-Préparer les variables GitHub, vérifier les droits write/deploy de
-`COOLIFY_TOKEN` et authentifier le VPS au registre GHCR privé. Le dépôt Git,
-les domaines et les volumes existants sont conservés.
-
-Après merge de la Release PR, le workflow fournit `APP_IMAGE` et
-`git_commit_sha` avant son premier appel de déploiement. Vérifier dans les logs
-Coolify le téléchargement de l’image et l’absence de compilation applicative.
-Le premier retour à une version antérieure à cette bascule nécessite le
-Compose et l’image locale de l’ancien déploiement ; il ne bénéficie pas encore
-d’un artefact GHCR. Conserver cette image locale jusqu’à validation de la
-première release GHCR et ne pas lancer de nettoyage Docker entre-temps.
+La bascule historique vers les images GHCR (issue 132) est remplacée pour les
+livraisons futures par la procédure contrôlée ci-dessous. Conserver les anciens
+digest/commit et désactiver les déclencheurs Coolify qui contournent cette
+procédure. Aucun jeton de livraison production n'est fourni au workflow de publication.
 
 ## Retour à une release GHCR précédente
 
@@ -453,3 +427,130 @@ données propres à la cible. Éviter un rollback des migrations de conservation
 après création de graphes détachés : leur `down` retire ces graphes avant de
 restaurer les contraintes non nulles et entraîne donc une perte de ces données.
 Préférer une migration corrective conservant les données.
+
+## Livraisons contrôlées et répétition bêta
+
+**État : préparé dans le dépôt, activation serveur non validée.** Cette
+procédure remplace la livraison automatique après publication dès intégration
+du workflow. Une GitHub Release publie son image et `container-image.json` ;
+elle ne déploie plus la production. Désactiver également Auto Deploy et les
+anciens webhooks Coolify avant activation. Ne pas utiliser l'ancien script
+`deploy-release.sh`, qui refuse désormais la livraison.
+
+Prérequis et copie isolée : [environnement bêta](beta-environment.md). Les
+commandes suivantes s'exécutent sur le serveur avec la configuration privée,
+jamais dans GitHub Actions. `--image` exige un digest GHCR ; `--commit` le SHA
+complet de cette image. Les labels `io.dlp-friends.source-tree` et
+`io.dlp-friends.migrations-sha256` sont contrôlés, puis les fichiers de
+migration réellement embarqués sont hachés. Le tree complet peut correspondre
+malgré des SHA différents après squash. Un changement de tree ou de migration
+exige une nouvelle répétition.
+
+### Transition initiale obligatoire
+
+Avant toute procédure, préparer une fenêtre de maintenance et conserver le
+digest/commit de l'image précédente. L'ancienne **et** la nouvelle image doivent
+partager `APP_MAINTENANCE_DRIVER=cache`, `APP_MAINTENANCE_STORE=redis`,
+`CACHE_PREFIX=dlp_friends_production_cache_`,
+`REDIS_PREFIX=dlp_friends_production_`, `REDIS_CACHE_DB=1`, `REDIS_DB=0`
+et le même Redis de production. Le script vérifie aussi son identité réelle,
+la base sélectionnée et le préfixe client effectif du stockage de maintenance.
+Le passage initial depuis une maintenance fichier/base exige une fermeture
+HTTP au niveau du proxy pendant la transition : un drapeau de l'ancien
+stockage n'est pas lu par le nouveau. La modification initiale des préfixes
+Redis/cache peut déconnecter les sessions existantes et invalider le cache.
+Vérifier cette transition avant d'ôter la fermeture proxy. Ne pas annoncer
+ces protections actives avant cette vérification réelle.
+L'image précédente doit aussi embarquer `docker/php/drain.conf` : le délai
+PHP-FPM de 86400 s empêche une escalade en TERM/KILL pendant les 150 s de
+drainage contrôlé. Le script refuse une autre configuration avant le signal.
+
+### Répétition sur la copie privée
+
+```sh
+bash scripts/operations/production-release.sh --config /srv/dlp-operations/private/config.json rehearse --image "$BETA_IMAGE" --commit "$BETA_COMMIT"
+```
+
+Le premier passage applique explicitement les migrations, en mesure la durée,
+les relance et exige zéro nouvelle migration. Il écrit un rapport
+`awaiting_journeys`, puis échoue tant que l'attestation manque. Conserver la
+copie, ouvrir **seulement la bêta réservée aux administrateurs actifs**, démarrer ses processus et
+tester connexion, profil existant, découverte, message temps réel, fichier,
+e-mail capturé et file. Refermer et arrêter proprement les processus après
+les essais. Remplir `beta-journeys.json` en `0600` : `snapshot_id`,
+`candidate_image`, `candidate_commit`, `completed_at` (timestamp Unix) et
+`checks` avec `login`, `existing_profile`, `discovery`, `realtime_message`,
+`file`, `captured_mail`, `queue`, chacun à `true` **après vérification réelle**.
+Relancer exactement la même commande : elle finalise le rapport sans réappliquer
+les migrations si l'image, le snapshot et le schéma bêta correspondent.
+
+La clôture refuse un snapshot âgé de 24 h ou plus, une date future, un rapport
+incomplet et une évolution du schéma production depuis la copie. Après une
+nouvelle copie ou un autre candidat, refaire les parcours et l'attestation.
+Un nouveau candidat ou une migration interrompue exige de repartir d'une copie
+fraîche : avant toute nouvelle exécution, schéma et registre de migrations bêta
+doivent encore correspondre au snapshot initial. Seule la reprise des parcours
+du même candidat en état `awaiting_journeys` réutilise la copie migrée.
+Une migration manquante dans le code ne se déduit pas d'une liste vide de
+migrations en attente : chaque futur changement de schéma doit avoir un test
+d'upgrade avec données anciennes dans `tests/Feature/Database/`, en complément
+des parcours et de la revue. Préférer ajout compatible, reprise rejouable puis
+retrait différé des anciens champs.
+
+### Préparer, livrer, contrôler, rouvrir
+
+1. Exécuter `production-release.sh ... prepare --image "$RELEASE_IMAGE" --commit "$RELEASE_COMMIT"`.
+   Le script ferme en maintenance persistante et arrête/drain les trois
+   processus (150 s maximum chacun), puis envoie SIGQUIT au maître PHP-FPM et
+   attend la disparition de tous ses processus (150 s maximum), donc la fin des
+   requêtes et callbacks en cours. Nginx et Artisan privé restent disponibles ;
+   les nouvelles requêtes applicatives échouent jusqu'au remplacement du web.
+   Il recontrôle ce drain avant livraison et conserve l'ancien digest/commit,
+   exporte MySQL et télécharge les objets privés avec contrôle de contenu.
+   Il attend ensuite une preuve de restauration ; la maintenance reste active.
+   Si le délai de drainage expire, aucune sauvegarde ni livraison ne démarre.
+   Garder fermé, identifier la requête bloquée et attendre sa terminaison avant
+   de reprendre. Ne pas relancer PHP-FPM ni lever la maintenance pendant ce drain.
+   Si la procédure doit être abandonnée après drainage, remplacer volontairement
+   le web par le digest précédent, toujours en maintenance, puis contrôler le
+   schéma et les processus avant toute réouverture opérateur.
+2. Restaurer cette sauvegarde dans une **troisième base jetable isolée**, jamais
+   dans la production ni par-dessus la répétition conservée. Vérifier schéma,
+   comptages et téléchargement des objets. Créer `backup-restore.json` privé
+   avec les valeurs `backup_id`, `sql_sha256`, `objects_sha256` de `backup.json`,
+   `completed_at` et les booléens `restored_to_isolated_database`,
+   `schema_and_counts_verified`, `objects_download_verified`. Aucun booléen
+   n'est prévalidé. Relancer `prepare` avec les mêmes arguments pour produire
+   `authorization.json`. Sans preuve, aucune livraison n'est autorisée.
+3. Exécuter `... deploy --image ... --commit ...`. Le script recontrôle la
+   répétition, le schéma source, la fermeture, le drain et la sauvegarde ;
+   il épingle image/commit puis demande Coolify une seule fois. Un timeout
+   laisse `deployment_unknown` : inspecter Coolify, ne pas relancer à l'aveugle.
+   Actualiser dans la configuration privée les références des conteneurs
+   remplacés. Le jeton curl Coolify reste dans un fichier `0600` serveur.
+4. **Action séparée et volontaire :** dans le conteneur web de l'image précise,
+   appliquer `php artisan migrate --force --no-interaction`. Ni `deploy`, ni
+   l'entrypoint ne le font. En cas d'échec, conserver la maintenance et les
+   processus arrêtés. Après le remplacement Coolify, arrêter proprement ses
+   processus en attente avant de poursuivre ; ils ne doivent traiter aucun job.
+5. Contrôler les parcours de lecture via un bypass Laravel privé de maintenance
+   (`php artisan down --with-secret`, sortie conservée hors logs publics).
+   Le bypass autorise aussi des écritures : le réserver à l'opérateur et aux
+   comptes de test. Remplir `production-journeys.json` : `image`, `commit`,
+   `deployment_uuid`, `completed_at`, `checks` (`login`, `existing_profile`,
+   `discovery`, `file`). Les essais d'envoi, de file et de temps réel ont été
+   effectués en bêta pour éviter des envois aux membres pendant cette phase.
+   `... verify --image ... --commit ...` exige déploiement terminé, commit,
+   digest, santé web et `deployment:check --allow-maintenance` réussis.
+6. Dans l'heure suivant la vérification, `... resume --image ... --commit ... --confirm-resume`
+   redémarre les conteneurs, puis lève la maintenance. Leurs entrypoints
+   attendent cette levée et revérifient le schéma avant de lancer les processus
+   (délai habituel jusqu'à deux secondes). Contrôler ensuite les trois santés
+   et la reconnexion temps réel ; en cas d'échec refermer immédiatement et
+   investiguer. Révoquer le bypass et vérifier les nouvelles connexions.
+
+Aucune erreur ne lance `up`, `migrate:rollback` ou une restauration automatique.
+Un rollback d'image ne restaure pas les données ; garder fermé puis choisir une
+correction en avant ou une restauration contrôlée selon les écritures depuis
+la sauvegarde. Ne pas exécuter une livraison production pour tester cette
+procédure : sa première utilisation reste une opération volontaire.

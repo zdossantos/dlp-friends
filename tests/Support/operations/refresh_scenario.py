@@ -1,0 +1,184 @@
+"""Synthetic boundary fixtures for the server-only refresh command."""
+import importlib.util
+import sys
+import subprocess
+import json
+import tempfile
+from types import SimpleNamespace
+
+from pathlib import Path
+
+module = Path(__file__).resolve().parents[3] / "scripts/operations/operations.py"
+spec = importlib.util.spec_from_file_location("operations", module)
+ops = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(ops)
+
+scenario = sys.argv[1]
+if scenario == "private-error":
+    ops.subprocess.run = lambda *args, **kwargs: SimpleNamespace(returncode=1, stdout=b"private-response", stderr=b"private-response")
+    try:
+        ops.run(["curl", "unused"])
+        raise AssertionError("private API failure accepted")
+    except ops.OperationError as error:
+        assert "private-response" not in str(error)
+    sys.exit(0)
+
+if scenario == "utf8-schema":
+    operation = object.__new__(ops.Operations)
+    operation.config = {"source": {"mysql_client": "/unused", "database": "source"}}
+    def mysql_result(arguments, **kwargs):
+        sql = arguments[-1]
+        if sql == "SHOW TABLES;":
+            content = b"users\n"
+        else:
+            encoding = "utf-8" if "--default-character-set=utf8mb4" in arguments else "latin-1"
+            content = "users\tCREATE TABLE `users` (`label` varchar(40) COMMENT 'amitié')\n".encode(encoding)
+        return SimpleNamespace(returncode=0, stdout=content, stderr=b"")
+    ops.subprocess.run = mysql_result
+    assert operation.schema_fingerprint("source") == ops.digest("CREATE TABLE `users` (`label` varchar(40) COMMENT 'amitié')")
+    sys.exit(0)
+
+if scenario == "schema-fingerprint":
+    a = "CREATE TABLE `users` (\n `id` bigint NOT NULL AUTO_INCREMENT,\n PRIMARY KEY (`id`)\n) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=utf8mb4"
+    b = a.replace("AUTO_INCREMENT=12", "AUTO_INCREMENT=400")
+    assert ops.normalize_schema([a]) == ops.normalize_schema([b])
+    assert ops.normalize_schema([a]) == a.replace(" AUTO_INCREMENT=12", "")
+    assert ops.normalize_schema([a]) != ops.normalize_schema([a.replace("`id` bigint", "`id` int")])
+    implicit = "CREATE TABLE `users` (\n `name` varchar(255) COLLATE utf8mb4_unicode_ci COMMENT 'CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci'\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci"
+    explicit = implicit.replace("varchar(255) COLLATE", "varchar(255) CHARACTER SET utf8mb4 COLLATE")
+    assert ops.normalize_schema([implicit]) == ops.normalize_schema([explicit])
+    assert "COMMENT 'CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci'" in ops.normalize_schema([explicit])
+    assert ops.normalize_schema([explicit]) != ops.normalize_schema([explicit.replace("utf8mb4_unicode_ci", "utf8mb4_bin", 1)])
+    assert ops.normalize_schema([explicit]) != ops.normalize_schema([explicit.replace("CHARACTER SET utf8mb4 COLLATE", "CHARACTER SET latin1 COLLATE", 1)])
+    sys.exit(0)
+
+with tempfile.TemporaryDirectory() as temporary:
+    directory = Path(temporary)
+    directory.chmod(0o700)
+    private = directory / "client"
+    private.write_text("[source]\ntype=s3\nendpoint=https://s3.example.test\naccess_key_id=source-key\n[beta]\ntype=s3\nendpoint=https://s3.example.test\naccess_key_id=" + ("source-key" if scenario == "rclone-key-alias" else "beta-key") + "\n")
+    private.chmod(0o600)
+    redis_password = directory / "redis-password"
+    redis_password.write_text("synthetic-password\n")
+    redis_password.chmod(0o600)
+    config = {"report_dir": temporary, "rclone_config": str(private), "garage_curl_config": str(private),
+              "garage_admin_url": "https://garage.example.test", "garage_s3_endpoint": "https://s3.example.test"}
+    for side in ("source", "beta"):
+        config[side] = {"application_uuid": side + "-app", "mysql_uuid": side + "-mysql", "redis_uuid": side + "-redis",
+                        "mysql_container": side + "-mysql", "redis_container": side + "-redis", "web_container": side + "-web",
+                        "process_containers": [side + "-worker", side + "-scheduler", side + "-reverb"],
+                        "database": side, "redis_password_file": str(redis_password), "mysql_client": str(private), "bucket": side, "bucket_id": side + "-bucket",
+                        "storage_key_id": side + "-key", "rclone_remote": side}
+    if scenario in ("escaped-database-grants", "wildcard-database-grants"):
+        config["beta"]["database"] = "beta_db"
+    if scenario == "resource-alias":
+        config["beta"]["redis_uuid"] = config["source"]["redis_uuid"]
+    path = directory / "config.json"
+    path.write_text(json.dumps(config))
+    path.chmod(0o600)
+    calls = []
+    imported = False
+    copied = False
+    mutations = []
+
+    def fake(arguments, *, input=None, output=None):
+        global imported, copied
+        calls.append(arguments)
+        if arguments[0] == "mysql":
+            side = "beta" if arguments[6] == "beta_db" else arguments[6]
+            sql = arguments[8] if input is None else "IMPORT"
+            if "server_uuid" in sql:
+                return ("source\tsource" if scenario == "mysql-alias" or side == "source" else "beta\tbeta") + "\n"
+            if sql == "SHOW GRANTS;":
+                if scenario in ("escaped-database-grants", "wildcard-database-grants"):
+                    database = r"beta\_db" if scenario == "escaped-database-grants" else "beta_db"
+                    return "GRANT USAGE ON *.* TO 'beta'@'%'\nGRANT ALL PRIVILEGES ON `" + database + "`.* TO 'beta'@'%'\n"
+                return "GRANT USAGE ON *.* TO 'beta'@'%'\nGRANT ALL PRIVILEGES ON `beta`.* TO 'beta'@'%'\n"
+            if "information_schema" in sql:
+                return "0\n"
+            if sql == "SHOW TABLES;":
+                return "migrations\nusers\n" if side == "source" or imported else "old_beta_tests\n"
+            if sql.startswith("SHOW CREATE"):
+                table = sql.split("`")[1]
+                return table + "\tCREATE TABLE `" + table + "` (\n `id` bigint NOT NULL\n) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8mb4\n"
+            if sql.startswith("SELECT migration"):
+                return "create_users\t1\n"
+            if sql.startswith("SELECT COUNT"):
+                return "0\n" if scenario == "incomplete-import" else "1\n"
+            if sql.startswith("SET FOREIGN_KEY_CHECKS"):
+                mutations.append("drop-beta")
+                return ""
+            if sql == "IMPORT":
+                mutations.append("import-beta")
+                if scenario == "interrupted-copy":
+                    raise KeyboardInterrupt()
+                imported = True
+                return ""
+            raise AssertionError(sql)
+        if arguments[0] == "docker":
+            if "redis-cli" in " ".join(arguments):
+                return "run_id:" + ("source" if "source-redis" in arguments else "beta") + "\n"
+            if "-r" in arguments:
+                lint = subprocess.run(["php", "-l"], input="<?php " + arguments[-1], text=True, capture_output=True)
+                assert lint.returncode == 0, lint.stderr + lint.stdout
+            if "flushdb" in " ".join(arguments):
+                mutations.append("reset-beta-redis")
+                return ""
+            if arguments[1] == "inspect":
+                name = arguments[2]
+                volume = "/volumes/" + name
+                if scenario == "volume-alias" and name == "beta-mysql":
+                    volume = "/volumes/source-mysql"
+                destination = "/var/lib/mysql" if name.endswith("mysql") else "/data"
+                return json.dumps([{"Id": name, "Mounts": [{"Source": volume, "Destination": destination}],
+                                    "State": {"Running": scenario == "active-process", "ExitCode": 0}}])
+            if "-r" in arguments:
+                return json.dumps({"env": "beta", "closed": True, "database": config["beta"]["database"], "bucket": "beta", "key": "beta-key",
+                                   "redis_default_id": "source" if scenario == "runtime-redis-alias" else "beta", "redis_cache_id": "beta",
+                                   "mysql_server_uuid": "source" if scenario == "runtime-mysql-alias" else "beta"})
+            assert "beta:sanitize-copy" in arguments
+            mutations.append("sanitize-beta")
+            return "sanitized\n"
+        if arguments[0] == "curl":
+            url = arguments[-1]
+            if "GetBucketInfo" in url:
+                side = "source" if url.endswith("=source") else "beta"
+                return json.dumps({"id": "source-bucket" if scenario == "bucket-alias" else side + "-bucket", "websiteAccess": False})
+            buckets = [{"id": "beta-bucket", "permissions": {"read": True, "write": True, "owner": False}}]
+            if scenario == "source-bucket-write":
+                buckets.append({"id": "source-bucket", "permissions": {"write": True}})
+            return json.dumps({"accessKeyId": "beta-key", "expired": False, "permissions": {"createBucket": False}, "buckets": buckets})
+        if arguments[0] == "mysqldump":
+            output.write(b"CREATE TABLE `migrations` (\n `id` bigint\n);\nINSERT INTO `migrations` (`id`) VALUES (1);\nCREATE TABLE `users` (\n `id` bigint\n);\nINSERT INTO `users` (`id`) VALUES (1);\n")
+            return ""
+        if arguments[0] == "rclone":
+            if "lsjson" in arguments:
+                return "[]" if copied and scenario == "object-disappeared" else json.dumps([{"Path": "synthetic.png", "Size": 123, "Hashes": {"md5": "synthetic"}}])
+            if "sync" in arguments:
+                mutations.append("copy-beta-bucket")
+                copied = True
+            return ""
+        raise AssertionError(arguments)
+
+    ops.run = fake
+    operation = ops.Operations(path)
+    expected = {"wildcard-database-grants": "beta_database_privileges", "mysql-alias": "mysql_alias", "resource-alias": "resource_alias", "volume-alias": "volume_alias",
+                "bucket-alias": "bucket_alias", "source-bucket-write": "beta_storage_permissions",
+                "missing-confirmation": "explicit_beta_replacement_required", "active-process": "beta_processes_not_drained",
+                "incomplete-import": "restored_count_mismatch", "object-disappeared": "objects_changed_during_copy",
+                "runtime-mysql-alias": "beta_closed_identity_required", "runtime-redis-alias": "beta_closed_identity_required", "rclone-key-alias": "rclone_identity_mismatch"}
+    try:
+        operation.refresh(scenario != "missing-confirmation")
+        assert scenario in ("complete-copy", "escaped-database-grants"), "unsafe refresh accepted"
+        report = json.loads((directory / "snapshot.json").read_text())
+        assert report["tables_verified"] and report["objects_verified"] and report["sanitized"]
+        assert mutations == ["drop-beta", "import-beta", "copy-beta-bucket", "reset-beta-redis", "sanitize-beta"]
+    except ops.OperationError as error:
+        assert str(error) == expected[scenario], str(error)
+        assert not (directory / "snapshot.json").exists()
+    except KeyboardInterrupt:
+        assert scenario == "interrupted-copy"
+        assert not (directory / "snapshot.json").exists()
+    if scenario in expected and scenario not in ("incomplete-import", "object-disappeared"):
+        assert not mutations, mutations
+    assert not any("up" in call or "migrate" in call for call in calls)

@@ -12,6 +12,7 @@ final class FrontendTranslations
         unset($onboarding['demo_profiles']);
 
         return [
+            'brand' => trans('brand'),
             'common' => trans('common'),
             'account' => trans('account'),
             'profile' => trans('profile'),

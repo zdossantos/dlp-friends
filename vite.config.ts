@@ -54,6 +54,8 @@ export default defineConfig({
                 globPatterns: [
                     'build/assets/**/*.{css,js,woff,woff2}',
                     'pwa/icon-*.png',
+                    'beta/pwa/icon-*.png',
+                    'beta/favicon.svg',
                     'favicon.svg',
                     'offline.html',
                 ],

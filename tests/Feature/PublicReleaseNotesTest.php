@@ -55,6 +55,19 @@ test('release note content is escaped and release links are generated from valid
         ->assertDontSee('href="javascript:', false);
 });
 
+test('notes prepared for a future release stay hidden until the changelog contains that feature release', function () {
+    config()->set('release-notes.items', [
+        ['version' => '99.0.0', 'date' => '2026-10-17', 'fr' => ['À venir'], 'en' => ['Coming soon']],
+        ['version' => '1.11.0', 'date' => '2026-09-30', 'fr' => ['Déjà disponible'], 'en' => ['Already available']],
+    ]);
+
+    $this->get('/fr/nouveautes')
+        ->assertOk()
+        ->assertSee('Déjà disponible')
+        ->assertDontSee('À venir')
+        ->assertDontSee('99.0.0');
+});
+
 test('versioned notes cover every changelog release containing features and ignore fixes only releases', function () {
     $notes = app(PublicReleaseNotes::class);
     $fixture = <<<'MARKDOWN'
@@ -80,7 +93,7 @@ MARKDOWN;
     expect($notes->featureVersions($fixture))->toBe(['2.1.0']);
 
     $publishedFeatureVersions = $notes->featureVersions(file_get_contents(base_path('CHANGELOG.md')));
-    $documentedVersions = collect(config('release-notes.items'))->pluck('version')->all();
+    $documentedVersions = collect($notes->items('fr'))->pluck('version')->all();
 
     expect($documentedVersions)->toBe($publishedFeatureVersions);
     expect(collect(config('release-notes.items'))->every(

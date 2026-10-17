@@ -11,11 +11,16 @@ final class PublicReleaseNotes
     {
         /** @var array<int, array{version: string, date: string, fr: list<string>, en: list<string>}> $items */
         $items = config('release-notes.items', []);
+        $publishedVersions = $this->featureVersions((string) file_get_contents(base_path('CHANGELOG.md')));
         $releaseNotes = [];
 
         foreach ($items as $item) {
             if (preg_match('/^\d+\.\d+\.\d+$/', $item['version']) !== 1 || $item['fr'] === [] || $item['en'] === []) {
                 throw new LogicException('Every feature release must have a valid version and non-empty French and English notes.');
+            }
+
+            if (! in_array($item['version'], $publishedVersions, true)) {
+                continue;
             }
 
             $changes = $locale === 'en' ? $item['en'] : $item['fr'];

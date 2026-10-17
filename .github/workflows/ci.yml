@@ -383,3 +383,5 @@ jobs:
           cache-to: type=gha,mode=max,scope=runtime-image
       - name: Smoke test runtime image
         run: bash .github/scripts/smoke-image.sh dlp-friends:ci
+      - name: Test real maintenance and HTTP drainage
+        run: python3 tests/Support/operations/runtime_integration.py dlp-friends:ci
