@@ -1,8 +1,10 @@
 # Environnement bêta privé
 
-État : code préparé, activation et vérifications d'infrastructure à terminer ;
-application, MySQL et Redis bêta créés dans Coolify ; aucun déploiement
-applicatif ni copie de données de production effectué.
+État : application bêta déployée avec MySQL, Redis et Mailpit dédiés ;
+contrôles HTTP et WebSocket sur comptes synthétiques réalisés, y compris la
+révocation du rôle admin sur une session et un socket existants. L'automatisation
+reste à terminer. Aucune donnée de production copiée
+et aucune répétition sur cette copie encore réalisée.
 La cible approuvée est décrite dans la [spécification](superpowers/specs/2026-10-17-isolated-release-beta-design.md).
 
 ## Capacité avant activation
@@ -155,3 +157,76 @@ migration vérifie ses identités réelles avant d'agir.
 
 Les fichiers de preuve, phases de livraison et attestations opérateur sont
 décrits dans [la procédure de livraison](operations.md#livraisons-contrôlées-et-répétition-bêta).
+
+## Mesure après déploiement sur comptes synthétiques
+
+Le 17 octobre 2026, après les essais HTTP et WebSocket, les processus bêta
+consomment 61,62 Mio (web), 44,88 Mio (Reverb), 37,48 Mio (scheduler) et
+37,32 Mio (worker), soit 181,30 Mio. Les dépendances dédiées consomment
+220,1 Mio (MySQL), 5,488 Mio (Redis) et 7,273 Mio (Mailpit) : environ
+414 Mio au total observés. Cette mesure précède l'import de données réelles
+et ne constitue pas une garantie de consommation maximale.
+
+Les plafonds effectifs sont 480 Mio pour l'application, 384 Mio pour MySQL,
+48 Mio pour Redis et 32 Mio pour Mailpit, soit 944 Mio cumulés. Aucun processus
+applicatif bêta n'a été tué par manque de mémoire pendant ces contrôles.
+L'hôte dispose alors de 1 824 Mio disponibles ; les quatre processus
+production sont sains depuis cinq jours et `/up` répond HTTP 200.
+
+## Déploiement automatique limité à la bêta
+
+Le workflow peut utiliser un compte SSH `dlp-beta-deploy` au lieu d'un jeton
+Coolify d'équipe. Configurer `BETA_SSH_HOST` et `BETA_SSH_KNOWN_HOSTS` dans les
+variables GitHub, et la clé privée dédiée dans `BETA_SSH_PRIVATE_KEY`. La clé
+d'hôte doit être relevée sur le serveur par un canal déjà authentifié ; le
+client refuse une clé inconnue ou modifiée. Ne jamais utiliser la clé SSH
+personnelle de l'opérateur. Le chemin API existant reste disponible si aucun
+hôte SSH n'est configuré, avec un jeton limité à une équipe bêta isolée.
+
+Sur le serveur, installer une copie relue de `beta-ssh-deploy.py`, appartenant
+à root et non modifiable par le compte de déploiement. Le fichier de
+configuration privé `0600`, dans un répertoire root `0700`, contient :
+
+```json
+{
+    "application_uuid": "UUID_APPLICATION_BETA",
+    "production_application_uuid": "UUID_APPLICATION_PRODUCTION",
+    "lock_file": "/srv/dlp-operations/private/beta-deploy.lock"
+}
+```
+
+La clé publique GitHub doit être limitée dans `authorized_keys` par
+`restrict,command="sudo -n /usr/local/sbin/dlp-beta-deploy"`. Le compte a un
+mot de passe verrouillé, aucun autre accès et ne peut modifier ni son dossier
+SSH, ni sa clé autorisée, ni le script. Le wrapper root refuse tout argument,
+fixe `PATH` à `/usr/sbin:/usr/bin:/sbin:/bin`, applique `umask 077`, puis lance
+Python avec le chemin absolu du script et de sa configuration. La règle
+sudoers n'autorise que ce wrapper **sans argument** (syntaxe `""`), sans
+`SETENV` ; la vérifier avec `visudo -cf` avant installation.
+
+Le relais accepte uniquement un petit JSON avec l'UUID bêta fixé, un SHA Git
+complet et un digest de l'image GHCR du projet. Il vérifie aussi que
+l'application Coolify appartient à l'environnement `beta`, utilise le bon
+dépôt et n'a aucune livraison active. Seuls `APP_IMAGE`, le commit, la branche du candidat et la
+file de déploiement de cette application sont modifiés. Aucune migration,
+copie de données ou reprise de maintenance ne peut être demandée par la clé.
+Le contrôle du candidat Release Please reste exécuté juste avant l'appel SSH.
+Ce mécanisme ne lance aucun service permanent supplémentaire.
+
+Coolify 4.3.23 recharge le Compose depuis le HEAD de la branche configurée,
+même si un SHA est indiqué. Le workflow crée donc une branche
+`chore/beta-candidates/<SHA>` pour chaque candidat et vérifie son SHA avant
+l'appel SSH. Il ne la déplace ni ne la force jamais ; une référence existante
+incohérente fait échouer le déploiement. Le relais sélectionne cette branche.
+Le job de déploiement a besoin de `contents: write` uniquement pour créer cette
+référence ; le build du candidat reste séparé des scripts de confiance.
+Ces branches techniques ne créent ni tag ni release ; leur nettoyage reste
+une opération explicite après retrait des candidats de Coolify.
+
+Avant d'activer le relais, un ruleset GitHub actif doit interdire les mises à
+jour, suppressions et force pushes sur `refs/heads/chore/beta-candidates/**`,
+sans acteur exempté ; la création reste autorisée. Cette protection ferme
+l'intervalle entre la vérification du SHA et la lecture du Compose par Coolify.
+Le ruleset `Immutable beta candidate branches` a été activé le 17 octobre 2026.
+Son retrait nécessite de suspendre le déploiement automatique. Le nettoyage
+des anciennes références exige une intervention explicite sur cette protection.
