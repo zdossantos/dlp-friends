@@ -1,5 +1,7 @@
 x-app: &app
   image: ${APP_IMAGE:?APP_IMAGE must be a published image digest}
+  networks:
+    default: {}
   environment: &app-environment
     APP_NAME: DLP Friends
     APP_ENV: beta
@@ -42,7 +44,7 @@ x-app: &app
     REVERB_APP_ID: ${BETA_REVERB_APP_ID:?REVERB_APP_ID is required}
     REVERB_APP_KEY: ${BETA_REVERB_APP_KEY:?REVERB_APP_KEY is required}
     REVERB_APP_SECRET: ${BETA_REVERB_APP_SECRET:?REVERB_APP_SECRET is required}
-    REVERB_HOST: reverb
+    REVERB_HOST: dlp-friends-beta-reverb
     REVERB_PORT: 8080
     REVERB_SCHEME: http
     FILESYSTEM_DISK: s3
@@ -121,6 +123,10 @@ services:
   reverb:
     <<: *app
     command: reverb
+    networks:
+      default:
+        aliases:
+          - dlp-friends-beta-reverb
     expose:
       - "8080"
     healthcheck:

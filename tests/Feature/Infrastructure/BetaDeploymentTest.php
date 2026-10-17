@@ -35,7 +35,17 @@ it('renders four isolated beta processes with private mail and stable maintenanc
             'MAIL_MAILER' => 'smtp', 'MAIL_HOST' => 'mailpit-beta.internal', 'MAIL_PORT' => '1025',
             'DB_HOST' => 'mysql-beta.internal', 'REDIS_HOST' => 'redis-beta.internal',
             'AWS_BUCKET' => 'beta', 'SESSION_DOMAIN' => '', 'SESSION_SECURE_COOKIE' => 'true',
+            'REVERB_HOST' => 'dlp-friends-beta-reverb',
         ])->not->toHaveKey('RESEND_API_KEY');
+    }
+    expect($compose['services']['reverb']['networks']['default']['aliases'])
+        ->toContain('dlp-friends-beta-reverb');
+    // Coolify adds explicit networks, removing Compose's implicit default membership.
+    $raw = Process::env(betaComposeEnvironment())->run('docker compose -f compose.beta.yaml config --no-normalize --no-consistency --format json');
+    expect($raw->successful())->toBeTrue($raw->errorOutput());
+    $source = json_decode($raw->output(), true, flags: JSON_THROW_ON_ERROR);
+    foreach ($source['services'] as $service) {
+        expect($service['networks'] ?? [])->toHaveKey('default');
     }
 });
 
