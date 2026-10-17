@@ -310,7 +310,7 @@ Paris.
 
 | Capacité | Statut | État observé |
 | --- | --- | --- |
-| Inscription e-mail, vérification et récupération | **Implémenté** | Fortify, pages et tests couvrent le parcours. |
+| Inscription e-mail, vérification et récupération | **Implémenté** | Fortify, pages et tests couvrent le parcours. L’inscription e-mail est suspendue lorsque le quota journalier ou mensuel Resend atteint 100 % ou ne peut pas être vérifié ; Google reste disponible (issue 272). |
 | Majorité, compte actif et contrôle d’accès social | **Implémenté** | Stockage, middlewares et tests sont présents. |
 | Liens de réseaux sociaux facultatifs | **Implémenté** | Cinq réseaux, trois liens maximum, visibilité serveur, export et purge, bulles accessibles FR/EN. |
 | Profil, avatar obligatoire et intérêts | **Implémenté** | Parcours membre et catalogues administrables sont livrés. |

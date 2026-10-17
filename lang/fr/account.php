@@ -21,6 +21,7 @@ return [
         ],
     ],
     'registration' => [
+        'email_unavailable' => 'L’inscription par e-mail est temporairement indisponible. Tu peux continuer avec Google.',
         'adult_only' => 'Tu dois être majeur pour t’inscrire.',
         'title' => 'Crée ton compte',
         'description' => 'Tu créeras ensuite ton profil, puis un tutoriel te montrera comment découvrir d’autres membres.',

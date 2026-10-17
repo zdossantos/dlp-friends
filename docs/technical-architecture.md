@@ -121,6 +121,18 @@ protègent également côté serveur.
 L’écran admin calcule ses agrégats et sa liste paginée sur le même périmètre de
 membres adultes, actifs, vérifiés et disposant d’un profil complet.
 
+## Disponibilité de l’inscription e-mail
+
+`CheckEmailRegistrationAvailability` centralise le contrôle des quotas Resend
+journalier et mensuel via le client HTTP Laravel. Fortify expose uniquement un
+booléen à la page `auth/Register` (cache de 60 secondes au maximum) ;
+`CreateNewUser` exige un contrôle frais après validation des champs et avant la
+transaction. Un refus renvoie une erreur de validation localisée, sans créer de
+compte ni déclencher l’envoi de vérification. La page masque le formulaire et
+conserve Google ainsi que le lien de connexion. Une erreur ou un état périmé
+ferme temporairement cette inscription. Voir `operations.md` pour les clés,
+les périodes, la réactivation et les limites de concurrence du contrôle.
+
 ## Authentification sociale
 
 Laravel Socialite gère Google nativement. La redirection conserve l'état OAuth

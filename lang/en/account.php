@@ -21,6 +21,7 @@ return [
         ],
     ],
     'registration' => [
+        'email_unavailable' => 'Email registration is temporarily unavailable. You can continue with Google.',
         'adult_only' => 'You must be an adult to register.',
         'title' => 'Create your account',
         'description' => 'You will then create your profile, and a tutorial will show you how to discover other members.',

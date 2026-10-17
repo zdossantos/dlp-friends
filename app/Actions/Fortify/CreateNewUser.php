@@ -2,6 +2,7 @@
 
 namespace App\Actions\Fortify;
 
+use App\Actions\CheckEmailRegistrationAvailability;
 use App\Concerns\AccountValidationRules;
 use App\Concerns\PasswordValidationRules;
 use App\Enums\RoleName;
@@ -10,6 +11,7 @@ use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Laravel\Fortify\Contracts\CreatesNewUsers;
 
 class CreateNewUser implements CreatesNewUsers
@@ -36,6 +38,12 @@ class CreateNewUser implements CreatesNewUsers
             'terms_accepted.accepted' => __('account.registration.terms_required'),
             'terms_accepted.required' => __('account.registration.terms_required'),
         ])->validate();
+
+        if (! app(CheckEmailRegistrationAvailability::class)->handle(fresh: true)) {
+            throw ValidationException::withMessages([
+                'email' => __('account.registration.email_unavailable'),
+            ]);
+        }
 
         return DB::transaction(function () use ($input): User {
             $user = User::query()->create([

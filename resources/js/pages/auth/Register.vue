@@ -15,6 +15,7 @@ import { store } from '@/routes/register';
 
 defineProps<{
     passwordRules: string;
+    emailRegistrationAvailable: boolean;
 }>();
 const { t } = useTranslations();
 const legal = usePage().props.legal;
@@ -32,7 +33,17 @@ defineOptions({
 
     <SocialLoginButtons />
 
+    <p
+        v-if="!emailRegistrationAvailable"
+        role="status"
+        class="text-sm text-muted-foreground"
+        data-test="email-registration-unavailable"
+    >
+        {{ t('account.registration.email_unavailable') }}
+    </p>
+
     <Form
+        v-if="emailRegistrationAvailable"
         v-bind="store.form()"
         :reset-on-success="['password', 'password_confirmation']"
         v-slot="{ errors, processing }"
@@ -45,7 +56,6 @@ defineOptions({
                     id="email"
                     type="email"
                     required
-                    :tabindex="1"
                     autocomplete="email"
                     name="email"
                     :placeholder="t('account.registration.email_placeholder')"
@@ -61,7 +71,6 @@ defineOptions({
                     id="birth_date"
                     type="date"
                     required
-                    :tabindex="2"
                     autocomplete="bday"
                     name="birth_date"
                 />
@@ -75,7 +84,6 @@ defineOptions({
                 <PasswordInput
                     id="password"
                     required
-                    :tabindex="3"
                     autocomplete="new-password"
                     name="password"
                     :placeholder="t('account.registration.password')"
@@ -91,7 +99,6 @@ defineOptions({
                 <PasswordInput
                     id="password_confirmation"
                     required
-                    :tabindex="4"
                     autocomplete="new-password"
                     name="password_confirmation"
                     :placeholder="
@@ -108,7 +115,6 @@ defineOptions({
                         id="terms_accepted"
                         name="terms_accepted"
                         value="1"
-                        :tabindex="5"
                     />
                     <Label
                         for="terms_accepted"
@@ -130,7 +136,6 @@ defineOptions({
             <Button
                 type="submit"
                 class="mt-2 w-full"
-                tabindex="6"
                 :disabled="processing"
                 :aria-busy="processing ? 'true' : undefined"
                 data-test="register-user-button"
@@ -139,15 +144,12 @@ defineOptions({
                 {{ t('account.registration.submit') }}
             </Button>
         </div>
-
-        <div class="text-center text-sm text-muted-foreground">
-            {{ t('account.registration.existing_account') }}
-            <TextLink
-                :href="login()"
-                class="underline underline-offset-4"
-                :tabindex="7"
-                >{{ t('account.registration.login') }}</TextLink
-            >
-        </div>
     </Form>
+
+    <div class="text-center text-sm text-muted-foreground">
+        {{ t('account.registration.existing_account') }}
+        <TextLink :href="login()" class="underline underline-offset-4">{{
+            t('account.registration.login')
+        }}</TextLink>
+    </div>
 </template>
