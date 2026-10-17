@@ -41,8 +41,8 @@ test('localized matching pages are public server rendered and explain the curren
         ->assertSee($reciprocity)
         ->assertDontSee('type="module"', false);
 })->with([
-    'French' => ['/fr/matching', 'fr', 'Comment fonctionnent les suggestions', 'Le nombre d’univers favoris actifs en commun passe en premier.', '0,25', 'L’âge sert uniquement à vérifier la majorité', 'deux Découvertes réciproques'],
-    'English' => ['/en/matching', 'en', 'How suggestions work', 'The number of shared active favorite worlds comes first.', '0.25', 'Age is used only to verify adulthood', 'two mutual Discoveries'],
+    'French' => ['/fr/matching', 'fr', 'Comment fonctionnent les suggestions', 'Dans chaque groupe, le nombre d’univers favoris actifs en commun est ensuite prioritaire.', '0,25', 'L’âge sert uniquement à vérifier la majorité', 'deux Découvertes réciproques'],
+    'English' => ['/en/matching', 'en', 'How suggestions work', 'Within each group, the number of shared active favorite worlds takes priority next.', '0.25', 'Age is used only to verify adulthood', 'two mutual Discoveries'],
 ]);
 
 test('localized matching pages expose canonical alternate and social metadata', function (string $path, string $locale, string $title) {
@@ -89,6 +89,7 @@ test('matching explanations cover every eligibility exclusion and ranking rule',
         'Le profil doit être complet, visible et utiliser un avatar encore actif.',
         'Ton propre profil et les profils que tu as déjà évalués sont exclus.',
         'Une personne que tu as bloquée, ou qui t’a bloqué, ne peut pas apparaître.',
+        'Les administrateurs éligibles apparaissent toujours en premier, même devant les autres cartes déjà chargées.',
         'À nombre égal, un bonus de 0,25 s’applique lorsque vous avez renseigné la même fréquence de visite.',
         'Si ces deux critères sont encore identiques, un départage aléatoire détermine l’ordre.',
     ]],
@@ -97,6 +98,7 @@ test('matching explanations cover every eligibility exclusion and ranking rule',
         'The profile must be complete, visible, and use an avatar that is still active.',
         'Your own profile and profiles you have already reviewed are excluded.',
         'Someone you blocked, or who blocked you, cannot appear.',
+        'Eligible administrators always appear first, even before other cards that are already loaded.',
         'When that number is tied, a 0.25 bonus applies if you both entered the same visit frequency.',
         'If both criteria are still identical, a random tie-break determines the order.',
     ]],

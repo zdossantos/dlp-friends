@@ -20,8 +20,9 @@ personnes partageant des intérêts à se découvrir, à exprimer réciproquemen
 leur envie d’échanger, puis à discuter en privé.
 
 Le produit évite de chercher des contacts dans des communautés généralistes :
-il présente en priorité les profils ayant le plus d’intérêts en commun, tout en
-laissant chaque membre contrôler sa visibilité et ses interactions.
+il présente d’abord les administrateurs éligibles, puis privilégie les intérêts
+en commun, tout en laissant chaque membre contrôler sa visibilité et ses
+interactions.
 
 DLP Friends est un projet indépendant, non affilié à Disney ni à Disneyland
 Paris.
@@ -105,7 +106,9 @@ Paris.
 ### Découverte et matching
 
 - Les cartes de découverte permettent le like ou le refus.
-- Le classement favorise d’abord le nombre d’intérêts actifs communs, puis la
+- Les administrateurs éligibles apparaissent toujours avant les autres profils,
+  y compris lorsque la pile contient déjà des cartes chargées. Dans chaque
+  groupe, le classement favorise le nombre d’intérêts actifs communs, puis la
   fréquence de visite commune lorsque ce bonus est activé.
 - Les profils déjà évalués, bloqués, masqués, incomplets ou indisponibles sont
   exclus.
@@ -271,8 +274,10 @@ Paris.
 - Les annonces créent une notification durable dans l’application et, lorsque
   le membre l’a explicitement autorisé sur un appareil, une alerte Web Push
   générique. Leur réception est activée par défaut et le membre peut se désinscrire à tout moment,
-  lire le contenu figé reçu, ouvrir le lien et retirer une annonce avec
-  confirmation. Le partenaire ne choisit aucun segment ni destinataire.
+  lire le contenu figé reçu dans un drawer sur mobile ou un dialogue sur bureau,
+  ouvrir explicitement le lien et retirer une annonce avec confirmation.
+  L’ouverture du message compte une lecture ; seul le lien compte un clic.
+  Le partenaire ne choisit aucun segment ni destinataire.
 - Les statistiques exposent uniquement les volumes et taux agrégés : livraisons,
   lectures, retraits, clics uniques et totaux ; l’administrateur dispose en plus
   des compteurs opérationnels et de la relance. Aucune liste de destinataires

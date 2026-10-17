@@ -2,9 +2,11 @@
 
 use App\Actions\CreateSwipe;
 use App\Contracts\DiscoveryTieBreaker;
+use App\Enums\RoleName;
 use App\Enums\SwipeDecision;
 use App\Models\Interest;
 use App\Models\MemberMatch;
+use App\Models\Role;
 use App\Models\SeasonalTheme;
 use App\Models\Swipe;
 use App\Models\User;
@@ -1058,4 +1060,32 @@ test('an unexpected HTTP response retains the card and exposes retry', function 
         ->click('Réessayer')
         ->assertPresent('[role="alert"]');
     $this->assertDatabaseCount('swipes', 0);
+});
+
+test('a newly promoted administrator moves ahead of already loaded discovery cards', function () {
+    $this->app->bind(DiscoveryTieBreaker::class, fn () => new class implements DiscoveryTieBreaker
+    {
+        public function rank(int $profileId): int
+        {
+            return $profileId;
+        }
+    });
+    $actor = discoveryMember('Alice');
+    $actor->profile->update(['visit_frequency' => null]);
+    foreach (['Basile', 'Chloé', 'David', 'Emma', 'Farid', 'Gabriel'] as $name) {
+        discoveryMember($name)->profile->update(['visit_frequency' => null]);
+    }
+    $admin = discoveryMember('Hugo');
+    $admin->profile->update(['visit_frequency' => null]);
+    $this->actingAs($actor);
+
+    $page = visit('/discover')->assertCount('[data-test="discovery-card-stack-item"]', 5);
+    $page->assertSeeIn('[data-test="discovery-card-stack-item"]:first-child', 'Basile');
+    $admin->roles()->attach(Role::query()->where('name', RoleName::Admin)->firstOrFail());
+
+    $page->click('[aria-label="Passer ce profil"]')
+        ->assertCount('[data-test="discovery-card-stack-item"]', 5)
+        ->assertSeeIn('[data-test="discovery-card-stack-item"]:first-child', 'Hugo')
+        ->assertSeeIn('[data-test="discovery-card-stack-item"]:nth-child(2)', 'Chloé')
+        ->assertNoJavaScriptErrors();
 });

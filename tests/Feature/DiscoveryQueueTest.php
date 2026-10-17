@@ -2,6 +2,7 @@
 
 use App\Contracts\DiscoveryTieBreaker;
 use App\Models\Block;
+use App\Models\Swipe;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
@@ -74,3 +75,37 @@ test('queue hints are bounded and validated before recording a decision', functi
     'invalid id' => [['invalid']],
     'negative id' => [[-1]],
 ]);
+
+test('administrators precede every queued member even when the queue fills the batch', function () {
+    $actor = User::factory()->withProfile()->create();
+    $queued = User::factory()->withProfile()->count(5)->create();
+    $admin = User::factory()->admin()->withProfile()->create();
+
+    $this->actingAs($actor)->get(route('discovery.index', ['queue' => $queued->modelKeys()]))
+        ->assertOk()->assertInertia(fn (Assert $page) => $page
+        ->loadDeferredProps(fn (Assert $deferred) => $deferred
+            ->has('suggestions', 5)
+            ->where('suggestions.0.userId', $admin->id)
+            ->where('suggestions.1.userId', $queued[0]->id)
+            ->where('suggestions.4.userId', $queued[3]->id)));
+});
+
+test('administrator priority never bypasses eligibility or an earlier decision', function (string $reason) {
+    $actor = User::factory()->withProfile()->create();
+    $admin = User::factory()->admin()->withProfile()->create();
+    $member = User::factory()->withProfile()->create();
+    match ($reason) {
+        'hidden' => $admin->profile->update(['visibility' => 'hidden']),
+        'incomplete' => $admin->profile->update(['onboarding_completed_at' => null]),
+        'banned' => $admin->forceFill(['status' => 'banned'])->save(),
+        'blocked' => Block::factory()->create(['blocker_user_id' => $admin->id, 'blocked_user_id' => $actor->id]),
+        'inactive-avatar' => $admin->profile->avatar->update(['is_active' => false]),
+        'already-swiped' => Swipe::factory()->create(['actor_user_id' => $actor->id, 'target_user_id' => $admin->id, 'decision' => 'pass']),
+    };
+
+    $this->actingAs($actor)->get(route('discovery.index', ['queue' => [$admin->id]]))
+        ->assertOk()->assertInertia(fn (Assert $page) => $page
+        ->loadDeferredProps(fn (Assert $deferred) => $deferred
+            ->has('suggestions', 1)
+            ->where('suggestions.0.userId', $member->id)));
+})->with(['hidden', 'incomplete', 'banned', 'blocked', 'inactive-avatar', 'already-swiped']);
