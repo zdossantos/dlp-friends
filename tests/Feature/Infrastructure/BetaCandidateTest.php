@@ -111,7 +111,7 @@ cat > "$SSH_PAYLOAD"
 # Check the client created private key files, without copying their contents.
 while (($#)); do
     if [[ "$1" == -i ]]; then
-        test "$(stat -f '%Lp' "$2" 2>/dev/null || stat -c '%a' "$2")" = 600
+        "$TEST_PHP_BINARY" -r 'exit((fileperms($argv[1]) & 0777) === 0600 ? 0 : 1);' "$2"
     fi
     shift
 done
@@ -125,6 +125,7 @@ SH);
         'BETA_SSH_KNOWN_HOSTS' => '192.0.2.1 ssh-ed25519 fixture-public-host-key',
         'SSH_LOG' => $this->candidateDirectory.'/ssh.log',
         'SSH_PAYLOAD' => $this->candidateDirectory.'/ssh.json',
+        'TEST_PHP_BINARY' => PHP_BINARY,
     ]))->run(['bash', base_path('.github/scripts/deploy-beta.sh')]);
     expect($result->successful())->toBeTrue($result->errorOutput())
         ->and(file_exists($this->candidateDirectory.'/requests.jsonl'))->toBeFalse()
