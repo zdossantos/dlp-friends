@@ -1,0 +1,39 @@
+{
+  "report_dir": "/srv/dlp-operations/private",
+  "rclone_config": "/srv/dlp-operations/private/rclone.conf",
+  "garage_admin_url": "https://garage-admin.example.invalid",
+  "garage_s3_endpoint": "https://s3.example.invalid",
+  "garage_curl_config": "/srv/dlp-operations/private/garage.curl",
+  "coolify_api_url": "https://coolify.example.invalid/api/v1",
+  "coolify_curl_config": "/srv/dlp-operations/private/coolify.curl",
+  "source": {
+    "application_uuid": "REQUIRED_PRODUCTION_APP_UUID",
+    "mysql_uuid": "REQUIRED_PRODUCTION_MYSQL_UUID",
+    "redis_uuid": "REQUIRED_PRODUCTION_REDIS_UUID",
+    "mysql_container": "REQUIRED_PRODUCTION_MYSQL_CONTAINER",
+    "redis_container": "REQUIRED_PRODUCTION_REDIS_CONTAINER",
+    "web_container": "REQUIRED_PRODUCTION_WEB_CONTAINER",
+    "process_containers": [],
+    "database": "dlp_friends",
+    "mysql_client": "/srv/dlp-operations/private/source.cnf",
+    "bucket": "REQUIRED_SOURCE_BUCKET_ALIAS",
+    "bucket_id": "REQUIRED_SOURCE_BUCKET_ID",
+    "storage_key_id": "REQUIRED_SOURCE_READ_ONLY_KEY_ID",
+    "rclone_remote": "source"
+  },
+  "beta": {
+    "application_uuid": "REQUIRED_BETA_APP_UUID",
+    "mysql_uuid": "REQUIRED_BETA_MYSQL_UUID",
+    "redis_uuid": "REQUIRED_BETA_REDIS_UUID",
+    "mysql_container": "REQUIRED_BETA_MYSQL_CONTAINER",
+    "redis_container": "REQUIRED_BETA_REDIS_CONTAINER",
+    "web_container": "REQUIRED_BETA_WEB_CONTAINER",
+    "process_containers": ["REQUIRED_BETA_WORKER", "REQUIRED_BETA_SCHEDULER", "REQUIRED_BETA_REVERB"],
+    "database": "dlp_friends_beta",
+    "mysql_client": "/srv/dlp-operations/private/beta.cnf",
+    "bucket": "REQUIRED_BETA_BUCKET_ALIAS",
+    "bucket_id": "REQUIRED_BETA_BUCKET_ID",
+    "storage_key_id": "REQUIRED_BETA_ONLY_KEY_ID",
+    "rclone_remote": "beta"
+  }
+}
