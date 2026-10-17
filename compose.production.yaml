@@ -10,6 +10,11 @@ x-app: &app
     APP_LOCALE: fr
     APP_FALLBACK_LOCALE: fr
     APP_MAINTENANCE_DRIVER: cache
+    APP_MAINTENANCE_STORE: redis
+    CACHE_PREFIX: dlp_friends_production_cache_
+    REDIS_PREFIX: dlp_friends_production_
+    REDIS_DB: 0
+    REDIS_CACHE_DB: 1
     LOG_CHANNEL: stack
     LOG_STACK: single
     LOG_LEVEL: ${LOG_LEVEL:-warning}

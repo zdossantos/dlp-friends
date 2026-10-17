@@ -8,6 +8,7 @@ it('serves the worker and manifest with safe production cache policies', functio
         ->toContain('Cache-Control "no-cache, no-store, must-revalidate"')
         ->toContain('Service-Worker-Allowed "/"')
         ->toContain('location = /app.webmanifest')
+        ->toContain('location = /beta/app.webmanifest')
         ->toContain('application/manifest+json')
         ->toContain('location ^~ /build/assets/')
         ->toContain('Cache-Control "public, immutable"');

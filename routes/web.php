@@ -122,6 +122,10 @@ Route::get('sitemap.xml', function () {
         ->header('Content-Type', 'application/xml; charset=UTF-8');
 })->name('sitemap');
 Route::get('robots.txt', function () {
+    if (app()->environment('beta')) {
+        return response("User-agent: *\nDisallow: /\n", 200, ['Content-Type' => 'text/plain; charset=UTF-8']);
+    }
+
     return response(implode("\n", [
         'User-agent: *',
         'Allow: /',

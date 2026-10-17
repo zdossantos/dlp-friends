@@ -125,7 +125,7 @@ contrôle des titres s'appliquent aussi aux PR de maintenance.
 
 Le workflow Release Please cible la branche qui a déclenché son exécution.
 Il prépare donc une Release PR distincte sur `release/1.14` ; son merge publie
-la version patch et déclenche le même build, smoke test et déploiement Coolify.
+la version patch et déclenche le même build, smoke test et publication pour livraison opérateur.
 La Release PR 1.15.0 sur `main` reste en attente. Aucun tag ni aucune release
 ne sont créés manuellement, et forcer un numéro patch sur `main` n'exclurait
 pas les nouveautés de son image.
@@ -152,14 +152,16 @@ une livraison en cours. Il enchaîne :
    identifient version et commit. Le workflow démarre l’image **publiée par son
    digest** et vérifie `/up` ainsi que les assets. Le digest, contrairement au
    tag, constitue la référence immuable utilisée en production.
-4. Après succès complet de ce job, `Record image and deploy to Coolify` joint
-   `container-image.json` à la GitHub Release : version, commit, plateforme et
-   référence `ghcr.io/zdossantos/dlp-friends@sha256:…`.
-5. Le script `.github/scripts/deploy-release.sh` met à jour uniquement
-   `APP_IMAGE` dans les variables Coolify, fixe `git_commit_sha` au commit de
-   release pour charger le bon Compose, puis appelle `POST /api/v1/deploy`.
-   Il exige un digest et un SHA complets ; chaque appel doit réussir avant le
-   suivant. L’acceptation de la requête n’atteste pas encore la santé du service.
+4. Après succès, `Record published image for operator delivery` joint
+   `container-image.json` à la Release : version, commit, tree Git complet,
+   empreinte des migrations, plateforme et digest GHCR. Les labels
+   `io.dlp-friends.source-tree` et `io.dlp-friends.migrations-sha256` portent
+   les mêmes empreintes. Aucun secret Coolify production n'est transmis.
+5. La publication ne déploie plus la production. La procédure serveur privée
+   [prepare → deploy → verify → resume](operations.md#livraisons-contrôlées-et-répétition-bêta)
+   exige une répétition sur copie de moins de 24 heures, un tree et des
+   migrations identiques, une maintenance persistante et une sauvegarde
+   restaurée/vérifiée. Les migrations production restent une commande séparée.
 
 Coolify garde le dépôt Git et le build pack **Docker Compose**, avec
 `compose.production.yaml`. Les quatre services `web`, `worker`, `scheduler` et
@@ -195,13 +197,14 @@ variables Coolify seules ne modifie pas les assets déjà compilés. Le build
 installe les dépendances et compile les assets sans joindre MySQL, Redis,
 MinIO ou Resend. Le réseau sortant vers les registres de dépendances est requis.
 
-Les seuls secrets GitHub nécessaires sont `RELEASE_PLEASE_TOKEN` et
-`COOLIFY_TOKEN`. L’ancien `COOLIFY_WEBHOOK` n’est plus utilisé : l’URL de l’API
-et l’UUID remplacent le webhook opaque, afin de modifier puis déployer la même
-application. `COOLIFY_TOKEN` doit autoriser la modification de l’application,
-la gestion de ses variables et son déploiement (droits **write** et **deploy**),
-sur l’équipe et les ressources nécessaires uniquement. Il n’a pas besoin de
-lire ou de divulguer les valeurs des autres variables.
+La publication utilise `RELEASE_PLEASE_TOKEN` et le `GITHUB_TOKEN` du job.
+Le secret production `COOLIFY_TOKEN` ne doit plus être fourni aux workflows ;
+révoquer l'ancien jeton après activation de la procédure serveur. Le workflow
+bêta utilise `COOLIFY_BETA_TOKEN`, restreint aux ressources bêta, et les variables
+`COOLIFY_BETA_APPLICATION_UUID`, `COOLIFY_APPLICATION_UUID` (garde anti-alias),
+`COOLIFY_API_URL` et `VITE_BETA_REVERB_APP_KEY`. La sélection et la mutation
+s'exécutent depuis les scripts de confiance de `main` ; un ancien build est
+resélectionné avant toute mutation et abandonné s'il est dépassé.
 
 Le package GHCR reste **privé**. Le job de publication reçoit seulement
 `contents: read` et `packages: write` via `GITHUB_TOKEN` ; le job de déploiement
@@ -273,7 +276,7 @@ checkout du SHA de release → build AMD64 → publication GHCR
       ↓
 test de démarrage par digest → référence jointe à la release
       ↓
-Coolify : image + commit épinglés → déploiement sans build
+Serveur opérateur : répétition + sauvegarde vérifiées → Coolify fermé → migration explicite → contrôles → reprise volontaire
 
 Dependabot (Composer, Bun, Actions)
       ↓

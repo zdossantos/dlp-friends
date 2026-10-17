@@ -71,6 +71,7 @@ RUN apk add --no-cache \
 
 COPY docker/nginx/default.conf /etc/nginx/http.d/default.conf
 COPY docker/php/uploads.ini /usr/local/etc/php/conf.d/uploads.ini
+COPY docker/php/drain.conf /usr/local/etc/php-fpm.d/zz-dlp-drain.conf
 COPY docker/php/entrypoint.sh /usr/local/bin/dlp-entrypoint
 COPY --from=build --chown=www-data:www-data /app /var/www/html
 
