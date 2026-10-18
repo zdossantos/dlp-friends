@@ -3,6 +3,41 @@
 use App\Http\Middleware\EnsureDeploymentReady;
 use App\Models\User;
 
+test('manual viewport reflow records the experiment and restores document geometry', function () {
+    app()->instance('env', 'beta');
+    $this->withoutMiddleware(EnsureDeploymentReady::class);
+    $this->actingAs(User::factory()->admin()->withProfile()->create());
+
+    $page = visit('/notifications')->resize(390, 844);
+    $page->click('[data-test="viewport-diagnostics-start"]')
+        ->assertMissing('[data-test="viewport-reflow-probe"]')
+        ->click('[data-test="viewport-diagnostics-reflow"]')
+        ->assertScript('document.documentElement.scrollHeight > 844', true)
+        ->assertScript(<<<'JS'
+            (() => {
+                const samples = JSON.parse(document.querySelector('[data-test="viewport-report"]').textContent).samples;
+                return samples.some(sample => sample.event === 'reflow:before')
+                    && samples.some(sample => sample.event === 'reflow:expanded' && sample.document.scrollHeight > 844);
+            })()
+        JS, true)
+        ->assertMissing('[data-test="viewport-reflow-probe"]')
+        ->assertScript(<<<'JS'
+            (() => {
+                const samples = JSON.parse(document.querySelector('[data-test="viewport-report"]').textContent).samples;
+                return samples.some(sample => sample.event === 'reflow:restored' && sample.document.scrollHeight === 844)
+                    && document.documentElement.scrollHeight === 844
+                    && document.querySelector('meta[name="viewport"]').content === 'width=device-width, initial-scale=1'
+                    && document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]').content === 'default';
+            })()
+        JS, true)
+        ->click('[data-test="viewport-diagnostics-reflow"]')
+        ->assertPresent('[data-test="viewport-reflow-probe"]')
+        ->click('[data-test="viewport-diagnostics-stop"]')
+        ->assertMissing('[data-test="viewport-reflow-probe"]')
+        ->assertScript('document.documentElement.scrollHeight', 844)
+        ->assertNoJavaScriptErrors();
+});
+
 test('viewport diagnostics are opt-in and only available on beta', function (string $environment, bool $visible) {
     app()->instance('env', $environment);
     $this->withoutMiddleware(EnsureDeploymentReady::class);

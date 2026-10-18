@@ -9,11 +9,13 @@ const page = usePage();
 const { t } = useTranslations();
 const { copy, copied } = useClipboard();
 const active = ref(false);
+const reflowing = ref(false);
 const copyFailed = ref(false);
 const probes = useTemplateRef<HTMLElement>('probes');
 const samples = ref<ReturnType<typeof measure>[]>([]);
 let listeners: AbortController | undefined;
 let settled: ReturnType<typeof setTimeout> | undefined;
+let reflowTimer: ReturnType<typeof setTimeout> | undefined;
 
 function rectangle(element: Element | null | undefined) {
     if (!element) {
@@ -132,9 +134,32 @@ async function start() {
 function stop() {
     listeners?.abort();
     clearTimeout(settled);
+    clearTimeout(reflowTimer);
+    reflowing.value = false;
     active.value = false;
     samples.value = [];
     copyFailed.value = false;
+}
+
+async function testReflow() {
+    if (!active.value || reflowing.value) {
+        return;
+    }
+
+    capture('reflow:before');
+    reflowing.value = true;
+    await nextTick();
+
+    if (!reflowing.value) {
+        return;
+    }
+
+    capture('reflow:expanded');
+    reflowTimer = setTimeout(async () => {
+        reflowing.value = false;
+        await nextTick();
+        capture('reflow:restored');
+    }, 1000);
 }
 
 async function copyReport() {
@@ -173,6 +198,15 @@ onBeforeUnmount(stop);
             </p>
             <div class="flex flex-wrap gap-1">
                 <Button
+                    data-test="viewport-diagnostics-reflow"
+                    variant="outline"
+                    type="button"
+                    class="min-h-11"
+                    :disabled="reflowing"
+                    @click="testReflow"
+                    >{{ t('common.pwa.diagnostics_reflow') }}</Button
+                >
+                <Button
                     data-test="viewport-diagnostics-capture"
                     variant="outline"
                     type="button"
@@ -208,6 +242,15 @@ onBeforeUnmount(stop);
             </details>
         </template>
     </aside>
+    <Teleport to="body">
+        <!-- A manual, temporary overflow experiment, never an automatic recovery. -->
+        <div
+            v-if="reflowing"
+            data-test="viewport-reflow-probe"
+            aria-hidden="true"
+            class="pointer-events-none invisible absolute top-0 left-0 h-[calc(100lvh+1px)] w-px"
+        />
+    </Teleport>
     <div
         v-if="active"
         ref="probes"
