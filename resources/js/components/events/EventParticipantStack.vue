@@ -6,7 +6,12 @@ import UserAvatar from '@/components/profile/UserAvatar.vue';
 import { useTranslations } from '@/composables/useTranslations';
 import type { EventParticipant } from '@/types/event';
 
-const props = defineProps<{ participants: EventParticipant[]; href: string }>();
+const props = defineProps<{
+    participants: EventParticipant[];
+    href: string;
+    preserveState?: boolean;
+    only?: string[];
+}>();
 const { t } = useTranslations();
 const visible = computed(() => props.participants.slice(0, 3));
 const remaining = computed(() => Math.max(0, props.participants.length - 3));
@@ -16,6 +21,8 @@ const remaining = computed(() => Math.max(0, props.participants.length - 3));
     <Link
         :href="href"
         preserve-scroll
+        :preserve-state="preserveState"
+        :only="only"
         data-test="participant-stack-trigger"
         class="inline-flex min-h-11 items-center rounded-full pr-2 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none"
         :aria-label="

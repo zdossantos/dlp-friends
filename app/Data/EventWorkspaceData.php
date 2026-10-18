@@ -6,11 +6,13 @@ use App\Enums\EventRegistrationStatus;
 use App\Enums\UserStatus;
 use App\Models\Block;
 use App\Models\Event;
+use App\Models\EventChatMessage;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -18,12 +20,20 @@ final readonly class EventWorkspaceData
 {
     public function context(Request $request): string
     {
-        return $request->query('origin') === 'mine' ? 'mine' : 'discover';
+        return match ($request->query('origin')) {
+            'mine' => 'mine',
+            'conversations' => 'conversations',
+            default => 'discover',
+        };
     }
 
     /** @param array<string, mixed>|null $panel */
     public function render(User $viewer, string $context, ?array $panel): Response
     {
+        if ($context === 'conversations' && isset($panel['event']['id'])) {
+            return $this->conversation($viewer, Event::query()->whereKey($panel['event']['id'])->firstOrFail(), $panel);
+        }
+
         if ($context === 'mine') {
             return Inertia::render('Events/Mine', [
                 ...$this->mine($viewer),
@@ -41,12 +51,36 @@ final readonly class EventWorkspaceData
         ]);
     }
 
+    /** @param array<string, mixed>|null $panel */
+    public function conversation(User $viewer, Event $event, ?array $panel = null): Response
+    {
+        Gate::forUser($viewer)->authorize('view', $event->chat);
+
+        return Inertia::render('Conversations/Group', [
+            'event' => fn (): array => EventDetailData::from($event->load('organizer.profile'), $viewer),
+            'chat' => fn (): array => EventChatData::chat($event->chat),
+            'messages' => Inertia::scroll(function () use ($event, $viewer) {
+                $messages = $event->chat->messages()
+                    ->with('author.profile')
+                    ->withCount('reactions')
+                    ->orderByDesc('id')
+                    ->simplePaginate(10, ['*'], 'messages')
+                    ->through(fn (EventChatMessage $message): array => EventChatData::message($message, $viewer));
+                $messages->setCollection($messages->getCollection()->reverse()->values());
+
+                return $messages;
+            }),
+            'panel' => $panel,
+            'closeHref' => route('events.chat.show', $event, absolute: false),
+        ]);
+    }
+
     public function detailUrl(Event $event, string $context): string
     {
         $parameters = ['event' => $event];
 
-        if ($context === 'mine') {
-            $parameters['origin'] = 'mine';
+        if ($context !== 'discover') {
+            $parameters['origin'] = $context;
         }
 
         return route('events.show', $parameters, absolute: false);

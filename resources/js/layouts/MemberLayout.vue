@@ -4,7 +4,6 @@ import { computed, watch } from 'vue';
 import MatchDialog from '@/components/discovery/MatchDialog.vue';
 import MemberBottomNavigation from '@/components/MemberBottomNavigation.vue';
 import PwaUpdatePrompt from '@/components/pwa/PwaUpdatePrompt.vue';
-import PwaViewportDiagnostics from '@/components/pwa/PwaViewportDiagnostics.vue';
 import WebPushInvitation from '@/components/pwa/WebPushInvitation.vue';
 import SeasonalDecorations from '@/components/seasonal/SeasonalDecorations.vue';
 import { Toaster } from '@/components/ui/sonner';
@@ -88,7 +87,6 @@ watch(
         />
         <Toaster />
         <PwaUpdatePrompt />
-        <PwaViewportDiagnostics />
         <WebPushInvitation />
     </div>
 </template>

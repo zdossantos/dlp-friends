@@ -8,6 +8,8 @@ import { restoreEventWorkspaceScroll } from '@/lib/eventWorkspaceScroll';
 
 const props = defineProps<{
     open: boolean;
+    preserveState?: boolean;
+    only?: string[];
     title?: string;
     description?: string;
     a11yHeading?: string | null;
@@ -87,6 +89,8 @@ function focusPanelWithoutScrolling(event: Event): void {
                         <Link
                             :href="backHref"
                             preserve-scroll
+                            :preserve-state="preserveState"
+                            :only="only"
                             :data-test="backDataTest"
                             :aria-label="backLabel"
                         >
@@ -129,6 +133,8 @@ function focusPanelWithoutScrolling(event: Event): void {
                     <Link
                         :href="backHref"
                         preserve-scroll
+                        :preserve-state="preserveState"
+                        :only="only"
                         :data-test="backDataTest"
                         :aria-label="backLabel"
                     >

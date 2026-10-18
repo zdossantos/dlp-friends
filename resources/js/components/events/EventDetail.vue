@@ -20,7 +20,7 @@ const props = defineProps<{
     context: EventWorkspaceContext;
 }>();
 const { t } = useTranslations();
-const origin = props.context === 'mine' ? { origin: 'mine' } : {};
+const origin = props.context === 'discover' ? {} : { origin: props.context };
 const cancelling = ref(false);
 const pendingCount = computed(
     () =>
@@ -46,8 +46,10 @@ function cancelEvent(): void {
         <EventInformation :event="event" />
         <Link
             v-if="event.chat"
-            :href="chatShow(event.id, { query: origin })"
+            :href="chatShow(event.id)"
             preserve-scroll
+            :preserve-state="context === 'conversations'"
+            :only="context === 'conversations' ? ['panel'] : undefined"
             data-test="event-chat-open"
             class="group flex items-center gap-3 rounded-2xl border border-border bg-muted/40 p-4 transition-colors hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
         >
@@ -81,6 +83,8 @@ function cancelEvent(): void {
                 <Link
                     :href="edit(event.id, { query: origin })"
                     preserve-scroll
+                    :preserve-state="context === 'conversations'"
+                    :only="context === 'conversations' ? ['panel'] : undefined"
                     data-test="event-edit"
                 >
                     {{ t('events.actions.edit') }}
@@ -90,6 +94,8 @@ function cancelEvent(): void {
                 <Link
                     :href="registrationsIndex(event.id, { query: origin })"
                     preserve-scroll
+                    :preserve-state="context === 'conversations'"
+                    :only="context === 'conversations' ? ['panel'] : undefined"
                     data-test="event-registrations"
                 >
                     {{
@@ -118,6 +124,8 @@ function cancelEvent(): void {
             </h3>
             <EventParticipantStack
                 :participants="event.participants"
+                :preserve-state="context === 'conversations'"
+                :only="context === 'conversations' ? ['panel'] : undefined"
                 :href="participantsIndex(event.id, { query: origin }).url"
             />
         </section>

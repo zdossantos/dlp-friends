@@ -12,7 +12,7 @@ const props = defineProps<{
     context: EventWorkspaceContext;
     participants: EventParticipant[];
 }>();
-const origin = props.context === 'mine' ? { origin: 'mine' } : {};
+const origin = props.context === 'discover' ? {} : { origin: props.context };
 const { t } = useTranslations();
 </script>
 
@@ -34,6 +34,8 @@ const { t } = useTranslations();
             <Link
                 :href="show([eventId, participant.id], { query: origin })"
                 preserve-scroll
+                :preserve-state="context === 'conversations'"
+                :only="context === 'conversations' ? ['panel'] : undefined"
                 :data-test="
                     participant.isSelf
                         ? `participant-self-${participant.id}`

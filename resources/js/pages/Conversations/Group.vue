@@ -1,27 +1,35 @@
 <script setup lang="ts">
-import { Head } from '@inertiajs/vue3';
-import { ref } from 'vue';
+import { Head, Link, router } from '@inertiajs/vue3';
 import ConversationHeader from '@/components/conversations/ConversationHeader.vue';
-import AdaptiveEventPanel from '@/components/events/AdaptiveEventPanel.vue';
 import EventChat from '@/components/events/EventChat.vue';
-import EventInformation from '@/components/events/EventInformation.vue';
-import UserAvatar from '@/components/profile/UserAvatar.vue';
-import { Button } from '@/components/ui/button';
+import EventWorkspacePanel from '@/components/events/EventWorkspacePanel.vue';
 import { useTranslations } from '@/composables/useTranslations';
 import { index } from '@/routes/conversations';
+import { show } from '@/routes/events';
 import type {
     EventChatInfo,
     EventDetail,
+    EventPanel,
     PaginatedEventChatMessages,
 } from '@/types/event';
 
-defineProps<{
+const props = defineProps<{
     event: EventDetail;
+    panel: EventPanel | null;
+    closeHref: string;
     chat: EventChatInfo;
     messages: PaginatedEventChatMessages;
 }>();
 const { t } = useTranslations();
-const infoOpen = ref(false);
+function updatePanel(open: boolean): void {
+    if (!open) {
+        router.visit(props.closeHref, {
+            preserveState: true,
+            preserveScroll: true,
+            only: ['panel'],
+        });
+    }
+}
 </script>
 
 <template>
@@ -36,14 +44,18 @@ const infoOpen = ref(false);
             back-data-test="group-chat-back"
         >
             <template #subtitle>
-                <button
-                    type="button"
+                <Link
+                    :href="
+                        show(event.id, { query: { origin: 'conversations' } })
+                    "
+                    preserve-state
+                    preserve-scroll
+                    :only="['panel']"
                     data-test="group-chat-info"
                     class="min-h-8 text-primary underline focus-visible:ring-2 focus-visible:ring-ring"
-                    @click="infoOpen = true"
                 >
                     {{ t('conversations.groups.info') }}
-                </button>
+                </Link>
             </template>
         </ConversationHeader>
         <EventChat
@@ -55,44 +67,10 @@ const infoOpen = ref(false);
             class="flex-1"
         />
     </main>
-    <AdaptiveEventPanel
-        :open="infoOpen"
-        :title="t('conversations.groups.info')"
-        :description="event.title"
-        @update:open="infoOpen = $event"
-    >
-        <section data-test="group-info" class="space-y-6">
-            <EventInformation :event="event" />
-            <section v-if="event.participants" class="space-y-3">
-                <h3 class="font-semibold">
-                    {{ t('events.show.participants') }}
-                </h3>
-                <ul class="space-y-3">
-                    <li
-                        v-for="participant in event.participants"
-                        :key="participant.id"
-                        class="flex items-center gap-3"
-                    >
-                        <UserAvatar
-                            :avatar="participant.avatar"
-                            :display-name="participant.displayName"
-                            class="size-10"
-                        />
-                        <span>{{
-                            participant.isSelf
-                                ? t('events.participants.me')
-                                : (participant.displayName ??
-                                  t('events.participants.blocked_user'))
-                        }}</span>
-                    </li>
-                </ul>
-            </section>
-            <Button
-                data-test="group-info-close"
-                variant="outline"
-                @click="infoOpen = false"
-                >{{ t('common.actions.close') }}</Button
-            >
-        </section>
-    </AdaptiveEventPanel>
+    <EventWorkspacePanel
+        :panel="panel"
+        context="conversations"
+        :close-href="closeHref"
+        @update:open="updatePanel"
+    />
 </template>

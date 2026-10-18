@@ -72,8 +72,8 @@ class EventChatMessageReactionTest extends TestCase
         $this->actingAs($reactor)
             ->get(route('events.chat.show', $event))
             ->assertInertia(fn ($page) => $page
-                ->where('panel.messages.data.0.reaction_count', 1)
-                ->where('panel.messages.data.0.reacted_by_current_user', true));
+                ->where('messages.data.0.reaction_count', 1)
+                ->where('messages.data.0.reacted_by_current_user', true));
     }
 
     /** @return array{Event, EventChat, User, User} */

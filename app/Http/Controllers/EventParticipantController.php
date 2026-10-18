@@ -77,8 +77,8 @@ final class EventParticipantController extends Controller
                 ]);
 
                 $parameters = ['event' => $event];
-                if ($this->workspace->context($request) === 'mine') {
-                    $parameters['origin'] = 'mine';
+                if ($this->workspace->context($request) !== 'discover') {
+                    $parameters['origin'] = $this->workspace->context($request);
                 }
 
                 return redirect()->to(route('events.participants.index', $parameters, absolute: false));

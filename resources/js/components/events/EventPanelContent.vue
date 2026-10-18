@@ -15,7 +15,7 @@ const props = defineProps<{
     closeHref: string;
 }>();
 const { t } = useTranslations();
-const origin = props.context === 'mine' ? { origin: 'mine' } : {};
+const origin = props.context === 'discover' ? {} : { origin: props.context };
 </script>
 
 <template>

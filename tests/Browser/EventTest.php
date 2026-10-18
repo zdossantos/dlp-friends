@@ -89,45 +89,21 @@ test('event details use the shadcn drawer on mobile without a close icon and a d
         ->assertNoJavaScriptErrors();
 });
 
-test('event discussion opens as a full height drill down inside the constrained panel', function () {
+test('event discussion opens the full conversation page from the shared event detail', function () {
     $organizer = eventBrowserMember('Alice');
-    $event = Event::factory()->for($organizer, 'organizer')->create([
-        'title' => 'Discussion du groupe',
-    ]);
+    $event = Event::factory()->for($organizer, 'organizer')->create(['title' => 'Discussion du groupe']);
     EventChat::factory()->for($event)->create();
     $this->actingAs($organizer);
 
-    $page = visit("/events/{$event->id}?origin=mine")->resize(390, 700)
-        ->assertPresent('[data-test="event-chat-open"]')
-        ->assertMissing('[data-test="event-chat-tab"]')
+    visit("/events/{$event->id}?origin=mine")->resize(390, 700)
         ->click('[data-test="event-chat-open"]')
-        ->assertPresent('[data-test="event-chat"]')
-        ->assertMissing('[data-test="event-chat"] nav')
-        ->assertPresent('[data-test="event-chat-back"]')
-        ->assertScript(<<<'JS'
-            (() => {
-                const panel = document.querySelector('[data-test="event-panel"]');
-                const rect = panel.getBoundingClientRect();
-
-                return rect.height >= window.innerHeight * 0.79
-                    && rect.height < window.innerHeight * 0.82;
-            })()
-            JS, true)
-        ->click('[data-test="event-chat-back"]')
+        ->assertPathIs("/events/{$event->id}/chat")
+        ->assertPresent('[data-test="conversation-page"]')
+        ->assertMissing('[data-test="event-panel"]')
+        ->assertPresent('[data-test="group-chat-back"]')
+        ->assertPresent('#message-content')
+        ->click('[data-test="group-chat-info"]')
         ->assertPresent('[data-test="event-detail"]')
-        ->assertNoJavaScriptErrors();
-
-    $page->click('[data-test="event-chat-open"]')
-        ->resize(1280, 800)
-        ->assertScript(<<<'JS'
-            (() => {
-                const panel = document.querySelector('[data-test="event-panel"]');
-                const rect = panel.getBoundingClientRect();
-
-                return rect.height >= window.innerHeight * 0.89
-                    && rect.height < window.innerHeight * 0.91;
-            })()
-            JS, true)
         ->assertNoJavaScriptErrors();
 });
 
@@ -772,9 +748,16 @@ test('group history loads while scrolling upward without leaving the chat or los
     $page = visit("/events/{$event->id}/chat?origin={$origin}")->resize(390, 700)
         ->assertSee('Historique du groupe [25]')
         ->assertDontSee('Historique du groupe [01]');
-    $page->page()->evaluate('document.querySelector(\'[data-test="event-chat"] [role="log"]\').scrollTop = 0');
+    $page->script(<<<'JS'
+        const scroll = document.querySelector('[data-test=message-scroll]');
+        scroll.scrollTop = 0;
+        const anchor = scroll.querySelector('[data-message-id]');
+        window.historyAnchor = { id: anchor.dataset.messageId, top: anchor.getBoundingClientRect().top };
+    JS);
     $page->assertSee('Historique du groupe [15]')
         ->assertSee('Historique du groupe [25]')
+        ->wait(0.5)
+        ->assertScript("Math.abs(document.querySelector('[data-message-id=\"' + window.historyAnchor.id + '\"]').getBoundingClientRect().top - window.historyAnchor.top) < 3", true)
         ->assertPathIs("/events/{$event->id}/chat")
         ->assertScript("document.querySelectorAll('[data-test=message-bubble]').length", 20)
         ->assertScript('document.querySelector(\'[data-test="event-chat"] [role="log"]\').scrollTop > 0', true);

@@ -215,7 +215,7 @@ watch(
         :aria-label="t('conversations.message.timeline')"
         aria-relevant="additions text"
         data-test="message-scroll"
-        class="relative min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain bg-muted/25 px-3 py-4 sm:px-6"
+        class="relative min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain bg-muted/25 px-3 py-4 [overflow-anchor:none] sm:px-6"
     >
         <ConversationPattern />
         <p class="sr-only" aria-live="polite">{{ announcedMessage }}</p>
@@ -245,7 +245,7 @@ watch(
             <template #[loadingSlot]="{ loading }">
                 <p
                     v-if="loading"
-                    class="pb-3 text-center text-sm text-muted-foreground"
+                    class="absolute inset-x-0 top-0 text-center text-sm text-muted-foreground"
                     role="status"
                 >
                     {{ t('conversations.message.loading_previous') }}

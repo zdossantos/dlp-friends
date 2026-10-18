@@ -65,7 +65,7 @@ export type EventDetail = EventSummary & {
     chat?: EventChatInfo;
 };
 
-export type EventWorkspaceContext = 'discover' | 'mine';
+export type EventWorkspaceContext = 'discover' | 'mine' | 'conversations';
 
 type AvailableEmbeddedMemberProfile = {
     isBlocked: false;
