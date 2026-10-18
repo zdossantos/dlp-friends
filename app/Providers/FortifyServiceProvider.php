@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Actions\CheckEmailRegistrationAvailability;
 use App\Actions\Fortify\CreateNewUser;
 use App\Actions\Fortify\ResetUserPassword;
 use App\Http\Responses\LoginResponse;
@@ -85,6 +86,7 @@ class FortifyServiceProvider extends ServiceProvider
         ]));
 
         Fortify::registerView(fn () => Inertia::render('auth/Register', [
+            'emailRegistrationAvailable' => app(CheckEmailRegistrationAvailability::class)->handle(),
             'passwordRules' => Password::defaults()->toPasswordRulesString(),
         ]));
 
