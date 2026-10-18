@@ -586,14 +586,14 @@ test('opening and closing an event preserves list scroll and restores opener foc
 
     $page = visit('/events/mine')->resize(390, 700);
     $page->script('new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))');
-    $page->script("const opener = document.querySelector('[data-test=event-link-{$target->id}]'); opener.scrollIntoView({ block: 'center' }); const region = document.querySelector('[data-test=member-shell-content]'); window.__eventScroll = region.scrollTop;");
+    $page->script("const opener = document.querySelector('[data-test=event-link-{$target->id}]'); opener.scrollIntoView({ block: 'center' }); window.__eventScroll = window.scrollY;");
     $page->assertScript('window.__eventScroll > 0', true)
         ->click("[data-test=\"event-link-{$target->id}\"]")
         ->assertPresent('[data-test="event-panel"]')
         ->click('[data-slot="drawer-overlay"]');
     $page->assertPathIs('/events/mine')
         ->assertScript("document.activeElement?.dataset.test === 'event-link-{$target->id}'", true)
-        ->assertScript("Math.abs(document.querySelector('[data-test=member-shell-content]').scrollTop - window.__eventScroll) < 2", true)
+        ->assertScript('Math.abs(window.scrollY - window.__eventScroll) < 2', true)
         ->assertNoJavaScriptErrors();
 });
 
@@ -757,3 +757,30 @@ function eventBrowserMember(string $displayName): User
 
     return $user;
 }
+
+test('group history loads while scrolling upward without leaving the chat or losing recent messages', function (string $origin) {
+    $organizer = eventBrowserMember('Alice');
+    $event = Event::factory()->for($organizer, 'organizer')->create();
+    $chat = EventChat::factory()->for($event)->create();
+    foreach (range(1, 25) as $number) {
+        EventChatMessage::factory()->for($chat)->for($organizer, 'author')->create([
+            'content' => sprintf("Historique du groupe [%02d]\n", $number).str_repeat('Un souvenir à partager ensemble. ', 10),
+        ]);
+    }
+    $this->actingAs($organizer);
+
+    $page = visit("/events/{$event->id}/chat?origin={$origin}")->resize(390, 700)
+        ->assertSee('Historique du groupe [25]')
+        ->assertDontSee('Historique du groupe [01]');
+    $page->page()->evaluate('document.querySelector(\'[data-test="event-chat"] [role="log"]\').scrollTop = 0');
+    $page->assertSee('Historique du groupe [15]')
+        ->assertSee('Historique du groupe [25]')
+        ->assertPathIs("/events/{$event->id}/chat")
+        ->assertScript("document.querySelectorAll('[data-test=event-chat-message-bubble]').length", 20)
+        ->assertScript('document.querySelector(\'[data-test="event-chat"] [role="log"]\').scrollTop > 0', true);
+    $page->page()->evaluate('document.querySelector(\'[data-test="event-chat"] [role="log"]\').scrollTop = 0');
+    $page->assertSee('Historique du groupe [01]')
+        ->assertSee('Historique du groupe [25]')
+        ->assertScript("document.querySelectorAll('[data-test=event-chat-message-bubble]').length", 25)
+        ->assertNoJavaScriptErrors();
+})->with(['event' => 'mine', 'messaging' => 'conversations']);

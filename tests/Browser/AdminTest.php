@@ -133,8 +133,8 @@ test('single-role administrator can open the account menu and log out with the k
             true,
         );
 
-    $page->script("document.querySelector('[data-test=admin-shell-content]').scrollTop = 500; true;");
-    $page->assertScript("document.querySelector('[data-test=admin-shell-content]').scrollTop > 0 && window.scrollY === 0", true);
+    $page->script('window.scrollTo(0, 500); true;');
+    $page->assertScript('window.scrollY > 0', true);
 
     $page->assertScript(
         "Math.round(document.querySelector('[data-test=admin-account-header]').getBoundingClientRect().top)",
@@ -710,8 +710,8 @@ test('a catalog move disables its control and preserves the scroll position', fu
         };
         true;
     JS);
-    $page->script("(() => { const shell = document.querySelector('[data-test=admin-shell-content]'); shell.scrollTop = shell.scrollHeight; return true; })()");
-    $scrollY = $page->script("document.querySelector('[data-test=admin-shell-content]').scrollTop");
+    $page->script('window.scrollTo(0, document.documentElement.scrollHeight); true;');
+    $scrollY = $page->script('window.scrollY');
     expect($scrollY)->toBeGreaterThan(0);
 
     $page->script("document.querySelector('[aria-label=\"Descendre {$interest->name}\"]').click()");
@@ -719,7 +719,7 @@ test('a catalog move disables its control and preserves the scroll position', fu
         ->assertDisabled("[aria-label=\"Descendre {$interest->name}\"]");
     $page->script('window.__releaseAdminRequest(); true;');
     $page->assertEnabled("[aria-label=\"Descendre {$interest->name}\"]")
-        ->assertScript("Math.abs(document.querySelector('[data-test=admin-shell-content]').scrollTop - {$scrollY}) <= 1", true);
+        ->assertScript("Math.abs(window.scrollY - {$scrollY}) <= 1", true);
 
     expect($interest->fresh()?->sort_order)->toBe(6);
 });

@@ -1,23 +1,16 @@
 const storageKey = 'event-workspace-scroll';
-const regionSelector = '[data-test="member-shell-content"]';
 let rememberedScrollTop: number | null = null;
 
 export function rememberEventWorkspaceScroll(
-    opener?: HTMLElement | null,
+    _opener?: HTMLElement | null,
 ): void {
-    const region =
-        opener?.closest<HTMLElement>(regionSelector) ??
-        document.querySelector<HTMLElement>(regionSelector);
-
-    if (region) {
-        rememberedScrollTop = region.scrollTop;
-        sessionStorage.setItem(storageKey, String(rememberedScrollTop));
-    }
+    void _opener;
+    rememberedScrollTop = window.scrollY;
+    sessionStorage.setItem(storageKey, String(rememberedScrollTop));
 }
 
 export function restoreEventWorkspaceScroll(): void {
     const stored = sessionStorage.getItem(storageKey);
-    const region = document.querySelector<HTMLElement>(regionSelector);
 
     if (rememberedScrollTop === null && stored !== null) {
         rememberedScrollTop = Number(stored);
@@ -25,11 +18,11 @@ export function restoreEventWorkspaceScroll(): void {
 
     const scrollTop = rememberedScrollTop;
 
-    if (scrollTop === null || !Number.isFinite(scrollTop) || !region) {
+    if (scrollTop === null || !Number.isFinite(scrollTop)) {
         return;
     }
 
-    region.scrollTop = scrollTop;
+    window.scrollTo({ top: scrollTop, behavior: 'instant' });
 }
 
 export function forgetEventWorkspaceScroll(): void {

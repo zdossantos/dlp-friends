@@ -35,7 +35,7 @@ watch(
 
 <template>
     <div
-        class="relative flex h-svh w-full max-w-full min-w-0 flex-col overflow-hidden bg-background text-foreground"
+        class="relative flex min-h-dvh w-full max-w-full min-w-0 flex-col bg-background text-foreground"
     >
         <div
             aria-hidden="true"
@@ -50,8 +50,7 @@ watch(
         </header>
         <main
             data-test="admin-shell-content"
-            scroll-region
-            class="relative min-h-0 w-full max-w-full min-w-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain [padding-bottom:calc(6rem+env(safe-area-inset-bottom))]"
+            class="relative w-full max-w-full min-w-0 flex-1 overflow-x-clip [padding-bottom:calc(6rem+env(safe-area-inset-bottom))]"
         >
             <slot />
         </main>

@@ -2,7 +2,7 @@
 
 use App\Models\User;
 
-test('admin content scrolls without moving the viewport or bottom navigation', function (int $width, int $height) {
+test('admin document scrolls while bottom navigation stays in the viewport', function (int $width, int $height) {
     $admin = User::factory()->admin()->create();
     User::factory()->count(10)->create();
     $this->actingAs($admin);
@@ -14,7 +14,7 @@ test('admin content scrolls without moving the viewport or bottom navigation', f
             document.documentElement.classList.add('seasonal-halloween');
             const shell = document.querySelector('[data-test="admin-shell-content"]');
             window.__adminNavigationBottom = document.querySelector('[data-test="admin-bottom-navigation"]').getBoundingClientRect().bottom;
-            shell.scrollTop = 400;
+            window.scrollTo(0, 400);
             return true;
         })()
     JS);
@@ -22,7 +22,7 @@ test('admin content scrolls without moving the viewport or bottom navigation', f
         (() => {
             const shell = document.querySelector('[data-test="admin-shell-content"]');
             const navigation = document.querySelector('[data-test="admin-bottom-navigation"]');
-            return shell.scrollTop > 0 && window.scrollY === 0
+            return window.scrollY > 0 && shell.scrollTop === 0
                 && Math.abs(navigation.getBoundingClientRect().bottom - window.__adminNavigationBottom) <= 1
                 && navigation.getBoundingClientRect().bottom <= window.innerHeight;
         })()
@@ -30,7 +30,7 @@ test('admin content scrolls without moving the viewport or bottom navigation', f
     $page->page()->evaluate(<<<'JS'
         (() => {
             const shell = document.querySelector('[data-test="admin-shell-content"]');
-            shell.scrollTop = shell.scrollHeight;
+            window.scrollTo(0, document.documentElement.scrollHeight);
             return true;
         })()
     JS);
@@ -39,9 +39,9 @@ test('admin content scrolls without moving the viewport or bottom navigation', f
             const shell = document.querySelector('[data-test="admin-shell-content"]');
             const navigation = document.querySelector('[data-test="admin-bottom-navigation"]');
             const lastCard = shell.lastElementChild;
-            return Math.abs(shell.scrollHeight - shell.clientHeight - shell.scrollTop) <= 1
+            return Math.abs(document.documentElement.scrollHeight - window.innerHeight - window.scrollY) <= 1
                 && lastCard.getBoundingClientRect().bottom <= navigation.getBoundingClientRect().top
-                && document.documentElement.scrollHeight <= window.innerHeight;
+                && shell.scrollHeight <= shell.clientHeight + 1;
         })()
     JS, true)->assertNoJavaScriptErrors();
 })->with([[320, 700], [390, 844]]);

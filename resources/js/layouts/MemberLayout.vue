@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { usePage } from '@inertiajs/vue3';
-import { watch } from 'vue';
+import { computed, watch } from 'vue';
 import MatchDialog from '@/components/discovery/MatchDialog.vue';
 import MemberBottomNavigation from '@/components/MemberBottomNavigation.vue';
 import PwaUpdatePrompt from '@/components/pwa/PwaUpdatePrompt.vue';
@@ -18,6 +18,21 @@ import type { DiscoveryMatch } from '@/types';
 
 const reservesMemberNavigation = useMemberNavigationVisibility();
 const page = usePage();
+// These views contain cards, a wizard or a message timeline sized to the viewport.
+// Other pages use document scrolling so WebKit can size its native scroll view.
+const boundedViewport = computed(() =>
+    [
+        'Discovery/Index',
+        'Discovery/Passed',
+        'Conversations/Index',
+        'Conversations/Show',
+        'Conversations/Group',
+        'Members/Show',
+        'profile/Create',
+        'profile/Edit',
+        'profile/Show',
+    ].includes(page.component),
+);
 const realtime = useMemberRealtimeNotifications(page.props.auth.user.id);
 provideMemberRealtimeContext(realtime);
 watch(
@@ -39,7 +54,8 @@ watch(
 
 <template>
     <div
-        class="relative flex h-svh w-full max-w-full min-w-0 flex-col overflow-hidden bg-background text-foreground"
+        class="relative flex w-full max-w-full min-w-0 flex-col bg-background text-foreground"
+        :class="boundedViewport ? 'h-dvh overflow-hidden' : 'min-h-dvh'"
     >
         <div
             aria-hidden="true"
@@ -48,13 +64,13 @@ watch(
         <SeasonalDecorations />
         <div
             data-test="member-shell-content"
-            scroll-region
-            class="relative flex min-h-0 w-full max-w-full min-w-0 flex-1 flex-col overflow-y-auto overscroll-contain"
-            :class="
-                reservesMemberNavigation
-                    ? '[padding-bottom:calc(5.5rem+env(safe-area-inset-bottom))]'
-                    : undefined
-            "
+            :scroll-region="boundedViewport ? '' : undefined"
+            class="relative flex w-full max-w-full min-w-0 flex-1 flex-col"
+            :class="[
+                boundedViewport && 'min-h-0 overflow-y-auto overscroll-contain',
+                reservesMemberNavigation &&
+                    '[padding-bottom:calc(5.5rem+env(safe-area-inset-bottom))]',
+            ]"
         >
             <slot />
         </div>

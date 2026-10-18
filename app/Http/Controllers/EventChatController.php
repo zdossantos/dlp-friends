@@ -9,6 +9,7 @@ use App\Http\Requests\EventChatIndexRequest;
 use App\Models\Event;
 use App\Models\EventChatMessage;
 use App\Models\User;
+use Inertia\Inertia;
 use Inertia\Response;
 
 final class EventChatController extends Controller
@@ -28,11 +29,19 @@ final class EventChatController extends Controller
             ->through(fn (EventChatMessage $message): array => EventChatData::message($message, $viewer));
         $messages->setCollection($messages->getCollection()->reverse()->values());
 
+        if ($request->query('origin') === 'conversations') {
+            return Inertia::render('Conversations/Group', [
+                'event' => EventDetailData::from($event->load('organizer.profile'), $viewer),
+                'chat' => EventChatData::chat($chat),
+                'messages' => Inertia::scroll($messages),
+            ]);
+        }
+
         return $this->workspace->render($viewer, 'mine', [
             'kind' => 'chat',
             'event' => EventDetailData::from($event->load('organizer.profile'), $viewer),
             'chat' => EventChatData::chat($chat),
-            'messages' => $messages,
+            'messages' => Inertia::scroll($messages),
         ]);
     }
 }

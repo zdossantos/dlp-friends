@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Link, router, usePage } from '@inertiajs/vue3';
+import { InfiniteScroll, router, usePage } from '@inertiajs/vue3';
 import { echo, useConnectionStatus, useEcho } from '@laravel/echo-vue';
 import { Heart, SendHorizontal } from '@lucide/vue';
 import { computed, nextTick, onMounted, ref, watch } from 'vue';
@@ -9,6 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useTranslations } from '@/composables/useTranslations';
 import { xsrfHeader } from '@/lib/csrf';
 import { mergeEventChatMessages } from '@/lib/eventChatState';
+import { index as conversationsIndex } from '@/routes/conversations';
 import {
     like as likeMessageRoute,
     store as storeMessage,
@@ -28,6 +29,7 @@ const props = defineProps<{
     chat: EventChatInfo;
     messages: PaginatedEventChatMessages;
     context: EventWorkspaceContext;
+    messagesProp?: string;
 }>();
 const page = usePage();
 const { t } = useTranslations();
@@ -42,6 +44,15 @@ const lastTouchTap = ref<{ messageId: number; occurredAt: number } | null>(
 );
 const scroll = ref<HTMLElement | null>(null);
 const status = useConnectionStatus();
+let messageItems: HTMLElement | null = null;
+
+function getMessageItems(): HTMLElement | null {
+    // Inertia can finish remembering items after unmount; retain the detached
+    // list until its pending callback completes instead of returning null.
+    messageItems = scroll.value?.querySelector('ol') ?? messageItems;
+
+    return messageItems;
+}
 
 function merge(messages: EventChatMessage[]): void {
     visibleMessages.value = mergeEventChatMessages(
@@ -221,7 +232,18 @@ useEcho<{
 watch(() => props.messages.data, merge, { immediate: true, deep: true });
 watch(status, (next, previous) => {
     if (next === 'connected' && previous !== 'connected') {
-        router.reload({ only: ['panel'] });
+        router.reload({
+            only: props.messagesProp ? ['messages', 'chat'] : ['panel'],
+            onHttpException: (response) => {
+                if (props.messagesProp && response.status === 403) {
+                    router.visit(
+                        conversationsIndex({ query: { category: 'groups' } }),
+                    );
+
+                    return false;
+                }
+            },
+        });
     }
 });
 onMounted(async () => {
@@ -253,20 +275,30 @@ onMounted(async () => {
             :aria-label="t('events.chat.timeline')"
             class="min-h-0 flex-1 overflow-y-auto px-4 py-4 sm:px-6"
         >
-            <Link
-                v-if="messages.next_page_url"
-                :href="messages.next_page_url"
-                preserve-scroll
-                class="mb-4 block text-center text-sm text-primary"
-                >{{ t('events.chat.load_previous') }}</Link
-            >
             <p
                 v-if="visibleMessages.length === 0"
                 class="py-10 text-center text-sm text-muted-foreground"
             >
                 {{ t('events.chat.empty') }}
             </p>
-            <ol v-else class="flex flex-col gap-3">
+            <InfiniteScroll
+                :data="messagesProp ?? 'panel.messages'"
+                :items-element="getMessageItems"
+                as="ol"
+                reverse
+                only-next
+                preserve-url
+                class="flex flex-col gap-3"
+            >
+                <template #next="{ loading }">
+                    <p
+                        v-if="loading"
+                        role="status"
+                        class="pb-3 text-center text-sm text-muted-foreground"
+                    >
+                        {{ t('conversations.message.loading_previous') }}
+                    </p>
+                </template>
                 <li
                     v-for="message in visibleMessages"
                     :key="message.id"
@@ -338,7 +370,7 @@ onMounted(async () => {
                         </button>
                     </div>
                 </li>
-            </ol>
+            </InfiniteScroll>
         </div>
         <footer class="shrink-0 border-t px-4 py-3 sm:px-6">
             <p

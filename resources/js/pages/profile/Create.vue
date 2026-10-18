@@ -32,7 +32,7 @@ defineProps<{
     <Head :title="t('profile.create.title')" />
 
     <main
-        class="fixed inset-0 mx-auto flex h-svh w-full max-w-xl overflow-hidden px-3 py-[max(0.5rem,env(safe-area-inset-top))] sm:px-6 sm:py-6"
+        class="fixed inset-0 mx-auto flex h-dvh w-full max-w-xl overflow-hidden px-3 py-[max(0.5rem,env(safe-area-inset-top))] sm:px-6 sm:py-6"
     >
         <Card
             class="flex h-full min-h-0 w-full gap-2 rounded-3xl border-border/70 py-3 shadow-xl shadow-primary/5 sm:gap-4 sm:py-6"

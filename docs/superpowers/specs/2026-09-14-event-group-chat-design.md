@@ -215,3 +215,15 @@ build frontend et suites de tests complètes concernés par le changement.
 Les pièces jointes, GIF, réactions, sondages, édition ou suppression de message,
 reçus individuels, présence, saisie, rôles de modération, administrateurs
 délégués et accès public ne font pas partie de cette évolution.
+
+
+## Accès depuis la messagerie commune (issue #278)
+
+La messagerie distingue les onglets Privées et Groupes. Les groupes correspondent
+uniquement aux événements organisés ou aux inscriptions acceptées. Ils ouvrent un
+écran de discussion dans la messagerie, qui réutilise EventChat, ses endpoints,
+son canal privé et ses marqueurs de lecture. Le lien depuis l’événement reste
+disponible dans le panneau adaptatif. La révocation retire le groupe de la liste
+et ferme son écran ouvert ; l’annulation et l’archivage conservent la lecture seule.
+L’historique charge les pages précédentes par InfiniteScroll Inertia en conservant
+la position de lecture et sans changer de page.
