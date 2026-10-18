@@ -412,3 +412,14 @@ détachés sont fermés par les scopes et Policies.
 d’authentification, vérification et activité. La page d’acceptation et le logout
 restent hors de cette garde ; la version et l’heure sont déterminées au serveur
 et l’écriture est unique/idempotente sous verrou.
+
+## Retour dans la PWA sur iOS
+
+Le document Inertia déclare `viewport-fit=cover` pour utiliser les marges de
+sécurité déjà prévues dans les composants. Sur iOS en mode standalone,
+`initializeIosViewportRecovery` réapplique cette déclaration après `focus`,
+`pageshow` ou le retour à l’état visible. Ce contournement vise la perte des
+contraintes de viewport par WebKit au retour d’un lien externe. Les événements
+simultanés sont regroupés ; aucune page n’est rechargée et les paramètres de
+zoom sont conservés. La régression native doit être vérifiée sur une PWA
+installée sur iPhone, les tests unitaires couvrant seulement le cycle de reprise.
