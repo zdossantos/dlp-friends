@@ -26,6 +26,10 @@ final class EventRegistrationController extends Controller
         $user = $request->user();
         $withdraw->handle($user, $event);
 
+        if ($request->query('origin') === 'conversations') {
+            return redirect()->route('events.show', ['event' => $event, 'origin' => 'mine']);
+        }
+
         return back();
     }
 }

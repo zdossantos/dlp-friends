@@ -22,7 +22,7 @@ const registrationError = computed(() => {
 
     return errors?.registration;
 });
-const origin = props.context === 'mine' ? { origin: 'mine' } : {};
+const origin = props.context === 'discover' ? {} : { origin: props.context };
 const actions = computed(() =>
     availableEventActions({
         role: props.event.isOrganizer ? 'organizer' : 'member',

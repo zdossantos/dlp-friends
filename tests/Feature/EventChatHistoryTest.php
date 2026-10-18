@@ -24,16 +24,16 @@ class EventChatHistoryTest extends TestCase
         $response = $this->actingAs($participant)->get(route('events.chat.show', $event));
 
         $response->assertOk()->assertInertia(fn (Assert $page) => $page
-            ->component('Events/Mine')
-            ->where('panel.kind', 'chat')
-            ->where('panel.event.id', $event->id)
-            ->where('panel.chat.id', $chat->id)
-            ->where('panel.chat.isReadOnly', false)
-            ->has('panel.messages.data', 10)
-            ->where('panel.messages.data.0.id', $created[2]->id)
-            ->where('panel.messages.data.9.id', $created[11]->id)
-            ->where('panel.messages.data.0.author.display_name', $organizer->profile?->display_name)
-            ->where('closeHref', route('events.mine', absolute: false)));
+            ->component('Conversations/Group')
+            ->where('panel', null)
+            ->where('event.id', $event->id)
+            ->where('chat.id', $chat->id)
+            ->where('chat.isReadOnly', false)
+            ->has('messages.data', 10)
+            ->where('messages.data.0.id', $created[2]->id)
+            ->where('messages.data.9.id', $created[11]->id)
+            ->where('messages.data.0.author.display_name', $organizer->profile?->display_name)
+            ->where('closeHref', route('events.chat.show', $event, absolute: false)));
     }
 
     public function test_an_older_page_and_read_only_metadata_remain_available_to_members(): void
@@ -46,11 +46,11 @@ class EventChatHistoryTest extends TestCase
             ->get(route('events.chat.show', ['event' => $event, 'messages' => 2]))
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
-                ->has('panel.messages.data', 2)
-                ->where('panel.messages.data.0.id', $created[0]->id)
-                ->where('panel.messages.data.1.id', $created[1]->id)
-                ->where('panel.chat.isReadOnly', true)
-                ->where('panel.chat.readOnlyReason', 'cancelled'));
+                ->has('messages.data', 2)
+                ->where('messages.data.0.id', $created[0]->id)
+                ->where('messages.data.1.id', $created[1]->id)
+                ->where('chat.isReadOnly', true)
+                ->where('chat.readOnlyReason', 'cancelled'));
     }
 
     public function test_non_members_cannot_discover_the_chat_or_its_history(): void

@@ -14,10 +14,11 @@ seule. Une annulation la rend immédiatement accessible en lecture seule.
 
 ## Décisions produit
 
-- La discussion apparaît dans un onglet « Discussion » du panneau adaptatif de
-  l’événement, aux côtés de « Détails » et « Participants ».
-- Une URL profonde ouvre l’espace Événements sur le bon contexte et sélectionne
-  directement cet onglet. La discussion n’apparaît pas dans la messagerie privée.
+- La discussion s’ouvre sur sa page de conversation complète depuis le bouton
+  « Discussion » de l’événement ou l’onglet « Groupes » de la messagerie.
+- « Voir le groupe » ouvre le même panneau de détail que la liste des événements,
+  avec accès aux participants et à leurs profils, sans perdre le brouillon ni
+  la position de lecture de la conversation.
 - L’organisateur et les inscriptions actuellement acceptées ont accès au chat.
 - Une désinscription, un retrait ou un blocage révoque immédiatement et
   définitivement l’accès de la personne concernée, en HTTP comme en temps réel.

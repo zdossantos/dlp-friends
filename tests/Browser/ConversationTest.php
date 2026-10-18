@@ -8,6 +8,7 @@ use App\Models\ConversationStarter;
 use App\Models\Event;
 use App\Models\EventChat;
 use App\Models\EventChatMessage;
+use App\Models\EventRegistration;
 use App\Models\MemberMatch;
 use App\Models\Message;
 use App\Models\SeasonalTheme;
@@ -435,8 +436,12 @@ test('a conversation renders safe recent history and repeatedly loads older mess
     $page->script(<<<'JS'
         const scroll = document.querySelector('[data-test=message-scroll]');
         scroll.scrollTop = 0;
+        const anchor = scroll.querySelector('[data-message-id]');
+        window.historyAnchor = { id: anchor.dataset.messageId, top: anchor.getBoundingClientRect().top };
     JS);
     $page->assertSee('Message 16')
+        ->wait(0.5)
+        ->assertScript("Math.abs(document.querySelector('[data-message-id=\"' + window.historyAnchor.id + '\"]').getBoundingClientRect().top - window.historyAnchor.top) < 3", true)
         ->assertScript("document.querySelector('[data-test=message-scroll]').scrollTop > 0", true);
 
     $page->script("document.querySelector('[data-test=message-scroll]').scrollTop = 0; true;");
@@ -655,6 +660,7 @@ test('messaging switches between private and event groups and sends in the share
     $conversation = $match->conversation()->create();
     $event = Event::factory()->for($member, 'organizer')->create(['title' => 'Le groupe du parc']);
     $chat = EventChat::factory()->for($event)->create();
+    EventRegistration::factory()->for($event)->for($peer)->accepted()->create();
     EventChatMessage::factory()->for($chat)->for($peer, 'author')->create(['content' => 'Bienvenue dans le groupe']);
     $this->actingAs($member);
 
@@ -670,11 +676,16 @@ test('messaging switches between private and event groups and sends in the share
         ->assertPresent('[data-test="conversation-day-separator"]')
         ->fill('#message-content', 'À bientôt au parc')
         ->click('[data-test="group-chat-info"]')
-        ->assertSeeIn('[data-test="group-info"]', 'Le groupe du parc')
-        ->assertDontSeeIn('[data-test="group-info"]', 'Écrire un message')
+        ->assertSeeIn('[data-test="event-detail"]', 'Le groupe du parc')
+        ->assertDontSeeIn('[data-test="event-panel"]', 'Écrire un message')
+        ->click('[data-test="participant-stack-trigger"]')
+        ->click("[data-test=participant-link-{$peer->id}]")
+        ->assertSeeIn('[data-test="event-panel"]', 'Basile')
+        ->click('[data-test="participant-profile-back"]')
+        ->assertPresent('[data-test="participant-list"]')
+        ->keys('[data-test="event-panel"]', 'Escape')
+        ->assertMissing('[data-test="event-panel"]')
         ->assertPathIs("/events/{$event->id}/chat")
-        ->click('[data-test="group-info-close"]')
-        ->assertMissing('[data-test="group-info"]')
         ->assertValue('#message-content', 'À bientôt au parc')
         ->click('[aria-label="Envoyer le message"]')
         ->assertSee('À bientôt au parc')

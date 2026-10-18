@@ -54,3 +54,43 @@ test('messaging group refresh includes read only state after cancellation', func
         ->assertJsonPath('props.chat.readOnlyReason', 'cancelled')
         ->assertJsonCount(0, 'props.messages.data');
 });
+
+test('event details and participant profiles share the conversation workspace', function () {
+    $member = User::factory()->withProfile()->create();
+    $peer = User::factory()->withProfile()->create();
+    $event = Event::factory()->for($member, 'organizer')->create();
+    $chat = EventChat::factory()->for($event)->create();
+    EventRegistration::factory()->for($event)->for($peer)->create(['status' => EventRegistrationStatus::Accepted]);
+    $this->actingAs($member);
+
+    $this->get(route('events.chat.show', $event))
+        ->assertInertia(fn (Assert $page) => $page->component('Conversations/Group')->where('panel', null));
+
+    foreach ([
+        ['events.show', ['event' => $event], 'detail'],
+        ['events.participants.index', ['event' => $event], 'participants'],
+        ['events.participants.show', ['event' => $event, 'member' => $peer], 'participant-profile'],
+    ] as [$route, $parameters, $kind]) {
+        $this->get(route($route, $parameters + ['origin' => 'conversations']))
+            ->assertInertia(fn (Assert $page) => $page->component('Conversations/Group')
+                ->where('event.id', $event->id)->where('chat.id', $chat->id)
+                ->where('panel.kind', $kind)->has('messages.data')
+                ->where('closeHref', route('events.chat.show', $event, absolute: false)));
+    }
+
+    $outsider = User::factory()->withProfile()->create();
+    $this->actingAs($outsider)->get(route('events.show', ['event' => $event, 'origin' => 'conversations']))->assertForbidden();
+});
+test('withdrawing from group details returns to the event without forbidden chat access', function () {
+    $member = User::factory()->withProfile()->create();
+    $event = Event::factory()->create();
+    EventChat::factory()->for($event)->create();
+    EventRegistration::factory()->for($event)->for($member)->create(['status' => EventRegistrationStatus::Accepted]);
+
+    $this->actingAs($member)
+        ->from(route('events.show', ['event' => $event, 'origin' => 'conversations']))
+        ->delete(route('events.registrations.destroy', ['event' => $event, 'origin' => 'conversations']))
+        ->assertRedirect(route('events.show', ['event' => $event, 'origin' => 'mine']));
+    $this->get(route('events.show', ['event' => $event, 'origin' => 'mine']))->assertOk();
+    $this->get(route('events.chat.show', $event))->assertForbidden();
+});

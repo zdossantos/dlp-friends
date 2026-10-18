@@ -2,14 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use App\Data\EventChatData;
-use App\Data\EventDetailData;
 use App\Data\EventWorkspaceData;
 use App\Http\Requests\EventChatIndexRequest;
 use App\Models\Event;
-use App\Models\EventChatMessage;
 use App\Models\User;
-use Inertia\Inertia;
 use Inertia\Response;
 
 final class EventChatController extends Controller
@@ -20,28 +16,7 @@ final class EventChatController extends Controller
     {
         /** @var User $viewer */
         $viewer = $request->user();
-        $chat = $event->chat;
-        $messages = $chat->messages()
-            ->with('author.profile')
-            ->withCount('reactions')
-            ->orderByDesc('id')
-            ->simplePaginate(10, ['*'], 'messages')
-            ->through(fn (EventChatMessage $message): array => EventChatData::message($message, $viewer));
-        $messages->setCollection($messages->getCollection()->reverse()->values());
 
-        if ($request->query('origin') === 'conversations') {
-            return Inertia::render('Conversations/Group', [
-                'event' => EventDetailData::from($event->load('organizer.profile'), $viewer),
-                'chat' => EventChatData::chat($chat),
-                'messages' => Inertia::scroll($messages),
-            ]);
-        }
-
-        return $this->workspace->render($viewer, 'mine', [
-            'kind' => 'chat',
-            'event' => EventDetailData::from($event->load('organizer.profile'), $viewer),
-            'chat' => EventChatData::chat($chat),
-            'messages' => Inertia::scroll($messages),
-        ]);
+        return $this->workspace->conversation($viewer, $event);
     }
 }
