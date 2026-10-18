@@ -66,6 +66,13 @@ return [
         'delete' => 'Supprimer',
     ],
     'pwa' => [
+        'diagnostics_title' => 'Diagnostic écran (bêta)',
+        'diagnostics_description' => 'Mesure quand le vide apparaît, puis tourne l’écran en paysage et en portrait. Copie ensuite le rapport. Seules les dimensions restent en mémoire jusqu’à la fermeture.',
+        'diagnostics_capture' => 'Mesurer',
+        'diagnostics_copy' => 'Copier',
+        'diagnostics_copied' => 'Copié',
+        'diagnostics_report' => 'Voir le rapport',
+        'diagnostics_copy_failed' => 'Copie impossible : sélectionne le texte dans le rapport.',
         'update_title' => 'Une mise à jour est prête',
         'update_description' => 'Recharge DLP Friends quand tu es prêt·e.',
         'update_action' => 'Mettre à jour',
