@@ -43,3 +43,18 @@ it('links the pwa metadata once from application documents', function () {
         ->and($html)->toContain('href="/app.webmanifest"')
         ->and($html)->toContain('content="yes"');
 });
+
+it('declares non-overlay iOS viewport metadata', function (string $url) {
+    $response = $this->get($url);
+
+    $response->assertOk();
+
+    $document = new DOMDocument;
+    @$document->loadHTML($response->getContent());
+    $xpath = new DOMXPath($document);
+
+    expect($xpath->evaluate('string(//meta[@name="apple-mobile-web-app-status-bar-style"]/@content)'))
+        ->toBe('default')
+        ->and($xpath->evaluate('string(//meta[@name="viewport"]/@content)'))
+        ->toBe('width=device-width, initial-scale=1');
+})->with(['/fr', '/login']);
