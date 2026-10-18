@@ -268,3 +268,23 @@ function notificationBrowserNotice(
         ],
     ]);
 }
+
+test('long notification history scrolls with the document above the fixed navigation', function () {
+    $member = notificationBrowserMember('Alice');
+    foreach (range(1, 20) as $number) {
+        notificationBrowserNotice($member, 'conversations', "Membre {$number}", $number);
+    }
+    $this->actingAs($member);
+
+    $page = visit('/notifications')->resize(390, 682);
+    $page->page()->evaluate('window.scrollTo(0, document.documentElement.scrollHeight)');
+    $page->assertScript(<<<'JS'
+        (() => {
+            const last = [...document.querySelectorAll('[data-test^="notification-"]')]
+                .filter(element => /^notification-[0-9a-f-]{36}$/.test(element.dataset.test)).at(-1);
+            const navigation = document.querySelector('[data-test="member-bottom-navigation"]');
+            return window.scrollY > 0 && last !== undefined
+                && last.getBoundingClientRect().bottom <= navigation.getBoundingClientRect().top;
+        })()
+    JS, true)->assertNoJavaScriptErrors();
+});

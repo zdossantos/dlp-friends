@@ -5,6 +5,9 @@ use App\Actions\SendMessage;
 use App\Events\MatchCreated;
 use App\Events\MessageSent;
 use App\Models\ConversationStarter;
+use App\Models\Event;
+use App\Models\EventChat;
+use App\Models\EventChatMessage;
 use App\Models\MemberMatch;
 use App\Models\Message;
 use App\Models\SeasonalTheme;
@@ -641,3 +644,51 @@ test('an archived conversation remains readable without a composer', function ()
         ->assertNotPresent('[data-test="member-bottom-navigation"]')
         ->assertNoJavaScriptErrors();
 });
+
+test('messaging switches between private and event groups and sends in the shared group chat', function () {
+    $member = conversationBrowserMember('Alice');
+    $peer = conversationBrowserMember('Basile');
+    $match = MemberMatch::factory()->create([
+        'user_low_id' => min($member->id, $peer->id),
+        'user_high_id' => max($member->id, $peer->id),
+    ]);
+    $conversation = $match->conversation()->create();
+    $event = Event::factory()->for($member, 'organizer')->create(['title' => 'Le groupe du parc']);
+    $chat = EventChat::factory()->for($event)->create();
+    EventChatMessage::factory()->for($chat)->for($peer, 'author')->create(['content' => 'Bienvenue dans le groupe']);
+    $this->actingAs($member);
+
+    $page = visit('/conversations')->resize(390, 700)
+        ->assertSee('Basile')->assertDontSee('Le groupe du parc');
+    EventChatMessage::factory()->for($chat)->for($peer, 'author')->create(['content' => 'Un nouveau souvenir']);
+    $page->click('[data-test="conversations-groups"]')
+        ->assertSee('Le groupe du parc')->assertDontSee('Basile')
+        ->assertPresent('[aria-label="2 messages non lus"]')
+        ->click("[data-test=group-conversation-{$chat->id}]")
+        ->assertPresent('[data-test="group-chat-back"]')
+        ->assertSee('Bienvenue dans le groupe')
+        ->fill('#event-chat-content', 'À bientôt au parc')
+        ->click('[aria-label="Envoyer le message"]')
+        ->assertSee('À bientôt au parc')
+        ->click('[data-test="group-chat-back"]')
+        ->assertAttribute('[data-test="conversations-groups"]', 'aria-selected', 'true')
+        ->assertAttribute("[data-test=group-conversation-{$chat->id}]", 'data-unread', 'false')
+        ->click('[data-test="conversations-private"]')
+        ->assertSee('Basile')
+        ->click("a[href='/conversations/{$conversation->id}']")
+        ->assertPresent('#message-content')
+        ->assertNoJavaScriptErrors();
+
+    $this->assertDatabaseHas('event_chat_messages', ['event_chat_id' => $chat->id, 'content' => 'À bientôt au parc']);
+});
+
+test('messaging categories support keyboard navigation on mobile and desktop', function (int $width, int $height) {
+    $this->actingAs(conversationBrowserMember('Alice'));
+
+    visit('/conversations')->resize($width, $height)
+        ->keys('[data-test="conversations-private"]', 'ArrowRight')
+        ->assertAttribute('[data-test="conversations-groups"]', 'aria-selected', 'true')
+        ->keys('[data-test="conversations-groups"]', 'ArrowLeft')
+        ->assertAttribute('[data-test="conversations-private"]', 'aria-selected', 'true')
+        ->assertNoJavaScriptErrors();
+})->with(['mobile' => [390, 700], 'desktop' => [1280, 800]]);

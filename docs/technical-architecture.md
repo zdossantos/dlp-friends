@@ -461,3 +461,19 @@ métadonnée ni règle de layout permanente n’est modifiée. Il s’agit d’u
 expérience à vérifier sur l’iPhone affecté, pas d’une correction validée.
 Les tests Chromium vérifient le débordement temporaire, sa suppression et la
 stabilité des métadonnées ; ils ne prouvent pas le recalcul natif sur iOS.
+
+Les pages classiques des espaces membre (événements, notifications, réglages,
+etc.) et administration utilisent le défilement du document et une hauteur
+minimale `100dvh`, sans enfermer le contenu dans un shell `100svh`. La navigation
+reste fixe, avec un espace réservé en fin de contenu et les insets natifs. Les
+vues de cartes (découverte et profils), l’assistant de profil et les échanges
+conservent un cadre `100dvh` et leur défilement interne. Le mode suit le composant
+Inertia courant, y compris lors d’une navigation sans rechargement.
+
+Sur l’iPhone affecté, l’expérience de débordement a fait passer la zone visible
+à 788 px alors que `svh` et le contenu restaient à 682 px ; la suppression de la
+sonde a ramené la zone visible à 682 px. Ce recalcul temporaire n’est donc pas
+utilisé comme correction automatique. Le défilement naturel retire la contrainte
+de hauteur de l’application, mais son effet sur la réservation native iOS doit
+encore être confirmé sur l’appareil : les tests Chromium couvrent le défilement,
+la navigation et le redimensionnement, pas le bug natif WebKit.

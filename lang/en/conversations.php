@@ -3,7 +3,16 @@
 return [
     'navigation' => 'Chats',
     'bottom_navigation' => 'Conversations',
+    'groups' => [
+        'private' => 'Private',
+        'title' => 'Groups',
+        'empty' => 'Chats for events you organize or have joined will appear here.',
+        'event_chat' => 'Event discussion',
+        'read_only' => 'Read only',
+        'event_link' => 'View event',
+    ],
     'page' => [
+        'messaging_description' => 'Find your private conversations and event discussions.',
         'title' => 'My chats',
         'description' => 'Find the people whose worlds have crossed with yours.',
         'empty_title' => 'No chats yet',

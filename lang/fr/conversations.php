@@ -3,7 +3,16 @@
 return [
     'navigation' => 'Échanges',
     'bottom_navigation' => 'Conversations',
+    'groups' => [
+        'private' => 'Privées',
+        'title' => 'Groupes',
+        'empty' => 'Les discussions des événements que tu organises ou auxquels tu participes apparaîtront ici.',
+        'event_chat' => 'Discussion d’événement',
+        'read_only' => 'Lecture seule',
+        'event_link' => 'Voir l’événement',
+    ],
     'page' => [
+        'messaging_description' => 'Retrouve tes échanges privés et les discussions de tes événements.',
         'title' => 'Mes échanges',
         'description' => 'Retrouve ici les personnes avec qui tes univers se sont croisés.',
         'empty_title' => 'Aucun échange pour le moment',

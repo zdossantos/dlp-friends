@@ -179,7 +179,10 @@ Paris.
   annulations produisent des notifications persistantes dans l’application.
   Leur ouverture mène à l’événement concerné.
 - Chaque événement possède une discussion de groupe réservée à l’organisateur
-  et aux participants acceptés. Elle s’ouvre dans le même panneau adaptatif,
+  et aux participants acceptés. La messagerie commune distingue les onglets
+  Privées et Groupes ; un groupe ouvre le même historique et le même formulaire
+  d’envoi, avec les mêmes droits et non-lus. L’accès depuis l’événement reste
+  disponible dans le panneau adaptatif. La discussion
   affiche un compteur de messages non lus et reçoit les messages en temps réel.
   Un retrait, une exclusion ou un blocage révoque définitivement l’accès. Une
   annulation la rend immédiatement consultable uniquement ; elle est également

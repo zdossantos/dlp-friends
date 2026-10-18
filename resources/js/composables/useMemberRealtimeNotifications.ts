@@ -24,6 +24,7 @@ import {
     selectMatchNotification,
     shouldShowMessageToast,
 } from '@/lib/memberNotifications';
+import { index as conversationsIndex } from '@/routes/conversations';
 import { show as showConversation } from '@/routes/conversations';
 import type { MemberIdentity, RealtimeConversationMessage } from '@/types';
 
@@ -105,7 +106,23 @@ export function useMemberRealtimeNotifications(
         ],
         (notification) => {
             if ('access' in notification) {
-                if (isEventWorkspaceUrl(page.url)) {
+                if (page.component === 'Conversations/Group') {
+                    const event = page.props.event as { id: number };
+
+                    if (event.id === notification.event_id) {
+                        if (notification.access === 'revoked') {
+                            router.visit(
+                                conversationsIndex({
+                                    query: { category: 'groups' },
+                                }),
+                            );
+                        } else {
+                            router.reload({ only: ['chat'] });
+                        }
+                    }
+                } else if (page.component === 'Conversations/Index') {
+                    router.reload({ only: ['groups'] });
+                } else if (isEventWorkspaceUrl(page.url)) {
                     router.reload(eventChatAccessReloadOptions(notification));
                 }
 
