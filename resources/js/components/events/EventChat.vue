@@ -44,6 +44,15 @@ const lastTouchTap = ref<{ messageId: number; occurredAt: number } | null>(
 );
 const scroll = ref<HTMLElement | null>(null);
 const status = useConnectionStatus();
+let messageItems: HTMLElement | null = null;
+
+function getMessageItems(): HTMLElement | null {
+    // Inertia can finish remembering items after unmount; retain the detached
+    // list until its pending callback completes instead of returning null.
+    messageItems = scroll.value?.querySelector('ol') ?? messageItems;
+
+    return messageItems;
+}
 
 function merge(messages: EventChatMessage[]): void {
     visibleMessages.value = mergeEventChatMessages(
@@ -274,6 +283,7 @@ onMounted(async () => {
             </p>
             <InfiniteScroll
                 :data="messagesProp ?? 'panel.messages'"
+                :items-element="getMessageItems"
                 as="ol"
                 reverse
                 only-next

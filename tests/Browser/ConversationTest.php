@@ -671,6 +671,8 @@ test('messaging switches between private and event groups and sends in the share
         ->click('[aria-label="Envoyer le message"]')
         ->assertSee('À bientôt au parc')
         ->click('[data-test="group-chat-back"]')
+        ->wait(0.4)
+        ->assertNoJavaScriptErrors()
         ->assertAttribute('[data-test="conversations-groups"]', 'aria-selected', 'true')
         ->assertAttribute("[data-test=group-conversation-{$chat->id}]", 'data-unread', 'false')
         ->click('[data-test="conversations-private"]')
