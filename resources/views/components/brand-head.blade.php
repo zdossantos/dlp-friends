@@ -2,7 +2,7 @@
 <meta name="theme-color" media="(prefers-color-scheme: dark)" content="hsl(258 30% 8%)">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 @php($brandPrefix = app()->environment('beta') ? '/beta' : '')
 <meta name="apple-mobile-web-app-title" content="{{ app()->environment('beta') ? __('brand.beta_app_name') : config('app.name') }}">
 <link rel="manifest" href="{{ $brandPrefix }}/app.webmanifest">
