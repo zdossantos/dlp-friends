@@ -63,7 +63,8 @@ return [
     'actions' => ['cancel' => 'Cancel', 'close' => 'Close', 'delete' => 'Delete'],
     'pwa' => [
         'diagnostics_title' => 'Screen diagnostics (beta)',
-        'diagnostics_description' => 'Capture when the gap appears, then rotate to landscape and portrait. Copy the report afterwards. Only dimensions stay in memory until closed.',
+        'diagnostics_description' => 'When the gap appears, test recalculation before rotating. The test makes the page scrollable for one second and may move it. Copy the report afterwards. Only dimensions stay in memory until closed.',
+        'diagnostics_reflow' => 'Test recalculation',
         'diagnostics_capture' => 'Capture',
         'diagnostics_copy' => 'Copy',
         'diagnostics_copied' => 'Copied',

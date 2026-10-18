@@ -444,3 +444,20 @@ l’affichage correspond notamment au symptôme décrit dans
 pas à confirmer la cause sur iOS 27.0.1. Les tests Chromium vérifient uniquement
 la collecte, son isolation à la bêta et le suivi des dimensions ; ils ne
 reproduisent pas le comportement du conteneur natif iOS.
+
+Les relevés iPhone sur iOS 27.0.1 montrent une hauteur de 682 px pour
+`innerHeight`, `visualViewport`, le document, `svh`, `dvh` et le contenant fixe,
+puis 812 px après paysage/portrait, à largeur constante de 402 px. Même `lvh`
+et `vh` passent de 787 à 812 px : changer seulement d’unité ou recopier
+`innerHeight` ne constitue donc pas une correction démontrée. Les insets à
+zéro sont compatibles avec les métadonnées actuelles sans `viewport-fit=cover`.
+
+Le bouton bêta « Tester le recalcul » teste une seule hypothèse : un débordement
+du document peut-il déclencher la mise à jour du viewport natif ? Sur action
+explicite, une sonde absolue invisible dans `body` étend la hauteur défilable à
+`100lvh + 1px` pendant une seconde. Le rapport enregistre avant, pendant et
+après ; fermer le diagnostic retire immédiatement cette sonde. Aucune
+métadonnée ni règle de layout permanente n’est modifiée. Il s’agit d’une
+expérience à vérifier sur l’iPhone affecté, pas d’une correction validée.
+Les tests Chromium vérifient le débordement temporaire, sa suppression et la
+stabilité des métadonnées ; ils ne prouvent pas le recalcul natif sur iOS.

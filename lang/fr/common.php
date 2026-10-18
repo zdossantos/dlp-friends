@@ -67,7 +67,8 @@ return [
     ],
     'pwa' => [
         'diagnostics_title' => 'Diagnostic écran (bêta)',
-        'diagnostics_description' => 'Mesure quand le vide apparaît, puis tourne l’écran en paysage et en portrait. Copie ensuite le rapport. Seules les dimensions restent en mémoire jusqu’à la fermeture.',
+        'diagnostics_description' => 'Quand le vide apparaît, teste le recalcul avant de tourner l’écran. Le test rend la page défilable pendant une seconde et peut la faire bouger. Copie ensuite le rapport. Seules les dimensions restent en mémoire jusqu’à la fermeture.',
+        'diagnostics_reflow' => 'Tester le recalcul',
         'diagnostics_capture' => 'Mesurer',
         'diagnostics_copy' => 'Copier',
         'diagnostics_copied' => 'Copié',
