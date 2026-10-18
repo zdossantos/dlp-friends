@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { InfiniteScroll } from '@inertiajs/vue3';
 import { Heart } from '@lucide/vue';
-import { computed, nextTick, onMounted, ref, watch } from 'vue';
+import { computed, nextTick, ref, watch } from 'vue';
 import ConversationPattern from '@/components/conversations/ConversationPattern.vue';
 import { useTranslations } from '@/composables/useTranslations';
 import {
@@ -38,6 +38,54 @@ function getMessageItems(): HTMLElement | null {
 
     return messageItems;
 }
+// Inertia anchors a list item against the window. In this nested scroller,
+// that item can be clipped by the header, and its date/sender heading can
+// disappear when older messages arrive. Anchor the visible bubble instead.
+let readingAnchor: { element: HTMLElement; top: number } | null = null;
+const historyReloadOptions = {
+    onBeforeUpdate: () => {
+        const container = scrollContainer.value;
+        const bounds = container?.getBoundingClientRect();
+        const element =
+            bounds && container
+                ? Array.from(
+                      container.querySelectorAll<HTMLElement>(
+                          '[data-message-id] article',
+                      ),
+                  ).find((bubble) => {
+                      const rect = bubble.getBoundingClientRect();
+
+                      return (
+                          rect.bottom > bounds.top && rect.top < bounds.bottom
+                      );
+                  })
+                : undefined;
+
+        readingAnchor = element
+            ? { element, top: element.getBoundingClientRect().top }
+            : null;
+    },
+    onSuccess: () => {
+        const anchor = readingAnchor;
+        // Run after Vue and Inertia's item restoration, within the same frame.
+        void nextTick(() =>
+            requestAnimationFrame(() => {
+                const container = scrollContainer.value;
+
+                if (!container || !anchor?.element.isConnected) {
+                    return;
+                }
+
+                const offset =
+                    anchor.element.getBoundingClientRect().top - anchor.top;
+
+                if (Math.abs(offset) > 1) {
+                    container.scrollBy({ top: offset, behavior: 'instant' });
+                }
+            }),
+        );
+    },
+};
 const announcedMessage = ref('');
 const animatedMessageId = ref<number | null>(null);
 const pendingReactionIds = ref(new Set<number>());
@@ -180,8 +228,6 @@ function handleMessageTouchEnd(
     }
 }
 
-onMounted(() => nextTick(scrollToBottom));
-
 watch(
     () => latestMessage.value?.id,
     async (messageId) => {
@@ -238,6 +284,8 @@ watch(
             :only-previous="!reverse"
             :only-next="reverse"
             preserve-url
+            :buffer="240"
+            :params="historyReloadOptions"
             :auto-scroll="true"
             role="list"
             class="relative z-10 mx-auto flex w-full max-w-4xl flex-col gap-2"

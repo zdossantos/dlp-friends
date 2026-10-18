@@ -435,13 +435,25 @@ test('a conversation renders safe recent history and repeatedly loads older mess
 
     $page->script(<<<'JS'
         const scroll = document.querySelector('[data-test=message-scroll]');
-        scroll.scrollTop = 0;
-        const anchor = scroll.querySelector('[data-message-id]');
-        window.historyAnchor = { id: anchor.dataset.messageId, top: anchor.getBoundingClientRect().top };
+        // Keep the real Inertia request, but allow time to change reading position.
+        const send = XMLHttpRequest.prototype.send;
+        XMLHttpRequest.prototype.send = function (...args) {
+            window.historyRequestPending = true;
+            setTimeout(() => send.apply(this, args), 400);
+        };
+        scroll.scrollTop = 160;
+    JS);
+    $page->page()->waitForFunction('window.historyRequestPending === true');
+    $page->script(<<<'JS'
+        const scroll = document.querySelector('[data-test=message-scroll]');
+        scroll.scrollTop = 260;
+        const anchor = [...scroll.querySelectorAll('[data-test=message-bubble]')]
+            .find(message => message.getBoundingClientRect().bottom > scroll.getBoundingClientRect().top);
+        window.historyAnchor = { id: anchor.closest('[data-message-id]').dataset.messageId, top: anchor.getBoundingClientRect().top };
     JS);
     $page->assertSee('Message 16')
         ->wait(0.5)
-        ->assertScript("Math.abs(document.querySelector('[data-message-id=\"' + window.historyAnchor.id + '\"]').getBoundingClientRect().top - window.historyAnchor.top) < 3", true)
+        ->assertScript("Math.abs(document.querySelector('[data-message-id=\"' + window.historyAnchor.id + '\"] [data-test=message-bubble]').getBoundingClientRect().top - window.historyAnchor.top) < 3", true)
         ->assertScript("document.querySelector('[data-test=message-scroll]').scrollTop > 0", true);
 
     $page->script("document.querySelector('[data-test=message-scroll]').scrollTop = 0; true;");
