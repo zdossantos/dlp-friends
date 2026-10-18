@@ -472,8 +472,14 @@ Inertia courant, y compris lors d’une navigation sans rechargement.
 
 Sur l’iPhone affecté, l’expérience de débordement a fait passer la zone visible
 à 788 px alors que `svh` et le contenu restaient à 682 px ; la suppression de la
-sonde a ramené la zone visible à 682 px. Ce recalcul temporaire n’est donc pas
-utilisé comme correction automatique. Le défilement naturel retire la contrainte
-de hauteur de l’application, mais son effet sur la réservation native iOS doit
-encore être confirmé sur l’appareil : les tests Chromium couvrent le défilement,
-la navigation et le redimensionnement, pas le bug natif WebKit.
+sonde a ramené la zone visible à 682 px. Le rétablissement automatique utilise désormais ce même débordement, en
+conservant une hauteur minimale du document de `100lvh + 1px` pour éviter la
+rechute observée à sa suppression. `usePwaViewportRecovery` vérifie après
+stabilisation les ouvertures, reprises, navigations et changements de dimensions
+des espaces membre et admin. Il intervient uniquement sur iOS en mode installé,
+si `100lvh` dépasse `innerHeight` de plus de 48 px, hors zoom et champ actif.
+Le cadre de l’application suit `100dvh`, y compris son fond. Aucune métadonnée
+viewport n’est modifiée. La hauteur minimale suit les unités CSS lors des
+rotations et est retirée à la destruction du layout. Les tests Chromium
+vérifient le déclenchement, la persistance et les gardes ; le rétablissement du
+conteneur natif doit encore être confirmé sur l’iPhone affecté.

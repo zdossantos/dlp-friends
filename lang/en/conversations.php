@@ -9,6 +9,7 @@ return [
         'empty' => 'Chats for events you organize or have joined will appear here.',
         'event_chat' => 'Event discussion',
         'read_only' => 'Read only',
+        'info' => 'View group',
         'event_link' => 'View event',
     ],
     'page' => [

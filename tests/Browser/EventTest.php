@@ -142,13 +142,13 @@ test('event discussion likes another member message by double tap without zoomin
     $this->actingAs($organizer);
 
     $page = visit("/events/{$event->id}/chat")->resize(390, 700)
-        ->assertPresent('[data-test="event-chat-message-like"]')
-        ->assertScript("document.querySelectorAll('[data-test=event-chat-message-like]').length", 1)
-        ->assertScript("getComputedStyle(document.querySelector('[data-test=event-chat-message-like]')).display", 'none');
+        ->assertPresent('[data-test="message-like"]')
+        ->assertScript("document.querySelectorAll('[data-test=message-like]').length", 1)
+        ->assertScript("getComputedStyle(document.querySelector('[data-test=message-like]')).display", 'none');
 
     $defaultPrevented = $page->script(<<<'JS'
         (() => {
-            const message = document.querySelector('[data-test="event-chat-message-bubble"]');
+            const message = document.querySelector('[data-test="message-bubble"]');
             message.dispatchEvent(new TouchEvent('touchend', { bubbles: true, cancelable: true }));
             const secondTap = new TouchEvent('touchend', { bubbles: true, cancelable: true });
             message.dispatchEvent(secondTap);
@@ -158,8 +158,8 @@ test('event discussion likes another member message by double tap without zoomin
     JS);
 
     expect($defaultPrevented)->toBeTrue();
-    $page->assertPresent('[data-test="event-chat-message-like"][aria-pressed="true"]')
-        ->assertSeeIn('[data-test="event-chat-message-like"]', '1')
+    $page->assertPresent('[data-test="message-like"][aria-pressed="true"]')
+        ->assertSeeIn('[data-test="message-like"]', '1')
         ->assertNoJavaScriptErrors();
 
     $this->assertDatabaseHas('event_chat_message_reactions', [
@@ -776,11 +776,11 @@ test('group history loads while scrolling upward without leaving the chat or los
     $page->assertSee('Historique du groupe [15]')
         ->assertSee('Historique du groupe [25]')
         ->assertPathIs("/events/{$event->id}/chat")
-        ->assertScript("document.querySelectorAll('[data-test=event-chat-message-bubble]').length", 20)
+        ->assertScript("document.querySelectorAll('[data-test=message-bubble]').length", 20)
         ->assertScript('document.querySelector(\'[data-test="event-chat"] [role="log"]\').scrollTop > 0', true);
     $page->page()->evaluate('document.querySelector(\'[data-test="event-chat"] [role="log"]\').scrollTop = 0');
     $page->assertSee('Historique du groupe [01]')
         ->assertSee('Historique du groupe [25]')
-        ->assertScript("document.querySelectorAll('[data-test=event-chat-message-bubble]').length", 25)
+        ->assertScript("document.querySelectorAll('[data-test=message-bubble]').length", 25)
         ->assertNoJavaScriptErrors();
 })->with(['event' => 'mine', 'messaging' => 'conversations']);

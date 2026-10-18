@@ -8,6 +8,7 @@ import PwaViewportDiagnostics from '@/components/pwa/PwaViewportDiagnostics.vue'
 import WebPushInvitation from '@/components/pwa/WebPushInvitation.vue';
 import SeasonalDecorations from '@/components/seasonal/SeasonalDecorations.vue';
 import { Toaster } from '@/components/ui/sonner';
+import { usePwaViewportRecovery } from '@/composables/usePwaViewportRecovery';
 import type { TranslationKey } from '@/composables/useTranslations';
 import type { BreadcrumbItem } from '@/types';
 
@@ -16,6 +17,7 @@ defineProps<{
 }>();
 
 const page = usePage();
+usePwaViewportRecovery();
 watch(
     () => page.props.auth.unread_notifications_count,
     (count) => {

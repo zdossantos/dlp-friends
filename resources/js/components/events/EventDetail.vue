@@ -1,14 +1,9 @@
 <script setup lang="ts">
 import { Link, router } from '@inertiajs/vue3';
-import {
-    CalendarDays,
-    ChevronRight,
-    MapPin,
-    MessageCircle,
-    Users,
-} from '@lucide/vue';
+import { ChevronRight, MessageCircle } from '@lucide/vue';
 import { computed, ref } from 'vue';
 import EventConfirmationDialog from '@/components/events/EventConfirmationDialog.vue';
+import EventInformation from '@/components/events/EventInformation.vue';
 import EventParticipantStack from '@/components/events/EventParticipantStack.vue';
 import EventRegistrationActions from '@/components/events/EventRegistrationActions.vue';
 import { Badge } from '@/components/ui/badge';
@@ -24,7 +19,7 @@ const props = defineProps<{
     event: EventDetail;
     context: EventWorkspaceContext;
 }>();
-const { t, formatDate } = useTranslations();
+const { t } = useTranslations();
 const origin = props.context === 'mine' ? { origin: 'mine' } : {};
 const cancelling = ref(false);
 const pendingCount = computed(
@@ -48,61 +43,7 @@ function cancelEvent(): void {
 
 <template>
     <article data-test="event-detail" class="space-y-6 pt-2">
-        <header class="flex items-start justify-between gap-4">
-            <h2
-                data-test="event-detail-title"
-                class="text-2xl font-semibold text-foreground"
-            >
-                {{ event.title }}
-            </h2>
-            <Badge v-if="event.isCancelled" variant="destructive">
-                {{ t('events.cancelled') }}
-            </Badge>
-        </header>
-        <p
-            data-test="event-detail-description"
-            class="whitespace-pre-line text-muted-foreground"
-        >
-            {{ event.description }}
-        </p>
-        <div class="grid gap-3 text-sm sm:grid-cols-2">
-            <p class="flex items-start gap-2 text-foreground">
-                <CalendarDays class="mt-0.5 size-5 shrink-0" />
-                {{
-                    formatDate(event.startsAt, {
-                        dateStyle: 'full',
-                        timeStyle: 'short',
-                        timeZone: 'Europe/Paris',
-                    })
-                }}
-            </p>
-            <p class="flex items-start gap-2 text-foreground">
-                <MapPin class="mt-0.5 size-5 shrink-0" />
-                {{ event.generalLocation }}
-            </p>
-            <p class="flex items-start gap-2 text-foreground">
-                <Users class="mt-0.5 size-5 shrink-0" />
-                {{
-                    t('events.capacity', {
-                        occupied: event.occupiedPlaces,
-                        capacity: event.capacity,
-                    })
-                }}
-            </p>
-        </div>
-        <section
-            v-if="event.detailedLocation"
-            data-test="event-private-location"
-            class="rounded-2xl bg-secondary p-4 text-secondary-foreground"
-        >
-            <h3 class="font-semibold">
-                {{ t('events.show.private_location') }}
-            </h3>
-            <p class="mt-1">{{ event.detailedLocation }}</p>
-        </section>
-        <p v-else class="text-sm text-muted-foreground">
-            {{ t('events.show.privacy') }}
-        </p>
+        <EventInformation :event="event" />
         <Link
             v-if="event.chat"
             :href="chatShow(event.id, { query: origin })"

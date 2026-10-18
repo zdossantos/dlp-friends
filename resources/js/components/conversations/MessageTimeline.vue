@@ -10,24 +10,34 @@ import {
 } from '@/lib/conversationTimeline';
 import { xsrfHeader } from '@/lib/csrf';
 import { like, unlike } from '@/routes/conversations/messages';
-import type {
-    ConversationMessage,
-    MessageReactionUpdate,
-    PaginatedMessages,
-} from '@/types';
+import type { MessageReactionUpdate, PaginatedMessages } from '@/types';
+import type { EventChatMessage } from '@/types/event';
+
+type TimelineMessage = PaginatedMessages['data'][number] | EventChatMessage;
 
 const { locale, t } = useTranslations();
 
 const props = defineProps<{
-    messages: PaginatedMessages;
+    messages: { data: TimelineMessage[] };
+    messagesProp?: string;
+    reverse?: boolean;
     currentUserId: number;
-    participantName: string;
+    participantName?: string;
     timezone: string;
-    conversationId: number;
+    conversationId?: number;
+    reactMessage?: (message: TimelineMessage) => Promise<MessageReactionUpdate>;
     onReactionUpdated: (update: MessageReactionUpdate) => void;
 }>();
 
+const loadingSlot = computed(() => (props.reverse ? 'next' : 'previous'));
 const scrollContainer = ref<HTMLElement | null>(null);
+let messageItems: HTMLElement | null = null;
+function getMessageItems(): HTMLElement | null {
+    // Inertia may finish its debounced history callback after this view unmounts.
+    messageItems = scrollContainer.value?.querySelector('ol') ?? messageItems;
+
+    return messageItems;
+}
 const announcedMessage = ref('');
 const animatedMessageId = ref<number | null>(null);
 const pendingReactionIds = ref(new Set<number>());
@@ -35,7 +45,7 @@ const reactionError = ref('');
 const lastTouchTap = ref<{ messageId: number; occurredAt: number } | null>(
     null,
 );
-const latestMessage = computed<ConversationMessage | undefined>(() =>
+const latestMessage = computed<TimelineMessage | undefined>(() =>
     props.messages.data.at(-1),
 );
 const lastOutgoingMessageId = computed<number | undefined>(
@@ -60,7 +70,7 @@ function showDaySeparator(index: number): boolean {
     );
 }
 
-function dayLabel(message: ConversationMessage): string {
+function dayLabel(message: TimelineMessage): string {
     if (message.created_at === null) {
         return '';
     }
@@ -93,7 +103,7 @@ function scrollToBottom(): void {
     });
 }
 
-async function toggleReaction(message: ConversationMessage): Promise<void> {
+async function toggleReaction(message: TimelineMessage): Promise<void> {
     if (pendingReactionIds.value.has(message.id)) {
         return;
     }
@@ -104,6 +114,16 @@ async function toggleReaction(message: ConversationMessage): Promise<void> {
     reactionError.value = '';
 
     try {
+        if (props.reactMessage) {
+            props.onReactionUpdated(await props.reactMessage(message));
+
+            return;
+        }
+
+        if (props.conversationId === undefined) {
+            return;
+        }
+
         const route = message.reacted_by_current_user
             ? unlike([props.conversationId, message.id])
             : like([props.conversationId, message.id]);
@@ -133,7 +153,7 @@ async function toggleReaction(message: ConversationMessage): Promise<void> {
     }
 }
 
-function likeMessage(message: ConversationMessage): void {
+function likeMessage(message: TimelineMessage): void {
     if (
         message.author_user_id !== props.currentUserId &&
         !message.reacted_by_current_user
@@ -144,7 +164,7 @@ function likeMessage(message: ConversationMessage): void {
 
 function handleMessageTouchEnd(
     event: TouchEvent,
-    message: ConversationMessage,
+    message: TimelineMessage,
 ): void {
     const occurredAt = performance.now();
     const previousTap = lastTouchTap.value;
@@ -211,15 +231,18 @@ watch(
         </p>
 
         <InfiniteScroll
-            data="messages"
+            :data="messagesProp ?? 'messages'"
+            :items-element="getMessageItems"
+            :reverse="reverse"
             as="ol"
-            only-previous
+            :only-previous="!reverse"
+            :only-next="reverse"
             preserve-url
             :auto-scroll="true"
             role="list"
             class="relative z-10 mx-auto flex w-full max-w-4xl flex-col gap-2"
         >
-            <template #previous="{ loading }">
+            <template #[loadingSlot]="{ loading }">
                 <p
                     v-if="loading"
                     class="pb-3 text-center text-sm text-muted-foreground"
@@ -283,7 +306,9 @@ watch(
                             {{
                                 message.author_user_id === currentUserId
                                     ? t('conversations.message.you')
-                                    : participantName
+                                    : 'author' in message
+                                      ? message.author.display_name
+                                      : participantName
                             }}
                         </p>
                         <article
@@ -342,6 +367,7 @@ watch(
                         <p
                             v-if="
                                 message.id === lastOutgoingMessageId &&
+                                'read_at' in message &&
                                 message.read_at !== null
                             "
                             data-test="last-message-read"
