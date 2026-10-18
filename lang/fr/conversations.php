@@ -9,6 +9,7 @@ return [
         'empty' => 'Les discussions des événements que tu organises ou auxquels tu participes apparaîtront ici.',
         'event_chat' => 'Discussion d’événement',
         'read_only' => 'Lecture seule',
+        'info' => 'Voir le groupe',
         'event_link' => 'Voir l’événement',
     ],
     'page' => [

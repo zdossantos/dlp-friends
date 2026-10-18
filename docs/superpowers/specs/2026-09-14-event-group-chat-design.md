@@ -227,3 +227,11 @@ disponible dans le panneau adaptatif. La révocation retire le groupe de la list
 et ferme son écran ouvert ; l’annulation et l’archivage conservent la lecture seule.
 L’historique charge les pages précédentes par InfiniteScroll Inertia en conservant
 la position de lecture et sans changer de page.
+
+La discussion ouverte depuis Groupes réutilise `ConversationHeader`,
+`MessageTimeline` et `MessageComposer`, comme les discussions privées.
+`EventChat` adapte uniquement les endpoints et événements du groupe à ces
+composants communs. « Voir le groupe » ouvre les informations et participants
+autorisés dans `AdaptiveEventPanel`, sans navigation ni perte du brouillon.
+`EventInformation` partage les informations en lecture seule avec le détail
+d’événement ; le panneau n’embarque ni second chat ni actions d’inscription.

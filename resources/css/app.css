@@ -615,3 +615,7 @@
         @apply bg-background text-foreground selection:bg-primary/20 selection:text-foreground;
     }
 }
+
+html {
+    min-height: var(--pwa-scroll-extent, 0px);
+}

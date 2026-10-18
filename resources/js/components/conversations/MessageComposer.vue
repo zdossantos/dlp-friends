@@ -1,4 +1,8 @@
-<script setup lang="ts">
+<script
+    setup
+    lang="ts"
+    generic="T extends { id: number; content: string } = ConversationMessage"
+>
 import { SendHorizontal } from '@lucide/vue';
 import { computed, nextTick, ref, watch } from 'vue';
 import { Button } from '@/components/ui/button';
@@ -12,8 +16,9 @@ import type { ConversationMessage, ConversationStarter } from '@/types';
 const props = defineProps<{
     conversationId?: number;
     archived: boolean;
-    onSent: (message: ConversationMessage) => void;
-    submitMessage?: (content: string) => Promise<ConversationMessage>;
+    archivedMessage?: string;
+    onSent: (message: T) => void;
+    submitMessage?: (content: string) => Promise<T>;
     onTyping?: (content: string) => void;
     onTypingStopped?: () => void;
     starters?: ConversationStarter[];
@@ -61,7 +66,7 @@ async function submit(): Promise<void> {
             body: JSON.stringify({ content: content.value }),
         });
         const payload = (await response.json()) as {
-            data?: ConversationMessage;
+            data?: T;
             errors?: { content?: string[] };
         };
 
@@ -112,7 +117,7 @@ async function chooseStarter(starter: ConversationStarter): Promise<void> {
         class="relative z-10 shrink-0 border-t bg-card/95 px-4 py-3 shadow-sm backdrop-blur sm:px-6"
     >
         <p v-if="archived" class="text-center text-sm text-muted-foreground">
-            {{ t('conversations.message.archived') }}
+            {{ archivedMessage ?? t('conversations.message.archived') }}
         </p>
         <form
             v-else

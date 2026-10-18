@@ -1,11 +1,10 @@
 <script setup lang="ts">
-import { InfiniteScroll, router, usePage } from '@inertiajs/vue3';
+import { router, usePage } from '@inertiajs/vue3';
 import { echo, useConnectionStatus, useEcho } from '@laravel/echo-vue';
-import { Heart, SendHorizontal } from '@lucide/vue';
-import { computed, nextTick, onMounted, ref, watch } from 'vue';
-import { Button } from '@/components/ui/button';
-import { Spinner } from '@/components/ui/spinner';
-import { Textarea } from '@/components/ui/textarea';
+import { computed, onMounted, ref, watch } from 'vue';
+import MessageComposer from '@/components/conversations/MessageComposer.vue';
+import MessageTimeline from '@/components/conversations/MessageTimeline.vue';
+import RealtimeStatus from '@/components/conversations/RealtimeStatus.vue';
 import { useTranslations } from '@/composables/useTranslations';
 import { xsrfHeader } from '@/lib/csrf';
 import { mergeEventChatMessages } from '@/lib/eventChatState';
@@ -16,6 +15,7 @@ import {
     unlike as unlikeMessageRoute,
 } from '@/routes/events/chat/messages';
 import { store as storeRead } from '@/routes/events/chat/read';
+import type { MessageReactionUpdate } from '@/types';
 import type {
     EventChatInfo,
     EventChatMessage,
@@ -35,25 +35,8 @@ const page = usePage();
 const { t } = useTranslations();
 const currentUserId = computed(() => page.props.auth.user.id);
 const visibleMessages = ref<EventChatMessage[]>([]);
-const content = ref('');
-const error = ref('');
-const pending = ref(false);
-const pendingReactionIds = ref(new Set<number>());
-const lastTouchTap = ref<{ messageId: number; occurredAt: number } | null>(
-    null,
-);
-const scroll = ref<HTMLElement | null>(null);
 const status = useConnectionStatus();
-let messageItems: HTMLElement | null = null;
-
-function getMessageItems(): HTMLElement | null {
-    // Inertia can finish remembering items after unmount; retain the detached
-    // list until its pending callback completes instead of returning null.
-    messageItems = scroll.value?.querySelector('ol') ?? messageItems;
-
-    return messageItems;
-}
-
+const timelineMessages = computed(() => ({ data: visibleMessages.value }));
 function merge(messages: EventChatMessage[]): void {
     visibleMessages.value = mergeEventChatMessages(
         visibleMessages.value,
@@ -80,115 +63,63 @@ async function markRead(): Promise<void> {
     });
 }
 
-async function submit(): Promise<void> {
-    if (pending.value || content.value.trim() === '') {
-        return;
+async function submit(content: string): Promise<EventChatMessage> {
+    const response = await fetch(storeMessage(props.event.id).url, {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: {
+            Accept: 'application/json',
+            'Content-Type': 'application/json',
+            ...xsrfHeader(document.cookie),
+        },
+        body: JSON.stringify({ content }),
+    });
+    const payload = (await response.json()) as { data?: EventChatMessage };
+
+    if (!response.ok || !payload.data) {
+        throw new Error('Unable to send the message.');
     }
 
-    pending.value = true;
-    error.value = '';
+    return payload.data;
+}
 
-    try {
-        const response = await fetch(storeMessage(props.event.id).url, {
-            method: 'POST',
-            credentials: 'same-origin',
-            headers: {
-                Accept: 'application/json',
-                'Content-Type': 'application/json',
-                ...xsrfHeader(document.cookie),
-            },
-            body: JSON.stringify({ content: content.value }),
-        });
-        const payload = (await response.json()) as {
-            data?: EventChatMessage;
-            errors?: { content?: string[] };
-        };
+function sent(message: EventChatMessage): void {
+    merge([message]);
+    void markRead();
+}
 
-        if (!response.ok || !payload.data) {
-            error.value =
-                payload.errors?.content?.[0] ?? t('events.chat.send_error');
+async function reactMessage(message: {
+    id: number;
+    reacted_by_current_user: boolean;
+}): Promise<MessageReactionUpdate> {
+    const route = message.reacted_by_current_user
+        ? unlikeMessageRoute([props.event.id, message.id])
+        : likeMessageRoute([props.event.id, message.id]);
+    const response = await fetch(route.url, {
+        method: route.method.toUpperCase(),
+        credentials: 'same-origin',
+        headers: { Accept: 'application/json', ...xsrfHeader(document.cookie) },
+    });
+    const payload = (await response.json()) as { data?: MessageReactionUpdate };
 
-            return;
+    if (!response.ok || !payload.data) {
+        throw new Error('Unable to update the reaction.');
+    }
+
+    return payload.data;
+}
+
+function updateReaction(update: MessageReactionUpdate): void {
+    const message = visibleMessages.value.find(
+        (item) => item.id === update.message_id,
+    );
+
+    if (message) {
+        message.reaction_count = update.reaction_count;
+
+        if (update.reactor_user_id === currentUserId.value) {
+            message.reacted_by_current_user = update.reacted;
         }
-
-        merge([payload.data]);
-        content.value = '';
-        await markRead();
-    } catch {
-        error.value = t('events.chat.send_error');
-    } finally {
-        pending.value = false;
-    }
-}
-
-function keydown(event: KeyboardEvent): void {
-    if (event.key === 'Enter' && !event.shiftKey) {
-        event.preventDefault();
-        void submit();
-    }
-}
-
-async function toggleReaction(message: EventChatMessage): Promise<void> {
-    if (
-        message.author_user_id === currentUserId.value ||
-        pendingReactionIds.value.has(message.id)
-    ) {
-        return;
-    }
-
-    pendingReactionIds.value.add(message.id);
-    pendingReactionIds.value = new Set(pendingReactionIds.value);
-
-    try {
-        const route = message.reacted_by_current_user
-            ? unlikeMessageRoute([props.event.id, message.id])
-            : likeMessageRoute([props.event.id, message.id]);
-        const response = await fetch(route.url, {
-            method: route.method.toUpperCase(),
-            credentials: 'same-origin',
-            headers: {
-                Accept: 'application/json',
-                ...xsrfHeader(document.cookie),
-            },
-        });
-        const payload = (await response.json()) as {
-            data?: {
-                reaction_count: number;
-                reacted: boolean;
-            };
-        };
-
-        if (response.ok && payload.data) {
-            message.reaction_count = payload.data.reaction_count;
-            message.reacted_by_current_user = payload.data.reacted;
-        }
-    } finally {
-        pendingReactionIds.value.delete(message.id);
-        pendingReactionIds.value = new Set(pendingReactionIds.value);
-    }
-}
-
-function likeMessage(message: EventChatMessage): void {
-    if (!message.reacted_by_current_user) {
-        void toggleReaction(message);
-    }
-}
-
-function handleMessageTouchEnd(
-    event: TouchEvent,
-    message: EventChatMessage,
-): void {
-    const occurredAt = performance.now();
-    const previousTap = lastTouchTap.value;
-    lastTouchTap.value = { messageId: message.id, occurredAt };
-
-    if (
-        previousTap?.messageId === message.id &&
-        occurredAt - previousTap.occurredAt <= 350
-    ) {
-        event.preventDefault();
-        lastTouchTap.value = null;
-        likeMessage(message);
     }
 }
 
@@ -197,11 +128,6 @@ useEcho<EventChatMessage>(
     '.event-chat.message.sent',
     async (message) => {
         merge([message]);
-        await nextTick();
-        scroll.value?.scrollTo({
-            top: scroll.value.scrollHeight,
-            behavior: 'smooth',
-        });
         void markRead();
     },
 );
@@ -246,182 +172,36 @@ watch(status, (next, previous) => {
         });
     }
 });
-onMounted(async () => {
-    await nextTick();
-    scroll.value?.scrollTo({ top: scroll.value.scrollHeight });
+onMounted(() => {
     void markRead();
 });
 </script>
 
 <template>
-    <section
-        class="flex h-full min-h-0 flex-col bg-card"
-        data-test="event-chat"
-    >
-        <div
-            v-if="['disconnected', 'failed'].includes(status)"
-            role="status"
-            class="flex items-center justify-between border-b bg-destructive/10 px-4 py-2 text-sm"
-        >
-            <span>{{ t('events.chat.connection_unavailable') }}</span>
-            <Button size="sm" variant="outline" @click="echo().connect()">{{
-                t('events.chat.retry')
-            }}</Button>
-        </div>
-        <div
-            ref="scroll"
-            role="log"
-            aria-live="polite"
-            :aria-label="t('events.chat.timeline')"
-            class="min-h-0 flex-1 overflow-y-auto px-4 py-4 sm:px-6"
-        >
-            <p
-                v-if="visibleMessages.length === 0"
-                class="py-10 text-center text-sm text-muted-foreground"
-            >
-                {{ t('events.chat.empty') }}
-            </p>
-            <InfiniteScroll
-                :data="messagesProp ?? 'panel.messages'"
-                :items-element="getMessageItems"
-                as="ol"
-                reverse
-                only-next
-                preserve-url
-                class="flex flex-col gap-3"
-            >
-                <template #next="{ loading }">
-                    <p
-                        v-if="loading"
-                        role="status"
-                        class="pb-3 text-center text-sm text-muted-foreground"
-                    >
-                        {{ t('conversations.message.loading_previous') }}
-                    </p>
-                </template>
-                <li
-                    v-for="message in visibleMessages"
-                    :key="message.id"
-                    class="flex"
-                    :class="
-                        message.author_user_id === currentUserId
-                            ? 'justify-end'
-                            : 'justify-start'
-                    "
-                >
-                    <div class="max-w-[85%] sm:max-w-[70%]">
-                        <p
-                            v-if="message.author_user_id !== currentUserId"
-                            class="mb-1 px-1 text-xs font-medium text-muted-foreground"
-                        >
-                            {{ message.author.display_name }}
-                        </p>
-                        <p
-                            data-test="event-chat-message-bubble"
-                            class="touch-manipulation rounded-3xl px-4 py-2.5 break-words whitespace-pre-wrap shadow-sm"
-                            :class="
-                                message.author_user_id === currentUserId
-                                    ? 'rounded-br-md bg-primary text-primary-foreground'
-                                    : 'rounded-bl-md border bg-background'
-                            "
-                            @dblclick.prevent="
-                                message.author_user_id !== currentUserId &&
-                                likeMessage(message)
-                            "
-                            @touchend="
-                                message.author_user_id !== currentUserId &&
-                                handleMessageTouchEnd($event, message)
-                            "
-                        >
-                            {{ message.content }}
-                        </p>
-                        <button
-                            v-if="message.author_user_id !== currentUserId"
-                            type="button"
-                            data-test="event-chat-message-like"
-                            class="mt-1 min-h-8 items-center gap-1 rounded-full px-2 text-xs font-medium text-muted-foreground hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
-                            :class="[
-                                message.reaction_count > 0
-                                    ? 'inline-flex'
-                                    : 'hidden sm:inline-flex',
-                                message.reacted_by_current_user
-                                    ? 'text-rose-600'
-                                    : undefined,
-                            ]"
-                            :aria-pressed="message.reacted_by_current_user"
-                            :aria-label="
-                                message.reacted_by_current_user
-                                    ? t('conversations.reactions.unlike')
-                                    : t('conversations.reactions.like')
-                            "
-                            :disabled="pendingReactionIds.has(message.id)"
-                            @click="toggleReaction(message)"
-                        >
-                            <Heart
-                                :class="[
-                                    'size-4',
-                                    message.reacted_by_current_user
-                                        ? 'fill-current'
-                                        : undefined,
-                                ]"
-                                aria-hidden="true"
-                            />
-                            <span>{{ message.reaction_count }}</span>
-                        </button>
-                    </div>
-                </li>
-            </InfiniteScroll>
-        </div>
-        <footer class="shrink-0 border-t px-4 py-3 sm:px-6">
-            <p
-                v-if="chat.isReadOnly"
-                class="text-center text-sm text-muted-foreground"
-            >
-                {{ t(`events.chat.read_only.${chat.readOnlyReason}`) }}
-            </p>
-            <form v-else class="flex items-end gap-2" @submit.prevent="submit">
-                <div class="min-w-0 flex-1">
-                    <label for="event-chat-content" class="sr-only">{{
-                        t('events.chat.label')
-                    }}</label>
-                    <Textarea
-                        id="event-chat-content"
-                        v-model="content"
-                        maxlength="2000"
-                        rows="1"
-                        :disabled="pending"
-                        :placeholder="t('events.chat.placeholder')"
-                        :aria-invalid="error !== ''"
-                        class="max-h-32 min-h-11 resize-none rounded-2xl"
-                        @keydown="keydown"
-                    />
-                    <p class="mt-1 text-right text-xs text-muted-foreground">
-                        {{
-                            t('events.chat.character_count', {
-                                count: content.length,
-                            })
-                        }}
-                    </p>
-                    <p
-                        v-if="error"
-                        role="alert"
-                        class="mt-1 text-sm text-destructive"
-                    >
-                        {{ error }}
-                    </p>
-                </div>
-                <Button
-                    type="submit"
-                    size="icon"
-                    class="size-11 rounded-2xl"
-                    :disabled="pending || content.trim() === ''"
-                    :aria-label="t('events.chat.send')"
-                    ><Spinner v-if="pending" /><SendHorizontal
-                        v-else
-                        class="size-5"
-                        aria-hidden="true"
-                /></Button>
-            </form>
-        </footer>
+    <section class="flex h-full min-h-0 flex-col" data-test="event-chat">
+        <RealtimeStatus
+            :unavailable="['disconnected', 'failed'].includes(status)"
+            :reconnecting="['connecting', 'reconnecting'].includes(status)"
+            :on-retry="() => echo().connect()"
+        />
+        <MessageTimeline
+            :messages="timelineMessages"
+            :current-user-id="currentUserId"
+            timezone="Europe/Paris"
+            :messages-prop="messagesProp ?? 'panel.messages'"
+            reverse
+            :react-message="reactMessage"
+            :on-reaction-updated="updateReaction"
+        />
+        <MessageComposer
+            :archived="chat.isReadOnly"
+            :archived-message="
+                chat.readOnlyReason
+                    ? t(`events.chat.read_only.${chat.readOnlyReason}`)
+                    : undefined
+            "
+            :submit-message="submit"
+            :on-sent="sent"
+        />
     </section>
 </template>
