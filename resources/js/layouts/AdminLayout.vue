@@ -4,6 +4,7 @@ import { watch } from 'vue';
 import AdminAccountMenu from '@/components/admin/AdminAccountMenu.vue';
 import AdminBottomNavigation from '@/components/admin/AdminBottomNavigation.vue';
 import PwaUpdatePrompt from '@/components/pwa/PwaUpdatePrompt.vue';
+import PwaViewportDiagnostics from '@/components/pwa/PwaViewportDiagnostics.vue';
 import WebPushInvitation from '@/components/pwa/WebPushInvitation.vue';
 import SeasonalDecorations from '@/components/seasonal/SeasonalDecorations.vue';
 import { Toaster } from '@/components/ui/sonner';
@@ -57,6 +58,7 @@ watch(
         <AdminBottomNavigation />
         <Toaster />
         <PwaUpdatePrompt />
+        <PwaViewportDiagnostics />
         <WebPushInvitation />
     </div>
 </template>

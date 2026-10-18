@@ -62,6 +62,13 @@ return [
     ],
     'actions' => ['cancel' => 'Cancel', 'close' => 'Close', 'delete' => 'Delete'],
     'pwa' => [
+        'diagnostics_title' => 'Screen diagnostics (beta)',
+        'diagnostics_description' => 'Capture when the gap appears, then rotate to landscape and portrait. Copy the report afterwards. Only dimensions stay in memory until closed.',
+        'diagnostics_capture' => 'Capture',
+        'diagnostics_copy' => 'Copy',
+        'diagnostics_copied' => 'Copied',
+        'diagnostics_report' => 'View report',
+        'diagnostics_copy_failed' => 'Could not copy: select the text in the report.',
         'update_title' => 'An update is ready',
         'update_description' => 'Reload DLP Friends when you are ready.',
         'update_action' => 'Update now',

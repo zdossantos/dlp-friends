@@ -426,3 +426,21 @@ d’état sur iPhone.
 Les tests HTTP vérifient les métadonnées des documents public et Inertia.
 Le rendu natif et le retour d’un lien externe restent à contrôler dans une PWA
 installée sur iPhone ; Chromium ne reproduit pas la gestion native de ces zones.
+
+Un diagnostic temporaire, activable uniquement en bêta depuis le bouton
+« Diagnostic écran (bêta) » des espaces membre et administration, compare les
+dimensions `innerHeight`, `documentElement`, `visualViewport`, les unités
+`svh`/`dvh`/`lvh`/`vh`, le contenant fixe et la position de la navigation. Il
+conserve au maximum 40 mesures en mémoire, y compris aux événements de reprise
+et de rotation (immédiatement puis après stabilisation). Aucune mesure n’est
+envoyée ni persistée ; le rapport copiable ne contient ni URL, ni compte, ni
+contenu de page. Fermer le diagnostic retire les sondes et les écouteurs.
+
+Pour analyser le vide intermittent : démarrer le diagnostic sur la PWA iPhone,
+mesurer lorsque le vide apparaît, effectuer paysage puis portrait et copier
+le rapport avec une capture de l’état défectueux. Une rotation qui rétablit
+l’affichage correspond notamment au symptôme décrit dans
+[WebKit 244264](https://bugs.webkit.org/show_bug.cgi?id=244264), mais ne suffit
+pas à confirmer la cause sur iOS 27.0.1. Les tests Chromium vérifient uniquement
+la collecte, son isolation à la bêta et le suivi des dimensions ; ils ne
+reproduisent pas le comportement du conteneur natif iOS.
