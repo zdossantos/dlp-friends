@@ -13,6 +13,7 @@ import {
 import { initializeAnalytics } from '@/lib/analytics';
 import { initializeFlashToast } from '@/lib/flashToast';
 import { resolvePageTitle } from '@/lib/pageTitle';
+import { initializeIosViewportRecovery } from '@/lib/pwa/viewport';
 import { resolveReverbHost } from '@/lib/reverbHost';
 
 const configuredReverbHost = import.meta.env.VITE_REVERB_HOST;
@@ -41,6 +42,7 @@ const inertiaReady = createInertiaApp({
     },
 });
 
+initializeIosViewportRecovery(window, document);
 void initializePwaLifecycle();
 
 if (
