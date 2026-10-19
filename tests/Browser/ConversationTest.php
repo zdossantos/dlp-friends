@@ -425,23 +425,45 @@ test('a conversation renders safe recent history and repeatedly loads older mess
         ->assertNotPresent('[role="log"] img[src="x"]')
         ->assertScript('window.__messageXss !== true', true);
 
-    $page->page()->waitForFunction(
-        "document.querySelector('[data-test=message-scroll]').scrollTop > 0",
-    );
-
     $page
         ->assertScript("document.querySelector('[data-test=message-scroll]').scrollTop > 0", true)
         ->assertScript('document.documentElement.scrollWidth <= document.documentElement.clientWidth', true);
 
     $page->script(<<<'JS'
         const scroll = document.querySelector('[data-test=message-scroll]');
-        scroll.scrollTop = 0;
-        const anchor = scroll.querySelector('[data-message-id]');
-        window.historyAnchor = { id: anchor.dataset.messageId, top: anchor.getBoundingClientRect().top };
+        // Hold only the real history request until the reading position changes.
+        const setRequestHeader = XMLHttpRequest.prototype.setRequestHeader;
+        const send = XMLHttpRequest.prototype.send;
+        XMLHttpRequest.prototype.setRequestHeader = function (name, value) {
+            if (name.toLowerCase() === 'x-inertia-infinite-scroll-merge-intent') {
+                this.isHistoryRequest = true;
+            }
+            return setRequestHeader.call(this, name, value);
+        };
+        XMLHttpRequest.prototype.send = function (...args) {
+            if (!this.isHistoryRequest) {
+                return send.apply(this, args);
+            }
+            window.releaseHistoryRequest = () => {
+                XMLHttpRequest.prototype.setRequestHeader = setRequestHeader;
+                XMLHttpRequest.prototype.send = send;
+                send.apply(this, args);
+            };
+        };
+        scroll.scrollTop = 160;
+    JS);
+    $page->assertScript("typeof window.releaseHistoryRequest === 'function'", true);
+    $page->script(<<<'JS'
+        const scroll = document.querySelector('[data-test=message-scroll]');
+        scroll.scrollTop = 260;
+        const anchor = [...scroll.querySelectorAll('[data-test=message-bubble]')]
+            .find(message => message.getBoundingClientRect().bottom > scroll.getBoundingClientRect().top);
+        window.historyAnchor = { id: anchor.closest('[data-message-id]').dataset.messageId, top: anchor.getBoundingClientRect().top };
+        window.releaseHistoryRequest();
     JS);
     $page->assertSee('Message 16')
         ->wait(0.5)
-        ->assertScript("Math.abs(document.querySelector('[data-message-id=\"' + window.historyAnchor.id + '\"]').getBoundingClientRect().top - window.historyAnchor.top) < 3", true)
+        ->assertScript("Math.abs(document.querySelector('[data-message-id=\"' + window.historyAnchor.id + '\"] [data-test=message-bubble]').getBoundingClientRect().top - window.historyAnchor.top) < 3", true)
         ->assertScript("document.querySelector('[data-test=message-scroll]').scrollTop > 0", true);
 
     $page->script("document.querySelector('[data-test=message-scroll]').scrollTop = 0; true;");

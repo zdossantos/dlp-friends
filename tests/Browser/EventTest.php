@@ -750,14 +750,15 @@ test('group history loads while scrolling upward without leaving the chat or los
         ->assertDontSee('Historique du groupe [01]');
     $page->script(<<<'JS'
         const scroll = document.querySelector('[data-test=message-scroll]');
-        scroll.scrollTop = 0;
-        const anchor = scroll.querySelector('[data-message-id]');
-        window.historyAnchor = { id: anchor.dataset.messageId, top: anchor.getBoundingClientRect().top };
+        scroll.scrollTop = 160;
+        const anchor = [...scroll.querySelectorAll('[data-test=message-bubble]')]
+            .find(message => message.getBoundingClientRect().bottom > scroll.getBoundingClientRect().top);
+        window.historyAnchor = { id: anchor.closest('[data-message-id]').dataset.messageId, top: anchor.getBoundingClientRect().top };
     JS);
     $page->assertSee('Historique du groupe [15]')
         ->assertSee('Historique du groupe [25]')
         ->wait(0.5)
-        ->assertScript("Math.abs(document.querySelector('[data-message-id=\"' + window.historyAnchor.id + '\"]').getBoundingClientRect().top - window.historyAnchor.top) < 3", true)
+        ->assertScript("Math.abs(document.querySelector('[data-message-id=\"' + window.historyAnchor.id + '\"] [data-test=message-bubble]').getBoundingClientRect().top - window.historyAnchor.top) < 3", true)
         ->assertPathIs("/events/{$event->id}/chat")
         ->assertScript("document.querySelectorAll('[data-test=message-bubble]').length", 20)
         ->assertScript('document.querySelector(\'[data-test="event-chat"] [role="log"]\').scrollTop > 0', true);
