@@ -273,6 +273,7 @@ class DirectUserDataExportTest extends TestCase
 
         $this->assertSame([
             'messages' => true,
+            'group_messages' => true,
             'matches' => true,
             'events' => true,
             'partner_announcements' => true,

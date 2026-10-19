@@ -680,6 +680,8 @@ test('messaging switches between private and event groups and sends in the share
         'user_high_id' => max($member->id, $peer->id),
     ]);
     $conversation = $match->conversation()->create();
+    Message::factory()->count(2)->for($conversation)->for($peer, 'author')->create();
+    Message::factory()->for($conversation)->for($member, 'author')->create();
     $event = Event::factory()->for($member, 'organizer')->create(['title' => 'Le groupe du parc']);
     $chat = EventChat::factory()->for($event)->create();
     EventRegistration::factory()->for($event)->for($peer)->accepted()->create();
@@ -687,7 +689,9 @@ test('messaging switches between private and event groups and sends in the share
     $this->actingAs($member);
 
     $page = visit('/conversations')->resize(390, 700)
-        ->assertSee('Basile')->assertDontSee('Le groupe du parc');
+        ->assertSee('Basile')->assertDontSee('Le groupe du parc')
+        ->assertSeeIn('[data-test=group-unread-count]', '1')
+        ->assertSeeIn('[data-test=private-unread-count]', '2');
     EventChatMessage::factory()->for($chat)->for($peer, 'author')->create(['content' => 'Un nouveau souvenir']);
     $page->click('[data-test="conversations-groups"]')
         ->assertSee('Le groupe du parc')->assertDontSee('Basile')
@@ -714,6 +718,7 @@ test('messaging switches between private and event groups and sends in the share
         ->click('[data-test="group-chat-back"]')
         ->wait(0.4)
         ->assertNoJavaScriptErrors()
+        ->assertNotPresent('[data-test=group-unread-count]')
         ->assertAttribute('[data-test="conversations-groups"]', 'aria-selected', 'true')
         ->assertAttribute("[data-test=group-conversation-{$chat->id}]", 'data-unread', 'false')
         ->click('[data-test="conversations-private"]')

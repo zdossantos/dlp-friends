@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\EventRegistrationStatus;
 use App\Enums\RoleName;
 use App\Enums\UserStatus;
 use App\Mail\ResetPasswordMail;
@@ -169,6 +170,16 @@ class User extends Authenticatable implements HasLocalePreference, MustVerifyEma
     public function termsAcceptances(): HasMany
     {
         return $this->hasMany(TermsAcceptance::class);
+    }
+
+    /** @param Builder<User> $query */
+    public function scopeInEventChat(Builder $query, EventChat $chat): void
+    {
+        $query->where('status', UserStatus::Active)
+            ->where(fn (Builder $members) => $members
+                ->whereKey($chat->event->organizer_user_id)
+                ->orWhereIn('id', $chat->event->registrations()
+                    ->where('status', EventRegistrationStatus::Accepted)->select('user_id')));
     }
 
     /** @param Builder<User> $query */

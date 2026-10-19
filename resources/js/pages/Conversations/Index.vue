@@ -35,7 +35,7 @@ const visibleConversations = ref(
     sortConversationSummaries(props.conversations),
 );
 const { t } = useTranslations();
-const { activeMatch, latestMessage, presenceChanged } =
+const { activeMatch, latestMessage, latestGroupMessage, presenceChanged } =
     useMemberRealtimeContext();
 const typingIds = useConversationListTyping(
     props.conversations.filter((conversation) => !conversation.archived_at),
@@ -47,6 +47,16 @@ const category = ref(
         ? 'groups'
         : 'private',
 );
+const privateUnreadCount = computed(() =>
+    visibleConversations.value.reduce(
+        (total, conversation) => total + conversation.unread_count,
+        0,
+    ),
+);
+const groupUnreadCount = computed(() =>
+    props.groups.reduce((total, group) => total + group.unread_count, 0),
+);
+watch(latestGroupMessage, () => router.reload({ only: ['groups'] }));
 const search = ref('');
 const normalizedSearch = computed(() => normalizeSearchText(search.value));
 const filteredConversations = computed(() => {
@@ -138,14 +148,30 @@ watch(presenceChanged, (event) => {
 
         <Tabs v-model="category" class="flex min-h-0 flex-1 flex-col gap-4">
             <TabsList class="grid w-full grid-cols-2">
-                <TabsTrigger
-                    value="private"
-                    data-test="conversations-private"
-                    >{{ t('conversations.groups.private') }}</TabsTrigger
-                >
-                <TabsTrigger value="groups" data-test="conversations-groups">{{
-                    t('conversations.groups.title')
-                }}</TabsTrigger>
+                <TabsTrigger value="private" data-test="conversations-private">
+                    {{ t('conversations.groups.private') }}
+                    <span
+                        v-if="privateUnreadCount > 0"
+                        data-test="private-unread-count"
+                        :aria-label="unreadLabel(privateUnreadCount)"
+                        class="ml-2 rounded-full bg-primary px-2 py-0.5 text-xs text-primary-foreground"
+                        >{{
+                            privateUnreadCount > 99 ? '99+' : privateUnreadCount
+                        }}</span
+                    >
+                </TabsTrigger>
+                <TabsTrigger value="groups" data-test="conversations-groups">
+                    {{ t('conversations.groups.title') }}
+                    <span
+                        v-if="groupUnreadCount > 0"
+                        data-test="group-unread-count"
+                        :aria-label="unreadLabel(groupUnreadCount)"
+                        class="ml-2 rounded-full bg-primary px-2 py-0.5 text-xs text-primary-foreground"
+                        >{{
+                            groupUnreadCount > 99 ? '99+' : groupUnreadCount
+                        }}</span
+                    >
+                </TabsTrigger>
             </TabsList>
             <TabsContent
                 value="private"

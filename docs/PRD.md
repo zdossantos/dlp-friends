@@ -184,6 +184,13 @@ Paris.
   d’envoi, avec les mêmes droits et non-lus. L’accès depuis l’événement reste
   disponible dans le panneau adaptatif. La discussion
   affiche un compteur de messages non lus et reçoit les messages en temps réel.
+  Les sélecteurs Privés et Groupes de la messagerie affichent chacun le total
+  de leurs messages reçus non lus. Un message de groupe produit une notification
+  persistante et une alerte Push sur les appareils autorisés, avec accès direct
+  à la discussion. La préférence « Messages de groupe », activée par défaut,
+  coupe ces alertes indépendamment des messages privés sans masquer les non-lus.
+  La lecture acquitte les notifications jusqu’au message consulté ; leur
+  suppression reste disponible dans le centre de notifications.
   Un retrait, une exclusion ou un blocage révoque définitivement l’accès. Une
   annulation la rend immédiatement consultable uniquement ; elle est également
   archivée sept jours après le début de l’événement.

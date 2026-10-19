@@ -69,7 +69,13 @@ privé personnel après validation métier. Un contrat commun catégorise
 conversations et événements et conserve seulement une clé de traduction, ses
 paramètres et la cible. Le centre Inertia filtre ce flux ; l’ouverture marque
 la notification comme lue avant de rediriger vers l’événement ou la
-conversation autorisée.
+conversation autorisée. Les messages de groupe utilisent une cible `event_chat`
+qui ouvre directement la discussion et revérifie sa Policy. Leur préférence
+`group_messages` contrôle les notifications persistantes, le broadcast de
+notification et le Push ; les événements de message sur les canaux personnels
+maintiennent les compteurs même si les alertes sont désactivées. Le curseur de
+lecture acquitte uniquement les notifications des messages consultés et empêche
+une notification différée de réapparaître après lecture.
 
 L’arrivée d’un membre autonome est annoncée lors de sa première complétion de
 profil vérifiée. La transaction verrouille le membre, les administrateurs

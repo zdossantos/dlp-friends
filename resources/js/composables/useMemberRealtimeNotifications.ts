@@ -23,10 +23,13 @@ import {
     registerNotification,
     selectMatchNotification,
     shouldShowMessageToast,
+    shouldAcknowledgePersistentNotification,
 } from '@/lib/memberNotifications';
 import { index as conversationsIndex } from '@/routes/conversations';
 import { show as showConversation } from '@/routes/conversations';
+import { show as showGroupChat } from '@/routes/events/chat';
 import type { MemberIdentity, RealtimeConversationMessage } from '@/types';
+import type { EventChatMessage } from '@/types/event';
 
 export type MemberMatchNotification = {
     match_id: number;
@@ -37,6 +40,7 @@ export type MemberMatchNotification = {
 type MemberRealtimeContext = {
     activeMatch: Ref<MemberMatchNotification | null>;
     latestMessage: ShallowRef<RealtimeConversationMessage | null>;
+    latestGroupMessage: ShallowRef<EventChatMessage | null>;
     latestPersistentNotification: ShallowRef<PersistentMemberNotification | null>;
     presenceChanged: ShallowRef<MemberPresenceChanged | null>;
     unreadNotificationsCount: Ref<number>;
@@ -71,6 +75,7 @@ export function useMemberRealtimeNotifications(
     const { t } = useTranslations();
     const activeMatch = ref<MemberMatchNotification | null>(null);
     const latestMessage = shallowRef<RealtimeConversationMessage | null>(null);
+    const latestGroupMessage = shallowRef<EventChatMessage | null>(null);
     const latestPersistentNotification =
         shallowRef<PersistentMemberNotification | null>(null);
     const presenceChanged = shallowRef<MemberPresenceChanged | null>(null);
@@ -96,6 +101,7 @@ export function useMemberRealtimeNotifications(
         | RealtimeConversationMessage
         | MemberPresenceChanged
         | EventChatAccessChanged
+        | EventChatMessage
     >(
         `App.Models.User.${currentUserId}`,
         [
@@ -103,9 +109,14 @@ export function useMemberRealtimeNotifications(
             '.message.sent',
             '.presence.changed',
             '.event-chat.access.changed',
+            '.event-chat.message.sent',
         ],
         (notification) => {
             if ('access' in notification) {
+                if (page.url.split(/[?#]/, 1)[0] === '/conversations') {
+                    router.reload({ only: ['groups'] });
+                }
+
                 if (page.component === 'Conversations/Group') {
                     const event = page.props.event as { id: number };
 
@@ -125,6 +136,12 @@ export function useMemberRealtimeNotifications(
                 } else if (isEventWorkspaceUrl(page.url)) {
                     router.reload(eventChatAccessReloadOptions(notification));
                 }
+
+                return;
+            }
+
+            if ('event_chat_id' in notification) {
+                latestGroupMessage.value = notification;
 
                 return;
             }
@@ -217,6 +234,33 @@ export function useMemberRealtimeNotifications(
             latestPersistentNotification.value = notification;
 
             if (
+                notification.target_type === 'event_chat' &&
+                !(
+                    page.component === 'Conversations/Group' &&
+                    (page.props.event as { id: number }).id ===
+                        notification.target_id
+                ) &&
+                !shouldAcknowledgePersistentNotification(notification, page.url)
+            ) {
+                toast(
+                    t('notifications.items.new_group_message', {
+                        sender: notification.parameters.sender ?? '',
+                        group: notification.parameters.group ?? '',
+                    }),
+                    {
+                        id: notification.id,
+                        action: {
+                            label: t('conversations.notification.open'),
+                            onClick: () =>
+                                router.visit(
+                                    showGroupChat(notification.target_id).url,
+                                ),
+                        },
+                    },
+                );
+            }
+
+            if (
                 new URL(page.url, window.location.origin).pathname ===
                 '/notifications'
             ) {
@@ -285,6 +329,7 @@ export function useMemberRealtimeNotifications(
     return {
         activeMatch,
         latestMessage,
+        latestGroupMessage,
         latestPersistentNotification,
         presenceChanged,
         unreadNotificationsCount,

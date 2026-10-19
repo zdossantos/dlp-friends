@@ -6,6 +6,7 @@ use App\Events\EventChatMessageSent;
 use App\Models\EventChat;
 use App\Models\EventChatMessage;
 use App\Models\User;
+use App\Notifications\NewGroupMessageNotification;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 
@@ -27,6 +28,12 @@ final class SendEventChatMessage
             ]);
 
             EventChatMessageSent::dispatch($message);
+
+            $recipients = User::query()->inEventChat($lockedChat)->whereKeyNot($author->id)->get();
+
+            foreach ($recipients as $recipient) {
+                $recipient->notify(new NewGroupMessageNotification($message));
+            }
 
             return $message;
         });

@@ -11,6 +11,7 @@ use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Contracts\Events\ShouldDispatchAfterCommit;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Gate;
 use LogicException;
 
 final class EventChatMessageSent implements ShouldBroadcast, ShouldDispatchAfterCommit
@@ -28,7 +29,15 @@ final class EventChatMessageSent implements ShouldBroadcast, ShouldDispatchAfter
             return [];
         }
 
-        return [new PrivateChannel("event-chat.{$this->message->event_chat_id}")];
+        $chat = $this->message->eventChat;
+        $recipients = User::query()->inEventChat($chat)->whereKeyNot($this->message->author_user_id)
+            ->get()
+            ->filter(fn (User $user): bool => Gate::forUser($user)->allows('view', $chat));
+
+        return [
+            new PrivateChannel("event-chat.{$this->message->event_chat_id}"),
+            ...$recipients->map(fn (User $user): PrivateChannel => new PrivateChannel("App.Models.User.{$user->id}"))->all(),
+        ];
     }
 
     public function broadcastWhen(): bool
