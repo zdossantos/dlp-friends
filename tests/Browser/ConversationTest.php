@@ -425,10 +425,6 @@ test('a conversation renders safe recent history and repeatedly loads older mess
         ->assertNotPresent('[role="log"] img[src="x"]')
         ->assertScript('window.__messageXss !== true', true);
 
-    $page->page()->waitForFunction(
-        "document.querySelector('[data-test=message-scroll]').scrollTop > 0",
-    );
-
     $page
         ->assertScript("document.querySelector('[data-test=message-scroll]').scrollTop > 0", true)
         ->assertScript('document.documentElement.scrollWidth <= document.documentElement.clientWidth', true);
@@ -456,7 +452,7 @@ test('a conversation renders safe recent history and repeatedly loads older mess
         };
         scroll.scrollTop = 160;
     JS);
-    $page->page()->waitForFunction("typeof window.releaseHistoryRequest === 'function'");
+    $page->assertScript("typeof window.releaseHistoryRequest === 'function'", true);
     $page->script(<<<'JS'
         const scroll = document.querySelector('[data-test=message-scroll]');
         scroll.scrollTop = 260;
