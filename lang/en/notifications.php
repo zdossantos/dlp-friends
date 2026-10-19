@@ -36,6 +36,7 @@ return [
     'items' => [
         'new_member' => 'A new member has joined DLP Friends.',
         'new_match' => 'New match with :member.',
+        'new_group_message' => ':sender sent a message in “:group”.',
         'new_message' => ':sender sent you a new message.',
         'message_liked' => ':member liked your message.',
         'event_accepted' => 'Your registration for “:event” was accepted.',
@@ -55,6 +56,10 @@ return [
         'new_member' => [
             'title' => 'New member',
             'body' => 'A new member has joined DLP Friends.',
+        ],
+        'group_messages' => [
+            'title' => 'New group message',
+            'body' => 'A new message is waiting in a group.',
         ],
         'messages' => [
             'title' => 'New message',

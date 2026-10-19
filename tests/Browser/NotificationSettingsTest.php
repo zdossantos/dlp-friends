@@ -16,10 +16,13 @@ test('a member can manage notification preferences and devices on mobile', funct
     $page->assertSee('iPhone de test')
         ->assertDontSee('Administration')
         ->assertDontSee('Arrivée de nouveaux membres')
+        ->assertAttribute('[data-test="notification-group_messages-switch"]', 'aria-checked', 'true')
+        ->keys('[data-test="notification-group_messages-switch"]', 'Space')
         ->keys('[data-test="notification-messages-switch"]', 'Space')
         ->press('[data-test="save-notification-preferences"]')
         ->assertSee(__('account.settings.notifications.saved', [], 'fr'))
         ->assertAttribute('[data-test="notification-messages-switch"]', 'aria-checked', 'false')
+        ->assertAttribute('[data-test="notification-group_messages-switch"]', 'aria-checked', 'false')
         ->assertScript('document.documentElement.scrollWidth <= window.innerWidth', true)
         ->assertNoJavaScriptErrors();
 

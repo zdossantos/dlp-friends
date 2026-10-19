@@ -5,6 +5,7 @@ import { computed, onMounted, ref, watch } from 'vue';
 import MessageComposer from '@/components/conversations/MessageComposer.vue';
 import MessageTimeline from '@/components/conversations/MessageTimeline.vue';
 import RealtimeStatus from '@/components/conversations/RealtimeStatus.vue';
+import { useMemberRealtimeContext } from '@/composables/useMemberRealtimeNotifications';
 import { useTranslations } from '@/composables/useTranslations';
 import { xsrfHeader } from '@/lib/csrf';
 import { mergeEventChatMessages } from '@/lib/eventChatState';
@@ -32,6 +33,7 @@ const props = defineProps<{
     messagesProp?: string;
 }>();
 const page = usePage();
+const { latestPersistentNotification } = useMemberRealtimeContext();
 const { t } = useTranslations();
 const currentUserId = computed(() => page.props.auth.user.id);
 const visibleMessages = ref<EventChatMessage[]>([]);
@@ -51,7 +53,7 @@ async function markRead(): Promise<void> {
         return;
     }
 
-    await fetch(storeRead(props.event.id).url, {
+    const response = await fetch(storeRead(props.event.id).url, {
         method: 'POST',
         credentials: 'same-origin',
         headers: {
@@ -61,6 +63,10 @@ async function markRead(): Promise<void> {
         },
         body: JSON.stringify({ last_read_message_id: id }),
     });
+
+    if (response.ok) {
+        router.reload({ only: ['auth'] });
+    }
 }
 
 async function submit(content: string): Promise<EventChatMessage> {
@@ -155,6 +161,14 @@ useEcho<{
     },
 );
 
+watch(latestPersistentNotification, (notification) => {
+    if (
+        notification?.target_type === 'event_chat' &&
+        notification.target_id === props.event.id
+    ) {
+        void markRead();
+    }
+});
 watch(() => props.messages.data, merge, { immediate: true, deep: true });
 watch(status, (next, previous) => {
     if (next === 'connected' && previous !== 'connected') {

@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Notifications\Channels\WebPushChannel;
 use App\Notifications\EventLifecycleNotification;
 use App\Notifications\MessageLikedNotification;
+use App\Notifications\NewGroupMessageNotification;
 use App\Notifications\NewMatchNotification;
 use App\Notifications\NewMessageNotification;
 use App\Notifications\PartnerAnnouncementDecisionNotification;
@@ -20,6 +21,7 @@ test('every internal notification category uses the private web push channel', f
         ->and($notification->webPushPreference())->toBe($preference)
         ->and($notification->via(new User))->toContain(WebPushChannel::class);
 })->with([
+    [NewGroupMessageNotification::class, WebPushPreference::GroupMessages],
     [NewMessageNotification::class, WebPushPreference::Messages],
     [MessageLikedNotification::class, WebPushPreference::Messages],
     [NewMatchNotification::class, WebPushPreference::Matches],

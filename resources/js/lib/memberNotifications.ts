@@ -44,6 +44,12 @@ export function shouldAcknowledgePersistentNotification(
     notification: PersistentNotice,
     currentUrl: string,
 ): boolean {
+    if (notification.target_type === 'event_chat') {
+        const path = currentUrl.split(/[?#]/, 1)[0];
+
+        return path === `/events/${notification.target_id}/chat`;
+    }
+
     return (
         notification.target_type === 'conversation' &&
         activeConversationId(currentUrl) === notification.target_id

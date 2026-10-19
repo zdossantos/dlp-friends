@@ -17,6 +17,12 @@ final class MarkEventChatRead
         DB::transaction(function () use ($reader, $chat, $messageId): void {
             EventChat::query()->lockForUpdate()->findOrFail($chat->id);
 
+            $reader->unreadNotifications()
+                ->where('data->target_type', 'event_chat')
+                ->where('data->target_id', $chat->event_id)
+                ->where('data->message_id', '<=', $messageId)
+                ->update(['read_at' => now()]);
+
             $read = EventChatRead::query()->firstOrNew([
                 'event_chat_id' => $chat->id,
                 'user_id' => $reader->id,

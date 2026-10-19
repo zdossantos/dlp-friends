@@ -86,3 +86,22 @@ describe('member realtime notifications', () => {
         ).toBe(false);
     });
 });
+
+test('recognizes a group notice only while its own chat is open', () => {
+    const notice = { id: 'group-1', target_type: 'event_chat', target_id: 8 };
+    expect(
+        shouldAcknowledgePersistentNotification(notice, '/events/8/chat'),
+    ).toBe(true);
+    expect(
+        shouldAcknowledgePersistentNotification(
+            notice,
+            '/events/8/chat?panel=details',
+        ),
+    ).toBe(true);
+    expect(
+        shouldAcknowledgePersistentNotification(notice, '/events/9/chat'),
+    ).toBe(false);
+    expect(shouldAcknowledgePersistentNotification(notice, '/events/8')).toBe(
+        false,
+    );
+});
