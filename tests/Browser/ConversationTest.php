@@ -435,21 +435,35 @@ test('a conversation renders safe recent history and repeatedly loads older mess
 
     $page->script(<<<'JS'
         const scroll = document.querySelector('[data-test=message-scroll]');
-        // Keep the real Inertia request, but allow time to change reading position.
+        // Hold only the real history request until the reading position changes.
+        const setRequestHeader = XMLHttpRequest.prototype.setRequestHeader;
         const send = XMLHttpRequest.prototype.send;
+        XMLHttpRequest.prototype.setRequestHeader = function (name, value) {
+            if (name.toLowerCase() === 'x-inertia-infinite-scroll-merge-intent') {
+                this.isHistoryRequest = true;
+            }
+            return setRequestHeader.call(this, name, value);
+        };
         XMLHttpRequest.prototype.send = function (...args) {
-            window.historyRequestPending = true;
-            setTimeout(() => send.apply(this, args), 400);
+            if (!this.isHistoryRequest) {
+                return send.apply(this, args);
+            }
+            window.releaseHistoryRequest = () => {
+                XMLHttpRequest.prototype.setRequestHeader = setRequestHeader;
+                XMLHttpRequest.prototype.send = send;
+                send.apply(this, args);
+            };
         };
         scroll.scrollTop = 160;
     JS);
-    $page->page()->waitForFunction('window.historyRequestPending === true');
+    $page->page()->waitForFunction("typeof window.releaseHistoryRequest === 'function'");
     $page->script(<<<'JS'
         const scroll = document.querySelector('[data-test=message-scroll]');
         scroll.scrollTop = 260;
         const anchor = [...scroll.querySelectorAll('[data-test=message-bubble]')]
             .find(message => message.getBoundingClientRect().bottom > scroll.getBoundingClientRect().top);
         window.historyAnchor = { id: anchor.closest('[data-message-id]').dataset.messageId, top: anchor.getBoundingClientRect().top };
+        window.releaseHistoryRequest();
     JS);
     $page->assertSee('Message 16')
         ->wait(0.5)
