@@ -1,5 +1,32 @@
 # Changelog
 
+## [1.16.0](https://github.com/zdossantos/dlp-friends/compare/v1.15.0...v1.16.0) (2026-10-19)
+
+
+### Features
+
+* **auth:** suspend email registration when Resend quota is unavailable ([#282](https://github.com/zdossantos/dlp-friends/issues/282)) ([c95db25](https://github.com/zdossantos/dlp-friends/commit/c95db2597a4b1a25575134301fe9f692c2a69ee0))
+* lire les annonces partenaires et prioriser les administrateurs ([#270](https://github.com/zdossantos/dlp-friends/issues/270)) ([0cbd299](https://github.com/zdossantos/dlp-friends/commit/0cbd29913087eceda98560234a9ef16e6ea5f833))
+* **messaging:** réunir les discussions et adapter le défilement PWA ([#291](https://github.com/zdossantos/dlp-friends/issues/291)) ([f5b3526](https://github.com/zdossantos/dlp-friends/commit/f5b352615d257f0b59db1ff87e17bfc074d5f86c))
+* préparer une bêta isolée et sécuriser les mises en production ([#273](https://github.com/zdossantos/dlp-friends/issues/273)) ([eb22088](https://github.com/zdossantos/dlp-friends/commit/eb220885aeac3341292b87f08aa7c9246679c524))
+* **pwa:** add manual beta viewport recalculation probe ([#290](https://github.com/zdossantos/dlp-friends/issues/290)) ([b806cd6](https://github.com/zdossantos/dlp-friends/commit/b806cd66f4990045364f2139b69ebd6bc278b008))
+* **pwa:** add opt-in beta viewport diagnostics ([5d1b97d](https://github.com/zdossantos/dlp-friends/commit/5d1b97d748fef8d18fe1bc2c7bb0dd5acd4ba49e))
+
+
+### Fixes
+
+* isolate beta Reverb network routing ([#277](https://github.com/zdossantos/dlp-friends/issues/277)) ([96b780c](https://github.com/zdossantos/dlp-friends/commit/96b780c93385dd90b4c745a792f15548e81ff6b0))
+* **messaging:** share group chat UI and recover PWA viewport automatically ([#292](https://github.com/zdossantos/dlp-friends/issues/292)) ([aa63492](https://github.com/zdossantos/dlp-friends/commit/aa6349212a47b93a3d884de43f12b867ba6eb68a))
+* **notifications:** désactiver les récapitulatifs e-mail par défaut ([#281](https://github.com/zdossantos/dlp-friends/issues/281)) ([03ec340](https://github.com/zdossantos/dlp-friends/commit/03ec3406ebf0839898a16b8c9853a571f51b8f52))
+* preserve chat history scroll and reuse event details ([#294](https://github.com/zdossantos/dlp-friends/issues/294)) ([060b004](https://github.com/zdossantos/dlp-friends/commit/060b004b6bd49b4749b2d8b4f8a25d7c047661c0))
+* preserve pending release notes across release PR updates ([#276](https://github.com/zdossantos/dlp-friends/issues/276)) ([f363bcc](https://github.com/zdossantos/dlp-friends/commit/f363bcc0d462543fb3e9a07643b3d18dce5c7cd7))
+* **profile:** handle missing social links visibility ([#267](https://github.com/zdossantos/dlp-friends/issues/267)) ([f534c60](https://github.com/zdossantos/dlp-friends/commit/f534c60d059aa1bf4c05d88f3242c95ff2bf2717))
+* **pwa:** remove unsafe iOS viewport recovery ([#285](https://github.com/zdossantos/dlp-friends/issues/285)) ([864352d](https://github.com/zdossantos/dlp-friends/commit/864352da4bd27bff57c919a86785632e2cb9bd2b))
+* **pwa:** restore iOS viewport after external links ([#284](https://github.com/zdossantos/dlp-friends/issues/284)) ([7b28d71](https://github.com/zdossantos/dlp-friends/commit/7b28d7169a892a531adaa49a5373f8bd753e1d75))
+* reserve beta access to administrators ([#274](https://github.com/zdossantos/dlp-friends/issues/274)) ([13112a7](https://github.com/zdossantos/dlp-friends/commit/13112a77be56103be3ae246419460f9c6d73d57b))
+* restrict automatic beta deployment to its application ([#279](https://github.com/zdossantos/dlp-friends/issues/279)) ([ab73152](https://github.com/zdossantos/dlp-friends/commit/ab73152fbf3d9d1a61aa7dc2df02b87689b1db8b))
+* stabilize conversation history scrolling ([#295](https://github.com/zdossantos/dlp-friends/issues/295)) ([1a388cf](https://github.com/zdossantos/dlp-friends/commit/1a388cf79e3f42b8ebfcc402887c43eb52ebf48e))
+
 ## [1.15.0](https://github.com/zdossantos/dlp-friends/compare/v1.14.0...v1.15.0) (2026-10-07)
 
 
