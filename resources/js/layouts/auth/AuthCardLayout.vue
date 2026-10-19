@@ -38,7 +38,7 @@ const legal = usePage().props.legal;
                 class="flex items-center gap-3 self-center rounded-lg font-medium focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
             >
                 <div
-                    class="flex size-11 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-lg shadow-primary/20"
+                    class="flex size-11 items-center justify-center rounded-2xl border border-border/70 bg-card text-card-foreground shadow-lg shadow-primary/20"
                 >
                     <AppLogoIcon class="size-7 fill-current" />
                 </div>

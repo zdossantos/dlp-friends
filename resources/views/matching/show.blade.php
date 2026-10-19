@@ -54,7 +54,7 @@
                 <header class="flex items-center justify-between gap-4 py-2">
                     <a href="{{ route('landing.show', ['locale' => $locale], false) }}" class="flex items-center gap-3 rounded-2xl focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-4 focus-visible:outline-none">
                         <span class="grid size-11 place-items-center rounded-2xl border border-border/70 bg-card shadow-lg shadow-primary/20">
-                            <span aria-hidden="true" data-test="app-logo-icon" class="inline-block size-7 shrink-0 bg-contain bg-center bg-no-repeat bg-[url('/brand/dlp-friends-logo.svg')] dark:bg-[url('/brand/dlp-friends-logo-dark.svg')]"></span>
+                            <span aria-hidden="true" data-test="app-logo-icon" class="inline-block size-7 shrink-0 bg-contain bg-center bg-no-repeat app-brand-mark"></span>
                         </span>
                         <span class="font-accent text-lg font-bold tracking-tight">{{ __('common.brand.name') }}</span>
                     </a>

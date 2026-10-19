@@ -55,7 +55,7 @@ self.addEventListener('push', (event) => {
             await self.registration.showNotification(payload.title, {
                 body: payload.body,
                 icon: '/pwa/icon-192.png',
-                badge: '/pwa/icon-192.png',
+                badge: '/pwa/badge-96.png',
                 tag: `dlp-friends-${payload.notificationId}`,
                 data: { target: payload.target },
             });

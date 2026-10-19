@@ -283,18 +283,13 @@ autorisé n’est ajouté au produit. Une évocation de chaleur ou de magie repo
 sur la palette, la lumière, les formes et le mouvement, jamais sur la copie
 d’un univers graphique protégé.
 
-Le logo DLP Friends conserve sa géométrie d’origine. Un dégradé diagonal continu
-relie le violet `primary` au rose `secondary` sur toute la marque ; sa variante
-sombre emploie les mêmes tokens dans leurs valeurs sombres. Les surfaces de
-l’application sélectionnent la variante selon le thème sans recolorer le logo
-avec `currentColor`.
+Le logo **Horizon**, validé dans l’issue [#293](https://github.com/zdossantos/dlp-friends/issues/293), remplace l’ancien logo. Le porteur du projet a confirmé le 19 octobre 2026 qu’il s’agit d’une adaptation originale autorisée. La source exacte est conservée dans `scripts/brand/horizon-source.svg` : silhouette, orbite et étoile espacée restent inchangées. Le dégagement ivoire devient un masque transparent, sans halo sur les surfaces colorées.
 
-Le favicon place la variante sombre au centre d’un carré arrondi utilisant le
-fond `hsl(258 30% 8%)`, avec une zone de sécurité de 64 px dans le canevas SVG
-de 512 px. Le SVG est la source ; les déclinaisons ICO 16/32/48 px et Apple
-Touch Icon 180 px reprennent exactement cette composition. Les futures icônes
-PWA installables et maskable doivent repartir de cette source et préserver sa
-zone de sécurité.
+Les six déclinaisons validées (standard, Halloween et Noël, chacune en clair et sombre) sont sélectionnées par `.app-brand-mark`, commune aux composants Vue et aux en-têtes Blade. Leur palette est limitée au dessin de marque ; les tokens et les polices de l’application restent ceux du présent document. Les tuiles de logo utilisent une surface neutre pour conserver le contraste. Deux monochromes noir et blanc sont disponibles.
+
+Les favicons SVG/ICO (16, 32 et 48 px), Apple Touch Icon opaque (180 px), icônes PWA standard et maskable (192 et 512 px), et versions bêta sont générés ensemble par `bun scripts/brand/generate.mjs` (Playwright/Chromium déjà utilisés par le projet). Les chemins installables existants utilisent la composition standard sombre ; ils restent stables pendant les changements de saison. Chaque ambiance dispose aussi de ses exports complets sous `public/brand/variants/`. Les signatures horizontales et verticales y conservent le texte éditable de la maquette approuvée ; les signatures dans l’application conservent `font-accent`.
+
+Les icônes maskable ont un fond opaque et placent la totalité du dessin, badge bêta compris, dans le cercle central de diamètre 80 %. Apple applique son propre masque au carré opaque. Le badge de notification Android est un monochrome blanc transparent de 96 px, distinct de l’icône couleur. À 16 px, l’étoile perd naturellement du détail ; le tracé approuvé n’est pas simplifié. Les captures du manifeste sont vérifiées lors de l’intégration.
 
 Les images d’avatars administrables restent des contenus applicatifs privés et
 doivent respecter les exigences de [`security-privacy.md`](security-privacy.md).

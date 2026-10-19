@@ -19,6 +19,7 @@ describe('service worker cache policy', () => {
         '/build/assets/app-ABC123.css',
         '/build/assets/instrument-sans-ABC123.woff2',
         '/pwa/icon-192.png',
+        '/pwa/badge-96.png',
         '/favicon.svg',
         '/offline.html',
     ])('allows the public static asset %s', (path) => {

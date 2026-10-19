@@ -21,6 +21,8 @@ it('publishes an installable manifest with safe brand assets', function () {
 
     foreach ([...$manifest['icons'], ...$manifest['screenshots']] as $asset) {
         expect(public_path(ltrim($asset['src'], '/')))->toBeFile();
+        $dimensions = getimagesize(public_path(ltrim($asset['src'], '/')));
+        expect($dimensions[0].'x'.$dimensions[1])->toBe($asset['sizes']);
     }
 
     expect($manifest['icons'])->toBe([

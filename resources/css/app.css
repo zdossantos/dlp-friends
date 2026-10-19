@@ -619,3 +619,23 @@
 html {
     min-height: var(--pwa-scroll-extent, 0px);
 }
+
+/* Horizon artwork: shared by public pages and Inertia, independent of UI tokens. */
+.app-brand-mark {
+    background-image: url('/brand/dlp-friends-logo.svg');
+}
+.dark .app-brand-mark {
+    background-image: url('/brand/dlp-friends-logo-dark.svg');
+}
+.seasonal-halloween .app-brand-mark {
+    background-image: url('/brand/dlp-friends-logo-halloween.svg');
+}
+.dark.seasonal-halloween .app-brand-mark {
+    background-image: url('/brand/dlp-friends-logo-halloween-dark.svg');
+}
+.seasonal-christmas .app-brand-mark {
+    background-image: url('/brand/dlp-friends-logo-christmas.svg');
+}
+.dark.seasonal-christmas .app-brand-mark {
+    background-image: url('/brand/dlp-friends-logo-christmas-dark.svg');
+}
