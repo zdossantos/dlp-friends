@@ -253,6 +253,14 @@ de protection attaché aux réponses privées. Un membre connecté qui ouvre la
 racine ou une landing page rejoint immédiatement la route d’aiguillage de son
 espace membre.
 
+Le lien de bio `/open` et ses variantes `/fr/open` et `/en/open` servent une
+page Blade d’aide à l’ouverture externe, hors indexation. Un petit module dédié
+permet de copier l’URL de l’accueil localisé ; le champ en lecture seule reste
+utilisable sans JavaScript. Aucune URL de destination n’est acceptée en entrée,
+aucune redirection automatique ni aucun schéma privé n’est activé. Les recherches
+et la recette Instagram sur appareils réels sont suivies dans
+[`instagram-browser.md`](instagram-browser.md).
+
 ### Standard des pages publiques indexables
 
 Toute nouvelle page publique destinée au référencement suit par défaut le

@@ -45,6 +45,7 @@ use App\Http\Controllers\EventRegistrationController;
 use App\Http\Controllers\EventRegistrationDecisionController;
 use App\Http\Controllers\EventRegistrationIndexController;
 use App\Http\Controllers\EventRegistrationRemovalController;
+use App\Http\Controllers\ExternalBrowserController;
 use App\Http\Controllers\LandingController;
 use App\Http\Controllers\LegalDocumentController;
 use App\Http\Controllers\LikeMemberController;
@@ -84,6 +85,10 @@ use App\Support\PublicUrls;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [PublicLandingController::class, 'redirect'])->name('home');
+Route::get('open', ExternalBrowserController::class)->name('external-browser');
+Route::get('{locale}/open', ExternalBrowserController::class)
+    ->whereIn('locale', ['fr', 'en'])
+    ->name('external-browser.localized');
 Route::get('partner-profiles/{partnerProfile}/image', [PublicLandingController::class, 'image'])
     ->name('partner-profiles.image');
 Route::get('partner-announcements/click/{token}', PartnerAnnouncementClickController::class)
