@@ -445,9 +445,9 @@ test('a conversation renders safe recent history and repeatedly loads older mess
     ]);
     $conversation = $match->conversation()->create();
 
-    foreach (range(1, 35) as $index) {
+    foreach (range(1, 65) as $index) {
         Message::factory()->for($conversation)->for($index % 2 === 0 ? $member : $peer, 'author')->create([
-            'content' => $index === 35
+            'content' => $index === 65
                 ? '<img src=x onerror=window.__messageXss=true>'
                 : "Message {$index} ".str_repeat('contenu ', 12),
             'created_at' => now()->addSeconds($index),
@@ -498,7 +498,7 @@ test('a conversation renders safe recent history and repeatedly loads older mess
         window.historyAnchor = { id: anchor.closest('[data-message-id]').dataset.messageId, top: anchor.getBoundingClientRect().top };
         window.releaseHistoryRequest();
     JS);
-    $page->assertSee('Message 16')
+    $page->assertSee('Message 26')
         ->wait(0.5)
         ->assertScript("Math.abs(document.querySelector('[data-message-id=\"' + window.historyAnchor.id + '\"] [data-test=message-bubble]').getBoundingClientRect().top - window.historyAnchor.top) < 3", true)
         ->assertScript("document.querySelector('[data-test=message-scroll]').scrollTop > 0", true);
@@ -509,10 +509,55 @@ test('a conversation renders safe recent history and repeatedly loads older mess
 
     $page->script("document.querySelector('[data-test=message-scroll]').scrollTop = 0; true;");
     $page->assertSee('Message 1')
-        ->assertScript("document.querySelectorAll('[data-message-id]').length", 35)
-        ->assertScript("new Set([...document.querySelectorAll('[data-message-id]')].map((message) => message.dataset.messageId)).size", 35)
+        ->assertScript("document.querySelectorAll('[data-message-id]').length", 65)
+        ->assertScript("new Set([...document.querySelectorAll('[data-message-id]')].map((message) => message.dataset.messageId)).size", 65)
         ->assertNoJavaScriptErrors();
 });
+
+test('one upward scroll loads one history page and keeps the reading position', function (int $width, int $height, int $scrollTop) {
+    $member = conversationBrowserMember('Alice');
+    $peer = conversationBrowserMember('Basile');
+    $match = MemberMatch::factory()->create([
+        'user_low_id' => min($member->id, $peer->id),
+        'user_high_id' => max($member->id, $peer->id),
+    ]);
+    $conversation = $match->conversation()->create();
+    foreach (range(1, 120) as $index) {
+        Message::factory()->for($conversation)->for($peer, 'author')->create([
+            'content' => "Message court {$index}",
+            'created_at' => now()->addSeconds($index),
+        ]);
+    }
+    $this->actingAs($member);
+    $page = visit("/conversations/{$conversation->id}")->resize($width, $height)->assertSee('Message court 120')->waitForEvent('networkidle');
+    $page->script("window.historyScrollTarget = {$scrollTop};");
+    $page->script(<<<'JS'
+        window.loadedBeforeScroll = document.querySelectorAll('[data-message-id]').length;
+        window.historyRequests = 0;
+        window.originalHistoryHeader = XMLHttpRequest.prototype.setRequestHeader;
+        XMLHttpRequest.prototype.setRequestHeader = function (name, value) {
+            if (name.toLowerCase() === 'x-inertia-infinite-scroll-merge-intent') window.historyRequests++;
+            return window.originalHistoryHeader.call(this, name, value);
+        };
+        const scroll = document.querySelector('[data-test=message-scroll]');
+        scroll.scrollTop = window.historyScrollTarget;
+        const anchor = [...scroll.querySelectorAll('[data-test=message-bubble]')]
+            .find(bubble => bubble.getBoundingClientRect().bottom > scroll.getBoundingClientRect().top);
+        window.topReadingAnchor = { id: anchor.closest('[data-message-id]').dataset.messageId, top: anchor.getBoundingClientRect().top };
+        true;
+        JS);
+    $page->assertScript('window.historyRequests > 0', true)->waitForEvent('networkidle')
+        ->assertScript('window.historyRequests', 1)
+        ->assertScript("document.querySelectorAll('[data-message-id]').length - window.loadedBeforeScroll", 20)
+        ->assertScript("Math.abs(document.querySelector('[data-message-id=\"' + window.topReadingAnchor.id + '\"] [data-test=message-bubble]').getBoundingClientRect().top - window.topReadingAnchor.top) < 3", true)
+        ->assertScript("document.querySelector('[data-test=message-scroll]').scrollTop > 400", true)
+        ->assertNoJavaScriptErrors();
+})->with([
+    'mobile at top' => [390, 844, 0],
+    'desktop at top' => [1280, 900, 0],
+    'mobile before top' => [390, 844, 350],
+    'desktop before top' => [1280, 900, 350],
+]);
 
 test('a pushed message is announced without moving a member who is reading older messages', function () {
     if (! filter_var(env('REALTIME_BROWSER_TESTS', false), FILTER_VALIDATE_BOOL)) {
@@ -528,7 +573,7 @@ test('a pushed message is announced without moving a member who is reading older
     ]);
     $conversation = $match->conversation()->create();
 
-    foreach (range(1, 12) as $index) {
+    foreach (range(1, 22) as $index) {
         Message::factory()->for($conversation)->for($peer, 'author')->create([
             'content' => "Historique {$index} ".str_repeat('contenu ', 20),
             'created_at' => now()->addSeconds($index),
@@ -537,7 +582,7 @@ test('a pushed message is announced without moving a member who is reading older
 
     $this->actingAs($member);
     $page = visit("/conversations/{$conversation->id}")->on()->mobile()
-        ->assertScript("document.querySelectorAll('[data-message-id]').length", 10);
+        ->assertScript("document.querySelectorAll('[data-message-id]').length", 20);
 
     $page->script(<<<'JS'
         const scroll = document.querySelector('[data-test=message-scroll]');
@@ -554,7 +599,7 @@ test('a pushed message is announced without moving a member who is reading older
 
     $page->assertSee('Message reçu en direct')
         ->assertScript("document.querySelector('[aria-live=polite]').textContent", 'Nouveau message reçu')
-        ->assertScript("document.querySelectorAll('[data-message-id]').length", 11)
+        ->assertScript("document.querySelectorAll('[data-message-id]').length", 21)
         ->assertScript("Math.abs(document.querySelector('[data-test=message-scroll]').scrollTop - window.__scrollBeforePushedMessage) < 2", true);
 
     expect($pushed->fresh()?->read_at)->not->toBeNull();
@@ -562,7 +607,7 @@ test('a pushed message is announced without moving a member who is reading older
         ->not->toBeNull();
 
     event(new MessageSent($pushed));
-    $page->assertScript("document.querySelectorAll('[data-message-id]').length", 11)
+    $page->assertScript("document.querySelectorAll('[data-message-id]').length", 21)
         ->assertNoJavaScriptErrors();
 
     $page->script(<<<'JS'

@@ -14,8 +14,8 @@ lisible, mais aucun nouveau message ne peut y être envoyé.
 ## Objectifs
 
 - Afficher uniquement les conversations du membre connecté.
-- Présenter les dix derniers messages d’une conversation au premier chargement.
-- Charger l’historique plus ancien par lots de dix lors du défilement vers le
+- Présenter les vingt derniers messages d’une conversation au premier chargement.
+- Charger l’historique plus ancien par lots de vingt lors du défilement vers le
   haut, sans saut de lecture.
 - Ajouter les nouveaux messages sans rechargement grâce à Echo/Reverb.
 - Conserver les messages déjà affichés lors d’une coupure temps réel.
@@ -67,11 +67,13 @@ La page `Conversations/Show` reçoit :
 - `currentUserId`, utilisé uniquement pour distinguer les bulles envoyées et
   reçues.
 
-Le backend sélectionne d’abord les dix messages les plus récents, puis remet
+Le backend sélectionne d’abord les vingt messages les plus récents, puis remet
 chaque page en ordre chronologique avant sérialisation. `Inertia::scroll()`
 configure la fusion des pages. Le composant `InfiniteScroll` utilise
 `only-previous` et `preserve-url` afin de charger uniquement les pages plus
-anciennes en haut de l’historique sans polluer l’URL.
+anciennes en haut de l’historique sans polluer l’URL. Le chargement commence
+à 400 px du haut pour anticiper la remontée, en conservant le message visible
+à la même position après insertion du lot.
 
 Les contenus restent du texte brut. Vue les interpole avec `{{ }}` ; aucun
 `v-html` n’est utilisé.
@@ -147,7 +149,7 @@ Les tests Pest fonctionnels couvrent :
 - la liste limitée aux conversations du membre et son ordre ;
 - les props de la liste et de la page de conversation ;
 - le refus d’un identifiant deviné ;
-- les dix derniers messages au premier chargement ;
+- les vingt derniers messages au premier chargement ;
 - la pagination vers les messages plus anciens, sans doublon et dans l’ordre ;
 - la lecture d’une conversation archivée et l’impossibilité d’envoyer.
 

@@ -29,3 +29,14 @@ Deux régressions corrigées avant livraison : le curseur de rattrapage ne suit 
 Les contrôles lint/format/TypeScript, Pint, Larastan, Wayfinder, les 137 tests frontend et le build Vite passent. La suite Pest complète termine avec 1 559 tests réussis et six ignorés ; le build Docker de production passe. Les régressions de messagerie ajoutées passent sous Chromium et le rendu mobile a été inspecté. Le clavier natif iOS reste à vérifier sur appareil.
 
 La première CI a exposé une réaction écrasée par un snapshot retardé, reproduite avec une réponse XHR retenue puis corrigée : la synchronisation préserve les réactions et accusés de lecture reçus pendant la requête, y compris pour un message apparu entretemps. Le test de retour attend désormais l’URL de la liste avant de revenir au fil. La vérification CI finale reste consultable dans la pull request.
+
+
+## Ajustement de pagination demandé après les captures
+
+- [x] Conversations privées : 20 messages par lot au lieu de 10.
+- [x] Fil partagé : anticipation à 400 px au lieu de 240 px.
+- [x] Vérifier sur 120 messages courts qu’une remontée (jusqu’au haut ou à 350 px)
+  charge exactement un lot et conserve la position de lecture sur mobile et ordinateur.
+- [x] Vérifier la pagination stable malgré les nouveaux messages et le chargement
+  répété sous réponse retardée ; 43 tests ciblés passent, quatre tests temps réel
+  ignorés localement. Lint, format, types, Pint, Larastan et build Vite passent.

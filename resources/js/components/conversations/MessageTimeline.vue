@@ -321,7 +321,7 @@ watch(
                 :only-previous="!reverse"
                 :only-next="reverse"
                 preserve-url
-                :buffer="240"
+                :buffer="400"
                 :params="historyReloadOptions"
                 :auto-scroll="true"
                 role="list"

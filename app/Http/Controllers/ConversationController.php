@@ -42,10 +42,11 @@ final class ConversationController extends Controller
             : $latestMessageId;
         $historyQuery = $conversation->messages()->where('id', '<=', $historyBoundary);
         $messageCount = (clone $historyQuery)->count();
-        $lastPage = max((int) ceil($messageCount / 10), 1);
+        $perPage = 20;
+        $lastPage = max((int) ceil($messageCount / $perPage), 1);
         $page = min(max($request->integer('messages', $lastPage), 1), $lastPage);
-        $offset = max($messageCount - (($lastPage - $page + 1) * 10), 0);
-        $limit = min(10, max($messageCount - (($lastPage - $page) * 10), 0));
+        $offset = max($messageCount - (($lastPage - $page + 1) * $perPage), 0);
+        $limit = min($perPage, max($messageCount - (($lastPage - $page) * $perPage), 0));
         $messageQuery = $conversation->messages()
             ->withCount('reactions')
             ->withExists([
@@ -68,7 +69,7 @@ final class ConversationController extends Controller
         $messages = new LengthAwarePaginator(
             items: $messageRows,
             total: $messageCount,
-            perPage: 10,
+            perPage: $perPage,
             currentPage: $page,
             options: [
                 'path' => $request->url(),
