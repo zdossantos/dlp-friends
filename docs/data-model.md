@@ -81,6 +81,12 @@ et son état de livraison sont définis dans le [`PRD.md`](PRD.md).
 - `blocks` est unique pour `(blocker_user_id, blocked_user_id)` et doit être vérifié dans chaque autorisation de conversation ou de matching.
 - `events.registration_mode` vaut `automatic` ou `manual`; `cancelled_at` conserve l’événement annulé dans l’historique.
 - `event_registrations` est unique pour `(event_id, user_id)`. Son état évolue entre `pending`, `accepted`, `refused`, `withdrawn`, `removed` et `blocked`. Seul `withdrawn` autorise une nouvelle inscription.
+- `event_chat_messages.system_type` est nul pour un message rédigé, ou vaut
+  `joined`, `left` ou `removed` pour une annonce système. L’annonce est créée
+  dans la transaction de la transition d’inscription. `author_user_id` référence
+  alors le membre concerné ; `content` reste vide et le texte est traduit à
+  l’affichage avec son nom actuel. Les règles de purge et de conservation des
+  messages restent applicables, sans copie supplémentaire de son identité.
 - L’organisateur compte dans `events.capacity` sans ligne d’inscription. Les transitions qui occupent une place verrouillent l’événement en base afin de ne jamais dépasser cette capacité.
 - `partner_profiles.user_id` devient nul à la suppression du compte. Toute
   révision en attente est alors refusée et aucune révision ne peut être publiée

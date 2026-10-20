@@ -2,6 +2,7 @@
 
 namespace App\Actions;
 
+use App\Enums\EventChatSystemType;
 use App\Enums\EventRegistrationMode;
 use App\Enums\EventRegistrationStatus;
 use App\Models\Event;
@@ -39,14 +40,18 @@ final class RegisterForEvent
 
             if ($registration !== null) {
                 $registration->update(['status' => $status]);
-
-                return $registration->refresh();
+            } else {
+                $registration = $lockedEvent->registrations()->create([
+                    'user_id' => $member->id,
+                    'status' => $status,
+                ]);
             }
 
-            return $lockedEvent->registrations()->create([
-                'user_id' => $member->id,
-                'status' => $status,
-            ]);
+            if ($status === EventRegistrationStatus::Accepted) {
+                app(AnnounceEventChatMembership::class)->handle($registration, EventChatSystemType::Joined);
+            }
+
+            return $registration->refresh();
         });
     }
 

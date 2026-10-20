@@ -26,7 +26,7 @@ final class SetEventChatMessageReaction
                 ->lockForUpdate()
                 ->findOrFail($message->id);
 
-            if ($reacted && $lockedMessage->author_user_id === $reactor->id) {
+            if ($lockedMessage->system_type !== null || ($reacted && $lockedMessage->author_user_id === $reactor->id)) {
                 throw new AccessDeniedHttpException;
             }
 

@@ -134,7 +134,11 @@ const latestMessage = computed<TimelineMessage | undefined>(() =>
 const lastOutgoingMessageId = computed<number | undefined>(
     () =>
         props.messages.data
-            .filter((message) => message.author_user_id === props.currentUserId)
+            .filter(
+                (message) =>
+                    !isSystemMessage(message) &&
+                    message.author_user_id === props.currentUserId,
+            )
             .at(-1)?.id,
 );
 
@@ -170,9 +174,24 @@ function dayLabel(message: TimelineMessage): string {
     );
 }
 
+function isSystemMessage(
+    message: TimelineMessage,
+): message is EventChatMessage & {
+    system_type: NonNullable<EventChatMessage['system_type']>;
+} {
+    return 'system_type' in message && message.system_type != null;
+}
+
+function systemMessageText(message: EventChatMessage): string {
+    return t(`events.chat.system.${message.system_type}`, {
+        name: message.author.display_name,
+    });
+}
+
 function showSender(index: number): boolean {
     return (
         index === 0 ||
+        isSystemMessage(props.messages.data[index - 1]) ||
         props.messages.data[index - 1]?.author_user_id !==
             props.messages.data[index]?.author_user_id ||
         showDaySeparator(index)
@@ -189,7 +208,7 @@ function scrollToBottom(): void {
 }
 
 async function toggleReaction(message: TimelineMessage): Promise<void> {
-    if (pendingReactionIds.value.has(message.id)) {
+    if (isSystemMessage(message) || pendingReactionIds.value.has(message.id)) {
         return;
     }
 
@@ -275,7 +294,10 @@ watch(
         animatedMessageId.value = messageId;
 
         if (latestMessage.value?.author_user_id !== props.currentUserId) {
-            announcedMessage.value = t('conversations.message.received');
+            announcedMessage.value =
+                latestMessage.value && isSystemMessage(latestMessage.value)
+                    ? systemMessageText(latestMessage.value)
+                    : t('conversations.message.received');
         }
 
         if (
@@ -367,7 +389,15 @@ watch(
                         </time>
                         <span class="h-px flex-1 bg-border" />
                     </div>
+                    <p
+                        v-if="isSystemMessage(message)"
+                        data-test="event-chat-system-message"
+                        class="mx-auto my-2 w-fit max-w-full rounded-xl bg-muted/90 px-3 py-1.5 text-center text-xs [overflow-wrap:anywhere] text-muted-foreground"
+                    >
+                        {{ systemMessageText(message) }}
+                    </p>
                     <div
+                        v-else
                         class="flex min-w-0"
                         :class="[
                             message.author_user_id === currentUserId
