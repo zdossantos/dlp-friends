@@ -177,6 +177,7 @@ final class BuildUserDataExport
                     'skipped_at' => $delivery->skipped_at?->toIso8601String(),
                     'created_at' => $delivery->created_at?->toIso8601String(),
                 ])->all(),
+            'discovery_preferences' => $user->discoveryPreferences(),
             'email_preferences' => [
                 'weekly_recap_messages' => $user->weekly_recap_messages,
                 'weekly_recap_matches' => $user->weekly_recap_matches,

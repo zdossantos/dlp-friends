@@ -212,10 +212,11 @@ class DiscoveryServiceTest extends TestCase
             ->and($result?->score)->toBe(1.0);
     }
 
-    public function test_a_member_on_their_exact_eighteenth_birthday_is_eligible(): void
+    public function test_a_member_on_their_exact_eighteenth_birthday_is_eligible_when_in_the_age_range(): void
     {
         [$interest] = $this->interests('Attractions');
         $actor = $this->member('Actor', VisitFrequency::Often, [$interest]);
+        $actor->forceFill(['discovery_min_age' => 18, 'discovery_max_age' => 30])->save();
         $target = $this->member(
             'Exactly eighteen',
             VisitFrequency::Rarely,

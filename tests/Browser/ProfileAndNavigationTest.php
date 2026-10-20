@@ -488,7 +488,7 @@ test('member navigation appears on discovery conversations profile and settings 
 
     visit('/settings/account')
         ->on()->mobile()
-        ->assertSee('Réglages du compte')
+        ->assertSee('Réglages')
         ->assertPresent('[data-test="member-bottom-navigation"]')
         ->assertPresent('[aria-label="Profil"][aria-current="page"]')
         ->assertScript(

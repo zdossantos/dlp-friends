@@ -8,6 +8,13 @@ use App\Models\User;
 
 final class UserPolicy
 {
+    public function updateDiscoveryPreferences(User $actor, User $member): bool
+    {
+        return $actor->is($member)
+            && $actor->status === UserStatus::Active
+            && $actor->hasRole(RoleName::User);
+    }
+
     public function accessBeta(User $actor): bool
     {
         return $actor->status === UserStatus::Active && $actor->hasRole(RoleName::Admin);

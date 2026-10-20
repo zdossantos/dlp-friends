@@ -41,8 +41,8 @@ test('localized matching pages are public server rendered and explain the curren
         ->assertSee($reciprocity)
         ->assertDontSee('type="module"', false);
 })->with([
-    'French' => ['/fr/matching', 'fr', 'Comment fonctionnent les suggestions', 'Dans chaque groupe, le nombre d’univers favoris actifs en commun est ensuite prioritaire.', '0,25', 'L’âge sert uniquement à vérifier la majorité', 'deux Découvertes réciproques'],
-    'English' => ['/en/matching', 'en', 'How suggestions work', 'Within each group, the number of shared active favorite worlds takes priority next.', '0.25', 'Age is used only to verify adulthood', 'two mutual Discoveries'],
+    'French' => ['/fr/matching', 'fr', 'Comment fonctionnent les suggestions', 'Dans chaque groupe, le nombre d’univers favoris actifs en commun est ensuite prioritaire.', '0,25', 'Tes filtres se règlent dans les paramètres du compte', 'deux Découvertes réciproques'],
+    'English' => ['/en/matching', 'en', 'How suggestions work', 'Within each group, the number of shared active favorite worlds takes priority next.', '0.25', 'Your filters are configured in account settings', 'two mutual Discoveries'],
 ]);
 
 test('localized matching pages expose canonical alternate and social metadata', function (string $path, string $locale, string $title) {

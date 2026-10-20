@@ -19,6 +19,7 @@ return [
                 'The profile must be complete, visible, and use an avatar that is still active.',
                 'Your own profile and profiles you have already reviewed are excluded.',
                 'Someone you blocked, or who blocked you, cannot appear.',
+                'The profile meets your age range and minimum number of shared active favorite worlds.',
             ],
         ],
         [
@@ -31,7 +32,7 @@ return [
                 'When that number is tied, a 0.25 bonus applies if you both entered the same visit frequency.',
                 'If both criteria are still identical, a random tie-break determines the order.',
             ],
-            'note' => 'Age is used only to verify adulthood. It never filters or ranks suggestions.',
+            'note' => 'Your filters are configured in account settings: five years below and above your age by default, starting at 18, and no minimum shared favorite worlds. Saved age limits stay fixed. They limit your suggestions without changing your visibility or existing chats; ranking stays the same.',
         ],
         [
             'id' => 'reciprocity',
@@ -47,7 +48,7 @@ return [
             'id' => 'unused-criteria',
             'title' => '4. What ranking does not use',
             'paragraphs' => [
-                'DLP Friends does not ask for a city and does not rank members by distance, age range, or romantic criteria.',
+                'DLP Friends does not ask for a city and does not rank members by distance, age, or romantic criteria. Age and minimum shared favorite worlds only filter your suggestions according to your settings.',
                 'This explanation describes the engine currently in use. It and its tests will be updated whenever those rules change.',
             ],
             'items' => [],

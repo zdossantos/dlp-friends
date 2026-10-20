@@ -136,6 +136,24 @@ et son état de livraison sont définis dans le [`PRD.md`](PRD.md).
 - La suppression de compte doit anonymiser ou supprimer les données conformément à la politique de conservation définie dans [`security-privacy.md`](security-privacy.md).
 - Un blocage transforme en `blocked` toute inscription active entre les deux membres. Une suppression organisateur annule puis purge ses événements, sauf ceux nécessaires aux données d’un compte banni, alors conservés sans organisateur ; une suppression participante purge ses propres inscriptions.
 
+## Filtres personnels de découverte (issue 271)
+
+`users.discovery_min_age` et `discovery_max_age` sont des entiers nullables.
+L’absence de personnalisation calcule les deux bornes depuis l’âge courant
+moins/plus cinq ans, limitées à 18–120 ans. L’enregistrement depuis les paramètres
+du compte exige deux entiers ordonnés dans cette plage et les conserve fixes.
+`users.discovery_min_common_interests` vaut zéro par défaut et accepte 0–100.
+Ces préférences restent privées, sont incluses dans l’export et disparaissent
+avec la ligne du compte à la purge.
+
+`DiscoveryService` combine les deux conditions avant de classer : âge entier
+inclus entre les bornes et nombre d’intérêts actifs sélectionnés sur les deux
+profils au moins égal au minimum. Un minimum impossible renvoie zéro résultat.
+Le filtre s’applique aussi aux administrateurs et aux identifiants de cartes
+transmis par le client ; il ne s’applique pas aux préférences du membre proposé.
+Aucun changement de visibilité réciproque, d’historique des profils passés ou
+d’accès aux profils et conversations existantes n’est induit.
+
 ## Score de proposition V1
 
 Le score est volontairement simple et explicable :

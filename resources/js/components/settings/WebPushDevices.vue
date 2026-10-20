@@ -2,6 +2,7 @@
 import { router } from '@inertiajs/vue3';
 import { Smartphone, Trash2 } from '@lucide/vue';
 import { ref } from 'vue';
+import SettingsSection from '@/components/settings/SettingsSection.vue';
 import { Button } from '@/components/ui/button';
 import { useTranslations } from '@/composables/useTranslations';
 import { xsrfHeader } from '@/lib/csrf';
@@ -43,18 +44,14 @@ async function remove(uuid: string): Promise<void> {
 </script>
 
 <template>
-    <section class="space-y-3" aria-labelledby="push-devices-title">
-        <div>
-            <h2 id="push-devices-title" class="font-medium">
-                {{ t('account.settings.notifications.devices_title') }}
-            </h2>
-            <p class="text-sm text-muted-foreground">
-                {{ t('account.settings.notifications.devices_help') }}
-            </p>
-        </div>
+    <SettingsSection
+        heading-id="push-devices-title"
+        :title="t('account.settings.notifications.devices_title')"
+        :description="t('account.settings.notifications.devices_help')"
+    >
         <p
             v-if="devices.length === 0"
-            class="rounded-2xl border p-4 text-sm text-muted-foreground"
+            class="rounded-xl bg-muted/40 p-4 text-sm leading-6 text-muted-foreground"
         >
             {{ t('account.settings.notifications.devices_empty') }}
         </p>
@@ -62,7 +59,7 @@ async function remove(uuid: string): Promise<void> {
             <li
                 v-for="device in devices"
                 :key="device.uuid"
-                class="flex min-h-14 items-center gap-3 rounded-2xl border p-3"
+                class="flex min-h-14 items-center gap-3 rounded-xl bg-muted/40 p-3"
             >
                 <Smartphone
                     class="size-5 shrink-0 text-primary"
@@ -104,5 +101,5 @@ async function remove(uuid: string): Promise<void> {
                 </Button>
             </li>
         </ul>
-    </section>
+    </SettingsSection>
 </template>

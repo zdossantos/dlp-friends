@@ -344,3 +344,33 @@ décisions restent dans une colonne latérale, sur mobile des liens d’ancrage
 permettent d’atteindre l’échange et le traitement. Le retour conserve le membre,
 le filtre et la page, y compris après clôture. Les accès « Signalements reçus »
 des fiches administratives et des profils ordinaires sont réservés aux admins.
+
+## Filtres dans les paramètres du compte
+
+La section des filtres des profils proposés réutilise le Slider shadcn-vue
+basé sur Reka UI, avec deux poignées nommées pour les âges minimum et maximum,
+un pas d’un an et un affichage textuel de la plage. Les deux poignées restent
+utilisables au clavier et au toucher avec des cibles de 44 px. Le nombre
+minimum d’univers favoris communs utilise le champ numérique existant.
+Les libellés et descriptions sont traduits en français et anglais.
+
+
+## Continuité des réglages et du profil
+
+Les pages Compte, Sécurité, Apparence et Notifications utilisent une colonne
+centrée de lecture, un retour explicite au profil et une navigation par rubriques
+à icônes. La rubrique active porte `aria-current="page"` et un fond secondaire.
+Sur mobile, les icônes précèdent les libellés dans quatre colonnes sans défilement
+horizontal ; sur ordinateur, chaque icône rejoint son libellé sur une ligne.
+Les comptes exclusivement partenaires ne voient que la rubrique Notifications
+et le retour mène à leur profil partenaire. Pour un administrateur sans rôle
+membre ou partenaire, le retour mène au tableau de bord administratif.
+
+`SettingsSection` regroupe un ensemble de réglages dans une surface `card`,
+avec un rayon de 16 px, une bordure discrète, un titre et une description
+facultatifs. Les champs et actions de ces sections reprennent les rayons de
+12 px et les cibles de 44 px du profil. Les formulaires conservent leurs
+enregistrements indépendants, états occupés, erreurs et confirmations.
+La suppression du compte garde un traitement destructif distinct. Le document
+reste défilable et réserve l'espace de la navigation basse, y compris avec les
+textes anglais et sur les écrans étroits.

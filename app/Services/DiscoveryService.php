@@ -33,6 +33,7 @@ final readonly class DiscoveryService
             return collect();
         }
 
+        $preferences = $user->discoveryPreferences();
         $actorInterestIds = $actorProfile->interests->modelKeys();
         $actorVisitFrequency = $actorProfile->visit_frequency?->value;
 
@@ -41,10 +42,11 @@ final readonly class DiscoveryService
             ->where('visibility', ProfileVisibility::Visible->value)
             ->whereNotNull('onboarding_completed_at')
             ->whereHas('avatar', fn (Builder $query) => $query->where('is_active', true))
-            ->whereHas('user', function (Builder $query): void {
+            ->whereHas('user', function (Builder $query) use ($preferences): void {
                 $query
                     ->where('status', UserStatus::Active->value)
-                    ->where('birth_date', '<=', today()->subYears(18));
+                    ->where('birth_date', '<=', today()->subYearsNoOverflow($preferences['min_age']))
+                    ->where('birth_date', '>', today()->subYearsNoOverflow($preferences['max_age'] + 1));
             })
             ->whereDoesntHave('user.receivedSwipes', function (Builder $query) use ($user): void {
                 $query->where('actor_user_id', $user->id);
@@ -107,6 +109,7 @@ final readonly class DiscoveryService
                     score: $commonInterestCount + ($frequencyBonus ? 0.25 : 0.0),
                 );
             })
+            ->filter(fn (DiscoveryProfileData $profile): bool => $profile->commonInterestCount >= $preferences['min_common_interests'])
             ->sortBy([
                 ['isAdmin', 'desc'],
                 ['commonInterestCount', 'desc'],

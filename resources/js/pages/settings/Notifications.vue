@@ -2,8 +2,8 @@
 import { Form, Head, router, setLayoutProps, usePage } from '@inertiajs/vue3';
 import { BellRing } from '@lucide/vue';
 import { computed } from 'vue';
-import Heading from '@/components/Heading.vue';
 import InputError from '@/components/InputError.vue';
+import SettingsSection from '@/components/settings/SettingsSection.vue';
 import WebPushDevices from '@/components/settings/WebPushDevices.vue';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
@@ -74,18 +74,8 @@ setLayoutProps({
 
 <template>
     <Head :title="t('account.settings.notifications.title')" />
-    <h1 class="sr-only">{{ t('account.settings.notifications.title') }}</h1>
-    <div class="space-y-8">
-        <Heading
-            variant="small"
-            :title="t('account.settings.notifications.title')"
-            :description="t('account.settings.notifications.description')"
-        />
-
-        <section
-            class="space-y-3 rounded-2xl border p-4"
-            aria-labelledby="push-status-title"
-        >
+    <div class="space-y-4">
+        <SettingsSection aria-labelledby="push-status-title">
             <div class="flex gap-3">
                 <BellRing
                     class="mt-0.5 size-5 shrink-0 text-primary"
@@ -165,147 +155,165 @@ setLayoutProps({
             >
                 {{ t('account.settings.notifications.push_error') }}
             </p>
-        </section>
+        </SettingsSection>
 
-        <Form
-            action="/settings/notifications"
-            method="patch"
-            class="space-y-4"
-            v-slot="{ errors, processing }"
+        <SettingsSection
+            :description="t('account.settings.notifications.description')"
+            :title="t('account.settings.notifications.title')"
         >
-            <section class="space-y-4" aria-labelledby="email-recap-title">
-                <div>
-                    <h2 id="email-recap-title" class="font-medium">
-                        {{ t('account.settings.notifications.email_title') }}
-                    </h2>
-                    <p class="text-sm text-muted-foreground">
-                        {{ t('account.settings.notifications.email_help') }}
-                    </p>
+            <Form
+                action="/settings/notifications"
+                method="patch"
+                class="space-y-5"
+                v-slot="{ errors, processing }"
+            >
+                <section class="space-y-4" aria-labelledby="email-recap-title">
+                    <div>
+                        <h2 id="email-recap-title" class="font-medium">
+                            {{
+                                t('account.settings.notifications.email_title')
+                            }}
+                        </h2>
+                        <p class="text-sm text-muted-foreground">
+                            {{ t('account.settings.notifications.email_help') }}
+                        </p>
+                    </div>
+                    <div
+                        v-for="(enabled, category) in emailPreferences"
+                        :key="category"
+                        class="border-t border-border/70 pt-4"
+                    >
+                        <label class="flex min-h-11 items-start gap-3 text-sm">
+                            <input type="hidden" :name="category" value="0" />
+                            <Switch
+                                :key="`${category}-${enabled}`"
+                                :name="category"
+                                value="1"
+                                :default-value="enabled"
+                                class="mt-0.5"
+                                :data-test="`email-${category}-switch`"
+                            />
+                            <span class="space-y-1">
+                                <span class="block font-medium">{{
+                                    t(
+                                        `account.settings.notifications.${category}`,
+                                    )
+                                }}</span>
+                                <span class="block text-muted-foreground">{{
+                                    t(
+                                        `account.settings.notifications.${category}_help`,
+                                    )
+                                }}</span>
+                            </span>
+                        </label>
+                        <InputError class="mt-2" :message="errors[category]" />
+                    </div>
+                </section>
+                <h2 class="pt-2 font-semibold">
+                    {{ t('account.settings.notifications.categories_title') }}
+                </h2>
+                <div
+                    v-if="adminNewMemberAlertsEnabled !== null"
+                    class="border-t border-border/70 pt-4"
+                >
+                    <label class="flex min-h-11 items-start gap-3 text-sm">
+                        <input
+                            type="hidden"
+                            name="admin_new_member_alerts"
+                            value="0"
+                        />
+                        <Switch
+                            :key="String(adminNewMemberAlertsEnabled)"
+                            name="admin_new_member_alerts"
+                            value="1"
+                            :default-value="adminNewMemberAlertsEnabled"
+                            class="mt-0.5"
+                            data-test="admin-new-member-alerts-switch"
+                        />
+                        <span class="space-y-1">
+                            <span class="block font-medium">{{
+                                t(
+                                    'account.settings.notifications.new_member_alerts',
+                                )
+                            }}</span>
+                            <span class="block text-muted-foreground">{{
+                                t(
+                                    'account.settings.notifications.new_member_alerts_help',
+                                )
+                            }}</span>
+                        </span>
+                    </label>
+                    <InputError
+                        class="mt-2"
+                        :message="errors.admin_new_member_alerts"
+                    />
                 </div>
                 <div
-                    v-for="(enabled, category) in emailPreferences"
+                    v-for="category in categories"
                     :key="category"
-                    class="rounded-2xl border p-4"
+                    class="border-t border-border/70 pt-4"
                 >
                     <label class="flex min-h-11 items-start gap-3 text-sm">
                         <input type="hidden" :name="category" value="0" />
                         <Switch
-                            :key="`${category}-${enabled}`"
                             :name="category"
                             value="1"
-                            :default-value="enabled"
+                            :default-value="preferences[category] ?? true"
                             class="mt-0.5"
-                            :data-test="`email-${category}-switch`"
+                            :data-test="
+                                category === 'partner_announcements'
+                                    ? 'partner-announcements-switch'
+                                    : `notification-${category}-switch`
+                            "
                         />
                         <span class="space-y-1">
                             <span class="block font-medium">{{
-                                t(`account.settings.notifications.${category}`)
+                                category === 'partner_announcements'
+                                    ? t(
+                                          'account.settings.notifications.partner_announcements',
+                                      )
+                                    : t(
+                                          `account.settings.notifications.categories.${category}`,
+                                      )
                             }}</span>
                             <span class="block text-muted-foreground">{{
-                                t(
-                                    `account.settings.notifications.${category}_help`,
-                                )
+                                category === 'partner_announcements'
+                                    ? t(
+                                          'account.settings.notifications.partner_announcements_help',
+                                      )
+                                    : t(
+                                          `account.settings.notifications.categories_help.${category}`,
+                                      )
                             }}</span>
                         </span>
                     </label>
                     <InputError class="mt-2" :message="errors[category]" />
                 </div>
-            </section>
-            <div
-                v-if="adminNewMemberAlertsEnabled !== null"
-                class="rounded-2xl border p-4"
-            >
-                <label class="flex min-h-11 items-start gap-3 text-sm">
-                    <input
-                        type="hidden"
-                        name="admin_new_member_alerts"
-                        value="0"
-                    />
-                    <Switch
-                        :key="String(adminNewMemberAlertsEnabled)"
-                        name="admin_new_member_alerts"
-                        value="1"
-                        :default-value="adminNewMemberAlertsEnabled"
-                        class="mt-0.5"
-                        data-test="admin-new-member-alerts-switch"
-                    />
-                    <span class="space-y-1">
-                        <span class="block font-medium">{{
-                            t(
-                                'account.settings.notifications.new_member_alerts',
-                            )
-                        }}</span>
-                        <span class="block text-muted-foreground">{{
-                            t(
-                                'account.settings.notifications.new_member_alerts_help',
-                            )
-                        }}</span>
-                    </span>
-                </label>
-                <InputError
-                    class="mt-2"
-                    :message="errors.admin_new_member_alerts"
-                />
-            </div>
-            <div
-                v-for="category in categories"
-                :key="category"
-                class="rounded-2xl border p-4"
-            >
-                <label class="flex min-h-11 items-start gap-3 text-sm">
-                    <input type="hidden" :name="category" value="0" />
-                    <Switch
-                        :name="category"
-                        value="1"
-                        :default-value="preferences[category] ?? true"
-                        class="mt-0.5"
-                        :data-test="
-                            category === 'partner_announcements'
-                                ? 'partner-announcements-switch'
-                                : `notification-${category}-switch`
-                        "
-                    />
-                    <span class="space-y-1">
-                        <span class="block font-medium">{{
-                            category === 'partner_announcements'
-                                ? t(
-                                      'account.settings.notifications.partner_announcements',
-                                  )
-                                : t(
-                                      `account.settings.notifications.categories.${category}`,
-                                  )
-                        }}</span>
-                        <span class="block text-muted-foreground">{{
-                            category === 'partner_announcements'
-                                ? t(
-                                      'account.settings.notifications.partner_announcements_help',
-                                  )
-                                : t(
-                                      `account.settings.notifications.categories_help.${category}`,
-                                  )
-                        }}</span>
-                    </span>
-                </label>
-                <InputError class="mt-2" :message="errors[category]" />
-            </div>
-            <Button
-                :disabled="processing"
-                :aria-busy="processing ? 'true' : undefined"
-                data-test="save-notification-preferences"
-                class="min-h-11"
-            >
-                <Spinner v-if="processing" />{{ t('account.settings.save') }}
-            </Button>
-            <Button
-                type="button"
-                variant="outline"
-                class="min-h-11"
-                data-test="disable-all-notifications"
-                @click="disableAll"
-            >
-                {{ t('account.settings.notifications.disable_all') }}
-            </Button>
-        </Form>
+                <div
+                    class="flex flex-wrap gap-3 border-t border-border/70 pt-5"
+                >
+                    <Button
+                        :disabled="processing"
+                        :aria-busy="processing ? 'true' : undefined"
+                        data-test="save-notification-preferences"
+                        class="min-h-11"
+                    >
+                        <Spinner v-if="processing" />{{
+                            t('account.settings.save')
+                        }}
+                    </Button>
+                    <Button
+                        type="button"
+                        variant="outline"
+                        class="min-h-11"
+                        data-test="disable-all-notifications"
+                        @click="disableAll"
+                    >
+                        {{ t('account.settings.notifications.disable_all') }}
+                    </Button>
+                </div>
+            </Form>
+        </SettingsSection>
 
         <WebPushDevices :devices="devices" />
     </div>

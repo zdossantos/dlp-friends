@@ -21,6 +21,7 @@ return [
                 'Le profil doit être complet, visible et utiliser un avatar encore actif.',
                 'Ton propre profil et les profils que tu as déjà évalués sont exclus.',
                 'Une personne que tu as bloquée, ou qui t’a bloqué, ne peut pas apparaître.',
+                'Le profil respecte ta tranche d’âge et ton minimum d’univers favoris actifs en commun.',
             ],
         ],
         [
@@ -35,7 +36,7 @@ return [
                 'À nombre égal, un bonus de 0,25 s’applique lorsque vous avez renseigné la même fréquence de visite.',
                 'Si ces deux critères sont encore identiques, un départage aléatoire détermine l’ordre.',
             ],
-            'note' => 'L’âge sert uniquement à vérifier la majorité. Il ne filtre pas et ne classe jamais les suggestions.',
+            'note' => 'Tes filtres se règlent dans les paramètres du compte : cinq ans avant et après ton âge par défaut, sans descendre sous 18 ans, et aucun minimum d’univers communs. Les bornes enregistrées restent fixes. Ils limitent tes suggestions sans modifier ta visibilité ni tes échanges existants ; le classement reste identique.',
         ],
         [
             'id' => 'reciprocite',
@@ -51,7 +52,7 @@ return [
             'id' => 'criteres-absents',
             'title' => '4. Ce que le classement n’utilise pas',
             'paragraphs' => [
-                'DLP Friends ne demande aucune ville et ne classe pas les membres selon une distance, une tranche d’âge ou un critère romantique.',
+                'DLP Friends ne demande aucune ville et ne classe pas les membres selon une distance, un âge ou un critère romantique. L’âge et le minimum d’univers communs servent uniquement à filtrer tes suggestions selon tes paramètres.',
                 'Ces explications décrivent le moteur actuellement utilisé. Elles seront mises à jour avec ses tests si ses règles évoluent.',
             ],
             'items' => [],

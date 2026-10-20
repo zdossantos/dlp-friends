@@ -2,7 +2,7 @@
 import { Form } from '@inertiajs/vue3';
 import { ShieldCheck } from '@lucide/vue';
 import { onUnmounted, ref } from 'vue';
-import Heading from '@/components/Heading.vue';
+import SettingsSection from '@/components/settings/SettingsSection.vue';
 import TwoFactorRecoveryCodes from '@/components/TwoFactorRecoveryCodes.vue';
 import TwoFactorSetupModal from '@/components/TwoFactorSetupModal.vue';
 import { Button } from '@/components/ui/button';
@@ -30,13 +30,11 @@ onUnmounted(() => clearTwoFactorAuthData());
 </script>
 
 <template>
-    <div v-if="canManageTwoFactor" class="space-y-6">
-        <Heading
-            variant="small"
-            :title="t('account.two_factor.title')"
-            :description="t('account.two_factor.description')"
-        />
-
+    <SettingsSection
+        v-if="canManageTwoFactor"
+        :title="t('account.two_factor.title')"
+        :description="t('account.two_factor.description')"
+    >
         <div
             v-if="!twoFactorEnabled"
             class="flex flex-col items-start justify-start space-y-4"
@@ -87,5 +85,5 @@ onUnmounted(() => clearTwoFactorAuthData());
             :requiresConfirmation="requiresConfirmation"
             :twoFactorEnabled="twoFactorEnabled"
         />
-    </div>
+    </SettingsSection>
 </template>

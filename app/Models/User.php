@@ -31,6 +31,9 @@ use Laravel\Fortify\PasskeyAuthenticatable;
 use Laravel\Fortify\TwoFactorAuthenticatable;
 
 /**
+ * @property int|null $discovery_min_age
+ * @property int|null $discovery_max_age
+ * @property int $discovery_min_common_interests
  * @property int $id
  * @property string $email
  * @property string|null $locale
@@ -326,6 +329,18 @@ class User extends Authenticatable implements HasLocalePreference, MustVerifyEma
         return $this->locale ?? app()->getLocale();
     }
 
+    /** @return array{min_age: int, max_age: int, min_common_interests: int} */
+    public function discoveryPreferences(): array
+    {
+        $age = $this->age ?? 18;
+
+        return [
+            'min_age' => $this->discovery_min_age ?? max(18, min(120, $age - 5)),
+            'max_age' => $this->discovery_max_age ?? max(18, min(120, $age + 5)),
+            'min_common_interests' => $this->discovery_min_common_interests ?? 0,
+        ];
+    }
+
     /**
      * Calculate the user's current age from their birth date.
      *
@@ -346,6 +361,9 @@ class User extends Authenticatable implements HasLocalePreference, MustVerifyEma
         return [
             'email_verified_at' => 'datetime',
             'birth_date' => 'date',
+            'discovery_min_age' => 'integer',
+            'discovery_max_age' => 'integer',
+            'discovery_min_common_interests' => 'integer',
             'status' => UserStatus::class,
             'deletion_requested_at' => 'immutable_datetime',
             'last_active_at' => 'datetime',

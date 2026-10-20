@@ -221,3 +221,12 @@ ne change pas. L’export contient les rapports soumis par le membre et ses
 sanctions, sans identité des autres auteurs, cibles ou décideurs, ni messages
 d’autrui. La version des CGU `2026-10-04` doit être réacceptée explicitement par
 tous les rôles avant l’accès privé ; déconnexion et textes publics restent ouverts.
+
+## Préférences privées de découverte (issue 271)
+
+Les deux bornes d’âge et le minimum d’univers communs sont enregistrés sur le
+compte et accessibles seulement à leur propriétaire dans ses paramètres et
+son export. Aucune préférence ne figure dans les cartes publiques. Elles sont
+supprimées avec le compte lors de sa purge. Leur modification requiert un
+membre actif, majeur, vérifié et autorisé ; les exclusions de sécurité et les
+blocages dans les deux sens restent prioritaires sur ces filtres.

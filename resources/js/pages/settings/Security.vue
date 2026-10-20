@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import { Form, Head, setLayoutProps } from '@inertiajs/vue3';
 import SecurityController from '@/actions/App/Http/Controllers/Settings/SecurityController';
-import Heading from '@/components/Heading.vue';
 import InputError from '@/components/InputError.vue';
 import type { Props as ManagePasskeysProps } from '@/components/ManagePasskeys.vue';
 import ManagePasskeys from '@/components/ManagePasskeys.vue';
 import type { Props as ManageTwoFactorProps } from '@/components/ManageTwoFactor.vue';
 import ManageTwoFactor from '@/components/ManageTwoFactor.vue';
 import PasswordInput from '@/components/PasswordInput.vue';
+import SettingsSection from '@/components/settings/SettingsSection.vue';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
@@ -30,15 +30,10 @@ setLayoutProps({
 <template>
     <Head :title="t('account.settings.security')" />
 
-    <h1 class="sr-only">{{ t('account.settings.security') }}</h1>
-
-    <div class="space-y-6">
-        <Heading
-            variant="small"
-            :title="t('account.settings.password_title')"
-            :description="t('account.settings.password_description')"
-        />
-
+    <SettingsSection
+        :title="t('account.settings.password_title')"
+        :description="t('account.settings.password_description')"
+    >
         <Form
             v-bind="SecurityController.update.form()"
             :options="{
@@ -108,7 +103,7 @@ setLayoutProps({
                 </Button>
             </div>
         </Form>
-    </div>
+    </SettingsSection>
 
     <ManageTwoFactor
         :canManageTwoFactor="canManageTwoFactor"
