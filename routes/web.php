@@ -81,6 +81,7 @@ use App\Http\Controllers\PublicReleaseNotesController;
 use App\Http\Controllers\SwipeController;
 use App\Http\Controllers\TermsAcceptanceController;
 use App\Http\Controllers\UnblockMemberController;
+use App\Http\Controllers\VisitAttendeeController;
 use App\Http\Controllers\VisitController;
 use App\Http\Controllers\VisitsVisibilityController;
 use App\Support\PublicUrls;
@@ -245,6 +246,7 @@ Route::middleware(['auth', 'verified', 'social', 'terms.current'])->group(functi
                 Route::post('discover/{target}/swipe', SwipeController::class)
                     ->name('discovery.swipe');
 
+                Route::get('visits/attendees', VisitAttendeeController::class)->name('visits.attendees.index');
                 Route::patch('visits/visibility', VisitsVisibilityController::class)->name('visits.visibility.update');
                 Route::resource('visits', VisitController::class)->only(['index', 'store', 'update', 'destroy']);
 

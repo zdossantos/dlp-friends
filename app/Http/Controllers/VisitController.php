@@ -2,18 +2,20 @@
 
 namespace App\Http\Controllers;
 
+use App\Data\VisitWorkspaceData;
 use App\Http\Requests\StoreVisitRequest;
 use App\Http\Requests\UpdateVisitRequest;
+use App\Http\Requests\VisitIndexRequest;
 use App\Models\Visit;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Gate;
+use Inertia\Inertia;
 
 class VisitController extends Controller
 {
-    public function index(): Response
+    public function index(VisitIndexRequest $request, VisitWorkspaceData $data): \Inertia\Response
     {
-        return response('');
+        return Inertia::render('Visits/Index', $data->build($request->user(), $request->filters()));
     }
 
     public function store(StoreVisitRequest $request): RedirectResponse

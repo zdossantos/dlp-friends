@@ -20,6 +20,7 @@ class StoreVisitRequest extends FormRequest
         return ['starts_on' => ['bail', 'required', 'date_format:Y-m-d'], 'ends_on' => ['bail', 'required', 'date_format:Y-m-d', 'after_or_equal:starts_on']];
     }
 
+    /** @return list<\Closure(Validator): void> */
     public function after(): array
     {
         return [function (Validator $validator): void {
