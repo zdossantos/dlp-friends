@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Conversation;
+use App\Models\ConversationReport;
 use App\Models\MemberMatch;
 use App\Models\Role;
 use App\Models\User;
@@ -23,6 +24,19 @@ it('reports without blocking and prevents duplicate open reports', function () {
     $this->assertDatabaseCount('blocks', 0);
     $this->post($this->endpoint, $payload)->assertSessionHasErrors('conversation');
     $this->assertDatabaseCount('conversation_reports', 1);
+});
+
+it('accepts flirting reports and keeps their reason available for administrative review', function () {
+    $this->actingAs($this->reporter)->post($this->endpoint, [
+        'reason' => 'flirting', 'block' => false, 'confirmed' => true,
+    ])->assertSessionHasNoErrors()->assertRedirect();
+
+    $report = ConversationReport::query()->sole();
+    expect($report->reason->value)->toBe('flirting');
+
+    $admin = User::factory()->withProfile()->admin()->create();
+    $this->actingAs($admin)->get("/admin/conversation-reports/{$report->id}")
+        ->assertOk()->assertInertia(fn ($page) => $page->where('report.reason', 'flirting'));
 });
 
 it('atomically blocks when chosen and allows reporting an archived exchange', function () {

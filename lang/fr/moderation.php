@@ -56,7 +56,7 @@ return ['banned' => 'Ce compte est banni pour son comportement dans l’applicat
     'next' => 'Page suivante',
     'full_conversation' => 'Conversation complète',
     'close_confirm' => 'Confirmer la clôture',
-    'reasons' => ['harassment' => 'Harcèlement', 'discrimination' => 'Propos discriminatoires', 'sexual_content' => 'Contenu sexuel', 'threats' => 'Menace', 'spam' => 'Spam ou arnaque', 'other' => 'Autre'],
+    'reasons' => ['flirting' => 'Drague', 'harassment' => 'Harcèlement', 'discrimination' => 'Propos discriminatoires', 'sexual_content' => 'Contenu sexuel', 'threats' => 'Menace', 'spam' => 'Spam ou arnaque', 'other' => 'Autre'],
     'terms_title' => 'Les conditions évoluent',
     'terms_description' => 'Votre accord est nécessaire pour continuer.',
     'terms_changes' => 'Les nouvelles conditions expliquent le signalement des échanges, leur consultation intégrale par les administrateurs et le bannissement sans expiration avec conservation des données.',

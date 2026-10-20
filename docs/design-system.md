@@ -327,9 +327,9 @@ Dans la fiche de signalement, clôture et bannissement sont côte à côte et
 utilisent le même champ de motif, sans second dialogue. L'avertissement de
 sanction est affiché avant les boutons ; la levée reste disponible après
 clôture. Le signalement explique la consultation
-intégrale avant validation, propose les six motifs, une précision limitée, puis
-Oui/Non pour le blocage avec Oui présélectionné. Une cible admin ne présente
-pas de blocage. La file admin et sa fiche paginent les messages en lecture seule ;
+intégrale avant validation, propose les sept motifs, dont la drague, une précision
+limitée, puis Oui/Non pour le blocage avec Oui présélectionné. Une cible admin
+ne présente pas de blocage. La file admin et sa fiche paginent les messages en lecture seule ;
 les boutons de décision attendent la réponse et affichent les erreurs du serveur.
 Le statut banni est visible dans la gestion des comptes ; suppression et sanction
 restent des commandes distinctes. La réacceptation comporte une case décochée

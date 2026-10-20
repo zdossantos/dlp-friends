@@ -417,9 +417,9 @@ Un participant actif, majeur et vérifié peut signaler un échange, même archi
 bloqué ou masqué. Il confirme l’accès administratif à toute la conversation,
 y compris ses messages anciens et ultérieurs. Le blocage est proposé avec
 « Oui » sélectionné ; un administrateur reste signalable sans pouvoir être
-bloqué. Six motifs sont proposés ; précision et décision sont limitées à
-1 000 caractères. Un seul signalement ouvert par auteur et échange est permis,
-et un nouveau peut être envoyé après clôture.
+bloqué. Sept motifs sont proposés, dont la drague ; précision et décision sont
+limitées à 1 000 caractères. Un seul signalement ouvert par auteur et échange
+est permis, et un nouveau peut être envoyé après clôture.
 
 Les administrateurs actifs consultent une file et les messages originaux paginés
 en lecture seule. La file distingue les éléments à traiter des éléments clôturés,
