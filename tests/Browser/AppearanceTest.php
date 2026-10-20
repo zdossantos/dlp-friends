@@ -234,18 +234,22 @@ test('the system appearance is used when no preference is stored', function () {
         ->assertNoJavaScriptErrors();
 });
 
-test('the application logo follows appearance and seasonal classes without reloading', function () {
-    $page = visit('/login')
-        ->assertPresent('[data-test="app-logo-icon"]')
-        ->assertScript("getComputedStyle(document.querySelector('[data-test=app-logo-icon]')).backgroundImage.includes('dlp-friends-logo.svg')", true);
-
-    $page->script("document.documentElement.classList.add('dark')");
-    $page->assertScript("getComputedStyle(document.querySelector('[data-test=app-logo-icon]')).backgroundImage.includes('dlp-friends-logo-dark.svg')", true);
-
-    $page->script("document.documentElement.classList.add('seasonal-halloween')");
-    $page->assertScript("getComputedStyle(document.querySelector('[data-test=app-logo-icon]')).backgroundImage.includes('dlp-friends-logo-halloween.svg')", true)
-        ->assertNoJavaScriptErrors();
-});
+test('the application and public logos follow all six appearance variants without reloading', function (string $url) {
+    $page = visit($url)->assertPresent('[data-test="app-logo-icon"]');
+    foreach ([
+        '' => 'dlp-friends-logo.svg',
+        'dark' => 'dlp-friends-logo-dark.svg',
+        'seasonal-halloween' => 'dlp-friends-logo-halloween.svg',
+        'dark seasonal-halloween' => 'dlp-friends-logo-halloween-dark.svg',
+        'seasonal-christmas' => 'dlp-friends-logo-christmas.svg',
+        'dark seasonal-christmas' => 'dlp-friends-logo-christmas-dark.svg',
+    ] as $classes => $filename) {
+        $page->script("document.documentElement.className = '{$classes}'");
+        $page->assertScript("getComputedStyle(document.querySelector('[data-test=app-logo-icon]')).backgroundImage.endsWith('/brand/{$filename}\")')", true)
+            ->assertScript('document.documentElement.scrollWidth <= innerWidth', true)
+            ->assertNoJavaScriptErrors();
+    }
+})->with(['/login', '/fr', '/fr/conditions-generales-utilisation']);
 
 test('appearance remains stable across repeated Inertia navigation', function () {
     $user = User::factory()->withProfile()->create();

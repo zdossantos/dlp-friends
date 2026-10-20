@@ -25,7 +25,7 @@ const props = defineProps<Props>();
         data-test="app-logo-icon"
         :role="props.accessibleName ? 'img' : undefined"
         :class="className"
-        class="relative inline-block shrink-0 bg-[url('/brand/dlp-friends-logo.svg')] bg-contain bg-center bg-no-repeat dark:bg-[url('/brand/dlp-friends-logo-dark.svg')] [.seasonal-halloween_&]:bg-[url('/brand/dlp-friends-logo-halloween.svg')]"
+        class="app-brand-mark relative inline-block shrink-0 bg-contain bg-center bg-no-repeat"
         :style="
             page.props.environment.isBeta
                 ? { containerType: 'inline-size' }

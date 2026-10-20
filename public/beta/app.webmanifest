@@ -41,17 +41,17 @@
     "screenshots": [
         {
             "src": "/pwa/screenshot-fr.png",
-            "sizes": "941x1672",
+            "sizes": "390x844",
             "type": "image/png",
             "form_factor": "narrow",
-            "label": "Découverte de profils amicaux"
+            "label": "Accueil et inscription"
         },
         {
             "src": "/pwa/screenshot-en.png",
-            "sizes": "940x1672",
+            "sizes": "390x844",
             "type": "image/png",
             "form_factor": "narrow",
-            "label": "Friendly profile discovery"
+            "label": "Welcome and registration"
         }
     ]
 }

@@ -26,7 +26,11 @@ const { t } = useTranslations();
                 :href="home()"
                 class="relative z-20 flex items-center font-accent text-lg font-bold"
             >
-                <AppLogoIcon class="mr-2 size-8 fill-current text-white" />
+                <span
+                    class="mr-2 grid size-12 place-items-center rounded-xl border border-border/70 bg-card"
+                >
+                    <AppLogoIcon class="size-8" />
+                </span>
                 {{ t('common.brand.name') }}
             </Link>
             <p class="relative z-20 mt-auto max-w-md text-2xl font-medium">

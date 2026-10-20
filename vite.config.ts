@@ -54,6 +54,8 @@ export default defineConfig({
                 globPatterns: [
                     'build/assets/**/*.{css,js,woff,woff2}',
                     'pwa/icon-*.png',
+                    'pwa/badge-96.png',
+                    'brand/dlp-friends-logo*.svg',
                     'beta/pwa/icon-*.png',
                     'beta/favicon.svg',
                     'favicon.svg',

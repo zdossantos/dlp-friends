@@ -7,7 +7,7 @@ test('shows beta badge in each theme', function () {
     $this->withoutMiddleware(EnsureDeploymentReady::class);
     $page = visit('/login')->assertSee('Beta')->assertPresent('[data-test="beta-badge"]');
 
-    foreach (['', 'dark', 'dark seasonal-halloween'] as $classes) {
+    foreach (['', 'dark', 'seasonal-halloween', 'dark seasonal-halloween', 'seasonal-christmas', 'dark seasonal-christmas'] as $classes) {
         $page->script("document.documentElement.className = '{$classes}'");
         $page->assertScript("getComputedStyle(document.querySelector('[data-test=beta-badge]')).backgroundColor", 'rgb(255, 255, 255)')
             ->assertScript("getComputedStyle(document.querySelector('[data-test=beta-badge]')).position", 'absolute')

@@ -34,7 +34,7 @@ const { t } = useTranslations();
                         class="flex flex-col items-center gap-2 rounded-xl font-medium focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
                     >
                         <div
-                            class="mb-1 flex size-12 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-lg shadow-primary/20"
+                            class="mb-1 flex size-12 items-center justify-center rounded-2xl border border-border/70 bg-card text-card-foreground shadow-lg shadow-primary/20"
                         >
                             <AppLogoIcon class="size-8 fill-current" />
                         </div>

@@ -7,7 +7,7 @@ const { t } = useTranslations();
 
 <template>
     <div
-        class="flex aspect-square size-9 items-center justify-center rounded-xl bg-sidebar-primary text-sidebar-primary-foreground shadow-sm"
+        class="flex aspect-square size-9 items-center justify-center rounded-xl border border-border/70 bg-card text-card-foreground shadow-sm"
     >
         <AppLogoIcon class="size-6 fill-current" />
     </div>

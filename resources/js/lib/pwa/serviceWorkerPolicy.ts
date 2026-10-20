@@ -20,6 +20,7 @@ export function isCacheableStaticRequest(request: Request): boolean {
     return (
         HASHED_BUILD_ASSET.test(pathname) ||
         PUBLIC_PWA_ASSET.test(pathname) ||
+        pathname === '/pwa/badge-96.png' ||
         pathname === '/favicon.svg' ||
         pathname === '/offline.html'
     );
