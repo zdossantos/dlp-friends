@@ -36,14 +36,14 @@ it('submits the chosen blocking option and keeps an administrator reportable', f
     }
     $conversation = MemberMatch::query()->create(['user_low_id' => $member->id, 'user_high_id' => $peer->id])->conversation()->create();
     $this->actingAs($member);
-    $page = visit("/conversations/{$conversation->id}")->click('[data-test="report-conversation-trigger"]')->select('#report-reason', 'other');
+    $page = visit("/conversations/{$conversation->id}")->click('[data-test="report-conversation-trigger"]')->select('#report-reason', 'flirting')->assertScript("document.querySelector('#report-reason').selectedOptions[0].textContent.trim()", 'Drague');
     if ($targetRole === 'admin') {
         $page->assertNotPresent('#report-block-yes');
     } elseif (! $block) {
         $page->click('#report-block-no');
     }
     $page->fill('#report-details', 'Contexte')->click('[data-test="confirm-report"]')->assertPathIs('/conversations')->assertNoJavaScriptErrors();
-    $this->assertDatabaseCount('conversation_reports', 1);
+    $this->assertDatabaseHas('conversation_reports', ['reason' => 'flirting']);
     $this->assertDatabaseCount('blocks', $block ? 1 : 0);
 })->with([['user', true], ['user', false], ['admin', false]]);
 
@@ -91,3 +91,102 @@ it('shows the ban explanation on login after a valid recovery code', function ()
         ->assertSee(BannedAuthentication::message())->assertNoJavaScriptErrors();
     $this->assertGuest();
 });
+
+it('opens received reports from the normal profile and returns to its filtered history after closure', function (string $device) {
+    Storage::fake('local');
+    $reporter = User::factory()->withProfile()->create();
+    $target = User::factory()->withProfile()->create();
+    $reporter->profile->update(['display_name' => 'Camille']);
+    $target->profile->update(['display_name' => 'Alex']);
+    $admin = User::factory()->withProfile()->admin()->create();
+    $conversation = MemberMatch::query()->create(['user_low_id' => $reporter->id, 'user_high_id' => $target->id])->conversation()->create();
+    $conversation->messages()->create(['author_user_id' => $reporter->id, 'content' => 'Je suis ici pour faire des rencontres amicales uniquement.']);
+    $conversation->messages()->create(['author_user_id' => $target->id, 'content' => 'Tu ne veux vraiment pas que ce soit un rendez-vous ?']);
+    $report = app(ReportConversation::class)->handle($reporter, $conversation, ConversationReportReason::Flirting, 'Cette personne insiste malgré ma demande de rester dans un cadre amical.', false);
+    Storage::disk('local')->put($target->profile->avatar->image_path, base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScL8WQAAAABJRU5ErkJggg=='));
+    $this->actingAs($admin);
+    $page = visit("/members/{$target->id}")->on()->{$device}()->assertSee('Alex');
+    if (getenv('CAPTURE_REPORTS')) {
+        $page->screenshot(filename: "reports-profile-{$device}");
+    }
+    $page->click('[data-test="received-reports"]')->assertSee('Signalements reçus')
+        ->assertSee('Camille')->assertSee('Drague')->assertDontSee('Tu ne veux vraiment pas');
+    if (getenv('CAPTURE_REPORTS')) {
+        $page->screenshot(filename: "reports-list-fr-{$device}");
+    }
+    $page->click('[data-test="review-report"]')->assertSee('Personne signalée')
+        ->assertSee('Cette personne insiste')->assertSee('Tu ne veux vraiment pas')
+        ->fill('#close-decision', 'Comportement contraire au cadre amical. Signalement examiné.');
+    if (getenv('CAPTURE_REPORTS')) {
+        $page->script('window.scrollTo({ top: 0, behavior: "instant" })');
+        $page->screenshot(filename: "reports-detail-fr-{$device}");
+    }
+    $page->click('[data-test="close-report"]')->assertSee('Signalement examiné.')
+        ->assertNotPresent('[data-test="close-report"]');
+    if (getenv('CAPTURE_REPORTS')) {
+        $page->script('window.scrollTo({ top: 0, behavior: "instant" })');
+        $page->screenshot(filename: "reports-closed-fr-{$device}");
+    }
+    $page->click('[data-test="reports-back"]')->assertSee('Signalements reçus')
+        ->assertSee('Clôturé')->click('[data-test="reports-origin"]')
+        ->assertPathIs("/members/{$target->id}")->assertNoJavaScriptErrors();
+    expect($report->fresh()->closed_at)->not->toBeNull();
+})->with(['desktop', 'mobile']);
+
+it('opens an empty received history from administrative member management', function (string $device) {
+    $admin = User::factory()->withProfile()->admin()->create();
+    $target = User::factory()->withProfile()->create();
+    $this->actingAs($admin);
+    visit("/admin/members?member={$target->id}")->on()->{$device}()
+        ->click('[data-test="received-reports"]')->assertSee('Aucun signalement reçu')
+        ->assertScript('document.documentElement.scrollWidth <= window.innerWidth', true)
+        ->assertNoJavaScriptErrors();
+})->with(['desktop', 'mobile']);
+
+it('supports English review links with the keyboard on desktop and mobile', function (string $device) {
+    $reporter = User::factory()->withProfile()->create();
+    $target = User::factory()->withProfile()->create();
+    $admin = User::factory()->withProfile()->admin()->create(['locale' => 'en']);
+    $conversation = MemberMatch::query()->create(['user_low_id' => $reporter->id, 'user_high_id' => $target->id])->conversation()->create();
+    $conversation->messages()->create(['author_user_id' => $target->id, 'content' => 'Original message']);
+    app(ReportConversation::class)->handle($reporter, $conversation, ConversationReportReason::Flirting, 'Context for review', false);
+    $this->actingAs($admin);
+    $page = visit("/admin/conversation-reports?target={$target->id}")->on()->{$device}()->assertSee('Reports received')->assertSee('Reported by')->assertSee('Reported member')->assertSee('Flirting')
+        ->assertScript('document.documentElement.scrollWidth <= window.innerWidth', true)->assertNoAccessibilityIssues();
+    if (getenv('CAPTURE_REPORTS')) {
+        $page->screenshot(filename: "reports-list-{$device}");
+    }
+    $page->keys('[data-test="review-report"]', 'Enter')->assertSee('Original message')
+        ->assertSee('Handle report')->assertSee('Context for review')
+        ->assertScript('document.documentElement.scrollWidth <= window.innerWidth', true)->assertNoAccessibilityIssues();
+    if (getenv('CAPTURE_REPORTS')) {
+        $page->screenshot(filename: "reports-detail-{$device}");
+    }
+    $page->keys('[data-test="reports-back"]', 'Enter')->assertSee('Reports received')->assertNoJavaScriptErrors();
+})->with(['desktop', 'mobile']);
+
+it('opens both public profiles from a report and returns to the review on desktop and mobile', function (string $device) {
+    Storage::fake('local');
+    $reporter = User::factory()->withProfile()->create();
+    $target = User::factory()->withProfile()->create();
+    $admin = User::factory()->withProfile()->admin()->create();
+    foreach ([$reporter, $target] as $member) {
+        Storage::disk('local')->put($member->profile->avatar->image_path, base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScL8WQAAAABJRU5ErkJggg=='));
+    }
+    $conversation = MemberMatch::query()->create(['user_low_id' => $reporter->id, 'user_high_id' => $target->id])->conversation()->create();
+    $report = app(ReportConversation::class)->handle($reporter, $conversation, ConversationReportReason::Flirting, null, false);
+    $this->actingAs($admin);
+    $page = visit("/admin/conversation-reports/{$report->id}")->on()->{$device}()->assertSee('Examiner le signalement');
+    foreach (['reporter' => $reporter, 'target' => $target] as $role => $member) {
+        $page->click('[data-test="report-'.$role.'-profile"]')
+            ->assertPathIs("/members/{$member->id}")->assertSee($member->profile->display_name)
+            ->assertPresent('[data-test="public-member-profile"]')
+            ->click('[data-test="profile-back-action"]')
+            ->assertPathIs("/admin/conversation-reports/{$report->id}");
+    }
+    $page->assertSee('Voir le profil public')->assertSee('Fiche administrative')
+        ->assertScript('document.documentElement.scrollWidth <= window.innerWidth', true)
+        ->assertNoAccessibilityIssues()->assertNoJavaScriptErrors()
+        ->click('[data-test="report-target-admin"]')->assertPathIs('/admin/members')
+        ->assertSee($target->profile->display_name);
+})->with(['desktop', 'mobile']);

@@ -327,10 +327,20 @@ Dans la fiche de signalement, clôture et bannissement sont côte à côte et
 utilisent le même champ de motif, sans second dialogue. L'avertissement de
 sanction est affiché avant les boutons ; la levée reste disponible après
 clôture. Le signalement explique la consultation
-intégrale avant validation, propose les six motifs, une précision limitée, puis
-Oui/Non pour le blocage avec Oui présélectionné. Une cible admin ne présente
-pas de blocage. La file admin et sa fiche paginent les messages en lecture seule ;
+intégrale avant validation, propose les sept motifs, dont la drague, une précision
+limitée, puis Oui/Non pour le blocage avec Oui présélectionné. Une cible admin
+ne présente pas de blocage. La file admin et sa fiche paginent les messages en lecture seule ;
 les boutons de décision attendent la réponse et affichent les erreurs du serveur.
 Le statut banni est visible dans la gestion des comptes ; suppression et sanction
 restent des commandes distinctes. La réacceptation comporte une case décochée
 et un bouton indisponible tant que le consentement explicite manque.
+
+La file administrative distingue « À traiter » et « Clôturés » avec des
+compteurs. L’historique d’un membre ajoute « Tous », un lien vers la fiche
+d’origine et un lien vers la file globale. Chaque ligne (ou carte sur mobile)
+distingue auteur, personne signalée, motif, date et état. Le détail sépare le
+contexte, l’échange original paginé et les décisions ; sur ordinateur les
+décisions restent dans une colonne latérale, sur mobile des liens d’ancrage
+permettent d’atteindre l’échange et le traitement. Le retour conserve le membre,
+le filtre et la page, y compris après clôture. Les accès « Signalements reçus »
+des fiches administratives et des profils ordinaires sont réservés aux admins.

@@ -417,13 +417,21 @@ Un participant actif, majeur et vérifié peut signaler un échange, même archi
 bloqué ou masqué. Il confirme l’accès administratif à toute la conversation,
 y compris ses messages anciens et ultérieurs. Le blocage est proposé avec
 « Oui » sélectionné ; un administrateur reste signalable sans pouvoir être
-bloqué. Six motifs sont proposés ; précision et décision sont limitées à
-1 000 caractères. Un seul signalement ouvert par auteur et échange est permis,
-et un nouveau peut être envoyé après clôture.
+bloqué. Sept motifs sont proposés, dont la drague ; précision et décision sont
+limitées à 1 000 caractères. Un seul signalement ouvert par auteur et échange
+est permis, et un nouveau peut être envoyé après clôture.
 
 Les administrateurs actifs consultent une file et les messages originaux paginés
-en lecture seule. Consultation et clôture sont auditées sans copier les messages
-ni modifier leur lecture. L’accès subsiste après clôture, blocage, masquage ou
+en lecture seule. La file distingue les éléments à traiter des éléments clôturés,
+avec compteurs et retour au filtre et à la page d’origine. L’historique reçu par
+un membre est accessible aux administrateurs depuis sa fiche administrative et
+son profil dans l’application, y compris le profil consulté depuis un événement.
+Il regroupe tous les signalements conservés qui ciblent ce membre, ouverts ou
+clôturés, avec pagination ; les signalements émis par ce membre en sont exclus.
+Le détail donne accès à la fiche administrative des deux personnes et à leur
+profil public lorsque les autorisations de visibilité le permettent.
+Les listes n’exposent pas les messages privés. Consultation et clôture sont
+auditées sans copier les messages ni modifier leur lecture. L’accès subsiste après clôture, blocage, masquage ou
 bannissement. Un administrateur peut bannir ou réactiver tout compte non admin,
 quel que soit son rôle, avec motif et confirmation ; aucun terme n’est prévu.
 

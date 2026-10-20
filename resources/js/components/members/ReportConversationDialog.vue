@@ -17,6 +17,7 @@ const { t } = useTranslations();
 const { isDesktop, Modal } = useResponsiveModal();
 const open = ref(false);
 const reasons = [
+    'flirting',
     'harassment',
     'discrimination',
     'sexual_content',

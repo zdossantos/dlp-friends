@@ -14,6 +14,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { useTranslations } from '@/composables/useTranslations';
+import { index as reports } from '@/routes/admin/conversation-reports';
 import { index } from '@/routes/admin/members';
 import { store as openConversation } from '@/routes/admin/members/conversation';
 import type { MemberIdentity, RoleName } from '@/types';
@@ -262,6 +263,23 @@ function date(value: string | null): string {
                                 </td>
                                 <td class="p-2">
                                     <div class="flex gap-2">
+                                        <Button as-child variant="outline"
+                                            ><Link
+                                                :href="
+                                                    reports({
+                                                        query: {
+                                                            target: member.id,
+                                                        },
+                                                    }).url
+                                                "
+                                                data-test="received-reports"
+                                                >{{
+                                                    t(
+                                                        'moderation.received_reports',
+                                                    )
+                                                }}</Link
+                                            ></Button
+                                        >
                                         <ManageMemberRolesDialog
                                             v-if="member.can_manage_roles"
                                             :member-id="member.id"

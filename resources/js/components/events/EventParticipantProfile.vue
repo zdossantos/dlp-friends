@@ -78,6 +78,17 @@ const visitFrequency = computed(() =>
             :is-admin="profile.member.is_admin"
         >
             <template #summary-actions>
+                <Button
+                    v-if="profile.receivedReportsHref"
+                    as-child
+                    variant="outline"
+                >
+                    <Link
+                        :href="profile.receivedReportsHref"
+                        data-test="received-reports"
+                        >{{ t('moderation.received_reports') }}</Link
+                    >
+                </Button>
                 <LikeMemberButton
                     v-if="profile.canLike"
                     :member-id="profile.member.id"
