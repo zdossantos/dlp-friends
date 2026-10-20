@@ -125,6 +125,7 @@ final class BuildUserDataExport
                 ->get()
                 ->map(fn (EventChatMessage $message): array => [
                     'event_chat_id' => $message->event_chat_id,
+                    'system_type' => $message->system_type?->value,
                     'content' => $message->content,
                     'created_at' => $message->created_at?->toIso8601String(),
                     'updated_at' => $message->updated_at?->toIso8601String(),

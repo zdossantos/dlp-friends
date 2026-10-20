@@ -2,6 +2,7 @@
 
 namespace App\Actions;
 
+use App\Enums\EventChatSystemType;
 use App\Enums\EventNotificationType;
 use App\Enums\EventRegistrationStatus;
 use App\Events\EventChatAccessChanged;
@@ -34,6 +35,10 @@ final class RemoveEventParticipant
 
             $hadAccess = $lockedRegistration->status === EventRegistrationStatus::Accepted;
             $lockedRegistration->update(['status' => EventRegistrationStatus::Removed]);
+
+            if ($hadAccess) {
+                app(AnnounceEventChatMembership::class)->handle($lockedRegistration, EventChatSystemType::Removed);
+            }
 
             return $lockedRegistration->refresh();
         });

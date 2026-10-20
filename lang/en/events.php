@@ -15,6 +15,11 @@ return [
     'edit' => ['title' => 'Edit event', 'submit' => 'Save changes'],
     'show' => ['participants' => 'Participants', 'requests' => 'Registration requests', 'private_location' => 'Exact meeting point', 'privacy' => 'The exact location and participants are only visible after acceptance.'],
     'chat' => [
+        'system' => [
+            'joined' => ':name joined the group.',
+            'left' => ':name left the group.',
+            'removed' => ':name was removed from the group by the organizer.',
+        ],
         'open' => 'Open discussion', 'open_description' => 'With the organizer and accepted participants',
         'empty' => 'The discussion is still empty. Send the first message!',
         'label' => 'Message', 'placeholder' => 'Write to the whole group…', 'send' => 'Send message',
@@ -36,7 +41,12 @@ return [
         'participants' => ['title' => 'Participants', 'description' => 'Members joining this event.'],
         'participant-profile' => ['title' => 'Participant profile', 'description' => 'Meet this member without leaving the event.'],
         'registrations' => ['title' => 'Registration requests', 'description' => 'Manage requests and participants for this event.'],
-        'chat' => ['title' => 'Event discussion', 'description' => 'Chat with the organizer and accepted participants.'],
+        'chat' => [
+            'system' => [
+                'joined' => ':name joined the group.',
+                'left' => ':name left the group.',
+                'removed' => ':name was removed from the group by the organizer.',
+            ], 'title' => 'Event discussion', 'description' => 'Chat with the organizer and accepted participants.'],
     ],
     'confirmations' => ['cancel_title' => 'Cancel this event?', 'cancel_description' => 'Registered members will be notified.', 'withdraw_title' => 'Withdraw from this event?', 'withdraw_description' => 'Your registration will no longer be active and your place may be offered to another member.', 'refuse_title' => 'Refuse this request?', 'refuse_description' => 'This decision is final: the request cannot be accepted later.', 'remove_title' => 'Remove this person?', 'remove_description' => 'This person will immediately lose access to the exact location and participant list.'],
     'capacity' => ':occupied/:capacity places occupied',

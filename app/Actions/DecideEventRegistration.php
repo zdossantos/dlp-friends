@@ -2,6 +2,7 @@
 
 namespace App\Actions;
 
+use App\Enums\EventChatSystemType;
 use App\Enums\EventNotificationType;
 use App\Enums\EventRegistrationStatus;
 use App\Events\EventChatAccessChanged;
@@ -41,6 +42,10 @@ final class DecideEventRegistration
                     ? EventRegistrationStatus::Accepted
                     : EventRegistrationStatus::Refused,
             ]);
+
+            if ($accept) {
+                app(AnnounceEventChatMembership::class)->handle($lockedRegistration, EventChatSystemType::Joined);
+            }
 
             return $lockedRegistration->refresh();
         });

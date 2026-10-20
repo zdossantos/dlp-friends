@@ -194,6 +194,14 @@ Paris.
   coupe ces alertes indépendamment des messages privés sans masquer les non-lus.
   La lecture acquitte les notifications jusqu’au message consulté ; leur
   suppression reste disponible dans le centre de notifications.
+  Chaque inscription acceptée, immédiate ou validée par l’organisateur, ajoute
+  une annonce système au fil, sans saisie du participant. La désinscription
+  ajoute une annonce de départ ; le retrait par l’organisateur a son propre
+  libellé. Les demandes en attente ou refusées ne sont pas annoncées. Ces lignes
+  centrées, traduites en français et anglais et sans réaction, restent dans
+  l’historique, sont diffusées après commit et participent aux non-lus habituels,
+  sans notification persistante ni Push supplémentaire. Aucun historique des
+  inscriptions antérieures au déploiement n’est reconstruit.
   Un retrait, une exclusion ou un blocage révoque définitivement l’accès. Une
   annulation la rend immédiatement consultable uniquement ; elle est également
   archivée sept jours après le début de l’événement.

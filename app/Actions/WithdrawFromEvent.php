@@ -2,6 +2,7 @@
 
 namespace App\Actions;
 
+use App\Enums\EventChatSystemType;
 use App\Enums\EventRegistrationStatus;
 use App\Events\EventChatAccessChanged;
 use App\Models\Event;
@@ -35,6 +36,10 @@ final class WithdrawFromEvent
 
             $hadAccess = $registration->status === EventRegistrationStatus::Accepted;
             $registration->update(['status' => EventRegistrationStatus::Withdrawn]);
+
+            if ($hadAccess) {
+                app(AnnounceEventChatMembership::class)->handle($registration, EventChatSystemType::Left);
+            }
 
             return $registration->refresh();
         });
