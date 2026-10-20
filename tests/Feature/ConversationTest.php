@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Actions\MarkConversationRead;
 use App\Events\MessagesRead;
+use App\Http\Middleware\HandleInertiaRequests;
 use App\Models\Block;
 use App\Models\Conversation;
 use App\Models\MemberMatch;
@@ -136,6 +137,24 @@ class ConversationTest extends TestCase
                 ->where('messages.current_page', 2)
                 ->where('messages.next_page_url', fn (string $url): bool => str_contains($url, "messages_before={$boundary}"))
                 ->has('messages.data', 10));
+    }
+
+    public function test_resuming_a_conversation_recovers_every_message_after_the_client_cursor(): void
+    {
+        [$member, $peer, $conversation] = $this->conversationMembers(withProfiles: true);
+        $initial = Message::factory()->for($conversation)->for($peer, 'author')->create();
+        $missed = Message::factory()->count(25)->for($conversation)->for($peer, 'author')->create();
+        Message::factory()->create();
+
+        $this->actingAs($member)->get("/conversations/{$conversation->id}?messages_after={$initial->id}", [
+            'X-Inertia' => 'true',
+            'X-Inertia-Version' => app(HandleInertiaRequests::class)->version(request()),
+            'X-Inertia-Partial-Component' => 'Conversations/Show',
+            'X-Inertia-Partial-Data' => 'messageUpdates',
+        ])->assertOk()
+            ->assertJsonCount(25, 'props.messageUpdates')
+            ->assertJsonPath('props.messageUpdates.*.id', $missed->pluck('id')->all())
+            ->assertJsonPath('props.messageUpdates.0.read_at', fn ($value): bool => $value !== null);
     }
 
     public function test_opening_a_conversation_marks_only_received_messages_as_read_and_broadcasts_the_latest_receipt(): void

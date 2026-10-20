@@ -27,7 +27,9 @@ const props = defineProps<{
 const content = ref('');
 const error = ref('');
 const pending = ref(false);
-const textarea = ref<{ focus: () => void } | null>(null);
+const textarea = ref<{ $el: HTMLTextAreaElement; focus: () => void } | null>(
+    null,
+);
 const { t } = useTranslations();
 const disabled = computed(
     () => props.archived || pending.value || content.value.trim() === '',
@@ -39,14 +41,18 @@ async function submit(): Promise<void> {
         return;
     }
 
+    const submittedContent = content.value;
     pending.value = true;
     error.value = '';
 
     try {
         if (props.submitMessage !== undefined) {
-            const message = await props.submitMessage(content.value);
+            const message = await props.submitMessage(submittedContent);
             props.onSent(message);
-            content.value = '';
+
+            if (content.value === submittedContent) {
+                content.value = '';
+            }
 
             return;
         }
@@ -63,7 +69,7 @@ async function submit(): Promise<void> {
                 'Content-Type': 'application/json',
                 ...xsrfHeader(document.cookie),
             },
-            body: JSON.stringify({ content: content.value }),
+            body: JSON.stringify({ content: submittedContent }),
         });
         const payload = (await response.json()) as {
             data?: T;
@@ -81,19 +87,23 @@ async function submit(): Promise<void> {
         }
 
         props.onSent(payload.data);
-        content.value = '';
-        props.onTypingStopped?.();
+
+        if (content.value === submittedContent) {
+            content.value = '';
+        }
+
+        if (content.value === '') {
+            props.onTypingStopped?.();
+        }
     } catch {
         error.value = t('conversations.message.send_error');
     } finally {
         pending.value = false;
-        await nextTick();
-        textarea.value?.focus();
     }
 }
 
 function handleKeydown(event: KeyboardEvent): void {
-    if (event.key !== 'Enter' || event.shiftKey) {
+    if (event.key !== 'Enter' || event.shiftKey || event.isComposing) {
         return;
     }
 
@@ -108,13 +118,13 @@ async function chooseStarter(starter: ConversationStarter): Promise<void> {
 
     content.value = starter.text;
     await nextTick();
-    textarea.value?.focus();
+    textarea.value?.$el.focus({ preventScroll: true });
 }
 </script>
 
 <template>
     <footer
-        class="relative z-10 shrink-0 border-t bg-card/95 px-4 py-3 shadow-sm backdrop-blur sm:px-6"
+        class="relative z-10 shrink-0 border-t bg-card/95 px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-sm backdrop-blur sm:px-6"
     >
         <p v-if="archived" class="text-center text-sm text-muted-foreground">
             {{ archivedMessage ?? t('conversations.message.archived') }}
@@ -158,7 +168,7 @@ async function chooseStarter(starter: ConversationStarter): Promise<void> {
                         maxlength="2000"
                         aria-describedby="message-character-count message-error"
                         :aria-invalid="error !== ''"
-                        :disabled="pending"
+                        :aria-busy="pending"
                         :placeholder="t('conversations.message.placeholder')"
                         class="max-h-32 min-h-11 resize-none rounded-2xl px-4 py-2.5 text-base"
                         @keydown="handleKeydown"
@@ -185,6 +195,7 @@ async function chooseStarter(starter: ConversationStarter): Promise<void> {
                     :aria-label="t('conversations.message.send')"
                     :aria-busy="pending ? 'true' : undefined"
                     :disabled="disabled"
+                    @pointerdown.prevent
                 >
                     <Spinner v-if="pending" class="size-5" />
                     <SendHorizontal v-else class="size-5" aria-hidden="true" />

@@ -49,6 +49,7 @@ return [
         'read' => 'Read',
         'timeline' => 'Message history',
         'received' => 'New message received',
+        'latest' => 'Latest messages',
         'loading_previous' => 'Loading previous messages…',
         'empty' => 'Start your friendly chat with a first message.',
         'you' => 'You',

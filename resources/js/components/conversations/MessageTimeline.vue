@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { InfiniteScroll } from '@inertiajs/vue3';
-import { Heart } from '@lucide/vue';
-import { computed, nextTick, ref, watch } from 'vue';
+import { ArrowDown, Heart } from '@lucide/vue';
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
 import ConversationPattern from '@/components/conversations/ConversationPattern.vue';
 import { useTranslations } from '@/composables/useTranslations';
 import {
@@ -31,6 +31,41 @@ const props = defineProps<{
 
 const loadingSlot = computed(() => (props.reverse ? 'next' : 'previous'));
 const scrollContainer = ref<HTMLElement | null>(null);
+const awayFromBottom = ref(false);
+let followLatest = true;
+let resizeObserver: ResizeObserver | undefined;
+function handleScroll(): void {
+    const container = scrollContainer.value;
+
+    if (!container) {
+        return;
+    }
+
+    followLatest =
+        container.scrollHeight - container.scrollTop - container.clientHeight <=
+        48;
+    awayFromBottom.value = !followLatest;
+}
+onMounted(() => {
+    const container = scrollContainer.value;
+
+    if (!container) {
+        return;
+    }
+
+    resizeObserver = new ResizeObserver(() => {
+        if (followLatest) {
+            scrollToBottom();
+        }
+    });
+    resizeObserver.observe(container);
+    const items = container.querySelector('ol');
+
+    if (items) {
+        resizeObserver.observe(items);
+    }
+});
+onUnmounted(() => resizeObserver?.disconnect());
 let messageItems: HTMLElement | null = null;
 function getMessageItems(): HTMLElement | null {
     // Inertia may finish its debounced history callback after this view unmounts.
@@ -145,6 +180,8 @@ function showSender(index: number): boolean {
 }
 
 function scrollToBottom(): void {
+    followLatest = true;
+    awayFromBottom.value = false;
     scrollContainer.value?.scrollTo({
         top: scrollContainer.value.scrollHeight,
         behavior: 'instant',
@@ -237,16 +274,14 @@ watch(
 
         animatedMessageId.value = messageId;
 
-        const container = scrollContainer.value;
-        const wasNearBottom =
-            container !== null &&
-            container.scrollHeight -
-                container.scrollTop -
-                container.clientHeight <=
-                48;
-        announcedMessage.value = t('conversations.message.received');
+        if (latestMessage.value?.author_user_id !== props.currentUserId) {
+            announcedMessage.value = t('conversations.message.received');
+        }
 
-        if (wasNearBottom) {
+        if (
+            followLatest ||
+            latestMessage.value?.author_user_id === props.currentUserId
+        ) {
             await nextTick();
             scrollToBottom();
         }
@@ -255,177 +290,190 @@ watch(
 </script>
 
 <template>
-    <section
-        ref="scrollContainer"
-        role="log"
-        :aria-label="t('conversations.message.timeline')"
-        aria-relevant="additions text"
-        data-test="message-scroll"
-        class="relative min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain bg-muted/25 px-3 py-4 [overflow-anchor:none] sm:px-6"
-    >
-        <ConversationPattern />
-        <p class="sr-only" aria-live="polite">{{ announcedMessage }}</p>
-        <p v-if="reactionError" role="alert" class="sr-only">
-            {{ reactionError }}
-        </p>
-
-        <p
-            v-if="messages.data.length === 0"
-            class="relative z-10 mx-auto mt-10 max-w-sm rounded-2xl border bg-card/90 p-5 text-center text-sm text-muted-foreground shadow-sm backdrop-blur"
+    <div class="relative flex min-h-0 flex-1 flex-col">
+        <section
+            ref="scrollContainer"
+            @scroll.passive="handleScroll"
+            role="log"
+            :aria-label="t('conversations.message.timeline')"
+            aria-relevant="additions text"
+            data-test="message-scroll"
+            class="relative min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain bg-muted/25 px-3 py-4 [overflow-anchor:none] sm:px-6"
         >
-            {{ t('conversations.message.empty') }}
-        </p>
+            <ConversationPattern />
+            <p class="sr-only" aria-live="polite">{{ announcedMessage }}</p>
+            <p v-if="reactionError" role="alert" class="sr-only">
+                {{ reactionError }}
+            </p>
 
-        <InfiniteScroll
-            :data="messagesProp ?? 'messages'"
-            :items-element="getMessageItems"
-            :reverse="reverse"
-            as="ol"
-            :only-previous="!reverse"
-            :only-next="reverse"
-            preserve-url
-            :buffer="240"
-            :params="historyReloadOptions"
-            :auto-scroll="true"
-            role="list"
-            class="relative z-10 mx-auto flex w-full max-w-4xl flex-col gap-2"
-        >
-            <template #[loadingSlot]="{ loading }">
-                <p
-                    v-if="loading"
-                    class="absolute inset-x-0 top-0 text-center text-sm text-muted-foreground"
-                    role="status"
-                >
-                    {{ t('conversations.message.loading_previous') }}
-                </p>
-            </template>
-
-            <li
-                v-for="(message, index) in messages.data"
-                :key="message.id"
-                :data-message-id="message.id"
-                :data-sender="
-                    message.author_user_id === currentUserId
-                        ? 'current-user'
-                        : 'participant'
-                "
-                class="min-w-0"
-                :class="
-                    message.id === animatedMessageId
-                        ? 'motion-message-enter'
-                        : undefined
-                "
+            <p
+                v-if="messages.data.length === 0"
+                class="relative z-10 mx-auto mt-10 max-w-sm rounded-2xl border bg-card/90 p-5 text-center text-sm text-muted-foreground shadow-sm backdrop-blur"
             >
-                <div
-                    v-if="showDaySeparator(index)"
-                    data-test="conversation-day-separator"
-                    class="my-3 flex items-center gap-3"
-                >
-                    <span class="h-px flex-1 bg-border" />
-                    <time
-                        :datetime="message.created_at ?? undefined"
-                        class="rounded-full border bg-card/90 px-3 py-1 text-xs font-medium text-muted-foreground shadow-sm backdrop-blur"
+                {{ t('conversations.message.empty') }}
+            </p>
+
+            <InfiniteScroll
+                :data="messagesProp ?? 'messages'"
+                :items-element="getMessageItems"
+                :reverse="reverse"
+                as="ol"
+                :only-previous="!reverse"
+                :only-next="reverse"
+                preserve-url
+                :buffer="240"
+                :params="historyReloadOptions"
+                :auto-scroll="true"
+                role="list"
+                class="relative z-10 mx-auto flex w-full max-w-4xl flex-col gap-2"
+            >
+                <template #[loadingSlot]="{ loading }">
+                    <p
+                        v-if="loading"
+                        class="absolute inset-x-0 top-0 text-center text-sm text-muted-foreground"
+                        role="status"
                     >
-                        {{ dayLabel(message) }}
-                    </time>
-                    <span class="h-px flex-1 bg-border" />
-                </div>
-                <div
-                    class="flex min-w-0"
-                    :class="[
+                        {{ t('conversations.message.loading_previous') }}
+                    </p>
+                </template>
+
+                <li
+                    v-for="(message, index) in messages.data"
+                    :key="message.id"
+                    :data-message-id="message.id"
+                    :data-sender="
                         message.author_user_id === currentUserId
-                            ? 'justify-end'
-                            : 'justify-start',
-                    ]"
+                            ? 'current-user'
+                            : 'participant'
+                    "
+                    class="min-w-0"
+                    :class="
+                        message.id === animatedMessageId
+                            ? 'motion-message-enter'
+                            : undefined
+                    "
                 >
                     <div
-                        class="flex max-w-[88%] min-w-0 flex-col sm:max-w-[70%]"
-                        :class="
-                            message.author_user_id === currentUserId
-                                ? 'items-end'
-                                : 'items-start'
-                        "
+                        v-if="showDaySeparator(index)"
+                        data-test="conversation-day-separator"
+                        class="my-3 flex items-center gap-3"
                     >
-                        <p
-                            v-if="showSender(index)"
-                            data-test="message-sender"
-                            class="mb-1 px-2 text-xs font-semibold text-muted-foreground"
+                        <span class="h-px flex-1 bg-border" />
+                        <time
+                            :datetime="message.created_at ?? undefined"
+                            class="rounded-full border bg-card/90 px-3 py-1 text-xs font-medium text-muted-foreground shadow-sm backdrop-blur"
                         >
-                            {{
-                                message.author_user_id === currentUserId
-                                    ? t('conversations.message.you')
-                                    : 'author' in message
-                                      ? message.author.display_name
-                                      : participantName
-                            }}
-                        </p>
-                        <article
-                            data-test="message-bubble"
-                            class="max-w-full min-w-0 touch-manipulation px-4 py-2.5 shadow-sm"
+                            {{ dayLabel(message) }}
+                        </time>
+                        <span class="h-px flex-1 bg-border" />
+                    </div>
+                    <div
+                        class="flex min-w-0"
+                        :class="[
+                            message.author_user_id === currentUserId
+                                ? 'justify-end'
+                                : 'justify-start',
+                        ]"
+                    >
+                        <div
+                            class="flex max-w-[88%] min-w-0 flex-col sm:max-w-[70%]"
                             :class="
                                 message.author_user_id === currentUserId
-                                    ? 'rounded-3xl rounded-br-md bg-primary text-primary-foreground'
-                                    : 'rounded-2xl rounded-bl-sm border-l-4 border-l-secondary-foreground/35 bg-card text-card-foreground'
-                            "
-                            @dblclick.prevent="likeMessage(message)"
-                            @touchend="
-                                message.author_user_id !== currentUserId &&
-                                handleMessageTouchEnd($event, message)
+                                    ? 'items-end'
+                                    : 'items-start'
                             "
                         >
                             <p
-                                class="[overflow-wrap:anywhere] whitespace-pre-wrap"
+                                v-if="showSender(index)"
+                                data-test="message-sender"
+                                class="mb-1 px-2 text-xs font-semibold text-muted-foreground"
                             >
-                                {{ message.content }}
+                                {{
+                                    message.author_user_id === currentUserId
+                                        ? t('conversations.message.you')
+                                        : 'author' in message
+                                          ? message.author.display_name
+                                          : participantName
+                                }}
                             </p>
-                        </article>
-                        <button
-                            v-if="message.author_user_id !== currentUserId"
-                            type="button"
-                            data-test="message-like"
-                            class="mt-1 min-h-8 items-center gap-1 rounded-full px-2 text-xs font-medium text-muted-foreground hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
-                            :class="[
-                                message.reaction_count > 0
-                                    ? 'inline-flex'
-                                    : 'hidden sm:inline-flex',
-                                message.reacted_by_current_user
-                                    ? 'text-rose-600'
-                                    : undefined,
-                            ]"
-                            :aria-pressed="message.reacted_by_current_user"
-                            :aria-label="
-                                message.reacted_by_current_user
-                                    ? t('conversations.reactions.unlike')
-                                    : t('conversations.reactions.like')
-                            "
-                            :disabled="pendingReactionIds.has(message.id)"
-                            @click="toggleReaction(message)"
-                        >
-                            <Heart
+                            <article
+                                data-test="message-bubble"
+                                class="max-w-full min-w-0 touch-manipulation px-4 py-2.5 shadow-sm"
+                                :class="
+                                    message.author_user_id === currentUserId
+                                        ? 'rounded-3xl rounded-br-md bg-primary text-primary-foreground'
+                                        : 'rounded-2xl rounded-bl-sm border-l-4 border-l-secondary-foreground/35 bg-card text-card-foreground'
+                                "
+                                @dblclick.prevent="likeMessage(message)"
+                                @touchend="
+                                    message.author_user_id !== currentUserId &&
+                                    handleMessageTouchEnd($event, message)
+                                "
+                            >
+                                <p
+                                    class="[overflow-wrap:anywhere] whitespace-pre-wrap"
+                                >
+                                    {{ message.content }}
+                                </p>
+                            </article>
+                            <button
+                                v-if="message.author_user_id !== currentUserId"
+                                type="button"
+                                data-test="message-like"
+                                class="mt-1 min-h-8 items-center gap-1 rounded-full px-2 text-xs font-medium text-muted-foreground hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
                                 :class="[
-                                    'size-4',
+                                    message.reaction_count > 0
+                                        ? 'inline-flex'
+                                        : 'hidden sm:inline-flex',
                                     message.reacted_by_current_user
-                                        ? 'fill-current'
+                                        ? 'text-rose-600'
                                         : undefined,
                                 ]"
-                                aria-hidden="true"
-                            />
-                            <span>{{ message.reaction_count }}</span>
-                        </button>
-                        <p
-                            v-if="
-                                message.id === lastOutgoingMessageId &&
-                                'read_at' in message &&
-                                message.read_at !== null
-                            "
-                            data-test="last-message-read"
-                            class="mt-1 px-1 text-xs text-muted-foreground"
-                        >
-                            {{ t('conversations.message.read') }}
-                        </p>
+                                :aria-pressed="message.reacted_by_current_user"
+                                :aria-label="
+                                    message.reacted_by_current_user
+                                        ? t('conversations.reactions.unlike')
+                                        : t('conversations.reactions.like')
+                                "
+                                :disabled="pendingReactionIds.has(message.id)"
+                                @click="toggleReaction(message)"
+                            >
+                                <Heart
+                                    :class="[
+                                        'size-4',
+                                        message.reacted_by_current_user
+                                            ? 'fill-current'
+                                            : undefined,
+                                    ]"
+                                    aria-hidden="true"
+                                />
+                                <span>{{ message.reaction_count }}</span>
+                            </button>
+                            <p
+                                v-if="
+                                    message.id === lastOutgoingMessageId &&
+                                    'read_at' in message &&
+                                    message.read_at !== null
+                                "
+                                data-test="last-message-read"
+                                class="mt-1 px-1 text-xs text-muted-foreground"
+                            >
+                                {{ t('conversations.message.read') }}
+                            </p>
+                        </div>
                     </div>
-                </div>
-            </li>
-        </InfiniteScroll>
-    </section>
+                </li>
+            </InfiniteScroll>
+        </section>
+        <button
+            v-if="awayFromBottom"
+            type="button"
+            data-test="latest-messages"
+            class="absolute bottom-3 left-1/2 z-20 flex min-h-11 -translate-x-1/2 items-center gap-2 rounded-full border bg-card px-4 py-2 text-sm font-medium shadow-md focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+            @click="scrollToBottom"
+        >
+            <ArrowDown class="size-4" aria-hidden="true" />
+            {{ t('conversations.message.latest') }}
+        </button>
+    </div>
 </template>

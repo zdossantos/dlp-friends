@@ -12,6 +12,7 @@ import {
     provideMemberRealtimeContext,
     useMemberRealtimeNotifications,
 } from '@/composables/useMemberRealtimeNotifications';
+import { useMessagingViewport } from '@/composables/useMessagingViewport';
 import { usePwaViewportRecovery } from '@/composables/usePwaViewportRecovery';
 import { show as showConversation } from '@/routes/conversations';
 import type { DiscoveryMatch } from '@/types';
@@ -19,6 +20,9 @@ import type { DiscoveryMatch } from '@/types';
 const reservesMemberNavigation = useMemberNavigationVisibility();
 const page = usePage();
 usePwaViewportRecovery();
+const messagingViewport = useMessagingViewport(() =>
+    ['Conversations/Show', 'Conversations/Group'].includes(page.component),
+);
 // These views contain cards, a wizard or a message timeline sized to the viewport.
 // Other pages use document scrolling so WebKit can size its native scroll view.
 const boundedViewport = computed(() =>
@@ -56,6 +60,7 @@ watch(
 <template>
     <div
         class="relative flex w-full max-w-full min-w-0 flex-col bg-background text-foreground"
+        :style="messagingViewport"
         :class="boundedViewport ? 'h-dvh overflow-hidden' : 'min-h-dvh'"
     >
         <div
