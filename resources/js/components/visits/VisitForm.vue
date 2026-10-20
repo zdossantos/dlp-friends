@@ -61,6 +61,7 @@ function remove() {
                 v-if="visit"
                 type="button"
                 variant="destructive"
+                class="min-h-11"
                 data-test="visit-delete"
                 :disabled="form.processing"
                 @click="removing = true"
@@ -68,6 +69,7 @@ function remove() {
             ><Button
                 type="submit"
                 :disabled="form.processing"
+                class="min-h-11"
                 data-test="visit-submit"
                 >{{ t('visits.save') }}</Button
             >
@@ -75,6 +77,7 @@ function remove() {
     </form>
     <ResponsiveConfirmation
         :open="removing"
+        return-focus="[data-test=visit-delete]"
         :title="t('visits.delete_title')"
         :description="t('visits.delete_description')"
         :confirm-label="t('visits.delete')"

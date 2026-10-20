@@ -127,3 +127,58 @@ test('closing the attendee list restores its scrolled opener and keyboard focus'
         ->assertScript('Math.abs(window.scrollY-window.__visitScroll)<2', true)
         ->assertNoJavaScriptErrors();
 });
+
+test('explicit month navigation keeps browser history and filters', function () {
+    $this->actingAs(User::factory()->withProfile()->create());
+    $day = today('Europe/Paris');
+    $page = visit('/visits?month='.$day->format('Y-m').'&day='.$day->toDateString().'&view=calendar&audience=matches')
+        ->click('[data-test="visit-next-month"]')
+        ->assertScript("document.querySelector('#visit-month').value", $day->copy()->addMonth()->format('Y-m'))
+        ->back()
+        ->assertPresent('[data-test="visit-calendar"]')
+        ->assertScript("document.querySelector('#visit-month').value", $day->format('Y-m'))
+        ->assertScript("document.querySelector('#visit-audience').value", 'matches');
+});
+
+test('stay forms and controlled confirmations restore focus and meet touch target sizes', function () {
+    $member = User::factory()->withProfile()->create();
+    $day = today('Europe/Paris')->addDay();
+    $visit = Visit::factory()->for($member)->create(['starts_on' => $day, 'ends_on' => $day]);
+    $this->actingAs($member);
+    $page = visit('/visits')->resize(320, 700)->click('[data-test="visit-create"]')
+        ->keys('#starts_on', 'Escape')->assertNotPresent('[data-test="visit-form-panel"]')
+        ->assertScript('document.activeElement?.dataset.test', 'visit-create');
+    $opener = 'visit-edit-'.$visit->id.'-'.$day->toDateString();
+    $page->click('[data-test="'.$opener.'"]')
+        ->assertScript('Array.from(document.querySelectorAll("[data-test=visit-submit], [data-test=visit-delete]")).every(button => button.getBoundingClientRect().height >= 44)', true)
+        ->screenshot(true, 'visits-form-corrected')
+        ->click('[data-test="visit-delete"]')
+        ->assertScript('Array.from(document.querySelectorAll("[data-test=visit-confirm-submit], [data-test=visit-confirm-cancel]")).every(button => button.getBoundingClientRect().height >= 44)', true)
+        ->screenshot(true, 'visits-confirm-corrected')
+        ->click('[data-test="visit-confirm-cancel"]')
+        ->assertScript('document.activeElement?.dataset.test', 'visit-delete')
+        ->keys('#starts_on', 'Escape')->assertNotPresent('[data-test="visit-form-panel"]')
+        ->assertScript('document.activeElement?.dataset.test', $opener)
+        ->select('visit-visibility', 'members')->click('[data-test="visit-confirm-cancel"]')
+        ->assertScript('document.activeElement?.id', 'visit-visibility');
+});
+
+test('filtered empty agendas explain missing results and offer recovery', function () {
+    $this->actingAs(User::factory()->withProfile()->create());
+    visit('/visits?search=Personne&audience=matches')->assertSee('Aucune visite ne correspond à tes filtres.')
+        ->screenshot(true, 'visits-no-results-corrected')
+        ->click('[data-test="visit-clear-filters"]')
+        ->assertScript("document.querySelector('#visit-search').value", '')
+        ->assertScript("document.querySelector('#visit-audience').value", 'members')
+        ->assertSee('Ajoute tes dates');
+});
+
+test('visit mutation buttons provide forty four pixel touch targets', function () {
+    $member = User::factory()->withProfile()->create();
+    $day = today('Europe/Paris')->addDay();
+    $visit = Visit::factory()->for($member)->create(['starts_on' => $day, 'ends_on' => $day]);
+    $this->actingAs($member);
+    visit('/visits')->resize(320, 700)->click('[data-test="visit-edit-'.$visit->id.'-'.$day->toDateString().'"]')
+        ->assertScript('document.querySelector("[data-test=visit-submit]").getBoundingClientRect().height >= 44', true)
+        ->assertScript('document.querySelector("[data-test=visit-delete]").getBoundingClientRect().height >= 44', true);
+});

@@ -44,6 +44,9 @@ final class VisitWorkspaceData
             ->with('profile.avatar')
             ->withExists(['lowMatches as visit_low_match' => fn (Builder $match) => $match->where('user_high_id', $viewer->id), 'highMatches as visit_high_match' => fn (Builder $match) => $match->where('user_low_id', $viewer->id)])
             ->orderBy(Profile::query()->select('display_name')->whereColumn('profiles.user_id', 'users.id'))->orderBy('users.id');
+        if ($date->startOfDay()->lt(CarbonImmutable::today('Europe/Paris'))) {
+            $query->whereRaw('1 = 0');
+        }
         if ($filters['audience'] === 'matches') {
             $query->where(fn (Builder $paired) => $paired->whereHas('lowMatches', fn (Builder $m) => $m->where('user_high_id', $viewer->id))->orWhereHas('highMatches', fn (Builder $m) => $m->where('user_low_id', $viewer->id)));
         }

@@ -83,6 +83,7 @@ function change(event: Event) {
         />
         <ResponsiveConfirmation
             :open="confirming"
+            return-focus="#visit-visibility"
             :title="t('visits.share_title')"
             :description="t('visits.share_description')"
             :confirm-label="t('visits.share_confirm')"

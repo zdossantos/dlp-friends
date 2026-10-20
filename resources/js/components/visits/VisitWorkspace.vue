@@ -42,7 +42,7 @@ watch(
         search.value = value;
     },
 );
-function navigate(patch: Partial<VisitFilters>) {
+function navigate(patch: Partial<VisitFilters>, replace = false) {
     cancelSearch?.();
     router.get(
         index.url(),
@@ -50,7 +50,7 @@ function navigate(patch: Partial<VisitFilters>) {
         {
             preserveState: true,
             preserveScroll: true,
-            replace: true,
+            replace,
             onStart: () => {
                 busy.value = true;
             },
@@ -65,7 +65,10 @@ function navigate(patch: Partial<VisitFilters>) {
 }
 watch(search, (value) => {
     clearTimeout(timer);
-    timer = setTimeout(() => navigate({ search: value, member: null }), 300);
+    timer = setTimeout(
+        () => navigate({ search: value, member: null }, true),
+        300,
+    );
 });
 onBeforeUnmount(() => {
     clearTimeout(timer);
@@ -80,11 +83,35 @@ function month(delta: number) {
     const value = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
     navigate({ month: value, day: value + '-01' });
 }
+let formOpener: string | undefined;
+function rememberFormOpener() {
+    formOpener = (document.activeElement as HTMLElement | null)?.dataset.test;
+}
+function restoreFormFocus(event: Event) {
+    event.preventDefault();
+    nextTick(() =>
+        requestAnimationFrame(() => {
+            const opener = formOpener
+                ? document.querySelector<HTMLElement>(
+                      `[data-test="${formOpener}"]`,
+                  )
+                : null;
+            (
+                opener ??
+                document.querySelector<HTMLElement>(
+                    '[data-test="visit-create"]',
+                )
+            )?.focus({ preventScroll: true });
+        }),
+    );
+}
 function edit(visit: OwnVisit) {
+    rememberFormOpener();
     editing.value = visit;
     formOpen.value = true;
 }
 function create() {
+    rememberFormOpener();
     editing.value = null;
     formOpen.value = true;
 }
@@ -223,6 +250,7 @@ function selectMember(id: number) {
             </div>
             <Button
                 v-if="filters.member"
+                class="min-h-11"
                 variant="outline"
                 @click="navigate({ member: null })"
                 >{{ t('visits.clear_member') }}</Button
@@ -291,6 +319,14 @@ function selectMember(id: number) {
             :days="days"
             :own-visits="ownVisits"
             :visibility="visibility"
+            :filtered="
+                !!filters.search ||
+                filters.audience !== 'members' ||
+                !!filters.member
+            "
+            @clear-filters="
+                navigate({ search: '', audience: 'members', member: null })
+            "
             @edit="edit"
             @attendees="all"
             @member="selectMember"
@@ -324,6 +360,7 @@ function selectMember(id: number) {
         :title="t(editing ? 'visits.edit_title' : 'visits.add')"
         :description="t('visits.form_description')"
         test-id="visit-form-panel"
+        @close-auto-focus="restoreFormFocus"
         @update:open="formOpen = $event"
         ><VisitForm
             v-if="formOpen"
@@ -392,6 +429,7 @@ function selectMember(id: number) {
                 <Button
                     v-if="panel.members.links.prev"
                     as-child
+                    class="min-h-11"
                     variant="outline"
                     ><Link
                         :href="panel.members.links.prev"
@@ -408,6 +446,7 @@ function selectMember(id: number) {
                 ><Button
                     v-if="panel.members.links.next"
                     as-child
+                    class="min-h-11"
                     variant="outline"
                     ><Link
                         :href="panel.members.links.next"

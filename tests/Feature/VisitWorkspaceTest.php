@@ -93,3 +93,13 @@ test('name search is accent insensitive literal and never filters the owners sta
 test('invalid calendar parameters cannot widen queries', function ($query, $field) {
     $this->actingAs(User::factory()->withProfile()->create())->get('/visits?'.$query)->assertSessionHasErrors($field);
 })->with([['month=2026-13', 'month'], ['day=2026-02-30', 'day'], ['view=unknown', 'view'], ['audience=hidden', 'audience'], ['member=abc', 'member'], ['page=-1', 'page'], ['search='.str_repeat('a', 101), 'search'], ['month=2026-10&day=2026-11-01', 'day']]);
+
+test('direct attendee links never reveal past days of an ongoing stay', function () {
+    $viewer = User::factory()->withProfile()->create();
+    $other = publicVisitor();
+    $other->visits()->update(['starts_on' => '2026-10-18', 'ends_on' => '2026-10-23']);
+    $this->actingAs($viewer)->get('/visits/attendees?month=2026-10&day=2026-10-18')
+        ->assertInertia(fn (Assert $page) => $page->where('panel.members.meta.total', 0)->has('panel.members.data', 0));
+    $this->get('/visits/attendees?month=2026-10&day=2026-10-20')
+        ->assertInertia(fn (Assert $page) => $page->where('panel.members.meta.total', 1));
+});

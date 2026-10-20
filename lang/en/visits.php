@@ -46,6 +46,8 @@ return [
     'also_present' => 'Also visiting · :count',
     'no_people' => 'No other members share a visit on this date with these filters.',
     'see_people' => 'See all :count members',
+    'no_results' => 'No visits match your filters.',
+    'clear_filters' => 'Clear filters',
     'empty' => 'No visits to show this month with these filters. Add your dates to plan your next outing.',
     'today' => 'Today',
     'visibility' => [

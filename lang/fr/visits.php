@@ -46,6 +46,8 @@ return [
     'also_present' => 'Également présents · :count',
     'no_people' => 'Aucun autre membre ne partage de visite à cette date avec ces filtres.',
     'see_people' => 'Voir les :count membres',
+    'no_results' => 'Aucune visite ne correspond à tes filtres.',
+    'clear_filters' => 'Retirer les filtres',
     'empty' => 'Aucune visite à afficher pour ce mois avec ces filtres. Ajoute tes dates pour préparer ta prochaine sortie.',
     'today' => 'Aujourd’hui',
     'visibility' => [

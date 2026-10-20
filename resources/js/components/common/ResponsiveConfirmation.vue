@@ -1,11 +1,13 @@
 <script setup lang="ts">
+import { nextTick } from 'vue';
 import { Button } from '@/components/ui/button';
 import { useResponsiveModal } from '@/composables/useResponsiveModal';
 import { useTranslations } from '@/composables/useTranslations';
 
-withDefaults(
+const props = withDefaults(
     defineProps<{
         open?: boolean;
+        returnFocus?: string;
         testPrefix?: string;
         title: string;
         description: string;
@@ -19,6 +21,22 @@ withDefaults(
 const emit = defineEmits<{ confirm: []; 'update:open': [open: boolean] }>();
 const { t } = useTranslations();
 const { isDesktop, Modal } = useResponsiveModal();
+function restoreFocus(event: Event) {
+    if (!props.returnFocus) {
+        return;
+    }
+
+    const element = document.querySelector<HTMLElement>(props.returnFocus);
+
+    if (!element) {
+        return;
+    }
+
+    event.preventDefault();
+    nextTick(() =>
+        requestAnimationFrame(() => element.focus({ preventScroll: true })),
+    );
+}
 </script>
 
 <template>
@@ -32,6 +50,7 @@ const { isDesktop, Modal } = useResponsiveModal();
         </component>
         <component
             :is="Modal.Content"
+            @close-auto-focus="restoreFocus"
             :data-test="`${testPrefix ?? 'confirm'}-dialog`"
             :class="[{ 'px-2 pb-8 *:px-4': !isDesktop }]"
         >
@@ -43,6 +62,7 @@ const { isDesktop, Modal } = useResponsiveModal();
                 <component :is="Modal.Close" as-child>
                     <Button
                         type="button"
+                        class="min-h-11"
                         variant="outline"
                         :disabled="busy"
                         :data-test="`${testPrefix ?? 'confirm'}-cancel`"
@@ -52,6 +72,7 @@ const { isDesktop, Modal } = useResponsiveModal();
                 </component>
                 <Button
                     type="button"
+                    class="min-h-11"
                     :variant="destructive ? 'destructive' : 'default'"
                     :disabled="busy"
                     :data-test="`${testPrefix ?? 'confirm'}-submit`"
