@@ -164,3 +164,29 @@ it('supports English review links with the keyboard on desktop and mobile', func
     }
     $page->keys('[data-test="reports-back"]', 'Enter')->assertSee('Reports received')->assertNoJavaScriptErrors();
 })->with(['desktop', 'mobile']);
+
+it('opens both public profiles from a report and returns to the review on desktop and mobile', function (string $device) {
+    Storage::fake('local');
+    $reporter = User::factory()->withProfile()->create();
+    $target = User::factory()->withProfile()->create();
+    $admin = User::factory()->withProfile()->admin()->create();
+    foreach ([$reporter, $target] as $member) {
+        Storage::disk('local')->put($member->profile->avatar->image_path, base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScL8WQAAAABJRU5ErkJggg=='));
+    }
+    $conversation = MemberMatch::query()->create(['user_low_id' => $reporter->id, 'user_high_id' => $target->id])->conversation()->create();
+    $report = app(ReportConversation::class)->handle($reporter, $conversation, ConversationReportReason::Flirting, null, false);
+    $this->actingAs($admin);
+    $page = visit("/admin/conversation-reports/{$report->id}")->on()->{$device}()->assertSee('Examiner le signalement');
+    foreach (['reporter' => $reporter, 'target' => $target] as $role => $member) {
+        $page->click('[data-test="report-'.$role.'-profile"]')
+            ->assertPathIs("/members/{$member->id}")->assertSee($member->profile->display_name)
+            ->assertPresent('[data-test="public-member-profile"]')
+            ->click('[data-test="profile-back-action"]')
+            ->assertPathIs("/admin/conversation-reports/{$report->id}");
+    }
+    $page->assertSee('Voir le profil public')->assertSee('Fiche administrative')
+        ->assertScript('document.documentElement.scrollWidth <= window.innerWidth', true)
+        ->assertNoAccessibilityIssues()->assertNoJavaScriptErrors()
+        ->click('[data-test="report-target-admin"]')->assertPathIs('/admin/members')
+        ->assertSee($target->profile->display_name);
+})->with(['desktop', 'mobile']);

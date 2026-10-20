@@ -21,7 +21,7 @@ it('lets admins read all original messages after closure without marking them re
     $reportId = DB::table('conversation_reports')->value('id');
     $endpoint = "/admin/conversation-reports/{$reportId}";
     $this->get($endpoint)->assertForbidden();
-    $this->actingAs($admin)->get($endpoint)->assertInertia(fn (Assert $page) => $page->component('Admin/ConversationReports/Show', false)->where('messages.data.0.content', 'Old message'));
+    $this->actingAs($admin)->get($endpoint)->assertInertia(fn (Assert $page) => $page->component('Admin/ConversationReports/Show', false)->where('messages.data.0.content', 'Old message')->where('publicProfileUrls.reporter', '/members/'.$reporter->id)->where('publicProfileUrls.target', '/members/'.$target->id));
     expect($message->fresh()->read_at)->toBeNull();
     $this->patch($endpoint, ['decision' => 'Reviewed', 'confirmed' => true])->assertRedirect();
     $conversation->messages()->create(['author_user_id' => $target->id, 'content' => 'Later message']);
@@ -45,7 +45,7 @@ it('retains review access after blocking hiding and banning while forbidding par
     $reporter->profile->update(['visibility' => 'hidden']);
     $target->forceFill(['status' => 'banned'])->save();
     $endpoint = "/admin/conversation-reports/{$report->id}";
-    $this->actingAs($admin)->get($endpoint)->assertInertia(fn (Assert $page) => $page->where('messages.data.0.content', 'Evidence'));
+    $this->actingAs($admin)->get($endpoint)->assertInertia(fn (Assert $page) => $page->where('messages.data.0.content', 'Evidence')->where('publicProfileUrls.reporter', null)->where('publicProfileUrls.target', null));
     $this->post("/conversations/{$conversation->id}/read")->assertForbidden();
     $this->post("/conversations/{$conversation->id}/messages/{$message->id}/like")->assertForbidden();
     expect($message->fresh()->read_at)->toBeNull();

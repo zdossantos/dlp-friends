@@ -428,6 +428,8 @@ un membre est accessible aux administrateurs depuis sa fiche administrative et
 son profil dans l’application, y compris le profil consulté depuis un événement.
 Il regroupe tous les signalements conservés qui ciblent ce membre, ouverts ou
 clôturés, avec pagination ; les signalements émis par ce membre en sont exclus.
+Le détail donne accès à la fiche administrative des deux personnes et à leur
+profil public lorsque les autorisations de visibilité le permettent.
 Les listes n’exposent pas les messages privés. Consultation et clôture sont
 auditées sans copier les messages ni modifier leur lecture. L’accès subsiste après clôture, blocage, masquage ou
 bannissement. Un administrateur peut bannir ou réactiver tout compte non admin,

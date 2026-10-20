@@ -14,6 +14,7 @@ import type { ConversationReport, ModerationPage } from '@/types/moderation';
 const props = defineProps<{
     report: ConversationReport;
     backHref: string;
+    publicProfileUrls: { reporter: string | null; target: string | null };
     context: Record<string, string | number | boolean>;
     messages: ModerationPage<{
         id: number;
@@ -97,8 +98,8 @@ function author(id: number): string {
             <dl class="grid gap-4 sm:grid-cols-2">
                 <div
                     v-for="person in [
-                        { role: 'reporter', ...report.reporter },
-                        { role: 'target', ...report.target },
+                        { role: 'reporter' as const, ...report.reporter },
+                        { role: 'target' as const, ...report.target },
                     ]"
                     :key="person.role"
                     class="min-w-0"
@@ -107,15 +108,36 @@ function author(id: number): string {
                         {{ t(`moderation.${person.role}`) }}
                     </dt>
                     <dd class="font-medium break-words">
-                        <Link
-                            v-if="person.id"
-                            :href="
-                                members({ query: { member: person.id } }).url
-                            "
-                            class="rounded-sm underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-ring"
-                            >{{ person.name }}</Link
-                        >
-                        <span v-else>{{ person.name }}</span>
+                        <span>{{ person.name }}</span>
+                        <div v-if="person.id" class="mt-2 flex flex-wrap gap-2">
+                            <Button
+                                v-if="publicProfileUrls[person.role]"
+                                as-child
+                                variant="outline"
+                                size="sm"
+                            >
+                                <Link
+                                    :href="publicProfileUrls[person.role]!"
+                                    :data-test="`report-${person.role}-profile`"
+                                    >{{
+                                        t('moderation.view_public_profile')
+                                    }}</Link
+                                >
+                            </Button>
+                            <Button as-child variant="outline" size="sm">
+                                <Link
+                                    :href="
+                                        members({
+                                            query: { member: person.id },
+                                        }).url
+                                    "
+                                    :data-test="`report-${person.role}-admin`"
+                                    >{{
+                                        t('moderation.administrative_record')
+                                    }}</Link
+                                >
+                            </Button>
+                        </div>
                     </dd>
                 </div>
                 <div class="sm:col-span-2">

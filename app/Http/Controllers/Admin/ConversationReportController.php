@@ -52,8 +52,17 @@ final class ConversationReportController extends Controller
         unset($listContext['list_page']);
         $listContext['page'] = $context['list_page'];
 
+        $reportData = $this->reportData($report);
+        $publicProfileUrls = [];
+        foreach (['reporter' => $report->reporter, 'target' => $report->target] as $role => $member) {
+            $publicProfileUrls[$role] = $member?->profile !== null && Gate::allows('viewPublic', $member->profile)
+                ? route('members.show', $member, absolute: false)
+                : null;
+        }
+
         return Inertia::render('Admin/ConversationReports/Show', [
-            'report' => $this->reportData($report),
+            'report' => $reportData,
+            'publicProfileUrls' => $publicProfileUrls,
             'context' => $context,
             'backHref' => route('admin.conversation-reports.index', $listContext, absolute: false),
             'messages' => $report->conversation->messages()->orderBy('created_at')->orderBy('id')->paginate(50)->withQueryString()->through(fn (Message $message): array => ['id' => $message->id, 'author_user_id' => $message->author_user_id, 'content' => $message->content, 'created_at' => $message->created_at?->toISOString()]),
