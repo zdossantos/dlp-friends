@@ -9,6 +9,11 @@ use App\Models\Visit;
 
 final class VisitPolicy
 {
+    public function view(User $user, Visit $visit): bool
+    {
+        return Visit::query()->visibleTo($user)->whereKey($visit->id)->exists();
+    }
+
     public function create(User $user): bool
     {
         return $user->status === UserStatus::Active && $user->hasVerifiedEmail() && $user->age >= 18 && $user->hasRole(RoleName::User);
