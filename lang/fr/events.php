@@ -15,6 +15,11 @@ return [
     'edit' => ['title' => 'Modifier l’événement', 'submit' => 'Enregistrer les modifications'],
     'show' => ['participants' => 'Participants', 'requests' => 'Demandes d’inscription', 'private_location' => 'Lieu de rendez-vous précis', 'privacy' => 'Le lieu précis et les participants sont visibles uniquement après acceptation.'],
     'chat' => [
+        'system' => [
+            'joined' => ':name a rejoint le groupe.',
+            'left' => ':name a quitté le groupe.',
+            'removed' => ':name a été retiré du groupe par l’organisateur.',
+        ],
         'open' => 'Ouvrir la discussion', 'open_description' => 'Avec l’organisateur et les participants acceptés',
         'empty' => 'La discussion est encore vide. Lance le premier message !',
         'label' => 'Message', 'placeholder' => 'Écrire à tout le groupe…', 'send' => 'Envoyer le message',
@@ -36,7 +41,12 @@ return [
         'participants' => ['title' => 'Participants', 'description' => 'Les membres qui participent à cet événement.'],
         'participant-profile' => ['title' => 'Profil du participant', 'description' => 'Découvre ce membre sans quitter l’événement.'],
         'registrations' => ['title' => 'Demandes d’inscription', 'description' => 'Gère les demandes et les participants à cet événement.'],
-        'chat' => ['title' => 'Discussion de l’événement', 'description' => 'Échange avec l’organisateur et les participants acceptés.'],
+        'chat' => [
+            'system' => [
+                'joined' => ':name a rejoint le groupe.',
+                'left' => ':name a quitté le groupe.',
+                'removed' => ':name a été retiré du groupe par l’organisateur.',
+            ], 'title' => 'Discussion de l’événement', 'description' => 'Échange avec l’organisateur et les participants acceptés.'],
     ],
     'confirmations' => ['cancel_title' => 'Annuler cet événement ?', 'cancel_description' => 'Les membres inscrits seront prévenus.', 'withdraw_title' => 'Te désinscrire ?', 'withdraw_description' => 'Ton inscription ne sera plus active et ta place pourra être proposée à un autre membre.', 'refuse_title' => 'Refuser cette demande ?', 'refuse_description' => 'Cette décision est définitive : la demande ne pourra pas être acceptée plus tard.', 'remove_title' => 'Retirer cette personne ?', 'remove_description' => 'La personne perdra immédiatement l’accès au lieu précis et à la liste des participants.'],
     'capacity' => ':occupied/:capacity places occupées',

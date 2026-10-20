@@ -62,6 +62,7 @@ final class EventChatMessageSent implements ShouldBroadcast, ShouldDispatchAfter
             'event_chat_id' => $this->message->event_chat_id,
             'author_user_id' => $this->message->author_user_id,
             'content' => $this->message->content,
+            'system_type' => $this->message->system_type?->value,
             'reaction_count' => 0,
             'reacted_by_current_user' => false,
             'author' => [

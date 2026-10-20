@@ -28,6 +28,7 @@ final readonly class EventChatData
             'event_chat_id' => $message->event_chat_id,
             'author_user_id' => $message->author_user_id,
             'content' => $message->content,
+            'system_type' => $message->system_type?->value,
             'reaction_count' => $message->reactions_count ?? $message->reactions()->count(),
             'reacted_by_current_user' => $viewer !== null
                 ? $message->reactions()->where('user_id', $viewer->id)->exists()

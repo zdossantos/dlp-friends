@@ -29,6 +29,7 @@ export type EventChatInfo = {
 export type EventChatMessage = {
     id: number;
     event_chat_id: number;
+    system_type: 'joined' | 'left' | 'removed' | null;
     author_user_id: number;
     content: string;
     reaction_count: number;
