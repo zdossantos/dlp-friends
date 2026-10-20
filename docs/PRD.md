@@ -30,8 +30,8 @@ Paris.
 ## Public et principes non négociables
 
 - Le service est réservé aux personnes âgées de 18 ans ou plus.
-- L’âge vérifie la majorité et apparaît sur le profil ; il ne sert pas à
-  filtrer ou à classer les suggestions.
+- L’âge vérifie la majorité et apparaît sur le profil. Il peut filtrer les
+  suggestions selon les préférences privées du membre, sans participer au classement.
 - Le swipe est une interaction de découverte amicale, jamais une mécanique de
   rencontre romantique.
 - Un match exige deux likes réciproques, à l’exception explicite d’un échange
@@ -49,7 +49,8 @@ Paris.
 - Un nouveau membre majeur peut créer un compte vérifié, compléter son profil,
   sélectionner ses intérêts et comprendre l’application grâce au tutoriel.
 - Les suggestions favorisent des affinités explicables sans critère
-  géographique, romantique ou fondé sur l’âge.
+  géographique ou romantique ; les paramètres permettent de filtrer par âge et
+  minimum d’intérêts communs.
 - Deux likes réciproques créent un match et une conversation sans intervention
   manuelle.
 - Les membres d’un match peuvent échanger des messages texte en temps réel.
@@ -106,6 +107,8 @@ Paris.
 ### Découverte et matching
 
 - Les cartes de découverte permettent le like ou le refus.
+- Les paramètres du compte règlent une plage d’âge et un minimum d’univers
+  favoris actifs en commun ; les deux filtres s’appliquent avant le classement.
 - Les administrateurs éligibles apparaissent toujours avant les autres profils,
   y compris lorsque la pile contient déjà des cartes chargées. Dans chaque
   groupe, le classement favorise le nombre d’intérêts actifs communs, puis la
@@ -329,6 +332,7 @@ Paris.
 | Majorité, compte actif et contrôle d’accès social | **Implémenté** | Stockage, middlewares et tests sont présents. |
 | Liens de réseaux sociaux facultatifs | **Implémenté** | Cinq réseaux, trois liens maximum, visibilité serveur, export et purge, bulles accessibles FR/EN. |
 | Profil, avatar obligatoire et intérêts | **Implémenté** | Parcours membre et catalogues administrables sont livrés. |
+| Filtres personnels des suggestions (issue 271) | **Implémenté** | Paramètres du compte, plage d’âge Reka UI −5/+5 ans par défaut, minimum d’univers actifs communs à zéro, validation serveur, export et tests FR/EN. |
 | Découverte, swipes et match réciproque | **Implémenté** | Service de classement, historique personnel paginé des profils passés, conversion en like, actions et tests sont présents. |
 | Conversations, amorces, messages, réactions, saisie, présence et état de lecture | **Implémenté** | Trois amorces aléatoires issues d’un catalogue bilingue en base facilitent le premier message. Le stockage, la diffusion privée, les J’aime uniques synchronisés en temps réel, leurs notifications in-app/PWA, l’indicateur de saisie éphémère, la présence confidentielle, la recherche locale et les tests sont présents. |
 | Blocage et déblocage | **Implémenté** | Effet immédiat sur découverte et conversation. |
@@ -362,12 +366,32 @@ Paris.
 Les preuves détaillées de cet instantané sont consignées dans
 [`documentation-inventory.md`](documentation-inventory.md).
 
+## Décision produit — filtres personnels (issue 271, 20 octobre 2026)
+
+Décision validée : les paramètres du compte permettent de choisir deux bornes
+inclusives d’âge avec un curseur à deux poignées et un minimum d’univers favoris
+actifs en commun. « Activités communes » désigne ces centres d’intérêt, pas la
+participation aux événements ni l’activité récente. Aucun autre filtre n’est retenu.
+
+Sans personnalisation, la plage suit l’âge courant du membre moins cinq et plus
+cinq ans, bornée à 18–120 ans ; le minimum commun vaut zéro. Les bornes choisies
+sont ensuite persistées comme âges absolus. Le minimum commun accepte 0–100,
+indépendamment du nombre de sélections courant : un seuil devenu impossible
+produit simplement une liste vide. Les deux conditions se combinent par ET.
+
+Ces préférences privées filtrent uniquement les nouvelles suggestions reçues,
+y compris les cartes précédemment chargées et les administrateurs. Elles ne
+changent ni la visibilité du membre chez les autres, ni le classement, ni les
+profils passés, ni les fiches accessibles, ni les matches ou échanges existants.
+Les exclusions de sécurité restent prioritaires. Un état vide invite à ajuster
+les filtres depuis les paramètres du compte.
+
 ## Hors périmètre du MVP
 
 - Compagnons pour une date de visite précise.
 - Groupes, fil communautaire et collections publiques.
-- Recherche par ville, distance ou tranche d’âge.
-- Limites quotidiennes, annulation de swipe et filtres avancés.
+- Recherche par ville ou distance.
+- Limites quotidiennes, annulation de swipe et filtres supplémentaires.
 - Signalement de profils, équipe de modération et outils avancés.
 - Paiement, abonnement et moteur publicitaire ; les annonces partenaires
   modérées avec désinscription membre constituent le seul parcours partenaire livré.

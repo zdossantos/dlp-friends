@@ -41,7 +41,7 @@ return [
         'retry' => 'Réessayer',
         'loading' => 'Recherche de profils…',
         'empty_title' => 'Tu as exploré tous les profils disponibles',
-        'empty_description' => 'Reviens plus tard ou ajuste ton profil pour mieux représenter tes univers favoris.',
+        'empty_description' => 'Aucun profil ne correspond actuellement à tes filtres parmi les membres disponibles. Reviens plus tard ou ajuste tes filtres depuis les paramètres du compte.',
         'profile' => 'Mon profil',
         'profiles_label' => 'Profils à découvrir',
     ],

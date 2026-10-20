@@ -344,3 +344,12 @@ décisions restent dans une colonne latérale, sur mobile des liens d’ancrage
 permettent d’atteindre l’échange et le traitement. Le retour conserve le membre,
 le filtre et la page, y compris après clôture. Les accès « Signalements reçus »
 des fiches administratives et des profils ordinaires sont réservés aux admins.
+
+## Filtres dans les paramètres du compte
+
+La section des filtres des profils proposés réutilise le Slider shadcn-vue
+basé sur Reka UI, avec deux poignées nommées pour les âges minimum et maximum,
+un pas d’un an et un affichage textuel de la plage. Les deux poignées restent
+utilisables au clavier et au toucher avec des cibles de 44 px. Le nombre
+minimum d’univers favoris communs utilise le champ numérique existant.
+Les libellés et descriptions sont traduits en français et anglais.

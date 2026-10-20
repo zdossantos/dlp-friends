@@ -22,6 +22,7 @@ class AccountController extends Controller
         return Inertia::render('settings/Account', [
             'mustVerifyEmail' => $request->user() instanceof MustVerifyEmail,
             'status' => $request->session()->get('status'),
+            'discoveryPreferences' => $request->user()->discoveryPreferences(),
         ]);
     }
 

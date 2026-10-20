@@ -3,6 +3,7 @@ import { Form, Head, Link, setLayoutProps, usePage } from '@inertiajs/vue3';
 import { computed } from 'vue';
 import AccountController from '@/actions/App/Http/Controllers/Settings/AccountController';
 import DeleteUser from '@/components/DeleteUser.vue';
+import DiscoveryPreferencesForm from '@/components/DiscoveryPreferencesForm.vue';
 import Heading from '@/components/Heading.vue';
 import InputError from '@/components/InputError.vue';
 import LocaleSwitcher from '@/components/LocaleSwitcher.vue';
@@ -18,6 +19,11 @@ import { send } from '@/routes/verification';
 
 const page = usePage<{
     mustVerifyEmail: boolean;
+    discoveryPreferences: {
+        min_age: number;
+        max_age: number;
+        min_common_interests: number;
+    };
 }>();
 const user = computed(() => page.props.auth.user);
 const { t } = useTranslations();
@@ -95,6 +101,9 @@ setLayoutProps({
                 </Button>
             </Form>
         </div>
+        <DiscoveryPreferencesForm
+            :preferences="page.props.discoveryPreferences"
+        />
         <UserDataExport />
         <DeleteUser />
     </div>
