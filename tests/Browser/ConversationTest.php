@@ -89,6 +89,43 @@ test('a member can like then unlike a message from the timeline', function () {
     $this->assertDatabaseCount('message_reactions', 0);
 });
 
+test('a delayed refresh does not overwrite a newer message reaction', function (bool $unlike) {
+    $member = conversationBrowserMember('Alice');
+    $peer = conversationBrowserMember('Basile');
+    $match = MemberMatch::factory()->create([
+        'user_low_id' => min($member->id, $peer->id),
+        'user_high_id' => max($member->id, $peer->id),
+    ]);
+    $conversation = $match->conversation()->create();
+    Message::factory()->for($conversation)->for($peer, 'author')->create(['content' => 'Une belle journée']);
+    $this->actingAs($member);
+    $page = visit("/conversations/{$conversation->id}")->on()->desktop()->assertSee('Une belle journée')->waitForEvent('networkidle');
+    $page->script(<<<'JS'
+        window.messagingOriginalSend = XMLHttpRequest.prototype.send;
+        XMLHttpRequest.prototype.send = function (...args) {
+            const loaded = this.onload;
+            this.onload = (...events) => {
+                window.finishRefresh = () => loaded.apply(this, events);
+            };
+            return window.messagingOriginalSend.apply(this, args);
+        };
+        window.dispatchEvent(new PageTransitionEvent('pageshow', { persisted: true }));
+        true;
+        JS);
+    $page->assertScript('typeof window.finishRefresh', 'function')
+        ->click('[data-test="message-like"]')
+        ->assertPresent('[data-test="message-like"][aria-pressed="true"]');
+    if ($unlike) {
+        $page->click('[data-test="message-like"]')
+            ->assertPresent('[data-test="message-like"][aria-pressed="false"]');
+    }
+    $page->script('XMLHttpRequest.prototype.send = window.messagingOriginalSend; window.finishRefresh(); true;');
+    $page->waitForEvent('networkidle')
+        ->assertPresent('[data-test="message-like"][aria-pressed="'.($unlike ? 'false' : 'true').'"]')
+        ->assertNoJavaScriptErrors();
+    $this->assertDatabaseCount('message_reactions', $unlike ? 0 : 1);
+})->with(['like' => false, 'like then unlike' => true]);
+
 test('a zero reaction stays hidden on mobile until a double tap likes the message', function () {
     $member = conversationBrowserMember('Alice');
     $peer = conversationBrowserMember('Basile');
@@ -408,9 +445,9 @@ test('a conversation renders safe recent history and repeatedly loads older mess
     ]);
     $conversation = $match->conversation()->create();
 
-    foreach (range(1, 35) as $index) {
+    foreach (range(1, 65) as $index) {
         Message::factory()->for($conversation)->for($index % 2 === 0 ? $member : $peer, 'author')->create([
-            'content' => $index === 35
+            'content' => $index === 65
                 ? '<img src=x onerror=window.__messageXss=true>'
                 : "Message {$index} ".str_repeat('contenu ', 12),
             'created_at' => now()->addSeconds($index),
@@ -461,7 +498,7 @@ test('a conversation renders safe recent history and repeatedly loads older mess
         window.historyAnchor = { id: anchor.closest('[data-message-id]').dataset.messageId, top: anchor.getBoundingClientRect().top };
         window.releaseHistoryRequest();
     JS);
-    $page->assertSee('Message 16')
+    $page->assertSee('Message 26')
         ->wait(0.5)
         ->assertScript("Math.abs(document.querySelector('[data-message-id=\"' + window.historyAnchor.id + '\"] [data-test=message-bubble]').getBoundingClientRect().top - window.historyAnchor.top) < 3", true)
         ->assertScript("document.querySelector('[data-test=message-scroll]').scrollTop > 0", true);
@@ -472,10 +509,55 @@ test('a conversation renders safe recent history and repeatedly loads older mess
 
     $page->script("document.querySelector('[data-test=message-scroll]').scrollTop = 0; true;");
     $page->assertSee('Message 1')
-        ->assertScript("document.querySelectorAll('[data-message-id]').length", 35)
-        ->assertScript("new Set([...document.querySelectorAll('[data-message-id]')].map((message) => message.dataset.messageId)).size", 35)
+        ->assertScript("document.querySelectorAll('[data-message-id]').length", 65)
+        ->assertScript("new Set([...document.querySelectorAll('[data-message-id]')].map((message) => message.dataset.messageId)).size", 65)
         ->assertNoJavaScriptErrors();
 });
+
+test('one upward scroll loads one history page and keeps the reading position', function (int $width, int $height, int $scrollTop) {
+    $member = conversationBrowserMember('Alice');
+    $peer = conversationBrowserMember('Basile');
+    $match = MemberMatch::factory()->create([
+        'user_low_id' => min($member->id, $peer->id),
+        'user_high_id' => max($member->id, $peer->id),
+    ]);
+    $conversation = $match->conversation()->create();
+    foreach (range(1, 120) as $index) {
+        Message::factory()->for($conversation)->for($peer, 'author')->create([
+            'content' => "Message court {$index}",
+            'created_at' => now()->addSeconds($index),
+        ]);
+    }
+    $this->actingAs($member);
+    $page = visit("/conversations/{$conversation->id}")->resize($width, $height)->assertSee('Message court 120')->waitForEvent('networkidle');
+    $page->script("window.historyScrollTarget = {$scrollTop};");
+    $page->script(<<<'JS'
+        window.loadedBeforeScroll = document.querySelectorAll('[data-message-id]').length;
+        window.historyRequests = 0;
+        window.originalHistoryHeader = XMLHttpRequest.prototype.setRequestHeader;
+        XMLHttpRequest.prototype.setRequestHeader = function (name, value) {
+            if (name.toLowerCase() === 'x-inertia-infinite-scroll-merge-intent') window.historyRequests++;
+            return window.originalHistoryHeader.call(this, name, value);
+        };
+        const scroll = document.querySelector('[data-test=message-scroll]');
+        scroll.scrollTop = window.historyScrollTarget;
+        const anchor = [...scroll.querySelectorAll('[data-test=message-bubble]')]
+            .find(bubble => bubble.getBoundingClientRect().bottom > scroll.getBoundingClientRect().top);
+        window.topReadingAnchor = { id: anchor.closest('[data-message-id]').dataset.messageId, top: anchor.getBoundingClientRect().top };
+        true;
+        JS);
+    $page->assertScript('window.historyRequests > 0', true)->waitForEvent('networkidle')
+        ->assertScript('window.historyRequests', 1)
+        ->assertScript("document.querySelectorAll('[data-message-id]').length - window.loadedBeforeScroll", 20)
+        ->assertScript("Math.abs(document.querySelector('[data-message-id=\"' + window.topReadingAnchor.id + '\"] [data-test=message-bubble]').getBoundingClientRect().top - window.topReadingAnchor.top) < 3", true)
+        ->assertScript("document.querySelector('[data-test=message-scroll]').scrollTop > 400", true)
+        ->assertNoJavaScriptErrors();
+})->with([
+    'mobile at top' => [390, 844, 0],
+    'desktop at top' => [1280, 900, 0],
+    'mobile before top' => [390, 844, 350],
+    'desktop before top' => [1280, 900, 350],
+]);
 
 test('a pushed message is announced without moving a member who is reading older messages', function () {
     if (! filter_var(env('REALTIME_BROWSER_TESTS', false), FILTER_VALIDATE_BOOL)) {
@@ -491,7 +573,7 @@ test('a pushed message is announced without moving a member who is reading older
     ]);
     $conversation = $match->conversation()->create();
 
-    foreach (range(1, 12) as $index) {
+    foreach (range(1, 22) as $index) {
         Message::factory()->for($conversation)->for($peer, 'author')->create([
             'content' => "Historique {$index} ".str_repeat('contenu ', 20),
             'created_at' => now()->addSeconds($index),
@@ -500,7 +582,7 @@ test('a pushed message is announced without moving a member who is reading older
 
     $this->actingAs($member);
     $page = visit("/conversations/{$conversation->id}")->on()->mobile()
-        ->assertScript("document.querySelectorAll('[data-message-id]').length", 10);
+        ->assertScript("document.querySelectorAll('[data-message-id]').length", 20);
 
     $page->script(<<<'JS'
         const scroll = document.querySelector('[data-test=message-scroll]');
@@ -517,7 +599,7 @@ test('a pushed message is announced without moving a member who is reading older
 
     $page->assertSee('Message reçu en direct')
         ->assertScript("document.querySelector('[aria-live=polite]').textContent", 'Nouveau message reçu')
-        ->assertScript("document.querySelectorAll('[data-message-id]').length", 11)
+        ->assertScript("document.querySelectorAll('[data-message-id]').length", 21)
         ->assertScript("Math.abs(document.querySelector('[data-test=message-scroll]').scrollTop - window.__scrollBeforePushedMessage) < 2", true);
 
     expect($pushed->fresh()?->read_at)->not->toBeNull();
@@ -525,7 +607,7 @@ test('a pushed message is announced without moving a member who is reading older
         ->not->toBeNull();
 
     event(new MessageSent($pushed));
-    $page->assertScript("document.querySelectorAll('[data-message-id]').length", 11)
+    $page->assertScript("document.querySelectorAll('[data-message-id]').length", 21)
         ->assertNoJavaScriptErrors();
 
     $page->script(<<<'JS'
@@ -740,3 +822,174 @@ test('messaging categories support keyboard navigation on mobile and desktop', f
         ->assertAttribute('[data-test="conversations-private"]', 'aria-selected', 'true')
         ->assertNoJavaScriptErrors();
 })->with(['mobile' => [390, 700], 'desktop' => [1280, 800]]);
+
+test('resuming the messaging list refreshes previews and unread counts without realtime', function () {
+    $member = conversationBrowserMember('Alice');
+    $peer = conversationBrowserMember('Basile');
+    $match = MemberMatch::factory()->create([
+        'user_low_id' => min($member->id, $peer->id),
+        'user_high_id' => max($member->id, $peer->id),
+    ]);
+    $conversation = $match->conversation()->create();
+    $this->actingAs($member);
+    $page = visit('/conversations')->assertSee('Basile');
+
+    Message::factory()->for($conversation)->for($peer, 'author')->create(['content' => 'Message pendant la veille']);
+    $page->script("window.dispatchEvent(new PageTransitionEvent('pageshow', { persisted: true })); true;");
+    $page->assertSee('Message pendant la veille')
+        ->assertPresent('[data-test="private-unread-count"]')
+        ->assertNoJavaScriptErrors();
+});
+
+test('resuming a conversation catches up beyond one page without duplicate messages', function () {
+    $member = conversationBrowserMember('Alice');
+    $peer = conversationBrowserMember('Basile');
+    $match = MemberMatch::factory()->create([
+        'user_low_id' => min($member->id, $peer->id),
+        'user_high_id' => max($member->id, $peer->id),
+    ]);
+    $conversation = $match->conversation()->create();
+    Message::factory()->for($conversation)->for($peer, 'author')->create(['content' => 'Avant la veille']);
+    $this->actingAs($member);
+    $page = visit("/conversations/{$conversation->id}")->assertSee('Avant la veille')->waitForEvent('networkidle');
+    foreach (range(1, 25) as $index) {
+        Message::factory()->for($conversation)->for($peer, 'author')->create(['content' => "Pendant la veille {$index} ".str_repeat('Un long message pour garder une page complète. ', 12)]);
+    }
+    $page->fill('content', 'Ma réponse après la veille')->keys('content', 'Enter')->assertSee('Ma réponse après la veille')->assertValue('content', '');
+    $page->script("window.dispatchEvent(new PageTransitionEvent('pageshow', { persisted: true })); true;");
+    $page->assertSee('Pendant la veille 25')
+        ->assertScript("document.querySelectorAll('[data-message-id]').length", 27)
+        ->assertScript("new Set(Array.from(document.querySelectorAll('[data-message-id]'), el => el.dataset.messageId)).size", 27);
+    $page->script("window.dispatchEvent(new PageTransitionEvent('pageshow', { persisted: true })); true;");
+    $page->waitForEvent('networkidle')->click('a[href="/conversations"]')->assertPathIs('/conversations')->assertSee('Ma réponse après la veille');
+    $page->back()->assertSee('Basile')
+        ->assertScript("document.querySelectorAll('[data-message-id]').length", 27)
+        ->assertNoJavaScriptErrors();
+});
+
+test('opening the keyboard keeps the latest bubble visible and lets the member return from history', function () {
+    $member = conversationBrowserMember('Alice');
+    $peer = conversationBrowserMember('Basile');
+    $match = MemberMatch::factory()->create([
+        'user_low_id' => min($member->id, $peer->id),
+        'user_high_id' => max($member->id, $peer->id),
+    ]);
+    $conversation = $match->conversation()->create();
+    Message::factory()->count(10)->for($conversation)->for($peer, 'author')->create(['content' => str_repeat('Un message à lire tranquillement. ', 8)]);
+    $this->actingAs($member);
+    $page = visit("/conversations/{$conversation->id}")->on()->mobile()->assertSee('Basile');
+    $page->assertScript("(() => { const el = document.querySelector('[data-test=message-scroll]'); return el.scrollHeight - el.scrollTop - el.clientHeight < 2; })()", true);
+    $page->script(<<<'JS'
+        Object.defineProperty(window.visualViewport, 'height', { configurable: true, value: 420 });
+        window.visualViewport.dispatchEvent(new Event('resize'));
+        true;
+        JS);
+    $page->script('async () => { await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))); return true; }');
+    $page->assertScript("document.querySelector('#message-content').getBoundingClientRect().bottom <= 420", true)
+        ->assertScript("(() => { const el = document.querySelector('[data-test=message-scroll]'); return el.scrollHeight - el.scrollTop - el.clientHeight < 2; })()", true);
+    $page->script("document.querySelector('[data-test=message-scroll]').scrollTop -= 150; true;");
+    $page->assertPresent('[data-test="latest-messages"]');
+    $page->script(<<<'JS'
+        window.readingPosition = document.querySelector('[data-test=message-scroll]').scrollTop;
+        Object.defineProperty(window.visualViewport, 'height', { configurable: true, value: 360 });
+        window.visualViewport.dispatchEvent(new Event('resize'));
+        true;
+        JS);
+    $page->script('async () => { await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))); return true; }');
+    $page->assertScript("Math.abs(document.querySelector('[data-test=message-scroll]').scrollTop - window.readingPosition) < 2", true)
+        ->screenshot(filename: 'messaging-280-reading')
+        ->click('[data-test="latest-messages"]')
+        ->assertScript("(() => { const el = document.querySelector('[data-test=message-scroll]'); return el.scrollHeight - el.scrollTop - el.clientHeight < 2; })()", true)
+        ->assertNoJavaScriptErrors()
+        ->screenshot(filename: 'messaging-280-composer');
+});
+
+test('enter during composition keeps the draft and starters stay hidden after sending', function () {
+    $member = conversationBrowserMember('Alice');
+    $peer = conversationBrowserMember('Basile');
+    $match = MemberMatch::factory()->create([
+        'user_low_id' => min($member->id, $peer->id),
+        'user_high_id' => max($member->id, $peer->id),
+    ]);
+    $conversation = $match->conversation()->create();
+    ConversationStarter::factory()->count(3)->create();
+    $this->actingAs($member);
+    $page = visit("/conversations/{$conversation->id}")->on()->mobile()->fill('content', 'Bonjour Basile');
+    $page->script("document.querySelector('#message-content').dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', isComposing: true, bubbles: true, cancelable: true })); true;");
+    $page->assertScript("document.querySelector('#message-content').value", 'Bonjour Basile');
+    expect($conversation->messages()->count())->toBe(0);
+    $page->keys('content', 'Enter')->assertSee('Bonjour Basile')
+        ->assertScript("document.querySelector('#message-content').value", '')
+        ->assertNotPresent('[data-test="conversation-starters"]')
+        ->assertScript('document.activeElement.id', 'message-content')
+        ->assertNoJavaScriptErrors();
+});
+
+test('browser back refreshes the reply preview and clears the read conversation badge', function () {
+    $member = conversationBrowserMember('Alice');
+    $peer = conversationBrowserMember('Basile');
+    $match = MemberMatch::factory()->create([
+        'user_low_id' => min($member->id, $peer->id),
+        'user_high_id' => max($member->id, $peer->id),
+    ]);
+    $conversation = $match->conversation()->create();
+    Message::factory()->for($conversation)->for($peer, 'author')->create(['content' => 'On se retrouve demain ?']);
+    $this->actingAs($member);
+    $page = visit('/conversations')->assertSee('On se retrouve demain ?')
+        ->assertPresent('[data-test="private-unread-count"]')
+        ->click("a[href='/conversations/{$conversation->id}']")
+        ->assertPresent('textarea[name="content"]')
+        ->fill('content', 'Avec plaisir, à demain !')
+        ->keys('content', 'Enter')
+        ->assertSee('Avec plaisir, à demain !')
+        ->assertValue('content', '');
+    $page->back()->assertSee('Toi : Avec plaisir, à demain !')
+        ->assertNotPresent('[data-test="private-unread-count"]')
+        ->assertNoJavaScriptErrors();
+});
+
+test('a slow failed send preserves textarea focus and the draft for retry', function () {
+    $member = conversationBrowserMember('Alice');
+    $peer = conversationBrowserMember('Basile');
+    $match = MemberMatch::factory()->create([
+        'user_low_id' => min($member->id, $peer->id),
+        'user_high_id' => max($member->id, $peer->id),
+    ]);
+    $conversation = $match->conversation()->create();
+    $this->actingAs($member);
+    $page = visit("/conversations/{$conversation->id}")->on()->mobile()->fill('content', 'Mon brouillon');
+    $page->script(<<<'JS'
+        window.messagingOriginalFetch = window.fetch.bind(window);
+        window.fetch = (url, options) => options?.method === 'POST' && String(url).endsWith('/messages')
+            ? new Promise(resolve => { window.finishSend = () => resolve(new Response('{}', { status: 503 })); })
+            : window.messagingOriginalFetch(url, options);
+        true;
+        JS);
+    $page->click('button[aria-label="Envoyer le message"]')
+        ->assertScript('document.activeElement.id', 'message-content')
+        ->assertScript("document.querySelector('#message-content').disabled", false)
+        ->assertScript("document.querySelector('#message-content').readOnly", false);
+    $page->script('window.finishSend(); true;');
+    $page->assertSee('Ton message n’a pas pu être envoyé. Réessaie.')
+        ->assertValue('content', 'Mon brouillon')
+        ->assertScript('document.activeElement.id', 'message-content')
+        ->assertEnabled('button[aria-label="Envoyer le message"]')
+        ->assertNoJavaScriptErrors();
+    $page->script(<<<'JS'
+        window.fetch = (url, options) => options?.method === 'POST' && String(url).endsWith('/messages')
+            ? new Promise(resolve => { window.finishSend = () => resolve(window.messagingOriginalFetch(url, options)); })
+            : window.messagingOriginalFetch(url, options);
+        true;
+        JS);
+    $page->click('button[aria-label="Envoyer le message"]')
+        ->fill('content', 'Le message suivant');
+    $page->script('window.finishSend(); true;');
+    $page->assertSee('Mon brouillon')
+        ->assertValue('content', 'Le message suivant')
+        ->assertScript('document.activeElement.id', 'message-content')
+        ->assertNoJavaScriptErrors();
+    $this->assertDatabaseHas('messages', [
+        'conversation_id' => $conversation->id,
+        'content' => 'Mon brouillon',
+    ]);
+});

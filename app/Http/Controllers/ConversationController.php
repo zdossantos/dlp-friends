@@ -42,33 +42,34 @@ final class ConversationController extends Controller
             : $latestMessageId;
         $historyQuery = $conversation->messages()->where('id', '<=', $historyBoundary);
         $messageCount = (clone $historyQuery)->count();
-        $lastPage = max((int) ceil($messageCount / 10), 1);
+        $perPage = 20;
+        $lastPage = max((int) ceil($messageCount / $perPage), 1);
         $page = min(max($request->integer('messages', $lastPage), 1), $lastPage);
-        $offset = max($messageCount - (($lastPage - $page + 1) * 10), 0);
-        $limit = min(10, max($messageCount - (($lastPage - $page) * 10), 0));
-        $messageRows = $historyQuery
+        $offset = max($messageCount - (($lastPage - $page + 1) * $perPage), 0);
+        $limit = min($perPage, max($messageCount - (($lastPage - $page) * $perPage), 0));
+        $messageQuery = $conversation->messages()
             ->withCount('reactions')
             ->withExists([
                 'reactions as reacted_by_current_user' => fn ($query) => $query->where('user_id', $member->id),
             ])
-            ->oldest('id')
-            ->offset($offset)
-            ->limit($limit)
-            ->get()
-            ->map(fn (Message $message): array => [
-                'id' => $message->id,
-                'conversation_id' => $message->conversation_id,
-                'author_user_id' => $message->author_user_id,
-                'content' => $message->content,
-                'read_at' => $message->read_at?->toISOString(),
-                'created_at' => $message->created_at?->toISOString(),
-                'reaction_count' => $message->reactions_count,
-                'reacted_by_current_user' => (bool) $message->reacted_by_current_user,
-            ]);
+            ->oldest('id');
+        $serializeMessage = fn (Message $message): array => [
+            'id' => $message->id,
+            'conversation_id' => $message->conversation_id,
+            'author_user_id' => $message->author_user_id,
+            'content' => $message->content,
+            'read_at' => $message->read_at?->toISOString(),
+            'created_at' => $message->created_at?->toISOString(),
+            'reaction_count' => $message->reactions_count,
+            'reacted_by_current_user' => (bool) $message->reacted_by_current_user,
+        ];
+        $messageRows = (clone $messageQuery)
+            ->where('id', '<=', $historyBoundary)
+            ->offset($offset)->limit($limit)->get()->map($serializeMessage);
         $messages = new LengthAwarePaginator(
             items: $messageRows,
             total: $messageCount,
-            perPage: 10,
+            perPage: $perPage,
             currentPage: $page,
             options: [
                 'path' => $request->url(),
@@ -116,7 +117,11 @@ final class ConversationController extends Controller
             'currentUserId' => $member->id,
             'canBlock' => ! $participant->hasRole('admin'),
             'timezone' => config('app.timezone'),
-            'messages' => Inertia::scroll($messages),
+            'messages' => Inertia::scroll($messages)->matchOn('data.id'),
+            'messageUpdates' => Inertia::optional(fn (): array => (clone $messageQuery)
+                ->where('id', '>', max($request->integer('messages_after'), 0))
+                ->where('id', '<=', $latestMessageId)
+                ->get()->map($serializeMessage)->all()),
             'conversationStarters' => $conversationStarters,
         ]);
     }

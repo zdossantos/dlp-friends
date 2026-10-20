@@ -9,6 +9,7 @@ import ReportConversationDialog from '@/components/members/ReportConversationDia
 import { useConversationMessages } from '@/composables/useConversationMessages';
 import { useConversationRealtime } from '@/composables/useConversationRealtime';
 import { useMemberRealtimeContext } from '@/composables/useMemberRealtimeNotifications';
+import { useMessagingRefresh } from '@/composables/useMessagingRefresh';
 import { useConversationTyping } from '@/composables/useTypingSignals';
 import { xsrfHeader } from '@/lib/csrf';
 import { shouldAcknowledgePersistentNotification } from '@/lib/memberNotifications';
@@ -30,10 +31,11 @@ const props = defineProps<{
     currentUserId: number;
     timezone: string;
     messages: PaginatedMessages;
+    messageUpdates?: ConversationMessage[];
     conversationStarters: ConversationStarter[];
     canBlock: boolean;
 }>();
-const { latestPersistentNotification, presenceChanged } =
+const { latestPersistentNotification, latestMessage, presenceChanged } =
     useMemberRealtimeContext();
 const participantPresence = ref(props.participant.presence);
 watch(presenceChanged, (event) => {
@@ -49,8 +51,80 @@ const displayedParticipant = computed(() => ({
     presence: participantPresence.value,
 }));
 
-const { visibleMessages, mergeMessage, markMessagesRead, updateReaction } =
-    useConversationMessages(() => props.messages.data);
+const {
+    visibleMessages,
+    mergeMessage,
+    mergeMessages,
+    markMessagesRead,
+    updateReaction,
+} = useConversationMessages(() => props.messages.data);
+// Live events may arrive out of order. Only a complete server catch-up can
+// advance the recovery cursor past messages that were missed during an outage.
+let synchronizedThrough = props.messages.data.at(-1)?.id ?? 0;
+watch(
+    () => props.messageUpdates,
+    (messages) => {
+        if (messages) {
+            mergeMessages(messages);
+            synchronizedThrough = Math.max(
+                synchronizedThrough,
+                messages.at(-1)?.id ?? 0,
+            );
+        }
+    },
+);
+function refreshMessages(): void {
+    const beforeRefresh = new Map(
+        visibleMessages.value.map((message) => [message.id, message]),
+    );
+    // A slow snapshot must not undo reactions or receipts received while it
+    // was in flight. The next refresh can reconcile their server state again.
+    function preserveNewerState(
+        message: ConversationMessage,
+    ): ConversationMessage {
+        const before = beforeRefresh.get(message.id);
+        const current = visibleMessages.value.find(
+            (item) => item.id === message.id,
+        );
+
+        if (!current) {
+            return message;
+        }
+
+        return {
+            ...message,
+            // Each live update replaces the message object, even when a like
+            // followed by an unlike ends with the same values as before.
+            ...(before !== current
+                ? {
+                      reaction_count: current.reaction_count,
+                      reacted_by_current_user: current.reacted_by_current_user,
+                  }
+                : {}),
+            read_at: current.read_at ?? message.read_at,
+        };
+    }
+
+    router.reload({
+        only: ['messages', 'messageUpdates', 'auth'],
+        preserveUrl: true,
+        data: { messages_after: synchronizedThrough },
+        onBeforeUpdate: (page) => {
+            const messages = page.props.messages as PaginatedMessages;
+            messages.data = messages.data.map(preserveNewerState);
+            page.props.messageUpdates = (
+                (page.props.messageUpdates as
+                    ConversationMessage[] | undefined) ?? []
+            ).map(preserveNewerState);
+        },
+    });
+}
+useMessagingRefresh(refreshMessages);
+watch(latestMessage, (message) => {
+    if (message?.conversation_id === props.conversation.id) {
+        handleRealtimeMessage(message);
+    }
+});
 const {
     peerTyping,
     signalInput,
@@ -77,6 +151,7 @@ async function markConversationAsRead(): Promise<void> {
 
 watch(latestPersistentNotification, (notification) => {
     if (
+        document.visibilityState !== 'visible' ||
         !notification ||
         !shouldAcknowledgePersistentNotification(
             notification,
@@ -94,7 +169,10 @@ watch(latestPersistentNotification, (notification) => {
 function handleRealtimeMessage(message: ConversationMessage): void {
     mergeMessage(message);
 
-    if (message.author_user_id !== props.currentUserId) {
+    if (
+        document.visibilityState === 'visible' &&
+        message.author_user_id !== props.currentUserId
+    ) {
         void markConversationAsRead().catch(() => undefined);
     }
 }
@@ -104,10 +182,7 @@ const { connectionUnavailable, reconnecting, retry } = useConversationRealtime(
     handleRealtimeMessage,
     (receipt) => markMessagesRead(receipt, props.currentUserId),
     (update) => updateReaction(update, props.currentUserId),
-    () =>
-        router.reload({
-            only: ['messages'],
-        }),
+    refreshMessages,
 );
 const timelineMessages = computed<PaginatedMessages>(() => ({
     ...props.messages,
@@ -159,7 +234,7 @@ const timelineMessages = computed<PaginatedMessages>(() => ({
             :on-sent="mergeMessage"
             :on-typing="signalInput"
             :on-typing-stopped="stopTyping"
-            :starters="conversationStarters"
+            :starters="visibleMessages.length === 0 ? conversationStarters : []"
         />
     </main>
 </template>

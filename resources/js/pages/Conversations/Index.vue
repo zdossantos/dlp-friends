@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useMemberRealtimeContext } from '@/composables/useMemberRealtimeNotifications';
+import { useMessagingRefresh } from '@/composables/useMessagingRefresh';
 import { useTranslations } from '@/composables/useTranslations';
 import { useConversationListTyping } from '@/composables/useTypingSignals';
 import {
@@ -31,6 +32,9 @@ const props = defineProps<{
         unread_count: number;
     })[];
 }>();
+useMessagingRefresh(() =>
+    router.reload({ only: ['conversations', 'groups', 'auth'] }),
+);
 const visibleConversations = ref(
     sortConversationSummaries(props.conversations),
 );

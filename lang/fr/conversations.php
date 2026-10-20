@@ -49,6 +49,7 @@ return [
         'read' => 'Lu',
         'timeline' => 'Historique des messages',
         'received' => 'Nouveau message reçu',
+        'latest' => 'Derniers messages',
         'loading_previous' => 'Chargement des messages précédents…',
         'empty' => 'Commence votre échange amical avec un premier message.',
         'you' => 'Vous',

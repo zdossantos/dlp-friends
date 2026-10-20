@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Actions\MarkConversationRead;
 use App\Events\MessagesRead;
+use App\Http\Middleware\HandleInertiaRequests;
 use App\Models\Block;
 use App\Models\Conversation;
 use App\Models\MemberMatch;
@@ -83,10 +84,10 @@ class ConversationTest extends TestCase
         }
     }
 
-    public function test_a_member_initially_receives_only_the_ten_newest_messages_in_chronological_order(): void
+    public function test_a_member_initially_receives_only_the_twenty_newest_messages_in_chronological_order(): void
     {
         [$member, $peer, $conversation] = $this->conversationMembers(withProfiles: true);
-        $messages = Message::factory()->count(15)->sequence(
+        $messages = Message::factory()->count(25)->sequence(
             fn (Sequence $sequence): array => [
                 'author_user_id' => $sequence->index % 2 === 0 ? $member->id : $peer->id,
                 'created_at' => now()->addSeconds($sequence->index),
@@ -105,7 +106,7 @@ class ConversationTest extends TestCase
                 ->where('currentUserId', $member->id)
                 ->where('messages.data', fn (Collection $rows): bool => $rows->pluck('id')->all() === $expectedNewest)
                 ->where('messages.current_page', 2)
-                ->has('messages.data', 10));
+                ->has('messages.data', 20));
 
         $this->actingAs($member)
             ->get("/conversations/{$conversation->id}?messages=1")
@@ -118,7 +119,7 @@ class ConversationTest extends TestCase
     public function test_older_history_keeps_its_initial_boundary_when_live_messages_arrive(): void
     {
         [$member, $peer, $conversation] = $this->conversationMembers(withProfiles: true);
-        $initialMessages = Message::factory()->count(25)->sequence(
+        $initialMessages = Message::factory()->count(45)->sequence(
             fn (Sequence $sequence): array => [
                 'author_user_id' => $sequence->index % 2 === 0 ? $member->id : $peer->id,
             ],
@@ -127,7 +128,7 @@ class ConversationTest extends TestCase
 
         Message::factory()->for($conversation)->for($peer, 'author')->create();
 
-        $expectedPrevious = $initialMessages->slice(5, 10)->pluck('id')->all();
+        $expectedPrevious = $initialMessages->slice(5, 20)->pluck('id')->all();
 
         $this->actingAs($member)
             ->get("/conversations/{$conversation->id}?messages=2&messages_before={$boundary}")
@@ -135,7 +136,25 @@ class ConversationTest extends TestCase
                 ->where('messages.data', fn (Collection $rows): bool => $rows->pluck('id')->all() === $expectedPrevious)
                 ->where('messages.current_page', 2)
                 ->where('messages.next_page_url', fn (string $url): bool => str_contains($url, "messages_before={$boundary}"))
-                ->has('messages.data', 10));
+                ->has('messages.data', 20));
+    }
+
+    public function test_resuming_a_conversation_recovers_every_message_after_the_client_cursor(): void
+    {
+        [$member, $peer, $conversation] = $this->conversationMembers(withProfiles: true);
+        $initial = Message::factory()->for($conversation)->for($peer, 'author')->create();
+        $missed = Message::factory()->count(25)->for($conversation)->for($peer, 'author')->create();
+        Message::factory()->create();
+
+        $this->actingAs($member)->get("/conversations/{$conversation->id}?messages_after={$initial->id}", [
+            'X-Inertia' => 'true',
+            'X-Inertia-Version' => app(HandleInertiaRequests::class)->version(request()),
+            'X-Inertia-Partial-Component' => 'Conversations/Show',
+            'X-Inertia-Partial-Data' => 'messageUpdates',
+        ])->assertOk()
+            ->assertJsonCount(25, 'props.messageUpdates')
+            ->assertJsonPath('props.messageUpdates.*.id', $missed->pluck('id')->all())
+            ->assertJsonPath('props.messageUpdates.0.read_at', fn ($value): bool => $value !== null);
     }
 
     public function test_opening_a_conversation_marks_only_received_messages_as_read_and_broadcasts_the_latest_receipt(): void
