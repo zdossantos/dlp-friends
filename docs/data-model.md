@@ -226,3 +226,23 @@ sont également nullables. Avant suppression, l’Action retire les relations
 ordinaires et conserve celles nécessaires aux données bannies ; une conversation
 détachée est archivée, un événement conservé est annulé. Ces graphes ne donnent
 aucun accès social. Les données du compte explicitement supprimé restent retirées.
+
+## Visites personnelles (issue 305)
+
+`visits` contient `user_id`, `starts_on` et `ends_on` en DATE, et les horodatages.
+Les bornes inclusives représentent les jours civils à Paris, sans conversion
+UTC. Index `(user_id, starts_on, ends_on)` et `(ends_on, starts_on)` ; la clé
+propriétaire est supprimée en cascade. Aucun identifiant de groupe ou trajet
+n’est associé. Les séjours peuvent se chevaucher.
+
+`users.visits_visibility` est une préférence indépendante, enum `hidden`
+(défaut), `matches`, `members`. La transition persistée vers `members` est
+contrôlée sous verrou du propriétaire avec confirmation explicite. Le scope
+`Visit::visibleTo` applique l’éligibilité, les blocages réciproques, le profil
+visible et complet, l’avatar actif et l’audience avant toute agrégation ou
+pagination. La sélection SQL par membres déduplique leurs séjours. Les aperçus
+sont bornés à trois profils par jour, la liste complète à 30 par page.
+
+Les séjours terminés depuis au moins 30 jours calendaires sont purgés en lots
+de 500 après recontrôle de leur fin et de l’état du propriétaire verrouillé.
+La purge automatique est suspendue pour un propriétaire banni.

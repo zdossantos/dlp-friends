@@ -596,3 +596,20 @@ Un rollback d'image ne restaure pas les données ; garder fermé puis choisir un
 correction en avant ou une restauration contrôlée selon les écritures depuis
 la sauvegarde. Ne pas exécuter une livraison production pour tester cette
 procédure : sa première utilisation reste une opération volontaire.
+
+## Rétention des visites personnelles
+
+Appliquer explicitement les migrations des visites et de leur préférence
+d’audience avant d’exposer l’espace Sorties ; aucune migration au démarrage des
+conteneurs. `visits:purge-expired` est planifiée chaque jour à 03:45 Europe/Paris,
+avec `withoutOverlapping` et `onOneServer` sur le cache partagé existant.
+
+```sh
+docker compose exec web php artisan visits:purge-expired
+```
+
+La commande est idempotente, traite 500 lignes par lot et recontrôle la fin du
+séjour sous verrou du propriétaire avant suppression. La borne est « fin au
+plus tard aujourd’hui moins 30 jours calendaires ». Une fin repoussée après la
+sélection du lot est conservée. Les propriétaires bannis sont exclus jusqu’à
+levée de sanction. La politique de rotation des sauvegardes reste inchangée.
