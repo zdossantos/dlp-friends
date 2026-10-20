@@ -191,6 +191,10 @@ La confirmation préalable informe l’auteur que les administrateurs actifs
 peuvent lire l’intégralité de l’échange et ses futurs messages, même après
 clôture, blocage, masquage ou bannissement. Le rapport ne duplique aucun message ;
 chaque consultation et clôture produit un audit réservé à l’administration.
+L’historique reçu depuis la fiche administrative ou le profil ordinaire est
+également réservé aux administrateurs actifs, avec contrôle Laravel. Son accès
+n’est pas transmis aux autres membres et ses listes ne contiennent aucun message
+privé. L’auteur du signalement reste visible uniquement dans l’administration.
 Le blocage reste facultatif, présélectionné sauf pour une cible administratrice.
 
 `banned` est un état sans expiration. La sanction n’est révélée qu’après

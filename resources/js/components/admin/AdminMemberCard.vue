@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { Link } from '@inertiajs/vue3';
 import { MessageCircle } from '@lucide/vue';
 import DeleteMemberDialog from '@/components/admin/DeleteMemberDialog.vue';
 import ManageMemberRolesDialog from '@/components/admin/ManageMemberRolesDialog.vue';
@@ -7,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useTranslations } from '@/composables/useTranslations';
+import { index as reports } from '@/routes/admin/conversation-reports';
 import type { RoleName } from '@/types';
 
 type Member = {
@@ -159,6 +161,13 @@ function date(value: string | null): string {
             <div
                 class="flex flex-col gap-2 sm:flex-row sm:flex-wrap [&>*]:min-h-11"
             >
+                <Button as-child variant="outline"
+                    ><Link
+                        :href="reports({ query: { target: member.id } }).url"
+                        data-test="received-reports"
+                        >{{ t('moderation.received_reports') }}</Link
+                    ></Button
+                >
                 <ManageMemberRolesDialog
                     v-if="member.can_manage_roles"
                     :member-id="member.id"

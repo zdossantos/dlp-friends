@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Head, router } from '@inertiajs/vue3';
+import { Head, Link, router } from '@inertiajs/vue3';
 import { ArrowLeft } from '@lucide/vue';
 import { computed } from 'vue';
 import BlockMemberDialog from '@/components/members/BlockMemberDialog.vue';
@@ -15,6 +15,7 @@ const props = defineProps<{
     backHref: string;
     likeHref?: string;
     likeLabel?: string;
+    receivedReportsHref?: string;
     canBlock: boolean;
     canLike: boolean;
     canUnblock: boolean;
@@ -78,6 +79,13 @@ function goBack(): void {
             :is-admin="member.is_admin"
         >
             <template #summary-actions>
+                <Button v-if="receivedReportsHref" as-child variant="outline">
+                    <Link
+                        :href="receivedReportsHref"
+                        data-test="received-reports"
+                        >{{ t('moderation.received_reports') }}</Link
+                    >
+                </Button>
                 <LikeMemberButton
                     v-if="canLike"
                     :member-id="member.id"

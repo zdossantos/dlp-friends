@@ -2,16 +2,19 @@
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import AdminPageHeader from '@/components/admin/AdminPageHeader.vue';
 import InputError from '@/components/InputError.vue';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useTranslations } from '@/composables/useTranslations';
-import { close, index } from '@/routes/admin/conversation-reports';
+import { close } from '@/routes/admin/conversation-reports';
 import { index as members } from '@/routes/admin/members';
 import { update as updateBan } from '@/routes/admin/members/ban';
 import type { ConversationReport, ModerationPage } from '@/types/moderation';
 const props = defineProps<{
     report: ConversationReport;
+    backHref: string;
+    context: Record<string, string | number | boolean>;
     messages: ModerationPage<{
         id: number;
         author_user_id: number;
@@ -43,7 +46,9 @@ function submit(event: SubmitEvent): void {
         return;
     }
 
-    form.patch(close(props.report.id).url, { preserveScroll: true });
+    form.patch(close(props.report.id, { query: props.context }).url, {
+        preserveScroll: true,
+    });
 }
 function author(id: number): string {
     return id === props.report.reporter.id
@@ -53,126 +58,271 @@ function author(id: number): string {
 </script>
 <template>
     <Head :title="t('moderation.review_title')" />
-    <main class="grid gap-5 p-4 sm:p-6">
+    <main class="grid min-w-0 gap-6 p-4 sm:p-6">
         <AdminPageHeader
             :title="t('moderation.review_title')"
             :description="t('moderation.review_description')"
-        /><Link :href="index().url">{{ t('moderation.reports_title') }}</Link>
-        <section class="grid gap-3 rounded-xl border bg-card p-4">
-            <p>{{ t(`moderation.reasons.${report.reason}`) }}</p>
-            <p v-if="report.details" class="break-words whitespace-pre-wrap">
-                {{ report.details }}
-            </p>
-            <div class="flex flex-wrap gap-3">
-                <Link
-                    v-if="report.reporter.id"
-                    :href="
-                        members({ query: { member: report.reporter.id } }).url
-                    "
-                    >{{ report.reporter.name }}</Link
-                ><Link
-                    v-if="report.target.id"
-                    :href="members({ query: { member: report.target.id } }).url"
-                    >{{ report.target.name }}</Link
-                >
-            </div>
-        </section>
-        <section
-            class="grid gap-3"
-            :aria-label="t('moderation.full_conversation')"
-        >
-            <article
-                v-for="message in messages.data"
-                :key="message.id"
-                class="rounded-xl border bg-card p-4"
+        />
+        <div class="flex flex-wrap items-center gap-3">
+            <Button as-child variant="outline"
+                ><Link :href="backHref" data-test="reports-back">{{
+                    t('moderation.back_to_list')
+                }}</Link></Button
             >
-                <p class="font-medium">{{ author(message.author_user_id) }}</p>
-                <p class="break-words whitespace-pre-wrap">
-                    {{ message.content }}
-                </p>
-                <time class="text-xs text-muted-foreground">{{
-                    formatDate(message.created_at, {
-                        dateStyle: 'short',
+            <Badge :variant="report.closed_at ? 'secondary' : 'default'">{{
+                t(
+                    report.closed_at
+                        ? 'moderation.state_closed'
+                        : 'moderation.state_open',
+                )
+            }}</Badge>
+            <time
+                :datetime="report.created_at"
+                class="text-sm text-muted-foreground"
+                >{{
+                    formatDate(report.created_at, {
+                        dateStyle: 'medium',
                         timeStyle: 'short',
                     })
-                }}</time>
-            </article>
-            <nav class="flex gap-3">
-                <Link
-                    v-if="messages.prev_page_url"
-                    :href="messages.prev_page_url"
-                    >{{ t('moderation.previous') }}</Link
-                ><Link
-                    v-if="messages.next_page_url"
-                    :href="messages.next_page_url"
-                    >{{ t('moderation.next') }}</Link
-                >
-            </nav>
-        </section>
-        <section v-if="report.closed_at" class="rounded-xl border p-4">
-            <p>{{ t('moderation.closed') }}</p>
-            <p class="whitespace-pre-wrap">{{ report.decision }}</p>
-        </section>
-        <form
-            v-if="
-                !report.closed_at || (report.target.id && report.target.can_ban)
-            "
-            class="grid gap-3"
-            @submit.prevent="submit"
-        >
-            <Label for="close-decision">{{
-                t('moderation.decision_reason')
-            }}</Label
-            ><Textarea
-                id="close-decision"
-                v-model="form.decision"
-                required
-                maxlength="1000"
-            />
-            <InputError
-                :message="form.errors.decision || banForm.errors.reason"
-            />
-            <InputError
-                :message="form.errors.confirmed || banForm.errors.confirmed"
-            />
-            <InputError :message="banForm.errors.banned" />
-            <p
-                v-if="report.target.id && report.target.can_ban"
-                id="report-ban-warning"
-                class="text-sm text-muted-foreground"
+                }}</time
             >
-                {{
-                    report.target.banned
-                        ? t('moderation.unban_warning')
-                        : t('moderation.ban_warning')
-                }}
-            </p>
-            <div class="flex gap-3">
-                <Button
-                    v-if="!report.closed_at"
-                    data-test="close-report"
-                    class="h-auto min-h-11 flex-1 px-3 py-2 whitespace-normal"
-                    :disabled="form.processing || banForm.processing"
-                    type="submit"
-                    value="close"
-                    >{{ t('moderation.close_confirm') }}</Button
+        </div>
+        <section
+            class="grid gap-4 rounded-xl border bg-card p-4 sm:p-6"
+            aria-labelledby="report-context"
+        >
+            <h2 id="report-context" class="text-lg font-semibold">
+                {{ t('moderation.report_context') }}
+            </h2>
+            <dl class="grid gap-4 sm:grid-cols-2">
+                <div
+                    v-for="person in [
+                        { role: 'reporter', ...report.reporter },
+                        { role: 'target', ...report.target },
+                    ]"
+                    :key="person.role"
+                    class="min-w-0"
                 >
-                <Button
-                    v-if="report.target.id && report.target.can_ban"
-                    data-test="review-member-ban"
-                    class="h-auto min-h-11 flex-1 px-3 py-2 whitespace-normal"
-                    :variant="report.target.banned ? 'outline' : 'destructive'"
-                    :disabled="form.processing || banForm.processing"
-                    aria-describedby="report-ban-warning"
-                    type="submit"
-                    value="ban"
-                    >{{
-                        report.target.banned
-                            ? t('moderation.unban')
-                            : t('moderation.ban')
-                    }}</Button
+                    <dt class="mb-1 text-sm text-muted-foreground">
+                        {{ t(`moderation.${person.role}`) }}
+                    </dt>
+                    <dd class="font-medium break-words">
+                        <Link
+                            v-if="person.id"
+                            :href="
+                                members({ query: { member: person.id } }).url
+                            "
+                            class="rounded-sm underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-ring"
+                            >{{ person.name }}</Link
+                        >
+                        <span v-else>{{ person.name }}</span>
+                    </dd>
+                </div>
+                <div class="sm:col-span-2">
+                    <dt class="mb-1 text-sm text-muted-foreground">
+                        {{ t('moderation.reason') }}
+                    </dt>
+                    <dd class="font-medium">
+                        {{ t(`moderation.reasons.${report.reason}`) }}
+                    </dd>
+                </div>
+            </dl>
+            <p
+                v-if="report.details"
+                class="max-w-prose break-words whitespace-pre-wrap"
+            >
+                {{ report.details }}
+            </p>
+            <div class="flex flex-wrap gap-2 lg:hidden">
+                <Button as-child variant="outline"
+                    ><a href="#reported-conversation">{{
+                        t('moderation.full_conversation')
+                    }}</a></Button
+                >
+                <Button as-child variant="outline"
+                    ><a href="#report-decision">{{
+                        t('moderation.processing')
+                    }}</a></Button
                 >
             </div>
-        </form>
+        </section>
+        <div
+            class="grid min-w-0 items-start gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]"
+        >
+            <section
+                id="reported-conversation"
+                class="grid min-w-0 scroll-mt-4 gap-3"
+                aria-labelledby="conversation-title"
+            >
+                <h2 id="conversation-title" class="text-lg font-semibold">
+                    {{ t('moderation.full_conversation') }}
+                </h2>
+                <p class="text-sm text-muted-foreground">
+                    {{ t('moderation.review_description') }}
+                </p>
+                <p
+                    v-if="messages.data.length === 0"
+                    class="rounded-xl border border-dashed p-6 text-muted-foreground"
+                >
+                    {{ t('moderation.no_messages') }}
+                </p>
+                <article
+                    v-for="message in messages.data"
+                    :key="message.id"
+                    class="min-w-0 rounded-xl border bg-card p-4"
+                >
+                    <p class="font-medium">
+                        {{ author(message.author_user_id) }}
+                    </p>
+                    <p class="break-words whitespace-pre-wrap">
+                        {{ message.content }}
+                    </p>
+                    <time
+                        :datetime="message.created_at"
+                        class="text-xs text-muted-foreground"
+                        >{{
+                            formatDate(message.created_at, {
+                                dateStyle: 'short',
+                                timeStyle: 'short',
+                            })
+                        }}</time
+                    >
+                </article>
+                <nav
+                    v-if="messages.last_page > 1"
+                    class="flex flex-wrap items-center justify-between gap-3"
+                    :aria-label="t('moderation.message_pagination')"
+                >
+                    <Link
+                        v-if="messages.prev_page_url"
+                        :href="messages.prev_page_url"
+                        >{{ t('moderation.previous') }}</Link
+                    ><Link
+                        v-if="messages.next_page_url"
+                        :href="messages.next_page_url"
+                        >{{ t('moderation.next') }}</Link
+                    >
+                </nav>
+            </section>
+            <aside
+                id="report-decision"
+                class="grid min-w-0 scroll-mt-4 gap-4 rounded-xl border bg-card p-4 sm:p-6 lg:sticky lg:top-4"
+            >
+                <h2 class="text-lg font-semibold">
+                    {{ t('moderation.processing') }}
+                </h2>
+                <section v-if="report.closed_at" class="rounded-xl border p-4">
+                    <h3 class="font-semibold">{{ t('moderation.closure') }}</h3>
+                    <p class="my-2 text-sm text-muted-foreground">
+                        {{
+                            t('moderation.closed_date', {
+                                date: formatDate(report.closed_at, {
+                                    dateStyle: 'medium',
+                                    timeStyle: 'short',
+                                }),
+                            })
+                        }}
+                    </p>
+                    <p class="break-words whitespace-pre-wrap">
+                        {{ report.decision }}
+                    </p>
+                </section>
+                <form
+                    v-if="
+                        !report.closed_at ||
+                        (report.target.id && report.target.can_ban)
+                    "
+                    class="grid gap-3"
+                    @submit.prevent="submit"
+                >
+                    <p class="text-sm text-muted-foreground">
+                        {{ t('moderation.confirm_description') }}
+                    </p>
+                    <Label for="close-decision">{{
+                        t('moderation.decision_reason')
+                    }}</Label
+                    ><Textarea
+                        id="close-decision"
+                        v-model="form.decision"
+                        required
+                        maxlength="1000"
+                        :disabled="form.processing || banForm.processing"
+                        :aria-invalid="
+                            Boolean(
+                                form.errors.decision || banForm.errors.reason,
+                            )
+                        "
+                        :aria-describedby="
+                            [
+                                form.errors.decision || banForm.errors.reason
+                                    ? 'decision-error'
+                                    : null,
+                                report.target.id && report.target.can_ban
+                                    ? 'report-ban-warning'
+                                    : null,
+                            ]
+                                .filter(Boolean)
+                                .join(' ') || undefined
+                        "
+                    />
+                    <InputError
+                        id="decision-error"
+                        :message="form.errors.decision || banForm.errors.reason"
+                    />
+                    <InputError
+                        :message="
+                            form.errors.confirmed || banForm.errors.confirmed
+                        "
+                    />
+                    <InputError :message="banForm.errors.banned" />
+                    <p
+                        v-if="report.target.id && report.target.can_ban"
+                        id="report-ban-warning"
+                        class="text-sm text-muted-foreground"
+                    >
+                        {{
+                            report.target.banned
+                                ? t('moderation.unban_warning')
+                                : t('moderation.ban_warning')
+                        }}
+                    </p>
+                    <p
+                        v-if="form.processing || banForm.processing"
+                        role="status"
+                        class="text-sm text-muted-foreground"
+                    >
+                        {{ t('moderation.loading') }}
+                    </p>
+                    <div class="flex gap-3">
+                        <Button
+                            v-if="!report.closed_at"
+                            data-test="close-report"
+                            class="h-auto min-h-11 flex-1 px-3 py-2 whitespace-normal"
+                            :disabled="form.processing || banForm.processing"
+                            type="submit"
+                            value="close"
+                            >{{ t('moderation.close_confirm') }}</Button
+                        >
+                        <Button
+                            v-if="report.target.id && report.target.can_ban"
+                            data-test="review-member-ban"
+                            class="h-auto min-h-11 flex-1 px-3 py-2 whitespace-normal"
+                            :variant="
+                                report.target.banned ? 'outline' : 'destructive'
+                            "
+                            :disabled="form.processing || banForm.processing"
+                            aria-describedby="report-ban-warning"
+                            type="submit"
+                            value="ban"
+                            >{{
+                                report.target.banned
+                                    ? t('moderation.unban')
+                                    : t('moderation.ban')
+                            }}</Button
+                        >
+                    </div>
+                </form>
+            </aside>
+        </div>
     </main>
 </template>

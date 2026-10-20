@@ -91,3 +91,58 @@ it('shows the ban explanation on login after a valid recovery code', function ()
         ->assertSee(BannedAuthentication::message())->assertNoJavaScriptErrors();
     $this->assertGuest();
 });
+
+it('opens received reports from the normal profile and returns to its filtered history after closure', function (string $device) {
+    Storage::fake('local');
+    $reporter = User::factory()->withProfile()->create();
+    $target = User::factory()->withProfile()->create();
+    $admin = User::factory()->withProfile()->admin()->create();
+    $conversation = MemberMatch::query()->create(['user_low_id' => $reporter->id, 'user_high_id' => $target->id])->conversation()->create();
+    $conversation->messages()->create(['author_user_id' => $target->id, 'content' => 'Échange original à examiner']);
+    $report = app(ReportConversation::class)->handle($reporter, $conversation, ConversationReportReason::Threats, 'Contexte du signalement', false);
+    Storage::disk('local')->put($target->profile->avatar->image_path, base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScL8WQAAAABJRU5ErkJggg=='));
+    $this->actingAs($admin);
+    $page = visit("/members/{$target->id}")->on()->{$device}();
+    $page->click('[data-test="received-reports"]')->assertSee('Signalements reçus')
+        ->assertSee($reporter->profile->display_name)->assertDontSee('Échange original à examiner')
+        ->click('[data-test="review-report"]')->assertSee('Personne signalée')
+        ->assertSee('Contexte du signalement')->assertSee('Échange original à examiner')
+        ->fill('#close-decision', 'Examen terminé')->click('[data-test="close-report"]')
+        ->assertSee('Examen terminé')->assertNotPresent('[data-test="close-report"]')
+        ->click('[data-test="reports-back"]')->assertSee('Signalements reçus')
+        ->assertSee('Clôturé')->click('[data-test="reports-origin"]')
+        ->assertPathIs("/members/{$target->id}")->assertNoJavaScriptErrors();
+    expect($report->fresh()->closed_at)->not->toBeNull();
+})->with(['desktop', 'mobile']);
+
+it('opens an empty received history from administrative member management', function (string $device) {
+    $admin = User::factory()->withProfile()->admin()->create();
+    $target = User::factory()->withProfile()->create();
+    $this->actingAs($admin);
+    visit("/admin/members?member={$target->id}")->on()->{$device}()
+        ->click('[data-test="received-reports"]')->assertSee('Aucun signalement reçu')
+        ->assertScript('document.documentElement.scrollWidth <= window.innerWidth', true)
+        ->assertNoJavaScriptErrors();
+})->with(['desktop', 'mobile']);
+
+it('supports English review links with the keyboard on desktop and mobile', function (string $device) {
+    $reporter = User::factory()->withProfile()->create();
+    $target = User::factory()->withProfile()->create();
+    $admin = User::factory()->withProfile()->admin()->create(['locale' => 'en']);
+    $conversation = MemberMatch::query()->create(['user_low_id' => $reporter->id, 'user_high_id' => $target->id])->conversation()->create();
+    $conversation->messages()->create(['author_user_id' => $target->id, 'content' => 'Original message']);
+    app(ReportConversation::class)->handle($reporter, $conversation, ConversationReportReason::Spam, 'Context for review', false);
+    $this->actingAs($admin);
+    $page = visit("/admin/conversation-reports?target={$target->id}")->on()->{$device}()->assertSee('Reports received')->assertSee('Reported by')->assertSee('Reported member')
+        ->assertScript('document.documentElement.scrollWidth <= window.innerWidth', true)->assertNoAccessibilityIssues();
+    if (getenv('CAPTURE_REPORTS')) {
+        $page->screenshot(filename: "reports-list-{$device}");
+    }
+    $page->keys('[data-test="review-report"]', 'Enter')->assertSee('Original message')
+        ->assertSee('Handle report')->assertSee('Context for review')
+        ->assertScript('document.documentElement.scrollWidth <= window.innerWidth', true)->assertNoAccessibilityIssues();
+    if (getenv('CAPTURE_REPORTS')) {
+        $page->screenshot(filename: "reports-detail-{$device}");
+    }
+    $page->keys('[data-test="reports-back"]', 'Enter')->assertSee('Reports received')->assertNoJavaScriptErrors();
+})->with(['desktop', 'mobile']);

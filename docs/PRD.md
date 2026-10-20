@@ -422,8 +422,14 @@ bloqué. Six motifs sont proposés ; précision et décision sont limitées à
 et un nouveau peut être envoyé après clôture.
 
 Les administrateurs actifs consultent une file et les messages originaux paginés
-en lecture seule. Consultation et clôture sont auditées sans copier les messages
-ni modifier leur lecture. L’accès subsiste après clôture, blocage, masquage ou
+en lecture seule. La file distingue les éléments à traiter des éléments clôturés,
+avec compteurs et retour au filtre et à la page d’origine. L’historique reçu par
+un membre est accessible aux administrateurs depuis sa fiche administrative et
+son profil dans l’application, y compris le profil consulté depuis un événement.
+Il regroupe tous les signalements conservés qui ciblent ce membre, ouverts ou
+clôturés, avec pagination ; les signalements émis par ce membre en sont exclus.
+Les listes n’exposent pas les messages privés. Consultation et clôture sont
+auditées sans copier les messages ni modifier leur lecture. L’accès subsiste après clôture, blocage, masquage ou
 bannissement. Un administrateur peut bannir ou réactiver tout compte non admin,
 quel que soit son rôle, avec motif et confirmation ; aucun terme n’est prévu.
 

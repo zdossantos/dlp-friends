@@ -4,6 +4,7 @@ namespace App\Data;
 
 use App\Enums\SwipeDecision;
 use App\Models\Block;
+use App\Models\ConversationReport;
 use App\Models\Interest;
 use App\Models\MemberMatch;
 use App\Models\Swipe;
@@ -45,6 +46,9 @@ final readonly class PublicMemberData
             : null;
 
         return [
+            ...(Gate::forUser($viewer)->allows('viewAny', ConversationReport::class)
+                ? ['receivedReportsHref' => route('admin.conversation-reports.index', ['target' => $member->id, 'source' => 'profile'], absolute: false)]
+                : []),
             'canBlock' => ! $isSelf && ! $isAdmin && ! $canUnblock,
             'canLike' => ! $isSelf
                 && ! $isBlockedPair

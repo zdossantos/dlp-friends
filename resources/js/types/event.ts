@@ -68,6 +68,7 @@ export type EventDetail = EventSummary & {
 export type EventWorkspaceContext = 'discover' | 'mine' | 'conversations';
 
 type AvailableEmbeddedMemberProfile = {
+    receivedReportsHref?: string;
     isBlocked: false;
     member: PublicMember;
     canBlock: boolean;
