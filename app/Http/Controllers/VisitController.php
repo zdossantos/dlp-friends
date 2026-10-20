@@ -10,10 +10,11 @@ use App\Models\Visit;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
+use Inertia\Response;
 
 class VisitController extends Controller
 {
-    public function index(VisitIndexRequest $request, VisitWorkspaceData $data): \Inertia\Response
+    public function index(VisitIndexRequest $request, VisitWorkspaceData $data): Response
     {
         return Inertia::render('Visits/Index', $data->build($request->user(), $request->filters()));
     }
@@ -22,14 +23,14 @@ class VisitController extends Controller
     {
         $request->user()->visits()->create($request->validated());
 
-        return to_route('visits.index');
+        return redirect()->back(fallback: route('visits.index'));
     }
 
     public function update(UpdateVisitRequest $request, Visit $visit): RedirectResponse
     {
         $visit->update($request->validated());
 
-        return to_route('visits.index');
+        return redirect()->back(fallback: route('visits.index'));
     }
 
     public function destroy(Visit $visit): RedirectResponse
@@ -37,6 +38,6 @@ class VisitController extends Controller
         Gate::authorize('delete', $visit);
         $visit->delete();
 
-        return to_route('visits.index');
+        return redirect()->back(fallback: route('visits.index'));
     }
 }

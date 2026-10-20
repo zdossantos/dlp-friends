@@ -3,6 +3,7 @@ import { Link, router } from '@inertiajs/vue3';
 import { computed, nextTick } from 'vue';
 import EventCard from '@/components/events/EventCard.vue';
 import EventWorkspacePanel from '@/components/events/EventWorkspacePanel.vue';
+import OutingsNavigation from '@/components/outings/OutingsNavigation.vue';
 import { Button } from '@/components/ui/button';
 import { useTranslations } from '@/composables/useTranslations';
 import {
@@ -68,6 +69,7 @@ function updatePanel(open: boolean): void {
         :data-test="context === 'discover' ? 'discover-events' : 'mine-events'"
         class="mx-auto w-full max-w-5xl min-w-0 space-y-7 px-4 pt-[max(1rem,env(safe-area-inset-top))] pb-24 sm:px-6 sm:pt-8"
     >
+        <OutingsNavigation active="events" />
         <header class="flex flex-wrap items-start justify-between gap-4">
             <div class="max-w-full min-w-0">
                 <h1

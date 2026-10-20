@@ -71,3 +71,13 @@ test('leap days and the Paris midnight boundary remain date only', function () {
     $this->actingAs($member)->post('/visits', ['starts_on' => '2028-02-28', 'ends_on' => '2028-02-29'])->assertSessionHasErrors('starts_on');
     $this->post('/visits', ['starts_on' => '2028-02-29', 'ends_on' => '2028-03-01'])->assertSessionHasNoErrors();
 });
+
+test('stay mutations return to the validated workspace context', function () {
+    $member = User::factory()->withProfile()->create();
+    $context = route('visits.index', ['month' => today('Europe/Paris')->format('Y-m'), 'view' => 'calendar', 'search' => 'Élodie']);
+    $data = ['starts_on' => today('Europe/Paris')->toDateString(), 'ends_on' => today('Europe/Paris')->toDateString()];
+    $this->actingAs($member)->from($context)->post(route('visits.store'), $data)->assertRedirect($context);
+    $visit = Visit::query()->sole();
+    $this->from($context)->patch(route('visits.update', $visit), $data)->assertRedirect($context);
+    $this->from($context)->delete(route('visits.destroy', $visit))->assertRedirect($context);
+});

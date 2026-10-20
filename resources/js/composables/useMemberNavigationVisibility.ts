@@ -6,11 +6,17 @@ const memberNavigationPaths = new Set([
     '/discover',
     '/discover/passed',
     '/events',
+    '/visits',
     '/conversations',
     '/notifications',
     '/profile',
 ]);
-const memberNavigationPrefixes = ['/events/', '/partner/', '/settings/'];
+const memberNavigationPrefixes = [
+    '/visits/',
+    '/events/',
+    '/partner/',
+    '/settings/',
+];
 
 export function useMemberNavigationVisibility(): ComputedRef<boolean> {
     const page = usePage();

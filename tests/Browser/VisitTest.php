@@ -1,0 +1,129 @@
+<?php
+
+use App\Models\MemberMatch;
+use App\Models\User;
+use App\Models\Visit;
+
+test('members create edit and delete a stay from the mobile agenda', function () {
+    $member = User::factory()->withProfile()->create();
+    $this->actingAs($member);
+    $start = today('Europe/Paris')->addDay()->toDateString();
+    $end = today('Europe/Paris')->addDays(3)->toDateString();
+    $page = visit('/visits')->resize(320, 700)
+        ->assertSee('Visites')->click('[data-test="visit-create"]')
+        ->fill('starts_on', $start)->fill('ends_on', $end)
+        ->click('[data-test="visit-submit"]')->assertSee('Ta visite')
+        ->assertNoJavaScriptErrors();
+    expect(Visit::query()->where('user_id', $member->id)->count())->toBe(1);
+    $id = Visit::query()->sole()->id;
+    $page->click('[data-test="visit-edit-'.$id.'-'.$start.'"]')->fill('ends_on', $start)
+        ->click('[data-test="visit-submit"]');
+    expect(Visit::query()->sole()->ends_on->toDateString())->toBe($start);
+    $page->click('[data-test="visit-edit-'.$id.'-'.$start.'"]')->click('[data-test="visit-delete"]')
+        ->click('[data-test="visit-confirm-submit"]')->assertDontSee('Ta visite')
+        ->assertScript('document.documentElement.scrollWidth <= innerWidth', true)
+        ->assertNoJavaScriptErrors();
+    expect(Visit::query()->count())->toBe(0);
+});
+
+test('audience confirmation keeps the saved audience until explicit acceptance', function () {
+    $member = User::factory()->withProfile()->create();
+    $this->actingAs($member);
+    $page = visit('/visits')->select('visit-visibility', 'members')
+        ->assertSee('Partager toutes tes visites')
+        ->click('[data-test="visit-confirm-cancel"]');
+    expect($member->fresh()->visits_visibility->value)->toBe('hidden');
+    $page->select('visit-visibility', 'members')->click('[data-test="visit-confirm-submit"]')
+        ->assertNoJavaScriptErrors();
+    expect($member->fresh()->visits_visibility->value)->toBe('members');
+    $page->select('visit-visibility', 'hidden')->assertNoJavaScriptErrors();
+    expect($member->fresh()->visits_visibility->value)->toBe('hidden');
+});
+
+test('calendar navigation and full lists preserve the selected context', function () {
+    $member = User::factory()->withProfile()->create();
+    $day = today('Europe/Paris')->addDay();
+    Visit::factory()->for($member)->create(['starts_on' => $day, 'ends_on' => $day]);
+    for ($i = 0; $i < 24; $i++) {
+        $other = User::factory()->withProfile()->create(['visits_visibility' => 'members']);
+        if ($i < 11) {
+            MemberMatch::query()->create(['user_low_id' => $member->id, 'user_high_id' => $other->id]);
+        }
+        $other->profile->update(['display_name' => 'Ami '.str_pad((string) $i, 2, '0', STR_PAD_LEFT)]);
+        Visit::factory()->for($other)->create(['starts_on' => $day, 'ends_on' => $day]);
+    }
+    $this->actingAs($member);
+    $page = visit('/visits?month='.$day->format('Y-m').'&day='.$day->toDateString().'&view=calendar')
+        ->resize(1440, 900)->assertPresent('[data-test="visit-calendar"]')
+        ->click('[data-test="visit-day-'.$day->toDateString().'"]')
+        ->assertSee('Également présents · 24')->screenshot(true, 'visits-desktop')
+        ->click('[data-test="visit-all-attendees"]')
+        ->assertSee('Ami 23')->click('[data-test="visit-attendees-back"]')
+        ->select('visit-audience', 'matches')->assertSee('Également présents · 11')
+        ->select('visit-audience', 'members')->assertSee('Également présents · 24')
+        ->assertPresent('[data-test="visit-calendar"]')
+        ->click('[data-test="visit-next-month"]')->click('[data-test="visit-previous-month"]')
+        ->click('[data-test="visit-view-agenda"]')->assertPresent('[data-test="visit-agenda"]')
+        ->assertNoJavaScriptErrors();
+});
+
+test('visits remain accessible in both languages and themes on narrow screens', function (string $locale, string $theme) {
+    $this->actingAs(User::factory()->withProfile()->create(['locale' => $locale]));
+    $page = visit('/visits')->resize(320, 700);
+    $page->script("document.documentElement.classList.toggle('dark', '".$theme."' === 'dark')");
+    $page->script('async () => { await Promise.all(document.getAnimations().map(animation => animation.finished)); }');
+    $page->assertPresent('[data-test="member-bottom-navigation"]')->assertSee($locale === 'fr' ? 'Ajouter une visite' : 'Add a visit')
+        ->assertNoAccessibilityIssues()
+        ->screenshot(true, 'visits-agenda-'.$locale.'-'.$theme)
+        ->keys('[data-test="visit-view-calendar"]', 'Enter')
+        ->assertPresent('[data-test="visit-calendar"]')
+        ->assertScript('document.documentElement.scrollWidth <= innerWidth', true)
+        ->assertNoAccessibilityIssues()
+        ->screenshot(true, 'visits-calendar-'.$locale.'-'.$theme)
+        ->click('[data-test="visit-create"]')->assertPresent('[data-test="visit-form-panel"]')
+        ->assertNoAccessibilityIssues()
+        ->keys('#starts_on', 'Escape')->assertNotPresent('[data-test="visit-form-panel"]')
+        ->assertNoJavaScriptErrors();
+})->with([['fr', 'light'], ['fr', 'dark'], ['en', 'light'], ['en', 'dark']]);
+
+test('full visitor lists page beyond one hundred and search names literally', function () {
+    $viewer = User::factory()->withProfile()->create();
+    $day = today('Europe/Paris')->addDay();
+    for ($i = 0; $i < 105; $i++) {
+        $other = User::factory()->withProfile()->create(['visits_visibility' => 'members']);
+        $other->profile->update(['display_name' => $i === 0 ? 'Élodie' : sprintf('Membre %03d', $i)]);
+        Visit::factory()->for($other)->create(['starts_on' => $day, 'ends_on' => $day]);
+    }
+    $this->actingAs($viewer);
+    $page = visit('/visits?month='.$day->format('Y-m').'&day='.$day->toDateString().'&view=calendar')
+        ->assertSee('99+')->click('[data-test="visit-all-attendees"]')
+        ->assertSee('Membres présents · 105')->assertSee('Page 1 sur 4')
+        ->click('Suivante')->assertSee('Page 2 sur 4')
+        ->click('Suivante')->assertSee('Page 3 sur 4')
+        ->click('Suivante')->assertSee('Page 4 sur 4')->assertSee('Membre 104')
+        ->click('[data-test="visit-attendees-back"]')
+        ->fill('visit-search', 'elodie')->assertSee('Élodie')->assertSee('Également présents · 1')
+        ->click('Élodie')->assertSee('Retirer le filtre membre')
+        ->assertNoJavaScriptErrors();
+});
+
+test('closing the attendee list restores its scrolled opener and keyboard focus', function () {
+    $viewer = User::factory()->withProfile()->create();
+    $other = User::factory()->withProfile()->create(['visits_visibility' => 'members']);
+    $day = today('Europe/Paris')->addDay();
+    Visit::factory()->for($other)->create(['starts_on' => $day, 'ends_on' => $day->copy()->endOfMonth()]);
+    $this->actingAs($viewer);
+    $date = $day->copy()->endOfMonth()->toDateString();
+    $page = visit('/visits?month='.$day->format('Y-m'))->resize(390, 700);
+    $page->script("const button = document.querySelectorAll('[data-test=visit-all-attendees]'); button[button.length-1].scrollIntoView({block:'center'}); button[button.length-1].id='visit-scroll-target'; window.__visitScroll = window.scrollY;");
+    $page->assertScript('window.__visitScroll > 0', true);
+    $page->click('#visit-scroll-target');
+    $page->assertPresent('[data-test="visit-attendees-panel"]')->click('[data-test="visit-attendees-back"]')
+        ->assertScript("document.activeElement?.id === 'visit-opener-".$date."'", true)
+        ->assertScript('Math.abs(window.scrollY-window.__visitScroll)<2', true)
+        ->click('#visit-opener-'.$date)->assertPresent('[data-test="visit-attendees-panel"]')
+        ->back()->assertNotPresent('[data-test="visit-attendees-panel"]')
+        ->assertScript("document.activeElement?.id === 'visit-opener-".$date."'", true)
+        ->assertScript('Math.abs(window.scrollY-window.__visitScroll)<2', true)
+        ->assertNoJavaScriptErrors();
+});
