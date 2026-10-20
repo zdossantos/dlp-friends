@@ -74,10 +74,49 @@ watch(
     },
 );
 function refreshMessages(): void {
+    const beforeRefresh = new Map(
+        visibleMessages.value.map((message) => [message.id, message]),
+    );
+    // A slow snapshot must not undo reactions or receipts received while it
+    // was in flight. The next refresh can reconcile their server state again.
+    function preserveNewerState(
+        message: ConversationMessage,
+    ): ConversationMessage {
+        const before = beforeRefresh.get(message.id);
+        const current = visibleMessages.value.find(
+            (item) => item.id === message.id,
+        );
+
+        if (!current) {
+            return message;
+        }
+
+        return {
+            ...message,
+            // Each live update replaces the message object, even when a like
+            // followed by an unlike ends with the same values as before.
+            ...(before !== current
+                ? {
+                      reaction_count: current.reaction_count,
+                      reacted_by_current_user: current.reacted_by_current_user,
+                  }
+                : {}),
+            read_at: current.read_at ?? message.read_at,
+        };
+    }
+
     router.reload({
         only: ['messages', 'messageUpdates', 'auth'],
         preserveUrl: true,
         data: { messages_after: synchronizedThrough },
+        onBeforeUpdate: (page) => {
+            const messages = page.props.messages as PaginatedMessages;
+            messages.data = messages.data.map(preserveNewerState);
+            page.props.messageUpdates = (
+                (page.props.messageUpdates as
+                    ConversationMessage[] | undefined) ?? []
+            ).map(preserveNewerState);
+        },
     });
 }
 useMessagingRefresh(refreshMessages);

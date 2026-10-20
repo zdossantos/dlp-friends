@@ -89,6 +89,43 @@ test('a member can like then unlike a message from the timeline', function () {
     $this->assertDatabaseCount('message_reactions', 0);
 });
 
+test('a delayed refresh does not overwrite a newer message reaction', function (bool $unlike) {
+    $member = conversationBrowserMember('Alice');
+    $peer = conversationBrowserMember('Basile');
+    $match = MemberMatch::factory()->create([
+        'user_low_id' => min($member->id, $peer->id),
+        'user_high_id' => max($member->id, $peer->id),
+    ]);
+    $conversation = $match->conversation()->create();
+    Message::factory()->for($conversation)->for($peer, 'author')->create(['content' => 'Une belle journée']);
+    $this->actingAs($member);
+    $page = visit("/conversations/{$conversation->id}")->on()->desktop()->assertSee('Une belle journée')->waitForEvent('networkidle');
+    $page->script(<<<'JS'
+        window.messagingOriginalSend = XMLHttpRequest.prototype.send;
+        XMLHttpRequest.prototype.send = function (...args) {
+            const loaded = this.onload;
+            this.onload = (...events) => {
+                window.finishRefresh = () => loaded.apply(this, events);
+            };
+            return window.messagingOriginalSend.apply(this, args);
+        };
+        window.dispatchEvent(new PageTransitionEvent('pageshow', { persisted: true }));
+        true;
+        JS);
+    $page->assertScript('typeof window.finishRefresh', 'function')
+        ->click('[data-test="message-like"]')
+        ->assertPresent('[data-test="message-like"][aria-pressed="true"]');
+    if ($unlike) {
+        $page->click('[data-test="message-like"]')
+            ->assertPresent('[data-test="message-like"][aria-pressed="false"]');
+    }
+    $page->script('XMLHttpRequest.prototype.send = window.messagingOriginalSend; window.finishRefresh(); true;');
+    $page->waitForEvent('networkidle')
+        ->assertPresent('[data-test="message-like"][aria-pressed="'.($unlike ? 'false' : 'true').'"]')
+        ->assertNoJavaScriptErrors();
+    $this->assertDatabaseCount('message_reactions', $unlike ? 0 : 1);
+})->with(['like' => false, 'like then unlike' => true]);
+
 test('a zero reaction stays hidden on mobile until a double tap likes the message', function () {
     $member = conversationBrowserMember('Alice');
     $peer = conversationBrowserMember('Basile');
@@ -779,7 +816,7 @@ test('resuming a conversation catches up beyond one page without duplicate messa
         ->assertScript("document.querySelectorAll('[data-message-id]').length", 27)
         ->assertScript("new Set(Array.from(document.querySelectorAll('[data-message-id]'), el => el.dataset.messageId)).size", 27);
     $page->script("window.dispatchEvent(new PageTransitionEvent('pageshow', { persisted: true })); true;");
-    $page->waitForEvent('networkidle')->click('a[href="/conversations"]')->assertSee('Ma réponse après la veille');
+    $page->waitForEvent('networkidle')->click('a[href="/conversations"]')->assertPathIs('/conversations')->assertSee('Ma réponse après la veille');
     $page->back()->assertSee('Basile')
         ->assertScript("document.querySelectorAll('[data-message-id]').length", 27)
         ->assertNoJavaScriptErrors();

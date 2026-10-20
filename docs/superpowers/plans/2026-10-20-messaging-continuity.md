@@ -14,7 +14,7 @@
 - [x] Reproduire le passage du champ sous le clavier et l’envoi accidentel pendant une composition IME.
 - [x] Conserver le focus pendant l’envoi, masquer les suggestions après le premier message et respecter la composition IME.
 - [x] Vérifier le suivi du bas du fil, la conservation de la position de lecture et le bouton « Derniers messages » pendant les changements de hauteur.
-- [ ] Exécuter les contrôles complets concernés, inspecter le rendu mobile et demander une revue indépendante.
+- [x] Exécuter les contrôles complets concernés, inspecter le rendu mobile et demander une revue indépendante.
 
 ## Points de revue
 
@@ -23,3 +23,9 @@ Retour navigateur avec état Inertia restauré ; reconnexion sans événement re
 ## Résultats de revue
 
 Deux régressions corrigées avant livraison : le curseur de rattrapage ne suit pas les événements temps réel, qui peuvent arriver hors ordre ; les rechargements Inertia fusionnent l’historique par identifiant pour éviter l’accumulation de doublons. Le test couvre également le retour arrière après récupération de 25 messages et la rédaction du message suivant pendant un envoi retardé. La revue indépendante ne relève plus de défaut bloquant confirmé.
+
+## Validation
+
+Les contrôles lint/format/TypeScript, Pint, Larastan, Wayfinder, les 137 tests frontend et le build Vite passent. La suite Pest complète termine avec 1 559 tests réussis et six ignorés ; le build Docker de production passe. Les régressions de messagerie ajoutées passent sous Chromium et le rendu mobile a été inspecté. Le clavier natif iOS reste à vérifier sur appareil.
+
+La première CI a exposé une réaction écrasée par un snapshot retardé, reproduite avec une réponse XHR retenue puis corrigée : la synchronisation préserve les réactions et accusés de lecture reçus pendant la requête, y compris pour un message apparu entretemps. Le test de retour attend désormais l’URL de la liste avant de revenir au fil. La vérification CI finale reste consultable dans la pull request.
