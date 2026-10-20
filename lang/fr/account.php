@@ -103,6 +103,8 @@ return [
         'alternative' => 'Tu peux aussi',
     ],
     'settings' => [
+        'back_to_profile' => 'Retour au profil',
+        'back_to_administration' => 'Retour à l’administration',
         'discovery' => [
             'title' => 'Filtres des profils proposés',
             'description' => 'Choisis les profils que tu souhaites découvrir. Ces filtres ne modifient pas ta visibilité auprès des autres membres.',
@@ -123,6 +125,7 @@ return [
         'security' => 'Sécurité',
         'appearance' => 'Apparence',
         'notifications' => [
+            'categories_title' => 'Alertes de l’application',
             'navigation' => 'Notifications',
             'title' => 'Notifications',
             'description' => 'Choisis tes e-mails et les alertes de l’application sur cet appareil.',

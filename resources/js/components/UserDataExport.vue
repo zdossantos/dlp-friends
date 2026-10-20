@@ -2,7 +2,7 @@
 import { ref } from 'vue';
 import { toast } from 'vue-sonner';
 import UserDataExportController from '@/actions/App/Http/Controllers/Settings/UserDataExportController';
-import Heading from '@/components/Heading.vue';
+import SettingsSection from '@/components/settings/SettingsSection.vue';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
 import { useTranslations } from '@/composables/useTranslations';
@@ -41,12 +41,10 @@ const download = async (): Promise<void> => {
 </script>
 
 <template>
-    <div class="space-y-6">
-        <Heading
-            variant="small"
-            :title="t('account.export.title')"
-            :description="t('account.export.description')"
-        />
+    <SettingsSection
+        :title="t('account.export.title')"
+        :description="t('account.export.description')"
+    >
         <Button
             type="button"
             :disabled="generating"
@@ -63,5 +61,5 @@ const download = async (): Promise<void> => {
                 )
             }}
         </Button>
-    </div>
+    </SettingsSection>
 </template>

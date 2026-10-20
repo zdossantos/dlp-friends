@@ -2,9 +2,9 @@
 import { Form, usePage } from '@inertiajs/vue3';
 import { computed, useTemplateRef } from 'vue';
 import AccountController from '@/actions/App/Http/Controllers/Settings/AccountController';
-import Heading from '@/components/Heading.vue';
 import InputError from '@/components/InputError.vue';
 import PasswordInput from '@/components/PasswordInput.vue';
+import SettingsSection from '@/components/settings/SettingsSection.vue';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
@@ -22,16 +22,12 @@ const { isDesktop, Modal } = useResponsiveModal();
 </script>
 
 <template>
-    <div class="space-y-6">
-        <Heading
-            variant="small"
-            :title="t('account.deletion.title')"
-            :description="t('account.deletion.description')"
-        />
-        <div
-            class="space-y-4 rounded-lg border border-red-100 bg-red-50 p-4 dark:border-red-200/10 dark:bg-red-700/10"
-        >
-            <div class="relative space-y-0.5 text-red-600 dark:text-red-100">
+    <SettingsSection
+        :title="t('account.deletion.title')"
+        :description="t('account.deletion.description')"
+    >
+        <div class="space-y-4 rounded-xl bg-destructive/5 p-4">
+            <div class="relative space-y-0.5 text-destructive">
                 <p class="font-medium">{{ t('account.deletion.warning') }}</p>
                 <p class="text-sm">
                     {{ t('account.deletion.irreversible') }}
@@ -139,5 +135,5 @@ const { isDesktop, Modal } = useResponsiveModal();
                 </component>
             </component>
         </div>
-    </div>
+    </SettingsSection>
 </template>

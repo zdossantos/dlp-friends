@@ -25,15 +25,17 @@ function selectAppearance(value: string | number): void {
         :aria-label="t('account.appearance.label')"
         @update:model-value="selectAppearance"
     >
-        <TabsList class="h-auto rounded-xl p-1">
+        <TabsList
+            class="grid h-auto w-full grid-cols-3 gap-1 rounded-xl bg-muted/60 p-1"
+        >
             <TabsTrigger
                 v-for="{ value, Icon, label } in tabs"
                 :key="value"
                 :value="value"
-                class="rounded-lg px-3 py-1.5"
+                class="min-h-20 flex-col gap-2 rounded-lg px-2 py-3"
             >
-                <component :is="Icon" class="-ml-1 size-4" />
-                <span class="ml-1.5 text-sm">{{ label }}</span>
+                <component :is="Icon" class="size-5" aria-hidden="true" />
+                <span class="text-sm">{{ label }}</span>
             </TabsTrigger>
         </TabsList>
     </Tabs>

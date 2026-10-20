@@ -73,6 +73,8 @@ return [
         'use_auth' => 'use an authentication code', 'use_recovery' => 'use a recovery code', 'continue' => 'Continue', 'alternative' => 'You can also',
     ],
     'settings' => [
+        'back_to_profile' => 'Back to profile',
+        'back_to_administration' => 'Back to administration',
         'discovery' => [
             'title' => 'Suggested profile filters',
             'description' => 'Choose the profiles you would like to discover. These filters do not change your visibility to other members.',
@@ -89,6 +91,7 @@ return [
         'title' => 'Settings', 'description' => 'Manage your account, notifications, security, and appearance.', 'navigation' => 'Settings',
         'account' => 'Account', 'security' => 'Security', 'appearance' => 'Appearance', 'account_page_title' => 'Account settings',
         'notifications' => [
+            'categories_title' => 'Application alerts',
             'navigation' => 'Notifications',
             'title' => 'Notifications',
             'description' => 'Choose your emails and app alerts on this device.',

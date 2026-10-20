@@ -4,9 +4,9 @@ import { computed } from 'vue';
 import AccountController from '@/actions/App/Http/Controllers/Settings/AccountController';
 import DeleteUser from '@/components/DeleteUser.vue';
 import DiscoveryPreferencesForm from '@/components/DiscoveryPreferencesForm.vue';
-import Heading from '@/components/Heading.vue';
 import InputError from '@/components/InputError.vue';
 import LocaleSwitcher from '@/components/LocaleSwitcher.vue';
+import SettingsSection from '@/components/settings/SettingsSection.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -34,15 +34,11 @@ setLayoutProps({
 
 <template>
     <Head :title="t('account.settings.account_page_title')" />
-    <h1 class="sr-only">{{ t('account.settings.account_page_title') }}</h1>
-    <div class="flex flex-col space-y-10">
-        <div class="space-y-6">
-            <LocaleSwitcher />
-            <Heading
-                variant="small"
-                :title="t('account.settings.account')"
-                :description="t('account.settings.account_description')"
-            />
+    <div class="space-y-4">
+        <SettingsSection
+            :title="t('account.settings.account')"
+            :description="t('account.settings.account_description')"
+        >
             <Form
                 v-bind="AccountController.update.form()"
                 class="space-y-6"
@@ -73,7 +69,7 @@ setLayoutProps({
                         {{ t('account.settings.resend_verification') }}
                     </Link>
                 </div>
-                <div class="rounded-2xl border p-4">
+                <div class="border-t border-border/70 pt-5">
                     <p class="font-medium">
                         {{ t('account.settings.presence_title') }}
                     </p>
@@ -100,7 +96,10 @@ setLayoutProps({
                     {{ t('account.settings.save') }}
                 </Button>
             </Form>
-        </div>
+        </SettingsSection>
+        <SettingsSection :title="t('common.locale.label')">
+            <LocaleSwitcher />
+        </SettingsSection>
         <DiscoveryPreferencesForm
             :preferences="page.props.discoveryPreferences"
         />

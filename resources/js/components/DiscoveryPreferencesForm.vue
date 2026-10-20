@@ -2,8 +2,8 @@
 import { useForm } from '@inertiajs/vue3';
 import { computed } from 'vue';
 import DiscoveryPreferenceController from '@/actions/App/Http/Controllers/Settings/DiscoveryPreferenceController';
-import Heading from '@/components/Heading.vue';
 import InputError from '@/components/InputError.vue';
+import SettingsSection from '@/components/settings/SettingsSection.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -36,13 +36,11 @@ function submit() {
 </script>
 
 <template>
-    <section class="space-y-6" aria-labelledby="discovery-preferences-title">
-        <Heading
-            id="discovery-preferences-title"
-            variant="small"
-            :title="t('account.settings.discovery.title')"
-            :description="t('account.settings.discovery.description')"
-        />
+    <SettingsSection
+        heading-id="discovery-preferences-title"
+        :title="t('account.settings.discovery.title')"
+        :description="t('account.settings.discovery.description')"
+    >
         <form class="space-y-6" @submit.prevent="submit">
             <fieldset class="grid min-w-0 gap-2" :disabled="form.processing">
                 <legend class="text-sm font-medium">
@@ -54,7 +52,10 @@ function submit() {
                 >
                     {{ t('account.settings.discovery.age_help') }}
                 </p>
-                <output class="font-medium" aria-live="polite">
+                <output
+                    class="text-lg font-semibold tabular-nums"
+                    aria-live="polite"
+                >
                     {{
                         t('account.settings.discovery.age_value', {
                             min: form.min_age,
@@ -88,6 +89,7 @@ function submit() {
                     v-model="form.min_common_interests"
                     name="min_common_interests"
                     type="number"
+                    class="max-w-28 tabular-nums"
                     min="0"
                     max="100"
                     step="1"
@@ -113,5 +115,5 @@ function submit() {
                 {{ t('account.settings.discovery.save') }}
             </Button>
         </form>
-    </section>
+    </SettingsSection>
 </template>

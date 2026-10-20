@@ -44,7 +44,8 @@ test('an account locale translates member settings', function () {
     $this->actingAs(User::factory()->withProfile()->create(['locale' => 'en']));
 
     visit('/settings/account')
-        ->assertSee('Account settings')
+        ->assertSee('Settings')
+        ->assertSee('Account')
         ->assertSee('Email address')
         ->assertScript('document.documentElement.lang', 'en')
         ->assertNoJavaScriptErrors();

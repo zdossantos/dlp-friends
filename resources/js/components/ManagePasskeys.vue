@@ -2,9 +2,9 @@
 import { router } from '@inertiajs/vue3';
 import { KeyRound } from '@lucide/vue';
 import { destroy } from '@/actions/Laravel/Passkeys/Http/Controllers/PasskeyRegistrationController';
-import Heading from '@/components/Heading.vue';
 import PasskeyItem from '@/components/PasskeyItem.vue';
 import PasskeyRegister from '@/components/PasskeyRegister.vue';
+import SettingsSection from '@/components/settings/SettingsSection.vue';
 import { useTranslations } from '@/composables/useTranslations';
 import type { Passkey } from '@/types/auth';
 
@@ -32,14 +32,12 @@ const { t } = useTranslations();
 </script>
 
 <template>
-    <div v-if="canManagePasskeys" class="space-y-6">
-        <Heading
-            variant="small"
-            :title="t('account.passkeys.title')"
-            :description="t('account.passkeys.description')"
-        />
-
-        <div class="overflow-hidden rounded-lg border border-border">
+    <SettingsSection
+        v-if="canManagePasskeys"
+        :title="t('account.passkeys.title')"
+        :description="t('account.passkeys.description')"
+    >
+        <div class="overflow-hidden rounded-xl bg-muted/40">
             <template v-if="passkeys.length">
                 <PasskeyItem
                     v-for="passkey in passkeys"
@@ -49,7 +47,7 @@ const { t } = useTranslations();
                 />
             </template>
 
-            <div v-else class="p-8 text-center">
+            <div v-else class="p-5 text-center">
                 <div
                     class="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-muted"
                 >
@@ -63,5 +61,5 @@ const { t } = useTranslations();
         </div>
 
         <PasskeyRegister @success="handleRegisterSuccess" />
-    </div>
+    </SettingsSection>
 </template>
