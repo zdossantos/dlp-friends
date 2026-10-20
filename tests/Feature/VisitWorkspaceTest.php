@@ -66,7 +66,7 @@ test('the full list paginates distinct people and rechecks privacy on every page
                         $ids[] = $member['id'];
                     }
 
-return true;
+                    return true;
                 });
         });
     }
