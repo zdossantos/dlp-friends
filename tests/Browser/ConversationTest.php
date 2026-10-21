@@ -76,6 +76,7 @@ test('a member can like then unlike a message from the timeline', function () {
     $this->actingAs($member);
 
     $page = visit("/conversations/{$conversation->id}")->on()->desktop()
+        ->waitForEvent('networkidle')
         ->assertPresent('[data-test="message-like"][aria-pressed="false"]')
         ->assertScript("getComputedStyle(document.querySelector('[data-test=message-like]')).display !== 'none'", true)
         ->click('[data-test="message-like"]')
@@ -524,12 +525,15 @@ test('one upward scroll loads one history page and keeps the reading position', 
     $conversation = $match->conversation()->create();
     foreach (range(1, 120) as $index) {
         Message::factory()->for($conversation)->for($peer, 'author')->create([
-            'content' => "Message court {$index}",
+            'content' => "Message court {$index}\nUne seconde ligne pour garder l’historique hors du seuil initial.",
             'created_at' => now()->addSeconds($index),
         ]);
     }
     $this->actingAs($member);
-    $page = visit("/conversations/{$conversation->id}")->resize($width, $height)->assertSee('Message court 120')->waitForEvent('networkidle');
+    $page = visit("/conversations/{$conversation->id}", ['viewport' => ['width' => $width, 'height' => $height]])
+        ->assertSee('Message court 120')
+        ->assertScript("document.querySelectorAll('[data-message-id]').length", 20)
+        ->waitForEvent('networkidle');
     $page->script("window.historyScrollTarget = {$scrollTop};");
     $page->script(<<<'JS'
         window.loadedBeforeScroll = document.querySelectorAll('[data-message-id]').length;
