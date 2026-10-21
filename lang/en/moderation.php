@@ -1,6 +1,13 @@
 <?php
 
-return ['banned' => 'This account is banned for behaviour in the application.', 'banned_contact' => 'To appeal this decision, contact :email.', 'ban_updated' => 'The sanction has been updated.', 'block_admin' => 'An administrator cannot be blocked.', 'already_open' => 'A report is already open for this conversation.', 'reported' => 'Your report has been submitted.', 'deleted_member' => 'Deleted account',
+return [
+    'trip_reports' => 'Trip withdrawals',
+    'trip_report_description' => 'Review reported withdrawals. Every review is audited.',
+    'trip_report_scope' => 'This dossier contains only the report and withdrawal dates.',
+    'trip_departure' => 'Scheduled departure',
+    'trip_left' => 'Withdrawal',
+    'trip_details' => 'Report explanation (1,000 characters maximum)',
+    'banned' => 'This account is banned for behaviour in the application.', 'banned_contact' => 'To appeal this decision, contact :email.', 'ban_updated' => 'The sanction has been updated.', 'block_admin' => 'An administrator cannot be blocked.', 'already_open' => 'A report is already open for this conversation.', 'reported' => 'Your report has been submitted.', 'deleted_member' => 'Deleted account',
     'report_trigger' => 'Report',
     'report_title' => 'Report this conversation',
     'report_warning' => 'After confirmation, administrators can read the entire conversation, including future messages, even after blocking or closing the report.',

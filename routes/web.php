@@ -83,6 +83,7 @@ use App\Http\Controllers\SwipeController;
 use App\Http\Controllers\TermsAcceptanceController;
 use App\Http\Controllers\TripCancellationController;
 use App\Http\Controllers\TripController;
+use App\Http\Controllers\TripDepartureReportController;
 use App\Http\Controllers\TripRegistrationController;
 use App\Http\Controllers\TripRegistrationDecisionController;
 use App\Http\Controllers\TripRegistrationRemovalController;
@@ -261,6 +262,7 @@ Route::middleware(['auth', 'verified', 'social', 'terms.current'])->group(functi
                 Route::patch('trips/{trip}/cancel', TripCancellationController::class)->name('trips.cancel');
                 Route::patch('trip-registrations/{registration}', TripRegistrationDecisionController::class)->name('trips.registrations.decision');
                 Route::delete('trip-registrations/{registration}', TripRegistrationRemovalController::class)->name('trips.registrations.remove');
+                Route::post('trip-departures/{departure}/reports', TripDepartureReportController::class)->name('trip-departures.reports.store');
                 Route::get('trips/mine', MyTripController::class)->name('trips.mine');
                 Route::resource('trips', TripController::class)->only(['index', 'store', 'show', 'update']);
 
@@ -352,6 +354,9 @@ Route::middleware(['auth', 'verified', 'social', 'terms.current'])->group(functi
             ->name('onboarding.index');
         Route::patch('onboarding', [AdminProductOnboardingController::class, 'update'])
             ->name('onboarding.update');
+        Route::get('trip-departure-reports', [App\Http\Controllers\Admin\TripDepartureReportController::class, 'index'])->name('trip-departure-reports.index');
+        Route::get('trip-departure-reports/{report}', [App\Http\Controllers\Admin\TripDepartureReportController::class, 'show'])->name('trip-departure-reports.show');
+        Route::patch('trip-departure-reports/{report}', [App\Http\Controllers\Admin\TripDepartureReportController::class, 'close'])->name('trip-departure-reports.close');
         Route::get('conversation-reports', [App\Http\Controllers\Admin\ConversationReportController::class, 'index'])->name('conversation-reports.index');
         Route::get('conversation-reports/{report}', [App\Http\Controllers\Admin\ConversationReportController::class, 'show'])->name('conversation-reports.show');
         Route::patch('conversation-reports/{report}', [App\Http\Controllers\Admin\ConversationReportController::class, 'close'])->name('conversation-reports.close');

@@ -135,7 +135,10 @@ useEcho<GroupChatMessage>(
     `App.Models.User.${currentUserId.value}`,
     '.group-chat.message.sent',
     async (message) => {
-        if (message.group_chat_id !== props.chat.id) return;
+        if (message.group_chat_id !== props.chat.id) {
+return;
+}
+
         merge([message]);
         void markRead();
     },
@@ -151,7 +154,10 @@ useEcho<{
     `App.Models.User.${currentUserId.value}`,
     '.group-chat.message.reaction.updated',
     (update) => {
-        if (update.group_chat_id !== props.chat.id) return;
+        if (update.group_chat_id !== props.chat.id) {
+return;
+}
+
         const message = visibleMessages.value.find(
             (item) => item.id === update.message_id,
         );

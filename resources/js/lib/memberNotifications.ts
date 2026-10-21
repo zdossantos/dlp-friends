@@ -52,6 +52,7 @@ export function shouldAcknowledgePersistentNotification(
 
         const context =
             notification.target_type === 'trip_chat' ? 'trips' : 'events';
+
         return path === `/${context}/${notification.target_id}/chat`;
     }
 
