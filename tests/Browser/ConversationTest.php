@@ -546,7 +546,20 @@ test('one upward scroll loads one history page and keeps the reading position', 
         window.topReadingAnchor = { id: anchor.closest('[data-message-id]').dataset.messageId, top: anchor.getBoundingClientRect().top };
         true;
         JS);
-    $page->assertScript('window.historyRequests > 0', true)->waitForEvent('networkidle')
+    $page->assertScript(<<<'JS'
+        window.historyRequests > 0 ? 'requested' : JSON.stringify((() => {
+            const scroll = document.querySelector('[data-test=message-scroll]');
+            return {
+                scrollTop: scroll.scrollTop,
+                scrollHeight: scroll.scrollHeight,
+                clientHeight: scroll.clientHeight,
+                firstItemTop: scroll.querySelector('li').getBoundingClientRect().top,
+                containerTop: scroll.getBoundingClientRect().top,
+                loaded: document.querySelectorAll('[data-message-id]').length,
+                viewport: [innerWidth, innerHeight],
+            };
+        })())
+        JS, 'requested')->waitForEvent('networkidle')
         ->assertScript('window.historyRequests', 1)
         ->assertScript("document.querySelectorAll('[data-message-id]').length - window.loadedBeforeScroll", 20)
         ->assertScript("Math.abs(document.querySelector('[data-message-id=\"' + window.topReadingAnchor.id + '\"] [data-test=message-bubble]').getBoundingClientRect().top - window.topReadingAnchor.top) < 3", true)
