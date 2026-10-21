@@ -137,6 +137,7 @@ test('explicit month navigation keeps browser history and filters', function () 
     $this->actingAs(User::factory()->withProfile()->create());
     $day = today('Europe/Paris');
     $page = visit('/visits?month='.$day->format('Y-m').'&day='.$day->toDateString().'&view=calendar&audience=matches')
+        ->on()->iPhone15Pro()
         ->click('[data-test="visit-next-month"]')
         ->assertScript("document.querySelector('#visit-month').value", $day->copy()->addMonth()->format('Y-m'))
         ->back()
