@@ -90,11 +90,14 @@ test('visits remain accessible in both languages and themes on narrow screens', 
 })->with([['fr', 'light'], ['fr', 'dark'], ['en', 'light'], ['en', 'dark']]);
 
 test('full visitor lists page beyond one hundred and search names literally', function () {
+    Storage::fake('local');
     $viewer = User::factory()->withProfile()->create();
+    $avatar = $viewer->profile->avatar;
+    Storage::put($avatar->image_path, base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScL8WQAAAABJRU5ErkJggg=='));
     $day = today('Europe/Paris')->addDay();
     for ($i = 0; $i < 105; $i++) {
         $other = User::factory()->withProfile()->create(['visits_visibility' => 'members']);
-        $other->profile->update(['display_name' => $i === 0 ? 'Élodie' : sprintf('Membre %03d', $i)]);
+        $other->profile->update(['display_name' => $i === 0 ? 'Élodie' : sprintf('Membre %03d', $i), 'avatar_id' => $avatar->id]);
         Visit::factory()->for($other)->create(['starts_on' => $day, 'ends_on' => $day]);
     }
     $this->actingAs($viewer);
