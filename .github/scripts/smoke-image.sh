@@ -20,6 +20,10 @@ for attempt in $(seq 1 30); do
         docker exec "$container" sh -c 'test ! -e .env && test ! -e node_modules && test ! -e .git'
         docker exec -i "$container" php <<'PHP'
 <?php
+if (PHP_VERSION_ID < 80427 || PHP_VERSION_ID >= 80500) {
+    throw new RuntimeException("Expected patched PHP 8.4.27 or later in the 8.4 branch; got ".PHP_VERSION);
+}
+echo "Patched PHP runtime: ".PHP_VERSION."\n";
 $source = imagecreatetruecolor(640, 360);
 foreach (['jpeg', 'png', 'webp'] as $format) {
     $encoder = 'image'.$format;
