@@ -1,8 +1,8 @@
 # Issue 304 — préparation de la proposition de trajets
 
-Statut : inventaire effectué ; décisions produit soumises à validation, non encore approuvées. Ce document ne décrit aucune fonctionnalité déjà livrée.
+Statut : inventaire préparatoire conservé pour traçabilité. Les décisions ont reçu une validation conversationnelle ; la conception consolidée, incluant les ajouts exclusion et désistement tardif, se trouve dans [la spécification du 21 octobre](../specs/2026-10-21-shared-trips-design.md). Ce document préparatoire ne constitue pas un plan d’exécution approuvé et ne décrit aucune fonctionnalité déjà livrée.
 
-Référence : [issue #304](https://github.com/zdossantos/dlp-friends/issues/304), section « Points à trancher avant implémentation ». La branche part de `main` après la fusion de la [PR #310](https://github.com/zdossantos/dlp-friends/pull/310), commit `baaf948`. Les propositions ci-dessous n’étendent pas le contrat produit tant qu’elles ne sont pas approuvées.
+Référence : [issue #304](https://github.com/zdossantos/dlp-friends/issues/304), section « Points à trancher avant implémentation ». La branche part de `main` après la fusion de la [PR #310](https://github.com/zdossantos/dlp-friends/pull/310), commit `baaf948`. En cas de différence, la spécification consolidée prévaut sur les propositions initiales ci-dessous.
 
 ## Résultat attendu
 
@@ -20,7 +20,7 @@ Un membre majeur propose un trajet amical en voiture, train, RER ou bus, pour un
 - Même fil, compositeur, reconnexion et non-lus que les groupes existants. Pas de barre de navigation inférieure dans la discussion.
 - Composants Select existants, champs date/mois centrés sur Safari ; valeur initiale à la date du jour à Paris. FR/EN et thèmes clair/sombre, sans débordement à 320 px.
 
-## Décisions soumises à validation
+## Propositions initiales, remplacées par la spécification consolidée
 
 - Modification jusqu’au départ ; date, lieux et transport verrouillés dès qu’un participant est accepté. Places modifiables sans descendre sous l’occupation.
 - Départ dans les douze prochains mois. Trajets complets visibles ; trajets passés et annulés dans Mes trajets.
@@ -75,4 +75,4 @@ Tests de concurrence réels MySQL ; aucune donnée privée dans les props Inerti
 | Cycle des données | Export limité aux données propres ; suppression et purge après délai retenu ; relations de comptes bannis conservées selon les règles existantes ; données d’autrui exclues de l’export. |
 | Interface | 320 px et desktop ; clavier, focus et fermeture des panneaux ; Safari date/mois ; FR/EN et clair/sombre ; clic membre ouvre son profil sans modifier les filtres. |
 
-Les cas dépendant de modification, blocage entre participants, archivage, anticipation ou plafond non automobile attendent la validation des règles ci-dessus. Aucun test ne doit entériner une décision encore ouverte.
+La spécification consolidée fixe modification, blocage, archivage, anticipation et plafond non automobile. La portée exacte des motifs y est présentée pour relecture ; aucun test ne doit entériner une interprétation encore discutée.
