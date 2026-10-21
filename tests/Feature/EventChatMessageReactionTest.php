@@ -3,7 +3,7 @@
 namespace Tests\Feature;
 
 use App\Enums\EventRegistrationStatus;
-use App\Events\EventChatMessageReactionUpdated;
+use App\Events\GroupChatMessageReactionUpdated;
 use App\Models\Event;
 use App\Models\EventRegistration;
 use App\Models\GroupChat;
@@ -24,7 +24,7 @@ class EventChatMessageReactionTest extends TestCase
     {
         [$event, $chat, $author, $reactor] = $this->scenario();
         $message = GroupChatMessage::factory()->for($chat)->for($author, 'author')->create();
-        EventFacade::fake([EventChatMessageReactionUpdated::class]);
+        EventFacade::fake([GroupChatMessageReactionUpdated::class]);
         Notification::fake();
 
         $this->actingAs($reactor)

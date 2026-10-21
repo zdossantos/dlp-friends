@@ -4,6 +4,7 @@ namespace App\Actions;
 
 use App\Enums\EventChatSystemType;
 use App\Enums\TripRegistrationStatus;
+use App\Events\GroupChatAccessChanged;
 use App\Models\Trip;
 use App\Models\TripRegistration;
 use App\Models\User;
@@ -49,7 +50,8 @@ final class DecideTripRegistration
             }
 
             if ($accept) {
-                app(AnnounceGroupChatMembership::class)->handle($registration, EventChatSystemType::Joined);
+                $announcement = app(AnnounceGroupChatMembership::class)->handle($registration, EventChatSystemType::Joined);
+                GroupChatAccessChanged::dispatch($announcement->group_chat_id, $registration->user_id, 'granted');
             }
 
             return $registration->refresh();

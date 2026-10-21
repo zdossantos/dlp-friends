@@ -108,8 +108,8 @@ export function useMemberRealtimeNotifications(
             '.match.created',
             '.message.sent',
             '.presence.changed',
-            '.event-chat.access.changed',
-            '.event-chat.message.sent',
+            '.group-chat.access.changed',
+            '.group-chat.message.sent',
         ],
         (notification) => {
             if ('access' in notification) {
@@ -117,10 +117,13 @@ export function useMemberRealtimeNotifications(
                     router.reload({ only: ['groups'] });
                 }
 
-                if (page.component === 'Conversations/Group') {
+                if (
+                    page.component === 'Conversations/Group' &&
+                    notification.context === 'event'
+                ) {
                     const event = page.props.event as { id: number };
 
-                    if (event.id === notification.event_id) {
+                    if (event.id === notification.context_id) {
                         if (notification.access === 'revoked') {
                             router.visit(
                                 conversationsIndex({

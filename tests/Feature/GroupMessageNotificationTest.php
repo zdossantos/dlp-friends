@@ -5,7 +5,7 @@ use App\Actions\MarkGroupChatRead;
 use App\Actions\SendGroupChatMessage;
 use App\Contracts\WebPushTransport;
 use App\Enums\EventRegistrationStatus;
-use App\Events\EventChatMessageSent;
+use App\Events\GroupChatMessageSent;
 use App\Models\Event;
 use App\Models\EventRegistration;
 use App\Models\GroupChat;
@@ -90,7 +90,7 @@ test('group activity reaches only eligible personal channels even with alerts di
     EventRegistration::factory()->for($event)->for($removed)->create(['status' => EventRegistrationStatus::Removed]);
     $member->notificationPreferences()->create(['category' => 'group_messages', 'enabled' => false]);
     $message = GroupChatMessage::factory()->for($chat)->for($organizer, 'author')->create();
-    $channels = collect((new EventChatMessageSent($message))->broadcastOn())->pluck('name')->all();
+    $channels = collect((new GroupChatMessageSent($message))->broadcastOn())->pluck('name')->all();
     expect($channels)->toContain("private-App.Models.User.{$member->id}")
         ->not->toContain("private-App.Models.User.{$removed->id}");
 });

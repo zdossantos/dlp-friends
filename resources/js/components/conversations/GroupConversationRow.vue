@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { Link, router } from '@inertiajs/vue3';
-import { useConnectionStatus, useEcho } from '@laravel/echo-vue';
+import { useConnectionStatus } from '@laravel/echo-vue';
 import { Users } from '@lucide/vue';
 import { watch } from 'vue';
+import { useMemberRealtimeContext } from '@/composables/useMemberRealtimeNotifications';
 import { useTranslations } from '@/composables/useTranslations';
 import { show } from '@/routes/events/chat';
 import type { EventChatInfo } from '@/types/event';
@@ -17,7 +18,10 @@ const props = defineProps<{
 const { t } = useTranslations();
 const status = useConnectionStatus();
 const refresh = () => router.reload({ only: ['groups'] });
-useEcho(`event-chat.${props.group.id}`, '.event-chat.message.sent', refresh);
+const { latestGroupMessage } = useMemberRealtimeContext();
+watch(latestGroupMessage, (message) => {
+    if (message?.group_chat_id === props.group.id) refresh();
+});
 watch(status, (next, previous) => {
     if (next === 'connected' && previous !== 'connected') {
         refresh();

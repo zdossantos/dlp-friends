@@ -1,5 +1,7 @@
 export type EventChatAccessChanged = {
-    event_id: number;
+    group_chat_id: number;
+    context: 'event' | 'trip';
+    context_id: number;
     access: 'granted' | 'revoked' | 'read_only';
 };
 

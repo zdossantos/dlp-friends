@@ -7,7 +7,7 @@ use App\Actions\RemoveEventParticipant;
 use App\Actions\WithdrawFromEvent;
 use App\Data\GroupChatData;
 use App\Enums\EventRegistrationMode;
-use App\Events\EventChatMessageSent;
+use App\Events\GroupChatMessageSent;
 use App\Models\Event;
 use App\Models\GroupChatMessage;
 use App\Models\User;
@@ -73,16 +73,16 @@ test('leaving rejoining and organizer removal have distinct ordered announcement
 });
 
 test('membership announcements use the realtime contract and unread cursor', function () {
-    EventFacade::fake([EventChatMessageSent::class]);
+    EventFacade::fake([GroupChatMessageSent::class]);
     $event = Event::factory()->create();
     $event->chat()->create();
     $member = User::factory()->withProfile()->create();
     app(RegisterForEvent::class)->handle($member, $event);
     $message = GroupChatMessage::query()->firstOrFail();
 
-    EventFacade::assertDispatched(EventChatMessageSent::class, fn ($broadcast) => $broadcast->broadcastWith()['system_type'] === 'joined'
+    EventFacade::assertDispatched(GroupChatMessageSent::class, fn ($broadcast) => $broadcast->broadcastWith()['system_type'] === 'joined'
         && $broadcast->broadcastWith()['author_user_id'] === $member->id
-        && $broadcast->broadcastOn()[0]->name === "private-event-chat.{$message->group_chat_id}");
+        && $broadcast->broadcastOn()[0]->name === "private-App.Models.User.{$event->organizer_user_id}");
     expect(GroupChatData::unreadCount($message->groupChat, $event->organizer))->toBe(1);
     $this->actingAs($event->organizer)->postJson(route('events.chat.read.store', $event), [
         'last_read_message_id' => $message->id,

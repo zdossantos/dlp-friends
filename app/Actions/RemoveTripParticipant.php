@@ -4,6 +4,7 @@ namespace App\Actions;
 
 use App\Enums\EventChatSystemType;
 use App\Enums\TripRegistrationStatus;
+use App\Events\GroupChatAccessChanged;
 use App\Models\Trip;
 use App\Models\TripRegistration;
 use App\Models\User;
@@ -30,7 +31,8 @@ final class RemoveTripParticipant
             }
             Validator::make(['reason' => $reason], ['reason' => ['required', 'string', 'max:1000']], attributes: __('trips.attributes'))->validate();
             $registration->update(['status' => TripRegistrationStatus::Removed, 'reason' => $reason, 'decided_at' => now()]);
-            app(AnnounceGroupChatMembership::class)->handle($registration, EventChatSystemType::Removed);
+            $announcement = app(AnnounceGroupChatMembership::class)->handle($registration, EventChatSystemType::Removed);
+            GroupChatAccessChanged::dispatch($announcement->group_chat_id, $registration->user_id, 'revoked');
         });
     }
 }

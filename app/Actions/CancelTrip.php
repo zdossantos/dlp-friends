@@ -2,6 +2,7 @@
 
 namespace App\Actions;
 
+use App\Events\GroupChatAccessChanged;
 use App\Models\Trip;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
@@ -26,6 +27,13 @@ final class CancelTrip
             }
             Validator::make(['reason' => $reason], ['reason' => ['required', 'string', 'max:1000']], attributes: __('trips.attributes'))->validate();
             $trip->update(['cancelled_at' => now(), 'cancellation_reason' => $reason]);
+            $chat = $trip->chat()->first();
+            if ($chat !== null) {
+                $recipients = $trip->registrations()->where('status', 'accepted')->pluck('user_id')->push($organizer->id)->filter()->unique();
+                foreach ($recipients as $userId) {
+                    GroupChatAccessChanged::dispatch($chat->id, $userId, 'read_only');
+                }
+            }
         });
     }
 }

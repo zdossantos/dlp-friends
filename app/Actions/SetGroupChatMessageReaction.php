@@ -2,7 +2,7 @@
 
 namespace App\Actions;
 
-use App\Events\EventChatMessageReactionUpdated;
+use App\Events\GroupChatMessageReactionUpdated;
 use App\Models\GroupChat;
 use App\Models\GroupChatMessage;
 use App\Models\GroupChatMessageReaction;
@@ -53,7 +53,7 @@ final class SetGroupChatMessageReaction
                 'reacted' => $reacted,
             ];
 
-            EventChatMessageReactionUpdated::dispatch(
+            GroupChatMessageReactionUpdated::dispatch(
                 $lockedChat->id,
                 $payload['message_id'],
                 $payload['reactor_user_id'],

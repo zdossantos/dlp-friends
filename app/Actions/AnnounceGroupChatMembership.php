@@ -3,7 +3,7 @@
 namespace App\Actions;
 
 use App\Enums\EventChatSystemType;
-use App\Events\EventChatMessageSent;
+use App\Events\GroupChatMessageSent;
 use App\Models\EventRegistration;
 use App\Models\GroupChatMessage;
 use App\Models\TripRegistration;
@@ -20,7 +20,7 @@ final class AnnounceGroupChatMembership
             'system_type' => $type,
         ]);
 
-        EventChatMessageSent::dispatch($message);
+        GroupChatMessageSent::dispatch($message);
 
         return $message;
     }

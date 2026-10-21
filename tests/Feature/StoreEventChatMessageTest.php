@@ -3,7 +3,7 @@
 namespace Tests\Feature;
 
 use App\Enums\EventRegistrationStatus;
-use App\Events\EventChatMessageSent;
+use App\Events\GroupChatMessageSent;
 use App\Models\Event;
 use App\Models\EventRegistration;
 use App\Models\GroupChat;
@@ -25,7 +25,7 @@ class StoreEventChatMessageTest extends TestCase
             'event_id' => $event->id,
             'user_id' => $participant->id,
         ]);
-        EventFacade::fake([EventChatMessageSent::class]);
+        EventFacade::fake([GroupChatMessageSent::class]);
 
         foreach ([$organizer, $participant] as $index => $member) {
             $content = "Bonjour {$index}";
@@ -42,7 +42,7 @@ class StoreEventChatMessageTest extends TestCase
         }
 
         $this->assertDatabaseCount('group_chat_messages', 2);
-        EventFacade::assertDispatchedTimes(EventChatMessageSent::class, 2);
+        EventFacade::assertDispatchedTimes(GroupChatMessageSent::class, 2);
     }
 
     #[DataProvider('invalidContentProvider')]

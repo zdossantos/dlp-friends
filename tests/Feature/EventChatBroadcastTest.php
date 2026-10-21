@@ -3,7 +3,7 @@
 namespace Tests\Feature;
 
 use App\Actions\SendGroupChatMessage;
-use App\Events\EventChatMessageSent;
+use App\Events\GroupChatMessageSent;
 use App\Models\Event;
 use App\Models\GroupChat;
 use App\Models\User;
@@ -22,20 +22,20 @@ class EventChatBroadcastTest extends TestCase
     public function test_sending_dispatches_one_event_with_a_minimal_private_contract(): void
     {
         [$chat, $author] = $this->groupChat();
-        EventFacade::fake([EventChatMessageSent::class]);
+        EventFacade::fake([GroupChatMessageSent::class]);
 
         $message = app(SendGroupChatMessage::class)->handle($author, $chat, '<b>texte brut</b>');
 
-        EventFacade::assertDispatchedTimes(EventChatMessageSent::class, 1);
-        EventFacade::assertDispatched(EventChatMessageSent::class, function ($event) use ($message): bool {
+        EventFacade::assertDispatchedTimes(GroupChatMessageSent::class, 1);
+        EventFacade::assertDispatched(GroupChatMessageSent::class, function ($event) use ($message): bool {
             $channels = $event->broadcastOn();
 
             return $event instanceof ShouldBroadcast
                 && $event instanceof ShouldDispatchAfterCommit
                 && count($channels) === 1
                 && $channels[0] instanceof PrivateChannel
-                && $channels[0]->name === "private-event-chat.{$message->group_chat_id}"
-                && $event->broadcastAs() === 'event-chat.message.sent'
+                && $channels[0]->name === "private-App.Models.User.{$message->author_user_id}"
+                && $event->broadcastAs() === 'group-chat.message.sent'
                 && $event->broadcastWith()['content'] === '<b>texte brut</b>';
         });
     }
@@ -50,7 +50,7 @@ class EventChatBroadcastTest extends TestCase
             'channel_name' => "private-event-chat.{$chat->id}",
         ];
 
-        $this->actingAs($organizer)->postJson('/broadcasting/auth', $credentials)->assertOk();
+        $this->actingAs($organizer)->postJson('/broadcasting/auth', $credentials)->assertForbidden();
         $this->actingAs($outsider)->postJson('/broadcasting/auth', $credentials)->assertForbidden();
     }
 

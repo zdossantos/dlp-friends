@@ -2,7 +2,7 @@
 
 namespace App\Actions;
 
-use App\Events\EventChatMessageSent;
+use App\Events\GroupChatMessageSent;
 use App\Models\GroupChat;
 use App\Models\GroupChatMessage;
 use App\Models\User;
@@ -27,7 +27,7 @@ final class SendGroupChatMessage
                 'content' => $content,
             ]);
 
-            EventChatMessageSent::dispatch($message);
+            GroupChatMessageSent::dispatch($message);
 
             $recipients = User::query()->inGroupChat($lockedChat)->whereKeyNot($author->id)->get();
 

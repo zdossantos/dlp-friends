@@ -4,6 +4,7 @@ namespace App\Actions;
 
 use App\Enums\EventChatSystemType;
 use App\Enums\TripRegistrationStatus;
+use App\Events\GroupChatAccessChanged;
 use App\Models\Trip;
 use App\Models\User;
 use App\Policies\TripPolicy;
@@ -32,7 +33,8 @@ final class WithdrawFromTrip
             }
             $registration->update(['status' => TripRegistrationStatus::Withdrawn, 'reason' => $reason, 'decided_at' => now()]);
             if ($wasAccepted) {
-                app(AnnounceGroupChatMembership::class)->handle($registration, EventChatSystemType::Left);
+                $announcement = app(AnnounceGroupChatMembership::class)->handle($registration, EventChatSystemType::Left);
+                GroupChatAccessChanged::dispatch($announcement->group_chat_id, $registration->user_id, 'revoked');
             }
         });
     }

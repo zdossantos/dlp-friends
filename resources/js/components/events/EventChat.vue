@@ -132,23 +132,26 @@ function updateReaction(update: MessageReactionUpdate): void {
 }
 
 useEcho<GroupChatMessage>(
-    `event-chat.${props.chat.id}`,
-    '.event-chat.message.sent',
+    `App.Models.User.${currentUserId.value}`,
+    '.group-chat.message.sent',
     async (message) => {
+        if (message.group_chat_id !== props.chat.id) return;
         merge([message]);
         void markRead();
     },
 );
 
 useEcho<{
+    group_chat_id: number;
     message_id: number;
     reactor_user_id: number;
     reaction_count: number;
     reacted: boolean;
 }>(
-    `event-chat.${props.chat.id}`,
-    '.event-chat.message.reaction.updated',
+    `App.Models.User.${currentUserId.value}`,
+    '.group-chat.message.reaction.updated',
     (update) => {
+        if (update.group_chat_id !== props.chat.id) return;
         const message = visibleMessages.value.find(
             (item) => item.id === update.message_id,
         );
