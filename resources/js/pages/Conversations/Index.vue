@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { Head, Link, router, usePage } from '@inertiajs/vue3';
+import { Head, Link, router, usePage, useRemember } from '@inertiajs/vue3';
 import { MessageCircle } from '@lucide/vue';
-import { computed, ref, watch } from 'vue';
+import { computed, ref, toRefs, unref, watch } from 'vue';
 import ActivityStatus from '@/components/conversations/ActivityStatus.vue';
 import GroupConversationRow from '@/components/conversations/GroupConversationRow.vue';
 import AvatarPortrait from '@/components/profile/AvatarPortrait.vue';
@@ -44,13 +44,19 @@ const { activeMatch, latestMessage, latestGroupMessage, presenceChanged } =
 const typingIds = useConversationListTyping(
     props.conversations.filter((conversation) => !conversation.archived_at),
 );
-const category = ref(
-    new URL(usePage().url, window.location.origin).searchParams.get(
-        'category',
-    ) === 'groups'
-        ? 'groups'
-        : 'private',
+const filters = useRemember(
+    {
+        category:
+            new URL(usePage().url, window.location.origin).searchParams.get(
+                'category',
+            ) === 'groups'
+                ? 'groups'
+                : 'private',
+        search: '',
+    },
+    'conversations-filters',
 );
+const { category, search } = toRefs(unref(filters));
 const privateUnreadCount = computed(() =>
     visibleConversations.value.reduce(
         (total, conversation) => total + conversation.unread_count,
@@ -61,7 +67,6 @@ const groupUnreadCount = computed(() =>
     props.groups.reduce((total, group) => total + group.unread_count, 0),
 );
 watch(latestGroupMessage, () => router.reload({ only: ['groups'] }));
-const search = ref('');
 const normalizedSearch = computed(() => normalizeSearchText(search.value));
 const filteredConversations = computed(() => {
     if (normalizedSearch.value === '') {

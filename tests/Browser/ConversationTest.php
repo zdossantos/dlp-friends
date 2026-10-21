@@ -798,6 +798,10 @@ test('messaging switches between private and event groups and sends in the share
         ->click('[aria-label="Envoyer le message"]')
         ->assertSee('À bientôt au parc')
         ->click('[data-test="group-chat-back"]')
+        ->assertPresent('[data-test="participant-list"]')
+        ->back()->assertPresent('[data-test="event-detail"]')
+        ->back()->assertMissing('[data-test="event-panel"]')
+        ->back()->assertPathIs('/conversations')
         ->wait(0.4)
         ->assertNoJavaScriptErrors()
         ->assertNotPresent('[data-test=group-unread-count]')
@@ -851,7 +855,7 @@ test('resuming a conversation catches up beyond one page without duplicate messa
     $conversation = $match->conversation()->create();
     Message::factory()->for($conversation)->for($peer, 'author')->create(['content' => 'Avant la veille']);
     $this->actingAs($member);
-    $page = visit("/conversations/{$conversation->id}")->assertSee('Avant la veille')->waitForEvent('networkidle');
+    $page = visit('/conversations')->click("a[href='/conversations/{$conversation->id}']")->assertSee('Avant la veille')->waitForEvent('networkidle');
     foreach (range(1, 25) as $index) {
         Message::factory()->for($conversation)->for($peer, 'author')->create(['content' => "Pendant la veille {$index} ".str_repeat('Un long message pour garder une page complète. ', 12)]);
     }
@@ -862,7 +866,7 @@ test('resuming a conversation catches up beyond one page without duplicate messa
         ->assertScript("new Set(Array.from(document.querySelectorAll('[data-message-id]'), el => el.dataset.messageId)).size", 27);
     $page->script("window.dispatchEvent(new PageTransitionEvent('pageshow', { persisted: true })); true;");
     $page->waitForEvent('networkidle')->click('a[href="/conversations"]')->assertPathIs('/conversations')->assertSee('Ma réponse après la veille');
-    $page->back()->assertSee('Basile')
+    $page->forward()->assertSee('Basile')
         ->assertScript("document.querySelectorAll('[data-message-id]').length", 27)
         ->assertNoJavaScriptErrors();
 });
