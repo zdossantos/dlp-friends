@@ -3,9 +3,11 @@
 namespace App\Actions;
 
 use App\Enums\TripAudience;
+use App\Enums\TripNotificationType;
 use App\Enums\TripRegistrationStatus;
 use App\Models\Trip;
 use App\Models\User;
+use App\Notifications\TripLifecycleNotification;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
@@ -40,7 +42,13 @@ final class UpdateTrip
             if ($trip->transport->value === 'car' && ($data['car_seats'] ?? 0) < $trip->registrations()->where('status', TripRegistrationStatus::Accepted)->count()) {
                 throw ValidationException::withMessages(['car_seats' => __('trips.validation.capacity')]);
             }
+            $meetingChanged = $trip->meeting_point !== $data['meeting_point'];
             $trip->update($data);
+            if ($meetingChanged) {
+                foreach ($trip->registrations()->with('user')->where('status', TripRegistrationStatus::Accepted)->get() as $registration) {
+                    $registration->user?->notify(new TripLifecycleNotification($trip->id, TripNotificationType::Changed, $registration->id));
+                }
+            }
 
             return $trip;
         });

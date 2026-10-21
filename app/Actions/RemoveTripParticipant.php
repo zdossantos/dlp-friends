@@ -3,11 +3,13 @@
 namespace App\Actions;
 
 use App\Enums\EventChatSystemType;
+use App\Enums\TripNotificationType;
 use App\Enums\TripRegistrationStatus;
 use App\Events\GroupChatAccessChanged;
 use App\Models\Trip;
 use App\Models\TripRegistration;
 use App\Models\User;
+use App\Notifications\TripLifecycleNotification;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Validator;
@@ -33,6 +35,7 @@ final class RemoveTripParticipant
             $registration->update(['status' => TripRegistrationStatus::Removed, 'reason' => $reason, 'decided_at' => now()]);
             $announcement = app(AnnounceGroupChatMembership::class)->handle($registration, EventChatSystemType::Removed);
             GroupChatAccessChanged::dispatch($announcement->group_chat_id, $registration->user_id, 'revoked');
+            $registration->user?->notify(new TripLifecycleNotification($trip->id, TripNotificationType::Removed, $registration->id));
         });
     }
 }

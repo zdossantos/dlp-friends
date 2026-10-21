@@ -14,6 +14,7 @@ return [
         'label' => 'Filter notifications',
         'all' => 'All',
         'conversations' => 'Conversations',
+        'trips' => 'Trips',
         'events' => 'Events',
         'partners' => 'Partners',
         'administration' => 'Administration',
@@ -34,6 +35,14 @@ return [
         'confirm_dismiss_partner_announcement' => 'Remove this partner announcement from your notifications?',
     ],
     'items' => [
+        'trip_requested' => 'Someone requested to join your trip.',
+        'trip_accepted' => 'Your request to join a trip was accepted.',
+        'trip_refused' => 'Your request to join a trip was declined.',
+        'trip_withdrawn' => 'Someone left your trip.',
+        'trip_removed' => 'You are no longer participating in this trip.',
+        'trip_changed' => 'Your trip meeting point has changed.',
+        'trip_cancelled' => 'Your trip was cancelled.',
+
         'new_member' => 'A new member has joined DLP Friends.',
         'new_match' => 'New match with :member.',
         'new_group_message' => ':sender sent a message in “:group”.',
@@ -53,6 +62,7 @@ return [
     ],
     'accessibility' => ['unread_count' => ':count unread notifications'],
     'push' => [
+        'trips' => ['title' => 'Trips', 'body' => 'An update about a trip is waiting for you.'],
         'new_member' => [
             'title' => 'New member',
             'body' => 'A new member has joined DLP Friends.',

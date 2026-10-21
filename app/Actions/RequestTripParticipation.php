@@ -2,10 +2,12 @@
 
 namespace App\Actions;
 
+use App\Enums\TripNotificationType;
 use App\Enums\TripRegistrationStatus;
 use App\Models\Trip;
 use App\Models\TripRegistration;
 use App\Models\User;
+use App\Notifications\TripLifecycleNotification;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 
@@ -25,9 +27,11 @@ final class RequestTripParticipation
             }
             Gate::forUser($member)->authorize('request', $trip);
             if ($registration === null) {
-                return $trip->registrations()->create(['user_id' => $member->id, 'status' => TripRegistrationStatus::Pending]);
+                $registration = $trip->registrations()->create(['user_id' => $member->id, 'status' => TripRegistrationStatus::Pending]);
+            } else {
+                $registration->update(['status' => TripRegistrationStatus::Pending, 'reason' => null, 'decided_at' => null]);
             }
-            $registration->update(['status' => TripRegistrationStatus::Pending, 'reason' => null, 'decided_at' => null]);
+            $trip->organizer?->notify(new TripLifecycleNotification($trip->id, TripNotificationType::Requested, $registration->id));
 
             return $registration->refresh();
         });

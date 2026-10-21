@@ -7,7 +7,7 @@ use App\Models\GroupChat;
 use App\Models\GroupChatMessage;
 use App\Models\GroupChatMessageReaction;
 use App\Models\User;
-use App\Notifications\EventChatMessageLikedNotification;
+use App\Notifications\GroupChatMessageLikedNotification;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
@@ -37,7 +37,7 @@ final class SetGroupChatMessageReaction
                 ]);
 
                 if ($reaction->wasRecentlyCreated) {
-                    $lockedMessage->author->notify(new EventChatMessageLikedNotification($lockedMessage, $reactor));
+                    $lockedMessage->author->notify(new GroupChatMessageLikedNotification($lockedMessage, $reactor));
                 }
             } else {
                 GroupChatMessageReaction::query()

@@ -11,6 +11,7 @@ const allowedPrefixes = [
     '/notifications',
     '/conversations/',
     '/events/',
+    '/trips/',
     '/partner/',
     '/admin/',
 ];

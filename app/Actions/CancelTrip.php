@@ -2,9 +2,11 @@
 
 namespace App\Actions;
 
+use App\Enums\TripNotificationType;
 use App\Events\GroupChatAccessChanged;
 use App\Models\Trip;
 use App\Models\User;
+use App\Notifications\TripLifecycleNotification;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Validator;
@@ -27,6 +29,9 @@ final class CancelTrip
             }
             Validator::make(['reason' => $reason], ['reason' => ['required', 'string', 'max:1000']], attributes: __('trips.attributes'))->validate();
             $trip->update(['cancelled_at' => now(), 'cancellation_reason' => $reason]);
+            foreach ($trip->registrations()->with('user')->whereIn('status', ['accepted', 'pending'])->get() as $registration) {
+                $registration->user?->notify(new TripLifecycleNotification($trip->id, TripNotificationType::Cancelled, $registration->id));
+            }
             $chat = $trip->chat()->first();
             if ($chat !== null) {
                 $recipients = $trip->registrations()->where('status', 'accepted')->pluck('user_id')->push($organizer->id)->filter()->unique();

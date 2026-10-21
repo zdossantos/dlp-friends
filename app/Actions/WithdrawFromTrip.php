@@ -3,10 +3,12 @@
 namespace App\Actions;
 
 use App\Enums\EventChatSystemType;
+use App\Enums\TripNotificationType;
 use App\Enums\TripRegistrationStatus;
 use App\Events\GroupChatAccessChanged;
 use App\Models\Trip;
 use App\Models\User;
+use App\Notifications\TripLifecycleNotification;
 use App\Policies\TripPolicy;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Facades\DB;
@@ -35,6 +37,7 @@ final class WithdrawFromTrip
             if ($wasAccepted) {
                 $announcement = app(AnnounceGroupChatMembership::class)->handle($registration, EventChatSystemType::Left);
                 GroupChatAccessChanged::dispatch($announcement->group_chat_id, $registration->user_id, 'revoked');
+                $trip->organizer?->notify(new TripLifecycleNotification($trip->id, TripNotificationType::Withdrawn, $registration->id));
             }
         });
     }

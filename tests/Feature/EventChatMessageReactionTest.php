@@ -9,8 +9,7 @@ use App\Models\EventRegistration;
 use App\Models\GroupChat;
 use App\Models\GroupChatMessage;
 use App\Models\User;
-use App\Notifications\Channels\WebPushChannel;
-use App\Notifications\EventChatMessageLikedNotification;
+use App\Notifications\GroupChatMessageLikedNotification;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Event as EventFacade;
 use Illuminate\Support\Facades\Notification;
@@ -35,10 +34,9 @@ class EventChatMessageReactionTest extends TestCase
 
         Notification::assertSentTo(
             $author,
-            EventChatMessageLikedNotification::class,
-            fn (EventChatMessageLikedNotification $notification, array $channels): bool => $channels === ['database', 'broadcast', WebPushChannel::class]
-                && $notification->message->is($message)
-                && $notification->reactor->is($reactor)
+            GroupChatMessageLikedNotification::class,
+            fn (GroupChatMessageLikedNotification $notification, array $channels): bool => $notification->messageId === $message->id
+                && $notification->reactorId === $reactor->id
                 && $notification->toArray($author)['target_id'] === $event->id,
         );
 

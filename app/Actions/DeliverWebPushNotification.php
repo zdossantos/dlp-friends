@@ -19,6 +19,10 @@ final class DeliverWebPushNotification
 
     public function handle(WebPushSubscription $subscription, WebPushNotification $notification): void
     {
+        $subscription = $subscription->fresh();
+        if ($subscription === null) {
+            return;
+        }
         $user = $subscription->user()->first();
         $notificationId = $notification instanceof Notification ? $notification->id : null;
 

@@ -157,12 +157,14 @@ return [
             'device_last_used' => 'Dernière utilisation : :date',
             'device_remove' => 'Retirer cet appareil',
             'categories' => [
+                'trips' => 'Trajets',
                 'group_messages' => 'Messages de groupe',
                 'messages' => 'Nouveaux messages', 'matches' => 'Nouvelles rencontres amicales',
                 'events' => 'Événements', 'partner_announcements' => 'Annonces partenaires',
                 'administration' => 'Administration',
             ],
             'categories_help' => [
+                'trips' => 'Les demandes, décisions, changements et annulations de tes trajets.',
                 'group_messages' => 'Recevoir les notifications dans l’application et les alertes Push des messages de groupe.',
                 'messages' => 'Une alerte générique quand un nouveau message arrive.',
                 'matches' => 'Une alerte quand une nouvelle mise en relation amicale est créée.',
