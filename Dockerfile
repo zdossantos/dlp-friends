@@ -2,7 +2,7 @@
 
 FROM oven/bun:1.3.14-alpine AS bun
 
-FROM php:8.4-cli-alpine3.22 AS build
+FROM php:8.4.27-cli-alpine3.24 AS build
 
 WORKDIR /app
 
@@ -42,7 +42,7 @@ RUN composer install \
     && bun run build \
     && rm -rf node_modules
 
-FROM php:8.4-fpm-alpine3.22 AS runtime
+FROM php:8.4.27-fpm-alpine3.24 AS runtime
 
 WORKDIR /var/www/html
 
