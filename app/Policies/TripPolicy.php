@@ -7,6 +7,7 @@ use App\Enums\TripRegistrationStatus;
 use App\Enums\UserStatus;
 use App\Models\Trip;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Builder;
 
 final class TripPolicy
 {
@@ -32,6 +33,11 @@ final class TripPolicy
 
     public function request(User $user, Trip $trip): bool
     {
-        return $this->view($user, $trip) && $trip->organizer_user_id !== $user->id && $trip->cancelled_at === null && $trip->departs_at->isFuture() && $trip->remainingPlaces() > 0;
+        return $this->view($user, $trip) && $trip->organizer_user_id !== $user->id && $trip->cancelled_at === null && $trip->departs_at->isFuture() && $trip->remainingPlaces() > 0
+            && ! $trip->registrations()->where('status', TripRegistrationStatus::Accepted)
+                ->whereHas('user', fn (Builder $participant) => $participant
+                    ->whereHas('blocksCreated', fn (Builder $blocks) => $blocks->where('blocked_user_id', $user->id))
+                    ->orWhereHas('blocksReceived', fn (Builder $blocks) => $blocks->where('blocker_user_id', $user->id)))
+                ->exists();
     }
 }

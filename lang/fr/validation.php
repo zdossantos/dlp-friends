@@ -1,6 +1,8 @@
 <?php
 
 return [
+    'required_if' => 'Le champ :attribute est obligatoire lorsque :other vaut :value.',
+    'prohibited_unless' => 'Le champ :attribute n’est autorisé que lorsque :other vaut :values.',
     'after_or_equal' => 'Le champ :attribute doit être une date postérieure ou égale au champ :date.',
     'date_format' => 'Le champ :attribute doit respecter le format :format.',
     'accepted' => 'Le champ :attribute doit être accepté.',

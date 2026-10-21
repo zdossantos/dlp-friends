@@ -1,6 +1,8 @@
 <?php
 
 return [
+    'required_if' => 'The :attribute field is required when :other is :value.',
+    'prohibited_unless' => 'The :attribute field is prohibited unless :other is in :values.',
     'after_or_equal' => 'The :attribute field must be a date after or equal to :date.',
     'date_format' => 'The :attribute field must match the format :format.',
     'accepted' => 'The :attribute field must be accepted.',
