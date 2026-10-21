@@ -65,7 +65,9 @@ async function markRead(): Promise<void> {
     });
 
     if (response.ok) {
-        router.reload({ only: ['auth'] });
+        router.reload({
+            only: ['auth', ...(props.messagesProp ? [props.messagesProp] : [])],
+        });
     }
 }
 
