@@ -1,8 +1,8 @@
 # Trajets entre membres — conception de l’issue 304
 
-Date : 21 octobre 2026. Statut : proposition écrite à relire, pas une fonctionnalité livrée.
+Date : 21 octobre 2026. Statut : conception écrite validée par l’utilisateur le 21 octobre 2026 ; pas une fonctionnalité livrée.
 
-Références : [issue 304](https://github.com/zdossantos/dlp-friends/issues/304), [PR 312](https://github.com/zdossantos/dlp-friends/pull/312), maquettes liées à l’issue. Les huit règles discutées ont reçu une validation conversationnelle ; ce document les rassemble avec l’exclusion et le signalement d’un désistement tardif demandés ensuite.
+Références : [issue 304](https://github.com/zdossantos/dlp-friends/issues/304), [PR 312](https://github.com/zdossantos/dlp-friends/pull/312), maquettes liées à l’issue. Ce document rassemble les règles approuvées, puis l’exclusion et le signalement d’un désistement tardif. L’utilisateur a ensuite validé cette conception écrite, y compris la portée des motifs obligatoires.
 
 ## Intention et limites
 
@@ -28,7 +28,7 @@ Les places voiture excluent le conducteur. La capacité train/RER/bus est de cin
 
 L’ordre des verrous est commun aux transitions, blocages et suppressions : comptes concernés par identifiant croissant, puis trajets par identifiant croissant, puis participations. Une transaction verrouille le trajet avant toute transition ou variation de capacité. L’acceptation recontrôle les deux comptes, les blocages, la demande et la dernière place disponible. Les doubles requêtes ne créent pas de doublons et deux acceptations concurrentes ne peuvent pas dépasser la capacité. Les appels répétés sur un état terminal ne répètent pas les notifications.
 
-Pour la relecture, l’expression « tout doit être motivé » est interprétée comme un motif obligatoire lors d’un refus, d’une sortie volontaire, d’une exclusion et d’une annulation. Le retrait d’une demande non acceptée n’exige pas d’explication. Les motifs sont limités à 1 000 caractères, validés et échappés. Un refus ou une exclusion est expliqué uniquement à la personne concernée ; une sortie à l’organisateur ; une annulation aux participants et demandeurs concernés. Aucun motif libre ne figure dans une notification Push, un journal technique ou une annonce publique du groupe. Un retrait automatique pour blocage ou inactivation ne demande aucun motif et ne révèle pas sa cause.
+La règle validée exige un motif lors d’un refus, d’une sortie volontaire, d’une exclusion et d’une annulation. Le retrait d’une demande non acceptée n’exige pas d’explication. Les motifs sont limités à 1 000 caractères, validés et échappés. Un refus ou une exclusion est expliqué uniquement à la personne concernée ; une sortie à l’organisateur ; une annulation aux participants et demandeurs concernés. Aucun motif libre ne figure dans une notification Push, un journal technique ou une annonce publique du groupe. Un retrait automatique pour blocage ou inactivation ne demande aucun motif et ne révèle pas sa cause.
 
 ## Modification et annulation
 
