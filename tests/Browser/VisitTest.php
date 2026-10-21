@@ -200,3 +200,23 @@ test('new visits start today independently of the browsed month and use applicat
         ->assertScript('Array.from(document.querySelectorAll("input[type=date]")).every(input => input.getBoundingClientRect().right <= input.parentElement.getBoundingClientRect().right)', true)
         ->assertNoJavaScriptErrors();
 });
+
+test('moving a stay start keeps a valid end and advances an earlier end', function (bool $editing) {
+    $member = User::factory()->withProfile()->create();
+    $today = today('Europe/Paris')->toDateString();
+    $visit = $editing ? Visit::factory()->for($member)->create(['starts_on' => $today, 'ends_on' => $today]) : null;
+    $this->actingAs($member);
+    $start = today('Europe/Paris')->addDays(2)->toDateString();
+    $end = today('Europe/Paris')->addDays(4)->toDateString();
+    $later = today('Europe/Paris')->addDays(6)->toDateString();
+    $opener = $visit ? 'visit-edit-'.$visit->id.'-'.$today : 'visit-create';
+    visit('/visits?view=agenda')->resize(390, 844)->click('[data-test="'.$opener.'"]')
+        ->fill('#starts_on', $start)->assertValue('#ends_on', $start)
+        ->fill('#ends_on', $end)->fill('#starts_on', today('Europe/Paris')->addDay()->toDateString())
+        ->assertValue('#ends_on', $end)
+        ->fill('#starts_on', $later)->assertValue('#ends_on', $later)
+        ->assertAttribute('#ends_on', 'min', $later)
+        ->screenshot(true, 'visits-date-alignment')
+        ->click('[data-test="visit-submit"]')->assertNotPresent('[data-test="visit-form-panel"]');
+    $this->assertDatabaseHas('visits', ['user_id' => $member->id, 'starts_on' => $later, 'ends_on' => $later]);
+})->with(['create' => false, 'edit' => true]);

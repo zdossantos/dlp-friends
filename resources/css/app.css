@@ -657,5 +657,7 @@ input::-webkit-datetime-edit {
 
 input::-webkit-date-and-time-value {
     min-inline-size: 0;
-    text-align: start;
+    block-size: 100%;
+    align-content: center;
+    text-align: inherit;
 }

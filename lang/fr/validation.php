@@ -1,6 +1,8 @@
 <?php
 
 return [
+    'after_or_equal' => 'Le champ :attribute doit être une date postérieure ou égale au champ :date.',
+    'date_format' => 'Le champ :attribute doit respecter le format :format.',
     'accepted' => 'Le champ :attribute doit être accepté.',
     'array' => 'Le champ :attribute doit être un tableau.',
     'boolean' => 'Le champ :attribute doit être vrai ou faux.',
@@ -52,6 +54,8 @@ return [
         ],
     ],
     'attributes' => [
+        'starts_on' => 'premier jour',
+        'ends_on' => 'dernier jour',
         'email' => 'adresse e-mail',
         'birth_date' => 'date de naissance',
         'password' => 'mot de passe',

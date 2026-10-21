@@ -81,3 +81,16 @@ test('stay mutations return to the validated workspace context', function () {
     $this->from($context)->patch(route('visits.update', $visit), $data)->assertRedirect($context);
     $this->from($context)->delete(route('visits.destroy', $visit))->assertRedirect($context);
 });
+
+test('visit date validation uses translated field names and messages', function ($locale, $orderMessage, $formatMessage) {
+    $member = User::factory()->withProfile()->create(['locale' => $locale]);
+    $this->actingAs($member)->post('/visits', [
+        'starts_on' => '2026-10-23', 'ends_on' => '2026-10-21',
+    ])->assertSessionHasErrors(['ends_on' => $orderMessage]);
+    $this->post('/visits', [
+        'starts_on' => 'invalid', 'ends_on' => '2026-10-23',
+    ])->assertSessionHasErrors(['starts_on' => $formatMessage]);
+})->with([
+    ['fr', 'Le champ dernier jour doit être une date postérieure ou égale au champ premier jour.', 'Le champ premier jour doit respecter le format Y-m-d.'],
+    ['en', 'The last day field must be a date after or equal to first day.', 'The first day field must match the format Y-m-d.'],
+]);

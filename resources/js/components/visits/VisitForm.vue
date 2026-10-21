@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useForm } from '@inertiajs/vue3';
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 import ResponsiveConfirmation from '@/components/common/ResponsiveConfirmation.vue';
 import InputError from '@/components/InputError.vue';
 import { Button } from '@/components/ui/button';
@@ -17,6 +17,15 @@ const form = useForm({
     starts_on: props.visit?.starts_on ?? props.day,
     ends_on: props.visit?.ends_on ?? props.day,
 });
+watch(
+    () => form.starts_on,
+    (start) => {
+        if (start && form.ends_on < start) {
+            form.ends_on = start;
+            form.clearErrors('ends_on');
+        }
+    },
+);
 function submit() {
     const options = { preserveScroll: true, onSuccess: () => emit('saved') };
 
@@ -50,6 +59,7 @@ function remove() {
                 :name="field"
                 type="date"
                 required
+                :min="field === 'ends_on' ? form.starts_on : undefined"
                 class="min-h-11 max-w-full min-w-0"
                 :aria-invalid="!!form.errors[field]"
                 :aria-describedby="`${field}-error`"
