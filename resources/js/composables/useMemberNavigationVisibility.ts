@@ -22,6 +22,14 @@ export function useMemberNavigationVisibility(): ComputedRef<boolean> {
     const page = usePage();
 
     return computed(() => {
+        if (
+            ['Conversations/Show', 'Conversations/Group'].includes(
+                page.component,
+            )
+        ) {
+            return false;
+        }
+
         const path = new URL(
             page.url,
             typeof window !== 'undefined'

@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { Link } from '@inertiajs/vue3';
 import { ArrowLeft } from '@lucide/vue';
 import { computed } from 'vue';
+import BackLink from '@/components/common/BackLink.vue';
 import { Button } from '@/components/ui/button';
 import { useResponsiveModal } from '@/composables/useResponsiveModal';
 
@@ -95,7 +95,7 @@ function focusPanelWithoutScrolling(event: Event): void {
                         size="icon"
                         class="pointer-events-auto size-11 shrink-0 rounded-full bg-card/90 shadow-sm backdrop-blur"
                     >
-                        <Link
+                        <BackLink
                             :href="backHref"
                             preserve-scroll
                             :preserve-state="preserveState"
@@ -104,7 +104,7 @@ function focusPanelWithoutScrolling(event: Event): void {
                             :aria-label="backLabel"
                         >
                             <ArrowLeft class="size-5" aria-hidden="true" />
-                        </Link>
+                        </BackLink>
                     </Button>
                     <div v-if="hasVisibleHeader" class="min-w-0 flex-1">
                         <component :is="Modal.Title">{{ title }}</component>
@@ -139,7 +139,7 @@ function focusPanelWithoutScrolling(event: Event): void {
                 class="shrink-0 border-t border-border bg-card px-6 py-4"
             >
                 <Button as-child type="button" variant="outline">
-                    <Link
+                    <BackLink
                         :href="backHref"
                         preserve-scroll
                         :preserve-state="preserveState"
@@ -149,7 +149,7 @@ function focusPanelWithoutScrolling(event: Event): void {
                     >
                         <ArrowLeft class="size-4" aria-hidden="true" />
                         {{ backLabel }}
-                    </Link>
+                    </BackLink>
                 </Button>
             </div>
         </component>

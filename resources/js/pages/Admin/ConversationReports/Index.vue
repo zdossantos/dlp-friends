@@ -4,6 +4,7 @@ import { ArrowLeft, ArrowUpRight } from '@lucide/vue';
 import { useMediaQuery } from '@vueuse/core';
 import { computed } from 'vue';
 import AdminPageHeader from '@/components/admin/AdminPageHeader.vue';
+import BackLink from '@/components/common/BackLink.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useTranslations } from '@/composables/useTranslations';
@@ -88,7 +89,7 @@ function date(value: string): string {
         />
         <div v-if="target" class="flex flex-wrap gap-2">
             <Button as-child variant="outline">
-                <Link
+                <BackLink
                     data-test="reports-origin"
                     :href="
                         source === 'profile'
@@ -104,7 +105,7 @@ function date(value: string): string {
                                 : 'moderation.back_to_member',
                         )
                     }}
-                </Link>
+                </BackLink>
             </Button>
             <Button as-child variant="ghost"
                 ><Link :href="index().url">{{

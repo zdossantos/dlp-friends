@@ -9,6 +9,7 @@ import {
     ref,
     watch,
 } from 'vue';
+import BackLink from '@/components/common/BackLink.vue';
 import ResponsivePanel from '@/components/common/ResponsivePanel.vue';
 import EventParticipantProfile from '@/components/events/EventParticipantProfile.vue';
 import OutingsNavigation from '@/components/outings/OutingsNavigation.vue';
@@ -449,8 +450,10 @@ function closeProfile() {
                 class="mb-4 min-h-11"
                 variant="outline"
                 data-test="visit-attendees-back"
-                @click="closePanel"
-                >{{ t('visits.back') }}</Button
+                as-child
+                ><BackLink :href="closeHref" preserve-state>{{
+                    t('visits.back')
+                }}</BackLink></Button
             >
             <ul class="divide-y divide-border">
                 <li v-for="member in panel.members.data" :key="member.id">

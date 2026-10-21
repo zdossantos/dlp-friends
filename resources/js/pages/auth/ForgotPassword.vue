@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Form, Head } from '@inertiajs/vue3';
+import BackLink from '@/components/common/BackLink.vue';
 import InputError from '@/components/InputError.vue';
-import TextLink from '@/components/TextLink.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -65,9 +65,11 @@ defineProps<{
         </Form>
 
         <div class="space-x-1 text-center text-sm text-muted-foreground">
-            <TextLink :href="login()">{{
-                t('account.forgot_password.back')
-            }}</TextLink>
+            <BackLink
+                :href="login()"
+                class="text-foreground underline underline-offset-4"
+                >{{ t('account.forgot_password.back') }}</BackLink
+            >
         </div>
     </div>
 </template>

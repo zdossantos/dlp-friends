@@ -7,6 +7,8 @@ return [
     'instagram_intro' => 'Open Instagram’s in-app browser menu, often shown as three dots. If an option to open in an external browser is available, select it.',
     'fallback' => 'Can’t find that option? Copy the link below, open Safari on iPhone or your usual browser on Android, such as Chrome, then paste the link into the address bar.',
     'link_label' => 'Link to open in your browser',
+    'open' => 'Open in browser',
+    'open_hint' => 'If your browser does not open, use the Instagram menu or copy the link below.',
     'copy' => 'Copy link',
     'copied' => 'Link copied. Open your browser and paste it into the address bar.',
     'copy_failed' => 'Automatic copying is unavailable. Select the link above, copy it using your phone’s menu, then paste it into your browser.',

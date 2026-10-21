@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { Head, Link, router } from '@inertiajs/vue3';
+import { Head, Link } from '@inertiajs/vue3';
 import { ArrowLeft } from '@lucide/vue';
 import { computed } from 'vue';
+import BackLink from '@/components/common/BackLink.vue';
 import BlockMemberDialog from '@/components/members/BlockMemberDialog.vue';
 import LikeMemberButton from '@/components/members/LikeMemberButton.vue';
 import UnblockMemberButton from '@/components/members/UnblockMemberButton.vue';
@@ -35,16 +36,6 @@ const visitFrequency = computed(() =>
         ? t(frequencyKeys[props.member.visit_frequency])
         : t('profile.details.frequency_unknown'),
 );
-
-function goBack(): void {
-    if (window.history.length > 1) {
-        window.history.back();
-
-        return;
-    }
-
-    router.visit(props.backHref);
-}
 </script>
 
 <template>
@@ -60,9 +51,11 @@ function goBack(): void {
             size="icon"
             :aria-label="t('profile.actions.back')"
             class="mb-3 size-11 shrink-0 rounded-full bg-card shadow-md"
-            @click="goBack"
+            as-child
         >
-            <ArrowLeft class="size-5" aria-hidden="true" />
+            <BackLink :href="backHref"
+                ><ArrowLeft class="size-5" aria-hidden="true"
+            /></BackLink>
         </Button>
 
         <ProfilePresentation

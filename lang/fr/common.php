@@ -61,6 +61,7 @@ return [
         ],
     ],
     'actions' => [
+        'back' => 'Retour',
         'cancel' => 'Annuler',
         'close' => 'Fermer',
         'delete' => 'Supprimer',

@@ -12,6 +12,7 @@ import {
 } from '@/layouts/resolvePageLayout';
 import { initializeAnalytics } from '@/lib/analytics';
 import { initializeFlashToast } from '@/lib/flashToast';
+import { initializeNavigationHistory } from '@/lib/navigationHistory';
 import { resolvePageTitle } from '@/lib/pageTitle';
 import { resolveReverbHost } from '@/lib/reverbHost';
 
@@ -32,6 +33,8 @@ configureEcho(
 );
 
 const appName = import.meta.env.VITE_APP_NAME;
+
+initializeNavigationHistory();
 
 const inertiaReady = createInertiaApp({
     title: (title) => resolvePageTitle(title, appName),

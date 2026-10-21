@@ -60,7 +60,12 @@ return [
             'conversations' => ['title' => 'Private chats', 'description' => 'Chat with ease in a private space when your worlds cross.'],
         ],
     ],
-    'actions' => ['cancel' => 'Cancel', 'close' => 'Close', 'delete' => 'Delete'],
+    'actions' => [
+        'back' => 'Back',
+        'cancel' => 'Cancel',
+        'close' => 'Close',
+        'delete' => 'Delete',
+    ],
     'pwa' => [
         'update_title' => 'An update is ready',
         'update_description' => 'Reload DLP Friends when you are ready.',

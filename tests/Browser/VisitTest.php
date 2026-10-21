@@ -104,6 +104,9 @@ test('full visitor lists page beyond one hundred and search names literally', fu
         ->click('Suivante')->assertSee('Page 2 sur 4')
         ->click('Suivante')->assertSee('Page 3 sur 4')
         ->click('Suivante')->assertSee('Page 4 sur 4')->assertSee('Membre 104')
+        ->click('[data-test="visit-attendees-back"]')->assertSee('Page 3 sur 4')
+        ->click('[data-test="visit-attendees-back"]')->assertSee('Page 2 sur 4')
+        ->click('[data-test="visit-attendees-back"]')->assertSee('Page 1 sur 4')
         ->click('[data-test="visit-attendees-back"]')
         ->fill('visit-search', 'elodie')->assertSee('Élodie')->assertSee('Également présents · 1')
         ->click('Élodie')->assertPresent('[data-test=visit-profile-panel]')->assertDontSee('Retirer le filtre membre')
@@ -247,5 +250,7 @@ test('visitor names open public profiles and return to the same list without fil
     if ($fullList) {
         $page->assertPresent('[data-test=visit-attendees-panel]');
     }
-    $page->assertNoJavaScriptErrors();
+    $page->forward()->assertPresent('[data-test=visit-profile-panel]')
+        ->back()->assertNotPresent('[data-test=visit-profile-panel]')
+        ->assertNoJavaScriptErrors();
 })->with([['agenda', false], ['calendar', false], ['calendar', true]]);

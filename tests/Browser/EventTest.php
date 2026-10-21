@@ -99,11 +99,18 @@ test('event discussion opens the full conversation page from the shared event de
         ->click('[data-test="event-chat-open"]')
         ->assertPathIs("/events/{$event->id}/chat")
         ->assertPresent('[data-test="conversation-page"]')
+        ->assertNotPresent('[data-test="member-bottom-navigation"]')
         ->assertMissing('[data-test="event-panel"]')
         ->assertPresent('[data-test="group-chat-back"]')
         ->assertPresent('#message-content')
         ->click('[data-test="group-chat-info"]')
         ->assertPresent('[data-test="event-detail"]')
+        ->assertNotPresent('[data-test="member-bottom-navigation"]')
+        ->back()->assertPathIs("/events/{$event->id}/chat")
+        ->click('[data-test="group-chat-back"]')->assertPathIs("/events/{$event->id}")
+        ->forward()->assertPathIs("/events/{$event->id}/chat")
+        ->assertNotPresent('[data-test="member-bottom-navigation"]')
+        ->assertScript("getComputedStyle(document.querySelector('[data-test=member-shell-content]')).paddingBottom", '0px')
         ->assertNoJavaScriptErrors();
 });
 

@@ -2,6 +2,7 @@
 import { Link, usePage } from '@inertiajs/vue3';
 import { ArrowLeft, Bell, Palette, ShieldCheck, UserRound } from '@lucide/vue';
 import { computed } from 'vue';
+import BackLink from '@/components/common/BackLink.vue';
 import { Button } from '@/components/ui/button';
 import { useCurrentUrl } from '@/composables/useCurrentUrl';
 import { useTranslations } from '@/composables/useTranslations';
@@ -30,13 +31,6 @@ const profileDestination = computed(() => {
 
     return isPartner.value ? editPartnerProfile() : dashboard();
 });
-const backLabel = computed(() =>
-    t(
-        isMember.value || isPartner.value
-            ? 'account.settings.back_to_profile'
-            : 'account.settings.back_to_administration',
-    ),
-);
 const sidebarNavItems: NavItem[] = [
     {
         title: t('account.settings.account'),
@@ -81,13 +75,13 @@ const { isCurrentOrParentUrl } = useCurrentUrl();
                 variant="ghost"
                 class="-ml-3 min-h-11 gap-2 rounded-xl px-3 text-muted-foreground"
             >
-                <Link
+                <BackLink
                     :href="profileDestination"
                     data-test="settings-back-to-profile"
                 >
                     <ArrowLeft class="size-4" aria-hidden="true" />
-                    {{ backLabel }}
-                </Link>
+                    {{ t('common.actions.back') }}
+                </BackLink>
             </Button>
             <div class="space-y-1.5">
                 <h1

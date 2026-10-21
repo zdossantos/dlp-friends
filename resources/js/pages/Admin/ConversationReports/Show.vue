@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import AdminPageHeader from '@/components/admin/AdminPageHeader.vue';
+import BackLink from '@/components/common/BackLink.vue';
 import InputError from '@/components/InputError.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -66,9 +67,9 @@ function author(id: number): string {
         />
         <div class="flex flex-wrap items-center gap-3">
             <Button as-child variant="outline"
-                ><Link :href="backHref" data-test="reports-back">{{
+                ><BackLink :href="backHref" data-test="reports-back">{{
                     t('moderation.back_to_list')
-                }}</Link></Button
+                }}</BackLink></Button
             >
             <Badge :variant="report.closed_at ? 'secondary' : 'default'">{{
                 t(

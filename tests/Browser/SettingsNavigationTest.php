@@ -3,7 +3,7 @@
 use App\Models\Role;
 use App\Models\User;
 
-test('members can identify each settings page and return to their profile without horizontal scrolling', function (string $locale, int $width) {
+test('members can identify each settings page and return to the previous settings page without horizontal scrolling', function (string $locale, int $width) {
     $member = User::factory()->withProfile()->create(['locale' => $locale]);
     $this->actingAs($member)->withSession(['auth.password_confirmed_at' => time()]);
     $page = visit('/settings/account')->resize($width, 900);
@@ -23,8 +23,8 @@ test('members can identify each settings page and return to their profile withou
     }
 
     $page->click('[data-test="settings-back-to-profile"]')
-        ->assertPathIs('/profile')
-        ->assertSee($member->profile->display_name);
+        ->assertPathIs('/settings/appearance')
+        ->forward()->assertPathIs('/settings/notifications');
 })->with([
     'French mobile' => ['fr', 390],
     'English narrow mobile' => ['en', 320],
@@ -52,5 +52,25 @@ test('administrator only accounts return from notification settings to administr
         ->assertAttribute('[data-test="settings-back-to-profile"]', 'href', '/dashboard')
         ->click('[data-test="settings-back-to-profile"]')
         ->assertPathIs('/dashboard')
+        ->assertNoJavaScriptErrors();
+});
+
+test('history return survives a reload', function () {
+    $this->actingAs(User::factory()->withProfile()->create());
+
+    visit('/settings/account')
+        ->click('nav a[href$="/appearance"]')->assertPathIs('/settings/appearance')
+        ->refresh()
+        ->click('[data-test="settings-back-to-profile"]')->assertPathIs('/settings/account')
+        ->forward()->assertPathIs('/settings/appearance')
+        ->assertNoJavaScriptErrors();
+});
+
+test('a direct entry uses its fallback even when the browser already has history', function () {
+    $this->actingAs(User::factory()->withProfile()->create());
+
+    visit('/settings/account')->navigate('/settings/notifications')
+        ->assertScript('history.length > 1', true)
+        ->click('[data-test="settings-back-to-profile"]')->assertPathIs('/profile')
         ->assertNoJavaScriptErrors();
 });
