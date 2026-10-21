@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Models\Visit;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Gate;
 
 final class VisitWorkspaceData
 {
@@ -31,6 +32,22 @@ final class VisitWorkspaceData
         }
 
         return ['today' => $today->toDateString(), 'filters' => $filters, 'visibility' => $viewer->visits_visibility->value, 'ownVisits' => $own->map(fn (Visit $visit): array => ['id' => $visit->id, 'starts_on' => $visit->starts_on->toDateString(), 'ends_on' => $visit->ends_on->toDateString()])->all(), 'days' => $days, 'closeHref' => route('visits.index', $filters, false), 'panel' => null];
+    }
+
+    /**
+     * @param  array{month:string,day:string,view:string,audience:string,search:string,member:int|null}  $filters
+     * @return array<string,mixed>|null
+     */
+    public function profile(User $viewer, array $filters, ?int $id, ?string $day): ?array
+    {
+        if ($id === null) {
+            return null;
+        }
+
+        $member = $this->attendees($viewer, $filters, CarbonImmutable::parse($day ?? $filters['day'], 'Europe/Paris'))->whereKey($id)->firstOrFail();
+        abort_unless($member->profile !== null && Gate::forUser($viewer)->allows('viewPublic', $member->profile), 404);
+
+        return ['isBlocked' => false] + PublicMemberData::from($viewer, $member);
     }
 
     /**

@@ -10,6 +10,7 @@ import {
     watch,
 } from 'vue';
 import ResponsivePanel from '@/components/common/ResponsivePanel.vue';
+import EventParticipantProfile from '@/components/events/EventParticipantProfile.vue';
 import OutingsNavigation from '@/components/outings/OutingsNavigation.vue';
 import UserAvatar from '@/components/profile/UserAvatar.vue';
 import { Button } from '@/components/ui/button';
@@ -193,16 +194,21 @@ function closePanel() {
         onSuccess: restore,
     });
 }
-function selectMember(id: number) {
-    if (props.panel) {
-        router.get(
-            index.url(),
-            { ...props.filters, member: id },
-            { preserveState: true, preserveScroll: true },
-        );
-    } else {
-        navigate({ member: id });
-    }
+function selectMember(id: number, date: string) {
+    const url = new URL(window.location.href);
+    url.searchParams.set('profile', String(id));
+    url.searchParams.set('profile_day', date);
+    router.get(
+        url.pathname + url.search,
+        {},
+        { preserveState: true, preserveScroll: true },
+    );
+}
+function closeProfile() {
+    router.visit(props.profileCloseHref, {
+        preserveState: true,
+        preserveScroll: true,
+    });
 }
 </script>
 <template>
@@ -401,24 +407,44 @@ function selectMember(id: number) {
         ></ResponsivePanel
     >
     <ResponsivePanel
-        :open="!!panel"
+        :open="!!panel || !!memberProfile"
         :title="
-            t('visits.people_title', { count: panel?.members.meta.total ?? 0 })
+            memberProfile
+                ? ''
+                : t('visits.people_title', {
+                      count: panel?.members.meta.total ?? 0,
+                  })
         "
         :description="
-            panel
+            panel && !memberProfile
                 ? formatDate(panel.date + 'T12:00:00', { dateStyle: 'full' })
                 : ''
         "
-        test-id="visit-attendees-panel"
+        :test-id="
+            memberProfile ? 'visit-profile-panel' : 'visit-attendees-panel'
+        "
+        :full-bleed="!!memberProfile"
+        :a11y-heading="t('events.panels.participant-profile.title')"
+        :a11y-summary="t('events.panels.participant-profile.description')"
+        :back-href="memberProfile ? profileCloseHref : null"
+        :back-label="t('visits.back')"
+        back-data-test="visit-profile-back"
+        preserve-state
         fill-height
         @close-auto-focus="
             $event.preventDefault();
             restore();
         "
-        @update:open="!$event && closePanel()"
+        @update:open="
+            !$event && (memberProfile ? closeProfile() : closePanel())
+        "
     >
-        <template v-if="panel"
+        <EventParticipantProfile
+            v-if="memberProfile"
+            :profile="memberProfile"
+            :block-return-href="profileCloseHref"
+        />
+        <template v-else-if="panel"
             ><Button
                 class="mb-4 min-h-11"
                 variant="outline"
@@ -431,7 +457,8 @@ function selectMember(id: number) {
                     <button
                         type="button"
                         class="flex min-h-14 w-full items-center gap-3 rounded-lg py-2 text-left focus-visible:ring-2 focus-visible:ring-ring"
-                        @click="selectMember(member.id)"
+                        :data-test="`visit-attendee-${member.id}`"
+                        @click="selectMember(member.id, panel.date)"
                     >
                         <UserAvatar
                             :avatar="member.avatar"

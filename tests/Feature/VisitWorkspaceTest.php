@@ -112,3 +112,35 @@ test('visits default to the calendar and matches while explicit filters remain a
     $this->get('/visits?view=agenda&audience=members')->assertInertia(fn (Assert $page) => $page
         ->where('filters.view', 'agenda')->where('filters.audience', 'members'));
 });
+
+test('visit profiles reuse public data without changing filters', function (string $path) {
+    $viewer = User::factory()->withProfile()->create();
+    $other = publicVisitor('Camille');
+    publicVisitor('Alex');
+    $this->actingAs($viewer)->get($path.'?audience=members&month=2026-10&day=2026-10-24&profile='.$other->id)
+        ->assertInertia(function (Assert $page) use ($other) {
+            $page->where('memberProfile.member.id', $other->id)->where('memberProfile.member.display_name', 'Camille')->where('filters.member', null);
+            visitDay($page, '2026-10-24', 2);
+        });
+})->with(['/visits', '/visits/attendees']);
+
+test('visit profile links recheck visit visibility and blocks', function (string $restriction) {
+    $viewer = User::factory()->withProfile()->create();
+    $other = publicVisitor();
+    if ($restriction === 'hidden') {
+        $other->forceFill(['visits_visibility' => 'hidden'])->save();
+    } else {
+        Block::query()->create(['blocker_user_id' => $other->id, 'blocked_user_id' => $viewer->id]);
+    }
+    $this->actingAs($viewer)->get('/visits?audience=members&month=2026-10&day=2026-10-24&profile='.$other->id)->assertNotFound();
+})->with(['hidden', 'blocked']);
+
+test('returning from a visit profile retains the full list page and search', function () {
+    $viewer = User::factory()->withProfile()->create();
+    $other = publicVisitor('Camille');
+    $url = '/visits/attendees?audience=members&view=agenda&month=2026-10&day=2026-10-24&search=Cam&page=2';
+    $this->actingAs($viewer)->get($url.'&profile='.$other->id.'&profile_day=2026-10-23')
+        ->assertInertia(fn (Assert $page) => $page->where('memberProfile.member.id', $other->id)
+            ->where('panel.members.meta.current_page', 2)->where('filters.day', '2026-10-24')
+            ->where('profileCloseHref', url($url)));
+});

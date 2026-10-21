@@ -3,6 +3,7 @@
 use App\Models\MemberMatch;
 use App\Models\User;
 use App\Models\Visit;
+use Illuminate\Support\Facades\Storage;
 
 test('members create edit and delete a stay from the mobile agenda', function () {
     $member = User::factory()->withProfile()->create();
@@ -105,7 +106,7 @@ test('full visitor lists page beyond one hundred and search names literally', fu
         ->click('Suivante')->assertSee('Page 4 sur 4')->assertSee('Membre 104')
         ->click('[data-test="visit-attendees-back"]')
         ->fill('visit-search', 'elodie')->assertSee('Élodie')->assertSee('Également présents · 1')
-        ->click('Élodie')->assertSee('Retirer le filtre membre')
+        ->click('Élodie')->assertPresent('[data-test=visit-profile-panel]')->assertDontSee('Retirer le filtre membre')
         ->assertNoJavaScriptErrors();
 });
 
@@ -222,3 +223,29 @@ test('moving a stay start keeps a valid end and advances an earlier end', functi
         ->click('[data-test="visit-submit"]')->assertNotPresent('[data-test="visit-form-panel"]');
     $this->assertDatabaseHas('visits', ['user_id' => $member->id, 'starts_on' => $later, 'ends_on' => $later]);
 })->with(['create' => false, 'edit' => true]);
+
+test('visitor names open public profiles and return to the same list without filtering', function (string $view, bool $fullList) {
+    $viewer = User::factory()->withProfile()->create();
+    $other = User::factory()->withProfile()->create(['visits_visibility' => 'members']);
+    $other->profile->update(['display_name' => 'Camille Visite', 'bio' => 'Ma présentation publique']);
+    Storage::fake('local');
+    foreach ([$viewer, $other] as $user) {
+        Storage::put($user->profile->avatar->image_path, base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScL8WQAAAABJRU5ErkJggg=='));
+    }
+    $day = today('Europe/Paris')->addDay();
+    Visit::factory()->for($other)->create(['starts_on' => $day, 'ends_on' => $day]);
+    $this->actingAs($viewer);
+    $page = visit('/visits?audience=members&view='.$view.'&month='.$day->format('Y-m').'&day='.$day->toDateString())->resize(390, 844);
+    if ($fullList) {
+        $page->click('[data-test=visit-all-attendees]');
+    }
+    $page->click($fullList ? '[data-test=visit-attendee-'.$other->id.']' : 'Camille Visite')->assertPresent('[data-test=visit-profile-panel]')
+        ->assertSee('Ma présentation publique')->assertDontSee('Retirer le filtre membre')
+        ->click('[data-test=visit-profile-back]')->assertNotPresent('[data-test=visit-profile-panel]')
+        ->assertSee('Camille Visite')->assertDontSee('Retirer le filtre membre')
+        ->assertScript("new URL(location.href).searchParams.get('view')", $view);
+    if ($fullList) {
+        $page->assertPresent('[data-test=visit-attendees-panel]');
+    }
+    $page->assertNoJavaScriptErrors();
+})->with([['agenda', false], ['calendar', false], ['calendar', true]]);

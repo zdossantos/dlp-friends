@@ -117,8 +117,10 @@ La recherche porte sur le nom d’affichage, sans distinction de casse ni
 d’accents, avec une collation MySQL adaptée et des caractères de recherche
 traités littéralement. `textSearch.ts` reste la référence de normalisation
 frontend ; aucune liste de tous les membres n’est chargée dans le navigateur.
-Un nom non unique peut correspondre à plusieurs personnes. Le clic sur un nom
-ajoute son identifiant comme filtre, soumis aux mêmes autorisations.
+Un nom non unique peut correspondre à plusieurs personnes. Le clic sur un membre ouvre son profil public dans le drawer/dialog partagé
+avec les événements, depuis les aperçus agenda/calendrier comme depuis la liste
+complète. Le retour conserve les filtres et la pagination, sans ajouter de filtre
+membre. Les autorisations sont revérifiées à chaque ouverture.
 
 La liste complète d’un jour contient les membres distincts, triés par nom puis
 identifiant, avec pagination serveur de 30 personnes et navigation explicite.

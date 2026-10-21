@@ -1,4 +1,5 @@
 import type { AvatarOption } from '@/types';
+import type { EmbeddedMemberProfile } from '@/types/event';
 export type VisitsVisibility = 'hidden' | 'matches' | 'members';
 export type OwnVisit = { id: number; starts_on: string; ends_on: string };
 export type VisitMember = {
@@ -23,6 +24,8 @@ export type VisitFilters = {
     member: number | null;
 };
 export type VisitWorkspaceProps = {
+    memberProfile: EmbeddedMemberProfile | null;
+    profileCloseHref: string;
     today: string;
     filters: VisitFilters;
     visibility: VisitsVisibility;

@@ -11,7 +11,7 @@ class VisitIndexRequest extends FormRequest
     /** @return array<string, list<string>> */
     public function rules(): array
     {
-        return ['month' => ['sometimes', 'date_format:Y-m'], 'day' => ['sometimes', 'date_format:Y-m-d'], 'view' => ['sometimes', 'in:agenda,calendar'], 'audience' => ['sometimes', 'in:members,matches'], 'search' => ['nullable', 'string', 'max:100'], 'member' => ['nullable', 'integer', 'min:1'], 'page' => ['sometimes', 'integer', 'min:1']];
+        return ['profile' => ['nullable', 'integer', 'min:1'], 'profile_day' => ['sometimes', 'date_format:Y-m-d'], 'month' => ['sometimes', 'date_format:Y-m'], 'day' => ['sometimes', 'date_format:Y-m-d'], 'view' => ['sometimes', 'in:agenda,calendar'], 'audience' => ['sometimes', 'in:members,matches'], 'search' => ['nullable', 'string', 'max:100'], 'member' => ['nullable', 'integer', 'min:1'], 'page' => ['sometimes', 'integer', 'min:1']];
     }
 
     /** @return list<\Closure(Validator): void> */

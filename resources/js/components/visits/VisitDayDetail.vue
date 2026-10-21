@@ -12,7 +12,7 @@ const props = defineProps<{
 const emit = defineEmits<{
     edit: [visit: OwnVisit];
     attendees: [date: string, event: Event];
-    member: [id: number];
+    member: [id: number, date: string];
 }>();
 const { t, formatDate } = useTranslations();
 </script>
@@ -82,7 +82,7 @@ const { t, formatDate } = useTranslations();
                     <button
                         type="button"
                         class="flex min-h-14 w-full items-center gap-3 rounded-lg py-2 text-left focus-visible:ring-2 focus-visible:ring-ring"
-                        @click="emit('member', member.id)"
+                        @click="emit('member', member.id, day.date)"
                     >
                         <UserAvatar
                             :avatar="member.avatar"

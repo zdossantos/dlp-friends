@@ -14,7 +14,7 @@ const emit = defineEmits<{
     'clear-filters': [];
     edit: [visit: OwnVisit];
     attendees: [date: string, event: Event];
-    member: [id: number];
+    member: [id: number, date: string];
 }>();
 const { t, formatDate } = useTranslations();
 const populated = computed(() =>
@@ -67,7 +67,7 @@ const populated = computed(() =>
                 :visibility="visibility"
                 @edit="emit('edit', $event)"
                 @attendees="(date, event) => emit('attendees', date, event)"
-                @member="emit('member', $event)"
+                @member="(id, date) => emit('member', id, date)"
             />
         </article>
     </div>

@@ -16,7 +16,7 @@ class VisitController extends Controller
 {
     public function index(VisitIndexRequest $request, VisitWorkspaceData $data): Response
     {
-        return Inertia::render('Visits/Index', $data->build($request->user(), $request->filters()));
+        return Inertia::render('Visits/Index', [...$data->build($request->user(), $request->filters()), 'memberProfile' => $data->profile($request->user(), $request->filters(), $request->filled('profile') ? $request->integer('profile') : null, $request->validated('profile_day')), 'profileCloseHref' => $request->fullUrlWithoutQuery(['profile', 'profile_day'])]);
     }
 
     public function store(StoreVisitRequest $request): RedirectResponse
