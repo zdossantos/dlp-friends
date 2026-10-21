@@ -33,3 +33,9 @@ test('meeting point and seats can change without taking accepted members seats',
     $this->trip->registrations()->create(['user_id' => $other->id, 'status' => 'accepted']);
     $this->patch('/trips/'.$this->trip->id, [...$this->payload, 'car_seats' => 1])->assertSessionHasErrors('car_seats');
 });
+
+test('editing a private meeting point preserves the locked departure seconds', function () {
+    $this->trip->update(['departs_at' => '2026-10-23 10:00:37', 'first_accepted_at' => now()]);
+    $this->actingAs($this->organizer)->patch('/trips/'.$this->trip->id, [...$this->payload, 'meeting_point' => 'Quai 3'])->assertSessionHasNoErrors();
+    expect($this->trip->fresh()->departs_at->format('Y-m-d H:i:s'))->toBe('2026-10-23 10:00:37');
+});

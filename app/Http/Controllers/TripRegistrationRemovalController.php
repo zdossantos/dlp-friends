@@ -13,6 +13,6 @@ class TripRegistrationRemovalController extends Controller
     {
         $action->handle($request->user(), $registration, $request->validated('reason'));
 
-        return to_route('trips.show', $registration->trip_id);
+        return back();
     }
 }

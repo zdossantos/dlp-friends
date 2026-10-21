@@ -22,7 +22,7 @@ final class TripWorkspaceData
     public function detail(User $viewer, Trip $trip): array
     {
         $own = $trip->registrations()->where('user_id', $viewer->id)->first();
-        if (Gate::forUser($viewer)->denies('view', $trip)) {
+        if (Gate::forUser($viewer)->denies('view', $trip) || ($own !== null && ! in_array($own->status->value, ['pending', 'accepted'], true) && $trip->organizer_user_id !== $viewer->id)) {
             abort_unless($own !== null && app(TripPolicy::class)->create($viewer), 403);
 
             return ['id' => $trip->id, 'registration' => ['id' => $own->id, 'status' => $own->status->value, 'reason' => $own->reason], 'can_manage' => false, 'can_request' => false];
@@ -37,9 +37,11 @@ final class TripWorkspaceData
             'registration' => $own === null ? null : ['id' => $own->id, 'status' => $own->status->value, 'reason' => $own->reason],
             'can_manage' => Gate::forUser($viewer)->allows('manage', $trip),
             'can_request' => Gate::forUser($viewer)->allows('request', $trip),
+            'can_edit' => Gate::forUser($viewer)->allows('manage', $trip) && $trip->cancelled_at === null && $trip->departs_at->isFuture(),
         ];
         if (Gate::forUser($viewer)->allows('viewPrivate', $trip)) {
             $data['meeting_point'] = $trip->meeting_point;
+            $data['cancellation_reason'] = $trip->cancellation_reason;
         }
 
         return $data;

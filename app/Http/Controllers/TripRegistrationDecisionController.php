@@ -13,6 +13,6 @@ class TripRegistrationDecisionController extends Controller
     {
         $action->handle($request->user(), $registration, $request->boolean('accept'), $request->validated('reason'));
 
-        return to_route('trips.show', $registration->trip_id);
+        return back();
     }
 }

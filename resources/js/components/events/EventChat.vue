@@ -136,8 +136,8 @@ useEcho<GroupChatMessage>(
     '.group-chat.message.sent',
     async (message) => {
         if (message.group_chat_id !== props.chat.id) {
-return;
-}
+            return;
+        }
 
         merge([message]);
         void markRead();
@@ -155,8 +155,8 @@ useEcho<{
     '.group-chat.message.reaction.updated',
     (update) => {
         if (update.group_chat_id !== props.chat.id) {
-return;
-}
+            return;
+        }
 
         const message = visibleMessages.value.find(
             (item) => item.id === update.message_id,

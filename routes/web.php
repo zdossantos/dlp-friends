@@ -84,8 +84,10 @@ use App\Http\Controllers\TermsAcceptanceController;
 use App\Http\Controllers\TripCancellationController;
 use App\Http\Controllers\TripController;
 use App\Http\Controllers\TripDepartureReportController;
+use App\Http\Controllers\TripParticipantController;
 use App\Http\Controllers\TripRegistrationController;
 use App\Http\Controllers\TripRegistrationDecisionController;
+use App\Http\Controllers\TripRegistrationIndexController;
 use App\Http\Controllers\TripRegistrationRemovalController;
 use App\Http\Controllers\UnblockMemberController;
 use App\Http\Controllers\VisitAttendeeController;
@@ -263,6 +265,9 @@ Route::middleware(['auth', 'verified', 'social', 'terms.current'])->group(functi
                 Route::patch('trip-registrations/{registration}', TripRegistrationDecisionController::class)->name('trips.registrations.decision');
                 Route::delete('trip-registrations/{registration}', TripRegistrationRemovalController::class)->name('trips.registrations.remove');
                 Route::post('trip-departures/{departure}/reports', TripDepartureReportController::class)->name('trip-departures.reports.store');
+                Route::get('trips/{trip}/participants', [TripParticipantController::class, 'index'])->name('trips.participants');
+                Route::get('trips/{trip}/members/{member}', [TripParticipantController::class, 'show'])->name('trips.members.show');
+                Route::get('trips/{trip}/requests', TripRegistrationIndexController::class)->name('trips.requests');
                 Route::get('trips/mine', MyTripController::class)->name('trips.mine');
                 Route::resource('trips', TripController::class)->only(['index', 'store', 'show', 'update']);
 

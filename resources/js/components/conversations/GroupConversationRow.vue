@@ -21,8 +21,8 @@ const refresh = () => router.reload({ only: ['groups'] });
 const { latestGroupMessage } = useMemberRealtimeContext();
 watch(latestGroupMessage, (message) => {
     if (message?.group_chat_id === props.group.id) {
-refresh();
-}
+        refresh();
+    }
 });
 watch(status, (next, previous) => {
     if (next === 'connected' && previous !== 'connected') {

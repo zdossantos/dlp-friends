@@ -34,6 +34,10 @@ final class UpdateTrip
                 foreach (['transport', 'direction', 'general_departure', 'destination', 'departs_at'] as $field) {
                     $original = $trip->getAttribute($field);
                     $original = $original instanceof \BackedEnum ? $original->value : $original;
+                    if ($field === 'departs_at' && $data[$field]->equalTo($original->startOfMinute())) {
+                        // The form edits minutes; retain the original immutable instant.
+                        $data[$field] = $original;
+                    }
                     if (($data[$field] ?? $original) != $original) {
                         throw ValidationException::withMessages([$field => __('trips.validation.locked')]);
                     }
