@@ -54,6 +54,7 @@ use App\Http\Controllers\MemberProfileController;
 use App\Http\Controllers\MessageController;
 use App\Http\Controllers\MessageReactionController;
 use App\Http\Controllers\MyEventController;
+use App\Http\Controllers\MyTripController;
 use App\Http\Controllers\NotFoundController;
 use App\Http\Controllers\NotificationDestroyController;
 use App\Http\Controllers\NotificationIndexController;
@@ -80,6 +81,7 @@ use App\Http\Controllers\PublicMemberProfileController;
 use App\Http\Controllers\PublicReleaseNotesController;
 use App\Http\Controllers\SwipeController;
 use App\Http\Controllers\TermsAcceptanceController;
+use App\Http\Controllers\TripController;
 use App\Http\Controllers\UnblockMemberController;
 use App\Http\Controllers\VisitAttendeeController;
 use App\Http\Controllers\VisitController;
@@ -249,6 +251,9 @@ Route::middleware(['auth', 'verified', 'social', 'terms.current'])->group(functi
                 Route::get('visits/attendees', VisitAttendeeController::class)->name('visits.attendees.index');
                 Route::patch('visits/visibility', VisitsVisibilityController::class)->name('visits.visibility.update');
                 Route::resource('visits', VisitController::class)->only(['index', 'store', 'update', 'destroy']);
+
+                Route::get('trips/mine', MyTripController::class)->name('trips.mine');
+                Route::resource('trips', TripController::class)->only(['index', 'store', 'show', 'update']);
 
                 Route::get('events/mine', MyEventController::class)->name('events.mine');
                 Route::resource('events', EventController::class)

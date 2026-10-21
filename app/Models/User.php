@@ -93,6 +93,18 @@ class User extends Authenticatable implements HasLocalePreference, MustVerifyEma
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable, PasskeyAuthenticatable, TwoFactorAuthenticatable;
 
+    /** @return HasMany<Trip, $this> */
+    public function organizedTrips(): HasMany
+    {
+        return $this->hasMany(Trip::class, 'organizer_user_id');
+    }
+
+    /** @return HasMany<TripRegistration, $this> */
+    public function tripRegistrations(): HasMany
+    {
+        return $this->hasMany(TripRegistration::class);
+    }
+
     /** @return HasMany<Visit, $this> */
     public function visits(): HasMany
     {
