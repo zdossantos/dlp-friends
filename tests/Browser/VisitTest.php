@@ -142,7 +142,8 @@ test('explicit month navigation keeps browser history and filters', function () 
         ->back()
         ->assertPresent('[data-test="visit-calendar"]')
         ->assertScript("document.querySelector('#visit-month').value", $day->format('Y-m'))
-        ->assertScript("document.querySelector('#visit-audience').textContent.trim()", 'Mes matchs');
+        ->assertScript("document.querySelector('#visit-audience').textContent.trim()", 'Mes matchs')
+        ->resize(390, 844)->screenshot(true, 'visits-month-alignment');
 });
 
 test('stay forms and controlled confirmations restore focus and meet touch target sizes', function () {

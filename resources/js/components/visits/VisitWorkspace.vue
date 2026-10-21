@@ -298,7 +298,7 @@ function selectMember(id: number) {
                         id="visit-month"
                         type="month"
                         :value="filters.month"
-                        class="block min-h-11 w-full max-w-48 min-w-0 appearance-none rounded-xl border border-input bg-background px-2 text-center font-semibold focus-visible:ring-2 focus-visible:ring-ring"
+                        class="block h-11 w-full max-w-48 min-w-0 appearance-none rounded-xl border border-input bg-background px-2 text-center font-semibold focus-visible:ring-2 focus-visible:ring-ring"
                         @change="
                             navigate({
                                 month: ($event.target as HTMLInputElement)
