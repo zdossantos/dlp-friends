@@ -374,3 +374,27 @@ enregistrements indépendants, états occupés, erreurs et confirmations.
 La suppression du compte garde un traitement destructif distinct. Le document
 reste défilable et réserve l'espace de la navigation basse, y compris avec les
 textes anglais et sur les écrans étroits.
+
+## Sorties et visites personnelles
+
+La navigation basse Sorties donne accès aux sous-espaces Événements et Visites.
+Les onglets Découvrir/Mes événements restent internes aux événements. Visites
+utilise les tokens, typographies, boutons et avatars existants : agenda groupé
+par date en alternative, grille mensuelle à sept colonnes par défaut. Les jours
+de présence personnelle portent un encadré coloré et un repère textuel. Les
+filtres utilisent les sélecteurs Reka UI ; la confirmation d’ouverture des
+visites à tous les membres utilise le bouton de danger. Les cases
+portent le jour, le repère textuel et graphique Toi, et le nombre compact des
+autres membres ; le nom accessible donne toujours la date et le total exact.
+Les avatars et noms restent dans le détail du jour, avec un aperçu de trois
+profils et une liste complète paginée.
+
+`VisitForm`, `VisitDayDetail`, `VisitAgenda`, `VisitCalendar` et
+`VisitVisibilityControl` portent les règles et présentations propres aux visites,
+absentes des composants événements. Les seules enveloppes partagées sont
+`ResponsivePanel` et `ResponsiveConfirmation`, construites sur le mécanisme
+Drawer/Dialog existant ; les wrappers événements gardent leur API, sélecteurs
+et restauration du défilement. Les filtres, le mois, le jour et la vue sont
+partageables par URL. Fermer la liste complète restitue le contexte, le
+défilement et le focus de son bouton. Les libellés, erreurs et noms accessibles
+sont traduits dans les catalogues FR/EN.

@@ -38,3 +38,16 @@ test('a regular browser can change language and continue to the site without ret
         ->assertPathIs('/en')
         ->assertNoJavaScriptErrors();
 });
+
+test('browser help adapts its opening action to the phone', function (string $userAgent, string $scheme) {
+    config()->set('app.url', 'https://dlp.example');
+    $page = visit('/fr/open')->withUserAgent($userAgent)->on()->iPhone15Pro();
+    $page->assertSee('Ouvrir dans le navigateur')
+        ->assertScript("document.querySelector('[data-open-browser]').href.startsWith('{$scheme}')", true)
+        ->assertPresent('[data-copy-link]')
+        ->assertNoJavaScriptErrors();
+})->with([
+    'Safari' => ['iPhone Safari', 'x-safari-https://'],
+    'Instagram iOS' => ['iPhone Instagram', 'instagram://extbrowser/?url='],
+    'Instagram Android' => ['Android Instagram', 'intent://'],
+]);

@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { Head, Link } from '@inertiajs/vue3';
+import { Head } from '@inertiajs/vue3';
 import { ArrowLeft, Megaphone } from '@lucide/vue';
+import BackLink from '@/components/common/BackLink.vue';
 import PartnerAnnouncementForm from '@/components/partners/PartnerAnnouncementForm.vue';
 import { Button } from '@/components/ui/button';
 import { useTranslations } from '@/composables/useTranslations';
@@ -18,10 +19,10 @@ const { t } = useTranslations();
     <main class="mx-auto w-full max-w-3xl space-y-6 px-4 py-6 sm:px-6 lg:py-10">
         <header class="space-y-4">
             <Button as-child variant="ghost" class="min-h-11">
-                <Link :href="index().url">
+                <BackLink :href="index().url">
                     <ArrowLeft aria-hidden="true" />
                     {{ t('partners.announcements.form.back') }}
-                </Link>
+                </BackLink>
             </Button>
             <div class="flex items-center gap-3">
                 <div class="rounded-xl bg-primary/10 p-2 text-primary">

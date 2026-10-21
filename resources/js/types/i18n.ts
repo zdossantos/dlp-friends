@@ -14,6 +14,8 @@ export type TranslationMessages = {
     conversations: TranslationTree;
     notifications: TranslationTree;
     events: TranslationTree;
+    visits: TranslationTree;
+    outings: TranslationTree;
     blocking: TranslationTree;
     moderation: TranslationTree;
     administration: TranslationTree;

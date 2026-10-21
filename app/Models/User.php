@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Enums\EventRegistrationStatus;
 use App\Enums\RoleName;
 use App\Enums\UserStatus;
+use App\Enums\VisitsVisibility;
 use App\Mail\ResetPasswordMail;
 use App\Mail\VerifyEmailMail;
 use Carbon\CarbonImmutable;
@@ -37,6 +38,7 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
  * @property int $id
  * @property string $email
  * @property string|null $locale
+ * @property VisitsVisibility $visits_visibility
  * @property bool $show_presence
  * @property bool $weekly_recap_messages
  * @property bool $weekly_recap_matches
@@ -86,10 +88,16 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
 class User extends Authenticatable implements HasLocalePreference, MustVerifyEmail, PasskeyUser
 {
     /** @var array<string, mixed> */
-    protected $attributes = ['admin_new_member_alerts' => true, 'weekly_recap_messages' => false, 'weekly_recap_matches' => false];
+    protected $attributes = ['visits_visibility' => 'hidden', 'admin_new_member_alerts' => true, 'weekly_recap_messages' => false, 'weekly_recap_matches' => false];
 
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable, PasskeyAuthenticatable, TwoFactorAuthenticatable;
+
+    /** @return HasMany<Visit, $this> */
+    public function visits(): HasMany
+    {
+        return $this->hasMany(Visit::class);
+    }
 
     /** @return HasOne<Profile, $this> */
     public function profile(): HasOne
@@ -368,6 +376,7 @@ class User extends Authenticatable implements HasLocalePreference, MustVerifyEma
             'deletion_requested_at' => 'immutable_datetime',
             'last_active_at' => 'datetime',
             'show_presence' => 'boolean',
+            'visits_visibility' => VisitsVisibility::class,
             'admin_new_member_alerts' => 'boolean',
             'weekly_recap_messages' => 'boolean',
             'weekly_recap_matches' => 'boolean',

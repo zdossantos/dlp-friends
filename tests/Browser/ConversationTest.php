@@ -76,6 +76,7 @@ test('a member can like then unlike a message from the timeline', function () {
     $this->actingAs($member);
 
     $page = visit("/conversations/{$conversation->id}")->on()->desktop()
+        ->waitForEvent('networkidle')
         ->assertPresent('[data-test="message-like"][aria-pressed="false"]')
         ->assertScript("getComputedStyle(document.querySelector('[data-test=message-like]')).display !== 'none'", true)
         ->click('[data-test="message-like"]')
@@ -524,12 +525,15 @@ test('one upward scroll loads one history page and keeps the reading position', 
     $conversation = $match->conversation()->create();
     foreach (range(1, 120) as $index) {
         Message::factory()->for($conversation)->for($peer, 'author')->create([
-            'content' => "Message court {$index}",
+            'content' => "Message court {$index}\nUne seconde ligne pour garder l’historique hors du seuil initial.",
             'created_at' => now()->addSeconds($index),
         ]);
     }
     $this->actingAs($member);
-    $page = visit("/conversations/{$conversation->id}")->resize($width, $height)->assertSee('Message court 120')->waitForEvent('networkidle');
+    $page = visit("/conversations/{$conversation->id}", ['viewport' => ['width' => $width, 'height' => $height]])
+        ->assertSee('Message court 120')
+        ->assertScript("document.querySelectorAll('[data-message-id]').length", 20)
+        ->waitForEvent('networkidle');
     $page->script("window.historyScrollTarget = {$scrollTop};");
     $page->script(<<<'JS'
         window.loadedBeforeScroll = document.querySelectorAll('[data-message-id]').length;
@@ -546,7 +550,20 @@ test('one upward scroll loads one history page and keeps the reading position', 
         window.topReadingAnchor = { id: anchor.closest('[data-message-id]').dataset.messageId, top: anchor.getBoundingClientRect().top };
         true;
         JS);
-    $page->assertScript('window.historyRequests > 0', true)->waitForEvent('networkidle')
+    $page->assertScript(<<<'JS'
+        window.historyRequests > 0 ? 'requested' : JSON.stringify((() => {
+            const scroll = document.querySelector('[data-test=message-scroll]');
+            return {
+                scrollTop: scroll.scrollTop,
+                scrollHeight: scroll.scrollHeight,
+                clientHeight: scroll.clientHeight,
+                firstItemTop: scroll.querySelector('li').getBoundingClientRect().top,
+                containerTop: scroll.getBoundingClientRect().top,
+                loaded: document.querySelectorAll('[data-message-id]').length,
+                viewport: [innerWidth, innerHeight],
+            };
+        })())
+        JS, 'requested')->waitForEvent('networkidle')
         ->assertScript('window.historyRequests', 1)
         ->assertScript("document.querySelectorAll('[data-message-id]').length - window.loadedBeforeScroll", 20)
         ->assertScript("Math.abs(document.querySelector('[data-message-id=\"' + window.topReadingAnchor.id + '\"] [data-test=message-bubble]').getBoundingClientRect().top - window.topReadingAnchor.top) < 3", true)
@@ -781,6 +798,10 @@ test('messaging switches between private and event groups and sends in the share
         ->click("[data-test=group-conversation-{$chat->id}]")
         ->assertPresent('[data-test="group-chat-back"]')
         ->assertSee('Bienvenue dans le groupe')
+        ->click('[data-test="group-chat-back"]')
+        ->assertPathIs('/conversations')
+        ->assertAttribute('[data-test="conversations-groups"]', 'aria-selected', 'true')
+        ->click("[data-test=group-conversation-{$chat->id}]")
         ->assertPresent('[data-test="conversation-day-separator"]')
         ->fill('#message-content', 'À bientôt au parc')
         ->click('[data-test="group-chat-info"]')
@@ -798,6 +819,10 @@ test('messaging switches between private and event groups and sends in the share
         ->click('[aria-label="Envoyer le message"]')
         ->assertSee('À bientôt au parc')
         ->click('[data-test="group-chat-back"]')
+        ->assertPresent('[data-test="participant-list"]')
+        ->forward()->assertMissing('[data-test="event-panel"]')
+        ->assertSee('À bientôt au parc')
+        ->navigate('/conversations?category=groups')
         ->wait(0.4)
         ->assertNoJavaScriptErrors()
         ->assertNotPresent('[data-test=group-unread-count]')
@@ -851,7 +876,7 @@ test('resuming a conversation catches up beyond one page without duplicate messa
     $conversation = $match->conversation()->create();
     Message::factory()->for($conversation)->for($peer, 'author')->create(['content' => 'Avant la veille']);
     $this->actingAs($member);
-    $page = visit("/conversations/{$conversation->id}")->assertSee('Avant la veille')->waitForEvent('networkidle');
+    $page = visit('/conversations')->click("a[href='/conversations/{$conversation->id}']")->assertSee('Avant la veille')->waitForEvent('networkidle');
     foreach (range(1, 25) as $index) {
         Message::factory()->for($conversation)->for($peer, 'author')->create(['content' => "Pendant la veille {$index} ".str_repeat('Un long message pour garder une page complète. ', 12)]);
     }
@@ -862,7 +887,7 @@ test('resuming a conversation catches up beyond one page without duplicate messa
         ->assertScript("new Set(Array.from(document.querySelectorAll('[data-message-id]'), el => el.dataset.messageId)).size", 27);
     $page->script("window.dispatchEvent(new PageTransitionEvent('pageshow', { persisted: true })); true;");
     $page->waitForEvent('networkidle')->click('a[href="/conversations"]')->assertPathIs('/conversations')->assertSee('Ma réponse après la veille');
-    $page->back()->assertSee('Basile')
+    $page->forward()->assertSee('Basile')
         ->assertScript("document.querySelectorAll('[data-message-id]').length", 27)
         ->assertNoJavaScriptErrors();
 });

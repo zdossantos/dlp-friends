@@ -65,7 +65,9 @@ async function markRead(): Promise<void> {
     });
 
     if (response.ok) {
-        router.reload({ only: ['auth'] });
+        router.reload({
+            only: ['auth', ...(props.messagesProp ? [props.messagesProp] : [])],
+        });
     }
 }
 
@@ -208,6 +210,7 @@ onMounted(() => {
             :on-reaction-updated="updateReaction"
         />
         <MessageComposer
+            :remember-key="`event-chat-draft:${chat.id}`"
             :archived="chat.isReadOnly"
             :archived-message="
                 chat.readOnlyReason

@@ -3,8 +3,9 @@
     lang="ts"
     generic="T extends { id: number; content: string } = ConversationMessage"
 >
+import { useRemember } from '@inertiajs/vue3';
 import { SendHorizontal } from '@lucide/vue';
-import { computed, nextTick, ref, watch } from 'vue';
+import { computed, nextTick, ref, toRef, unref, watch } from 'vue';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
 import { Textarea } from '@/components/ui/textarea';
@@ -15,6 +16,7 @@ import type { ConversationMessage, ConversationStarter } from '@/types';
 
 const props = defineProps<{
     conversationId?: number;
+    rememberKey?: string;
     archived: boolean;
     archivedMessage?: string;
     onSent: (message: T) => void;
@@ -24,7 +26,9 @@ const props = defineProps<{
     starters?: ConversationStarter[];
 }>();
 
-const content = ref('');
+const content = props.rememberKey
+    ? toRef(unref(useRemember({ content: '' }, props.rememberKey)), 'content')
+    : ref('');
 const error = ref('');
 const pending = ref(false);
 const textarea = ref<{ $el: HTMLTextAreaElement; focus: () => void } | null>(

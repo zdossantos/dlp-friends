@@ -476,3 +476,30 @@ suspendues et la suppression d’un autre compte ne détruit pas ses données.
 La demande de suppression en application est interdite au compte banni ;
 la suppression administrative explicite reste disponible. Le contact légal
 reste accessible et les textes ne restreignent pas les droits légaux.
+
+## Visites personnelles — évolution hors MVP (issue 305)
+
+L’espace Sorties réunit Événements et Visites. Les visites personnelles sont
+désormais implémentées : calendrier mensuel par défaut, agenda mobile alternatif, journées
+ou séjours de 1 à 30 jours inclusifs, dont la fin se situe au plus tard dans les
+12 prochains mois calendaires (Europe/Paris). Les chevauchements sont autorisés ;
+un membre n’est compté qu’une fois par jour, hors propriétaire. Le filtre de
+consultation cible les matchs par défaut. Les séjours
+terminés disparaissent des surfaces.
+
+L’audience globale est initialement « Moi uniquement ». Elle peut être limitée
+aux matchs actuels ou ouverte aux membres éligibles ; chaque transition réelle
+vers tous les membres exige une confirmation. Le réglage s’applique aux visites
+actuelles et futures, indépendamment des liens sociaux et des trajets.
+
+La recherche par nom ignore casse et accents et traite les caractères spéciaux
+littéralement. Le filtre matchs et la sélection d’un membre portent uniquement
+sur les visites autorisées. Les aperçus montrent trois personnes ; la liste
+complète indique le total exact et est paginée par 30. Les propres visites
+restent consultables et modifiables quel que soit le filtre ou leur audience.
+Les blocages dans les deux sens, le masquage du profil et la perte d’éligibilité
+retirent immédiatement les visites des autres membres.
+
+Cette livraison ne crée aucun événement, groupe, message ou contact. Les
+trajets de l’issue 304 restent différés ; aucun onglet de trajet inactif n’est
+présenté. Les autres ambitions de « Compagnons de visite » restent envisagées.

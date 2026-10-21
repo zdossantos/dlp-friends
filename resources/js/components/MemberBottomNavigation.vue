@@ -60,10 +60,10 @@ const memberItems = computed<BottomNavigationItem[]>(() => [
         activeParents: ['/conversations'],
     },
     {
-        label: t('events.navigation'),
+        label: t('outings.title'),
         href: events(),
         icon: CalendarDays,
-        activeParents: ['/events'],
+        activeParents: ['/events', '/visits'],
     },
     {
         label: t('notifications.navigation'),

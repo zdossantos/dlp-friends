@@ -639,3 +639,25 @@ html {
 .dark.seasonal-christmas .app-brand-mark {
     background-image: url('/brand/dlp-friends-logo-christmas-dark.svg');
 }
+
+/* WebKit gives date controls an intrinsic width that can exceed narrow grids. */
+input[type='date'],
+input[type='datetime-local'],
+input[type='month'] {
+    display: block;
+    min-inline-size: 0;
+    max-inline-size: 100%;
+    appearance: none;
+}
+
+input::-webkit-datetime-edit {
+    min-inline-size: 0;
+    padding: 0;
+}
+
+input::-webkit-date-and-time-value {
+    min-inline-size: 0;
+    block-size: 100%;
+    align-content: center;
+    text-align: inherit;
+}

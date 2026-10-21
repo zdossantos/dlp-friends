@@ -16,11 +16,19 @@ sélectionne le champ et affiche les instructions de copie manuelle. Le lien à
 copier vient de `APP_URL` et cible uniquement `/fr` ou `/en`, jamais `/open`.
 Les paramètres `url`, `redirect` ou autres ne permettent pas de changer la cible.
 
-Aucune détection de navigateur ni redirection automatique n’est nécessaire :
-les instructions restent disponibles même si Instagram modifie son user agent.
-« Continuer sur DLP Friends » poursuit la visite dans le navigateur actuel ;
-ce bouton ne promet pas une ouverture externe. Le parcours d’installation
-existant est proposé à la fin du tutoriel produit.
+Le bouton « Ouvrir dans le navigateur » utilise un lien adapté au téléphone,
+uniquement après un clic : handler externe Instagram sur iOS, Safari sur les
+autres navigateurs iOS HTTPS, intent Android avec secours HTTPS, lien ordinaire
+sur ordinateur. Aucune redirection automatique au chargement. Les instructions
+et la copie restent disponibles si l’ouverture est refusée ou indisponible.
+« Continuer sur DLP Friends » poursuit la visite dans le navigateur actuel.
+
+Cette activation du 21 octobre 2026 répond à la demande de test sur téléphone.
+Le handler Instagram est privé et peut changer ; la génération des liens est
+testée, leur prise en charge par Instagram reste à vérifier sur appareil réel.
+Aucune dépendance externe n’est ajoutée. La destination reste celle de `APP_URL`,
+sans paramètre de redirection fourni par le visiteur. Le protocole HTTP du
+Docker local est conservé, sans conversion artificielle en HTTPS.
 
 ## Recherche du 20 octobre 2026
 
@@ -30,9 +38,9 @@ des essais réalisés sur DLP Friends.
 
 | Méthode | Éléments vérifiés dans les sources | Décision |
 | --- | --- | --- |
-| `intent://…#Intent;scheme=https;…;end` sur Android | La documentation Chrome décrit les liens déclenchés par une action utilisateur, les activités `BROWSABLE` et `S.browser_fallback_url`. Le projet Inapp Debugger publie un succès dans Instagram Android, daté du 7 novembre 2024. Cela ne garantit pas la version actuelle d’Instagram. | Candidat à tester sur appareil ; pas activé sans vérification dans Instagram. Un `package=com.android.chrome` imposerait Chrome et ne correspondrait pas forcément au navigateur choisi par la personne. |
-| `x-safari-https://…` sur iPhone | Les essais publiés dans Inapp Debugger rapportent des régressions suivant les versions d’Instagram, notamment à partir de 417, avec des résultats divergents pour 419. | Écarté du parcours livré : pas de garantie de fonctionnement et Safari imposé. |
-| `instagram://extbrowser/?url=…` sur iPhone | Des projets open source utilisent ce schéma privé. InAppBrowser-Escaper l’a adopté dans sa version 1.0.1 après un échec rapporté avec iOS 26.4.1 et Instagram 424.1. La documentation officielle consultée ne fournit pas de contrat Meta pour ce mécanisme. | Candidat à tester ; pas activé sans vérification réelle. Aucun mécanisme privé présenté comme une API supportée. |
+| `intent://…#Intent;scheme=https;…;end` sur Android | La documentation Chrome décrit les liens déclenchés par une action utilisateur, les activités `BROWSABLE` et `S.browser_fallback_url`. Le projet Inapp Debugger publie un succès dans Instagram Android, daté du 7 novembre 2024. Cela ne garantit pas la version actuelle d’Instagram. | Activé par clic, à vérifier dans Instagram sur appareil. Un `package=com.android.chrome` imposerait Chrome et ne correspondrait pas forcément au navigateur choisi par la personne. |
+| `x-safari-https://…` sur iPhone | Les essais publiés dans Inapp Debugger rapportent des régressions suivant les versions d’Instagram, notamment à partir de 417, avec des résultats divergents pour 419. | Utilisé hors Instagram sur iOS HTTPS ; Instagram utilise son propre handler. |
+| `instagram://extbrowser/?url=…` sur iPhone | Des projets open source utilisent ce schéma privé. InAppBrowser-Escaper l’a adopté dans sa version 1.0.1 après un échec rapporté avec iOS 26.4.1 et Instagram 424.1. La documentation officielle consultée ne fournit pas de contrat Meta pour ce mécanisme. | Activé par clic dans Instagram iOS, recette réelle encore nécessaire. Aucun mécanisme privé présenté comme une API supportée. |
 | `target="_blank"`, paramètre d’URL ou simple redirection HTTPS | Les sources consultées ne démontrent pas que ces mécanismes forcent Instagram à quitter sa vue intégrée. | Pas de promesse d’ouverture externe ; navigation HTTPS ordinaire pour continuer. |
 | Menu Instagram et copie du lien | Parcours indépendant d’un schéma privé. La présence et le libellé de l’option du menu peuvent varier : le texte prévoit explicitement son absence. | Parcours livré, avec copie manuelle possible si le presse-papiers est inaccessible. |
 
@@ -51,7 +59,9 @@ Sources primaires :
 - `tests/Feature/ExternalBrowserTest.php` : URL de bio, langues, HTML de secours,
   accès connecté, absence de redirection et cible indépendante des paramètres.
 - `tests/Browser/ExternalBrowserTest.php` : refus du presse-papiers, confirmation
-  après copie, changement de langue et continuation sans boucle dans Chromium.
+  après copie, changement de langue, lien Safari et continuation sans boucle dans Chromium.
+- `tests/Frontend/externalBrowser.test.js` : génération des liens Instagram iOS,
+  Safari, Android avec secours, ordinateur et HTTP local.
 
 Vérifications visuelles dans Chromium : français à 320 px et anglais à 1280 px,
 sans débordement horizontal. Avec JavaScript désactivé, le champ reste visible
@@ -84,6 +94,5 @@ Sur chaque appareil :
    le menu ne propose aucune ouverture externe.
 6. Vérifier « Continuer sur DLP Friends », le retour arrière et l’ouverture
    directe de `/open` depuis le navigateur classique, sans boucle.
-7. Consigner ici les modèles, versions, date et résultats exacts. Toute future
-   activation d’un intent ou schéma privé nécessite ses propres essais, dont
+7. Consigner ici les modèles, versions, date et résultats exacts. Tester aussi les intents et schémas privés activés, dont
    refus de confirmation, navigateur absent et retour à la page de secours.

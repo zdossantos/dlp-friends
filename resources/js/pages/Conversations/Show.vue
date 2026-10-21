@@ -12,6 +12,7 @@ import { useMemberRealtimeContext } from '@/composables/useMemberRealtimeNotific
 import { useMessagingRefresh } from '@/composables/useMessagingRefresh';
 import { useConversationTyping } from '@/composables/useTypingSignals';
 import { xsrfHeader } from '@/lib/csrf';
+import { mergeEventChatMessages } from '@/lib/eventChatState';
 import { shouldAcknowledgePersistentNotification } from '@/lib/memberNotifications';
 import { index as conversationsIndex } from '@/routes/conversations';
 import { store as storeConversationRead } from '@/routes/conversations/read';
@@ -111,11 +112,16 @@ function refreshMessages(): void {
         data: { messages_after: synchronizedThrough },
         onBeforeUpdate: (page) => {
             const messages = page.props.messages as PaginatedMessages;
-            messages.data = messages.data.map(preserveNewerState);
             page.props.messageUpdates = (
                 (page.props.messageUpdates as
                     ConversationMessage[] | undefined) ?? []
             ).map(preserveNewerState);
+            // Keep the complete loaded timeline in Inertia's existing snapshot
+            // so back/forward restores messages recovered while this page was open.
+            messages.data = mergeEventChatMessages(visibleMessages.value, [
+                ...messages.data.map(preserveNewerState),
+                ...(page.props.messageUpdates as ConversationMessage[]),
+            ]);
         },
     });
 }

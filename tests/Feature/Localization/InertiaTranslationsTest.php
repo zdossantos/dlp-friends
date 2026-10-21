@@ -14,6 +14,8 @@ function featureTranslationKeys(string $locale): array
         'conversations',
         'notifications',
         'events',
+        'visits',
+        'outings',
         'blocking',
         'administration',
         'partners',
@@ -91,7 +93,7 @@ test('Inertia shares the French frontend catalogue by default', function () {
 test('only business feature catalogues are shared with the frontend', function () {
     expect(array_keys(FrontendTranslations::messages()))->toBe([
         'brand', 'common', 'account', 'profile', 'onboarding', 'discovery',
-        'conversations', 'notifications', 'events', 'blocking', 'moderation', 'administration',
+        'conversations', 'notifications', 'events', 'visits', 'outings', 'blocking', 'moderation', 'administration',
         'partners',
     ]);
 });

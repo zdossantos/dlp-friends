@@ -18,6 +18,7 @@ use App\Models\PartnerProfile;
 use App\Models\PartnerProfileRevision;
 use App\Models\RoleAudit;
 use App\Models\User;
+use App\Models\Visit;
 use App\Models\WebPushSubscription;
 use App\Models\WeeklyEmailRecapDelivery;
 use Illuminate\Database\Eloquent\Builder;
@@ -178,6 +179,13 @@ final class BuildUserDataExport
                     'skipped_at' => $delivery->skipped_at?->toIso8601String(),
                     'created_at' => $delivery->created_at?->toIso8601String(),
                 ])->all(),
+            'visits_visibility' => $user->visits_visibility->value,
+            'visits' => $user->visits()->orderBy('id')->get()->map(fn (Visit $visit): array => [
+                'starts_on' => $visit->starts_on->toDateString(),
+                'ends_on' => $visit->ends_on->toDateString(),
+                'created_at' => $visit->created_at?->toIso8601String(),
+                'updated_at' => $visit->updated_at?->toIso8601String(),
+            ])->all(),
             'discovery_preferences' => $user->discoveryPreferences(),
             'email_preferences' => [
                 'weekly_recap_messages' => $user->weekly_recap_messages,

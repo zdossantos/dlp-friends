@@ -1,6 +1,8 @@
 <?php
 
 return [
+    'after_or_equal' => 'The :attribute field must be a date after or equal to :date.',
+    'date_format' => 'The :attribute field must match the format :format.',
     'accepted' => 'The :attribute field must be accepted.',
     'array' => 'The :attribute field must be an array.',
     'boolean' => 'The :attribute field must be true or false.',
@@ -52,6 +54,8 @@ return [
         ],
     ],
     'attributes' => [
+        'starts_on' => 'first day',
+        'ends_on' => 'last day',
         'email' => 'email address',
         'birth_date' => 'birth date',
         'password' => 'password',

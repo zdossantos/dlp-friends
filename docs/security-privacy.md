@@ -230,3 +230,28 @@ son export. Aucune préférence ne figure dans les cartes publiques. Elles sont
 supprimées avec le compte lors de sa purge. Leur modification requiert un
 membre actif, majeur, vérifié et autorisé ; les exclusions de sécurité et les
 blocages dans les deux sens restent prioritaires sur ces filtres.
+
+## Confidentialité et conservation des visites (issue 305)
+
+Les visites sont privées par défaut. L’accord de partage avec tous les membres
+est demandé à chaque transition effective depuis une audience plus restreinte ;
+un formulaire ancien ne contourne pas ce contrôle serveur. Modifier un séjour
+ne modifie pas son audience. Les compteurs, aperçus, recherches et pages de
+participants utilisent les mêmes autorisations avant de produire les résultats.
+La réponse n’expose jamais les identifiants de séjours des autres membres.
+
+Un compte actif, vérifié, majeur, au profil complet et au rôle membre est requis.
+Le masquage du propriétaire, l’inactivité d’un avatar, la perte du match ou un
+blocage dans l’un des deux sens retirent l’accès correspondant dès la requête
+suivante. Le propriétaire garde ses propres visites même si son profil est
+masqué. Un membre privé recherché produit une liste vide sans révéler ses dates.
+
+L’export personnel comprend `visits_visibility` et tous les séjours encore
+stockés du seul propriétaire, avec bornes et horodatages. La demande de
+suppression retire immédiatement l’accès social ; la purge du compte et la
+suppression administrative retirent ses séjours par cascade. Les séjours
+terminés disparaissent immédiatement de l’interface et sont supprimés de la
+base active après 30 jours calendaires à Paris. Les comptes bannis gardent le
+gel de toutes les purges automatiques ; une suppression explicite reste
+effective. La rotation et les délais existants des sauvegardes restent
+applicables : la purge de la base active ne réécrit pas les sauvegardes.

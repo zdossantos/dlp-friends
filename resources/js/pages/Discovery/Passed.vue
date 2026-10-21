@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { Head, Link, router, usePage } from '@inertiajs/vue3';
+import { Head, router, usePage } from '@inertiajs/vue3';
 import { X } from '@lucide/vue';
 import { computed, ref, watch } from 'vue';
+import BackLink from '@/components/common/BackLink.vue';
 import BlockMemberDialog from '@/components/members/BlockMemberDialog.vue';
 import LikeMemberButton from '@/components/members/LikeMemberButton.vue';
 import ProfilePresentation from '@/components/profile/ProfilePresentation.vue';
@@ -167,9 +168,9 @@ function navigate(url: string | null): void {
     >
         <header class="shrink-0 space-y-2">
             <Button as-child variant="outline"
-                ><Link :href="explore()">{{
+                ><BackLink :href="explore()">{{
                     t('discovery.passed.back')
-                }}</Link></Button
+                }}</BackLink></Button
             >
             <h1 class="text-2xl font-semibold">
                 {{ t('discovery.passed.title') }}

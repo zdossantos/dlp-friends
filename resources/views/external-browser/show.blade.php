@@ -18,9 +18,11 @@
                 @endforeach
             </nav>
         </header>
-        <main class="mx-auto max-w-2xl px-4 pt-8 pb-12 sm:px-6 sm:pt-12">
+        <main data-browser-help class="mx-auto max-w-2xl px-4 pt-8 pb-12 sm:px-6 sm:pt-12">
             <h1 class="text-3xl leading-tight font-semibold tracking-tight text-balance sm:text-4xl">{{ __('external-browser.title') }}</h1>
             <p class="mt-4 text-lg leading-relaxed text-muted-foreground">{{ __('external-browser.intro') }}</p>
+
+            <a href="{{ $destination }}" data-open-browser class="mt-6 inline-flex min-h-12 w-full items-center justify-center rounded-xl bg-primary px-4 py-3 text-center font-semibold text-primary-foreground hover:bg-primary/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring">{{ __('external-browser.open') }}</a>
 
             <section aria-labelledby="instagram-help" class="mt-8">
                 <h2 id="instagram-help" class="text-xl font-semibold">{{ __('external-browser.instagram_title') }}</h2>
@@ -28,11 +30,11 @@
                 <p class="mt-3 leading-relaxed">{{ __('external-browser.fallback') }}</p>
             </section>
 
-            <div class="mt-6" data-browser-help>
+            <div class="mt-6">
                 <label for="browser-link" class="text-sm font-semibold">{{ __('external-browser.link_label') }}</label>
                 <input id="browser-link" type="url" readonly value="{{ $destination }}" class="mt-2 min-h-12 w-full min-w-0 rounded-xl border border-input bg-card px-3 text-base select-all focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring" aria-describedby="copy-status">
-                <button type="button" hidden data-copy-link class="mt-3 min-h-12 w-full cursor-pointer rounded-xl bg-primary px-4 py-3 font-semibold text-primary-foreground hover:bg-primary/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring">{{ __('external-browser.copy') }}</button>
-                <p id="copy-status" role="status" aria-live="polite" class="mt-3 text-sm leading-relaxed" data-copied="{{ __('external-browser.copied') }}" data-copy-failed="{{ __('external-browser.copy_failed') }}"></p>
+                <button type="button" hidden data-copy-link class="mt-3 min-h-12 w-full cursor-pointer rounded-xl bg-secondary px-4 py-3 font-semibold text-secondary-foreground hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring">{{ __('external-browser.copy') }}</button>
+                <p id="copy-status" role="status" aria-live="polite" class="mt-3 text-sm leading-relaxed" data-open-hint="{{ __('external-browser.open_hint') }}" data-copied="{{ __('external-browser.copied') }}" data-copy-failed="{{ __('external-browser.copy_failed') }}"></p>
             </div>
 
             <div class="mt-8 border-t border-border pt-6">

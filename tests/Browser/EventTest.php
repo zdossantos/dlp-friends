@@ -99,11 +99,18 @@ test('event discussion opens the full conversation page from the shared event de
         ->click('[data-test="event-chat-open"]')
         ->assertPathIs("/events/{$event->id}/chat")
         ->assertPresent('[data-test="conversation-page"]')
+        ->assertNotPresent('[data-test="member-bottom-navigation"]')
         ->assertMissing('[data-test="event-panel"]')
         ->assertPresent('[data-test="group-chat-back"]')
         ->assertPresent('#message-content')
         ->click('[data-test="group-chat-info"]')
         ->assertPresent('[data-test="event-detail"]')
+        ->assertNotPresent('[data-test="member-bottom-navigation"]')
+        ->back()->assertPathIs("/events/{$event->id}/chat")
+        ->click('[data-test="group-chat-back"]')->assertPathIs("/events/{$event->id}")
+        ->forward()->assertPathIs("/events/{$event->id}/chat")
+        ->assertNotPresent('[data-test="member-bottom-navigation"]')
+        ->assertScript("getComputedStyle(document.querySelector('[data-test=member-shell-content]')).paddingBottom", '0px')
         ->assertNoJavaScriptErrors();
 });
 
@@ -641,7 +648,8 @@ test('event creation preserves its description after a validation error', functi
     $member = eventBrowserMember('Alice');
     $this->actingAs($member);
 
-    visit('/events/create')
+    visit('/events/create')->resize(320, 700)
+        ->assertScript("(() => { const field = document.querySelector('#starts_at'); const bounds = field.getBoundingClientRect(); return field.value.length > 0 && bounds.right <= field.parentElement.getBoundingClientRect().right + 1; })()", true)
         ->fill('title', 'Une journée entre amis')
         ->fill('description', 'Description à préserver après validation.')
         ->fill('general_location', 'Disneyland Park')

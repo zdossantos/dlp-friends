@@ -19,7 +19,9 @@ const props = defineProps<{
     submitLabel: string;
 }>();
 const { t } = useTranslations();
-const startsAt = props.event ? parisLocalFormValue(props.event.startsAt) : '';
+const startsAt = props.event
+    ? parisLocalFormValue(props.event.startsAt)
+    : parisLocalFormValue(new Date(Date.now() + 60 * 60 * 1000).toISOString());
 const description = ref(props.event?.description ?? '');
 const registrationMode = ref(props.event?.registrationMode ?? 'automatic');
 </script>

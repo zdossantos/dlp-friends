@@ -468,10 +468,10 @@ test('member navigation appears on discovery conversations profile and settings 
         ->assertScript(<<<'JS'
             Array.from(document.querySelectorAll('[data-test="member-bottom-navigation"] a'))
                 .map((item) => item.getAttribute('aria-label'))
-                .join('|') === 'Découvrir|Conversations|Événements|Notifications|Profil'
+                .join('|') === 'Découvrir|Conversations|Sorties|Notifications|Profil'
             JS, true)
         ->assertPresent('[aria-label="Découvrir"][aria-current="page"]')
-        ->assertPresent('[aria-label="Événements"]')
+        ->assertPresent('[aria-label="Sorties"]')
         ->assertPresent('[aria-label="Conversations"]')
         ->assertPresent('[aria-label="Notifications"]')
         ->assertPresent('[aria-label="Profil"]');

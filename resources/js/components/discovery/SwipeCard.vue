@@ -535,7 +535,7 @@ watch(
                                 'max-w-full rounded-full px-2 py-0.5 text-xs leading-4',
                                 interest.isCommon
                                     ? 'border-primary/30 bg-primary/10 text-primary'
-                                    : 'text-muted-foreground',
+                                    : 'text-secondary-foreground',
                             ]"
                         >
                             <Sparkles
