@@ -2,10 +2,10 @@
 
 namespace Tests\Feature;
 
-use App\Actions\SendEventChatMessage;
+use App\Actions\SendGroupChatMessage;
 use App\Events\EventChatMessageSent;
 use App\Models\Event;
-use App\Models\EventChat;
+use App\Models\GroupChat;
 use App\Models\User;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
@@ -21,10 +21,10 @@ class EventChatBroadcastTest extends TestCase
 
     public function test_sending_dispatches_one_event_with_a_minimal_private_contract(): void
     {
-        [$chat, $author] = $this->eventChat();
+        [$chat, $author] = $this->groupChat();
         EventFacade::fake([EventChatMessageSent::class]);
 
-        $message = app(SendEventChatMessage::class)->handle($author, $chat, '<b>texte brut</b>');
+        $message = app(SendGroupChatMessage::class)->handle($author, $chat, '<b>texte brut</b>');
 
         EventFacade::assertDispatchedTimes(EventChatMessageSent::class, 1);
         EventFacade::assertDispatched(EventChatMessageSent::class, function ($event) use ($message): bool {
@@ -34,7 +34,7 @@ class EventChatBroadcastTest extends TestCase
                 && $event instanceof ShouldDispatchAfterCommit
                 && count($channels) === 1
                 && $channels[0] instanceof PrivateChannel
-                && $channels[0]->name === "private-event-chat.{$message->event_chat_id}"
+                && $channels[0]->name === "private-event-chat.{$message->group_chat_id}"
                 && $event->broadcastAs() === 'event-chat.message.sent'
                 && $event->broadcastWith()['content'] === '<b>texte brut</b>';
         });
@@ -42,7 +42,7 @@ class EventChatBroadcastTest extends TestCase
 
     public function test_only_members_can_authorize_the_private_channel(): void
     {
-        [$chat, $organizer] = $this->eventChat();
+        [$chat, $organizer] = $this->groupChat();
         $outsider = User::factory()->withProfile()->create();
         $this->usePusherBroadcaster();
         $credentials = [
@@ -54,13 +54,13 @@ class EventChatBroadcastTest extends TestCase
         $this->actingAs($outsider)->postJson('/broadcasting/auth', $credentials)->assertForbidden();
     }
 
-    /** @return array{EventChat, User} */
-    private function eventChat(): array
+    /** @return array{GroupChat, User} */
+    private function groupChat(): array
     {
         $organizer = User::factory()->withProfile()->create();
         $event = Event::factory()->create(['organizer_user_id' => $organizer->id]);
 
-        return [EventChat::factory()->for($event)->create(), $organizer];
+        return [GroupChat::factory()->for($event)->create(), $organizer];
     }
 
     private function usePusherBroadcaster(): void

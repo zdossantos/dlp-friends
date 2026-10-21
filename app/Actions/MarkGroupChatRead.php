@@ -2,29 +2,31 @@
 
 namespace App\Actions;
 
-use App\Models\EventChat;
-use App\Models\EventChatRead;
+use App\Models\GroupChat;
+use App\Models\GroupChatRead;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 
-final class MarkEventChatRead
+final class MarkGroupChatRead
 {
-    public function handle(User $reader, EventChat $chat, int $messageId): void
+    public function handle(User $reader, GroupChat $chat, int $messageId): void
     {
         Gate::forUser($reader)->authorize('view', $chat);
 
         DB::transaction(function () use ($reader, $chat, $messageId): void {
-            EventChat::query()->lockForUpdate()->findOrFail($chat->id);
+            $chat = GroupChat::query()->lockForUpdate()->findOrFail($chat->id);
+            Gate::forUser($reader)->authorize('view', $chat);
+            $chat->messages()->findOrFail($messageId);
 
             $reader->unreadNotifications()
-                ->where('data->target_type', 'event_chat')
-                ->where('data->target_id', $chat->event_id)
+                ->where('data->target_type', $chat->trip_id !== null ? 'trip_chat' : 'event_chat')
+                ->where('data->target_id', $chat->trip_id ?? $chat->event_id)
                 ->where('data->message_id', '<=', $messageId)
                 ->update(['read_at' => now()]);
 
-            $read = EventChatRead::query()->firstOrNew([
-                'event_chat_id' => $chat->id,
+            $read = GroupChatRead::query()->firstOrNew([
+                'group_chat_id' => $chat->id,
                 'user_id' => $reader->id,
             ]);
 

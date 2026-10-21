@@ -21,7 +21,7 @@ test('members manage entire inclusive stays without creating a group', function 
     expect($visit->starts_on->toDateString())->toBe('2026-10-23');
     expect($visit->ends_on->toDateString())->toBe('2026-10-25');
     $this->assertDatabaseEmpty('events');
-    $this->assertDatabaseEmpty('event_chats');
+    $this->assertDatabaseEmpty('group_chats');
     $this->patch('/visits/'.$visit->id, ['starts_on' => '2026-12-30', 'ends_on' => '2027-01-02'])->assertRedirect('/visits');
     expect($visit->fresh()->ends_on->toDateString())->toBe('2027-01-02');
     $this->actingAs($other)->patch('/visits/'.$visit->id, ['starts_on' => '2026-10-23', 'ends_on' => '2026-10-25'])->assertForbidden();

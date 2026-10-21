@@ -3,7 +3,7 @@
 namespace App\Events;
 
 use App\Enums\UserStatus;
-use App\Models\EventChatMessage;
+use App\Models\GroupChatMessage;
 use App\Models\User;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Broadcasting\PrivateChannel;
@@ -20,7 +20,7 @@ final class EventChatMessageSent implements ShouldBroadcast, ShouldDispatchAfter
 
     public bool $afterCommit = true;
 
-    public function __construct(public EventChatMessage $message) {}
+    public function __construct(public GroupChatMessage $message) {}
 
     /** @return array<int, PrivateChannel> */
     public function broadcastOn(): array
@@ -29,20 +29,23 @@ final class EventChatMessageSent implements ShouldBroadcast, ShouldDispatchAfter
             return [];
         }
 
-        $chat = $this->message->eventChat;
-        $recipients = User::query()->inEventChat($chat)->whereKeyNot($this->message->author_user_id)
+        $chat = $this->message->groupChat;
+        $recipients = User::query()->inGroupChat($chat)->whereKeyNot($this->message->author_user_id)
             ->get()
             ->filter(fn (User $user): bool => Gate::forUser($user)->allows('view', $chat));
 
         return [
-            new PrivateChannel("event-chat.{$this->message->event_chat_id}"),
+            new PrivateChannel("event-chat.{$this->message->group_chat_id}"),
             ...$recipients->map(fn (User $user): PrivateChannel => new PrivateChannel("App.Models.User.{$user->id}"))->all(),
         ];
     }
 
     public function broadcastWhen(): bool
     {
-        return User::query()->whereKey($this->message->author_user_id)->where('status', UserStatus::Active)->exists() && $this->message->eventChat()->whereHas('event.organizer', fn ($q) => $q->where('status', UserStatus::Active))->exists();
+        return User::query()->whereKey($this->message->author_user_id)->where('status', UserStatus::Active)->exists()
+            && $this->message->groupChat()->where(fn ($q) => $q
+                ->whereHas('event.organizer', fn ($owner) => $owner->where('status', UserStatus::Active))
+                ->orWhereHas('trip.organizer', fn ($owner) => $owner->where('status', UserStatus::Active)))->exists();
     }
 
     public function broadcastAs(): string
@@ -59,7 +62,7 @@ final class EventChatMessageSent implements ShouldBroadcast, ShouldDispatchAfter
 
         return [
             'id' => $this->message->id,
-            'event_chat_id' => $this->message->event_chat_id,
+            'group_chat_id' => $this->message->group_chat_id,
             'author_user_id' => $this->message->author_user_id,
             'content' => $this->message->content,
             'system_type' => $this->message->system_type?->value,

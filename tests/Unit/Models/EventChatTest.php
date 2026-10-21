@@ -3,9 +3,9 @@
 namespace Tests\Unit\Models;
 
 use App\Models\Event;
-use App\Models\EventChat;
-use App\Models\EventChatMessage;
-use App\Models\EventChatRead;
+use App\Models\GroupChat;
+use App\Models\GroupChatMessage;
+use App\Models\GroupChatRead;
 use App\Models\User;
 use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -18,14 +18,14 @@ class EventChatTest extends TestCase
     public function test_it_stores_one_cascading_chat_per_event_with_messages_and_member_read_cursors(): void
     {
         $event = Event::factory()->create();
-        $chat = EventChat::factory()->for($event)->create();
+        $chat = GroupChat::factory()->for($event)->create();
         $author = User::factory()->create();
-        $message = EventChatMessage::factory()
+        $message = GroupChatMessage::factory()
             ->for($chat)
             ->for($author, 'author')
             ->create();
-        $read = EventChatRead::query()->create([
-            'event_chat_id' => $chat->id,
+        $read = GroupChatRead::query()->create([
+            'group_chat_id' => $chat->id,
             'user_id' => $author->id,
             'last_read_message_id' => $message->id,
         ]);
@@ -36,27 +36,27 @@ class EventChatTest extends TestCase
         $this->assertTrue($chat->reads->contains($read));
         $this->assertTrue($message->author->is($author));
         $this->assertTrue($read->lastReadMessage->is($message));
-        $this->assertTrue($author->eventChatReads->contains($read));
+        $this->assertTrue($author->groupChatReads->contains($read));
 
         $this->expectException(QueryException::class);
-        EventChat::factory()->for($event)->create();
+        GroupChat::factory()->for($event)->create();
     }
 
     public function test_deleting_an_event_cascades_to_its_chat_messages_and_reads(): void
     {
         $event = Event::factory()->create();
-        $chat = EventChat::factory()->for($event)->create();
-        $message = EventChatMessage::factory()->for($chat)->create();
-        $read = EventChatRead::query()->create([
-            'event_chat_id' => $chat->id,
+        $chat = GroupChat::factory()->for($event)->create();
+        $message = GroupChatMessage::factory()->for($chat)->create();
+        $read = GroupChatRead::query()->create([
+            'group_chat_id' => $chat->id,
             'user_id' => User::factory()->create()->id,
             'last_read_message_id' => $message->id,
         ]);
 
         $event->delete();
 
-        $this->assertNull(EventChat::find($chat->id));
-        $this->assertNull(EventChatMessage::find($message->id));
-        $this->assertNull(EventChatRead::find($read->id));
+        $this->assertNull(GroupChat::find($chat->id));
+        $this->assertNull(GroupChatMessage::find($message->id));
+        $this->assertNull(GroupChatRead::find($read->id));
     }
 }

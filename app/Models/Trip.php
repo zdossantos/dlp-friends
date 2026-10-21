@@ -17,6 +17,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 /**
  * @property int $id
@@ -32,6 +33,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property CarbonImmutable|null $first_accepted_at
  * @property CarbonImmutable|null $cancelled_at
  * @property string|null $cancellation_reason
+ * @property-read GroupChat|null $chat
  * @property-read User|null $organizer
  */
 #[Fillable(['transport', 'direction', 'general_departure', 'destination', 'departs_at', 'meeting_point', 'audience', 'car_seats', 'first_accepted_at', 'cancelled_at', 'cancellation_reason'])]
@@ -44,6 +46,12 @@ class Trip extends Model
     public function organizer(): BelongsTo
     {
         return $this->belongsTo(User::class, 'organizer_user_id');
+    }
+
+    /** @return HasOne<GroupChat, $this> */
+    public function chat(): HasOne
+    {
+        return $this->hasOne(GroupChat::class);
     }
 
     /** @return HasMany<TripRegistration, $this> */

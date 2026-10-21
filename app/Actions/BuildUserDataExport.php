@@ -7,8 +7,8 @@ use App\Enums\WebPushPreference;
 use App\Models\Conversation;
 use App\Models\ConversationReport;
 use App\Models\Event;
-use App\Models\EventChatMessage;
 use App\Models\EventRegistration;
+use App\Models\GroupChatMessage;
 use App\Models\Interest;
 use App\Models\MemberMatch;
 use App\Models\ModerationAudit;
@@ -120,12 +120,12 @@ final class BuildUserDataExport
                 ];
             })->all(),
             'messages' => $messages,
-            'event_chat_messages' => EventChatMessage::query()
+            'group_chat_messages' => GroupChatMessage::query()
                 ->where('author_user_id', $user->id)
                 ->orderBy('id')
                 ->get()
-                ->map(fn (EventChatMessage $message): array => [
-                    'event_chat_id' => $message->event_chat_id,
+                ->map(fn (GroupChatMessage $message): array => [
+                    'group_chat_id' => $message->group_chat_id,
                     'system_type' => $message->system_type?->value,
                     'content' => $message->content,
                     'created_at' => $message->created_at?->toIso8601String(),

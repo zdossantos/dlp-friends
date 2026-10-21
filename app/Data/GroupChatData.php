@@ -2,14 +2,14 @@
 
 namespace App\Data;
 
-use App\Models\EventChat;
-use App\Models\EventChatMessage;
+use App\Models\GroupChat;
+use App\Models\GroupChatMessage;
 use App\Models\User;
 
-final readonly class EventChatData
+final readonly class GroupChatData
 {
     /** @return array<string, mixed> */
-    public static function chat(EventChat $chat): array
+    public static function chat(GroupChat $chat): array
     {
         return [
             'id' => $chat->id,
@@ -19,13 +19,13 @@ final readonly class EventChatData
     }
 
     /** @return array<string, mixed> */
-    public static function message(EventChatMessage $message, ?User $viewer = null): array
+    public static function message(GroupChatMessage $message, ?User $viewer = null): array
     {
         $message->loadMissing('author.profile');
 
         return [
             'id' => $message->id,
-            'event_chat_id' => $message->event_chat_id,
+            'group_chat_id' => $message->group_chat_id,
             'author_user_id' => $message->author_user_id,
             'content' => $message->content,
             'system_type' => $message->system_type?->value,
@@ -42,7 +42,7 @@ final readonly class EventChatData
         ];
     }
 
-    public static function unreadCount(EventChat $chat, User $viewer): int
+    public static function unreadCount(GroupChat $chat, User $viewer): int
     {
         $lastReadMessageId = (int) ($chat->reads()
             ->where('user_id', $viewer->id)

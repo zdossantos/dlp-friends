@@ -8,20 +8,20 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
  * @property int $id
- * @property int $event_chat_id
+ * @property int $group_chat_id
  * @property int $user_id
  * @property int|null $last_read_message_id
- * @property-read EventChat $eventChat
+ * @property-read GroupChat $groupChat
  * @property-read User $user
- * @property-read EventChatMessage|null $lastReadMessage
+ * @property-read GroupChatMessage|null $lastReadMessage
  */
-#[Fillable(['event_chat_id', 'user_id', 'last_read_message_id'])]
-class EventChatRead extends Model
+#[Fillable(['group_chat_id', 'user_id', 'last_read_message_id'])]
+class GroupChatRead extends Model
 {
-    /** @return BelongsTo<EventChat, $this> */
-    public function eventChat(): BelongsTo
+    /** @return BelongsTo<GroupChat, $this> */
+    public function groupChat(): BelongsTo
     {
-        return $this->belongsTo(EventChat::class);
+        return $this->belongsTo(GroupChat::class);
     }
 
     /** @return BelongsTo<User, $this> */
@@ -30,9 +30,9 @@ class EventChatRead extends Model
         return $this->belongsTo(User::class);
     }
 
-    /** @return BelongsTo<EventChatMessage, $this> */
+    /** @return BelongsTo<GroupChatMessage, $this> */
     public function lastReadMessage(): BelongsTo
     {
-        return $this->belongsTo(EventChatMessage::class, 'last_read_message_id');
+        return $this->belongsTo(GroupChatMessage::class, 'last_read_message_id');
     }
 }

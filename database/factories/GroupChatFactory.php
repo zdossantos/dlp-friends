@@ -3,13 +3,13 @@
 namespace Database\Factories;
 
 use App\Models\Event;
-use App\Models\EventChat;
+use App\Models\GroupChat;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
-/** @extends Factory<EventChat> */
-class EventChatFactory extends Factory
+/** @extends Factory<GroupChat> */
+class GroupChatFactory extends Factory
 {
-    protected $model = EventChat::class;
+    protected $model = GroupChat::class;
 
     /** @return array<string, mixed> */
     public function definition(): array

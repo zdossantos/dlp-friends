@@ -48,7 +48,7 @@ final class RegisterForEvent
             }
 
             if ($status === EventRegistrationStatus::Accepted) {
-                app(AnnounceEventChatMembership::class)->handle($registration, EventChatSystemType::Joined);
+                app(AnnounceGroupChatMembership::class)->handle($registration, EventChatSystemType::Joined);
             }
 
             return $registration->refresh();

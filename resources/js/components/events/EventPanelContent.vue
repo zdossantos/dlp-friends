@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import EventChat from '@/components/events/EventChat.vue';
+import GroupChat from '@/components/events/EventChat.vue';
 import EventDetail from '@/components/events/EventDetail.vue';
 import EventForm from '@/components/events/EventForm.vue';
 import EventParticipantList from '@/components/events/EventParticipantList.vue';
@@ -30,7 +30,7 @@ const origin = props.context === 'discover' ? {} : { origin: props.context };
         method="post"
         :submit-label="t('events.create.submit')"
     />
-    <EventChat
+    <GroupChat
         v-else-if="panel.kind === 'chat'"
         :event="panel.event"
         :chat="panel.chat"

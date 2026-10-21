@@ -8,7 +8,7 @@ import RealtimeStatus from '@/components/conversations/RealtimeStatus.vue';
 import { useMemberRealtimeContext } from '@/composables/useMemberRealtimeNotifications';
 import { useTranslations } from '@/composables/useTranslations';
 import { xsrfHeader } from '@/lib/csrf';
-import { mergeEventChatMessages } from '@/lib/eventChatState';
+import { mergeGroupChatMessages } from '@/lib/groupChatState';
 import { index as conversationsIndex } from '@/routes/conversations';
 import {
     like as likeMessageRoute,
@@ -19,16 +19,16 @@ import { store as storeRead } from '@/routes/events/chat/read';
 import type { MessageReactionUpdate } from '@/types';
 import type {
     EventChatInfo,
-    EventChatMessage,
+    GroupChatMessage,
     EventDetail,
     EventWorkspaceContext,
-    PaginatedEventChatMessages,
+    PaginatedGroupChatMessages,
 } from '@/types/event';
 
 const props = defineProps<{
     event: EventDetail;
     chat: EventChatInfo;
-    messages: PaginatedEventChatMessages;
+    messages: PaginatedGroupChatMessages;
     context: EventWorkspaceContext;
     messagesProp?: string;
 }>();
@@ -36,11 +36,11 @@ const page = usePage();
 const { latestPersistentNotification } = useMemberRealtimeContext();
 const { t } = useTranslations();
 const currentUserId = computed(() => page.props.auth.user.id);
-const visibleMessages = ref<EventChatMessage[]>([]);
+const visibleMessages = ref<GroupChatMessage[]>([]);
 const status = useConnectionStatus();
 const timelineMessages = computed(() => ({ data: visibleMessages.value }));
-function merge(messages: EventChatMessage[]): void {
-    visibleMessages.value = mergeEventChatMessages(
+function merge(messages: GroupChatMessage[]): void {
+    visibleMessages.value = mergeGroupChatMessages(
         visibleMessages.value,
         messages,
     );
@@ -71,7 +71,7 @@ async function markRead(): Promise<void> {
     }
 }
 
-async function submit(content: string): Promise<EventChatMessage> {
+async function submit(content: string): Promise<GroupChatMessage> {
     const response = await fetch(storeMessage(props.event.id).url, {
         method: 'POST',
         credentials: 'same-origin',
@@ -82,7 +82,7 @@ async function submit(content: string): Promise<EventChatMessage> {
         },
         body: JSON.stringify({ content }),
     });
-    const payload = (await response.json()) as { data?: EventChatMessage };
+    const payload = (await response.json()) as { data?: GroupChatMessage };
 
     if (!response.ok || !payload.data) {
         throw new Error('Unable to send the message.');
@@ -91,7 +91,7 @@ async function submit(content: string): Promise<EventChatMessage> {
     return payload.data;
 }
 
-function sent(message: EventChatMessage): void {
+function sent(message: GroupChatMessage): void {
     merge([message]);
     void markRead();
 }
@@ -131,7 +131,7 @@ function updateReaction(update: MessageReactionUpdate): void {
     }
 }
 
-useEcho<EventChatMessage>(
+useEcho<GroupChatMessage>(
     `event-chat.${props.chat.id}`,
     '.event-chat.message.sent',
     async (message) => {

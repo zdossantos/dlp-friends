@@ -2,6 +2,7 @@
 
 namespace App\Actions;
 
+use App\Enums\EventChatSystemType;
 use App\Enums\TripRegistrationStatus;
 use App\Models\Trip;
 use App\Models\TripRegistration;
@@ -45,6 +46,10 @@ final class DecideTripRegistration
             $registration->update(['status' => $target, 'reason' => $accept ? null : $reason, 'decided_at' => now()]);
             if ($accept && $trip->first_accepted_at === null) {
                 $trip->update(['first_accepted_at' => now()]);
+            }
+
+            if ($accept) {
+                app(AnnounceGroupChatMembership::class)->handle($registration, EventChatSystemType::Joined);
             }
 
             return $registration->refresh();

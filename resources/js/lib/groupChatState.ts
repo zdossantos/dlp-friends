@@ -1,6 +1,6 @@
 type IdentifiedMessage = { id: number };
 
-export function mergeEventChatMessages<T extends IdentifiedMessage>(
+export function mergeGroupChatMessages<T extends IdentifiedMessage>(
     current: T[],
     incoming: T[],
 ): T[] {
@@ -13,7 +13,7 @@ export function mergeEventChatMessages<T extends IdentifiedMessage>(
     return Array.from(byId.values()).sort((a, b) => a.id - b.id);
 }
 
-export function eventChatUnreadIncrement(
+export function groupChatUnreadIncrement(
     message: { author_user_id: number },
     currentUserId: number,
     chatIsOpen: boolean,

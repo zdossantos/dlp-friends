@@ -6,7 +6,7 @@ use App\Enums\RoleName;
 use App\Enums\UserStatus;
 use App\Models\Conversation;
 use App\Models\Event;
-use App\Models\EventChat;
+use App\Models\GroupChat;
 use App\Models\PartnerAnnouncementDelivery;
 use App\Models\User;
 use Illuminate\Notifications\DatabaseNotification;
@@ -126,7 +126,7 @@ final class MemberNotificationPresenter
         }
 
         if (($data['target_type'] ?? null) === 'event_chat' && $targetId !== false) {
-            $chat = EventChat::query()->with('event.organizer')->where('event_id', $targetId)->first();
+            $chat = GroupChat::query()->with('event.organizer')->where('event_id', $targetId)->first();
 
             if ($chat !== null && $viewer->can('view', $chat)) {
                 return route('events.chat.show', $targetId, absolute: false);

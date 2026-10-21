@@ -6,13 +6,13 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-#[Fillable(['event_chat_message_id', 'user_id'])]
-class EventChatMessageReaction extends Model
+#[Fillable(['group_chat_message_id', 'user_id'])]
+class GroupChatMessageReaction extends Model
 {
-    /** @return BelongsTo<EventChatMessage, $this> */
+    /** @return BelongsTo<GroupChatMessage, $this> */
     public function message(): BelongsTo
     {
-        return $this->belongsTo(EventChatMessage::class, 'event_chat_message_id');
+        return $this->belongsTo(GroupChatMessage::class, 'group_chat_message_id');
     }
 
     /** @return BelongsTo<User, $this> */

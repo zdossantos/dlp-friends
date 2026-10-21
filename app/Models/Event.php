@@ -28,7 +28,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
  * @property CarbonImmutable|null $cancelled_at
  * @property-read User|null $organizer
  * @property-read Collection<int, EventRegistration> $registrations
- * @property-read EventChat|null $chat
+ * @property-read GroupChat|null $chat
  */
 #[Fillable([
     'organizer_user_id',
@@ -58,10 +58,10 @@ class Event extends Model
         return $this->hasMany(EventRegistration::class);
     }
 
-    /** @return HasOne<EventChat, $this> */
+    /** @return HasOne<GroupChat, $this> */
     public function chat(): HasOne
     {
-        return $this->hasOne(EventChat::class);
+        return $this->hasOne(GroupChat::class);
     }
 
     public function occupiedPlaces(): int

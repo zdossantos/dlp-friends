@@ -6,9 +6,9 @@ use App\Events\MatchCreated;
 use App\Events\MessageSent;
 use App\Models\ConversationStarter;
 use App\Models\Event;
-use App\Models\EventChat;
-use App\Models\EventChatMessage;
 use App\Models\EventRegistration;
+use App\Models\GroupChat;
+use App\Models\GroupChatMessage;
 use App\Models\MemberMatch;
 use App\Models\Message;
 use App\Models\SeasonalTheme;
@@ -782,16 +782,16 @@ test('messaging switches between private and event groups and sends in the share
     Message::factory()->count(2)->for($conversation)->for($peer, 'author')->create();
     Message::factory()->for($conversation)->for($member, 'author')->create();
     $event = Event::factory()->for($member, 'organizer')->create(['title' => 'Le groupe du parc']);
-    $chat = EventChat::factory()->for($event)->create();
+    $chat = GroupChat::factory()->for($event)->create();
     EventRegistration::factory()->for($event)->for($peer)->accepted()->create();
-    EventChatMessage::factory()->for($chat)->for($peer, 'author')->create(['content' => 'Bienvenue dans le groupe']);
+    GroupChatMessage::factory()->for($chat)->for($peer, 'author')->create(['content' => 'Bienvenue dans le groupe']);
     $this->actingAs($member);
 
     $page = visit('/conversations')->resize(390, 700)
         ->assertSee('Basile')->assertDontSee('Le groupe du parc')
         ->assertSeeIn('[data-test=group-unread-count]', '1')
         ->assertSeeIn('[data-test=private-unread-count]', '2');
-    EventChatMessage::factory()->for($chat)->for($peer, 'author')->create(['content' => 'Un nouveau souvenir']);
+    GroupChatMessage::factory()->for($chat)->for($peer, 'author')->create(['content' => 'Un nouveau souvenir']);
     $page->click('[data-test="conversations-groups"]')
         ->assertSee('Le groupe du parc')->assertDontSee('Basile')
         ->assertPresent('[aria-label="2 messages non lus"]')
@@ -834,7 +834,7 @@ test('messaging switches between private and event groups and sends in the share
         ->assertPresent('#message-content')
         ->assertNoJavaScriptErrors();
 
-    $this->assertDatabaseHas('event_chat_messages', ['event_chat_id' => $chat->id, 'content' => 'À bientôt au parc']);
+    $this->assertDatabaseHas('group_chat_messages', ['group_chat_id' => $chat->id, 'content' => 'À bientôt au parc']);
 });
 
 test('messaging categories support keyboard navigation on mobile and desktop', function (int $width, int $height) {

@@ -2,7 +2,7 @@
 
 use App\Actions\RegisterForEvent;
 use App\Actions\RemoveEventParticipant;
-use App\Actions\SendEventChatMessage;
+use App\Actions\SendGroupChatMessage;
 use App\Actions\WithdrawFromEvent;
 use App\Models\Event;
 use App\Models\User;
@@ -17,7 +17,7 @@ test('group chat renders membership notices separately from messages in both lan
     app(WithdrawFromEvent::class)->handle($member, $event);
     $registration = app(RegisterForEvent::class)->handle($member, $event);
     app(RemoveEventParticipant::class)->handle($organizer, $registration);
-    app(SendEventChatMessage::class)->handle($organizer, $event->chat, 'À bientôt dans les parcs');
+    app(SendGroupChatMessage::class)->handle($organizer, $event->chat, 'À bientôt dans les parcs');
     $this->actingAs($organizer);
 
     visit(route('events.chat.show', $event, absolute: false))->resize(320, 800)

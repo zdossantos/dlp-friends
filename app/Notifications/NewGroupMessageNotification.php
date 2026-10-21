@@ -7,7 +7,7 @@ use App\Contracts\WebPushNotification;
 use App\Enums\NotificationCategory;
 use App\Enums\UserStatus;
 use App\Enums\WebPushPreference;
-use App\Models\EventChatMessage;
+use App\Models\GroupChatMessage;
 use App\Models\User;
 use App\Notifications\Channels\GroupMessageDatabaseChannel;
 use App\Notifications\Channels\WebPushChannel;
@@ -23,7 +23,7 @@ final class NewGroupMessageNotification extends Notification implements Personal
 {
     use Queueable;
 
-    public function __construct(public EventChatMessage $message)
+    public function __construct(public GroupChatMessage $message)
     {
         $this->afterCommit();
     }
@@ -46,14 +46,14 @@ final class NewGroupMessageNotification extends Notification implements Personal
     /** @return array{category: string, translation_key: string, parameters: array{sender: string|null, group: string}, target_type: string, target_id: int, message_id: int} */
     public function toArray(User $notifiable): array
     {
-        $this->message->loadMissing(['author.profile', 'eventChat.event']);
+        $this->message->loadMissing(['author.profile', 'groupChat.event']);
 
         return [
             'category' => NotificationCategory::Conversations->value,
             'translation_key' => 'notifications.items.new_group_message',
-            'parameters' => ['sender' => $this->message->author->profile?->display_name, 'group' => $this->message->eventChat->event->title],
-            'target_type' => 'event_chat',
-            'target_id' => $this->message->eventChat->event_id,
+            'parameters' => ['sender' => $this->message->author->profile?->display_name, 'group' => ($this->message->groupChat->trip_id !== null ? $this->message->groupChat->trip()->firstOrFail()->destination : $this->message->groupChat->event()->firstOrFail()->title)],
+            'target_type' => $this->message->groupChat->trip_id !== null ? 'trip_chat' : 'event_chat',
+            'target_id' => (int) ($this->message->groupChat->trip_id ?? $this->message->groupChat->event_id),
             'message_id' => $this->message->id,
         ];
     }
@@ -89,15 +89,17 @@ final class NewGroupMessageNotification extends Notification implements Personal
 
     public function webPushTarget(User $notifiable): WebPushTarget
     {
-        return new WebPushTarget(route('events.chat.show', $this->message->eventChat->event_id, absolute: false));
+        return new WebPushTarget($this->message->groupChat->trip_id !== null
+            ? '/trips/'.$this->message->groupChat->trip_id.'/chat'
+            : route('events.chat.show', $this->message->groupChat->event_id, absolute: false));
     }
 
     public function webPushAccessAllowed(User $notifiable): bool
     {
         return $notifiable->id !== $this->message->author_user_id
             && $this->message->author()->where('status', UserStatus::Active)->exists()
-            && Gate::forUser($notifiable)->allows('view', $this->message->eventChat)
-            && ! $this->message->eventChat->reads()->where('user_id', $notifiable->id)
+            && Gate::forUser($notifiable)->allows('view', $this->message->groupChat)
+            && ! $this->message->groupChat->reads()->where('user_id', $notifiable->id)
                 ->where('last_read_message_id', '>=', $this->message->id)->exists();
     }
 }

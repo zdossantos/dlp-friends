@@ -6,9 +6,9 @@ use App\Enums\ProfileVisibility;
 use App\Enums\SwipeDecision;
 use App\Models\Block;
 use App\Models\Event;
-use App\Models\EventChat;
-use App\Models\EventChatMessage;
 use App\Models\EventRegistration;
+use App\Models\GroupChat;
+use App\Models\GroupChatMessage;
 use App\Models\Swipe;
 use App\Models\User;
 use Illuminate\Support\Facades\Storage;
@@ -92,7 +92,7 @@ test('event details use the shadcn drawer on mobile without a close icon and a d
 test('event discussion opens the full conversation page from the shared event detail', function () {
     $organizer = eventBrowserMember('Alice');
     $event = Event::factory()->for($organizer, 'organizer')->create(['title' => 'Discussion du groupe']);
-    EventChat::factory()->for($event)->create();
+    GroupChat::factory()->for($event)->create();
     $this->actingAs($organizer);
 
     visit("/events/{$event->id}?origin=mine")->resize(390, 700)
@@ -118,10 +118,10 @@ test('event discussion likes another member message by double tap without zoomin
     $organizer = eventBrowserMember('Alice');
     $participant = eventBrowserMember('Basile');
     $event = Event::factory()->for($organizer, 'organizer')->create();
-    $chat = EventChat::factory()->for($event)->create();
+    $chat = GroupChat::factory()->for($event)->create();
     EventRegistration::factory()->for($event)->for($participant)->accepted()->create();
-    $message = EventChatMessage::factory()->for($chat)->for($participant, 'author')->create();
-    EventChatMessage::factory()->for($chat)->for($organizer, 'author')->create();
+    $message = GroupChatMessage::factory()->for($chat)->for($participant, 'author')->create();
+    GroupChatMessage::factory()->for($chat)->for($organizer, 'author')->create();
     $this->actingAs($organizer);
 
     $page = visit("/events/{$event->id}/chat")->resize(390, 700)
@@ -145,8 +145,8 @@ test('event discussion likes another member message by double tap without zoomin
         ->assertSeeIn('[data-test="message-like"]', '1')
         ->assertNoJavaScriptErrors();
 
-    $this->assertDatabaseHas('event_chat_message_reactions', [
-        'event_chat_message_id' => $message->id,
+    $this->assertDatabaseHas('group_chat_message_reactions', [
+        'group_chat_message_id' => $message->id,
         'user_id' => $organizer->id,
     ]);
 });
@@ -745,9 +745,9 @@ function eventBrowserMember(string $displayName): User
 test('group history loads while scrolling upward without leaving the chat or losing recent messages', function (string $origin) {
     $organizer = eventBrowserMember('Alice');
     $event = Event::factory()->for($organizer, 'organizer')->create();
-    $chat = EventChat::factory()->for($event)->create();
+    $chat = GroupChat::factory()->for($event)->create();
     foreach (range(1, 25) as $number) {
-        EventChatMessage::factory()->for($chat)->for($organizer, 'author')->create([
+        GroupChatMessage::factory()->for($chat)->for($organizer, 'author')->create([
             'content' => sprintf("Historique du groupe [%02d]\n", $number).str_repeat('Un souvenir à partager ensemble. ', 10),
         ]);
     }

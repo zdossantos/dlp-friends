@@ -7,7 +7,7 @@ use App\Contracts\WebPushNotification;
 use App\Enums\NotificationCategory;
 use App\Enums\UserStatus;
 use App\Enums\WebPushPreference;
-use App\Models\EventChatMessage;
+use App\Models\GroupChatMessage;
 use App\Models\User;
 use App\Notifications\Channels\WebPushChannel;
 use App\Support\WebPushTarget;
@@ -21,7 +21,7 @@ final class EventChatMessageLikedNotification extends Notification implements Pe
 {
     use Queueable;
 
-    public function __construct(public EventChatMessage $message, public User $reactor)
+    public function __construct(public GroupChatMessage $message, public User $reactor)
     {
         $this->afterCommit();
     }
@@ -48,8 +48,8 @@ final class EventChatMessageLikedNotification extends Notification implements Pe
             'category' => NotificationCategory::Conversations->value,
             'translation_key' => 'notifications.items.message_liked',
             'parameters' => ['member' => $this->reactor->profile?->display_name],
-            'target_type' => 'event',
-            'target_id' => $this->message->eventChat->event_id,
+            'target_type' => $this->message->groupChat->trip_id !== null ? 'trip' : 'event',
+            'target_id' => (int) ($this->message->groupChat->trip_id ?? $this->message->groupChat->event_id),
         ];
     }
 
@@ -74,11 +74,13 @@ final class EventChatMessageLikedNotification extends Notification implements Pe
 
     public function webPushTarget(User $notifiable): WebPushTarget
     {
-        return new WebPushTarget(route('events.chat.show', $this->message->eventChat->event_id, absolute: false));
+        return new WebPushTarget($this->message->groupChat->trip_id !== null
+            ? '/trips/'.$this->message->groupChat->trip_id.'/chat'
+            : route('events.chat.show', $this->message->groupChat->event_id, absolute: false));
     }
 
     public function webPushAccessAllowed(User $notifiable): bool
     {
-        return Gate::forUser($notifiable)->allows('view', $this->message->eventChat);
+        return Gate::forUser($notifiable)->allows('view', $this->message->groupChat);
     }
 }

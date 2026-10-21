@@ -2,7 +2,7 @@
 
 namespace App\Notifications\Channels;
 
-use App\Models\EventChat;
+use App\Models\GroupChat;
 use App\Models\User;
 use App\Notifications\NewGroupMessageNotification;
 use Illuminate\Notifications\Channels\DatabaseChannel;
@@ -15,8 +15,8 @@ final class GroupMessageDatabaseChannel
     public function send(User $notifiable, NewGroupMessageNotification $notification): void
     {
         DB::transaction(function () use ($notifiable, $notification): void {
-            // Serialize delivery with MarkEventChatRead so an already-read message cannot reappear.
-            EventChat::query()->lockForUpdate()->findOrFail($notification->message->event_chat_id);
+            // Serialize delivery with MarkGroupChatRead so an already-read message cannot reappear.
+            GroupChat::query()->lockForUpdate()->findOrFail($notification->message->group_chat_id);
 
             if ($notification->shouldSend($notifiable, self::class)) {
                 $this->database->send($notifiable, $notification);

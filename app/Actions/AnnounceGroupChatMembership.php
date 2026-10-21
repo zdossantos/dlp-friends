@@ -4,14 +4,16 @@ namespace App\Actions;
 
 use App\Enums\EventChatSystemType;
 use App\Events\EventChatMessageSent;
-use App\Models\EventChatMessage;
 use App\Models\EventRegistration;
+use App\Models\GroupChatMessage;
+use App\Models\TripRegistration;
 
-final class AnnounceEventChatMembership
+final class AnnounceGroupChatMembership
 {
-    public function handle(EventRegistration $registration, EventChatSystemType $type): EventChatMessage
+    public function handle(EventRegistration|TripRegistration $registration, EventChatSystemType $type): GroupChatMessage
     {
-        $chat = $registration->event->chat()->firstOrCreate();
+        $context = $registration instanceof TripRegistration ? $registration->trip : $registration->event;
+        $chat = $context->chat()->firstOrCreate();
         $message = $chat->messages()->create([
             'author_user_id' => $registration->user_id,
             'content' => '',

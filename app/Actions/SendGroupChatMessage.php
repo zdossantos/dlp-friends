@@ -3,19 +3,19 @@
 namespace App\Actions;
 
 use App\Events\EventChatMessageSent;
-use App\Models\EventChat;
-use App\Models\EventChatMessage;
+use App\Models\GroupChat;
+use App\Models\GroupChatMessage;
 use App\Models\User;
 use App\Notifications\NewGroupMessageNotification;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 
-final class SendEventChatMessage
+final class SendGroupChatMessage
 {
-    public function handle(User $author, EventChat $chat, string $content): EventChatMessage
+    public function handle(User $author, GroupChat $chat, string $content): GroupChatMessage
     {
-        return DB::transaction(function () use ($author, $chat, $content): EventChatMessage {
-            $lockedChat = EventChat::query()
+        return DB::transaction(function () use ($author, $chat, $content): GroupChatMessage {
+            $lockedChat = GroupChat::query()
                 ->with('event')
                 ->lockForUpdate()
                 ->findOrFail($chat->id);
@@ -29,7 +29,7 @@ final class SendEventChatMessage
 
             EventChatMessageSent::dispatch($message);
 
-            $recipients = User::query()->inEventChat($lockedChat)->whereKeyNot($author->id)->get();
+            $recipients = User::query()->inGroupChat($lockedChat)->whereKeyNot($author->id)->get();
 
             foreach ($recipients as $recipient) {
                 $recipient->notify(new NewGroupMessageNotification($message));

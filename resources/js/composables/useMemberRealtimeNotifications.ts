@@ -29,7 +29,7 @@ import { index as conversationsIndex } from '@/routes/conversations';
 import { show as showConversation } from '@/routes/conversations';
 import { show as showGroupChat } from '@/routes/events/chat';
 import type { MemberIdentity, RealtimeConversationMessage } from '@/types';
-import type { EventChatMessage } from '@/types/event';
+import type { GroupChatMessage } from '@/types/event';
 
 export type MemberMatchNotification = {
     match_id: number;
@@ -40,7 +40,7 @@ export type MemberMatchNotification = {
 type MemberRealtimeContext = {
     activeMatch: Ref<MemberMatchNotification | null>;
     latestMessage: ShallowRef<RealtimeConversationMessage | null>;
-    latestGroupMessage: ShallowRef<EventChatMessage | null>;
+    latestGroupMessage: ShallowRef<GroupChatMessage | null>;
     latestPersistentNotification: ShallowRef<PersistentMemberNotification | null>;
     presenceChanged: ShallowRef<MemberPresenceChanged | null>;
     unreadNotificationsCount: Ref<number>;
@@ -75,7 +75,7 @@ export function useMemberRealtimeNotifications(
     const { t } = useTranslations();
     const activeMatch = ref<MemberMatchNotification | null>(null);
     const latestMessage = shallowRef<RealtimeConversationMessage | null>(null);
-    const latestGroupMessage = shallowRef<EventChatMessage | null>(null);
+    const latestGroupMessage = shallowRef<GroupChatMessage | null>(null);
     const latestPersistentNotification =
         shallowRef<PersistentMemberNotification | null>(null);
     const presenceChanged = shallowRef<MemberPresenceChanged | null>(null);
@@ -101,7 +101,7 @@ export function useMemberRealtimeNotifications(
         | RealtimeConversationMessage
         | MemberPresenceChanged
         | EventChatAccessChanged
-        | EventChatMessage
+        | GroupChatMessage
     >(
         `App.Models.User.${currentUserId}`,
         [
@@ -140,7 +140,7 @@ export function useMemberRealtimeNotifications(
                 return;
             }
 
-            if ('event_chat_id' in notification) {
+            if ('group_chat_id' in notification) {
                 latestGroupMessage.value = notification;
 
                 return;

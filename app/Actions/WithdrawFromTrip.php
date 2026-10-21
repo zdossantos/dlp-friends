@@ -2,6 +2,7 @@
 
 namespace App\Actions;
 
+use App\Enums\EventChatSystemType;
 use App\Enums\TripRegistrationStatus;
 use App\Models\Trip;
 use App\Models\User;
@@ -24,11 +25,15 @@ final class WithdrawFromTrip
             if (! in_array($registration->status, [TripRegistrationStatus::Pending, TripRegistrationStatus::Accepted], true)) {
                 return;
             }
-            if ($registration->status === TripRegistrationStatus::Accepted) {
+            $wasAccepted = $registration->status === TripRegistrationStatus::Accepted;
+            if ($wasAccepted) {
                 Validator::make(['reason' => $reason], ['reason' => ['required', 'string', 'max:1000']], attributes: __('trips.attributes'))->validate();
                 $trip->departures()->create(['trip_registration_id' => $registration->id, 'user_id' => $member->id, 'scheduled_departure_at' => $trip->departs_at, 'left_at' => now(), 'reason' => $reason]);
             }
             $registration->update(['status' => TripRegistrationStatus::Withdrawn, 'reason' => $reason, 'decided_at' => now()]);
+            if ($wasAccepted) {
+                app(AnnounceGroupChatMembership::class)->handle($registration, EventChatSystemType::Left);
+            }
         });
     }
 }

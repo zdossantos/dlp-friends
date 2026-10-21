@@ -3,7 +3,7 @@
 namespace App\Events;
 
 use App\Enums\UserStatus;
-use App\Models\EventChat;
+use App\Models\GroupChat;
 use App\Models\User;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Broadcasting\PrivateChannel;
@@ -18,7 +18,7 @@ final class EventChatMessageReactionUpdated implements ShouldBroadcast, ShouldDi
     public bool $afterCommit = true;
 
     public function __construct(
-        public int $eventChatId,
+        public int $groupChatId,
         public int $messageId,
         public int $reactorUserId,
         public int $reactionCount,
@@ -31,12 +31,12 @@ final class EventChatMessageReactionUpdated implements ShouldBroadcast, ShouldDi
             return [];
         }
 
-        return [new PrivateChannel("event-chat.{$this->eventChatId}")];
+        return [new PrivateChannel("event-chat.{$this->groupChatId}")];
     }
 
     public function broadcastWhen(): bool
     {
-        return User::query()->whereKey($this->reactorUserId)->where('status', UserStatus::Active)->exists() && EventChat::query()->whereKey($this->eventChatId)->whereHas('event.organizer', fn ($q) => $q->where('status', UserStatus::Active))->exists();
+        return User::query()->whereKey($this->reactorUserId)->where('status', UserStatus::Active)->exists() && GroupChat::query()->whereKey($this->groupChatId)->where(fn ($q) => $q->whereHas('event.organizer', fn ($owner) => $owner->where('status', UserStatus::Active))->orWhereHas('trip.organizer', fn ($owner) => $owner->where('status', UserStatus::Active)))->exists();
     }
 
     public function broadcastAs(): string

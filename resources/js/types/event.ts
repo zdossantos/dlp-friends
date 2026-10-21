@@ -26,9 +26,9 @@ export type EventChatInfo = {
     readOnlyReason: 'cancelled' | 'archived' | null;
 };
 
-export type EventChatMessage = {
+export type GroupChatMessage = {
     id: number;
-    event_chat_id: number;
+    group_chat_id: number;
     system_type: 'joined' | 'left' | 'removed' | null;
     author_user_id: number;
     content: string;
@@ -39,8 +39,8 @@ export type EventChatMessage = {
     updated_at?: string;
 };
 
-export type PaginatedEventChatMessages = {
-    data: EventChatMessage[];
+export type PaginatedGroupChatMessages = {
+    data: GroupChatMessage[];
     next_page_url: string | null;
     prev_page_url: string | null;
 };
@@ -105,7 +105,7 @@ export type EventPanel =
           kind: 'chat';
           event: EventDetail;
           chat: EventChatInfo;
-          messages: PaginatedEventChatMessages;
+          messages: PaginatedGroupChatMessages;
       };
 
 export type EventWorkspaceProps = {

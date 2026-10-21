@@ -11,9 +11,9 @@ import {
 import { xsrfHeader } from '@/lib/csrf';
 import { like, unlike } from '@/routes/conversations/messages';
 import type { MessageReactionUpdate, PaginatedMessages } from '@/types';
-import type { EventChatMessage } from '@/types/event';
+import type { GroupChatMessage } from '@/types/event';
 
-type TimelineMessage = PaginatedMessages['data'][number] | EventChatMessage;
+type TimelineMessage = PaginatedMessages['data'][number] | GroupChatMessage;
 
 const { locale, t } = useTranslations();
 
@@ -176,13 +176,13 @@ function dayLabel(message: TimelineMessage): string {
 
 function isSystemMessage(
     message: TimelineMessage,
-): message is EventChatMessage & {
-    system_type: NonNullable<EventChatMessage['system_type']>;
+): message is GroupChatMessage & {
+    system_type: NonNullable<GroupChatMessage['system_type']>;
 } {
     return 'system_type' in message && message.system_type != null;
 }
 
-function systemMessageText(message: EventChatMessage): string {
+function systemMessageText(message: GroupChatMessage): string {
     return t(`events.chat.system.${message.system_type}`, {
         name: message.author.display_name,
     });

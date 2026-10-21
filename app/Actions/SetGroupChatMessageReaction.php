@@ -3,26 +3,26 @@
 namespace App\Actions;
 
 use App\Events\EventChatMessageReactionUpdated;
-use App\Models\EventChat;
-use App\Models\EventChatMessage;
-use App\Models\EventChatMessageReaction;
+use App\Models\GroupChat;
+use App\Models\GroupChatMessage;
+use App\Models\GroupChatMessageReaction;
 use App\Models\User;
 use App\Notifications\EventChatMessageLikedNotification;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 
-final class SetEventChatMessageReaction
+final class SetGroupChatMessageReaction
 {
     /** @return array{message_id: int, reactor_user_id: int, reaction_count: int, reacted: bool} */
-    public function handle(User $reactor, EventChat $chat, EventChatMessage $message, bool $reacted): array
+    public function handle(User $reactor, GroupChat $chat, GroupChatMessage $message, bool $reacted): array
     {
         return DB::transaction(function () use ($reactor, $chat, $message, $reacted): array {
-            $lockedChat = EventChat::query()->with('event')->lockForUpdate()->findOrFail($chat->id);
+            $lockedChat = GroupChat::query()->with('event')->lockForUpdate()->findOrFail($chat->id);
             Gate::forUser($reactor)->authorize('view', $lockedChat);
 
-            $lockedMessage = EventChatMessage::query()
-                ->where('event_chat_id', $lockedChat->id)
+            $lockedMessage = GroupChatMessage::query()
+                ->where('group_chat_id', $lockedChat->id)
                 ->lockForUpdate()
                 ->findOrFail($message->id);
 
@@ -31,8 +31,8 @@ final class SetEventChatMessageReaction
             }
 
             if ($reacted) {
-                $reaction = EventChatMessageReaction::query()->firstOrCreate([
-                    'event_chat_message_id' => $lockedMessage->id,
+                $reaction = GroupChatMessageReaction::query()->firstOrCreate([
+                    'group_chat_message_id' => $lockedMessage->id,
                     'user_id' => $reactor->id,
                 ]);
 
@@ -40,8 +40,8 @@ final class SetEventChatMessageReaction
                     $lockedMessage->author->notify(new EventChatMessageLikedNotification($lockedMessage, $reactor));
                 }
             } else {
-                EventChatMessageReaction::query()
-                    ->where('event_chat_message_id', $lockedMessage->id)
+                GroupChatMessageReaction::query()
+                    ->where('group_chat_message_id', $lockedMessage->id)
                     ->where('user_id', $reactor->id)
                     ->delete();
             }

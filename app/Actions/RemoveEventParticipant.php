@@ -37,7 +37,7 @@ final class RemoveEventParticipant
             $lockedRegistration->update(['status' => EventRegistrationStatus::Removed]);
 
             if ($hadAccess) {
-                app(AnnounceEventChatMembership::class)->handle($lockedRegistration, EventChatSystemType::Removed);
+                app(AnnounceGroupChatMembership::class)->handle($lockedRegistration, EventChatSystemType::Removed);
             }
 
             return $lockedRegistration->refresh();

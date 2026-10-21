@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use App\Data\EventChatData;
+use App\Data\GroupChatData;
 use App\Enums\EventRegistrationStatus;
 use App\Models\Avatar;
 use App\Models\Conversation;
-use App\Models\EventChat;
+use App\Models\GroupChat;
 use App\Models\Message;
 use App\Models\User;
 use App\Support\MemberPresence;
@@ -67,7 +67,7 @@ final class ConversationIndexController extends Controller
         return Inertia::render('Conversations/Index', [
             'conversations' => $conversations,
             'currentUserId' => $member->id,
-            'groups' => EventChat::query()
+            'groups' => GroupChat::query()
                 ->whereHas('event', fn ($query) => $query
                     ->where('organizer_user_id', $member->id)
                     ->orWhereHas('registrations', fn ($registrations) => $registrations
@@ -75,15 +75,15 @@ final class ConversationIndexController extends Controller
                         ->where('status', EventRegistrationStatus::Accepted)))
                 ->with('event.organizer')
                 ->withMax('messages', 'created_at')
-                ->orderByRaw('COALESCE(messages_max_created_at, event_chats.created_at) DESC')
+                ->orderByRaw('COALESCE(messages_max_created_at, group_chats.created_at) DESC')
                 ->orderByDesc('id')
                 ->get()
-                ->filter(fn (EventChat $chat): bool => $member->can('view', $chat))
-                ->map(fn (EventChat $chat): array => [
-                    ...EventChatData::chat($chat),
+                ->filter(fn (GroupChat $chat): bool => $member->can('view', $chat))
+                ->map(fn (GroupChat $chat): array => [
+                    ...GroupChatData::chat($chat),
                     'event_id' => $chat->event_id,
                     'title' => $chat->event->title,
-                    'unread_count' => EventChatData::unreadCount($chat, $member),
+                    'unread_count' => GroupChatData::unreadCount($chat, $member),
                 ])->values()->all(),
         ]);
     }

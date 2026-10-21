@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Actions\MarkEventChatRead;
+use App\Actions\MarkGroupChatRead;
 use App\Http\Requests\StoreEventChatReadRequest;
 use App\Models\Event;
 use App\Models\User;
@@ -13,7 +13,7 @@ final class EventChatReadController extends Controller
     public function __invoke(
         StoreEventChatReadRequest $request,
         Event $event,
-        MarkEventChatRead $action,
+        MarkGroupChatRead $action,
     ): Response {
         /** @var User $reader */
         $reader = $request->user();

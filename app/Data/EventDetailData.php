@@ -55,7 +55,7 @@ final readonly class EventDetailData
         ];
 
         if ($event->chat !== null) {
-            $privateData['chat'] = EventChatData::chat($event->chat);
+            $privateData['chat'] = GroupChatData::chat($event->chat);
         }
 
         if ($event->organizer_user_id === $viewer->id) {

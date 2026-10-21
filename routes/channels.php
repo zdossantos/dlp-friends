@@ -2,7 +2,7 @@
 
 use App\Enums\UserStatus;
 use App\Models\Conversation;
-use App\Models\EventChat;
+use App\Models\GroupChat;
 use App\Models\User;
 use Illuminate\Support\Facades\Broadcast;
 use Illuminate\Support\Facades\Gate;
@@ -18,7 +18,7 @@ Broadcast::channel(
 );
 
 Broadcast::channel(
-    'event-chat.{eventChat}',
-    fn (User $user, EventChat $eventChat): bool => Gate::forUser($user)
-        ->allows('view', $eventChat),
+    'event-chat.{groupChat}',
+    fn (User $user, GroupChat $groupChat): bool => Gate::forUser($user)
+        ->allows('view', $groupChat),
 );

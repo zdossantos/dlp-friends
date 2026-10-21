@@ -4,8 +4,8 @@ namespace Tests\Feature;
 
 use App\Enums\EventRegistrationStatus;
 use App\Models\Event;
-use App\Models\EventChat;
 use App\Models\EventRegistration;
+use App\Models\GroupChat;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Gate;
@@ -35,7 +35,7 @@ class EventChatAuthorizationTest extends TestCase
             'organizer_user_id' => $organizer->id,
             'starts_at' => now()->subDays(7)->addSecond(),
         ]);
-        $chat = EventChat::factory()->for($event)->create();
+        $chat = GroupChat::factory()->for($event)->create();
 
         $this->assertTrue(Gate::forUser($organizer)->allows('view', $chat));
         $this->assertTrue(Gate::forUser($organizer)->allows('send', $chat));
@@ -74,12 +74,12 @@ class EventChatAuthorizationTest extends TestCase
         ];
     }
 
-    /** @return array{User, EventChat} */
+    /** @return array{User, GroupChat} */
     private function scenario(string $role, ?EventRegistrationStatus $status): array
     {
         $organizer = User::factory()->create();
         $event = Event::factory()->create(['organizer_user_id' => $organizer->id]);
-        $chat = EventChat::factory()->for($event)->create();
+        $chat = GroupChat::factory()->for($event)->create();
 
         if ($role === 'organizer') {
             return [$organizer, $chat];

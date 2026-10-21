@@ -6,7 +6,7 @@ use InvalidArgumentException;
 
 final readonly class WebPushTarget
 {
-    private const ALLOWED_PREFIXES = ['/notifications', '/conversations/', '/events/', '/partner/', '/admin/'];
+    private const ALLOWED_PREFIXES = ['/notifications', '/conversations/', '/events/', '/trips/', '/partner/', '/admin/'];
 
     public function __construct(public string $url)
     {

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Head, Link, router } from '@inertiajs/vue3';
 import ConversationHeader from '@/components/conversations/ConversationHeader.vue';
-import EventChat from '@/components/events/EventChat.vue';
+import GroupChat from '@/components/events/EventChat.vue';
 import EventWorkspacePanel from '@/components/events/EventWorkspacePanel.vue';
 import { useTranslations } from '@/composables/useTranslations';
 import { index } from '@/routes/conversations';
@@ -10,7 +10,7 @@ import type {
     EventChatInfo,
     EventDetail,
     EventPanel,
-    PaginatedEventChatMessages,
+    PaginatedGroupChatMessages,
 } from '@/types/event';
 
 const props = defineProps<{
@@ -18,7 +18,7 @@ const props = defineProps<{
     panel: EventPanel | null;
     closeHref: string;
     chat: EventChatInfo;
-    messages: PaginatedEventChatMessages;
+    messages: PaginatedGroupChatMessages;
 }>();
 const { t } = useTranslations();
 function updatePanel(open: boolean): void {
@@ -58,7 +58,7 @@ function updatePanel(open: boolean): void {
                 </Link>
             </template>
         </ConversationHeader>
-        <EventChat
+        <GroupChat
             :event="event"
             :chat="chat"
             :messages="messages"

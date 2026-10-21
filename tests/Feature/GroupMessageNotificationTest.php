@@ -1,15 +1,15 @@
 <?php
 
 use App\Actions\DeliverWebPushNotification;
-use App\Actions\MarkEventChatRead;
-use App\Actions\SendEventChatMessage;
+use App\Actions\MarkGroupChatRead;
+use App\Actions\SendGroupChatMessage;
 use App\Contracts\WebPushTransport;
 use App\Enums\EventRegistrationStatus;
 use App\Events\EventChatMessageSent;
 use App\Models\Event;
-use App\Models\EventChat;
-use App\Models\EventChatMessage;
 use App\Models\EventRegistration;
+use App\Models\GroupChat;
+use App\Models\GroupChatMessage;
 use App\Models\User;
 use App\Models\WebPushSubscription;
 use App\Notifications\NewGroupMessageNotification;
@@ -26,7 +26,7 @@ function groupNotificationScenario(): array
     $organizer = User::factory()->withProfile()->create();
     $member = User::factory()->withProfile()->create();
     $event = Event::factory()->for($organizer, 'organizer')->create();
-    $chat = EventChat::factory()->for($event)->create();
+    $chat = GroupChat::factory()->for($event)->create();
     EventRegistration::factory()->accepted()->for($event)->for($member)->create();
 
     return [$event, $chat, $organizer, $member];
@@ -38,7 +38,7 @@ test('a group message creates a private notification only for other accepted mem
         EventRegistration::factory()->for($event)->create(['status' => $status]);
     }
 
-    app(SendEventChatMessage::class)->handle($organizer, $chat, 'Contenu du groupe');
+    app(SendGroupChatMessage::class)->handle($organizer, $chat, 'Contenu du groupe');
 
     $notification = $member->notifications()->sole();
     expect($notification->data['target_type'])->toBe('event_chat')
@@ -54,18 +54,18 @@ test('a group message creates a private notification only for other accepted mem
 test('a participant notifies the organizer and group preferences can disable and restore alerts', function () {
     [$event, $chat, $organizer, $member] = groupNotificationScenario();
     $this->actingAs($organizer)->patch(route('notification-preferences.update'), ['group_messages' => false])->assertRedirect();
-    app(SendEventChatMessage::class)->handle($member, $chat, 'Premier message');
+    app(SendGroupChatMessage::class)->handle($member, $chat, 'Premier message');
     expect($organizer->notifications()->count())->toBe(0);
 
     $this->actingAs($organizer)->patch(route('notification-preferences.update'), ['group_messages' => true])->assertRedirect();
-    app(SendEventChatMessage::class)->handle($member, $chat, 'Deuxième message');
+    app(SendGroupChatMessage::class)->handle($member, $chat, 'Deuxième message');
     expect($organizer->notifications()->count())->toBe(1);
 });
 
 test('reading a group acknowledges only notifications through the read cursor and allows deletion', function () {
     [$event, $chat, $organizer, $member] = groupNotificationScenario();
-    $older = app(SendEventChatMessage::class)->handle($organizer, $chat, 'Ancien');
-    app(SendEventChatMessage::class)->handle($organizer, $chat, 'Nouveau');
+    $older = app(SendGroupChatMessage::class)->handle($organizer, $chat, 'Ancien');
+    app(SendGroupChatMessage::class)->handle($organizer, $chat, 'Nouveau');
     $this->actingAs($member)->postJson(route('events.chat.read.store', $event), ['last_read_message_id' => $older->id])->assertNoContent();
     expect($member->notifications()->whereNotNull('read_at')->count())->toBe(1)
         ->and($member->unreadNotifications()->count())->toBe(1);
@@ -76,7 +76,7 @@ test('reading a group acknowledges only notifications through the read cursor an
 
 test('queued group alerts recheck membership and preference before delivery', function () {
     [$event, $chat, $organizer, $member] = groupNotificationScenario();
-    $message = EventChatMessage::factory()->for($chat)->for($organizer, 'author')->create();
+    $message = GroupChatMessage::factory()->for($chat)->for($organizer, 'author')->create();
     $notification = new NewGroupMessageNotification($message);
     expect($notification->shouldSend($member, 'database'))->toBeTrue();
     EventRegistration::query()->where('user_id', $member->id)->update(['status' => EventRegistrationStatus::Removed]);
@@ -89,7 +89,7 @@ test('group activity reaches only eligible personal channels even with alerts di
     $removed = User::factory()->withProfile()->create();
     EventRegistration::factory()->for($event)->for($removed)->create(['status' => EventRegistrationStatus::Removed]);
     $member->notificationPreferences()->create(['category' => 'group_messages', 'enabled' => false]);
-    $message = EventChatMessage::factory()->for($chat)->for($organizer, 'author')->create();
+    $message = GroupChatMessage::factory()->for($chat)->for($organizer, 'author')->create();
     $channels = collect((new EventChatMessageSent($message))->broadcastOn())->pluck('name')->all();
     expect($channels)->toContain("private-App.Models.User.{$member->id}")
         ->not->toContain("private-App.Models.User.{$removed->id}");
@@ -97,16 +97,16 @@ test('group activity reaches only eligible personal channels even with alerts di
 
 test('reading before queued delivery suppresses the late notification', function () {
     [$event, $chat, $organizer, $member] = groupNotificationScenario();
-    $message = EventChatMessage::factory()->for($chat)->for($organizer, 'author')->create();
+    $message = GroupChatMessage::factory()->for($chat)->for($organizer, 'author')->create();
     $notification = new NewGroupMessageNotification($message);
-    app(MarkEventChatRead::class)->handle($member, $chat, $message->id);
+    app(MarkGroupChatRead::class)->handle($member, $chat, $message->id);
     expect($notification->shouldSend($member, 'database'))->toBeFalse()
         ->and($notification->webPushAccessAllowed($member))->toBeFalse();
 });
 
 test('group push delivery opens the chat and respects an independent preference', function () {
     [$event, $chat, $organizer, $member] = groupNotificationScenario();
-    $message = EventChatMessage::factory()->for($chat)->for($organizer, 'author')->create(['content' => str_repeat('Bonjour ', 25)]);
+    $message = GroupChatMessage::factory()->for($chat)->for($organizer, 'author')->create(['content' => str_repeat('Bonjour ', 25)]);
     $notification = new NewGroupMessageNotification($message);
     $notification->id = (string) Str::uuid();
     $subscription = WebPushSubscription::factory()->for($member)->create();
@@ -128,12 +128,12 @@ test('group push delivery opens the chat and respects an independent preference'
 
 test('database delivery rechecks a read occurring after the queued preflight', function () {
     [$event, $chat, $organizer, $member] = groupNotificationScenario();
-    $message = EventChatMessage::factory()->for($chat)->for($organizer, 'author')->create();
+    $message = GroupChatMessage::factory()->for($chat)->for($organizer, 'author')->create();
     $notification = new NewGroupMessageNotification($message);
     $notification->id = (string) Str::uuid();
     expect($notification->shouldSend($member, 'database'))->toBeTrue();
 
-    app(MarkEventChatRead::class)->handle($member, $chat, $message->id);
+    app(MarkGroupChatRead::class)->handle($member, $chat, $message->id);
     app(ChannelManager::class)->driver($notification->via($member)[0])->send($member, $notification);
 
     expect($member->unreadNotifications()->count())->toBe(0);
