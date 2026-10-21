@@ -27,6 +27,7 @@ final class DeleteMember
                 ->whereNull('cancelled_at')
                 ->where('starts_at', '>', now())
                 ->update(['cancelled_at' => now()]);
+            app(DeactivateMemberTrips::class)->handle($lockedMember);
             $this->deactivateDeletedPartner->handle($lockedMember);
             $this->purgeDeletedPartnerData->handle($lockedMember);
             DB::table('sessions')->where('user_id', $lockedMember->id)->delete();

@@ -15,9 +15,9 @@ final class ReportConversation
 {
     public function __construct(private BlockUser $blockUser) {}
 
-    public function handle(User $reporter, Conversation $conversation, ConversationReportReason $reason, ?string $details, bool $block): ConversationReport
+    public function handle(User $reporter, Conversation $conversation, ConversationReportReason $reason, ?string $details, bool $block, bool $confirmTripDepartures = false): ConversationReport
     {
-        return DB::transaction(function () use ($reporter, $conversation, $reason, $details, $block): ConversationReport {
+        return DB::transaction(function () use ($reporter, $conversation, $reason, $details, $block, $confirmTripDepartures): ConversationReport {
             $match = $conversation->memberMatch;
             $users = User::query()->whereKey([$match->user_low_id, $match->user_high_id])->orderBy('id')->lockForUpdate()->get();
             $reporter = $users->firstWhere('id', $reporter->id);
@@ -35,7 +35,7 @@ final class ReportConversation
             }
             $report = ConversationReport::query()->create(['conversation_id' => $conversation->id, 'reporter_user_id' => $reporter->id, 'target_user_id' => $target->id, 'reason' => $reason, 'details' => $details, 'open_key' => $key]);
             if ($block) {
-                $this->blockUser->handle($reporter, $target);
+                $this->blockUser->handle($reporter, $target, $confirmTripDepartures);
             }
 
             return $report;

@@ -14,7 +14,7 @@ final class ConversationReportController extends Controller
     public function __invoke(StoreConversationReportRequest $request, Conversation $conversation, ReportConversation $action): RedirectResponse
     {
         $data = $request->validated();
-        $action->handle($request->user(), $conversation, ConversationReportReason::from($data['reason']), $data['details'] ?? null, $request->boolean('block'));
+        $action->handle($request->user(), $conversation, ConversationReportReason::from($data['reason']), $data['details'] ?? null, $request->boolean('block'), $request->boolean('confirm_trip_departures'));
         Inertia::flash('toast', ['type' => 'success', 'message' => __('moderation.reported')]);
 
         return redirect()->route('conversations.index');

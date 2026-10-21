@@ -16,6 +16,6 @@ class StoreConversationReportRequest extends FormRequest
     /** @return array<string, array<mixed>> */
     public function rules(): array
     {
-        return ['reason' => ['required', Rule::enum(ConversationReportReason::class)], 'details' => ['nullable', 'string', 'max:1000'], 'block' => ['required', 'boolean'], 'confirmed' => ['required', 'accepted']];
+        return ['confirm_trip_departures' => ['sometimes', 'boolean'], 'reason' => ['required', Rule::enum(ConversationReportReason::class)], 'details' => ['nullable', 'string', 'max:1000'], 'block' => ['required', 'boolean'], 'confirmed' => ['required', 'accepted']];
     }
 }

@@ -35,6 +35,7 @@ final class SetMemberBan
             if ($banned) {
                 $target->organizedEvents()->whereNull('cancelled_at')->where('starts_at', '>', now())->orderBy('id')->get()->each(fn ($event) => $this->cancelEvent->handle($target, $event));
                 $target->eventRegistrations()->whereIn('status', [EventRegistrationStatus::Pending, EventRegistrationStatus::Accepted])->whereHas('event', fn ($q) => $q->where('starts_at', '>', now()))->with('event')->get()->each(fn ($registration) => $this->withdraw->handle($target, $registration->event));
+                app(DeactivateMemberTrips::class)->handle($target);
                 $this->deactivatePartner->handle($target);
             }
             if ($banned) {

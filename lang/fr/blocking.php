@@ -8,6 +8,7 @@ return [
     'title' => 'Bloquer ce membre ?',
     'description' => 'Ce profil sera retiré de tes suggestions et vous ne pourrez plus vous envoyer de nouveaux messages.',
     'effects' => 'Votre échange restera consultable, mais sera archivé pour vous deux.',
+    'trip_departures' => 'Vous participez à des trajets communs. Confirmer ce blocage te fera quitter tous ces groupes, sans possibilité de retrouver automatiquement ta place.',
     'confirm' => 'Confirmer le blocage',
     'submitting' => 'Blocage en cours…',
     'error' => 'Le blocage n’a pas pu être enregistré. Réessaie.',
