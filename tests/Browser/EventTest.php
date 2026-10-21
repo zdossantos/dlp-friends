@@ -641,7 +641,8 @@ test('event creation preserves its description after a validation error', functi
     $member = eventBrowserMember('Alice');
     $this->actingAs($member);
 
-    visit('/events/create')
+    visit('/events/create')->resize(320, 700)
+        ->assertScript("(() => { const field = document.querySelector('#starts_at'); const bounds = field.getBoundingClientRect(); return field.value.length > 0 && bounds.right <= field.parentElement.getBoundingClientRect().right + 1; })()", true)
         ->fill('title', 'Une journée entre amis')
         ->fill('description', 'Description à préserver après validation.')
         ->fill('general_location', 'Disneyland Park')

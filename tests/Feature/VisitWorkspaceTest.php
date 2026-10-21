@@ -39,7 +39,7 @@ test('calendar counts distinct authorized others including both boundaries and k
     $hidden->forceFill(['visits_visibility' => 'hidden'])->save();
     $blocked = publicVisitor();
     Block::query()->create(['blocker_user_id' => $blocked->id, 'blocked_user_id' => $viewer->id]);
-    $this->actingAs($viewer)->get('/visits?month=2026-10&day=2026-10-24')->assertInertia(function (Assert $page) {
+    $this->actingAs($viewer)->get('/visits?audience=members&month=2026-10&day=2026-10-24')->assertInertia(function (Assert $page) {
         $page->component('Visits/Index', false)->has('ownVisits', 2);
         visitDay($page, '2026-10-23', 24);
         visitDay($page, '2026-10-24', 24);
@@ -56,7 +56,7 @@ test('the full list paginates distinct people and rechecks privacy on every page
         $user = publicVisitor(sprintf('Member %03d', $i));
         $first ??= $user;
     }
-    $url = '/visits/attendees?month=2026-10&day=2026-10-24';
+    $url = '/visits/attendees?audience=members&month=2026-10&day=2026-10-24';
     $ids = [];
     for ($page = 1; $page <= 4; $page++) {
         $this->actingAs($viewer)->get($url.'&page='.$page)->assertInertia(function (Assert $response) use (&$ids, $page) {
@@ -84,10 +84,10 @@ test('name search is accent insensitive literal and never filters the owners sta
     $private = publicVisitor('Élodie');
     $private->forceFill(['visits_visibility' => 'hidden'])->save();
     foreach (['elodie' => 2, 'ELODIE' => 2, '%' => 1, '_' => 1, "O'Neil" => 1, 'inconnu' => 0] as $search => $count) {
-        $this->actingAs($viewer)->get('/visits?month=2026-10&search='.urlencode($search))->assertInertia(fn (Assert $p) => visitDay($p, '2026-10-24', $count)->has('ownVisits', 1));
+        $this->actingAs($viewer)->get('/visits?audience=members&month=2026-10&search='.urlencode($search))->assertInertia(fn (Assert $p) => visitDay($p, '2026-10-24', $count)->has('ownVisits', 1));
     }
-    $this->get('/visits?month=2026-10&member='.$elodie->id)->assertInertia(fn (Assert $p) => visitDay($p, '2026-10-24', 1));
-    $this->get('/visits?month=2026-10&member='.$private->id)->assertInertia(fn (Assert $p) => visitDay($p, '2026-10-24', 0));
+    $this->get('/visits?audience=members&month=2026-10&member='.$elodie->id)->assertInertia(fn (Assert $p) => visitDay($p, '2026-10-24', 1));
+    $this->get('/visits?audience=members&month=2026-10&member='.$private->id)->assertInertia(fn (Assert $p) => visitDay($p, '2026-10-24', 0));
 });
 
 test('invalid calendar parameters cannot widen queries', function ($query, $field) {
@@ -98,8 +98,17 @@ test('direct attendee links never reveal past days of an ongoing stay', function
     $viewer = User::factory()->withProfile()->create();
     $other = publicVisitor();
     $other->visits()->update(['starts_on' => '2026-10-18', 'ends_on' => '2026-10-23']);
-    $this->actingAs($viewer)->get('/visits/attendees?month=2026-10&day=2026-10-18')
+    $this->actingAs($viewer)->get('/visits/attendees?audience=members&month=2026-10&day=2026-10-18')
         ->assertInertia(fn (Assert $page) => $page->where('panel.members.meta.total', 0)->has('panel.members.data', 0));
-    $this->get('/visits/attendees?month=2026-10&day=2026-10-20')
+    $this->get('/visits/attendees?audience=members&month=2026-10&day=2026-10-20')
         ->assertInertia(fn (Assert $page) => $page->where('panel.members.meta.total', 1));
+});
+
+test('visits default to the calendar and matches while explicit filters remain available', function () {
+    $viewer = User::factory()->withProfile()->create();
+    $this->actingAs($viewer)->get('/visits')->assertInertia(fn (Assert $page) => $page
+        ->where('filters.view', 'calendar')->where('filters.audience', 'matches')
+        ->where('filters.day', '2026-10-20'));
+    $this->get('/visits?view=agenda&audience=members')->assertInertia(fn (Assert $page) => $page
+        ->where('filters.view', 'agenda')->where('filters.audience', 'members'));
 });

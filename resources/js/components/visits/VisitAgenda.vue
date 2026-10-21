@@ -37,7 +37,17 @@ const populated = computed(() =>
                 >{{ t('visits.clear_filters') }}</Button
             >
         </div>
-        <article v-for="day in populated" :key="day.date" class="space-y-3">
+        <article
+            v-for="day in populated"
+            :key="day.date"
+            :data-test="`visit-agenda-day-${day.date}`"
+            class="space-y-3 rounded-xl"
+            :class="
+                day.ownVisitIds.length
+                    ? 'border border-primary/40 bg-primary/5 p-3 sm:p-4'
+                    : ''
+            "
+        >
             <h2 class="border-b border-border pb-3 text-lg font-semibold">
                 {{
                     formatDate(day.date + 'T12:00:00', {

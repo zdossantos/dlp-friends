@@ -103,7 +103,8 @@ personnelles ne sont pas ajoutées aux journaux ou à la mesure d’audience.
 
 La page Visites conserve dans ses paramètres le mois, le jour, la vue,
 l’audience de filtre, la recherche et, le cas échéant, le membre sélectionné.
-Sans paramètre, afficher l’agenda à partir d’aujourd’hui. L’agenda et le
+Sans paramètre, afficher le calendrier du mois courant, filtré sur les matchs.
+Une nouvelle visite commence aujourd’hui, indépendamment du mois consulté. L’agenda et le
 calendrier naviguent entre les mois, y compris au changement d’année.
 
 Chaque requête charge une période bornée. Les compteurs quotidiens sont

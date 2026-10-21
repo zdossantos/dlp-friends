@@ -15,6 +15,14 @@ import UserAvatar from '@/components/profile/UserAvatar.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
+
 import VisitAgenda from '@/components/visits/VisitAgenda.vue';
 import VisitCalendar from '@/components/visits/VisitCalendar.vue';
 import VisitDayDetail from '@/components/visits/VisitDayDetail.vue';
@@ -234,25 +242,35 @@ function selectMember(id: number) {
                 <div>
                     <Label for="visit-audience">{{
                         t('visits.audience')
-                    }}</Label
-                    ><select
-                        id="visit-audience"
-                        :value="filters.audience"
-                        class="mt-2 block min-h-11 w-full max-w-full rounded-xl border border-input bg-background px-3 text-sm focus-visible:ring-2 focus-visible:ring-ring"
-                        @change="
+                    }}</Label>
+                    <Select
+                        :model-value="filters.audience"
+                        @update:model-value="
                             navigate({
-                                audience: ($event.target as HTMLSelectElement)
-                                    .value as 'members' | 'matches',
+                                audience: $event as 'members' | 'matches',
                             })
                         "
                     >
-                        <option value="members">
-                            {{ t('visits.all_members') }}
-                        </option>
-                        <option value="matches">
-                            {{ t('visits.my_matches') }}
-                        </option>
-                    </select>
+                        <SelectTrigger
+                            id="visit-audience"
+                            class="mt-2 min-h-11 w-full"
+                            ><SelectValue
+                        /></SelectTrigger>
+                        <SelectContent>
+                            <SelectItem
+                                class="min-h-11"
+                                value="matches"
+                                data-test="visit-audience-matches"
+                                >{{ t('visits.my_matches') }}</SelectItem
+                            >
+                            <SelectItem
+                                class="min-h-11"
+                                value="members"
+                                data-test="visit-audience-members"
+                                >{{ t('visits.all_members') }}</SelectItem
+                            >
+                        </SelectContent>
+                    </Select>
                 </div>
             </div>
             <Button
@@ -272,7 +290,7 @@ function selectMember(id: number) {
                     @click="month(-1)"
                     ><ChevronLeft aria-hidden="true"
                 /></Button>
-                <div>
+                <div class="min-w-0">
                     <Label for="visit-month" class="sr-only">{{
                         t('visits.month')
                     }}</Label
@@ -280,7 +298,7 @@ function selectMember(id: number) {
                         id="visit-month"
                         type="month"
                         :value="filters.month"
-                        class="min-h-11 w-full max-w-48 min-w-0 rounded-xl border border-input bg-background px-2 text-center font-semibold focus-visible:ring-2 focus-visible:ring-ring"
+                        class="block min-h-11 w-full max-w-48 min-w-0 appearance-none rounded-xl border border-input bg-background px-2 text-center font-semibold focus-visible:ring-2 focus-visible:ring-ring"
                         @change="
                             navigate({
                                 month: ($event.target as HTMLInputElement)
@@ -328,11 +346,11 @@ function selectMember(id: number) {
             :visibility="visibility"
             :filtered="
                 !!filters.search ||
-                filters.audience !== 'members' ||
+                filters.audience !== 'matches' ||
                 !!filters.member
             "
             @clear-filters="
-                navigate({ search: '', audience: 'members', member: null })
+                navigate({ search: '', audience: 'matches', member: null })
             "
             @edit="edit"
             @attendees="all"
@@ -373,7 +391,7 @@ function selectMember(id: number) {
             v-if="formOpen"
             :key="editing?.id ?? 'new'"
             :visit="editing"
-            :day="filters.day"
+            :day="today"
             @saved="formOpen = false"
         /><Button
             variant="outline"

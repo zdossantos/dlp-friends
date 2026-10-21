@@ -131,7 +131,8 @@ test('the landing page sends a signed-in member directly to discovery', function
 });
 
 test('the registration form collects account data without a public name', function () {
-    visit('/register', ['locale' => 'fr-FR'])
+    visit('/register', ['locale' => 'fr-FR'])->resize(320, 700)
+        ->assertScript("(() => { const field = document.querySelector('#birth_date'); return field.getBoundingClientRect().right <= field.parentElement.getBoundingClientRect().right + 1 && document.documentElement.scrollWidth <= innerWidth; })()", true)
         ->assertSee('Tu créeras ensuite ton profil, puis un tutoriel te montrera comment découvrir d’autres membres.')
         ->assertPresent('input[name="email"]')
         ->assertPresent('input[name="birth_date"]')

@@ -30,7 +30,7 @@ final class VisitWorkspaceData
             $days[] = ['date' => $date->toDateString(), 'isToday' => $date->isSameDay($today), 'ownVisitIds' => $own->filter(fn (Visit $visit): bool => $visit->starts_on->toDateString() <= $date->toDateString() && $visit->ends_on->toDateString() >= $date->toDateString())->pluck('id')->values()->all(), 'otherCount' => $count, 'preview' => $preview];
         }
 
-        return ['filters' => $filters, 'visibility' => $viewer->visits_visibility->value, 'ownVisits' => $own->map(fn (Visit $visit): array => ['id' => $visit->id, 'starts_on' => $visit->starts_on->toDateString(), 'ends_on' => $visit->ends_on->toDateString()])->all(), 'days' => $days, 'closeHref' => route('visits.index', $filters, false), 'panel' => null];
+        return ['today' => $today->toDateString(), 'filters' => $filters, 'visibility' => $viewer->visits_visibility->value, 'ownVisits' => $own->map(fn (Visit $visit): array => ['id' => $visit->id, 'starts_on' => $visit->starts_on->toDateString(), 'ends_on' => $visit->ends_on->toDateString()])->all(), 'days' => $days, 'closeHref' => route('visits.index', $filters, false), 'panel' => null];
     }
 
     /**

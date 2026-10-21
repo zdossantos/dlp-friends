@@ -480,10 +480,11 @@ reste accessible et les textes ne restreignent pas les droits légaux.
 ## Visites personnelles — évolution hors MVP (issue 305)
 
 L’espace Sorties réunit Événements et Visites. Les visites personnelles sont
-désormais implémentées : agenda mobile par défaut, calendrier mensuel, journées
+désormais implémentées : calendrier mensuel par défaut, agenda mobile alternatif, journées
 ou séjours de 1 à 30 jours inclusifs, dont la fin se situe au plus tard dans les
 12 prochains mois calendaires (Europe/Paris). Les chevauchements sont autorisés ;
-un membre n’est compté qu’une fois par jour, hors propriétaire. Les séjours
+un membre n’est compté qu’une fois par jour, hors propriétaire. Le filtre de
+consultation cible les matchs par défaut. Les séjours
 terminés disparaissent des surfaces.
 
 L’audience globale est initialement « Moi uniquement ». Elle peut être limitée

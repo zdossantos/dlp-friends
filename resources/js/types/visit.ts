@@ -23,6 +23,7 @@ export type VisitFilters = {
     member: number | null;
 };
 export type VisitWorkspaceProps = {
+    today: string;
     filters: VisitFilters;
     visibility: VisitsVisibility;
     ownVisits: OwnVisit[];

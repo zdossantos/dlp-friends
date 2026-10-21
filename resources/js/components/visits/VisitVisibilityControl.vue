@@ -4,6 +4,14 @@ import { Eye, LockKeyhole, Users } from '@lucide/vue';
 import { ref } from 'vue';
 import ResponsiveConfirmation from '@/components/common/ResponsiveConfirmation.vue';
 import InputError from '@/components/InputError.vue';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
+
 import { useTranslations } from '@/composables/useTranslations';
 import { update } from '@/routes/visits/visibility';
 import type { VisitsVisibility } from '@/types/visit';
@@ -21,11 +29,7 @@ function save(visibility: VisitsVisibility, confirmed = false) {
         },
     });
 }
-function change(event: Event) {
-    const select = event.target as HTMLSelectElement;
-    const next = select.value as VisitsVisibility;
-    select.value = props.visibility;
-
+function change(next: VisitsVisibility) {
     if (next === 'members' && props.visibility !== 'members') {
         confirming.value = true;
     } else {
@@ -60,22 +64,36 @@ function change(event: Event) {
                     {{ t('visits.visibility_help') }}
                 </p>
             </div>
-            <select
-                id="visit-visibility"
-                :value="visibility"
-                :disabled="form.processing"
-                aria-describedby="visit-visibility-help visit-visibility-error"
-                class="col-span-2 min-h-11 w-full max-w-full rounded-xl border border-input bg-background px-3 text-sm focus-visible:ring-2 focus-visible:ring-ring sm:col-span-1 sm:w-auto"
-                @change="change"
-            >
-                <option
-                    v-for="value in ['hidden', 'matches', 'members']"
-                    :key="value"
-                    :value="value"
+            <div class="col-span-2 min-w-0 sm:col-span-1">
+                <Select
+                    :model-value="visibility"
+                    :disabled="form.processing"
+                    @update:model-value="change($event as VisitsVisibility)"
                 >
-                    {{ t(`visits.visibility.${value}`) }}
-                </option>
-            </select>
+                    <SelectTrigger
+                        id="visit-visibility"
+                        aria-describedby="visit-visibility-help visit-visibility-error"
+                        class="min-h-11 w-full"
+                    >
+                        <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem
+                            class="min-h-11"
+                            v-for="value in [
+                                'hidden',
+                                'matches',
+                                'members',
+                            ] as const"
+                            :key="value"
+                            :value="value"
+                            :data-test="`visit-visibility-${value}`"
+                        >
+                            {{ t(`visits.visibility.${value}`) }}
+                        </SelectItem>
+                    </SelectContent>
+                </Select>
+            </div>
         </div>
         <InputError
             id="visit-visibility-error"
@@ -87,6 +105,7 @@ function change(event: Event) {
             :title="t('visits.share_title')"
             :description="t('visits.share_description')"
             :confirm-label="t('visits.share_confirm')"
+            destructive
             :busy="form.processing"
             test-prefix="visit-confirm"
             @update:open="confirming = $event"

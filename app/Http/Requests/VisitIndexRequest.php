@@ -33,6 +33,6 @@ class VisitIndexRequest extends FormRequest
         $today = CarbonImmutable::today('Europe/Paris');
         $month = $this->string('month', $today->format('Y-m'))->toString();
 
-        return ['month' => $month, 'day' => $this->string('day', str_starts_with($today->toDateString(), $month) ? $today->toDateString() : $month.'-01')->toString(), 'view' => $this->string('view', 'agenda')->toString(), 'audience' => $this->string('audience', 'members')->toString(), 'search' => trim($this->string('search')->toString()), 'member' => $this->filled('member') ? $this->integer('member') : null];
+        return ['month' => $month, 'day' => $this->string('day', str_starts_with($today->toDateString(), $month) ? $today->toDateString() : $month.'-01')->toString(), 'view' => $this->string('view', 'calendar')->toString(), 'audience' => $this->string('audience', 'matches')->toString(), 'search' => trim($this->string('search')->toString()), 'member' => $this->filled('member') ? $this->integer('member') : null];
     }
 }

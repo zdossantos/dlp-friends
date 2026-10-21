@@ -1089,3 +1089,17 @@ test('a newly promoted administrator moves ahead of already loaded discovery car
         ->assertSeeIn('[data-test="discovery-card-stack-item"]:nth-child(2)', 'Chloé')
         ->assertNoJavaScriptErrors();
 });
+
+test('non shared interest tags keep readable contrast in dark mode', function () {
+    $viewer = discoveryMember('Alice');
+    $other = discoveryMember('Basile');
+    $interest = Interest::factory()->create(['name' => 'Spectacles']);
+    $other->profile->interests()->attach($interest);
+    $this->actingAs($viewer);
+    $page = visit('/discover')->resize(390, 844);
+    $page->script("document.documentElement.classList.add('dark')");
+    $selector = '[data-test=discovery-interest][data-common=false]';
+    $page->assertPresent($selector)
+        ->assertScript(renderedContrastIsAtLeastScript($selector, $selector), true)
+        ->assertNoJavaScriptErrors();
+});
