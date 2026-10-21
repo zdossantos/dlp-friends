@@ -17,7 +17,7 @@ test('members create edit and delete a stay from the mobile agenda', function ()
     expect(Visit::query()->where('user_id', $member->id)->count())->toBe(1);
     $id = Visit::query()->sole()->id;
     $page->click('[data-test="visit-edit-'.$id.'-'.$start.'"]')->fill('ends_on', $start)
-        ->click('[data-test="visit-submit"]');
+        ->click('[data-test="visit-submit"]')->assertNotPresent('[data-test="visit-form-panel"]');
     expect(Visit::query()->sole()->ends_on->toDateString())->toBe($start);
     $page->click('[data-test="visit-edit-'.$id.'-'.$start.'"]')->click('[data-test="visit-delete"]')
         ->click('[data-test="visit-confirm-submit"]')->assertDontSee('Ta visite')
