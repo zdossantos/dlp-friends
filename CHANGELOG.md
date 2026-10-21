@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.16.1](https://github.com/zdossantos/dlp-friends/compare/v1.16.0...v1.16.1) (2026-10-21)
+
+
+### Fixes
+
+* **security:** patch PHP runtime for 1.16.1 ([#314](https://github.com/zdossantos/dlp-friends/issues/314)) ([4e17f32](https://github.com/zdossantos/dlp-friends/commit/4e17f3291431e336e3862315f3123d941b2f8eb5))
+
 ## [1.16.0](https://github.com/zdossantos/dlp-friends/compare/v1.15.0...v1.16.0) (2026-10-19)
 
 
