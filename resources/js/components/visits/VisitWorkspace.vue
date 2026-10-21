@@ -163,6 +163,13 @@ onMounted(() => {
         restore();
     }
 });
+// Inertia schedules its history scroll restoration before emitting navigate.
+const removeNavigateListener = router.on('navigate', () => {
+    if (!props.panel) {
+        restore();
+    }
+});
+onBeforeUnmount(removeNavigateListener);
 watch(
     () => props.panel,
     (panel, previous) => {

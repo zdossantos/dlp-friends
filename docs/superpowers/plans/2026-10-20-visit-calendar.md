@@ -166,3 +166,19 @@ Arbitrages consignés :
 Mineur différé : le repère personnel « Toi » du calendrier utilise 10 px,
 contre 12 px minimum documentés. Cet écart local n'est pas promu en règle
 pour les autres écrans.
+
+
+### Correction issue de la CI de la PR #310
+
+Le premier passage GitHub a révélé une course sur le retour arrière : Inertia
+restaurait parfois une position d’historique périmée après le rappel de montage
+du composant. Une instrumentation temporaire a confirmé l’ordre des appels
+`scrollTo(y)` puis `scrollTo(0)`. Le test de retour arrière reproduit désormais
+ce cas en fournissant une position d’historique périmée ; il échoue avant la
+correction et réussit après. La restauration des visites écoute aussi
+`navigate`, émis après la programmation de la restauration Inertia, et son
+écouteur est retiré au démontage.
+
+Après correction : 13 tests navigateur visites / 102 assertions réussis ;
+ESLint, Prettier, TypeScript, Pint ciblé et build Vite réussis. La suite complète
+et les checks GitHub sont relancés sur cette correction.
