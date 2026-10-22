@@ -497,3 +497,27 @@ viewport n’est modifiée. La hauteur minimale suit les unités CSS lors des
 rotations et est retirée à la destruction du layout. Les tests Chromium
 vérifient le déclenchement, la persistance et les gardes ; le rétablissement du
 conteneur natif doit encore être confirmé sur l’iPhone affecté.
+
+
+## Trajets et messagerie commune (issue 304)
+
+Les routes `/trips` gardent le domaine séparé des événements et visites.
+Les Actions de participation, Policies et Form Requests portent les règles ;
+Vue reçoit uniquement les données autorisées de `TripWorkspaceData`.
+Les contrôleurs de chat événement et trajet délèguent aux mêmes Actions et
+à `GroupChat`, avec autorisation du contexte concret. Les URLs événement
+existantes restent utilisables et leurs délais ne changent pas.
+
+Les événements de message et réaction transportent des identifiants puis
+recalculent les destinataires sur leurs canaux personnels après commit.
+`GroupChatAccessChanged` transmet une révocation ou un changement de lecture
+sans contenu privé. Le client filtre le groupe, déduplique HTTP/temps réel,
+actualise les non-lus et ferme l’accès révoqué. Les brouillons sont propres
+au membre et groupe ; le panneau d’informations et le profil utilisent le
+retour historique existant.
+
+La préférence Trajets contrôle les alertes de gestion ; Messages de groupe
+contrôle le chat. Les canaux de livraison revérifient les droits, y compris
+après mise en file. `TripRetentionAccounts` partage entre purge planifiée et
+suppression de compte le graphe de conservation des données bannies ; cette
+logique ne crée pas de moteur générique de relations.

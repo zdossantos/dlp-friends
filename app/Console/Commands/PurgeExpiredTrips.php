@@ -31,7 +31,7 @@ final class PurgeExpiredTrips extends Command
                             return;
                         }
                         $terminalAt = $trip->cancelled_at !== null && $trip->cancelled_at->isBefore($trip->departs_at) ? $trip->cancelled_at : $trip->departs_at;
-                        if ($terminalAt->isAfter($cutoff) || User::query()->whereKey($graph->forTrips([$trip->id]))->where('status', UserStatus::Banned)->orderBy('id')->lockForUpdate()->get()->isNotEmpty()) {
+                        if ($terminalAt->isAfter($cutoff) || User::query()->whereKey($graph->forTrips([$trip->id]))->where('status', UserStatus::Banned)->orderBy('id')->lockForUpdate()->first() !== null) {
                             return;
                         }
                         // Reports use nullOnDelete; only their minimal snapshot survives.

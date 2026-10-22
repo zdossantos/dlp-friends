@@ -500,6 +500,41 @@ restent consultables et modifiables quel que soit le filtre ou leur audience.
 Les blocages dans les deux sens, le masquage du profil et la perte d’éligibilité
 retirent immédiatement les visites des autres membres.
 
-Cette livraison ne crée aucun événement, groupe, message ou contact. Les
-trajets de l’issue 304 restent différés ; aucun onglet de trajet inactif n’est
-présenté. Les autres ambitions de « Compagnons de visite » restent envisagées.
+Les visites ne créent aucun événement, groupe, message ou contact. Les trajets
+forment un domaine distinct, décrit ci-dessous. Les autres ambitions de
+« Compagnons de visite » restent envisagées.
+
+
+## Trajets entre membres — évolution hors MVP (issue 304)
+
+Sorties propose Événements, Visites et Trajets. Un trajet est un aller ou un
+retour distinct en voiture, train, RER ou bus, futur dans les douze prochains
+mois calendaires à Paris. Il ne gère ni paiement ni réservation de transport.
+L’audience initiale est Mes matchs ; tout élargissement réel à tous les membres
+exige une confirmation rouge, vérifiée côté serveur. L’organisateur choisit les
+participants par demande puis acceptation. Les places voiture excluent le
+conducteur ; les autres transports acceptent au maximum 49 passagers.
+
+Le rendez-vous précis, la liste des participants et la discussion sont réservés
+à l’organisateur et aux participants acceptés. Les autres membres autorisés
+voient seulement la proposition générale et leur propre demande. La première
+acceptation verrouille définitivement transport, sens, origine, destination et
+horaire ; le rendez-vous reste modifiable avec notification, les places sans
+passer sous l’occupation. Refus, sortie acceptée, exclusion et annulation ont
+un motif obligatoire de 1 000 caractères au plus, limité aux personnes concernées.
+Le retrait d’une demande en attente ne demande aucun motif.
+
+L’organisateur peut exclure avant le départ. Une sortie volontaire d’un
+participant accepté entre douze heures avant le départ incluses et le départ
+exclu peut être signalée avec explication. La preuve de sortie survit à une
+nouvelle demande. L’administration consulte seulement le dossier minimal ;
+elle ne reçoit pas accès à la discussion. Aucune sanction automatique n’en
+découle. Clôturer le dossier et bannir un compte restent deux actions distinctes.
+
+La messagerie Groupes réunit événements et trajets. Une discussion trajet est
+en lecture seule à l’annulation ou 24 heures après le départ ; sortie,
+exclusion et blocage retirent l’accès privé immédiatement. Mes trajets conserve
+l’historique minimal propre jusqu’à la purge à trente jours. Notifications dans
+l’application et Push selon les préférences Trajets ou Messages de groupe,
+sans nouvel e-mail. Les règles de rétention et de gel des comptes bannis
+s’appliquent aux nouvelles relations.
