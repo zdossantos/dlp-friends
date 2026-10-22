@@ -22,6 +22,7 @@ final class DeleteMember
         $displayName = $member->profile->display_name ?? $email;
 
         DB::transaction(function () use ($member): void {
+            app(PrepareMemberDataForDeletion::class)->lockAccounts($member);
             $lockedMember = User::query()->lockForUpdate()->findOrFail($member->id);
             $lockedMember->organizedEvents()
                 ->whereNull('cancelled_at')

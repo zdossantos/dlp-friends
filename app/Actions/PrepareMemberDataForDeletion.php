@@ -4,11 +4,14 @@ namespace App\Actions;
 
 use App\Enums\UserStatus;
 use App\Models\User;
+use App\Support\TripRetentionAccounts;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
 
 final class PrepareMemberDataForDeletion
 {
-    public function handle(User $member): void
+    /** @return Collection<int, User> */
+    public function lockAccounts(User $member): Collection
     {
         // Include every endpoint that could lose data through a user cascade.
         $ids = collect([$member->id]);
@@ -25,8 +28,21 @@ final class PrepareMemberDataForDeletion
         $groupMessageIds = DB::table('group_chat_messages')->where('author_user_id', $member->id)->pluck('id');
         $ids = $ids->concat(DB::table('message_reactions')->whereIn('message_id', $messageIds)->pluck('user_id'))
             ->concat(DB::table('group_chat_message_reactions')->whereIn('group_chat_message_id', $groupMessageIds)->pluck('user_id'));
+        $tripIds = DB::table('trips')->where('organizer_user_id', $member->id)->pluck('id')
+            ->concat(DB::table('trip_registrations')->where('user_id', $member->id)->pluck('trip_id'));
+        $reports = DB::table('trip_departure_reports')->where('reporter_user_id', $member->id)->orWhere('target_user_id', $member->id)->get();
+        $ids = $ids->concat(app(TripRetentionAccounts::class)->forTrips(array_values($tripIds->unique()->map(fn ($id): int => (int) $id)->all())))
+            ->concat($reports->flatMap(fn ($report): array => [$report->reporter_user_id, $report->target_user_id, $report->decided_by_user_id]));
+
         // Locking reads see current committed statuses, unlike an earlier MySQL snapshot.
-        $participants = User::query()->whereKey($ids->filter()->unique()->sort()->values())->orderBy('id')->lockForUpdate()->get();
+        return User::query()->whereKey($ids->filter()->unique()->sort()->values())->orderBy('id')->lockForUpdate()->get();
+    }
+
+    public function handle(User $member): void
+    {
+        $participants = $this->lockAccounts($member);
+        $messageIds = DB::table('messages')->where('author_user_id', $member->id)->pluck('id');
+        $groupMessageIds = DB::table('group_chat_messages')->where('author_user_id', $member->id)->pluck('id');
         $banned = $participants->filter(fn (User $user): bool => $user->status === UserStatus::Banned && $user->id !== $member->id)->pluck('id');
         DB::table('message_reactions')->whereIn('message_id', $messageIds)->whereNotIn('user_id', $banned)->delete();
         DB::table('group_chat_message_reactions')->whereIn('group_chat_message_id', $groupMessageIds)->whereNotIn('user_id', $banned)->delete();
@@ -47,6 +63,24 @@ final class PrepareMemberDataForDeletion
                 DB::table('events')->where('id', $event->id)->delete();
             }
         }
+        $tripIds = DB::table('trips')->where('organizer_user_id', $member->id)->pluck('id')
+            ->concat(DB::table('trip_registrations')->where('user_id', $member->id)->pluck('trip_id'))->unique();
+        $trips = DB::table('trips')->whereIn('id', $tripIds)->orderBy('id')->lockForUpdate()->get();
+        foreach ($trips as $trip) {
+            $protected = collect(app(TripRetentionAccounts::class)->forTrips([$trip->id]))->intersect($banned)->isNotEmpty();
+            if ($trip->organizer_user_id === $member->id) {
+                if ($protected) {
+                    DB::table('trips')->where('id', $trip->id)->update(['cancelled_at' => $trip->cancelled_at ?? now()]);
+                } else {
+                    DB::table('trips')->where('id', $trip->id)->delete();
+                }
+            } elseif (! $protected) {
+                DB::table('trip_registrations')->where('trip_id', $trip->id)->where('user_id', $member->id)->delete();
+            }
+        }
+        DB::table('trip_departure_reports')->where(fn ($q) => $q->where('reporter_user_id', $member->id)->orWhere('target_user_id', $member->id))
+            ->where(fn ($q) => $q->whereNull('reporter_user_id')->orWhereNotIn('reporter_user_id', $banned))
+            ->where(fn ($q) => $q->whereNull('target_user_id')->orWhereNotIn('target_user_id', $banned))->delete();
         DB::table('conversation_reports')->where(fn ($q) => $q->where('reporter_user_id', $member->id)->orWhere('target_user_id', $member->id))->where(fn ($q) => $q->whereNull('reporter_user_id')->orWhereNotIn('reporter_user_id', $banned))->where(fn ($q) => $q->whereNull('target_user_id')->orWhereNotIn('target_user_id', $banned))->delete();
         DB::table('moderation_audits')->where('target_user_id', $member->id)->delete();
     }

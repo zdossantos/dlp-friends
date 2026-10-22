@@ -17,6 +17,10 @@ use App\Models\PartnerAnnouncementDelivery;
 use App\Models\PartnerProfile;
 use App\Models\PartnerProfileRevision;
 use App\Models\RoleAudit;
+use App\Models\Trip;
+use App\Models\TripDeparture;
+use App\Models\TripDepartureReport;
+use App\Models\TripRegistration;
 use App\Models\User;
 use App\Models\Visit;
 use App\Models\WebPushSubscription;
@@ -71,6 +75,7 @@ final class BuildUserDataExport
             'format_version' => 1,
             'moderation' => [
                 'reports_submitted' => ConversationReport::query()->where('reporter_user_id', $user->id)->orderBy('id')->get()->map(fn ($report): array => ['reason' => $report->reason->value, 'details' => $report->details, 'created_at' => $report->created_at?->toISOString(), 'closed_at' => $report->closed_at?->toISOString(), 'decision' => $report->decision])->all(),
+                'trip_reports_submitted' => TripDepartureReport::query()->where('reporter_user_id', $user->id)->orderBy('id')->get()->map(fn ($report): array => ['scheduled_departure_at' => $report->scheduled_departure_at->toISOString(), 'left_at' => $report->left_at->toISOString(), 'details' => $report->details, 'created_at' => $report->created_at?->toISOString(), 'closed_at' => $report->closed_at?->toISOString(), 'decision' => $report->decision])->all(),
                 'decisions' => ModerationAudit::query()->where('target_user_id', $user->id)->whereIn('operation', ['ban', 'unban'])->orderBy('id')->get(['operation', 'reason', 'created_at'])->toArray(),
             ],
             'generated_at' => now()->toIso8601String(),
@@ -131,6 +136,22 @@ final class BuildUserDataExport
                     'created_at' => $message->created_at?->toIso8601String(),
                     'updated_at' => $message->updated_at?->toIso8601String(),
                 ])->all(),
+            'organized_trips' => Trip::query()->where('organizer_user_id', $user->id)->orderBy('id')->get()->map(fn (Trip $trip): array => [
+                'id' => $trip->id, 'transport' => $trip->transport->value, 'direction' => $trip->direction->value,
+                'general_departure' => $trip->general_departure, 'destination' => $trip->destination,
+                'departs_at' => $trip->departs_at->toIso8601String(), 'meeting_point' => $trip->meeting_point,
+                'audience' => $trip->audience->value, 'car_seats' => $trip->car_seats,
+                'cancelled_at' => $trip->cancelled_at?->toIso8601String(), 'cancellation_reason' => $trip->cancellation_reason,
+            ])->all(),
+            'trip_registrations' => TripRegistration::query()->where('user_id', $user->id)->orderBy('id')->get()->map(fn (TripRegistration $registration): array => [
+                'trip_id' => $registration->trip_id, 'status' => $registration->status->value, 'reason' => $registration->reason,
+                'decided_at' => $registration->decided_at?->toIso8601String(),
+                'created_at' => $registration->created_at?->toIso8601String(), 'updated_at' => $registration->updated_at?->toIso8601String(),
+            ])->all(),
+            'trip_departures' => TripDeparture::query()->where('user_id', $user->id)->orderBy('id')->get()->map(fn (TripDeparture $departure): array => [
+                'trip_id' => $departure->trip_id, 'scheduled_departure_at' => $departure->scheduled_departure_at->toIso8601String(),
+                'left_at' => $departure->left_at->toIso8601String(), 'reason' => $departure->reason,
+            ])->all(),
             'organized_events' => Event::query()
                 ->where('organizer_user_id', $user->id)
                 ->orderBy('id')

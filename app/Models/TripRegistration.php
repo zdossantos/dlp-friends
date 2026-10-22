@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\TripRegistrationStatus;
+use Carbon\CarbonImmutable;
 use Database\Factories\TripRegistrationFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -14,6 +15,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property int $trip_id
  * @property int|null $user_id
  * @property TripRegistrationStatus $status
+ * @property CarbonImmutable|null $decided_at
  * @property string|null $reason
  * @property-read Trip $trip
  * @property-read User|null $user
