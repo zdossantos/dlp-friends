@@ -249,7 +249,7 @@ export function useMemberRealtimeNotifications(
                 notification.target_type === 'event_chat' &&
                 !(
                     page.component === 'Conversations/Group' &&
-                    (page.props.event as { id: number }).id ===
+                    (page.props.event as { id: number } | undefined)?.id ===
                         notification.target_id
                 ) &&
                 !shouldAcknowledgePersistentNotification(notification, page.url)

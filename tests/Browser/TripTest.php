@@ -99,3 +99,19 @@ it('falls back to trips when closing a directly opened organizer profile', funct
     $this->actingAs(User::factory()->withProfile()->create());
     visit("/trips/{$trip->id}/members/{$trip->organizer_user_id}")->resize(320, 800)->assertPresent('@event-participant-profile')->click('@profile-close')->assertPathIs('/trips')->assertPresent('@trip-transport-filter')->assertNoJavaScriptErrors();
 });
+
+it('shows cancelled pending requests and lets accepted passengers leave cancelled groups', function (string $status) {
+    $member = User::factory()->withProfile()->create();
+    $trip = Trip::factory()->create(['audience' => 'members', 'cancelled_at' => now(), 'cancellation_reason' => 'Train supprimé']);
+    $trip->chat()->create();
+    $registration = TripRegistration::factory()->for($trip)->for($member, 'user')->create(['status' => $status]);
+    $this->actingAs($member);
+    $page = visit("/trips/{$trip->id}")->on()->mobile()->assertSee('Trajet annulé')->assertSee('Train supprimé');
+    if ($status === 'accepted') {
+        $page->click('Quitter le trajet')->fill('#trip-reason', 'Je rentre autrement')->click('@trip-action-submit')->click('@trip-danger-submit')->assertSee('Je rentre autrement')->assertNoJavaScriptErrors();
+        expect($registration->fresh()->status->value)->toBe('withdrawn');
+        $this->get("/trips/{$trip->id}/chat")->assertForbidden();
+    } else {
+        $page->assertDontSee($trip->meeting_point)->assertNoJavaScriptErrors();
+    }
+})->with(['pending', 'accepted']);

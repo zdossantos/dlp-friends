@@ -25,6 +25,7 @@ const props = defineProps<{
     participantName?: string;
     timezone: string;
     conversationId?: number;
+    reactionsDisabled?: boolean;
     reactMessage?: (message: TimelineMessage) => Promise<MessageReactionUpdate>;
     onReactionUpdated: (update: MessageReactionUpdate) => void;
 }>();
@@ -208,7 +209,11 @@ function scrollToBottom(): void {
 }
 
 async function toggleReaction(message: TimelineMessage): Promise<void> {
-    if (isSystemMessage(message) || pendingReactionIds.value.has(message.id)) {
+    if (
+        props.reactionsDisabled ||
+        isSystemMessage(message) ||
+        pendingReactionIds.value.has(message.id)
+    ) {
         return;
     }
 
@@ -465,7 +470,10 @@ watch(
                                         ? t('conversations.reactions.unlike')
                                         : t('conversations.reactions.like')
                                 "
-                                :disabled="pendingReactionIds.has(message.id)"
+                                :disabled="
+                                    reactionsDisabled ||
+                                    pendingReactionIds.has(message.id)
+                                "
                                 @click="toggleReaction(message)"
                             >
                                 <Heart

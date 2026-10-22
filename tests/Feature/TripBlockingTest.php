@@ -101,6 +101,12 @@ test('inactivation cancels owned future trips and revokes joined trips without d
         'deletion' => app(RequestAccountDeletion::class)->handle($this->first),
         'admin_deletion' => app(DeleteMember::class)->handle($this->first),
     };
+    if ($operation === 'admin_deletion') {
+        expect($owned->fresh())->toBeNull()->and($this->firstRegistration->fresh())->toBeNull()
+            ->and(TripDeparture::query()->count())->toBe(0);
+
+        return;
+    }
     expect($owned->fresh()?->cancelled_at)->not->toBeNull()
         ->and($this->firstRegistration->fresh()?->status)->toBe(TripRegistrationStatus::Blocked)
         ->and(TripDeparture::query()->count())->toBe(0)

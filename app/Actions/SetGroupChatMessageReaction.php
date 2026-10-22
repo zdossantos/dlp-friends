@@ -19,7 +19,7 @@ final class SetGroupChatMessageReaction
     {
         return DB::transaction(function () use ($reactor, $chat, $message, $reacted): array {
             $lockedChat = GroupChat::query()->with('event')->lockForUpdate()->findOrFail($chat->id);
-            Gate::forUser($reactor)->authorize('view', $lockedChat);
+            Gate::forUser($reactor)->authorize('react', $lockedChat);
 
             $lockedMessage = GroupChatMessage::query()
                 ->where('group_chat_id', $lockedChat->id)

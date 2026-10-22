@@ -1,5 +1,8 @@
 <?php
 
+use App\Actions\CancelTrip;
+use App\Actions\DecideTripRegistration;
+use App\Actions\RequestTripParticipation;
 use App\Models\Trip;
 use App\Models\TripRegistration;
 use App\Models\User;
@@ -23,4 +26,27 @@ test('private trip lists and profiles are separately authorized', function () {
     $this->get("/trips/{$trip->id}/requests")->assertForbidden();
     $this->get("/trips/{$trip->id}/members/{$pending->user_id}")->assertNotFound();
     $this->actingAs($organizer)->get("/trips/{$trip->id}/requests")->assertOk()->assertInertia(fn ($page) => $page->has('registrations', 2));
+});
+
+test('former participants can request again without disclosing private history', function (string $status) {
+    $member = User::factory()->withProfile()->create();
+    $trip = Trip::factory()->create(['audience' => 'members']);
+    $trip->chat()->create();
+    $registration = TripRegistration::factory()->for($trip)->for($member, 'user')->create(['status' => $status, 'reason' => 'Ancienne décision']);
+    $this->actingAs($member)->get("/trips/{$trip->id}")->assertInertia(fn ($page) => $page
+        ->where('trip.can_request', true)->missing('trip.meeting_point')->missing('trip.organizer'));
+    $renewed = app(RequestTripParticipation::class)->handle($member, $trip);
+    expect($renewed->id)->toBe($registration->id)->and($renewed->status->value)->toBe('pending')->and($renewed->reason)->toBeNull();
+    app(DecideTripRegistration::class)->handle($trip->organizer, $renewed, true, null);
+    $this->get("/trips/{$trip->id}")->assertInertia(fn ($page) => $page->where('trip.registration.status', 'accepted')->where('trip.meeting_point', $trip->meeting_point));
+})->with(['withdrawn', 'refused', 'removed']);
+
+test('pending requesters see cancellation explanation without private trip details', function () {
+    $member = User::factory()->withProfile()->create();
+    $trip = Trip::factory()->create(['audience' => 'members']);
+    TripRegistration::factory()->for($trip)->for($member, 'user')->create(['status' => 'pending']);
+    app(CancelTrip::class)->handle($trip->organizer, $trip, 'Train supprimé');
+    $this->actingAs($member)->get("/trips/{$trip->id}")->assertOk()->assertInertia(fn ($page) => $page
+        ->where('trip.cancellation_reason', 'Train supprimé')->where('trip.cancelled_at', $trip->fresh()->cancelled_at->toIso8601String())
+        ->where('trip.can_request', false)->missing('trip.meeting_point')->missing('trip.organizer')->missing('participants'));
 });

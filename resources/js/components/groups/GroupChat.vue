@@ -226,6 +226,7 @@ onMounted(() => {
             timezone="Europe/Paris"
             :messages-prop="messagesProp ?? 'panel.messages'"
             reverse
+            :reactions-disabled="context.type === 'trip' && chat.isReadOnly"
             :react-message="reactMessage"
             :on-reaction-updated="updateReaction"
         />

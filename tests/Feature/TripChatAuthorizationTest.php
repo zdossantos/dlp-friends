@@ -76,3 +76,27 @@ test('accepted trip members can exchange messages and group notifications use th
     expect($notification->toArray($this->organizer)['target_id'])->toBe($this->trip->id);
     expect($notification->webPushTarget($this->organizer)->url)->toBe('/trips/'.$this->trip->id.'/chat');
 });
+
+test('read only trip chats reject additions and removals of reactions without notifications', function (string $closure) {
+    Notification::fake();
+    TripRegistration::factory()->for($this->trip)->for($this->member)->create(['status' => 'accepted']);
+    $message = $this->chat->messages()->create(['author_user_id' => $this->organizer->id, 'content' => 'À bientôt']);
+    $action = app(SetGroupChatMessageReaction::class);
+    if ($closure === 'elapsed') {
+        $this->trip->update(['departs_at' => now()->subHours(24)->addSecond()]);
+    }
+    $action->handle($this->member, $this->chat, $message, true);
+    expect($message->reactions()->count())->toBe(1);
+    Notification::fake();
+    if ($closure === 'elapsed') {
+        $this->travel(1)->second();
+    } else {
+        $this->trip->update(['cancelled_at' => now()]);
+    }
+    expect(fn () => $action->handle($this->member, $this->chat, $message, false))->toThrow(AuthorizationException::class);
+    expect($message->reactions()->count())->toBe(1);
+    $message->reactions()->delete();
+    expect(fn () => $action->handle($this->member, $this->chat, $message, true))->toThrow(AuthorizationException::class);
+    expect($message->reactions()->count())->toBe(0);
+    Notification::assertNothingSent();
+})->with(['cancelled', 'elapsed']);

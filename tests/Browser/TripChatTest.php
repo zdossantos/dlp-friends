@@ -40,7 +40,7 @@ test('cancelled trip chat stays readable without a composer', function () {
     app(SendGroupChatMessage::class)->handle($this->organizer, $this->trip->chat, 'Message conservé');
     $this->trip->update(['cancelled_at' => now()]);
     $this->actingAs($this->member);
-    visit('/trips/'.$this->trip->id.'/chat')->resize(320, 800)->assertSee('Message conservé')->assertNotPresent('#message-content')->assertNotPresent('@member-bottom-navigation')->assertNoJavaScriptErrors();
+    visit('/trips/'.$this->trip->id.'/chat')->resize(320, 800)->assertSee('Message conservé')->assertDisabled('@message-like')->assertNotPresent('#message-content')->assertNotPresent('@member-bottom-navigation')->assertNoJavaScriptErrors();
 });
 
 test('two separate browser sessions exchange messages and lose private access after exclusion', function () {

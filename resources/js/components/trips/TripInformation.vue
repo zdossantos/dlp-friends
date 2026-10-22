@@ -24,10 +24,7 @@ const { t, locale } = useTranslations();
                     }).format(new Date(trip.departs_at))
                 }}
             </p>
-            <p v-if="trip.cancelled_at" class="font-semibold text-destructive">
-                {{ t('trips.cancelled') }}
-            </p>
-            <p v-else class="font-medium">
+            <p v-if="!trip.cancelled_at" class="font-medium">
                 {{
                     trip.remaining_places === 0
                         ? t('trips.full')
@@ -53,10 +50,13 @@ const { t, locale } = useTranslations();
                 </h2>
                 <p class="mt-2">{{ trip.meeting_point }}</p>
             </div>
-            <p v-if="trip.cancellation_reason">
-                {{ trip.cancellation_reason }}
-            </p>
         </template>
+        <p v-if="trip.cancelled_at" class="font-semibold text-destructive">
+            {{ t('trips.cancelled') }}
+        </p>
+        <p v-if="trip.cancellation_reason" class="whitespace-pre-wrap">
+            {{ trip.cancellation_reason }}
+        </p>
         <div
             v-if="trip.registration"
             class="rounded-xl border border-border p-4"

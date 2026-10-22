@@ -51,7 +51,13 @@ final class TripWorkspaceData
         if (Gate::forUser($viewer)->denies('view', $trip) || ($own !== null && ! in_array($own->status->value, ['pending', 'accepted'], true) && $trip->organizer_user_id !== $viewer->id)) {
             abort_unless($own !== null && app(TripPolicy::class)->create($viewer), 403);
 
-            return ['id' => $trip->id, 'registration' => ['id' => $own->id, 'status' => $own->status->value, 'reason' => $own->reason], 'can_manage' => false, 'can_request' => false];
+            $data = ['id' => $trip->id, 'registration' => ['id' => $own->id, 'status' => $own->status->value, 'reason' => $own->reason], 'can_manage' => false, 'can_request' => Gate::forUser($viewer)->allows('request', $trip)];
+            if (in_array($own->status->value, ['pending', 'accepted'], true) && $trip->cancelled_at !== null) {
+                $data['cancelled_at'] = $trip->cancelled_at->toIso8601String();
+                $data['cancellation_reason'] = $trip->cancellation_reason;
+            }
+
+            return $data;
         }
         $data = [
             'id' => $trip->id, 'transport' => $trip->transport->value, 'direction' => $trip->direction->value,

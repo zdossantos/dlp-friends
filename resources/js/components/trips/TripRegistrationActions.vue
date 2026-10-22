@@ -126,10 +126,7 @@ function withdraw() {
                 >{{ t('trips.withdraw') }}</Button
             >
             <Button
-                v-if="
-                    trip.registration?.status === 'accepted' &&
-                    !trip.cancelled_at
-                "
+                v-if="trip.registration?.status === 'accepted'"
                 variant="destructive"
                 @click="open('leave')"
                 >{{ t('trips.leave') }}</Button
