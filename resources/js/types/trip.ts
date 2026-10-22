@@ -11,6 +11,7 @@ export type TripRegistration = {
     member?: TripMember | null;
 };
 export type TripDetail = {
+    chat_href?: string;
     id: number;
     transport?: string;
     direction?: string;

@@ -2,13 +2,39 @@
 
 namespace App\Data;
 
+use App\Models\GroupChatMessage;
 use App\Models\Trip;
 use App\Models\User;
 use App\Policies\TripPolicy;
 use Illuminate\Support\Facades\Gate;
+use Inertia\Inertia;
+use Inertia\Response;
 
 final class TripWorkspaceData
 {
+    public function conversation(User $viewer, Trip $trip): Response
+    {
+        Gate::forUser($viewer)->authorize('view', $trip->chat);
+
+        return Inertia::render('Conversations/Group', [
+            'trip' => fn (): array => $this->detail($viewer, $trip),
+            'chat' => fn (): array => GroupChatData::chat($trip->chat),
+            'messages' => Inertia::scroll(function () use ($trip, $viewer) {
+                $messages = $trip->chat->messages()
+                    ->with('author.profile')
+                    ->withCount('reactions')
+                    ->orderByDesc('id')
+                    ->simplePaginate(10, ['*'], 'messages')
+                    ->through(fn (GroupChatMessage $message): array => GroupChatData::message($message, $viewer));
+                $messages->setCollection($messages->getCollection()->reverse()->values());
+
+                return $messages;
+            }),
+            'panel' => null,
+            'closeHref' => route('trips.chat.show', $trip, absolute: false),
+        ]);
+    }
+
     /** @return array<string, mixed> */
     public function summary(User $viewer, Trip $trip): array
     {
@@ -41,6 +67,9 @@ final class TripWorkspaceData
         ];
         if (Gate::forUser($viewer)->allows('viewPrivate', $trip)) {
             $data['meeting_point'] = $trip->meeting_point;
+            if ($trip->chat !== null && Gate::forUser($viewer)->allows('view', $trip->chat)) {
+                $data['chat_href'] = route('trips.chat.show', $trip, absolute: false);
+            }
             $data['cancellation_reason'] = $trip->cancellation_reason;
         }
 

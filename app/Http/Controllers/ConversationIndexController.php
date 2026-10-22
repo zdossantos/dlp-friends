@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Data\GroupChatData;
 use App\Enums\EventRegistrationStatus;
+use App\Enums\TripRegistrationStatus;
 use App\Models\Avatar;
 use App\Models\Conversation;
 use App\Models\GroupChat;
@@ -68,12 +69,13 @@ final class ConversationIndexController extends Controller
             'conversations' => $conversations,
             'currentUserId' => $member->id,
             'groups' => GroupChat::query()
-                ->whereHas('event', fn ($query) => $query
+                ->where(fn ($contexts) => $contexts->whereHas('event', fn ($query) => $query
                     ->where('organizer_user_id', $member->id)
                     ->orWhereHas('registrations', fn ($registrations) => $registrations
                         ->where('user_id', $member->id)
                         ->where('status', EventRegistrationStatus::Accepted)))
-                ->with('event.organizer')
+                    ->orWhereHas('trip', fn ($query) => $query->where('organizer_user_id', $member->id)->orWhereHas('registrations', fn ($registrations) => $registrations->where('user_id', $member->id)->where('status', TripRegistrationStatus::Accepted))))
+                ->with(['event.organizer', 'trip.organizer'])
                 ->withMax('messages', 'created_at')
                 ->orderByRaw('COALESCE(messages_max_created_at, group_chats.created_at) DESC')
                 ->orderByDesc('id')
@@ -82,7 +84,9 @@ final class ConversationIndexController extends Controller
                 ->map(fn (GroupChat $chat): array => [
                     ...GroupChatData::chat($chat),
                     'event_id' => $chat->event_id,
-                    'title' => $chat->event->title,
+                    'context' => $chat->trip_id !== null ? 'trip' : 'event',
+                    'href' => $chat->trip_id !== null ? route('trips.chat.show', $chat->trip_id, absolute: false) : route('events.chat.show', $chat->event_id, absolute: false),
+                    'title' => $chat->trip !== null ? $chat->trip->general_departure.' → '.$chat->trip->destination : $chat->event->title,
                     'unread_count' => GroupChatData::unreadCount($chat, $member),
                 ])->values()->all(),
         ]);

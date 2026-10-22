@@ -117,14 +117,23 @@ export function useMemberRealtimeNotifications(
                     router.reload({ only: ['groups'] });
                 }
 
-                if (
-                    page.component === 'Conversations/Group' &&
-                    notification.context === 'event'
-                ) {
-                    const event = page.props.event as { id: number };
+                if (page.component === 'Conversations/Group') {
+                    const event = page.props[notification.context] as
+                        { id: number } | undefined;
 
-                    if (event.id === notification.context_id) {
+                    if (event?.id === notification.context_id) {
                         if (notification.access === 'revoked') {
+                            const key = `group-chat-draft:${notification.group_chat_id}`;
+                            router.remember({ content: '' }, key);
+
+                            try {
+                                sessionStorage.removeItem(
+                                    `${currentUserId}:${key}`,
+                                );
+                            } catch {
+                                /* Storage may be unavailable. */
+                            }
+
                             router.visit(
                                 conversationsIndex({
                                     query: { category: 'groups' },

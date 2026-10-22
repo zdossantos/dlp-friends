@@ -82,6 +82,10 @@ use App\Http\Controllers\PublicReleaseNotesController;
 use App\Http\Controllers\SwipeController;
 use App\Http\Controllers\TermsAcceptanceController;
 use App\Http\Controllers\TripCancellationController;
+use App\Http\Controllers\TripChatController;
+use App\Http\Controllers\TripChatMessageController;
+use App\Http\Controllers\TripChatMessageReactionController;
+use App\Http\Controllers\TripChatReadController;
 use App\Http\Controllers\TripController;
 use App\Http\Controllers\TripDepartureReportController;
 use App\Http\Controllers\TripParticipantController;
@@ -265,6 +269,17 @@ Route::middleware(['auth', 'verified', 'social', 'terms.current'])->group(functi
                 Route::patch('trip-registrations/{registration}', TripRegistrationDecisionController::class)->name('trips.registrations.decision');
                 Route::delete('trip-registrations/{registration}', TripRegistrationRemovalController::class)->name('trips.registrations.remove');
                 Route::post('trip-departures/{departure}/reports', TripDepartureReportController::class)->name('trip-departures.reports.store');
+                Route::post('trips/{trip}/chat/messages', TripChatMessageController::class)
+                    ->name('trips.chat.messages.store');
+                Route::post('trips/{trip}/chat/messages/{message}/like', [TripChatMessageReactionController::class, 'store'])
+                    ->name('trips.chat.messages.like');
+                Route::delete('trips/{trip}/chat/messages/{message}/like', [TripChatMessageReactionController::class, 'destroy'])
+                    ->name('trips.chat.messages.unlike');
+                Route::get('trips/{trip}/chat', TripChatController::class)
+                    ->name('trips.chat.show');
+                Route::post('trips/{trip}/chat/read', TripChatReadController::class)
+                    ->name('trips.chat.read.store');
+
                 Route::get('trips/{trip}/participants', [TripParticipantController::class, 'index'])->name('trips.participants');
                 Route::get('trips/{trip}/members/{member}', [TripParticipantController::class, 'show'])->name('trips.members.show');
                 Route::get('trips/{trip}/requests', TripRegistrationIndexController::class)->name('trips.requests');

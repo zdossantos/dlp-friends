@@ -1,4 +1,8 @@
 import type { AvatarOption } from './auth';
+import type {
+    GroupChatInfo as EventChatInfo,
+    PaginatedGroupChatMessages,
+} from './groupChat';
 import type { PublicMember } from './member';
 
 export type EventRegistrationStatus =
@@ -20,30 +24,11 @@ export type EventSummary = {
     chatUnreadCount?: number;
 };
 
-export type EventChatInfo = {
-    id: number;
-    isReadOnly: boolean;
-    readOnlyReason: 'cancelled' | 'archived' | null;
-};
-
-export type GroupChatMessage = {
-    id: number;
-    group_chat_id: number;
-    system_type: 'joined' | 'left' | 'removed' | null;
-    author_user_id: number;
-    content: string;
-    reaction_count: number;
-    reacted_by_current_user: boolean;
-    author: { id: number; display_name: string };
-    created_at: string;
-    updated_at?: string;
-};
-
-export type PaginatedGroupChatMessages = {
-    data: GroupChatMessage[];
-    next_page_url: string | null;
-    prev_page_url: string | null;
-};
+export type {
+    GroupChatInfo as EventChatInfo,
+    GroupChatMessage,
+    PaginatedGroupChatMessages,
+} from './groupChat';
 
 export type EventParticipant = {
     id: number;

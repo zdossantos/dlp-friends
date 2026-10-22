@@ -72,6 +72,11 @@ function close(open: boolean) {
                 ></Button
             >
         </div>
+        <Button v-if="trip.chat_href" as-child
+            ><Link :href="trip.chat_href" data-test="trip-chat">{{
+                t('trips.chat.open')
+            }}</Link></Button
+        >
         <TripRegistrationActions :trip="trip" />
         <ResponsivePanel
             v-model:open="editing"

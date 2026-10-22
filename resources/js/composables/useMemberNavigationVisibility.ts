@@ -7,12 +7,14 @@ const memberNavigationPaths = new Set([
     '/discover/passed',
     '/events',
     '/visits',
+    '/trips',
     '/conversations',
     '/notifications',
     '/profile',
 ]);
 const memberNavigationPrefixes = [
     '/visits/',
+    '/trips/',
     '/events/',
     '/partner/',
     '/settings/',

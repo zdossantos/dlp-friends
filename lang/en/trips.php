@@ -1,6 +1,7 @@
 <?php
 
 return [
+    'chat' => ['open' => 'Open conversation', 'read_only' => ['cancelled' => 'This trip is cancelled. The conversation is read-only.', 'archived' => 'This conversation is archived.']],
     'title' => 'Trips',
     'description' => 'Offer a departure or join members travelling to the park.',
     'mine' => 'My trips',
