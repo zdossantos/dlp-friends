@@ -1,5 +1,25 @@
 # Changelog
 
+## [1.17.0](https://github.com/zdossantos/dlp-friends/compare/v1.16.0...v1.17.0) (2026-10-23)
+
+
+### Features
+
+* **admin:** clarifier les signalements et leur historique par profil ([#301](https://github.com/zdossantos/dlp-friends/issues/301)) ([637aace](https://github.com/zdossantos/dlp-friends/commit/637aacebc8f83475732374859c9661cfb598a625))
+* **brand:** intégrer Horizon et toutes ses déclinaisons d’icônes ([#300](https://github.com/zdossantos/dlp-friends/issues/300)) ([dc44d04](https://github.com/zdossantos/dlp-friends/commit/dc44d047365045dd8f2026a4e94c9dc74e38bc42))
+* **chat:** annoncer les arrivées et départs des groupes ([#309](https://github.com/zdossantos/dlp-friends/issues/309)) ([f8bf57d](https://github.com/zdossantos/dlp-friends/commit/f8bf57dcba3c67d6c2d8c6a96c9b5ae8295c3988))
+* **experience:** faciliter l’ouverture externe depuis Instagram ([#308](https://github.com/zdossantos/dlp-friends/issues/308)) ([a94931c](https://github.com/zdossantos/dlp-friends/commit/a94931c8992fa193d31ee2522f3bfc0bf986fcdb))
+* **messaging:** ajouter les notifications de messages de groupe ([#298](https://github.com/zdossantos/dlp-friends/issues/298)) ([9004f72](https://github.com/zdossantos/dlp-friends/commit/9004f726da08520b4a854c98ea33984730ce5ddb))
+* **settings:** configure discovery filters and align settings pages ([#302](https://github.com/zdossantos/dlp-friends/issues/302)) ([a6f8da4](https://github.com/zdossantos/dlp-friends/commit/a6f8da423876e7d3fb5a461f11af31d3e14df563))
+* **sorties:** add private visit agenda and calendar ([#310](https://github.com/zdossantos/dlp-friends/issues/310)) ([baaf948](https://github.com/zdossantos/dlp-friends/commit/baaf9489744ed18f98822854a220d73336950ad7)), closes [#305](https://github.com/zdossantos/dlp-friends/issues/305)
+* **sorties:** organiser des trajets entre membres ([#312](https://github.com/zdossantos/dlp-friends/issues/312)) ([af9a5dc](https://github.com/zdossantos/dlp-friends/commit/af9a5dc4e2e1365619202e9947acd73fdcb18077))
+
+
+### Fixes
+
+* **messaging:** fiabiliser la reprise des échanges et la saisie mobile ([#303](https://github.com/zdossantos/dlp-friends/issues/303)) ([c8e622a](https://github.com/zdossantos/dlp-friends/commit/c8e622a1971ee8b85e9bc3924a727ff4f4717784))
+* **security:** patch PHP runtime to 8.4.27 ([#315](https://github.com/zdossantos/dlp-friends/issues/315)) ([00742f9](https://github.com/zdossantos/dlp-friends/commit/00742f9a40c2d6983bb61233a3e7c558650d3244))
+
 ## [1.16.0](https://github.com/zdossantos/dlp-friends/compare/v1.15.0...v1.16.0) (2026-10-19)
 
 
