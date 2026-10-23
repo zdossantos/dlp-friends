@@ -7,6 +7,7 @@ return [
         'private' => 'Private',
         'title' => 'Groups',
         'empty' => 'Chats for events you organize or have joined will appear here.',
+        'trip_chat' => 'Trip chat',
         'event_chat' => 'Event discussion',
         'read_only' => 'Read only',
         'info' => 'View group',

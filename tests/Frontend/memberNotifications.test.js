@@ -105,3 +105,10 @@ test('recognizes a group notice only while its own chat is open', () => {
         false,
     );
 });
+
+test('acknowledges trip chat notifications only in their own open chat', () => {
+    const notice = { id: 'trip-1', target_type: 'trip_chat', target_id: 17 };
+    expect(shouldAcknowledgePersistentNotification(notice, '/trips/17/chat')).toBe(true);
+    expect(shouldAcknowledgePersistentNotification(notice, '/events/17/chat')).toBe(false);
+    expect(shouldAcknowledgePersistentNotification(notice, '/trips/18/chat')).toBe(false);
+});

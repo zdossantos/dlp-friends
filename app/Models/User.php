@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use App\Enums\EventRegistrationStatus;
 use App\Enums\RoleName;
 use App\Enums\UserStatus;
 use App\Enums\VisitsVisibility;
@@ -72,8 +71,8 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
  * @property-read Collection<int, TermsAcceptance> $termsAcceptances
  * @property-read Collection<int, Event> $organizedEvents
  * @property-read Collection<int, EventRegistration> $eventRegistrations
- * @property-read Collection<int, EventChatMessage> $authoredEventChatMessages
- * @property-read Collection<int, EventChatRead> $eventChatReads
+ * @property-read Collection<int, GroupChatMessage> $authoredGroupChatMessages
+ * @property-read Collection<int, GroupChatRead> $groupChatReads
  * @property-read PartnerProfile|null $partnerProfile
  * @property-read PartnerNotificationPreference|null $partnerNotificationPreference
  * @property-read Collection<int, PartnerAnnouncementDelivery> $partnerAnnouncementDeliveries
@@ -92,6 +91,18 @@ class User extends Authenticatable implements HasLocalePreference, MustVerifyEma
 
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable, PasskeyAuthenticatable, TwoFactorAuthenticatable;
+
+    /** @return HasMany<Trip, $this> */
+    public function organizedTrips(): HasMany
+    {
+        return $this->hasMany(Trip::class, 'organizer_user_id');
+    }
+
+    /** @return HasMany<TripRegistration, $this> */
+    public function tripRegistrations(): HasMany
+    {
+        return $this->hasMany(TripRegistration::class);
+    }
 
     /** @return HasMany<Visit, $this> */
     public function visits(): HasMany
@@ -184,13 +195,19 @@ class User extends Authenticatable implements HasLocalePreference, MustVerifyEma
     }
 
     /** @param Builder<User> $query */
-    public function scopeInEventChat(Builder $query, EventChat $chat): void
+    public function scopeInGroupChat(Builder $query, GroupChat $chat): void
     {
+        $context = $chat->trip ?? $chat->event;
+        if ($context === null) {
+            $query->whereRaw('1 = 0');
+
+            return;
+        }
         $query->where('status', UserStatus::Active)
             ->where(fn (Builder $members) => $members
-                ->whereKey($chat->event->organizer_user_id)
-                ->orWhereIn('id', $chat->event->registrations()
-                    ->where('status', EventRegistrationStatus::Accepted)->select('user_id')));
+                ->whereKey($context->organizer_user_id)
+                ->orWhereIn('id', $context->registrations()
+                    ->where('status', 'accepted')->select('user_id')));
     }
 
     /** @param Builder<User> $query */
@@ -211,16 +228,16 @@ class User extends Authenticatable implements HasLocalePreference, MustVerifyEma
         return $this->hasMany(EventRegistration::class);
     }
 
-    /** @return HasMany<EventChatMessage, $this> */
-    public function authoredEventChatMessages(): HasMany
+    /** @return HasMany<GroupChatMessage, $this> */
+    public function authoredGroupChatMessages(): HasMany
     {
-        return $this->hasMany(EventChatMessage::class, 'author_user_id');
+        return $this->hasMany(GroupChatMessage::class, 'author_user_id');
     }
 
-    /** @return HasMany<EventChatRead, $this> */
-    public function eventChatReads(): HasMany
+    /** @return HasMany<GroupChatRead, $this> */
+    public function groupChatReads(): HasMany
     {
-        return $this->hasMany(EventChatRead::class);
+        return $this->hasMany(GroupChatRead::class);
     }
 
     /** @return HasOne<PartnerProfile, $this> */

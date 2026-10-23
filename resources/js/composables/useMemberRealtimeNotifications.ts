@@ -29,7 +29,7 @@ import { index as conversationsIndex } from '@/routes/conversations';
 import { show as showConversation } from '@/routes/conversations';
 import { show as showGroupChat } from '@/routes/events/chat';
 import type { MemberIdentity, RealtimeConversationMessage } from '@/types';
-import type { EventChatMessage } from '@/types/event';
+import type { GroupChatMessage } from '@/types/event';
 
 export type MemberMatchNotification = {
     match_id: number;
@@ -40,7 +40,7 @@ export type MemberMatchNotification = {
 type MemberRealtimeContext = {
     activeMatch: Ref<MemberMatchNotification | null>;
     latestMessage: ShallowRef<RealtimeConversationMessage | null>;
-    latestGroupMessage: ShallowRef<EventChatMessage | null>;
+    latestGroupMessage: ShallowRef<GroupChatMessage | null>;
     latestPersistentNotification: ShallowRef<PersistentMemberNotification | null>;
     presenceChanged: ShallowRef<MemberPresenceChanged | null>;
     unreadNotificationsCount: Ref<number>;
@@ -75,7 +75,7 @@ export function useMemberRealtimeNotifications(
     const { t } = useTranslations();
     const activeMatch = ref<MemberMatchNotification | null>(null);
     const latestMessage = shallowRef<RealtimeConversationMessage | null>(null);
-    const latestGroupMessage = shallowRef<EventChatMessage | null>(null);
+    const latestGroupMessage = shallowRef<GroupChatMessage | null>(null);
     const latestPersistentNotification =
         shallowRef<PersistentMemberNotification | null>(null);
     const presenceChanged = shallowRef<MemberPresenceChanged | null>(null);
@@ -101,15 +101,15 @@ export function useMemberRealtimeNotifications(
         | RealtimeConversationMessage
         | MemberPresenceChanged
         | EventChatAccessChanged
-        | EventChatMessage
+        | GroupChatMessage
     >(
         `App.Models.User.${currentUserId}`,
         [
             '.match.created',
             '.message.sent',
             '.presence.changed',
-            '.event-chat.access.changed',
-            '.event-chat.message.sent',
+            '.group-chat.access.changed',
+            '.group-chat.message.sent',
         ],
         (notification) => {
             if ('access' in notification) {
@@ -118,10 +118,22 @@ export function useMemberRealtimeNotifications(
                 }
 
                 if (page.component === 'Conversations/Group') {
-                    const event = page.props.event as { id: number };
+                    const event = page.props[notification.context] as
+                        { id: number } | undefined;
 
-                    if (event.id === notification.event_id) {
+                    if (event?.id === notification.context_id) {
                         if (notification.access === 'revoked') {
+                            const key = `group-chat-draft:${notification.group_chat_id}`;
+                            router.remember({ content: '' }, key);
+
+                            try {
+                                sessionStorage.removeItem(
+                                    `${currentUserId}:${key}`,
+                                );
+                            } catch {
+                                /* Storage may be unavailable. */
+                            }
+
                             router.visit(
                                 conversationsIndex({
                                     query: { category: 'groups' },
@@ -140,7 +152,7 @@ export function useMemberRealtimeNotifications(
                 return;
             }
 
-            if ('event_chat_id' in notification) {
+            if ('group_chat_id' in notification) {
                 latestGroupMessage.value = notification;
 
                 return;
@@ -237,7 +249,7 @@ export function useMemberRealtimeNotifications(
                 notification.target_type === 'event_chat' &&
                 !(
                     page.component === 'Conversations/Group' &&
-                    (page.props.event as { id: number }).id ===
+                    (page.props.event as { id: number } | undefined)?.id ===
                         notification.target_id
                 ) &&
                 !shouldAcknowledgePersistentNotification(notification, page.url)

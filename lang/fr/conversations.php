@@ -7,6 +7,7 @@ return [
         'private' => 'Privées',
         'title' => 'Groupes',
         'empty' => 'Les discussions des événements que tu organises ou auxquels tu participes apparaîtront ici.',
+        'trip_chat' => 'Discussion du trajet',
         'event_chat' => 'Discussion d’événement',
         'read_only' => 'Lecture seule',
         'info' => 'Voir le groupe',

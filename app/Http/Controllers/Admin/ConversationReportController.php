@@ -3,12 +3,14 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Actions\CloseConversationReport;
+use App\Data\TripDepartureReportData;
 use App\Enums\UserStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\CloseConversationReportRequest;
 use App\Models\ConversationReport;
 use App\Models\Message;
 use App\Models\ModerationAudit;
+use App\Models\TripDepartureReport;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
@@ -30,6 +32,11 @@ final class ConversationReportController extends Controller
         $page = min(max(1, $request->integer('page', 1)), max(1, (int) ceil($total / 20)));
 
         return Inertia::render('Admin/ConversationReports/Index', [
+            'tripReports' => TripDepartureReport::query()->when($target, fn (Builder $query) => $query->where('target_user_id', $target->id))
+                ->when($status === 'closed', fn (Builder $query) => $query->whereNotNull('closed_at'))
+                ->when($status === 'open', fn (Builder $query) => $query->whereNull('closed_at'))
+                ->with(['reporter.profile', 'target.profile', 'target.roles'])->latest('id')->paginate(20, pageName: 'trips_page')->withQueryString()
+                ->through(fn (TripDepartureReport $report): array => TripDepartureReportData::detail($report)),
             'closed' => $status === 'closed',
             'status' => $status,
             'counts' => $counts,

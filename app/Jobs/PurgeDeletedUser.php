@@ -25,6 +25,11 @@ class PurgeDeletedUser implements ShouldQueue
         $purgeDeletedPartnerData = app(PurgeDeletedPartnerData::class);
 
         DB::transaction(function () use ($purgeDeletedPartnerData, $requestedAt): void {
+            $candidate = User::query()->find($this->userId);
+            if ($candidate === null) {
+                return;
+            }
+            app(PrepareMemberDataForDeletion::class)->lockAccounts($candidate);
             $user = User::query()->lockForUpdate()->find($this->userId);
 
             if ($user === null

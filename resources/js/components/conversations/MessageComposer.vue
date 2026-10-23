@@ -17,6 +17,7 @@ import type { ConversationMessage, ConversationStarter } from '@/types';
 const props = defineProps<{
     conversationId?: number;
     rememberKey?: string;
+    persistDraftKey?: string;
     archived: boolean;
     archivedMessage?: string;
     onSent: (message: T) => void;
@@ -38,7 +39,21 @@ const { t } = useTranslations();
 const disabled = computed(
     () => props.archived || pending.value || content.value.trim() === '',
 );
-watch(content, (value) => props.onTyping?.(value));
+watch(content, (value) => {
+    props.onTyping?.(value);
+
+    if (props.persistDraftKey) {
+        try {
+            if (value === '') {
+                sessionStorage.removeItem(props.persistDraftKey);
+            } else {
+                sessionStorage.setItem(props.persistDraftKey, value);
+            }
+        } catch {
+            /* Draft remains in Inertia history when storage is unavailable. */
+        }
+    }
+});
 
 async function submit(): Promise<void> {
     if (disabled.value) {

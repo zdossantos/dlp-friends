@@ -5,11 +5,11 @@ use App\Actions\DecideEventRegistration;
 use App\Actions\RegisterForEvent;
 use App\Actions\RemoveEventParticipant;
 use App\Actions\WithdrawFromEvent;
-use App\Data\EventChatData;
+use App\Data\GroupChatData;
 use App\Enums\EventRegistrationMode;
-use App\Events\EventChatMessageSent;
+use App\Events\GroupChatMessageSent;
 use App\Models\Event;
-use App\Models\EventChatMessage;
+use App\Models\GroupChatMessage;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
@@ -40,7 +40,7 @@ test('pending refused and withdrawn requests never announce membership', functio
     $withdrawn = app(RegisterForEvent::class)->handle(User::factory()->withProfile()->create(), $event);
     app(DecideEventRegistration::class)->handle($event->organizer, $refused, false);
     app(WithdrawFromEvent::class)->handle($withdrawn->user, $event);
-    expect(EventChatMessage::query()->count())->toBe(0);
+    expect(GroupChatMessage::query()->count())->toBe(0);
 });
 
 test('manual acceptance announces membership exactly once', function () {
@@ -52,8 +52,8 @@ test('manual acceptance announces membership exactly once', function () {
         app(DecideEventRegistration::class)->handle($event->organizer, $registration, true);
         $this->fail('Duplicate acceptance should fail.');
     } catch (ValidationException) {
-        expect(EventChatMessage::query()->count())->toBe(1);
-        expect(EventChatMessage::query()->firstOrFail()->system_type?->value)->toBe('joined');
+        expect(GroupChatMessage::query()->count())->toBe(1);
+        expect(GroupChatMessage::query()->firstOrFail()->system_type?->value)->toBe('joined');
     }
 });
 
@@ -66,28 +66,28 @@ test('leaving rejoining and organizer removal have distinct ordered announcement
     $registration = app(RegisterForEvent::class)->handle($member, $event);
     app(RemoveEventParticipant::class)->handle($event->organizer, $registration);
 
-    expect(EventChatMessage::query()->orderBy('id')->get()->map(fn ($message) => $message->system_type?->value)->all())
+    expect(GroupChatMessage::query()->orderBy('id')->get()->map(fn ($message) => $message->system_type?->value)->all())
         ->toBe(['joined', 'left', 'joined', 'removed']);
-    expect(EventChatMessage::query()->where('author_user_id', $member->id)->count())->toBe(4);
+    expect(GroupChatMessage::query()->where('author_user_id', $member->id)->count())->toBe(4);
     $this->actingAs($member)->get(route('events.chat.show', $event))->assertForbidden();
 });
 
 test('membership announcements use the realtime contract and unread cursor', function () {
-    EventFacade::fake([EventChatMessageSent::class]);
+    EventFacade::fake([GroupChatMessageSent::class]);
     $event = Event::factory()->create();
     $event->chat()->create();
     $member = User::factory()->withProfile()->create();
     app(RegisterForEvent::class)->handle($member, $event);
-    $message = EventChatMessage::query()->firstOrFail();
+    $message = GroupChatMessage::query()->firstOrFail();
 
-    EventFacade::assertDispatched(EventChatMessageSent::class, fn ($broadcast) => $broadcast->broadcastWith()['system_type'] === 'joined'
+    EventFacade::assertDispatched(GroupChatMessageSent::class, fn ($broadcast) => $broadcast->broadcastWith()['system_type'] === 'joined'
         && $broadcast->broadcastWith()['author_user_id'] === $member->id
-        && $broadcast->broadcastOn()[0]->name === "private-event-chat.{$message->event_chat_id}");
-    expect(EventChatData::unreadCount($message->eventChat, $event->organizer))->toBe(1);
+        && $broadcast->broadcastOn()[0]->name === "private-App.Models.User.{$event->organizer_user_id}");
+    expect(GroupChatData::unreadCount($message->groupChat, $event->organizer))->toBe(1);
     $this->actingAs($event->organizer)->postJson(route('events.chat.read.store', $event), [
         'last_read_message_id' => $message->id,
     ])->assertSuccessful();
-    expect(EventChatData::unreadCount($message->eventChat, $event->organizer))->toBe(0);
+    expect(GroupChatData::unreadCount($message->groupChat, $event->organizer))->toBe(0);
 });
 
 test('membership announcements cannot be liked or forged by a chat sender', function () {
@@ -95,7 +95,7 @@ test('membership announcements cannot be liked or forged by a chat sender', func
     $event->chat()->create();
     $member = User::factory()->withProfile()->create();
     app(RegisterForEvent::class)->handle($member, $event);
-    $message = EventChatMessage::query()->firstOrFail();
+    $message = GroupChatMessage::query()->firstOrFail();
     $this->actingAs($event->organizer)->postJson(route('events.chat.messages.like', [$event, $message]))->assertForbidden();
     $this->postJson(route('events.chat.messages.store', $event), [
         'content' => 'Bonjour', 'system_type' => 'joined',
@@ -108,9 +108,9 @@ test('rolling back a registration also removes its announcement', function () {
     $event->chat()->create();
     DB::beginTransaction();
     app(RegisterForEvent::class)->handle(User::factory()->withProfile()->create(), $event);
-    expect(EventChatMessage::query()->count())->toBe(1);
+    expect(GroupChatMessage::query()->count())->toBe(1);
     DB::rollBack();
-    expect(EventChatMessage::query()->count())->toBe(0);
+    expect(GroupChatMessage::query()->count())->toBe(0);
     expect($event->registrations()->count())->toBe(0);
 });
 
@@ -118,7 +118,7 @@ test('pending removals and failed registrations do not leave announcements', fun
     $event = Event::factory()->create(['registration_mode' => EventRegistrationMode::Manual]);
     $registration = app(RegisterForEvent::class)->handle(User::factory()->withProfile()->create(), $event);
     app(RemoveEventParticipant::class)->handle($event->organizer, $registration);
-    expect(EventChatMessage::query()->count())->toBe(0);
+    expect(GroupChatMessage::query()->count())->toBe(0);
 
     $full = Event::factory()->create(['capacity' => 2]);
     app(RegisterForEvent::class)->handle($registration->user, $full);
@@ -127,7 +127,7 @@ test('pending removals and failed registrations do not leave announcements', fun
             app(RegisterForEvent::class)->handle($member, $full);
             $this->fail('Duplicate or full registration should fail.');
         } catch (ValidationException) {
-            expect(EventChatMessage::query()->count())->toBe(1);
+            expect(GroupChatMessage::query()->count())->toBe(1);
         }
     }
 });
@@ -138,7 +138,7 @@ test('personal exports identify only the members own membership announcements', 
     app(RegisterForEvent::class)->handle($member, $event);
     app(RegisterForEvent::class)->handle(User::factory()->withProfile()->create(), $event);
     $export = app(BuildUserDataExport::class)->handle($member);
-    expect($export['event_chat_messages'])->toHaveCount(1);
-    expect($export['event_chat_messages'][0]['system_type'])->toBe('joined');
-    expect($export['event_chat_messages'][0])->not->toHaveKey('author');
+    expect($export['group_chat_messages'])->toHaveCount(1);
+    expect($export['group_chat_messages'][0]['system_type'])->toBe('joined');
+    expect($export['group_chat_messages'][0])->not->toHaveKey('author');
 });

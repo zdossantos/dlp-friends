@@ -34,6 +34,7 @@ final class RequestAccountDeletion
                 ->get()
                 ->each(fn ($event) => $this->cancelEvent->handle($lockedUser, $event));
 
+            app(DeactivateMemberTrips::class)->handle($lockedUser);
             $requestedAt = CarbonImmutable::now();
             $lockedUser->forceFill([
                 'status' => UserStatus::PendingDeletion,

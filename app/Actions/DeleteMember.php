@@ -22,11 +22,13 @@ final class DeleteMember
         $displayName = $member->profile->display_name ?? $email;
 
         DB::transaction(function () use ($member): void {
+            app(PrepareMemberDataForDeletion::class)->lockAccounts($member);
             $lockedMember = User::query()->lockForUpdate()->findOrFail($member->id);
             $lockedMember->organizedEvents()
                 ->whereNull('cancelled_at')
                 ->where('starts_at', '>', now())
                 ->update(['cancelled_at' => now()]);
+            app(DeactivateMemberTrips::class)->handle($lockedMember);
             $this->deactivateDeletedPartner->handle($lockedMember);
             $this->purgeDeletedPartnerData->handle($lockedMember);
             DB::table('sessions')->where('user_id', $lockedMember->id)->delete();

@@ -54,6 +54,7 @@ use App\Http\Controllers\MemberProfileController;
 use App\Http\Controllers\MessageController;
 use App\Http\Controllers\MessageReactionController;
 use App\Http\Controllers\MyEventController;
+use App\Http\Controllers\MyTripController;
 use App\Http\Controllers\NotFoundController;
 use App\Http\Controllers\NotificationDestroyController;
 use App\Http\Controllers\NotificationIndexController;
@@ -80,6 +81,19 @@ use App\Http\Controllers\PublicMemberProfileController;
 use App\Http\Controllers\PublicReleaseNotesController;
 use App\Http\Controllers\SwipeController;
 use App\Http\Controllers\TermsAcceptanceController;
+use App\Http\Controllers\TripCancellationController;
+use App\Http\Controllers\TripChatController;
+use App\Http\Controllers\TripChatMessageController;
+use App\Http\Controllers\TripChatMessageReactionController;
+use App\Http\Controllers\TripChatReadController;
+use App\Http\Controllers\TripController;
+use App\Http\Controllers\TripDepartureReportController;
+use App\Http\Controllers\TripParticipantController;
+use App\Http\Controllers\TripPlaceSearchController;
+use App\Http\Controllers\TripRegistrationController;
+use App\Http\Controllers\TripRegistrationDecisionController;
+use App\Http\Controllers\TripRegistrationIndexController;
+use App\Http\Controllers\TripRegistrationRemovalController;
 use App\Http\Controllers\UnblockMemberController;
 use App\Http\Controllers\VisitAttendeeController;
 use App\Http\Controllers\VisitController;
@@ -250,6 +264,30 @@ Route::middleware(['auth', 'verified', 'social', 'terms.current'])->group(functi
                 Route::patch('visits/visibility', VisitsVisibilityController::class)->name('visits.visibility.update');
                 Route::resource('visits', VisitController::class)->only(['index', 'store', 'update', 'destroy']);
 
+                Route::post('trips/{trip}/registrations', [TripRegistrationController::class, 'store'])->name('trips.registrations.store');
+                Route::delete('trips/{trip}/registrations', [TripRegistrationController::class, 'destroy'])->name('trips.registrations.destroy');
+                Route::patch('trips/{trip}/cancel', TripCancellationController::class)->name('trips.cancel');
+                Route::patch('trip-registrations/{registration}', TripRegistrationDecisionController::class)->name('trips.registrations.decision');
+                Route::delete('trip-registrations/{registration}', TripRegistrationRemovalController::class)->name('trips.registrations.remove');
+                Route::post('trip-departures/{departure}/reports', TripDepartureReportController::class)->name('trip-departures.reports.store');
+                Route::post('trips/{trip}/chat/messages', TripChatMessageController::class)
+                    ->name('trips.chat.messages.store');
+                Route::post('trips/{trip}/chat/messages/{message}/like', [TripChatMessageReactionController::class, 'store'])
+                    ->name('trips.chat.messages.like');
+                Route::delete('trips/{trip}/chat/messages/{message}/like', [TripChatMessageReactionController::class, 'destroy'])
+                    ->name('trips.chat.messages.unlike');
+                Route::get('trips/{trip}/chat', TripChatController::class)
+                    ->name('trips.chat.show');
+                Route::post('trips/{trip}/chat/read', TripChatReadController::class)
+                    ->name('trips.chat.read.store');
+
+                Route::get('trips/{trip}/participants', [TripParticipantController::class, 'index'])->name('trips.participants');
+                Route::get('trips/{trip}/members/{member}', [TripParticipantController::class, 'show'])->name('trips.members.show');
+                Route::get('trips/{trip}/requests', TripRegistrationIndexController::class)->name('trips.requests');
+                Route::post('trips/places', TripPlaceSearchController::class)->middleware('throttle:60,1')->name('trips.places');
+                Route::get('trips/mine', MyTripController::class)->name('trips.mine');
+                Route::resource('trips', TripController::class)->only(['index', 'store', 'show', 'update']);
+
                 Route::get('events/mine', MyEventController::class)->name('events.mine');
                 Route::resource('events', EventController::class)
                     ->only(['index', 'create', 'store', 'show', 'edit', 'update']);
@@ -338,6 +376,9 @@ Route::middleware(['auth', 'verified', 'social', 'terms.current'])->group(functi
             ->name('onboarding.index');
         Route::patch('onboarding', [AdminProductOnboardingController::class, 'update'])
             ->name('onboarding.update');
+        Route::get('trip-departure-reports', [App\Http\Controllers\Admin\TripDepartureReportController::class, 'index'])->name('trip-departure-reports.index');
+        Route::get('trip-departure-reports/{report}', [App\Http\Controllers\Admin\TripDepartureReportController::class, 'show'])->name('trip-departure-reports.show');
+        Route::patch('trip-departure-reports/{report}', [App\Http\Controllers\Admin\TripDepartureReportController::class, 'close'])->name('trip-departure-reports.close');
         Route::get('conversation-reports', [App\Http\Controllers\Admin\ConversationReportController::class, 'index'])->name('conversation-reports.index');
         Route::get('conversation-reports/{report}', [App\Http\Controllers\Admin\ConversationReportController::class, 'show'])->name('conversation-reports.show');
         Route::patch('conversation-reports/{report}', [App\Http\Controllers\Admin\ConversationReportController::class, 'close'])->name('conversation-reports.close');

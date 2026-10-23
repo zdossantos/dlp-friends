@@ -6,9 +6,11 @@ use App\Enums\RoleName;
 use App\Enums\UserStatus;
 use App\Models\Conversation;
 use App\Models\Event;
-use App\Models\EventChat;
+use App\Models\GroupChat;
 use App\Models\PartnerAnnouncementDelivery;
+use App\Models\Trip;
 use App\Models\User;
+use App\Policies\TripPolicy;
 use Illuminate\Notifications\DatabaseNotification;
 use Illuminate\Support\Facades\Route;
 use LogicException;
@@ -125,8 +127,21 @@ final class MemberNotificationPresenter
             }
         }
 
+        if (($data['target_type'] ?? null) === 'trip' && $targetId !== false) {
+            $trip = Trip::query()->with('organizer')->find($targetId);
+            if ($trip !== null && app(TripPolicy::class)->create($viewer) && ($viewer->can('view', $trip) || $trip->registrations()->where('user_id', $viewer->id)->exists())) {
+                return route('trips.show', $trip, absolute: false);
+            }
+        }
+        if (($data['target_type'] ?? null) === 'trip_chat' && $targetId !== false) {
+            $chat = GroupChat::query()->with('trip.organizer')->where('trip_id', $targetId)->first();
+            if ($chat !== null && $viewer->can('view', $chat)) {
+                return '/trips/'.$targetId.'/chat';
+            }
+        }
+
         if (($data['target_type'] ?? null) === 'event_chat' && $targetId !== false) {
-            $chat = EventChat::query()->with('event.organizer')->where('event_id', $targetId)->first();
+            $chat = GroupChat::query()->with('event.organizer')->where('event_id', $targetId)->first();
 
             if ($chat !== null && $viewer->can('view', $chat)) {
                 return route('events.chat.show', $targetId, absolute: false);

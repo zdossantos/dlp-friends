@@ -6,7 +6,7 @@ use App\Enums\EventRegistrationStatus;
 use App\Enums\UserStatus;
 use App\Models\Block;
 use App\Models\Event;
-use App\Models\EventChatMessage;
+use App\Models\GroupChatMessage;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\Relation;
@@ -58,14 +58,14 @@ final readonly class EventWorkspaceData
 
         return Inertia::render('Conversations/Group', [
             'event' => fn (): array => EventDetailData::from($event->load('organizer.profile'), $viewer),
-            'chat' => fn (): array => EventChatData::chat($event->chat),
+            'chat' => fn (): array => GroupChatData::chat($event->chat),
             'messages' => Inertia::scroll(function () use ($event, $viewer) {
                 $messages = $event->chat->messages()
                     ->with('author.profile')
                     ->withCount('reactions')
                     ->orderByDesc('id')
                     ->simplePaginate(10, ['*'], 'messages')
-                    ->through(fn (EventChatMessage $message): array => EventChatData::message($message, $viewer));
+                    ->through(fn (GroupChatMessage $message): array => GroupChatData::message($message, $viewer));
                 $messages->setCollection($messages->getCollection()->reverse()->values());
 
                 return $messages;

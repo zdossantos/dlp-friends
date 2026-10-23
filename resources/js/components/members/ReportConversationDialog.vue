@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useForm } from '@inertiajs/vue3';
 import { Flag } from '@lucide/vue';
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 import InputError from '@/components/InputError.vue';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -30,9 +30,22 @@ const form = useForm({
     details: '',
     block: props.canBlock,
     confirmed: true,
+    confirm_trip_departures: false,
+});
+const requiresTripConfirmation = ref(false);
+watch(open, () => {
+    requiresTripConfirmation.value = false;
+    form.confirm_trip_departures = false;
+    form.clearErrors();
 });
 function submit(): void {
     form.post(store(props.conversationId).url, {
+        onError: (errors) => {
+            if (errors.confirm_trip_departures) {
+                requiresTripConfirmation.value = true;
+                form.confirm_trip_departures = true;
+            }
+        },
         onSuccess: () => {
             open.value = false;
             form.reset();
@@ -114,6 +127,13 @@ function submit(): void {
                 </fieldset>
                 <p v-else class="text-sm text-muted-foreground">
                     {{ t('moderation.block_admin') }}
+                </p>
+                <p
+                    v-if="requiresTripConfirmation && form.block"
+                    role="alert"
+                    class="text-sm text-destructive"
+                >
+                    {{ t('blocking.trip_departures') }}
                 </p>
                 <InputError :message="form.errors.block" /><InputError
                     :message="form.errors.confirmed"

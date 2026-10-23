@@ -63,7 +63,7 @@ const memberItems = computed<BottomNavigationItem[]>(() => [
         label: t('outings.title'),
         href: events(),
         icon: CalendarDays,
-        activeParents: ['/events', '/visits'],
+        activeParents: ['/events', '/visits', '/trips'],
     },
     {
         label: t('notifications.navigation'),

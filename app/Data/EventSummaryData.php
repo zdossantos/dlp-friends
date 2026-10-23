@@ -55,7 +55,7 @@ final readonly class EventSummaryData
         $chat = $event->chat;
 
         return $chat === null ? [] : [
-            'chatUnreadCount' => EventChatData::unreadCount($chat, $viewer),
+            'chatUnreadCount' => GroupChatData::unreadCount($chat, $viewer),
         ];
     }
 }

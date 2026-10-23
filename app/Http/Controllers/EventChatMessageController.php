@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Actions\SendEventChatMessage;
-use App\Data\EventChatData;
+use App\Actions\SendGroupChatMessage;
+use App\Data\GroupChatData;
 use App\Http\Requests\StoreEventChatMessageRequest;
 use App\Models\Event;
 use App\Models\User;
@@ -15,7 +15,7 @@ final class EventChatMessageController extends Controller
     public function __invoke(
         StoreEventChatMessageRequest $request,
         Event $event,
-        SendEventChatMessage $action,
+        SendGroupChatMessage $action,
     ): JsonResponse {
         /** @var User $author */
         $author = $request->user();
@@ -26,7 +26,7 @@ final class EventChatMessageController extends Controller
         );
 
         return response()->json([
-            'data' => EventChatData::message($message, $author),
+            'data' => GroupChatData::message($message, $author),
         ], Response::HTTP_CREATED);
     }
 }

@@ -11,9 +11,9 @@ use App\Enums\RoleName;
 use App\Models\Block;
 use App\Models\Conversation;
 use App\Models\Event;
-use App\Models\EventChat;
-use App\Models\EventChatMessage;
 use App\Models\EventRegistration;
+use App\Models\GroupChat;
+use App\Models\GroupChatMessage;
 use App\Models\Interest;
 use App\Models\MemberMatch;
 use App\Models\Message;
@@ -80,9 +80,9 @@ class DirectUserDataExportTest extends TestCase
             'organizer_user_id' => $user->id,
             'detailed_location' => 'Mon lieu privé',
         ]);
-        $eventChat = EventChat::factory()->for($organizedEvent)->create();
-        EventChatMessage::factory()->for($eventChat)->for($user, 'author')->create(['content' => 'Mon message de groupe']);
-        EventChatMessage::factory()->for($eventChat)->for($other, 'author')->create(['content' => 'Message du groupe par un autre']);
+        $groupChat = GroupChat::factory()->for($organizedEvent)->create();
+        GroupChatMessage::factory()->for($groupChat)->for($user, 'author')->create(['content' => 'Mon message de groupe']);
+        GroupChatMessage::factory()->for($groupChat)->for($other, 'author')->create(['content' => 'Message du groupe par un autre']);
         EventRegistration::factory()->accepted()->create(['event_id' => $organizedEvent->id]);
         $ownRegistration = EventRegistration::factory()->accepted()->create(['user_id' => $user->id]);
         $user->notifications()->create([
@@ -109,7 +109,7 @@ class DirectUserDataExportTest extends TestCase
         );
 
         $this->assertSame(
-            ['format_version', 'moderation', 'generated_at', 'account', 'profile', 'interests', 'matches', 'messages', 'event_chat_messages', 'organized_events', 'event_registrations', 'notifications', 'weekly_email_recap_deliveries', 'visits_visibility', 'visits', 'discovery_preferences', 'email_preferences', 'notification_preferences', 'admin_new_member_alerts_enabled', 'push_devices', 'role_history', 'partner_profile', 'partner_profile_revisions', 'partner_announcements', 'received_partner_announcements'],
+            ['format_version', 'moderation', 'generated_at', 'account', 'profile', 'interests', 'matches', 'messages', 'group_chat_messages', 'organized_trips', 'trip_registrations', 'trip_departures', 'organized_events', 'event_registrations', 'notifications', 'weekly_email_recap_deliveries', 'visits_visibility', 'visits', 'discovery_preferences', 'email_preferences', 'notification_preferences', 'admin_new_member_alerts_enabled', 'push_devices', 'role_history', 'partner_profile', 'partner_profile_revisions', 'partner_announcements', 'received_partner_announcements'],
             array_keys($payload),
         );
         $this->assertSame('self@example.com', $payload['account']['email']);
@@ -117,7 +117,7 @@ class DirectUserDataExportTest extends TestCase
         $this->assertSame($other->profile->display_name, $payload['matches'][0]['other_member']['display_name']);
         $this->assertSame(['self'], array_column($payload['messages'], 'author'));
         $this->assertSame(['Mon message exporté'], array_column($payload['messages'], 'content'));
-        $this->assertSame(['Mon message de groupe'], array_column($payload['event_chat_messages'], 'content'));
+        $this->assertSame(['Mon message de groupe'], array_column($payload['group_chat_messages'], 'content'));
         $this->assertSame([$organizedEvent->id], array_column($payload['organized_events'], 'id'));
         $this->assertSame([$ownRegistration->event_id], array_column($payload['event_registrations'], 'event_id'));
         $this->assertSame('events', $payload['notifications'][0]['category']);
@@ -276,6 +276,7 @@ class DirectUserDataExportTest extends TestCase
             'group_messages' => true,
             'matches' => true,
             'events' => true,
+            'trips' => true,
             'partner_announcements' => true,
             'administration' => true,
         ], $payload['notification_preferences']);

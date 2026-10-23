@@ -21,16 +21,12 @@ import {
 import { normalizeSearchText } from '@/lib/textSearch';
 import { show as showConversation } from '@/routes/conversations';
 import type { ConversationSummary } from '@/types';
-import type { EventChatInfo } from '@/types/event';
+import type { GroupConversationSummary } from '@/types/groupChat';
 
 const props = defineProps<{
     conversations: ConversationSummary[];
     currentUserId: number;
-    groups: (EventChatInfo & {
-        event_id: number;
-        title: string;
-        unread_count: number;
-    })[];
+    groups: GroupConversationSummary[];
 }>();
 useMessagingRefresh(() =>
     router.reload({ only: ['conversations', 'groups', 'auth'] }),

@@ -44,7 +44,7 @@ final class DecideEventRegistration
             ]);
 
             if ($accept) {
-                app(AnnounceEventChatMembership::class)->handle($lockedRegistration, EventChatSystemType::Joined);
+                app(AnnounceGroupChatMembership::class)->handle($lockedRegistration, EventChatSystemType::Joined);
             }
 
             return $lockedRegistration->refresh();

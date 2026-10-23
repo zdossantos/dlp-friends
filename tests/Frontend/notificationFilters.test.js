@@ -18,6 +18,7 @@ test('notification categories expose partner announcements', () => {
     expect(notificationCategories).toEqual([
         'conversations',
         'events',
+        'trips',
         'partners',
         'administration',
     ]);

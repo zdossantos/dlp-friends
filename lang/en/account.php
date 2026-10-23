@@ -123,12 +123,14 @@ return [
             'device_last_used' => 'Last used: :date',
             'device_remove' => 'Remove this device',
             'categories' => [
+                'trips' => 'Trips',
                 'group_messages' => 'Group messages',
                 'messages' => 'New messages', 'matches' => 'New friendly connections',
                 'events' => 'Events', 'partner_announcements' => 'Partner announcements',
                 'administration' => 'Administration',
             ],
             'categories_help' => [
+                'trips' => 'Requests, decisions, changes and cancellations for your trips.',
                 'group_messages' => 'Receive in-app notifications and Push alerts for group messages.',
                 'messages' => 'A generic alert when a new message arrives.',
                 'matches' => 'An alert when a new friendly connection is created.',

@@ -255,3 +255,33 @@ base active après 30 jours calendaires à Paris. Les comptes bannis gardent le
 gel de toutes les purges automatiques ; une suppression explicite reste
 effective. La rotation et les délais existants des sauvegardes restent
 applicables : la purge de la base active ne réécrit pas les sauvegardes.
+
+
+## Confidentialité et conservation des trajets (issue 304)
+
+Les Policies et Actions vérifient comptes éligibles et blocages avant de
+transmettre les informations. L’audience publique ne donne accès ni au
+rendez-vous précis, ni aux participants, ni au chat. Un ancien participant
+conserve uniquement ses propres décisions et motifs. Le blocage d’un autre
+participant accepté provoque la sortie de celui qui bloque après confirmation ;
+un blocage avec l’organisateur retire le participant. Le déblocage ne réinscrit
+personne. Le masquage ne se confond pas avec le bannissement.
+
+Messages et réactions sont diffusés sur les canaux personnels, avec droits
+recalculés à la livraison, y compris pour Broadcast, notifications persistantes
+et Push différés. Aucun motif libre ou rendez-vous précis n’est transmis dans
+les alertes de gestion. Le dossier de désistement tardif ne donne jamais un
+droit de lecture du chat à l’administration. Consultation et clôture sont auditées.
+
+`trips:purge-expired`, à 04:00 Europe/Paris, supprime le trajet et sa discussion
+trente jours après le départ, ou après l’annulation si elle précède le départ.
+Le dossier de modération est détaché et garde son seul contenu minimal.
+Les comptes liés sont verrouillés avant suppression ; un bannissement concurrent
+est recontrôlé par une lecture actuelle verrouillée. La suppression d’un autre
+compte préserve les relations nécessaires aux données bannies en détachant les
+références du compte supprimé. Le gel prime sur la purge automatique.
+
+L’export en mémoire comprend les trajets organisés, inscriptions, sorties,
+messages propres et rapports soumis autorisés. Il exclut les messages et
+participations privés d’autrui, l’auteur d’un signalement reçu et les décideurs.
+Aucun nouveau fichier d’export persistant n’est ajouté.

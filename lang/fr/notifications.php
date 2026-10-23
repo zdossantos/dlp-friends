@@ -14,6 +14,7 @@ return [
         'label' => 'Filtrer les notifications',
         'all' => 'Toutes',
         'conversations' => 'Conversations',
+        'trips' => 'Trajets',
         'events' => 'Événements',
         'partners' => 'Partenaires',
         'administration' => 'Administration',
@@ -34,6 +35,14 @@ return [
         'confirm_dismiss_partner_announcement' => 'Supprimer cette annonce partenaire de tes notifications ?',
     ],
     'items' => [
+        'trip_requested' => 'Une personne demande à rejoindre ton trajet.',
+        'trip_accepted' => 'Ta demande de participation à un trajet est acceptée.',
+        'trip_refused' => 'Ta demande de participation à un trajet a été refusée.',
+        'trip_withdrawn' => 'Une personne a quitté ton trajet.',
+        'trip_removed' => 'Tu ne participes plus à ce trajet.',
+        'trip_changed' => 'Le rendez-vous de ton trajet a changé.',
+        'trip_cancelled' => 'Ton trajet a été annulé.',
+
         'new_member' => 'Un nouveau membre a rejoint DLP Friends.',
         'new_match' => 'Nouveau match avec :member.',
         'new_group_message' => ':sender a envoyé un message dans « :group ».',
@@ -53,6 +62,7 @@ return [
     ],
     'accessibility' => ['unread_count' => ':count notifications non lues'],
     'push' => [
+        'trips' => ['title' => 'Trajets', 'body' => 'Une information concernant un trajet t’attend.'],
         'new_member' => [
             'title' => 'Nouveau membre',
             'body' => 'Un nouveau membre a rejoint DLP Friends.',

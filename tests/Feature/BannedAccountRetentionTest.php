@@ -85,5 +85,5 @@ it('retains registrations and group messages after deleting an event organizer',
     app(DeleteMember::class)->handle($organizer);
     $this->assertDatabaseHas('events', ['id' => $event->id, 'organizer_user_id' => null]);
     $this->assertDatabaseHas('event_registrations', ['id' => $registration->id]);
-    $this->assertDatabaseHas('event_chat_messages', ['id' => $message->id]);
+    $this->assertDatabaseHas('group_chat_messages', ['id' => $message->id]);
 });

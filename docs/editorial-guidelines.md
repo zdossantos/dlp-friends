@@ -77,3 +77,17 @@ ancienne et future, devient consultable par les administrateurs. Employer
 Distinguer suppression en application et droits légaux ; rappeler le contact
 public après vérification d’identité. Aucun message d’authentification ne révèle
 une sanction avant validation du mot de passe et du second facteur éventuel.
+
+
+## Trajets et désistements
+
+Employer « demande », « participant », « organisateur », « quitter le trajet »
+et « exclure du trajet ». Une exclusion ne signifie pas bannissement du service.
+Le nombre de places voiture exclut le conducteur ; pour les transports publics,
+le plafond du groupe ne garantit aucune réservation de place.
+
+Demander un motif sans jugement sur la personne. « Signaler le désistement »
+ouvre un dossier expliqué ; aucune formulation ne promet de sanction ou de
+score automatique. Ne jamais afficher le motif libre ou le rendez-vous précis
+dans une alerte Push. Utiliser les catalogues FR/EN pour libellés, erreurs,
+confirmations et accessibilité.

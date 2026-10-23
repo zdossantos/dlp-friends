@@ -22,3 +22,11 @@ export type ModerationPage<T> = {
     prev_page_url: string | null;
     next_page_url: string | null;
 };
+
+export type TripDepartureReport = Omit<
+    ConversationReport,
+    'conversation_id' | 'reason'
+> & {
+    scheduled_departure_at: string;
+    left_at: string;
+};

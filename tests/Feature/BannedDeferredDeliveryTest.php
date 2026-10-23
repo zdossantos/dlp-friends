@@ -1,8 +1,8 @@
 <?php
 
 use App\Events\EventChatAccessChanged;
-use App\Events\EventChatMessageReactionUpdated;
-use App\Events\EventChatMessageSent;
+use App\Events\GroupChatMessageReactionUpdated;
+use App\Events\GroupChatMessageSent;
 use App\Events\MatchCreated;
 use App\Events\MessageReactionUpdated;
 use App\Events\MessageSent;
@@ -29,13 +29,14 @@ it('drops the real queued broadcast before delivery when its author is banned', 
     $message = $conversation->messages()->create(['author_user_id' => $author->id, 'content' => 'Queued content']);
     $event = Event::factory()->create(['organizer_user_id' => $recipient->id]);
     $chat = $event->chat()->create();
+    $event->registrations()->create(['user_id' => $author->id, 'status' => 'accepted']);
     $groupMessage = $chat->messages()->create(['author_user_id' => $author->id, 'content' => 'Queued group content']);
     $broadcast = match ($kind) {
         'message' => new MessageSent($message),
         'read' => new MessagesRead($conversation->id, $author->id, $message->id, now()->toISOString()),
         'reaction' => new MessageReactionUpdated($conversation->id, $message->id, $author->id, 1, true),
-        'group-message' => new EventChatMessageSent($groupMessage),
-        'group-reaction' => new EventChatMessageReactionUpdated($chat->id, $groupMessage->id, $author->id, 1, true),
+        'group-message' => new GroupChatMessageSent($groupMessage),
+        'group-reaction' => new GroupChatMessageReactionUpdated($chat->id, $groupMessage->id, $author->id, 1, true),
         'group-access' => new EventChatAccessChanged($event->id, $author->id, 'accepted'),
         'match' => new MatchCreated($match, $recipient),
         'presence' => new PresenceChanged($author, true),

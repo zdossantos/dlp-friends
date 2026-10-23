@@ -1,6 +1,13 @@
 <?php
 
-return ['banned' => 'Ce compte est banni pour son comportement dans l’application.', 'banned_contact' => 'Pour contester cette décision, contactez :email.', 'ban_updated' => 'La sanction a été mise à jour.', 'block_admin' => 'Un administrateur ne peut pas être bloqué.', 'already_open' => 'Un signalement est déjà ouvert pour cet échange.', 'reported' => 'Le signalement a été transmis.', 'deleted_member' => 'Compte supprimé',
+return [
+    'trip_reports' => 'Désistements de trajets',
+    'trip_report_description' => 'Examinez les désistements signalés. Chaque consultation est auditée.',
+    'trip_report_scope' => 'Ce dossier contient uniquement le signalement et les dates du désistement.',
+    'trip_departure' => 'Départ prévu',
+    'trip_left' => 'Désistement',
+    'trip_details' => 'Explication du signalement (1 000 caractères maximum)',
+    'banned' => 'Ce compte est banni pour son comportement dans l’application.', 'banned_contact' => 'Pour contester cette décision, contactez :email.', 'ban_updated' => 'La sanction a été mise à jour.', 'block_admin' => 'Un administrateur ne peut pas être bloqué.', 'already_open' => 'Un signalement est déjà ouvert pour cet échange.', 'reported' => 'Le signalement a été transmis.', 'deleted_member' => 'Compte supprimé',
     'report_trigger' => 'Signaler',
     'report_title' => 'Signaler cet échange',
     'report_warning' => 'Toute la conversation, y compris les messages à venir, sera accessible aux administrateurs après votre confirmation, même après blocage ou clôture du signalement.',

@@ -27,8 +27,8 @@ class StoreEventChatReadRequest extends FormRequest
             'last_read_message_id' => [
                 'required',
                 'integer',
-                Rule::exists('event_chat_messages', 'id')
-                    ->where('event_chat_id', $event->chat->id),
+                Rule::exists('group_chat_messages', 'id')
+                    ->where('group_chat_id', $event->chat->id),
             ],
         ];
     }

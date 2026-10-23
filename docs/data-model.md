@@ -246,3 +246,27 @@ sont bornés à trois profils par jour, la liste complète à 30 par page.
 Les séjours terminés depuis au moins 30 jours calendaires sont purgés en lots
 de 500 après recontrôle de leur fin et de l’état du propriétaire verrouillé.
 La purge automatique est suspendue pour un propriétaire banni.
+
+
+## Trajets et groupes communs (issue 304)
+
+- `trips` : organisateur nullable, transport, sens, départ général, destination,
+  départ UTC, rendez-vous précis, audience, places voiture, première acceptation,
+  annulation et motif. La capacité voiture exclut le conducteur.
+- `trip_registrations` : couple trajet/membre unique, état pending, accepted,
+  refused, withdrawn, removed ou blocked, motif de décision et dates.
+- `trip_departures` : preuve distincte d’une sortie volontaire acceptée avec
+  participation, membre nullable, départ prévu, sortie effective et motif.
+  Une nouvelle demande ne réécrit pas cette preuve.
+- `trip_departure_reports` : preuve nullable, auteur/cible/décideur nullables,
+  instants minimaux, explication, clé d’unicité du dossier ouvert, clôture et
+  décision. La suppression du trajet détache la preuve du dossier.
+- `group_chats`, `group_chat_messages`, `group_chat_reads` et
+  `group_chat_message_reactions` remplacent les tables de chat événement.
+  Les identifiants et curseurs existants sont conservés. Chaque groupe possède
+  exactement un événement ou un trajet, chacun unique dans ce contexte.
+
+Le verrouillage suit les comptes par identifiant croissant, puis les trajets,
+puis les inscriptions. L’acceptation recontrôle capacité et autorisations dans
+la transaction. Les références utilisateur nullables permettent la suppression
+explicite sans cascade détruisant les données d’un compte banni lié.

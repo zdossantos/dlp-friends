@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { router } from '@inertiajs/vue3';
 import { ShieldBan } from '@lucide/vue';
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 import { Button } from '@/components/ui/button';
 import { useResponsiveModal } from '@/composables/useResponsiveModal';
 import { useTranslations } from '@/composables/useTranslations';
@@ -13,16 +13,30 @@ const { isDesktop, Modal } = useResponsiveModal();
 const open = ref(false);
 const submitting = ref(false);
 const failed = ref(false);
+const confirmTripDepartures = ref(false);
+watch(open, () => {
+    confirmTripDepartures.value = false;
+    failed.value = false;
+});
 
 function submit(): void {
     failed.value = false;
     router.post(
         blockMember(props.memberId).url,
-        { return_to: props.returnHref },
+        {
+            return_to: props.returnHref,
+            confirm_trip_departures: confirmTripDepartures.value,
+        },
         {
             preserveScroll: true,
             onStart: () => (submitting.value = true),
-            onError: () => (failed.value = true),
+            onError: (errors) => {
+                if (errors.confirm_trip_departures) {
+                    confirmTripDepartures.value = true;
+                } else {
+                    failed.value = true;
+                }
+            },
             onFinish: () => (submitting.value = false),
         },
     );
@@ -57,6 +71,13 @@ function submit(): void {
             </component>
             <p class="text-sm text-muted-foreground">
                 {{ t('blocking.effects') }}
+            </p>
+            <p
+                v-if="confirmTripDepartures"
+                role="alert"
+                class="text-sm text-destructive"
+            >
+                {{ t('blocking.trip_departures') }}
             </p>
             <p v-if="failed" role="alert" class="text-sm text-destructive">
                 {{ t('blocking.error') }}

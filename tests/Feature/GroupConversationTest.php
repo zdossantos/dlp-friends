@@ -3,9 +3,9 @@
 use App\Enums\EventRegistrationStatus;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Models\Event;
-use App\Models\EventChat;
-use App\Models\EventChatMessage;
 use App\Models\EventRegistration;
+use App\Models\GroupChat;
+use App\Models\GroupChatMessage;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
@@ -16,10 +16,10 @@ test('messaging lists only groups the member may read and shares their unread st
     $member = User::factory()->withProfile()->create();
     $organizer = User::factory()->withProfile()->create();
     $event = Event::factory()->for($organizer, 'organizer')->create();
-    $chat = EventChat::factory()->for($event)->create();
+    $chat = GroupChat::factory()->for($event)->create();
     EventRegistration::factory()->for($event)->for($member)->create(['status' => EventRegistrationStatus::Accepted]);
-    EventChatMessage::factory()->for($chat)->for($organizer, 'author')->create();
-    $other = EventChat::factory()->create();
+    GroupChatMessage::factory()->for($chat)->for($organizer, 'author')->create();
+    $other = GroupChat::factory()->create();
 
     $this->actingAs($member)->get(route('conversations.index'))
         ->assertInertia(fn (Assert $page) => $page->component('Conversations/Index')
@@ -39,7 +39,7 @@ test('messaging lists only groups the member may read and shares their unread st
 test('messaging group refresh includes read only state after cancellation', function () {
     $member = User::factory()->withProfile()->create();
     $event = Event::factory()->for($member, 'organizer')->create();
-    $chat = EventChat::factory()->for($event)->create();
+    $chat = GroupChat::factory()->for($event)->create();
     $event->update(['cancelled_at' => now()]);
 
     $this->actingAs($member)->get(route('events.chat.show', ['event' => $event, 'origin' => 'conversations']), [
@@ -59,7 +59,7 @@ test('event details and participant profiles share the conversation workspace', 
     $member = User::factory()->withProfile()->create();
     $peer = User::factory()->withProfile()->create();
     $event = Event::factory()->for($member, 'organizer')->create();
-    $chat = EventChat::factory()->for($event)->create();
+    $chat = GroupChat::factory()->for($event)->create();
     EventRegistration::factory()->for($event)->for($peer)->create(['status' => EventRegistrationStatus::Accepted]);
     $this->actingAs($member);
 
@@ -84,7 +84,7 @@ test('event details and participant profiles share the conversation workspace', 
 test('withdrawing from group details returns to the event without forbidden chat access', function () {
     $member = User::factory()->withProfile()->create();
     $event = Event::factory()->create();
-    EventChat::factory()->for($event)->create();
+    GroupChat::factory()->for($event)->create();
     EventRegistration::factory()->for($event)->for($member)->create(['status' => EventRegistrationStatus::Accepted]);
 
     $this->actingAs($member)

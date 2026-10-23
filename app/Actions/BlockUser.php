@@ -13,7 +13,7 @@ final class BlockUser
 {
     public function __construct(private BlockEventRegistrations $blockEventRegistrations) {}
 
-    public function handle(User $blocker, User $blocked): Block
+    public function handle(User $blocker, User $blocked, bool $confirmTripDepartures = false): Block
     {
         if ($blocker->is($blocked) || $blocked->loadMissing('roles')->hasRole(RoleName::Admin)) {
             throw ValidationException::withMessages([
@@ -21,7 +21,7 @@ final class BlockUser
             ]);
         }
 
-        return DB::transaction(function () use ($blocker, $blocked): Block {
+        return DB::transaction(function () use ($blocker, $blocked, $confirmTripDepartures): Block {
             [$lowId, $highId] = $blocker->id < $blocked->id
                 ? [$blocker->id, $blocked->id]
                 : [$blocked->id, $blocker->id];
@@ -40,6 +40,12 @@ final class BlockUser
                 ]);
             }
 
+            $trips = app(BlockTripRegistrations::class);
+            if (! $confirmTripDepartures && $trips->requiresDepartureConfirmation($blocker, $blocked)) {
+                throw ValidationException::withMessages(['confirm_trip_departures' => __('blocking.trip_departures')]);
+            }
+            $trips->handle($blocker, $blocked);
+
             $block = Block::query()->firstOrCreate([
                 'blocker_user_id' => $blocker->id,
                 'blocked_user_id' => $blocked->id,
@@ -57,6 +63,6 @@ final class BlockUser
             $this->blockEventRegistrations->handle($blocker, $blocked);
 
             return $block;
-        });
+        }, 3);
     }
 }

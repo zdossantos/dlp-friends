@@ -1,6 +1,7 @@
 export const notificationCategories = [
     'conversations',
     'events',
+    'trips',
     'partners',
     'administration',
 ] as const;

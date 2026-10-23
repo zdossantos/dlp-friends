@@ -1,0 +1,61 @@
+<?php
+
+namespace App\Actions;
+
+use App\Enums\TripAudience;
+use App\Enums\TripNotificationType;
+use App\Enums\TripRegistrationStatus;
+use App\Models\Trip;
+use App\Models\User;
+use App\Notifications\TripLifecycleNotification;
+use Carbon\CarbonImmutable;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
+use Illuminate\Validation\ValidationException;
+
+final class UpdateTrip
+{
+    /** @param array<string, mixed> $data */
+    public function handle(User $organizer, Trip $trip, array $data): Trip
+    {
+        return DB::transaction(function () use ($organizer, $trip, $data): Trip {
+            $organizer = User::query()->lockForUpdate()->findOrFail($organizer->id);
+            $trip = Trip::query()->lockForUpdate()->findOrFail($trip->id);
+            Gate::forUser($organizer)->authorize('manage', $trip);
+            if ($trip->cancelled_at !== null || $trip->departs_at->isPast()) {
+                throw ValidationException::withMessages(['trip' => __('trips.validation.closed')]);
+            }
+            if (($data['audience'] ?? $trip->audience->value) === TripAudience::Members->value && $trip->audience !== TripAudience::Members && ! filter_var($data['confirm_members'] ?? false, FILTER_VALIDATE_BOOLEAN)) {
+                throw ValidationException::withMessages(['confirm_members' => __('trips.validation.confirm_members')]);
+            }
+            unset($data['confirm_members']);
+            $data['departs_at'] = CarbonImmutable::createFromFormat('!Y-m-d\TH:i', (string) $data['departs_at'], 'Europe/Paris')->utc();
+            $data['arrives_at'] = empty($data['arrives_at']) ? null : CarbonImmutable::createFromFormat('!Y-m-d\TH:i', (string) $data['arrives_at'], 'Europe/Paris')->utc();
+            if ($trip->first_accepted_at !== null) {
+                foreach (['transport', 'direction', 'general_departure', 'destination', 'departs_at', 'arrives_at'] as $field) {
+                    $original = $trip->getAttribute($field);
+                    $original = $original instanceof \BackedEnum ? $original->value : $original;
+                    if (in_array($field, ['departs_at', 'arrives_at'], true) && $original !== null && $data[$field]?->equalTo($original->startOfMinute())) {
+                        // The form edits minutes; retain the original immutable instant.
+                        $data[$field] = $original;
+                    }
+                    if ($data[$field] != $original) {
+                        throw ValidationException::withMessages([$field => __('trips.validation.locked')]);
+                    }
+                }
+            }
+            if ($trip->transport->value === 'car' && ($data['car_seats'] ?? 0) < $trip->registrations()->where('status', TripRegistrationStatus::Accepted)->count()) {
+                throw ValidationException::withMessages(['car_seats' => __('trips.validation.capacity')]);
+            }
+            $meetingChanged = $trip->meeting_point !== $data['meeting_point'];
+            $trip->update($data);
+            if ($meetingChanged) {
+                foreach ($trip->registrations()->with('user')->where('status', TripRegistrationStatus::Accepted)->get() as $registration) {
+                    $registration->user?->notify(new TripLifecycleNotification($trip->id, TripNotificationType::Changed, $registration->id));
+                }
+            }
+
+            return $trip;
+        });
+    }
+}

@@ -26,3 +26,9 @@ Schedule::command('notifications:dispatch-weekly-recaps')
     ->timezone('Europe/Paris')
     ->withoutOverlapping()
     ->onOneServer();
+
+Schedule::command('trips:purge-expired')
+    ->dailyAt('04:00')
+    ->timezone('Europe/Paris')
+    ->withoutOverlapping()
+    ->onOneServer();

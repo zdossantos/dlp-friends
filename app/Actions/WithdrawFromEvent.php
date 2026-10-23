@@ -38,7 +38,7 @@ final class WithdrawFromEvent
             $registration->update(['status' => EventRegistrationStatus::Withdrawn]);
 
             if ($hadAccess) {
-                app(AnnounceEventChatMembership::class)->handle($registration, EventChatSystemType::Left);
+                app(AnnounceGroupChatMembership::class)->handle($registration, EventChatSystemType::Left);
             }
 
             return $registration->refresh();

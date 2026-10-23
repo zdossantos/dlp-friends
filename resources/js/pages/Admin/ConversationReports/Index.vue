@@ -4,6 +4,7 @@ import { ArrowLeft, ArrowUpRight } from '@lucide/vue';
 import { useMediaQuery } from '@vueuse/core';
 import { computed } from 'vue';
 import AdminPageHeader from '@/components/admin/AdminPageHeader.vue';
+import TripDepartureReportList from '@/components/admin/TripDepartureReportList.vue';
 import BackLink from '@/components/common/BackLink.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -11,10 +12,12 @@ import { useTranslations } from '@/composables/useTranslations';
 import { index, show } from '@/routes/admin/conversation-reports';
 import { index as members } from '@/routes/admin/members';
 import { show as profile } from '@/routes/members';
+import type { TripDepartureReport } from '@/types/moderation';
 import type { ConversationReport, ModerationPage } from '@/types/moderation';
 
 const props = defineProps<{
     reports: ModerationPage<ConversationReport>;
+    tripReports: ModerationPage<TripDepartureReport>;
     status: 'all' | 'open' | 'closed';
     counts: { open: number; closed: number };
     target: { id: number; name: string } | null;
@@ -307,5 +310,6 @@ function date(value: string): string {
                 }}</Link></Button
             >
         </nav>
+        <TripDepartureReportList :reports="tripReports" />
     </main>
 </template>
