@@ -7,7 +7,17 @@ const notices = [];
 const page = {
     component: 'Conversations/Group',
     url: '/trips/42/chat',
-    props: { trip: { id: 42 }, auth: { unread_notifications_count: 0 } },
+    props: {
+        trip: { id: 42 },
+        auth: { unread_notifications_count: 0 },
+        i18n: {
+            locale: 'fr',
+            messages: {
+                notifications: { items: { new_group_message: ':sender · :group' } },
+                conversations: { notification: { open: 'Ouvrir' } },
+            },
+        },
+    },
 };
 mock.module('@inertiajs/vue3', () => ({
     usePage: () => page,
@@ -20,9 +30,6 @@ mock.module('@laravel/echo-vue', () => ({
     },
 }));
 mock.module('vue-sonner', () => ({ toast: (...args) => notices.push(args) }));
-mock.module('@/composables/useTranslations', () => ({
-    useTranslations: () => ({ t: (key) => key }),
-}));
 const { useMemberRealtimeNotifications } =
     await import('../../resources/js/composables/useMemberRealtimeNotifications');
 
@@ -47,5 +54,6 @@ test('event message notification remains visible while a trip group is open', as
         }),
     ).not.toThrow();
     expect(notices).toHaveLength(1);
+    expect(notices[0][0]).toBe('Alice · Sortie');
     expect(context.unreadNotificationsCount.value).toBe(1);
 });
