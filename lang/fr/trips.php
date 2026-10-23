@@ -1,6 +1,17 @@
 <?php
 
 return [
+    'search' => 'Départ ou arrivée',
+    'search_placeholder' => 'Ville, gare ou lieu…',
+    'search_submit' => 'Rechercher',
+    'search_clear' => 'Effacer la recherche',
+    'pagination' => 'Pages des trajets',
+    'page' => 'Page :current sur :last',
+    'previous' => 'Précédent',
+    'next' => 'Suivant',
+    'departure' => 'Départ',
+    'arrival' => 'Arrivée',
+    'schedule' => 'Date et heure du départ',
     'chat' => ['open' => 'Ouvrir la discussion', 'read_only' => ['cancelled' => 'Ce trajet est annulé. La discussion est en lecture seule.', 'archived' => 'Cette discussion est archivée.']],
     'title' => 'Trajets',
     'description' => 'Propose un départ ou rejoins des membres pour aller au parc.',
@@ -46,7 +57,7 @@ return [
         'removed' => 'Exclue',
         'blocked' => 'Accès retiré',
     ],
-    'places' => ':count place(s) disponible(s)',
+    'places' => 'Places disponibles : :count',
     'full' => 'Complet',
     'cancelled' => 'Trajet annulé',
     'share_title' => 'Partager ce trajet avec les membres',

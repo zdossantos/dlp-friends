@@ -133,7 +133,8 @@ function withdraw() {
             >
             <Button
                 v-if="trip.can_edit"
-                variant="destructive"
+                variant="outline"
+                class="border-destructive/30 text-destructive hover:bg-destructive/10 hover:text-destructive"
                 data-test="trip-cancel"
                 @click="open('cancel')"
                 >{{ t('trips.cancel') }}</Button

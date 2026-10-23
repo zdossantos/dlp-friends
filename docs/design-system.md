@@ -413,3 +413,17 @@ La discussion commune réutilise timeline, compositeur, réactions et statut
 réseau et masque navigation inférieure et espace réservé. Informations et
 profil sont des panneaux refermés par l’historique, avec secours sur entrée
 directe. Le brouillon est conservé pendant ces transitions.
+
+Les cartes trajets présentent le parcours vertical Départ/Arrivée, puis la date,
+l’heure et les places, avec l’avatar et le nom de l’organisateur. Le même lien
+membre est utilisé pour les participants et les demandes. Le profil réutilise
+le panneau plein cadre des visites, sans titre de trajet ni marge intérieure.
+La fiche complète anime brièvement le tracé SVG à son ouverture ; les préférences
+de réduction des animations sont respectées. La discussion reste l’action
+principale pour les participants ; les commandes de gestion sont secondaires.
+
+Découvrir propose une recherche textuelle dans le départ général ou la
+destination, combinable au transport. Le rendez-vous privé reste exclu de la
+recherche. La pagination indique la page courante et propose Précédent/Suivant ;
+elle disparaît lorsque tous les résultats tiennent sur une page. Les filtres
+restent dans l’URL et sont conservés lors du retour depuis un profil.

@@ -8,6 +8,7 @@ import OutingsNavigation from '@/components/outings/OutingsNavigation.vue';
 import TripDepartureReportForm from '@/components/trips/TripDepartureReportForm.vue';
 import TripForm from '@/components/trips/TripForm.vue';
 import TripInformation from '@/components/trips/TripInformation.vue';
+import TripMemberLink from '@/components/trips/TripMemberLink.vue';
 import TripParticipantList from '@/components/trips/TripParticipantList.vue';
 import TripRegistrationActions from '@/components/trips/TripRegistrationActions.vue';
 import { Button } from '@/components/ui/button';
@@ -46,7 +47,19 @@ function close(open: boolean) {
             ><BackLink href="/trips">{{ t('trips.back') }}</BackLink></Button
         >
         <TripInformation :trip="trip" />
-        <div class="flex flex-wrap gap-3">
+        <Button v-if="trip.chat_href" as-child class="w-full sm:w-auto"
+            ><Link :href="trip.chat_href" data-test="trip-chat">{{
+                t('trips.chat.open')
+            }}</Link></Button
+        >
+        <div
+            v-if="
+                trip.can_edit ||
+                trip.meeting_point !== undefined ||
+                trip.can_manage
+            "
+            class="flex flex-wrap gap-2 border-t border-border pt-4"
+        >
             <Button
                 v-if="trip.can_edit"
                 variant="outline"
@@ -72,11 +85,6 @@ function close(open: boolean) {
                 ></Button
             >
         </div>
-        <Button v-if="trip.chat_href" as-child
-            ><Link :href="trip.chat_href" data-test="trip-chat">{{
-                t('trips.chat.open')
-            }}</Link></Button
-        >
         <TripRegistrationActions :trip="trip" />
         <ResponsivePanel
             v-model:open="editing"
@@ -87,21 +95,26 @@ function close(open: boolean) {
         <ResponsivePanel
             :open="Boolean(panel)"
             :title="
-                t(
-                    panel === 'profile'
-                        ? 'trips.details'
-                        : panel === 'requests'
-                          ? 'trips.requests'
-                          : 'trips.participants',
-                )
+                panel === 'profile'
+                    ? ''
+                    : t(
+                          panel === 'requests'
+                              ? 'trips.requests'
+                              : 'trips.participants',
+                      )
             "
-            :description="t('trips.description')"
+            :description="panel === 'profile' ? '' : t('trips.description')"
+            :full-bleed="panel === 'profile'"
+            :fill-height="panel === 'profile'"
+            :test-id="panel === 'profile' ? 'trip-profile-panel' : 'trip-panel'"
+            :a11y-heading="t('events.panels.participant-profile.title')"
+            :a11y-summary="t('events.panels.participant-profile.description')"
             :back-href="panel === 'profile' ? '/trips' : `/trips/${trip.id}`"
             :back-label="t('trips.back')"
             :back-data-test="
                 panel === 'profile' ? 'profile-close' : 'trip-panel-close'
             "
-            back-in-header
+            :back-in-header="panel !== 'profile'"
             @update:open="close"
         >
             <nav v-if="panel !== 'profile'" class="mb-4 flex flex-wrap gap-2">
@@ -139,18 +152,16 @@ function close(open: boolean) {
                     :key="registration.id"
                     class="space-y-3 py-4"
                 >
-                    <Link
+                    <TripMemberLink
                         v-if="
                             registration.member &&
                             ['pending', 'accepted'].includes(
                                 registration.status,
                             )
                         "
-                        :href="`/trips/${trip.id}/members/${registration.member.id}`"
-                        class="inline-flex min-h-11 items-center text-primary underline"
-                        preserve-scroll
-                        >{{ registration.member.display_name }}</Link
-                    >
+                        :trip-id="trip.id"
+                        :member="registration.member"
+                    />
                     <p v-else>
                         {{
                             registration.member?.display_name ??

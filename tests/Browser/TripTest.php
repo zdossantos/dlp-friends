@@ -115,3 +115,25 @@ it('shows cancelled pending requests and lets accepted passengers leave cancelle
         $page->assertDontSee($trip->meeting_point)->assertNoJavaScriptErrors();
     }
 })->with(['pending', 'accepted']);
+
+it('opens the standard full bleed profile drawer from an organizer avatar', function () {
+    $trip = Trip::factory()->create(['audience' => 'members']);
+    $this->actingAs(User::factory()->withProfile()->create());
+    visit('/trips')->resize(390, 844)
+        ->assertPresent('[data-test="trip-organizer"] img')
+        ->assertMissing('@trip-pagination')
+        ->click('@trip-organizer')->assertPresent('@trip-profile-panel')
+        ->assertMissing('@trip-profile-panel-header')
+        ->assertScript("getComputedStyle(document.querySelector('[data-test=trip-profile-panel-scroll]')).paddingLeft", '0px')
+        ->click('@profile-close')->assertPathIs('/trips')->assertNoJavaScriptErrors();
+});
+
+it('searches departure and arrival without losing the transport filter', function () {
+    $owner = User::factory()->withProfile()->create();
+    Trip::factory()->for($owner, 'organizer')->create(['audience' => 'members', 'transport' => 'car', 'general_departure' => 'Bruxelles', 'destination' => 'Chessy']);
+    Trip::factory()->for($owner, 'organizer')->create(['audience' => 'members', 'transport' => 'car', 'general_departure' => 'Lyon', 'destination' => 'Chessy']);
+    $this->actingAs(User::factory()->withProfile()->create());
+    visit('/trips?transport=car')->resize(390, 844)->fill('#trip-search', 'Bruxelles')->click('@trip-search-submit')
+        ->assertSee('Bruxelles')->assertDontSee('Lyon')->assertQueryStringHas('transport', 'car')->assertQueryStringHas('search', 'Bruxelles')
+        ->click('@trip-organizer')->click('@profile-close')->assertValue('#trip-search', 'Bruxelles')->assertNoJavaScriptErrors();
+});

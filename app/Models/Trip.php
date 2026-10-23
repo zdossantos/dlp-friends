@@ -74,6 +74,16 @@ class Trip extends Model
     }
 
     /** @param Builder<Trip> $query */
+    public function scopeSearching(Builder $query, ?string $search): void
+    {
+        if ($search === null || trim($search) === '') {
+            return;
+        }
+        $pattern = '%'.str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], trim($search)).'%';
+        $query->where(fn (Builder $places) => $places->where('general_departure', 'like', $pattern)->orWhere('destination', 'like', $pattern));
+    }
+
+    /** @param Builder<Trip> $query */
     public function scopeVisibleTo(Builder $query, User $viewer): void
     {
         if ($viewer->status !== UserStatus::Active || ! $viewer->hasVerifiedEmail() || $viewer->age < 18 || ! $viewer->hasRole(RoleName::User) || ! $viewer->profile?->isComplete()) {

@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import { Link } from '@inertiajs/vue3';
-import UserAvatar from '@/components/profile/UserAvatar.vue';
+import TripMemberLink from '@/components/trips/TripMemberLink.vue';
 import TripRegistrationActions from '@/components/trips/TripRegistrationActions.vue';
 import { useTranslations } from '@/composables/useTranslations';
 import type { TripDetail, TripMember } from '@/types/trip';
@@ -17,18 +16,8 @@ const { t } = useTranslations();
             :key="person.member.id"
             class="space-y-3 py-4"
         >
-            <Link
-                :href="`/trips/${trip.id}/members/${person.member.id}`"
-                class="flex min-h-11 items-center gap-3 rounded-lg focus-visible:ring-2 focus-visible:ring-ring"
-                preserve-scroll
-                ><UserAvatar
-                    :avatar="person.member.avatar ?? null"
-                    :display-name="person.member.display_name"
-                    class="size-11 shrink-0"
-                /><span class="min-w-0 wrap-break-word">{{
-                    person.member.display_name
-                }}</span></Link
-            ><TripRegistrationActions
+            <TripMemberLink :trip-id="trip.id" :member="person.member" />
+            <TripRegistrationActions
                 v-if="person.id && trip.can_manage"
                 :trip="trip"
                 :registration="{

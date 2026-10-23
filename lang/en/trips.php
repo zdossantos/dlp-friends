@@ -1,6 +1,17 @@
 <?php
 
 return [
+    'search' => 'Departure or arrival',
+    'search_placeholder' => 'City, station or place…',
+    'search_submit' => 'Search',
+    'search_clear' => 'Clear search',
+    'pagination' => 'Trip pages',
+    'page' => 'Page :current of :last',
+    'previous' => 'Previous',
+    'next' => 'Next',
+    'departure' => 'Departure',
+    'arrival' => 'Arrival',
+    'schedule' => 'Departure date and time',
     'chat' => ['open' => 'Open conversation', 'read_only' => ['cancelled' => 'This trip is cancelled. The conversation is read-only.', 'archived' => 'This conversation is archived.']],
     'title' => 'Trips',
     'description' => 'Offer a departure or join members travelling to the park.',

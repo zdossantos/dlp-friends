@@ -1,11 +1,14 @@
 <script setup lang="ts">
 import { Link, router } from '@inertiajs/vue3';
-import { ref } from 'vue';
+import { Search, ChevronLeft, ChevronRight } from '@lucide/vue';
+import { ref, watch } from 'vue';
 import ResponsivePanel from '@/components/common/ResponsivePanel.vue';
 import OutingsNavigation from '@/components/outings/OutingsNavigation.vue';
 import TripCard from '@/components/trips/TripCard.vue';
 import TripForm from '@/components/trips/TripForm.vue';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
     Select,
     SelectTrigger,
@@ -18,15 +21,30 @@ import type { TripPage } from '@/types/trip';
 const props = defineProps<{
     trips: TripPage;
     mine?: boolean;
-    filters?: { transport?: string };
+    filters?: { transport?: string; search?: string };
 }>();
 const { t } = useTranslations();
 const creating = ref(false);
-function filter(value: unknown) {
-    router.get('/trips', value === 'all' ? {} : { transport: String(value) }, {
-        preserveScroll: true,
-        replace: true,
-    });
+const search = ref(props.filters?.search ?? '');
+watch(
+    () => props.filters?.search,
+    (value) => {
+        search.value = value ?? '';
+    },
+);
+function filter(value: unknown = props.filters?.transport ?? 'all') {
+    router.get(
+        '/trips',
+        {
+            ...(value !== 'all' ? { transport: String(value) } : {}),
+            ...(search.value.trim() ? { search: search.value.trim() } : {}),
+        },
+        { preserveScroll: true },
+    );
+}
+function clearSearch() {
+    search.value = '';
+    filter();
 }
 </script>
 <template>
@@ -50,40 +68,98 @@ function filter(value: unknown) {
                 ><Link href="/trips/mine">{{ t('trips.mine') }}</Link></Button
             >
         </nav>
-        <Select
-            v-if="!mine"
-            :model-value="props.filters?.transport ?? 'all'"
-            @update:model-value="filter"
-            ><SelectTrigger
-                class="w-full"
-                data-test="trip-transport-filter"
-                :aria-label="t('trips.fields.transport')"
-                ><SelectValue /></SelectTrigger
-            ><SelectContent
-                ><SelectItem value="all">{{ t('trips.all') }}</SelectItem
-                ><SelectItem
-                    v-for="kind in ['car', 'train', 'rer', 'bus']"
-                    :key="kind"
-                    :value="kind"
-                    >{{ t(`trips.transport.${kind}`) }}</SelectItem
-                ></SelectContent
-            ></Select
-        >
+        <form v-if="!mine" class="space-y-3" @submit.prevent="filter()">
+            <Label for="trip-search">{{ t('trips.search') }}</Label>
+            <div class="flex gap-2">
+                <div class="relative min-w-0 flex-1">
+                    <Search
+                        class="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground"
+                        aria-hidden="true"
+                    />
+                    <Input
+                        id="trip-search"
+                        v-model="search"
+                        type="search"
+                        maxlength="160"
+                        :placeholder="t('trips.search_placeholder')"
+                        class="pl-10"
+                    />
+                </div>
+                <Button type="submit" data-test="trip-search-submit">{{
+                    t('trips.search_submit')
+                }}</Button>
+            </div>
+            <Select
+                :model-value="props.filters?.transport ?? 'all'"
+                @update:model-value="filter"
+            >
+                <SelectTrigger
+                    class="w-full"
+                    data-test="trip-transport-filter"
+                    :aria-label="t('trips.fields.transport')"
+                    ><SelectValue
+                /></SelectTrigger>
+                <SelectContent>
+                    <SelectItem value="all">{{ t('trips.all') }}</SelectItem>
+                    <SelectItem
+                        v-for="kind in ['car', 'train', 'rer', 'bus']"
+                        :key="kind"
+                        :value="kind"
+                        >{{ t(`trips.transport.${kind}`) }}</SelectItem
+                    >
+                </SelectContent>
+            </Select>
+            <Button
+                v-if="props.filters?.search"
+                type="button"
+                variant="ghost"
+                @click="clearSearch"
+                >{{ t('trips.search_clear') }}</Button
+            >
+        </form>
         <p v-if="!trips.data.length" class="py-8 text-muted-foreground">
             {{ t('trips.empty') }}
         </p>
         <div class="grid min-w-0 gap-4 sm:grid-cols-2">
             <TripCard v-for="trip in trips.data" :key="trip.id" :trip="trip" />
         </div>
-        <nav class="flex flex-wrap gap-2">
-            <template v-for="(link, i) in trips.links" :key="i"
-                ><Link
-                    v-if="link.url"
-                    :href="link.url"
-                    :aria-current="link.active ? 'page' : undefined"
-                    class="rounded-lg border border-border px-3 py-2"
-                    ><span v-html="link.label" /></Link
-            ></template>
+        <nav
+            v-if="trips.last_page > 1"
+            data-test="trip-pagination"
+            :aria-label="t('trips.pagination')"
+            class="flex items-center justify-between gap-2 border-t border-border pt-4"
+        >
+            <Button v-if="trips.prev_page_url" as-child variant="outline"
+                ><Link :href="trips.prev_page_url" rel="prev"
+                    ><ChevronLeft class="size-4" aria-hidden="true" />{{
+                        t('trips.previous')
+                    }}</Link
+                ></Button
+            >
+            <Button v-else disabled variant="outline"
+                ><ChevronLeft class="size-4" aria-hidden="true" />{{
+                    t('trips.previous')
+                }}</Button
+            >
+            <span
+                class="text-center text-sm text-muted-foreground"
+                aria-live="polite"
+                >{{
+                    t('trips.page', {
+                        current: trips.current_page,
+                        last: trips.last_page,
+                    })
+                }}</span
+            >
+            <Button v-if="trips.next_page_url" as-child variant="outline"
+                ><Link :href="trips.next_page_url" rel="next"
+                    >{{ t('trips.next')
+                    }}<ChevronRight class="size-4" aria-hidden="true" /></Link
+            ></Button>
+            <Button v-else disabled variant="outline"
+                >{{ t('trips.next')
+                }}<ChevronRight class="size-4" aria-hidden="true"
+            /></Button>
         </nav>
         <ResponsivePanel
             v-model:open="creating"

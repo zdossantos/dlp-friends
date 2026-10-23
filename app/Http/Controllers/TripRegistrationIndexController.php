@@ -19,9 +19,9 @@ final class TripRegistrationIndexController extends Controller
 
         return Inertia::render('Trips/Show', [
             'trip' => $data->detail($viewer, $trip), 'panel' => 'requests',
-            'registrations' => $trip->registrations()->with('user.profile')->orderByDesc('id')->get()->map(fn ($registration) => [
+            'registrations' => $trip->registrations()->with('user.profile.avatar')->orderByDesc('id')->get()->map(fn ($registration) => [
                 'id' => $registration->id, 'status' => $registration->status->value, 'reason' => $registration->reason,
-                'member' => $registration->user === null ? null : ['id' => $registration->user_id, 'display_name' => $registration->user->profile?->display_name],
+                'member' => $registration->user === null ? null : $data->member($registration->user),
             ]),
             'departures' => $trip->departures()->with('user.profile')->orderByDesc('id')->get()->map(fn ($departure) => [
                 'id' => $departure->id, 'display_name' => $departure->user?->profile?->display_name,

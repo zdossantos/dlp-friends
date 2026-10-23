@@ -3,7 +3,10 @@ import { Head } from '@inertiajs/vue3';
 import TripListWorkspace from '@/components/trips/TripListWorkspace.vue';
 import { useTranslations } from '@/composables/useTranslations';
 import type { TripPage } from '@/types/trip';
-defineProps<{ trips: TripPage; filters?: { transport?: string } }>();
+defineProps<{
+    trips: TripPage;
+    filters?: { transport?: string; search?: string };
+}>();
 const { t } = useTranslations();
 </script>
 <template>

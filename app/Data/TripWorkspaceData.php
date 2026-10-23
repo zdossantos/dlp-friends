@@ -36,6 +36,15 @@ final class TripWorkspaceData
     }
 
     /** @return array<string, mixed> */
+    public function member(User $member): array
+    {
+        $avatar = $member->profile?->avatar;
+
+        return ['id' => $member->id, 'display_name' => $member->profile?->display_name,
+            'avatar' => $avatar === null ? null : ['id' => $avatar->id, 'name' => $avatar->name, 'image_url' => route('avatars.image', $avatar), 'primary_color' => $avatar->primary_color, 'secondary_color' => $avatar->secondary_color]];
+    }
+
+    /** @return array<string, mixed> */
     public function summary(User $viewer, Trip $trip): array
     {
         $data = $this->detail($viewer, $trip);
@@ -65,7 +74,7 @@ final class TripWorkspaceData
             'departs_at' => $trip->departs_at->toIso8601String(), 'audience' => $trip->audience->value,
             'remaining_places' => $trip->remainingPlaces(), 'car_seats' => $trip->car_seats,
             'cancelled_at' => $trip->cancelled_at?->toIso8601String(), 'first_accepted_at' => $trip->first_accepted_at?->toIso8601String(),
-            'organizer' => ['id' => $trip->organizer_user_id, 'display_name' => $trip->organizer?->profile?->display_name],
+            'organizer' => $trip->organizer === null ? null : $this->member($trip->organizer),
             'registration' => $own === null ? null : ['id' => $own->id, 'status' => $own->status->value, 'reason' => $own->reason],
             'can_manage' => Gate::forUser($viewer)->allows('manage', $trip),
             'can_request' => Gate::forUser($viewer)->allows('request', $trip),

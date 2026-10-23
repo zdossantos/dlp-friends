@@ -40,5 +40,9 @@ export type TripDeparture = {
 };
 export type TripPage = {
     data: TripDetail[];
+    current_page: number;
+    last_page: number;
+    prev_page_url: string | null;
+    next_page_url: string | null;
     links: { url: string | null; label: string; active: boolean }[];
 };
