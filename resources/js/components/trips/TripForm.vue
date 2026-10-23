@@ -28,6 +28,9 @@ const form = useForm({
         props.trip?.departs_at ??
             new Date(Date.now() + 15 * 60000).toISOString(),
     ),
+    arrives_at: props.trip?.arrives_at
+        ? parisLocalFormValue(props.trip.arrives_at)
+        : '',
     meeting_point: props.trip?.meeting_point ?? '',
     audience: props.trip?.audience ?? 'matches',
     car_seats: props.trip?.car_seats ?? 1,
@@ -102,6 +105,7 @@ function submit(confirmed = false) {
                 'general_departure',
                 'destination',
                 'departs_at',
+                'arrives_at',
                 'meeting_point',
             ] as const"
             :key="field"
@@ -111,14 +115,25 @@ function submit(confirmed = false) {
             <Input
                 :id="field"
                 v-model="form[field]"
-                :type="field === 'departs_at' ? 'datetime-local' : 'text'"
+                :type="
+                    ['departs_at', 'arrives_at'].includes(field)
+                        ? 'datetime-local'
+                        : 'text'
+                "
+                :min="field === 'arrives_at' ? form.departs_at : undefined"
                 :maxlength="field === 'meeting_point' ? 255 : 160"
                 :disabled="locked && field !== 'meeting_point'"
-                required
+                :required="field !== 'arrives_at'"
                 class="w-full min-w-0"
                 :aria-invalid="Boolean(form.errors[field])"
                 :aria-describedby="`${field}-error`"
             />
+            <p
+                v-if="field === 'arrives_at'"
+                class="text-sm text-muted-foreground"
+            >
+                {{ t('trips.arrival_help') }}
+            </p>
             <InputError :id="`${field}-error`" :message="form.errors[field]" />
         </div>
         <div v-if="form.transport === 'car'" class="space-y-2">

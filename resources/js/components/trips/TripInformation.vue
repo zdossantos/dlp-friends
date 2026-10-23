@@ -3,15 +3,35 @@ import {
     Car,
     TrainFront,
     BusFront,
-    CalendarDays,
+    Clock3,
     Users,
     LockKeyhole,
 } from '@lucide/vue';
 import TripMemberLink from '@/components/trips/TripMemberLink.vue';
 import { useTranslations } from '@/composables/useTranslations';
 import type { TripDetail } from '@/types/trip';
-defineProps<{ trip: TripDetail; compact?: boolean }>();
+const props = defineProps<{ trip: TripDetail; compact?: boolean }>();
 const { t, locale } = useTranslations();
+function formatSchedule(value: string): string {
+    return new Intl.DateTimeFormat(locale.value, {
+        dateStyle: props.compact ? 'medium' : 'long',
+        timeStyle: 'short',
+        timeZone: 'Europe/Paris',
+    }).format(new Date(value));
+}
+function formatDuration(minutes: number): string {
+    const hours = Math.floor(minutes / 60);
+    const remaining = minutes % 60;
+
+    return t(
+        hours === 0
+            ? 'trips.duration_minutes'
+            : remaining === 0
+              ? 'trips.duration_hours'
+              : 'trips.duration_hours_minutes',
+        { hours, minutes: remaining },
+    );
+}
 </script>
 <template>
     <section class="min-w-0 space-y-4 wrap-break-word">
@@ -72,6 +92,13 @@ const { t, locale } = useTranslations();
                         :class="compact ? 'text-lg' : 'text-2xl sm:text-3xl'"
                         >{{ trip.general_departure }}</component
                     >
+                    <time
+                        v-if="trip.departs_at"
+                        :datetime="trip.departs_at"
+                        :aria-label="t('trips.schedule')"
+                        class="mt-1 block text-sm text-muted-foreground"
+                        >{{ formatSchedule(trip.departs_at) }}</time
+                    >
                 </div>
                 <div class="col-start-2 min-w-0">
                     <p class="text-xs text-muted-foreground">
@@ -83,27 +110,37 @@ const { t, locale } = useTranslations();
                     >
                         {{ trip.destination }}
                     </p>
+                    <time
+                        v-if="trip.arrives_at"
+                        data-test="trip-arrival-time"
+                        :datetime="trip.arrives_at"
+                        :aria-label="t('trips.fields.arrives_at')"
+                        class="mt-1 block text-sm text-muted-foreground"
+                        >{{ formatSchedule(trip.arrives_at) }}</time
+                    >
+                    <p v-else class="mt-1 text-sm text-muted-foreground">
+                        {{ t('trips.arrival_unknown') }}
+                    </p>
                 </div>
             </div>
             <div
                 class="flex flex-wrap gap-x-5 gap-y-3 border-y border-border py-3 text-sm"
             >
                 <p
-                    v-if="trip.departs_at"
-                    class="flex items-start gap-2"
-                    :aria-label="t('trips.schedule')"
+                    v-if="trip.estimated_duration_minutes != null"
+                    class="flex items-center gap-2"
                 >
-                    <CalendarDays
-                        class="mt-0.5 size-4 shrink-0 text-primary"
+                    <Clock3
+                        class="size-4 shrink-0 text-primary"
                         aria-hidden="true"
                     />
-                    <time :datetime="trip.departs_at">{{
-                        new Intl.DateTimeFormat(locale, {
-                            dateStyle: compact ? 'medium' : 'long',
-                            timeStyle: 'short',
-                            timeZone: 'Europe/Paris',
-                        }).format(new Date(trip.departs_at))
-                    }}</time>
+                    {{
+                        t('trips.duration', {
+                            duration: formatDuration(
+                                trip.estimated_duration_minutes,
+                            ),
+                        })
+                    }}
                 </p>
                 <p
                     v-if="!trip.cancelled_at"
@@ -163,16 +200,14 @@ const { t, locale } = useTranslations();
 <style scoped>
 @media (prefers-reduced-motion: no-preference) {
     .route-animated path {
-        animation: route-arrival 900ms ease-out both;
+        animation: route-arrival 1.2s linear infinite;
     }
     @keyframes route-arrival {
         from {
-            stroke-dashoffset: 24;
-            opacity: 0;
+            stroke-dashoffset: 8;
         }
         to {
             stroke-dashoffset: 0;
-            opacity: 1;
         }
     }
 }

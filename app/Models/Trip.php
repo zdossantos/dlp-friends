@@ -26,6 +26,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
  * @property TripDirection $direction
  * @property string $general_departure
  * @property string $destination
+ * @property CarbonImmutable|null $arrives_at
  * @property CarbonImmutable $departs_at
  * @property string $meeting_point
  * @property TripAudience $audience
@@ -36,7 +37,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
  * @property-read GroupChat|null $chat
  * @property-read User|null $organizer
  */
-#[Fillable(['transport', 'direction', 'general_departure', 'destination', 'departs_at', 'meeting_point', 'audience', 'car_seats', 'first_accepted_at', 'cancelled_at', 'cancellation_reason'])]
+#[Fillable(['transport', 'direction', 'general_departure', 'destination', 'departs_at', 'arrives_at', 'meeting_point', 'audience', 'car_seats', 'first_accepted_at', 'cancelled_at', 'cancellation_reason'])]
 class Trip extends Model
 {
     /** @use HasFactory<TripFactory> */
@@ -116,6 +117,6 @@ class Trip extends Model
     /** @return array<string, string> */
     protected function casts(): array
     {
-        return ['transport' => TripTransport::class, 'direction' => TripDirection::class, 'audience' => TripAudience::class, 'departs_at' => 'immutable_datetime', 'first_accepted_at' => 'immutable_datetime', 'cancelled_at' => 'immutable_datetime', 'car_seats' => 'integer'];
+        return ['transport' => TripTransport::class, 'direction' => TripDirection::class, 'audience' => TripAudience::class, 'departs_at' => 'immutable_datetime', 'arrives_at' => 'immutable_datetime', 'first_accepted_at' => 'immutable_datetime', 'cancelled_at' => 'immutable_datetime', 'car_seats' => 'integer'];
     }
 }

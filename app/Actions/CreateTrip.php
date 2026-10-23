@@ -24,6 +24,7 @@ final class CreateTrip
             unset($data['confirm_members']);
             $data['audience'] ??= TripAudience::Matches;
             $data['departs_at'] = CarbonImmutable::createFromFormat('!Y-m-d\TH:i', (string) $data['departs_at'], 'Europe/Paris')->utc();
+            $data['arrives_at'] = empty($data['arrives_at']) ? null : CarbonImmutable::createFromFormat('!Y-m-d\TH:i', (string) $data['arrives_at'], 'Europe/Paris')->utc();
 
             $trip = $organizer->organizedTrips()->create($data);
             $trip->chat()->create();

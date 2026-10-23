@@ -18,6 +18,8 @@ export type TripDetail = {
     general_departure?: string;
     destination?: string;
     departs_at?: string;
+    arrives_at?: string | null;
+    estimated_duration_minutes?: number | null;
     audience?: string;
     remaining_places?: number;
     car_seats?: number | null;

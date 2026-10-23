@@ -30,15 +30,16 @@ final class UpdateTrip
             }
             unset($data['confirm_members']);
             $data['departs_at'] = CarbonImmutable::createFromFormat('!Y-m-d\TH:i', (string) $data['departs_at'], 'Europe/Paris')->utc();
+            $data['arrives_at'] = empty($data['arrives_at']) ? null : CarbonImmutable::createFromFormat('!Y-m-d\TH:i', (string) $data['arrives_at'], 'Europe/Paris')->utc();
             if ($trip->first_accepted_at !== null) {
-                foreach (['transport', 'direction', 'general_departure', 'destination', 'departs_at'] as $field) {
+                foreach (['transport', 'direction', 'general_departure', 'destination', 'departs_at', 'arrives_at'] as $field) {
                     $original = $trip->getAttribute($field);
                     $original = $original instanceof \BackedEnum ? $original->value : $original;
-                    if ($field === 'departs_at' && $data[$field]->equalTo($original->startOfMinute())) {
+                    if (in_array($field, ['departs_at', 'arrives_at'], true) && $original !== null && $data[$field]?->equalTo($original->startOfMinute())) {
                         // The form edits minutes; retain the original immutable instant.
                         $data[$field] = $original;
                     }
-                    if (($data[$field] ?? $original) != $original) {
+                    if ($data[$field] != $original) {
                         throw ValidationException::withMessages([$field => __('trips.validation.locked')]);
                     }
                 }

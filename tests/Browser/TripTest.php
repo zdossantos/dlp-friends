@@ -137,3 +137,19 @@ it('searches departure and arrival without losing the transport filter', functio
         ->assertSee('Bruxelles')->assertDontSee('Lyon')->assertQueryStringHas('transport', 'car')->assertQueryStringHas('search', 'Bruxelles')
         ->click('@trip-organizer')->click('@profile-close')->assertValue('#trip-search', 'Bruxelles')->assertNoJavaScriptErrors();
 });
+
+it('shows arrival and estimated duration with continuous accessible motion and ordered actions', function () {
+    $this->travelTo('2026-11-02 08:00:00 UTC');
+    $organizer = User::factory()->withProfile()->create();
+    $this->actingAs($organizer);
+    $page = visit('/trips')->resize(390, 844)->click('@trip-create');
+    $page->fill('#general_departure', 'Paris')->fill('#destination', 'Chessy')->fill('#meeting_point', 'Sous l’horloge')
+        ->fill('#departs_at', today('Europe/Paris')->addDays(2)->format('Y-m-d').'T23:00')
+        ->fill('#arrives_at', today('Europe/Paris')->addDays(3)->format('Y-m-d').'T01:30')
+        ->click('@trip-submit')->assertSee('Durée estimée : 2 h 30 min')->assertPresent('@trip-arrival-time')
+        ->assertPresent('@trip-management')->assertPresent('@trip-chat')->assertPresent('@trip-cancel')
+        ->assertScript("getComputedStyle(document.querySelector('.route-animated path')).animationIterationCount", 'infinite')
+        ->assertScript("document.querySelector('[data-test=trip-chat]').getBoundingClientRect().top < document.querySelector('[data-test=trip-management]').getBoundingClientRect().top", true)
+        ->assertScript('document.documentElement.scrollWidth <= window.innerWidth', true)->assertNoJavaScriptErrors();
+    $page->click('@trip-edit')->assertValue('#arrives_at', today('Europe/Paris')->addDays(3)->format('Y-m-d').'T01:30');
+});

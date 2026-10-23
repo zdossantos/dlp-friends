@@ -519,10 +519,15 @@ Le rendez-vous précis, la liste des participants et la discussion sont réserv�
 à l’organisateur et aux participants acceptés. Les autres membres autorisés
 voient seulement la proposition générale et leur propre demande. La première
 acceptation verrouille définitivement transport, sens, origine, destination et
-horaire ; le rendez-vous reste modifiable avec notification, les places sans
+horaires ; le rendez-vous reste modifiable avec notification, les places sans
 passer sous l’occupation. Refus, sortie acceptée, exclusion et annulation ont
 un motif obligatoire de 1 000 caractères au plus, limité aux personnes concernées.
 Le retrait d’une demande en attente ne demande aucun motif.
+
+Une arrivée estimée facultative complète le départ ; elle doit lui être
+strictement postérieure. La durée estimée correspond au temps écoulé entre
+ces deux horaires, y compris lors des changements d’heure. Sans arrivée connue,
+aucune durée n’est affichée. Les horaires sont verrouillés après acceptation.
 
 L’organisateur peut exclure avant le départ. Une sortie volontaire d’un
 participant accepté entre douze heures avant le départ incluses et le départ

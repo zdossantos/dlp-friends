@@ -79,7 +79,9 @@ function withdraw() {
 }
 </script>
 <template>
-    <div class="flex flex-wrap gap-2">
+    <div
+        class="flex flex-wrap gap-2 [&>button]:min-h-11 [&>button]:flex-1 [&>button]:whitespace-normal"
+    >
         <template v-if="registration">
             <template v-if="trip.can_edit && registration.status === 'pending'"
                 ><Button

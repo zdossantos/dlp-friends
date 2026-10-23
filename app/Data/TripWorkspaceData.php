@@ -72,6 +72,8 @@ final class TripWorkspaceData
             'id' => $trip->id, 'transport' => $trip->transport->value, 'direction' => $trip->direction->value,
             'general_departure' => $trip->general_departure, 'destination' => $trip->destination,
             'departs_at' => $trip->departs_at->toIso8601String(), 'audience' => $trip->audience->value,
+            'arrives_at' => $trip->arrives_at?->toIso8601String(),
+            'estimated_duration_minutes' => $trip->arrives_at === null ? null : (int) $trip->departs_at->diffInMinutes($trip->arrives_at),
             'remaining_places' => $trip->remainingPlaces(), 'car_seats' => $trip->car_seats,
             'cancelled_at' => $trip->cancelled_at?->toIso8601String(), 'first_accepted_at' => $trip->first_accepted_at?->toIso8601String(),
             'organizer' => $trip->organizer === null ? null : $this->member($trip->organizer),

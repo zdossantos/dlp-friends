@@ -111,3 +111,9 @@ Suivre rouge, vert, refactorisation pour les règles et régressions. La couvert
 - Parcours Pest Browser Chromium proposition/demande/décision/groupe, exclusion motivée, désistement/signalement/admin, annulation de confirmation, retour/avance, clavier et mobile FR/EN clair/sombre.
 
 Après contrôles ciblés, lancer les contrôles PHP/frontend pertinents complets, Wayfinder, Vite et build Docker. Aucun succès annoncé sans sortie récente. Déploiement Docker local sans reseed destructeur, avec migration explicitement exécutée ; aucun lancement automatique de migration ajouté à Docker. Mise à jour du PRD et des documents spécialisés seulement pour décrire le comportement réellement livré.
+
+## Ajustements validés du 23 octobre : horaires et actions
+
+L’organisateur peut renseigner une date et heure d’arrivée estimée, facultative si elle est inconnue. Le serveur stocke cet instant en UTC et calcule la durée écoulée depuis le départ, y compris à cheval sur minuit et lors des changements d’heure. L’arrivée doit être strictement postérieure au départ ; elle est verrouillée après la première acceptation comme le départ. Les anciens trajets conservent une arrivée inconnue, sans durée inventée. L’export personnel inclut cet horaire.
+
+La fiche place la discussion en action principale. Participants, demandes et modification sont regroupés dans une section de gestion ; l’annulation reste séparée. La ligne illustrant le parcours s’anime en continu, sauf préférence système de réduction des animations.

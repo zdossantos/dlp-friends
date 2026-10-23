@@ -27,6 +27,7 @@ class StoreTripRequest extends FormRequest
             'general_departure' => ['required', 'string', 'max:160'],
             'destination' => ['required', 'string', 'max:160'],
             'departs_at' => ['bail', 'required', 'date_format:Y-m-d\TH:i'],
+            'arrives_at' => ['bail', 'nullable', 'date_format:Y-m-d\TH:i'],
             'meeting_point' => ['required', 'string', 'max:255'],
             'audience' => ['sometimes', 'required', Rule::enum(TripAudience::class)],
             'car_seats' => ['nullable', 'required_if:transport,car', 'prohibited_unless:transport,car', 'integer', 'min:1', 'max:65535'],
@@ -49,6 +50,15 @@ class StoreTripRequest extends FormRequest
                 $validator->errors()->add('departs_at', __('trips.validation.future'));
             } elseif ($departure->startOfDay()->gt(CarbonImmutable::today('Europe/Paris')->addMonthsNoOverflow(12))) {
                 $validator->errors()->add('departs_at', __('trips.validation.horizon'));
+            }
+            if ($departure !== null && $this->filled('arrives_at')) {
+                $arrivalRaw = $this->string('arrives_at')->toString();
+                $arrival = CarbonImmutable::createFromFormat('!Y-m-d\TH:i', $arrivalRaw, 'Europe/Paris');
+                if ($arrival === null || $arrival->format('Y-m-d\TH:i') !== $arrivalRaw) {
+                    $validator->errors()->add('arrives_at', __('trips.validation.local_time'));
+                } elseif ($arrival->lte($departure)) {
+                    $validator->errors()->add('arrives_at', __('trips.validation.arrival_after_departure'));
+                }
             }
         }];
     }

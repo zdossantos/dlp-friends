@@ -139,7 +139,7 @@ final class BuildUserDataExport
             'organized_trips' => Trip::query()->where('organizer_user_id', $user->id)->orderBy('id')->get()->map(fn (Trip $trip): array => [
                 'id' => $trip->id, 'transport' => $trip->transport->value, 'direction' => $trip->direction->value,
                 'general_departure' => $trip->general_departure, 'destination' => $trip->destination,
-                'departs_at' => $trip->departs_at->toIso8601String(), 'meeting_point' => $trip->meeting_point,
+                'departs_at' => $trip->departs_at->toIso8601String(), 'arrives_at' => $trip->arrives_at?->toIso8601String(), 'meeting_point' => $trip->meeting_point,
                 'audience' => $trip->audience->value, 'car_seats' => $trip->car_seats,
                 'cancelled_at' => $trip->cancelled_at?->toIso8601String(), 'cancellation_reason' => $trip->cancellation_reason,
             ])->all(),
