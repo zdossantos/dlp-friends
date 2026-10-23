@@ -153,3 +153,15 @@ it('shows arrival and estimated duration with continuous accessible motion and o
         ->assertScript('document.documentElement.scrollWidth <= window.innerWidth', true)->assertNoJavaScriptErrors();
     $page->click('@trip-edit')->assertValue('#arrives_at', today('Europe/Paris')->addDays(3)->format('Y-m-d').'T01:30');
 });
+
+it('keeps route endpoints round with long place names on cards and details', function () {
+    $owner = User::factory()->withProfile()->create();
+    $trip = Trip::factory()->for($owner, 'organizer')->create(['audience' => 'members', 'general_departure' => 'Gare de Marne-la-Vallée — Chessy, rendez-vous principal', 'destination' => 'Paris, gare de Lyon — entrée côté place Louis-Armand']);
+    $this->actingAs($owner);
+    $round = "[...document.querySelectorAll('[data-test=trip-route-marker]')].length === 2 && [...document.querySelectorAll('[data-test=trip-route-marker]')].every(e => { const r=e.getBoundingClientRect(); return r.width >= 10 && Math.abs(r.width-r.height) < 0.1 && getComputedStyle(e).borderRadius === '50%'; })";
+    $page = visit('/trips')->resize(320, 800)->assertSee($trip->general_departure)
+        ->assertScript($round, true)->assertScript('document.documentElement.scrollWidth <= innerWidth', true);
+    $page->click('Détails du trajet')->assertPathIs('/trips/'.$trip->id)->assertScript($round, true)
+        ->assertScript('document.documentElement.scrollWidth <= innerWidth', true)->assertNoJavaScriptErrors();
+    $page->resize(1280, 900)->assertScript($round, true)->assertNoJavaScriptErrors();
+});

@@ -9,12 +9,12 @@ const { t } = useTranslations();
 </script>
 <template>
     <article
-        class="flex min-w-0 flex-col gap-4 rounded-2xl border border-border bg-card p-5"
+        class="flex min-w-0 flex-col gap-4 rounded-2xl border border-border bg-card p-4 sm:p-5"
     >
         <TripInformation :trip="trip" compact /><Button
             as-child
             variant="outline"
-            class="mt-auto w-full"
+            class="mt-auto min-h-11 w-full"
             ><Link :href="`/trips/${trip.id}`">{{
                 t('trips.details')
             }}</Link></Button

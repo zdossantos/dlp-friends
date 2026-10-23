@@ -34,7 +34,10 @@ function formatDuration(minutes: number): string {
 }
 </script>
 <template>
-    <section class="min-w-0 space-y-4 wrap-break-word">
+    <section
+        class="min-w-0 wrap-break-word"
+        :class="compact ? 'space-y-3' : 'space-y-5'"
+    >
         <template v-if="trip.transport">
             <div
                 class="flex items-center gap-2 text-sm font-medium text-muted-foreground"
@@ -55,33 +58,29 @@ function formatDuration(minutes: number): string {
                 >{{ t(`trips.direction.${trip.direction}`) }}
             </div>
             <div
-                class="relative grid min-w-0 grid-cols-[1rem_1fr] gap-x-3 gap-y-5"
-                :class="compact ? '' : 'py-2'"
+                class="grid min-w-0 grid-cols-[1rem_minmax(0,1fr)] gap-x-3 gap-y-4"
             >
-                <svg
-                    class="route-line absolute top-3 bottom-3 left-0 h-[calc(100%-1.5rem)] w-4 overflow-visible text-primary"
-                    viewBox="0 0 16 100"
-                    preserveAspectRatio="none"
-                    fill="none"
-                    aria-hidden="true"
-                    :class="{ 'route-animated': !compact }"
-                >
-                    <path
-                        d="M8 6V94"
-                        stroke="currentColor"
-                        stroke-width="2"
-                        stroke-dasharray="3 5"
+                <div class="relative flex justify-center" aria-hidden="true">
+                    <svg
+                        class="route-line pointer-events-none absolute top-3 left-1/2 h-[calc(100%+1rem)] w-0.5 -translate-x-1/2 text-primary"
+                        viewBox="0 0 2 100"
+                        preserveAspectRatio="none"
+                        fill="none"
+                        :class="{ 'route-animated': !compact }"
+                    >
+                        <path
+                            d="M1 0V100"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            stroke-dasharray="3 5"
+                            vector-effect="non-scaling-stroke"
+                        />
+                    </svg>
+                    <span
+                        data-test="trip-route-marker"
+                        class="route-marker relative mt-1.5 size-3 shrink-0 border-2 border-primary bg-card"
                     />
-                    <circle
-                        cx="8"
-                        cy="6"
-                        r="4"
-                        fill="var(--color-card)"
-                        stroke="currentColor"
-                        stroke-width="2"
-                    />
-                    <circle cx="8" cy="94" r="4" fill="currentColor" />
-                </svg>
+                </div>
                 <div class="col-start-2 min-w-0">
                     <p class="text-xs text-muted-foreground">
                         {{ t('trips.departure') }}
@@ -99,6 +98,12 @@ function formatDuration(minutes: number): string {
                         class="mt-1 block text-sm text-muted-foreground"
                         >{{ formatSchedule(trip.departs_at) }}</time
                     >
+                </div>
+                <div class="flex justify-center" aria-hidden="true">
+                    <span
+                        data-test="trip-route-marker"
+                        class="route-marker mt-1.5 size-3 shrink-0 bg-primary"
+                    />
                 </div>
                 <div class="col-start-2 min-w-0">
                     <p class="text-xs text-muted-foreground">
@@ -124,7 +129,8 @@ function formatDuration(minutes: number): string {
                 </div>
             </div>
             <div
-                class="flex flex-wrap gap-x-5 gap-y-3 border-y border-border py-3 text-sm"
+                class="flex flex-wrap gap-x-5 gap-y-2 text-sm"
+                :class="compact ? 'pt-1' : 'border-y border-border py-3'"
             >
                 <p
                     v-if="trip.estimated_duration_minutes != null"
@@ -198,6 +204,10 @@ function formatDuration(minutes: number): string {
 </template>
 
 <style scoped>
+.route-marker {
+    border-radius: 50%;
+}
+
 @media (prefers-reduced-motion: no-preference) {
     .route-animated path {
         animation: route-arrival 1.2s linear infinite;
