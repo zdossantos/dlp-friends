@@ -95,6 +95,8 @@ return [
     'deleted_member' => 'Compte supprimé',
     'history' => 'Ton inscription',
 
+    'place_search' => ['query' => 'recherche de lieu', 'placeholder' => 'Ville, gare ou adresse…', 'loading' => 'Recherche des lieux…', 'empty' => 'Aucun lieu trouvé. Tu peux conserver ta saisie.', 'unavailable' => 'Recherche indisponible. Tu peux saisir ton lieu librement.', 'hint' => 'Choisis un lieu général. Garde le rendez-vous précis dans le champ privé.', 'credit' => 'Recherche : Photon · données OpenStreetMap'],
+
     'validation' => [
         'full' => 'Ce trajet est complet.',
         'pending' => 'Cette demande n’est plus en attente.',

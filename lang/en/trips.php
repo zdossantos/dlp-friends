@@ -95,6 +95,8 @@ return [
     'deleted_member' => 'Deleted account',
     'history' => 'Your registration',
 
+    'place_search' => ['query' => 'place search', 'placeholder' => 'City, station or address…', 'loading' => 'Searching places…', 'empty' => 'No places found. You can keep your text.', 'unavailable' => 'Search unavailable. You can enter a place yourself.', 'hint' => 'Choose a general location. Keep the exact meeting point in the private field.', 'credit' => 'Search: Photon · OpenStreetMap data'],
+
     'validation' => [
         'full' => 'This trip is full.',
         'pending' => 'This request is no longer pending.',

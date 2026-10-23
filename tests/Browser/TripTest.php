@@ -7,9 +7,11 @@ use App\Models\TripDeparture;
 use App\Models\TripDepartureReport;
 use App\Models\TripRegistration;
 use App\Models\User;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 
 beforeEach(function () {
+    Http::fake(['photon.komoot.io/*' => Http::response(['features' => []])]);
     Storage::fake('local');
     Avatar::created(fn (Avatar $avatar) => Storage::put($avatar->image_path, base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScL8WQAAAABJRU5ErkJggg==')));
 });
@@ -164,4 +166,14 @@ it('keeps route endpoints round with long place names on cards and details', fun
     $page->click('Détails du trajet')->assertPathIs('/trips/'.$trip->id)->assertScript($round, true)
         ->assertScript('document.documentElement.scrollWidth <= innerWidth', true)->assertNoJavaScriptErrors();
     $page->resize(1280, 900)->assertScript($round, true)->assertNoJavaScriptErrors();
+});
+
+it('suggests places for both endpoints using keyboard and preserves free text on failure', function () {
+    $this->actingAs(User::factory()->withProfile()->create());
+    $page = visit('/trips')->resize(320, 800)->click('@trip-create');
+    $page->script("window.fetch = async () => new Response(JSON.stringify({suggestions: ['Gare de Lyon, Paris, France', 'Gare de Lyon Part-Dieu, Lyon, France']}), {status: 200, headers: {'Content-Type': 'application/json'}})");
+    $page->fill('#general_departure', 'Gare de Lyon')->assertSee('Gare de Lyon, Paris, France')->keys('#general_departure', ['ArrowDown', 'Enter'])->assertValue('#general_departure', 'Gare de Lyon Part-Dieu, Lyon, France');
+    $page->fill('#destination', 'Gare de Lyon')->click('@destination-place-0')->assertValue('#destination', 'Gare de Lyon, Paris, France');
+    $page->script("window.fetch = async () => new Response('{}', {status: 503})");
+    $page->fill('#destination', 'Un lieu libre')->assertSee('Recherche indisponible. Tu peux saisir ton lieu librement.')->assertValue('#destination', 'Un lieu libre')->assertScript('document.documentElement.scrollWidth <= innerWidth', true)->assertNoJavaScriptErrors();
 });

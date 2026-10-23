@@ -117,3 +117,37 @@ Après contrôles ciblés, lancer les contrôles PHP/frontend pertinents complet
 L’organisateur peut renseigner une date et heure d’arrivée estimée, facultative si elle est inconnue. Le serveur stocke cet instant en UTC et calcule la durée écoulée depuis le départ, y compris à cheval sur minuit et lors des changements d’heure. L’arrivée doit être strictement postérieure au départ ; elle est verrouillée après la première acceptation comme le départ. Les anciens trajets conservent une arrivée inconnue, sans durée inventée. L’export personnel inclut cet horaire.
 
 La fiche place la discussion en action principale. Participants, demandes et modification sont regroupés dans une section de gestion ; l’annulation reste séparée. La ligne illustrant le parcours s’anime en continu, sauf préférence système de réduction des animations.
+
+
+## Suggestions de lieux validées le 23 octobre
+
+Les deux lieux généraux utilisent Photon/OpenStreetMap via une route Laravel
+réservée aux membres autorisés, limitée à 60 recherches par minute. À partir de
+trois caractères, une pause de 350 ms déclenche une recherche FR/EN ; une nouvelle
+saisie annule la précédente. Cinq libellés de 160 caractères au plus sont proposés
+avec les primitives Combobox Reka et le champ Input existants, au clavier comme
+au toucher. Chargement, absence de résultat et panne sont traduits ; la saisie
+libre reste valide. Le rendez-vous privé reste un champ séparé, jamais envoyé.
+Le serveur transmet seulement la recherche, la langue et la limite, sans identité,
+coordonnées de compte ou cookie ; il ne persiste pas les recherches ni les
+coordonnées géographiques. Le service n’est pas utilisé pour calculer une durée.
+
+## Relecture des demandes précédentes le 23 octobre
+
+- Visites : Select partagés, dates et mois Safari, date courante, recalage de la
+  fin, erreurs FR/EN, calendrier et matchs initiaux, repères des visites propres,
+  confirmation rouge et profil public depuis les listes : couverts dans VisitTest
+  et les tests serveur des visites.
+- Navigation : BackLink et navigationHistory partagés, conservation des filtres,
+  absence de barre inférieure dans Conversations/Group. Le bouton de navigateur
+  externe dispose de tests selon la plateforme ; Instagram physique reste à vérifier.
+- Trajets : avatar à gauche avec UserAvatar, profil public EventParticipantProfile,
+  recherche départ/arrivée, pagination masquée à une page, animation continue avec
+  mouvement réduit, repères ronds, horaires et actions regroupées : couverts par
+  TripTest navigateur et les tests métier des trajets.
+- Gestion : exclusion motivée, confirmations, confidentialité et signalement du
+  désistement entre H−12 inclus et le départ exclu : tests serveur dédiés, sans
+  sanction automatique.
+- Oubli retrouvé : suggestions de lieux réelles, ajoutées dans cette révision.
+  La durée reste celle entre les deux horaires estimés saisis ; aucun moteur de
+  calcul d’itinéraire n’est intégré.

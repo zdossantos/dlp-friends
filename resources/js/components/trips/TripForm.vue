@@ -3,6 +3,7 @@ import { useForm } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 import ResponsiveConfirmation from '@/components/common/ResponsiveConfirmation.vue';
 import InputError from '@/components/InputError.vue';
+import TripPlaceInput from '@/components/trips/TripPlaceInput.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -112,7 +113,15 @@ function submit(confirmed = false) {
             class="min-w-0 space-y-2"
         >
             <Label :for="field">{{ t(`trips.fields.${field}`) }}</Label>
+            <TripPlaceInput
+                v-if="field === 'general_departure' || field === 'destination'"
+                :id="field"
+                v-model="form[field]"
+                :disabled="locked"
+                :invalid="Boolean(form.errors[field])"
+            />
             <Input
+                v-else
                 :id="field"
                 v-model="form[field]"
                 :type="

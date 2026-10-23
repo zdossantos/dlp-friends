@@ -529,6 +529,12 @@ strictement postérieure. La durée estimée correspond au temps écoulé entre
 ces deux horaires, y compris lors des changements d’heure. Sans arrivée connue,
 aucune durée n’est affichée. Les horaires sont verrouillés après acceptation.
 
+Les lieux de départ et d’arrivée proposent des suggestions Photon/OpenStreetMap
+après trois caractères, via le serveur et après une courte pause de saisie.
+Seuls le texte recherché et la langue sont transmis au fournisseur ; le champ
+privé du rendez-vous n’utilise pas ce service. La saisie libre reste possible,
+y compris en cas de panne, sans obliger le membre à choisir une suggestion.
+
 L’organisateur peut exclure avant le départ. Une sortie volontaire d’un
 participant accepté entre douze heures avant le départ incluses et le départ
 exclu peut être signalée avec explication. La preuve de sortie survit à une

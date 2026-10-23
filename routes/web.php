@@ -89,6 +89,7 @@ use App\Http\Controllers\TripChatReadController;
 use App\Http\Controllers\TripController;
 use App\Http\Controllers\TripDepartureReportController;
 use App\Http\Controllers\TripParticipantController;
+use App\Http\Controllers\TripPlaceSearchController;
 use App\Http\Controllers\TripRegistrationController;
 use App\Http\Controllers\TripRegistrationDecisionController;
 use App\Http\Controllers\TripRegistrationIndexController;
@@ -283,6 +284,7 @@ Route::middleware(['auth', 'verified', 'social', 'terms.current'])->group(functi
                 Route::get('trips/{trip}/participants', [TripParticipantController::class, 'index'])->name('trips.participants');
                 Route::get('trips/{trip}/members/{member}', [TripParticipantController::class, 'show'])->name('trips.members.show');
                 Route::get('trips/{trip}/requests', TripRegistrationIndexController::class)->name('trips.requests');
+                Route::post('trips/places', TripPlaceSearchController::class)->middleware('throttle:60,1')->name('trips.places');
                 Route::get('trips/mine', MyTripController::class)->name('trips.mine');
                 Route::resource('trips', TripController::class)->only(['index', 'store', 'show', 'update']);
 
