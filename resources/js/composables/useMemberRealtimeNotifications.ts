@@ -113,10 +113,6 @@ export function useMemberRealtimeNotifications(
         ],
         (notification) => {
             if ('access' in notification) {
-                if (page.url.split(/[?#]/, 1)[0] === '/conversations') {
-                    router.reload({ only: ['groups'] });
-                }
-
                 if (page.component === 'Conversations/Group') {
                     const event = page.props[notification.context] as
                         { id: number } | undefined;

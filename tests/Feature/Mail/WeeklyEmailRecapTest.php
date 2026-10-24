@@ -16,8 +16,13 @@ use Carbon\CarbonImmutable;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\Client\ConnectionException;
+use Illuminate\Queue\WorkerOptions;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Queue;
+use Illuminate\Support\Str;
 
 uses(RefreshDatabase::class);
 
@@ -320,4 +325,178 @@ test('a member without email opt in receives no recap despite old unread message
     expect(WeeklyEmailRecapDelivery::query()->count())->toBe(0);
     Queue::assertNothingPushed();
     Mail::assertNothingSent();
+});
+
+test('recap network sending happens outside the delivery transaction', function () {
+    $delivery = reserveRecapFor($this);
+    $baseline = DB::transactionLevel();
+    Mail::shouldReceive('to')->once()->with($this->member->email)->andReturnSelf();
+    Mail::shouldReceive('send')->once()->andReturnUsing(function () use ($baseline) {
+        expect(DB::transactionLevel())->toBe($baseline);
+    });
+
+    (new SendWeeklyEmailRecap($delivery->id))->handle(app(BuildWeeklyEmailRecap::class));
+    expect($delivery->fresh()->sent_at)->not->toBeNull();
+});
+
+test('resend retries keep the same idempotency key and frozen request after an uncertain acceptance', function () {
+    config()->set('mail.default', 'resend');
+    config()->set('services.resend.key', 'test-key');
+    $delivery = reserveRecapFor($this);
+    $requests = [];
+    Http::fake(function ($request) use (&$requests) {
+        $requests[] = ['key' => $request->header('Idempotency-Key'), 'body' => $request->data()];
+        if (count($requests) === 1) {
+            throw new ConnectionException('Response lost after acceptance');
+        }
+
+        return Http::response(['id' => 'provider-email-id']);
+    });
+    $job = new SendWeeklyEmailRecap($delivery->id);
+    expect(fn () => $job->handle(app(BuildWeeklyEmailRecap::class)))
+        ->toThrow(ConnectionException::class);
+    $this->member->update(['locale' => 'en']);
+    $job->handle(app(BuildWeeklyEmailRecap::class));
+
+    expect($requests)->toHaveCount(2)->and($requests[0]['key'])->not->toBeEmpty()
+        ->and($requests[1])->toBe($requests[0])
+        ->and($delivery->fresh()->sent_at)->not->toBeNull()
+        ->and($delivery->fresh()->resend_payload)->toBeNull();
+});
+
+test('a recap waiting on its lease is released and rechecks consent before resuming', function () {
+    Mail::fake();
+    $delivery = reserveRecapFor($this);
+    $delivery->forceFill(['reserved_at' => now()])->save();
+    config()->set('queue.connections.database.after_commit', false);
+    $queue = Queue::connection('database');
+    $queue->push(new SendWeeklyEmailRecap($delivery->id));
+    $this->travel(2)->minutes();
+    $job = $queue->pop();
+    $job->fire();
+    expect($job->isReleased())->toBeTrue()->and($queue->size())->toBe(1);
+    Mail::assertNothingSent();
+
+    $this->member->forceFill(['weekly_recap_messages' => false])->save();
+    $this->travel(9)->minutes();
+    $job = $queue->pop();
+    $job->fire();
+    expect($queue->size())->toBe(0)->and($delivery->fresh()->skipped_at)->not->toBeNull();
+    Mail::assertNothingSent();
+});
+
+test('an uncertain recap is stopped before the provider idempotency window expires', function () {
+    config()->set('mail.default', 'resend');
+    config()->set('services.resend.key', 'test-key');
+    $attempts = 0;
+    Http::fake(function () use (&$attempts) {
+        $attempts++;
+        throw new ConnectionException('Lost response');
+    });
+    $delivery = reserveRecapFor($this);
+    $job = new SendWeeklyEmailRecap($delivery->id);
+    expect(fn () => $job->handle(app(BuildWeeklyEmailRecap::class)))
+        ->toThrow(ConnectionException::class);
+    expect(DB::table('weekly_email_recap_deliveries')->where('id', $delivery->id)->value('resend_payload'))
+        ->not->toContain($this->member->email);
+    $this->travel(24)->hours();
+    $job->handle(app(BuildWeeklyEmailRecap::class));
+    expect($attempts)->toBe(1);
+    expect($delivery->fresh()->sent_at)->toBeNull()
+        ->and($delivery->fresh()->skipped_at)->not->toBeNull()
+        ->and($delivery->fresh()->resend_payload)->toBeNull();
+});
+
+test('a pending frozen recap is cancelled after its recipient or match preference changes', function (string $change) {
+    config()->set('mail.default', 'resend');
+    config()->set('services.resend.key', 'test-key');
+    $attempts = 0;
+    Http::fake(function () use (&$attempts) {
+        $attempts++;
+        throw new ConnectionException('Lost response');
+    });
+    $delivery = reserveRecapFor($this);
+    $job = new SendWeeklyEmailRecap($delivery->id);
+    expect(fn () => $job->handle(app(BuildWeeklyEmailRecap::class)))
+        ->toThrow(ConnectionException::class);
+    $this->member->forceFill($change === 'email' ? ['email' => 'changed@example.test'] : ['weekly_recap_matches' => false])->save();
+    $job->handle(app(BuildWeeklyEmailRecap::class));
+
+    expect($attempts)->toBe(1);
+    expect($delivery->fresh()->skipped_at)->not->toBeNull()
+        ->and($delivery->fresh()->resend_payload)->toBeNull();
+})->with(['email', 'matches']);
+
+test('exhausted recap attempts discard the temporary encrypted recipient snapshot', function () {
+    config()->set('mail.default', 'resend');
+    config()->set('services.resend.key', 'test-key');
+    $attempts = 0;
+    Http::fake(function () use (&$attempts) {
+        $attempts++;
+        throw new ConnectionException('Lost response');
+    });
+    $delivery = reserveRecapFor($this);
+    $job = new SendWeeklyEmailRecap($delivery->id);
+    expect(fn () => $job->handle(app(BuildWeeklyEmailRecap::class)))
+        ->toThrow(ConnectionException::class);
+
+    $job->failed(new RuntimeException('Attempts exhausted'));
+
+    expect($delivery->fresh()->skipped_at)->not->toBeNull()
+        ->and($delivery->fresh()->resend_payload)->toBeNull()
+        ->and($delivery->fresh()->reserved_at)->toBeNull();
+});
+
+test('a concurrent recap consumer waits while the first provider request is in flight', function () {
+    config()->set('mail.default', 'resend');
+    config()->set('services.resend.key', 'test-key');
+    $delivery = reserveRecapFor($this);
+    $duplicate = (new SendWeeklyEmailRecap($delivery->id))->withFakeQueueInteractions();
+    $baseline = DB::transactionLevel();
+    Http::fake(function () use ($duplicate, $baseline) {
+        expect(DB::transactionLevel())->toBe($baseline);
+        $duplicate->handle(app(BuildWeeklyEmailRecap::class));
+        $duplicate->assertReleased();
+        $duplicate->failed(new RuntimeException('An older duplicate exhausted its attempts'));
+        expect(WeeklyEmailRecapDelivery::query()->findOrFail($duplicate->deliveryId)->skipped_at)->toBeNull();
+
+        return Http::response(['id' => 'provider-email-id']);
+    });
+    (new SendWeeklyEmailRecap($delivery->id))->handle(app(BuildWeeklyEmailRecap::class));
+
+    Http::assertSentCount(1);
+    expect($delivery->fresh()->sent_at)->not->toBeNull();
+});
+
+test('weekly dispatch clears expired snapshots even when the worker died and consent was withdrawn', function () {
+    Queue::fake();
+    $delivery = reserveRecapFor($this);
+    $delivery->forceFill([
+        'reserved_at' => now()->subMinutes(11),
+        'first_attempt_at' => now()->subHours(25),
+        'idempotency_key' => (string) Str::uuid(),
+        'resend_payload' => ['request' => ['to' => [$this->member->email]], 'matches_enabled' => false],
+    ])->save();
+    $this->member->forceFill(['weekly_recap_messages' => false])->save();
+
+    $this->artisan('notifications:dispatch-weekly-recaps')->assertSuccessful();
+
+    expect($delivery->fresh()->resend_payload)->toBeNull()
+        ->and($delivery->fresh()->skipped_at)->not->toBeNull();
+    Queue::assertNothingPushed();
+});
+
+test('a first recap attempt delayed by a queue outage keeps the documented weekly eligibility window', function () {
+    Mail::fake();
+    $delivery = reserveRecapFor($this);
+    config()->set('queue.connections.database.after_commit', false);
+    $queue = Queue::connection('database');
+    $queue->push(new SendWeeklyEmailRecap($delivery->id));
+    $this->travel(2)->days();
+
+    app('queue.worker')->process('database', $queue->pop(), new WorkerOptions(maxTries: 3));
+
+    Mail::assertSentCount(1);
+    expect($delivery->fresh()->sent_at)->not->toBeNull()
+        ->and($delivery->fresh()->skipped_at)->toBeNull();
 });

@@ -177,3 +177,116 @@ it('suggests places for both endpoints using keyboard and preserves free text on
     $page->script("window.fetch = async () => new Response('{}', {status: 503})");
     $page->fill('#destination', 'Un lieu libre')->assertSee('Recherche indisponible. Tu peux saisir ton lieu librement.')->assertValue('#destination', 'Un lieu libre')->assertScript('document.documentElement.scrollWidth <= innerWidth', true)->assertNoJavaScriptErrors();
 });
+
+it('creates a return trip by public transport without car seats', function (string $transport) {
+    $this->actingAs(User::factory()->withProfile()->create());
+
+    visit('/trips')->resize(390, 844)->click('@trip-create')
+        ->click('#transport')->click('[data-slot="select-item"][data-value="'.$transport.'"]')
+        ->click('#direction')->click('[data-slot="select-item"][data-value="return"]')
+        ->assertMissing('#car_seats')
+        ->fill('#general_departure', 'Chessy')->fill('#destination', 'Paris')
+        ->fill('#meeting_point', 'Sous la grande horloge')->click('@trip-submit')
+        ->assertSee('Sous la grande horloge')->assertPresent('@trip-chat')->assertNoJavaScriptErrors();
+
+    $trip = Trip::query()->sole();
+    expect($trip->transport->value)->toBe($transport)
+        ->and($trip->direction->value)->toBe('return')
+        ->and($trip->car_seats)->toBeNull();
+})->with(['train', 'rer', 'bus']);
+
+it('withdraws a pending request and reapplies without duplicating registrations or departures', function () {
+    $member = User::factory()->withProfile()->create();
+    $trip = Trip::factory()->create(['audience' => 'members']);
+    $trip->chat()->create();
+    $this->actingAs($member);
+
+    $page = visit("/trips/{$trip->id}")->click('@trip-request')->assertSee('En attente');
+    $registration = $trip->registrations()->sole();
+    $page->click('Retirer ma demande')->assertPresent('@trip-request')->assertDontSee($trip->meeting_point);
+    expect($registration->fresh()->status->value)->toBe('withdrawn')
+        ->and($trip->departures()->count())->toBe(0);
+
+    $page->click('@trip-request')->assertSee('En attente')->assertNoJavaScriptErrors();
+    expect($trip->registrations()->sole()->id)->toBe($registration->id)
+        ->and($registration->fresh()->status->value)->toBe('pending')
+        ->and($registration->fresh()->reason)->toBeNull();
+});
+
+it('lets an accepted passenger cancel then confirm leaving and revokes private access', function () {
+    $member = User::factory()->withProfile()->create();
+    $trip = Trip::factory()->create(['audience' => 'members', 'car_seats' => 1]);
+    $trip->chat()->create();
+    $registration = TripRegistration::factory()->for($trip)->for($member, 'user')->create(['status' => 'accepted']);
+    $this->actingAs($member);
+
+    $page = visit("/trips/{$trip->id}")->assertSee($trip->meeting_point)->assertPresent('@trip-chat')
+        ->click('Quitter le trajet')->fill('#trip-reason', 'Je prends un autre train')
+        ->click('@trip-action-submit')->click('@trip-danger-cancel');
+    expect($registration->fresh()->status->value)->toBe('accepted')->and($trip->remainingPlaces())->toBe(0);
+    $page->click('@trip-action-submit')->click('@trip-danger-submit')
+        ->assertMissing('@trip-chat')->assertMissing('@trip-participants')
+        ->assertDontSee($trip->meeting_point)->assertNoJavaScriptErrors();
+    expect($registration->fresh()->status->value)->toBe('withdrawn')
+        ->and($trip->remainingPlaces())->toBe(1)
+        ->and($trip->departures()->sole()->reason)->toBe('Je prends un autre train');
+    $page->assertScript("async () => (await fetch('/trips/{$trip->id}/chat')).status", 403);
+});
+
+it('rejects a stale acceptance when another passenger has taken the last seat', function () {
+    $organizer = User::factory()->withProfile()->create();
+    $trip = Trip::factory()->for($organizer, 'organizer')->create(['audience' => 'members', 'car_seats' => 1]);
+    $trip->chat()->create();
+    $pending = TripRegistration::factory()->for($trip)->create(['status' => 'pending']);
+    $this->actingAs($organizer);
+    $page = visit("/trips/{$trip->id}/requests")->assertPresent('@trip-accept-'.$pending->id);
+    TripRegistration::factory()->for($trip)->create(['status' => 'accepted']);
+
+    $page->click('@trip-accept-'.$pending->id)->assertSee('Ce trajet est complet.')->assertNoJavaScriptErrors();
+    expect($pending->fresh()->status->value)->toBe('pending')->and($trip->remainingPlaces())->toBe(0);
+});
+
+it('rejects lowering capacity below accepted passengers and allows correcting the form', function () {
+    $organizer = User::factory()->withProfile()->create();
+    $trip = Trip::factory()->for($organizer, 'organizer')->create(['car_seats' => 3, 'first_accepted_at' => now()]);
+    TripRegistration::factory()->for($trip)->count(2)->create(['status' => 'accepted']);
+    $this->actingAs($organizer);
+
+    $page = visit("/trips/{$trip->id}")->click('@trip-edit')->fill('#car_seats', '1')->click('@trip-submit')
+        ->assertSee('Le nombre de places ne peut pas être inférieur au nombre de participants acceptés.')
+        ->assertValue('#car_seats', '1');
+    expect($trip->fresh()->car_seats)->toBe(3);
+    $page->fill('#car_seats', '2')->click('@trip-submit')->assertMissing('#car_seats')->assertNoJavaScriptErrors();
+    expect($trip->fresh()->car_seats)->toBe(2)->and($trip->fresh()->remainingPlaces())->toBe(0);
+});
+
+it('keeps trip private routes inaccessible to non accepted members', function (?string $status) {
+    $member = User::factory()->withProfile()->create();
+    $trip = Trip::factory()->create(['audience' => 'members']);
+    $trip->chat()->create();
+    if ($status !== null) {
+        TripRegistration::factory()->for($trip)->for($member, 'user')->create(['status' => $status]);
+    }
+    $this->actingAs($member);
+    $page = visit("/trips/{$trip->id}")->assertDontSee($trip->meeting_point)->assertMissing('@trip-chat')->assertMissing('@trip-participants');
+    foreach (['chat', 'participants', 'requests'] as $path) {
+        $page->assertScript("async () => (await fetch('/trips/{$trip->id}/{$path}')).status", 403);
+    }
+    $page->assertNoJavaScriptErrors();
+})->with([null, 'pending', 'refused', 'withdrawn', 'removed']);
+
+it('notifies a candidate of acceptance and opens the meeting point and group from notifications', function () {
+    $member = User::factory()->withProfile()->create();
+    $trip = Trip::factory()->create(['audience' => 'members']);
+    $trip->chat()->create();
+    $this->actingAs($member);
+    visit("/trips/{$trip->id}")->click('@trip-request')->assertSee('En attente')->assertDontSee($trip->meeting_point);
+    $registration = $trip->registrations()->sole();
+    $this->actingAs($trip->organizer);
+    visit("/trips/{$trip->id}/requests")->click('@trip-accept-'.$registration->id)->assertSee('Acceptée');
+    $notification = $member->notifications()->sole();
+    $this->actingAs($member);
+    visit('/notifications')->click('@notification-'.$notification->id)->assertPathIs("/trips/{$trip->id}")
+        ->assertSee($trip->meeting_point)->click('@trip-chat')->assertPathIs("/trips/{$trip->id}/chat")
+        ->assertPresent('#message-content')->assertNoJavaScriptErrors();
+});

@@ -1,6 +1,11 @@
 export type PartnerRevisionStatus =
     'draft' | 'pending_approval' | 'approved' | 'rejected';
 
+export type PartnerAnnouncementPagination = {
+    previous: string | null;
+    next: string | null;
+};
+
 export type PartnerRevision = {
     id: number;
     nameFr: string;

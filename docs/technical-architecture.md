@@ -191,9 +191,16 @@ création du run et de la métrique, puis job après commit. La préparation cap
 l’audience par lots de 500 (compte actif, vérifié, rôle `user`, hors suppression,
 préférence absente ou active), insère les livraisons uniques et déclenche leurs jobs après commit.
 Chaque livraison revérifie l’éligibilité sous verrou, écrit notification et
-métrique atomiquement, puis diffuse via Reverb après commit. La finalisation
+métrique atomiquement, puis déclenche après commit les jobs indépendants
+`BroadcastPartnerAnnouncement` et `PushPartnerAnnouncement`. Le second réutilise
+le canal et les livraisons Web Push existants avec le même UUID de notification,
+une copie générique et les contrôles d’éligibilité, préférences et appareil
+revérifiés à la consommation. La finalisation
 attend la fin de préparation et des livraisons non terminales ; les reprises
 conservent les lignes déjà livrées ou ignorées et réessaient les broadcasts manqués.
+La reprise administrative redispatche aussi le Push des livraisons conservées,
+même si le broadcast est terminé ; la clé notification/appareil empêche de
+renvoyer un Push déjà livré. Aucun marqueur ni table supplémentaire n’est ajouté.
 
 Le centre de notifications présente l’annonce reçue dans le panneau adaptatif
 `useResponsiveModal`. Son ouverture appelle la route authentifiée de lecture
@@ -203,7 +210,7 @@ par jeton opaque et enregistre un clic. Le retrait conserve sa confirmation.
 Les compteurs d’engagement sont atomiques ; `PartnerAnnouncementStatisticsData`
 ne transmet que les agrégats, avec compteurs opérationnels supplémentaires
 pour l’administration. Les taux sont rapportés aux livraisons effectives.
-Il n’existe ni API séparée, ni ciblage partenaire, ni envoi e-mail/push.
+Il n’existe ni API séparée, ni ciblage partenaire, ni envoi e-mail pour ces annonces.
 
 Les livraisons d'annonces conservent un instantané immuable du contenu public
 reçu. Leur clé étrangère vers l'annonce est nullable avec `null on delete` : la
@@ -317,16 +324,16 @@ la balise de validation Search Console aux documents HTML.
 
 ## Services Docker
 
-| Service | Responsabilité |
-| --- | --- |
-| `web` | Application HTTP avec PHP-FPM et Nginx |
-| `worker` | Exécution des files Laravel |
-| `scheduler` | Exécution des tâches planifiées |
-| `reverb` | Serveur WebSocket |
-| MySQL Coolify indépendant | Base relationnelle persistante sur un réseau privé externe |
-| Redis Coolify indépendant | Cache, sessions et files sur un réseau privé externe authentifié |
-| Garage Coolify indépendant | Stockage objet privé compatible S3 |
-| `mailpit` | Capture locale des e-mails |
+| Service                    | Responsabilité                                                   |
+| -------------------------- | ---------------------------------------------------------------- |
+| `web`                      | Application HTTP avec PHP-FPM et Nginx                           |
+| `worker`                   | Exécution des files Laravel                                      |
+| `scheduler`                | Exécution des tâches planifiées                                  |
+| `reverb`                   | Serveur WebSocket                                                |
+| MySQL Coolify indépendant  | Base relationnelle persistante sur un réseau privé externe       |
+| Redis Coolify indépendant  | Cache, sessions et files sur un réseau privé externe authentifié |
+| Garage Coolify indépendant | Stockage objet privé compatible S3                               |
+| `mailpit`                  | Capture locale des e-mails                                       |
 
 Les quatre services applicatifs utilisent la même image Docker. MySQL et Redis
 sont des ressources Coolify indépendantes ; le worker et le scheduler ne publient
@@ -345,12 +352,12 @@ cycle de vie de MySQL ni ses identifiants administrateur en production.
 
 ## Environnements
 
-| Sujet | Développement | CI | Production |
-| --- | --- | --- | --- |
-| Base de données | MySQL Docker | MySQL de service pour les suites Pest | MySQL privé |
-| Cache et files | Redis Docker | Stockages `array` et files synchrones | Redis privé |
-| Fichiers | MinIO via le disque `s3` | Disque local éphémère | Garage privé via le disque `s3` |
-| E-mails | Mailpit | Transport `array` | Resend via le mailer `resend` |
+| Sujet           | Développement            | CI                                    | Production                      |
+| --------------- | ------------------------ | ------------------------------------- | ------------------------------- |
+| Base de données | MySQL Docker             | MySQL de service pour les suites Pest | MySQL privé                     |
+| Cache et files  | Redis Docker             | Stockages `array` et files synchrones | Redis privé                     |
+| Fichiers        | MinIO via le disque `s3` | Disque local éphémère                 | Garage privé via le disque `s3` |
+| E-mails         | Mailpit                  | Transport `array`                     | Resend via le mailer `resend`   |
 
 Les secrets sont fournis par variables d'environnement et ne sont jamais
 intégrés à l'image ou au dépôt.
@@ -375,6 +382,23 @@ services longs possèdent également un healthcheck Docker et des limites de
 ressources.
 
 ## Contrôle des données personnelles
+
+La révocation des sessions ne dépend pas du stockage SQL ou Redis.
+`users.session_version` est incrémenté sous verrou dans les transactions de
+bannissement, levée de sanction et demande de suppression. Le listener de
+l’événement Laravel `Login` enregistre la version de l’utilisateur authentifié
+dans la session, y compris après authentification Fortify, Google ou passkey
+et reconnexion par cookie remember. `EnsureSessionIsCurrent` compare cette
+valeur à une lecture fraîche du compte sur les requêtes web et déconnecte
+uniquement le navigateur périmé, sans renouveler le jeton des connexions
+récentes. La rotation du remember token reste effectuée lors de la révocation.
+
+La migration `2026_10_23_050000_add_session_version_to_users` doit être exécutée
+explicitement avant de servir le nouveau code ; aucun entrypoint ne la lance.
+Les comptes existants et les sessions sans version commencent à zéro : pas de
+déconnexion générale au déploiement, mais aucune adoption automatique d’une
+version ultérieure par une ancienne session. Les anciennes clés Redis peuvent
+expirer normalement ; aucune purge Redis globale n’est nécessaire.
 
 Les exports JSON sont construits à la demande par `BuildUserDataExport` et
 renvoyés directement au membre authentifié. Aucun fichier d’export ni état de
@@ -411,6 +435,12 @@ Le broadcaster Reverb signe une identité minimale `user_id` dans `channel_data`
 pour chaque canal privé. `IdentityAwareChannelManager` substitue le canal privé
 qui valide signature et activité à l’abonnement et recontrôle l’activité fraîche
 à chaque diffusion, y compris `broadcastToAll` utilisé en distribution. La
+Policy `ConversationPolicy::send` est aussi recontrôlée sur une conversation
+fraîche à l’abonnement, pour les whispers et avant chaque livraison privée.
+Sur les canaux personnels, `message.sent` fournit l’identifiant de conversation
+à ce contrôle, même si le worker a publié le message avant le blocage.
+Les événements privés différés rechargent également la conversation et
+recontrôlent cette Policy lors de leur consommation par le worker. La
 terminaison signée des connexions intervient après commit ; son échec ne
 permet pas de livraison à un destinataire inactif. Événements et notifications
 différés recontrôlent aussi les participants. Aucun code vendor n’est modifié ;
@@ -498,7 +528,6 @@ rotations et est retirée à la destruction du layout. Les tests Chromium
 vérifient le déclenchement, la persistance et les gardes ; le rétablissement du
 conteneur natif doit encore être confirmé sur l’iPhone affecté.
 
-
 ## Trajets et messagerie commune (issue 304)
 
 Les routes `/trips` gardent le domaine séparé des événements et visites.
@@ -521,3 +550,46 @@ contrôle le chat. Les canaux de livraison revérifient les droits, y compris
 après mise en file. `TripRetentionAccounts` partage entre purge planifiée et
 suppression de compte le graphe de conservation des données bannies ; cette
 logique ne crée pas de moteur générique de relations.
+
+## Réservations et reprises des notifications
+
+Le worker de production conserve son timeout de 90 secondes. Les réservations
+Redis, SQL et Beanstalkd expirent par défaut après 120 secondes ;
+`deployment:check` refuse un `retry_after` inférieur à 120 pour la connexion
+courante. Les appels Web Push et récapitulatif Resend ont un délai de connexion
+de 5 secondes et un délai total de 30 secondes ; SMTP est borné à 30 secondes.
+
+Les réservations applicatives des Push et récapitulatifs durent dix minutes.
+Un consommateur qui trouve une réservation active remet son job en file jusqu’à
+son expiration. Les jobs autorisent les remises en file sans limite de tentatives, avec une
+limite de quatre exceptions ; attendre une réservation ne consomme pas ce
+budget d’erreurs. Le récapitulatif conserve sa fenêtre métier hebdomadaire,
+y compris après une panne de file de plusieurs jours. Une reprise recontrôle l’accès, les préférences et l’appareil.
+Un Push déjà livré n’est pas renvoyé. Le protocole Push n’offre pas de transaction
+avec MySQL : un arrêt après acceptation externe mais avant enregistrement peut
+encore produire une nouvelle tentative.
+
+Le récapitulatif réserve sa livraison sous une courte transaction SQL, sans
+verrou utilisateur pendant l’envoi réseau. En production, lui seul appelle
+l’API Resend directement via le client HTTP Laravel : le transport Resend Laravel
+installé ne transmet pas l’option HTTP d’idempotence. Le même UUID et la même
+requête chiffrée sont réutilisés après une réponse perdue, même si la langue ou
+les compteurs changent. Une modification de l’adresse destinataire, le retrait
+d’un consentement nécessaire ou la perte d’éligibilité arrête cette reprise.
+Le transport Laravel reste utilisé pour les autres mails et pour Mailpit.
+Le HTML utilise le Mailable existant ; [Resend en dérive la version texte](https://resend.com/changelog/automatic-plain-text-emails).
+
+[Resend conserve ses clés pendant 24 heures](https://resend.com/changelog/idempotency-keys).
+Après 23 heures depuis la première tentative, ou à l’échec définitif du job,
+le récapitulatif est arrêté et son payload temporaire effacé, sauf si un autre
+consommateur détient encore sa réservation. Le dispatch hebdomadaire nettoie
+aussi les instantanés de plus de 24 heures sans réservation active, même si
+le compte n’est plus éligible : un worker tué sans rappel d’échec ne conserve
+ainsi pas indéfiniment le destinataire chiffré. Une acceptation
+incertaine ne déclenche pas un nouvel envoi hors fenêtre. `sent_at` ne devient
+vrai qu’après une réponse de succès. Un arrêt marqué `skipped_at` ne prouve pas
+une absence d’acceptation par le fournisseur. Aucun exactement-une-fois n’est
+revendiqué pour SMTP/Mailpit. La migration de réservation doit être exécutée
+explicitement avant le redémarrage des workers. Les jobs déjà sérialisés avant
+ce changement conservent les limites de tentatives de leur ancien payload ;
+les contrôles d’accès et les nouvelles réservations s’appliquent néanmoins.

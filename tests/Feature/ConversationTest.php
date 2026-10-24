@@ -26,7 +26,8 @@ class ConversationTest extends TestCase
 
     public function test_both_members_keep_history_access_but_cannot_send_after_a_block(): void
     {
-        [$lowUser, $highUser, $conversation] = $this->conversationMembers();
+        [$lowUser, $highUser, $conversation] = $this->conversationMembers(withProfiles: true);
+        $message = Message::factory()->for($conversation)->for($lowUser, 'author')->create();
         Block::factory()->create([
             'blocker_user_id' => $lowUser->id,
             'blocked_user_id' => $highUser->id,
@@ -36,6 +37,16 @@ class ConversationTest extends TestCase
             ->and(Gate::forUser($highUser)->allows('view', $conversation))->toBeTrue()
             ->and(Gate::forUser($lowUser)->allows('send', $conversation))->toBeFalse()
             ->and(Gate::forUser($highUser)->allows('send', $conversation))->toBeFalse();
+
+        foreach ([$lowUser, $highUser] as $member) {
+            $this->actingAs($member)->get("/conversations/{$conversation->id}")
+                ->assertOk()->assertInertia(fn (Assert $page) => $page->has('messages.data', 1));
+            $this->post(route('conversations.messages.store', $conversation), ['content' => 'New message'])->assertForbidden();
+            $this->post(route('conversations.messages.like', [$conversation, $message]))->assertForbidden();
+        }
+        $this->assertDatabaseCount('messages', 1);
+        $this->assertDatabaseCount('message_reactions', 0);
+
     }
 
     public function test_a_match_exposes_its_conversation(): void

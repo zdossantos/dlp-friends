@@ -71,6 +71,8 @@ export function useWebPush(vapidPublicKey: string, currentUserId?: number) {
 
         if (response.ok || response.status === 404) {
             localStorage.removeItem('web-push-device-uuid');
+        } else {
+            throw new Error('subscription_revocation_failed');
         }
     };
 
@@ -120,10 +122,7 @@ export function useWebPush(vapidPublicKey: string, currentUserId?: number) {
             }
 
             const registration =
-                (await navigator.serviceWorker.getRegistration()) ??
-                (permission.value === 'granted'
-                    ? await navigator.serviceWorker.ready
-                    : undefined);
+                await navigator.serviceWorker.getRegistration();
             const subscription =
                 await registration?.pushManager.getSubscription();
             const storedUserId = localStorage.getItem('web-push-user-id');
@@ -158,6 +157,14 @@ export function useWebPush(vapidPublicKey: string, currentUserId?: number) {
             }
 
             subscribed.value = await syncSubscription(subscription);
+
+            if (!subscribed.value) {
+                throw new Error('subscription_sync_failed');
+            }
+
+            error.value = undefined;
+        } catch {
+            error.value = 'subscription_failed';
         } finally {
             initialized.value = true;
         }
@@ -205,9 +212,10 @@ export function useWebPush(vapidPublicKey: string, currentUserId?: number) {
 
     const disableCurrent = async (): Promise<void> => {
         busy.value = true;
-        localStorage.setItem('web-push-opted-out', 'true');
+        error.value = undefined;
 
         try {
+            localStorage.setItem('web-push-opted-out', 'true');
             const registration =
                 'serviceWorker' in navigator
                     ? await navigator.serviceWorker.getRegistration()

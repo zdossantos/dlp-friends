@@ -15,6 +15,11 @@ final class DeploymentReadiness
             $this->assertBetaConfiguration();
         }
 
+        $retryAfter = config('queue.connections.'.config('queue.default').'.retry_after');
+        if ($retryAfter !== null && (int) $retryAfter < 120) {
+            throw new DeploymentNotReady('unsafe_queue_reservation');
+        }
+
         try {
             if (! $allowMaintenance && app()->isDownForMaintenance()) {
                 throw new DeploymentNotReady('maintenance');

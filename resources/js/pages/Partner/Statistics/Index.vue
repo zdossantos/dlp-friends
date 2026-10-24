@@ -1,11 +1,16 @@
 <script setup lang="ts">
 import { Head } from '@inertiajs/vue3';
 import { ChartBar } from '@lucide/vue';
+import AnnouncementPagination from '@/components/partners/AnnouncementPagination.vue';
 import AnnouncementStatisticsTable from '@/components/partners/AnnouncementStatisticsTable.vue';
 import { useTranslations } from '@/composables/useTranslations';
-import type { PartnerAnnouncementStatistics } from '@/types';
+import type {
+    PartnerAnnouncementStatistics,
+    PartnerAnnouncementPagination,
+} from '@/types';
 
 defineProps<{
+    pagination: PartnerAnnouncementPagination;
     announcements: PartnerAnnouncementStatistics[];
 }>();
 
@@ -37,5 +42,6 @@ const { t } = useTranslations();
             :caption="t('partners.statistics.caption')"
             :empty-message="t('partners.statistics.empty')"
         />
+        <AnnouncementPagination :links="pagination" />
     </main>
 </template>

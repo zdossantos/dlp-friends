@@ -91,3 +91,51 @@ test('disable all turns off both weekly email preferences', function () {
         ->assertAttribute('[data-test="email-weekly_recap_messages-switch"]', 'aria-checked', 'false')
         ->assertAttribute('[data-test="email-weekly_recap_matches-switch"]', 'aria-checked', 'false');
 });
+
+test('push invitation stays open after a network failure and allows a retry', function () {
+    config(['services.web_push.public_key' => 'dGVzdA']);
+    $member = User::factory()->withProfile()->create(['locale' => 'fr']);
+    $this->actingAs($member);
+    $page = visit('/settings/notifications')->assertPresent('@enable-web-push');
+    $page->page()->context()->addInitScript(<<<'JS'
+        let permission = 'default';
+        Object.defineProperty(Notification, 'permission', {get: () => permission});
+        Notification.requestPermission = async () => permission = 'granted';
+        const subscription = {toJSON: () => ({endpoint:'https://push.example.test/retry',keys:{p256dh:'test',auth:'test'}})};
+        Object.defineProperty(navigator.serviceWorker, 'ready', {value: Promise.resolve({pushManager:{getSubscription:async()=>null,subscribe:async()=>subscription}})});
+        navigator.serviceWorker.getRegistration = async () => undefined;
+        window.failPush = true;
+        const originalFetch = window.fetch;
+        window.fetch = (url, options) => url === '/settings/notifications/devices' && options?.method === 'POST'
+            ? Promise.resolve(new Response(JSON.stringify({uuid:'test-device'}), {status:window.failPush ? 503 : 200,headers:{'Content-Type':'application/json'}}))
+            : originalFetch(url, options);
+    JS);
+    $page->refresh()->click('@enable-web-push')->assertPresent('@web-push-invitation')
+        ->click('@accept-web-push')
+        ->assertPresent('@web-push-invitation')
+        ->assertSeeIn('@web-push-invitation', __('account.settings.notifications.push_error', [], 'fr'))
+        ->assertEnabled('@accept-web-push')
+        ->assertScript("localStorage.getItem('web-push-invitation-dismissed:{$member->id}')", null);
+    $page->script('window.failPush = false; true;');
+    $page->click('@accept-web-push')->assertNotPresent('@web-push-invitation')->assertNoJavaScriptErrors();
+});
+
+test('device removal shows an error releases the button and can be retried', function () {
+    $member = User::factory()->withProfile()->create(['locale' => 'fr']);
+    $device = WebPushSubscription::factory()->for($member)->create(['device_name' => 'Appareil à retirer']);
+    $this->actingAs($member);
+    $page = visit('/settings/notifications')->assertSee('Appareil à retirer');
+    $page->script(<<<'JS'
+        window.confirm = () => true;
+        window.originalPushFetch = window.fetch;
+        window.fetch = (url, options) => options?.method === 'DELETE'
+            ? Promise.reject(new Error('offline')) : window.originalPushFetch(url, options);
+        true;
+    JS);
+    $selector = '[aria-label="'.__('account.settings.notifications.device_remove', [], 'fr').'"]';
+    $page->click($selector)->assertSee(__('account.settings.notifications.push_error', [], 'fr'))->assertEnabled($selector);
+    expect($device->fresh()->revoked_at)->toBeNull();
+    $page->script('window.fetch = window.originalPushFetch; true;');
+    $page->click($selector)->assertDontSee('Appareil à retirer')->assertNoJavaScriptErrors();
+    expect($device->fresh()->revoked_at)->not->toBeNull();
+});

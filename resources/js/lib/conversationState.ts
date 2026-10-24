@@ -5,6 +5,21 @@ import type {
     MessageReactionUpdate,
 } from '@/types';
 
+type IdentifiedMessage = { id: number };
+
+export function mergeChatMessages<T extends IdentifiedMessage>(
+    current: T[],
+    incoming: T[],
+): T[] {
+    const byId = new Map(current.map((message) => [message.id, message]));
+
+    for (const message of incoming) {
+        byId.set(message.id, message);
+    }
+
+    return Array.from(byId.values()).sort((a, b) => a.id - b.id);
+}
+
 export function sortConversationSummaries(
     conversations: ConversationSummary[],
 ): ConversationSummary[] {
@@ -17,11 +32,12 @@ export function sortConversationSummaries(
     });
 }
 
-export function applyMessageReaction(
-    messages: ConversationMessage[],
-    update: MessageReactionUpdate,
-    currentUserId: number,
-): ConversationMessage[] {
+export function applyMessageReaction<
+    T extends Pick<
+        ConversationMessage,
+        'id' | 'reaction_count' | 'reacted_by_current_user'
+    >,
+>(messages: T[], update: MessageReactionUpdate, currentUserId: number): T[] {
     return messages.map((message) =>
         message.id === update.message_id
             ? {

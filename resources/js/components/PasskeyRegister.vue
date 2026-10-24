@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import { usePasskeyRegister } from '@laravel/passkeys/vue';
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import InputError from '@/components/InputError.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useTranslations } from '@/composables/useTranslations';
+import { localizePasskeyError } from '@/lib/passkeyError';
 
 const emit = defineEmits<{
     success: [];
@@ -31,19 +32,26 @@ const getDefaultPasskeyName = () => {
         { pattern: /Windows/, name: 'Windows' },
     ].find(({ pattern }) => pattern.test(ua))?.name;
 
-    return [browser, os].filter(Boolean).join(' sur ') || '';
+    return browser && os
+        ? t('account.passkeys.default_name', { browser, device: os })
+        : browser || os || '';
 };
 
 const name = ref(getDefaultPasskeyName());
 const showForm = ref(false);
 
-const { register, isLoading, error, isSupported } = usePasskeyRegister({
-    onSuccess: () => {
-        name.value = '';
-        showForm.value = false;
-        emit('success');
-    },
-});
+const { register, isLoading, error, errorInstance, isSupported } =
+    usePasskeyRegister({
+        onSuccess: () => {
+            name.value = '';
+            showForm.value = false;
+            emit('success');
+        },
+    });
+
+const errorMessage = computed(() =>
+    localizePasskeyError(errorInstance.value, error.value, t),
+);
 
 const handleSubmit = async (event: Event) => {
     event.preventDefault();
@@ -90,7 +98,7 @@ const handleCancel = () => {
             </p>
         </div>
 
-        <InputError v-if="error" :message="error" />
+        <InputError v-if="errorMessage" :message="errorMessage" />
 
         <div class="flex gap-2">
             <Button type="submit" :disabled="isLoading || !name.trim()">

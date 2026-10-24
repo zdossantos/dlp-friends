@@ -9,6 +9,7 @@ use App\Models\Event;
 use App\Models\EventRegistration;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\ValidationException;
 
 final class RegisterForEvent
@@ -16,7 +17,12 @@ final class RegisterForEvent
     public function handle(User $member, Event $event): EventRegistration
     {
         return DB::transaction(function () use ($member, $event): EventRegistration {
+            $accounts = User::query()->whereKey([$member->id, $event->organizer_user_id])
+                ->orderBy('id')->lockForUpdate()->get()->keyBy('id');
+            $member = $accounts->get($member->id) ?? abort(403);
             $lockedEvent = Event::query()->lockForUpdate()->findOrFail($event->id);
+            $lockedEvent->setRelation('organizer', $accounts->get($lockedEvent->organizer_user_id));
+            Gate::forUser($member)->authorize('register', $lockedEvent);
             $this->ensureAvailable($member, $lockedEvent);
 
             $registration = EventRegistration::query()
@@ -52,7 +58,7 @@ final class RegisterForEvent
             }
 
             return $registration->refresh();
-        });
+        }, 3);
     }
 
     private function ensureAvailable(User $member, Event $event): void

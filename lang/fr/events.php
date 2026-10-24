@@ -1,7 +1,10 @@
 <?php
 
 return [
-    'validation' => ['starts_at_future' => 'Le champ starts at doit être une date postérieure à maintenant.'],
+    'validation' => [
+        'starts_at_future' => 'Le champ starts at doit être une date postérieure à maintenant.',
+        'local_time' => 'Cet horaire local n’existe pas à Paris.',
+    ],
     'navigation' => 'Événements',
     'workspace_navigation' => 'Navigation des événements',
     'index' => [
@@ -26,7 +29,7 @@ return [
         'character_count' => ':count / 2 000', 'unread' => ':count non lu(s)', 'timeline' => 'Messages de la discussion',
         'load_previous' => 'Afficher les messages précédents', 'send_error' => 'Le message n’a pas pu être envoyé.',
         'connection_unavailable' => 'Connexion en temps réel interrompue.', 'retry' => 'Réessayer',
-        'read_only' => ['cancelled' => 'Cet événement est annulé. La discussion reste consultable.', 'archived' => 'Cette discussion est archivée et reste consultable.'],
+        'read_only' => ['cancelled' => 'Cet événement est annulé. La discussion reste consultable.', 'expired' => 'Cette discussion est archivée et reste consultable.'],
     ],
     'fields' => ['title' => 'Titre', 'description' => 'Description', 'general_location' => 'Lieu général', 'detailed_location' => 'Lieu précis', 'starts_at' => 'Date et heure', 'capacity' => 'Nombre de places', 'registration_mode' => 'Mode d’inscription'],
     'modes' => ['automatic' => 'Acceptation automatique', 'manual' => 'Validation par l’organisateur'],

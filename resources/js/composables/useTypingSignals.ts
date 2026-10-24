@@ -1,6 +1,6 @@
 import { echo } from '@laravel/echo-vue';
-import { onBeforeUnmount, onMounted, ref } from 'vue';
-import type { Ref } from 'vue';
+import { onBeforeUnmount, onMounted, ref, toValue, watch } from 'vue';
+import type { MaybeRefOrGetter, Ref } from 'vue';
 
 type TypingSignal = { user_id: number; typing: boolean };
 
@@ -80,56 +80,80 @@ export function useConversationTyping(
 }
 
 export function useConversationListTyping(
-    conversations: Array<{ id: number; participant: { id: number } }>,
+    conversations: MaybeRefOrGetter<
+        Array<{ id: number; participant: { id: number } }>
+    >,
 ): Ref<Set<number>> {
     const typingIds = ref(new Set<number>());
-    const timers = new Map<number, ReturnType<typeof setTimeout>>();
-    const listeners = conversations.map((conversation) => {
-        const channel = echo().private(`conversation.${conversation.id}`);
-        const receive = (signal: TypingSignal): void => {
-            if (signal.user_id !== conversation.participant.id) {
-                return;
-            }
+    const listeners = new Map<number, { peerId: number; stop: () => void }>();
 
-            const next = new Set(typingIds.value);
+    function remove(id: number): void {
+        listeners.get(id)?.stop();
+        listeners.delete(id);
+        typingIds.value.delete(id);
+    }
 
-            if (signal.typing) {
-                next.add(conversation.id);
-            } else {
-                next.delete(conversation.id);
-            }
+    onMounted(() => {
+        watch(
+            () => toValue(conversations),
+            (items) => {
+                for (const [id, listener] of listeners) {
+                    if (
+                        !items.some(
+                            (item) =>
+                                item.id === id &&
+                                item.participant.id === listener.peerId,
+                        )
+                    ) {
+                        remove(id);
+                    }
+                }
 
-            typingIds.value = next;
-            const timer = timers.get(conversation.id);
+                for (const conversation of items) {
+                    if (listeners.has(conversation.id)) {
+                        continue;
+                    }
 
-            if (timer) {
-                clearTimeout(timer);
-            }
+                    const channel = echo().private(
+                        `conversation.${conversation.id}`,
+                    );
+                    let timer: ReturnType<typeof setTimeout> | undefined;
+                    const receive = (signal: TypingSignal): void => {
+                        if (signal.user_id !== conversation.participant.id) {
+                            return;
+                        }
 
-            if (signal.typing) {
-                timers.set(
-                    conversation.id,
-                    setTimeout(() => {
-                        const expired = new Set(typingIds.value);
-                        expired.delete(conversation.id);
-                        typingIds.value = expired;
-                    }, 5_000),
-                );
-            }
-        };
+                        clearTimeout(timer);
 
-        return { channel, receive };
+                        if (signal.typing) {
+                            typingIds.value.add(conversation.id);
+                            timer = setTimeout(
+                                () => typingIds.value.delete(conversation.id),
+                                5_000,
+                            );
+                        } else {
+                            typingIds.value.delete(conversation.id);
+                        }
+                    };
+                    channel.listenForWhisper('typing', receive);
+                    listeners.set(conversation.id, {
+                        peerId: conversation.participant.id,
+                        stop: () => {
+                            clearTimeout(timer);
+                            // Other chat listeners may share this Echo channel.
+                            channel.stopListeningForWhisper('typing', receive);
+                        },
+                    });
+                }
+            },
+            { immediate: true, deep: true },
+        );
     });
-    onMounted(() =>
-        listeners.forEach(({ channel, receive }) =>
-            channel.listenForWhisper('typing', receive),
-        ),
-    );
-    onBeforeUnmount(() =>
-        listeners.forEach(({ channel, receive }) =>
-            channel.stopListeningForWhisper('typing', receive),
-        ),
-    );
+    onBeforeUnmount(() => {
+        for (const id of listeners.keys()) {
+            remove(id);
+        }
+    });
 
     return typingIds;
 }

@@ -2,13 +2,14 @@
 
 namespace App\Events;
 
-use App\Enums\UserStatus;
 use App\Models\Conversation;
+use App\Models\User;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Contracts\Events\ShouldDispatchAfterCommit;
 use Illuminate\Foundation\Events\Dispatchable;
+use Illuminate\Support\Facades\Gate;
 
 final class MessagesRead implements ShouldBroadcast, ShouldDispatchAfterCommit
 {
@@ -33,7 +34,11 @@ final class MessagesRead implements ShouldBroadcast, ShouldDispatchAfterCommit
 
     public function broadcastWhen(): bool
     {
-        return Conversation::query()->whereKey($this->conversationId)->whereHas('memberMatch.lowUser', fn ($q) => $q->where('status', UserStatus::Active))->whereHas('memberMatch.highUser', fn ($q) => $q->where('status', UserStatus::Active))->exists();
+        $conversation = Conversation::query()->with(['memberMatch.lowUser', 'memberMatch.highUser'])->find($this->conversationId);
+        $reader = User::query()->find($this->readerUserId);
+
+        return $conversation !== null && $reader !== null
+            && Gate::forUser($reader)->allows('send', $conversation);
     }
 
     public function broadcastAs(): string

@@ -27,6 +27,8 @@ it('attaches signed identity and denies delivery and replay after a ban outdated
         app()->instance('env', 'beta');
     }
     $user = $betaRoleRevoked ? User::factory()->admin()->create() : User::factory()->create();
+    $peer = User::factory()->create();
+    $conversation = MemberMatch::query()->create(['user_low_id' => $user->id, 'user_high_id' => $peer->id])->conversation()->create();
     $app = new Application('test', 'key', 'secret', 60, 30, ['*'], 10000);
     $socket = new class($app) extends Connection
     {
@@ -61,7 +63,7 @@ it('attaches signed identity and denies delivery and replay after a ban outdated
             $this->closed = true;
         }
     };
-    $channel = new IdentityAwarePrivateChannel('private-conversation.12');
+    $channel = new IdentityAwarePrivateChannel('private-conversation.'.$conversation->id);
     $data = json_encode(['user_id' => (string) $user->id]);
     $auth = 'key:'.hash_hmac('sha256', $socket->id().':'.$channel->name().':'.$data, 'secret');
     $channel->subscribe($socket, $auth, $data);
@@ -137,6 +139,8 @@ it('filters every channel on a distributed node even if HTTP termination fails',
     $manager = new IdentityAwareChannelManager;
     $this->app->instance(ChannelManager::class, $manager);
     $user = User::factory()->create();
+    $peer = User::factory()->create();
+    $conversation = MemberMatch::query()->create(['user_low_id' => $user->id, 'user_high_id' => $peer->id])->conversation()->create();
     $application = new Application('test', 'key', 'secret', 60, 30, ['*'], 10000);
     $socket = new class($application) extends Connection
     {
@@ -171,7 +175,7 @@ it('filters every channel on a distributed node even if HTTP termination fails',
             $this->closed = true;
         }
     };
-    $channels = ['private-conversation.1', 'private-event-chat.1', "private-App.Models.User.{$user->id}"];
+    $channels = ['private-conversation.'.$conversation->id, 'private-event-chat.1', "private-App.Models.User.{$user->id}"];
     foreach ($channels as $name) {
         $channel = $manager->for($application)->findOrCreate($name);
         $data = json_encode(['user_id' => (string) $user->id]);

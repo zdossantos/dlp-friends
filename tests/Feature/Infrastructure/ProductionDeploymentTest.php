@@ -28,6 +28,7 @@ function productionComposeEnvironment(array $overrides = []): array
         'REVERB_APP_SECRET' => 'reverb-secret',
         'VITE_REVERB_HOST' => 'reverb.dlpfriends.example',
         'RESEND_API_KEY' => 're_test_only',
+        'RESEND_USAGE_API_KEY' => '',
         'MAIL_FROM_ADDRESS' => 'noreply@dlpfriends.example',
         'GOOGLE_CLIENT_ID' => 'google-client-id',
         'GOOGLE_CLIENT_SECRET' => 'google-client-secret',
@@ -159,6 +160,32 @@ it('provides Google OAuth credentials to every Laravel process', function () {
             ->and($services[$service]['environment']['GOOGLE_REDIRECT_URI'])->toBe('https://dlpfriends.example/auth/google/callback');
     }
 });
+
+it('routes application logs to Docker with bounded storage for every process', function () {
+    $result = resolveProductionCompose();
+    expect($result->successful())->toBeTrue($result->errorOutput());
+
+    foreach (json_decode($result->output(), true, flags: JSON_THROW_ON_ERROR)['services'] as $service) {
+        expect($service['environment']['LOG_CHANNEL'])->toBe('stderr')
+            ->and($service['logging'])->toMatchArray([
+                'driver' => 'json-file',
+                'options' => ['max-size' => '10m', 'max-file' => '3'],
+            ]);
+    }
+});
+
+it('passes the dedicated Resend Usage key and keeps the sending key fallback', function (string $usageKey, string $expected) {
+    $result = resolveProductionCompose(['RESEND_USAGE_API_KEY' => $usageKey]);
+    expect($result->successful())->toBeTrue($result->errorOutput());
+
+    foreach (json_decode($result->output(), true, flags: JSON_THROW_ON_ERROR)['services'] as $service) {
+        expect($service['environment']['RESEND_API_KEY'])->toBe('re_test_only')
+            ->and($service['environment']['RESEND_USAGE_API_KEY'] ?? null)->toBe($expected);
+    }
+})->with([
+    'dedicated key' => ['re_usage_only', 're_usage_only'],
+    'empty optional key' => ['', 're_test_only'],
+]);
 
 it('provides VAPID credentials to every Laravel process', function () {
     $result = resolveProductionCompose();

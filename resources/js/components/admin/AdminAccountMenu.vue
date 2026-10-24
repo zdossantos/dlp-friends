@@ -14,9 +14,6 @@ import { useTranslations } from '@/composables/useTranslations';
 
 const page = usePage();
 const user = computed(() => page.props.auth.user);
-const canAccessSettings = computed(() =>
-    user.value.roles.some((role) => role.name === 'user'),
-);
 const identityLabel = computed(
     () => user.value.profile?.display_name || user.value.email,
 );
@@ -45,10 +42,7 @@ const { t } = useTranslations();
                 </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" class="w-64">
-                <UserMenuContent
-                    :user="user"
-                    :show-settings="canAccessSettings"
-                />
+                <UserMenuContent :user="user" />
             </DropdownMenuContent>
         </DropdownMenu>
     </div>

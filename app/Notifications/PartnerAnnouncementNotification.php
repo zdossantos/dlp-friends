@@ -3,8 +3,10 @@
 namespace App\Notifications;
 
 use App\Contracts\WebPushNotification;
+use App\Enums\PartnerDeliveryStatus;
 use App\Enums\WebPushPreference;
 use App\Models\PartnerAnnouncement;
+use App\Models\PartnerAnnouncementDelivery;
 use App\Models\User;
 use App\Notifications\Channels\WebPushChannel;
 use App\Support\WebPushTarget;
@@ -72,7 +74,14 @@ final class PartnerAnnouncementNotification extends Notification implements WebP
 
     public function webPushAccessAllowed(User $notifiable): bool
     {
-        return $this->announcement === null
-            || $this->announcement->deliveries()->where('user_id', $notifiable->id)->exists();
+        return User::query()->eligibleForPartnerAnnouncements()->whereKey($notifiable->id)->exists()
+            && PartnerAnnouncementDelivery::query()
+                ->where('user_id', $notifiable->id)
+                ->where('notification_id', $this->id)
+                ->whereNotNull('notification_id')
+                ->where('status', PartnerDeliveryStatus::Delivered)
+                ->whereNull('dismissed_at')
+                ->whereHas('notification')
+                ->exists();
     }
 }

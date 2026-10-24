@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { Head, Link } from '@inertiajs/vue3';
 import { ArrowLeft } from '@lucide/vue';
-import { computed } from 'vue';
 import BackLink from '@/components/common/BackLink.vue';
 import BlockMemberDialog from '@/components/members/BlockMemberDialog.vue';
 import LikeMemberButton from '@/components/members/LikeMemberButton.vue';
@@ -9,9 +8,9 @@ import UnblockMemberButton from '@/components/members/UnblockMemberButton.vue';
 import ProfilePresentation from '@/components/profile/ProfilePresentation.vue';
 import { Button } from '@/components/ui/button';
 import { useTranslations } from '@/composables/useTranslations';
-import type { PublicMember, VisitFrequency } from '@/types';
+import type { PublicMember } from '@/types';
 
-const props = defineProps<{
+defineProps<{
     member: PublicMember;
     backHref: string;
     likeHref?: string;
@@ -22,20 +21,6 @@ const props = defineProps<{
     canUnblock: boolean;
 }>();
 const { t } = useTranslations();
-const frequencyKeys: Record<
-    VisitFrequency,
-    `profile.details.frequency_${VisitFrequency}`
-> = {
-    rarely: 'profile.details.frequency_rarely',
-    sometimes: 'profile.details.frequency_sometimes',
-    often: 'profile.details.frequency_often',
-    very_often: 'profile.details.frequency_very_often',
-};
-const visitFrequency = computed(() =>
-    props.member.visit_frequency
-        ? t(frequencyKeys[props.member.visit_frequency])
-        : t('profile.details.frequency_unknown'),
-);
 </script>
 
 <template>
@@ -61,14 +46,11 @@ const visitFrequency = computed(() =>
         <ProfilePresentation
             :avatar="member.avatar"
             :display-name="member.display_name"
-            :age-label="t('profile.details.age', { age: member.age })"
+            :age="member.age"
             :bio="member.bio ?? t('profile.details.empty_bio')"
-            :visit-frequency="visitFrequency"
+            :visit-frequency="member.visit_frequency"
             :social-links="member.social_links ?? []"
             :interests="member.interests"
-            :about-label="t('profile.details.about')"
-            :interests-label="t('profile.details.interests')"
-            :visit-frequency-label="t('profile.details.visit_frequency')"
             :is-admin="member.is_admin"
         >
             <template #summary-actions>

@@ -29,13 +29,6 @@ export function availableEventActions(state: {
     return [];
 }
 
-export function capacityLabel(
-    occupied: number,
-    capacity: number,
-): { occupied: number; available: number } {
-    return { occupied, available: Math.max(0, capacity - occupied) };
-}
-
 export function parisLocalFormValue(value: string): string {
     const parts = new Intl.DateTimeFormat('en-CA', {
         timeZone: 'Europe/Paris',

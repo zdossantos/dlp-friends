@@ -62,6 +62,8 @@ class ProfilePolicy
 
         return $target->isNot($user)
             && $target->status === UserStatus::Active
+            && $target->hasVerifiedEmail()
+            && $target->hasRole(RoleName::User)
             && $target->birth_date !== null
             && $target->birth_date->lte(today()->subYears(18))
             && $profile->visibility === ProfileVisibility::Visible

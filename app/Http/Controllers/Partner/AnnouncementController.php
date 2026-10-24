@@ -29,16 +29,18 @@ final class AnnouncementController extends Controller
             ? null
             : $cooldown->nextAvailableAt($profile->id);
 
+        $announcements = PartnerAnnouncement::query()
+            ->ownedBy($partner)
+            ->latest('id')
+            ->simplePaginate(20)->withQueryString();
+
         return Inertia::render('Partner/Announcements/Index', [
             'canCreate' => $partner->can('create', PartnerAnnouncement::class),
-            'announcements' => PartnerAnnouncement::query()
-                ->ownedBy($partner)
-                ->latest('id')
-                ->get()
-                ->map(fn (PartnerAnnouncement $announcement): array => $this->announcementData(
-                    $announcement,
-                    $nextSubmissionAt?->toIso8601String(),
-                )),
+            'announcements' => $announcements->getCollection()->map(fn (PartnerAnnouncement $announcement): array => $this->announcementData(
+                $announcement,
+                $nextSubmissionAt?->toIso8601String(),
+            )),
+            'pagination' => ['previous' => $announcements->previousPageUrl(), 'next' => $announcements->nextPageUrl()],
         ]);
     }
 

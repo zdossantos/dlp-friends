@@ -455,11 +455,11 @@ watch(
                                 v-if="message.author_user_id !== currentUserId"
                                 type="button"
                                 data-test="message-like"
-                                class="mt-1 min-h-8 items-center gap-1 rounded-full px-2 text-xs font-medium text-muted-foreground hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+                                class="inline-flex min-h-8 items-center gap-1 rounded-full text-xs font-medium text-muted-foreground hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
                                 :class="[
                                     message.reaction_count > 0
-                                        ? 'inline-flex'
-                                        : 'hidden sm:inline-flex',
+                                        ? 'mt-1 px-2'
+                                        : 'sr-only focus:not-sr-only focus:mt-1 focus:px-2 sm:not-sr-only sm:mt-1 sm:px-2',
                                     message.reacted_by_current_user
                                         ? 'text-rose-600'
                                         : undefined,

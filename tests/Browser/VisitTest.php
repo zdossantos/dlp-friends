@@ -230,7 +230,7 @@ test('moving a stay start keeps a valid end and advances an earlier end', functi
     $this->assertDatabaseHas('visits', ['user_id' => $member->id, 'starts_on' => $later, 'ends_on' => $later]);
 })->with(['create' => false, 'edit' => true]);
 
-test('visitor names open public profiles and return to the same list without filtering', function (string $view, bool $fullList) {
+test('visitor names open public profiles and return to the same list without filtering', function (string $view, bool $fullList, int $width) {
     $viewer = User::factory()->withProfile()->create();
     $other = User::factory()->withProfile()->create(['visits_visibility' => 'members']);
     $other->profile->update(['display_name' => 'Camille Visite', 'bio' => 'Ma présentation publique']);
@@ -241,7 +241,7 @@ test('visitor names open public profiles and return to the same list without fil
     $day = today('Europe/Paris')->addDay();
     Visit::factory()->for($other)->create(['starts_on' => $day, 'ends_on' => $day]);
     $this->actingAs($viewer);
-    $page = visit('/visits?audience=members&view='.$view.'&month='.$day->format('Y-m').'&day='.$day->toDateString())->resize(390, 844);
+    $page = visit('/visits?audience=members&view='.$view.'&month='.$day->format('Y-m').'&day='.$day->toDateString())->resize($width, 844);
     if ($fullList) {
         $page->click('[data-test=visit-all-attendees]');
     }
@@ -256,4 +256,33 @@ test('visitor names open public profiles and return to the same list without fil
     $page->forward()->assertPresent('[data-test=visit-profile-panel]')
         ->back()->assertNotPresent('[data-test=visit-profile-panel]')
         ->assertNoJavaScriptErrors();
-})->with([['agenda', false], ['calendar', false], ['calendar', true]]);
+})->with([['agenda', false, 390], ['calendar', false, 390], ['calendar', true, 390], ['agenda', false, 1440], ['calendar', false, 1440], ['calendar', true, 1440]]);
+
+test('visit audiences protect a stay from unmatched viewers while preserving matched access', function (string $visibility, bool $matched, bool $visible) {
+    Storage::fake('local');
+    $owner = User::factory()->withProfile()->create(['visits_visibility' => $visibility]);
+    $owner->profile->update(['display_name' => 'Visiteur confidentiel']);
+    Storage::put($owner->profile->avatar->image_path, base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScL8WQAAAABJRU5ErkJggg=='));
+    $viewer = User::factory()->withProfile()->create();
+    if ($matched) {
+        MemberMatch::query()->create(['user_low_id' => $owner->id, 'user_high_id' => $viewer->id]);
+    }
+    $day = today('Europe/Paris')->addDay();
+    Visit::factory()->for($owner)->create(['starts_on' => $day, 'ends_on' => $day]);
+    $this->actingAs($viewer);
+
+    $page = visit('/visits?audience=members&view=agenda&month='.$day->format('Y-m'));
+    if ($visible) {
+        $page->assertSee('Visiteur confidentiel')->click('Visiteur confidentiel')->assertPresent('@visit-profile-panel');
+    } else {
+        $page->assertDontSee('Visiteur confidentiel');
+    }
+    $page->assertNoJavaScriptErrors();
+})->with([
+    'hidden from stranger' => ['hidden', false, false],
+    'hidden from match' => ['hidden', true, false],
+    'matches excludes stranger' => ['matches', false, false],
+    'matches includes match' => ['matches', true, true],
+    'members includes stranger' => ['members', false, true],
+    'members includes match' => ['members', true, true],
+]);

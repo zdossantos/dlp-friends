@@ -27,7 +27,7 @@ final class SetMemberBan
                 return;
             }
             abort_unless($banned || $target->status === UserStatus::Banned, 403);
-            $target->forceFill(['status' => $banned ? UserStatus::Banned : UserStatus::Active, 'deletion_requested_at' => null, 'remember_token' => Str::random(60)])->save();
+            $target->forceFill(['status' => $banned ? UserStatus::Banned : UserStatus::Active, 'deletion_requested_at' => null, 'remember_token' => Str::random(60), 'session_version' => $target->session_version + 1])->save();
             DB::table('sessions')->where('user_id', $target->id)->delete();
             DB::table('password_reset_tokens')->where('email', $target->email)->delete();
             $target->webPushSubscriptions()->whereNull('revoked_at')->update(['revoked_at' => now()]);

@@ -6,6 +6,7 @@ use App\Http\Middleware\EnsureDeploymentReady;
 use App\Http\Middleware\EnsurePrivateAccountAccess;
 use App\Http\Middleware\EnsureProductOnboardingIsComplete;
 use App\Http\Middleware\EnsureProfileIsComplete;
+use App\Http\Middleware\EnsureSessionIsCurrent;
 use App\Http\Middleware\EnsureUserCanAccessSocialFeatures;
 use App\Http\Middleware\EnsureUserHasRole;
 use App\Http\Middleware\HandleAppearance;
@@ -46,6 +47,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->web(append: [
             HandleAppearance::class,
             SetLocale::class,
+            EnsureSessionIsCurrent::class,
             EnsureBetaAccess::class,
             EnsurePrivateAccountAccess::class,
             HandleInertiaRequests::class,

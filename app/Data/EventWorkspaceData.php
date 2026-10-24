@@ -6,7 +6,6 @@ use App\Enums\EventRegistrationStatus;
 use App\Enums\UserStatus;
 use App\Models\Block;
 use App\Models\Event;
-use App\Models\GroupChatMessage;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\Relation;
@@ -58,18 +57,7 @@ final readonly class EventWorkspaceData
 
         return Inertia::render('Conversations/Group', [
             'event' => fn (): array => EventDetailData::from($event->load('organizer.profile'), $viewer),
-            'chat' => fn (): array => GroupChatData::chat($event->chat),
-            'messages' => Inertia::scroll(function () use ($event, $viewer) {
-                $messages = $event->chat->messages()
-                    ->with('author.profile')
-                    ->withCount('reactions')
-                    ->orderByDesc('id')
-                    ->simplePaginate(10, ['*'], 'messages')
-                    ->through(fn (GroupChatMessage $message): array => GroupChatData::message($message, $viewer));
-                $messages->setCollection($messages->getCollection()->reverse()->values());
-
-                return $messages;
-            }),
+            ...GroupChatData::conversation($event->chat, $viewer),
             'panel' => $panel,
             'closeHref' => route('events.chat.show', $event, absolute: false),
         ]);
@@ -99,6 +87,7 @@ final readonly class EventWorkspaceData
             ->withAcceptedRegistrationCount()
             ->with([
                 'organizer.profile',
+                'chat' => fn ($chat) => $chat->withUnreadCount($viewer),
                 'registrations' => fn (Relation $registrations) => $registrations
                     ->where('user_id', $viewer->id),
             ])
@@ -117,6 +106,7 @@ final readonly class EventWorkspaceData
             ->withAcceptedRegistrationCount()
             ->with([
                 'organizer.profile',
+                'chat' => fn ($chat) => $chat->withUnreadCount($viewer),
                 'registrations' => fn (Relation $registrations) => $registrations
                     ->where('user_id', $viewer->id),
             ])
@@ -134,6 +124,7 @@ final readonly class EventWorkspaceData
             ->withAcceptedRegistrationCount()
             ->with([
                 'organizer.profile',
+                'chat' => fn ($chat) => $chat->withUnreadCount($viewer),
                 'registrations' => fn (Relation $registrations) => $registrations
                     ->where('user_id', $viewer->id),
             ])

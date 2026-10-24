@@ -17,27 +17,14 @@ import { useTranslations } from '@/composables/useTranslations';
 import { dashboard, logout } from '@/routes';
 import { edit as editAccount } from '@/routes/account';
 import { edit as editProfile } from '@/routes/member-profile';
-import type { Profile, VisitFrequency } from '@/types';
+import type { Profile } from '@/types';
 
-const props = defineProps<{ profile: Profile; age: number }>();
+defineProps<{ profile: Profile; age: number }>();
 const page = usePage();
 const { t } = useTranslations();
 
 const isAdmin = computed(() =>
     page.props.auth.user.roles.some((role) => role.name === 'admin'),
-);
-
-const frequencyLabels: Record<VisitFrequency, string> = {
-    rarely: t('profile.details.frequency_rarely'),
-    sometimes: t('profile.details.frequency_sometimes'),
-    often: t('profile.details.frequency_often'),
-    very_often: t('profile.details.frequency_very_often'),
-};
-
-const visitFrequency = computed(() =>
-    props.profile.visit_frequency
-        ? frequencyLabels[props.profile.visit_frequency]
-        : t('profile.details.frequency_unknown'),
 );
 
 function handleLogout(): void {
@@ -60,14 +47,11 @@ function handleLogout(): void {
             <ProfilePresentation
                 :avatar="profile.avatar"
                 :display-name="profile.display_name"
-                :age-label="t('profile.details.age', { age })"
+                :age="age"
                 :bio="profile.bio || t('profile.details.empty_bio')"
-                :visit-frequency="visitFrequency"
+                :visit-frequency="profile.visit_frequency"
                 :social-links="profile.social_links ?? []"
                 :interests="profile.interests ?? []"
-                :about-label="t('profile.details.about')"
-                :interests-label="t('profile.details.interests')"
-                :visit-frequency-label="t('profile.details.visit_frequency')"
                 :is-admin="isAdmin"
                 class="h-full"
             >
@@ -134,7 +118,7 @@ function handleLogout(): void {
                         </Button>
                     </div>
                 </template>
-                <template #badges>
+                <template #badges="{ visitFrequency }">
                     <span
                         data-test="profile-visibility-badge"
                         class="inline-flex items-center gap-2 rounded-full border border-border/70 bg-muted px-3 py-1.5 text-sm font-medium"

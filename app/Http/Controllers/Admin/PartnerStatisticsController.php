@@ -16,28 +16,29 @@ final class PartnerStatisticsController extends Controller
 {
     public function __invoke(PartnerAnnouncementCooldown $cooldown): Response
     {
+        $announcements = PartnerAnnouncement::query()
+            ->with(['metric', 'partnerProfile.publishedRevision'])
+            ->withCount([
+                'deliveries as pending_count' => fn (Builder $query) => $query
+                    ->where('status', PartnerDeliveryStatus::Pending),
+                'deliveries as failed_count' => fn (Builder $query) => $query
+                    ->where('status', PartnerDeliveryStatus::Failed),
+                'deliveries as skipped_count' => fn (Builder $query) => $query
+                    ->where('status', PartnerDeliveryStatus::Skipped),
+            ])
+            ->latest('id')
+            ->simplePaginate(20)->withQueryString();
+
+        $nextDispatch = $cooldown->forAnnouncements($announcements->getCollection());
+
         return Inertia::render('Admin/Partners/Statistics', [
             'eligibleRecipientCount' => User::query()->eligibleForPartnerAnnouncements()->count(),
-            'announcements' => PartnerAnnouncement::query()
-                ->with(['metric', 'partnerProfile.publishedRevision'])
-                ->withCount([
-                    'deliveries as pending_count' => fn (Builder $query) => $query
-                        ->where('status', PartnerDeliveryStatus::Pending),
-                    'deliveries as failed_count' => fn (Builder $query) => $query
-                        ->where('status', PartnerDeliveryStatus::Failed),
-                    'deliveries as skipped_count' => fn (Builder $query) => $query
-                        ->where('status', PartnerDeliveryStatus::Skipped),
-                ])
-                ->latest('id')
-                ->get()
-                ->map(fn (PartnerAnnouncement $announcement): array => [
-                    ...PartnerAnnouncementStatisticsData::from($announcement, includeOperations: true),
-                    'partner_name' => $this->partnerName($announcement),
-                    'next_dispatch_at' => $cooldown->nextAvailableAt(
-                        $announcement->partner_profile_id,
-                        $announcement->id,
-                    )?->toIso8601String(),
-                ]),
+            'announcements' => $announcements->getCollection()->map(fn (PartnerAnnouncement $announcement): array => [
+                ...PartnerAnnouncementStatisticsData::from($announcement, includeOperations: true),
+                'partner_name' => $this->partnerName($announcement),
+                'next_dispatch_at' => $nextDispatch[$announcement->id]?->toIso8601String(),
+            ]),
+            'pagination' => ['previous' => $announcements->previousPageUrl(), 'next' => $announcements->nextPageUrl()],
         ]);
     }
 

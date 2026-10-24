@@ -14,15 +14,17 @@ use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 
 final readonly class DiscoveryService
 {
     public function __construct(private DiscoveryTieBreaker $tieBreaker) {}
 
     /**
+     * @param  list<int>  $queue
      * @return Collection<int, DiscoveryProfileData>
      */
-    public function for(User $user): Collection
+    public function for(User $user, array $queue = []): Collection
     {
         $actorProfile = Profile::query()
             ->where('user_id', $user->id)
@@ -37,7 +39,7 @@ final readonly class DiscoveryService
         $actorInterestIds = $actorProfile->interests->modelKeys();
         $actorVisitFrequency = $actorProfile->visit_frequency?->value;
 
-        $profiles = Profile::query()
+        $eligible = Profile::query()
             ->whereKeyNot($actorProfile->id)
             ->where('visibility', ProfileVisibility::Visible->value)
             ->whereNotNull('onboarding_completed_at')
@@ -45,6 +47,8 @@ final readonly class DiscoveryService
             ->whereHas('user', function (Builder $query) use ($preferences): void {
                 $query
                     ->where('status', UserStatus::Active->value)
+                    ->whereNotNull('email_verified_at')
+                    ->whereHas('roles', fn (Builder $roles) => $roles->where('name', RoleName::User))
                     ->where('birth_date', '<=', today()->subYearsNoOverflow($preferences['min_age']))
                     ->where('birth_date', '>', today()->subYearsNoOverflow($preferences['max_age'] + 1));
             })
@@ -56,19 +60,45 @@ final readonly class DiscoveryService
             })
             ->whereDoesntHave('user.blocksCreated', function (Builder $query) use ($user): void {
                 $query->where('blocked_user_id', $user->id);
-            })
-            ->with([
-                'avatar',
-                'user.roles',
-                'interests' => $this->activeInterests(...),
-            ])
-            ->get();
+            });
 
-        $tieRanks = $profiles
-            ->mapWithKeys(fn (Profile $profile): array => [$profile->id => $this->tieBreaker->rank($profile->id)]);
+        $queueOrder = 'CASE profiles.user_id';
+        $queueBindings = [];
+        foreach ($queue as $position => $id) {
+            $queueOrder .= ' WHEN ? THEN ?';
+            $queueBindings[] = $id;
+            $queueBindings[] = $position;
+        }
+        $queueOrder = $queue === [] ? '5' : $queueOrder.' ELSE 5 END';
+        $candidates = (clone $eligible)->select('profiles.id', 'profiles.user_id')
+            ->withExists(['user as is_admin' => fn (Builder $query) => $query->whereHas('roles', fn (Builder $roles) => $roles->where('name', RoleName::Admin))])
+            ->withCount(['interests as common_interest_count' => fn (Builder $interests) => $interests->where('is_active', true)->whereIn('interests.id', $actorInterestIds)])
+            ->selectRaw('CASE WHEN visit_frequency = ? THEN 1 ELSE 0 END as frequency_bonus', [$actorVisitFrequency])
+            ->selectRaw($queueOrder.' as queue_position', $queueBindings);
+        $ranked = DB::query()->fromSub($candidates, 'candidates')
+            ->where('common_interest_count', '>=', $preferences['min_common_interests'])
+            ->orderByDesc('is_admin')->orderBy('queue_position')
+            ->orderByDesc('common_interest_count')->orderByDesc('frequency_bonus')->orderBy('id');
 
-        return $profiles
-            ->map(function (Profile $profile) use ($actorInterestIds, $actorVisitFrequency): DiscoveryProfileData {
+        // Only ties at the fifth position need a PHP rank. Stream their IDs;
+        // never hydrate the whole audience or truncate a tie before ranking it.
+        $selected = [];
+        foreach ($ranked->lazy(200) as $candidate) {
+            $priority = [-(int) $candidate->is_admin, (int) $candidate->queue_position, -(int) $candidate->common_interest_count, -(int) $candidate->frequency_bonus];
+            if (count($selected) === 5 && $priority > array_slice($selected[4]['order'], 0, 4)) {
+                break;
+            }
+            $selected[] = ['id' => (int) $candidate->id, 'is_admin' => (bool) $candidate->is_admin, 'order' => [...$priority, $this->tieBreaker->rank((int) $candidate->id), (int) $candidate->id]];
+            usort($selected, fn (array $left, array $right): int => $left['order'] <=> $right['order']);
+            $selected = array_slice($selected, 0, 5);
+        }
+        $positions = array_flip(array_column($selected, 'id'));
+        $admins = array_column($selected, 'is_admin', 'id');
+
+        return (clone $eligible)->whereKey(array_keys($positions))
+            ->with(['avatar', 'user', 'interests' => $this->activeInterests(...)])->get()
+            ->sortBy(fn (Profile $profile): int => $positions[$profile->id])
+            ->map(function (Profile $profile) use ($actorInterestIds, $actorVisitFrequency, $admins): DiscoveryProfileData {
                 $avatar = $profile->avatar;
 
                 abort_unless($avatar instanceof Avatar, 500);
@@ -91,7 +121,7 @@ final readonly class DiscoveryService
                     userId: $profile->user->id,
                     profileId: $profile->id,
                     displayName: $profile->display_name,
-                    isAdmin: $profile->user->hasRole(RoleName::Admin),
+                    isAdmin: $admins[$profile->id],
                     avatar: [
                         'id' => $avatar->id,
                         'name' => $avatar->name,
@@ -109,13 +139,6 @@ final readonly class DiscoveryService
                     score: $commonInterestCount + ($frequencyBonus ? 0.25 : 0.0),
                 );
             })
-            ->filter(fn (DiscoveryProfileData $profile): bool => $profile->commonInterestCount >= $preferences['min_common_interests'])
-            ->sortBy([
-                ['isAdmin', 'desc'],
-                ['commonInterestCount', 'desc'],
-                ['frequencyBonus', 'desc'],
-                fn (DiscoveryProfileData $left, DiscoveryProfileData $right): int => $tieRanks[$left->profileId] <=> $tieRanks[$right->profileId],
-            ])
             ->values();
     }
 

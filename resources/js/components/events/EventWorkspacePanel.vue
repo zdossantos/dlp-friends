@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { computed } from 'vue';
-import AdaptiveEventPanel from '@/components/events/AdaptiveEventPanel.vue';
+import ResponsivePanel from '@/components/common/ResponsivePanel.vue';
 import EventPanelContent from '@/components/events/EventPanelContent.vue';
 import { useTranslations } from '@/composables/useTranslations';
+import { restoreEventWorkspaceScroll } from '@/lib/eventWorkspaceScroll';
 import { show } from '@/routes/events';
 import { index as participantsIndex } from '@/routes/events/participants';
 import type { EventPanel, EventWorkspaceContext } from '@/types/event';
@@ -77,7 +78,9 @@ const accessiblePanelDescription = computed(() => {
 </script>
 
 <template>
-    <AdaptiveEventPanel
+    <ResponsivePanel
+        test-id="event-panel"
+        @restore-scroll="restoreEventWorkspaceScroll"
         :open="panel !== null"
         :title="panelTitle"
         :description="panelDescription"
@@ -101,5 +104,5 @@ const accessiblePanelDescription = computed(() => {
             :context="context"
             :close-href="closeHref"
         />
-    </AdaptiveEventPanel>
+    </ResponsivePanel>
 </template>

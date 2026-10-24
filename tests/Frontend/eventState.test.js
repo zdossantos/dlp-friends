@@ -1,7 +1,6 @@
 import { expect, test } from 'bun:test';
 import {
     availableEventActions,
-    capacityLabel,
     parisLocalFormValue,
 } from '../../resources/js/lib/eventState';
 
@@ -41,8 +40,7 @@ test('event actions follow role, registration and lifecycle state', () => {
     ).toEqual([]);
 });
 
-test('capacity labels and Paris-local form values are deterministic', () => {
-    expect(capacityLabel(2, 6)).toEqual({ occupied: 2, available: 4 });
+test('Paris-local form values are deterministic', () => {
     expect(parisLocalFormValue('2026-10-10T08:30:00+00:00')).toBe(
         '2026-10-10T10:30',
     );

@@ -1,6 +1,7 @@
 <?php
 
 use App\Enums\ProfileVisibility;
+use App\Enums\UserStatus;
 use App\Models\Block;
 use App\Models\Conversation;
 use App\Models\MemberMatch;
@@ -178,3 +179,27 @@ function conversationBetween(User $first, User $second): Conversation
 
     return $match->conversation()->create();
 }
+
+test('conversation visibility preserves eligibility in both participant positions', function (bool $memberFirst, string $state, bool $unblocked, bool $visible) {
+    $first = User::factory()->withProfile()->create();
+    $second = User::factory()->withProfile()->create();
+    [$member, $peer] = $memberFirst ? [$first, $second] : [$second, $first];
+    $conversation = conversationBetween($member, $peer);
+    if ($state === 'hidden') {
+        $peer->profile->update(['visibility' => ProfileVisibility::Hidden]);
+    } elseif ($state === 'inactive') {
+        $peer->forceFill(['status' => UserStatus::PendingDeletion])->save();
+    } elseif (in_array($state, ['incoming', 'outgoing'], true)) {
+        [$blocker, $blocked] = $state === 'incoming' ? [$peer, $member] : [$member, $peer];
+        Block::factory()->create(['blocker_user_id' => $blocker->id, 'blocked_user_id' => $blocked->id]);
+    }
+
+    expect(Conversation::query()->forMember($member)->withUnblockedParticipant($member)->whereKey($conversation->id)->exists())->toBe($unblocked)
+        ->and(Conversation::query()->forMember($member)->withVisibleParticipant($member)->whereKey($conversation->id)->exists())->toBe($visible);
+})->with([true, false])->with([
+    'visible peer' => ['active', true, true],
+    'hidden peer' => ['hidden', true, false],
+    'inactive peer' => ['inactive', false, false],
+    'incoming block' => ['incoming', false, false],
+    'outgoing block' => ['outgoing', false, false],
+]);

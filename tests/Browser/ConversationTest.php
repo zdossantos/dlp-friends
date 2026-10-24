@@ -1,9 +1,5 @@
 <?php
 
-use App\Actions\MarkConversationRead;
-use App\Actions\SendMessage;
-use App\Events\MatchCreated;
-use App\Events\MessageSent;
 use App\Models\ConversationStarter;
 use App\Models\Event;
 use App\Models\EventRegistration;
@@ -79,6 +75,8 @@ test('a member can like then unlike a message from the timeline', function () {
         ->waitForEvent('networkidle')
         ->assertPresent('[data-test="message-like"][aria-pressed="false"]')
         ->assertScript("getComputedStyle(document.querySelector('[data-test=message-like]')).display !== 'none'", true)
+        ->assertScript("getComputedStyle(document.querySelector('[data-test=message-like]')).paddingLeft", '8px')
+        ->assertScript("getComputedStyle(document.querySelector('[data-test=message-like]')).marginTop", '4px')
         ->click('[data-test="message-like"]')
         ->assertPresent('[data-test="message-like"][aria-pressed="true"]')
         ->assertSeeIn('[data-test="message-like"]', '1')
@@ -141,7 +139,7 @@ test('a zero reaction stays hidden on mobile until a double tap likes the messag
     $this->actingAs($member);
 
     $page = visit("/conversations/{$conversation->id}")->on()->mobile()
-        ->assertScript("getComputedStyle(document.querySelector('[data-test=message-like]')).display", 'none');
+        ->assertScript("getComputedStyle(document.querySelector('[data-test=message-like]')).clipPath", 'inset(50%)');
 
     $defaultPrevented = $page->script(<<<'JS'
         (() => {
@@ -355,87 +353,6 @@ test('a member filters conversations locally by member name only', function () {
         ->assertNoJavaScriptErrors();
 });
 
-test('the conversation list updates and reorders its preview in realtime', function () {
-    if (! filter_var(env('REALTIME_BROWSER_TESTS', false), FILTER_VALIDATE_BOOL)) {
-        $this->markTestSkipped('Set REALTIME_BROWSER_TESTS=true and start Reverb to run this integration test.');
-    }
-
-    $member = conversationBrowserMember('Alice');
-    $firstPeer = conversationBrowserMember('Basile');
-    $secondPeer = conversationBrowserMember('Camille');
-    $firstMatch = MemberMatch::factory()->create([
-        'user_low_id' => min($member->id, $firstPeer->id),
-        'user_high_id' => max($member->id, $firstPeer->id),
-    ]);
-    $secondMatch = MemberMatch::factory()->create([
-        'user_low_id' => min($member->id, $secondPeer->id),
-        'user_high_id' => max($member->id, $secondPeer->id),
-    ]);
-    $first = $firstMatch->conversation()->create();
-    $second = $secondMatch->conversation()->create();
-    Message::factory()->for($first)->for($firstPeer, 'author')->create([
-        'content' => 'Conversation initiale',
-        'read_at' => now(),
-        'created_at' => now()->subMinute(),
-    ]);
-    $this->actingAs($member);
-
-    $page = visit('/conversations')->on()->mobile()
-        ->assertSee('Conversation initiale')
-        ->assertPresent("a[href='/conversations/{$second->id}'] [data-test='new-conversation-label']");
-
-    $this->app->make(SendMessage::class)->handle($secondPeer, $second, 'Aperçu reçu en direct');
-
-    $page->assertSee('Aperçu reçu en direct')
-        ->assertPresent("a[href='/conversations/{$second->id}'][data-unread='true']")
-        ->assertNotPresent("a[href='/conversations/{$second->id}'] [data-test='new-conversation-label']")
-        ->assertScript("document.querySelector('[aria-label=Échanges] li:first-child a').getAttribute('href')", "/conversations/{$second->id}")
-        ->assertNoJavaScriptErrors();
-
-    $this->travel(1)->seconds();
-    $this->app->make(SendMessage::class)->handle($member, $first, 'Réponse en direct');
-
-    $page->assertSee('Toi : Réponse en direct')
-        ->assertScript("document.querySelector('[aria-label=Échanges] li:first-child a').getAttribute('href')", "/conversations/{$first->id}")
-        ->assertNoJavaScriptErrors();
-});
-
-test('a conversation created in realtime appears first without a reload', function () {
-    if (! filter_var(env('REALTIME_BROWSER_TESTS', false), FILTER_VALIDATE_BOOL)) {
-        $this->markTestSkipped('Set REALTIME_BROWSER_TESTS=true and start Reverb to run this integration test.');
-    }
-
-    $member = conversationBrowserMember('Alice');
-    $olderPeer = conversationBrowserMember('Basile');
-    $newPeer = conversationBrowserMember('Camille');
-    $olderMatch = MemberMatch::factory()->create([
-        'user_low_id' => min($member->id, $olderPeer->id),
-        'user_high_id' => max($member->id, $olderPeer->id),
-    ]);
-    $older = $olderMatch->conversation()->create(['created_at' => now()->subDay()]);
-    Message::factory()->for($older)->for($olderPeer, 'author')->create([
-        'created_at' => now()->subHour(),
-        'read_at' => now(),
-    ]);
-    $this->actingAs($member);
-
-    $page = visit('/conversations')->on()->mobile()
-        ->assertSee('Basile')
-        ->assertDontSee('Camille');
-
-    $newMatch = MemberMatch::factory()->create([
-        'user_low_id' => min($member->id, $newPeer->id),
-        'user_high_id' => max($member->id, $newPeer->id),
-    ]);
-    $new = $newMatch->conversation()->create(['created_at' => now()]);
-    event(new MatchCreated($newMatch, $member));
-
-    $page->assertSee('Camille')
-        ->assertPresent("a[href='/conversations/{$new->id}'] [data-test='new-conversation-label']")
-        ->assertScript("document.querySelector('[aria-label=Échanges] li:first-child a').getAttribute('href')", "/conversations/{$new->id}")
-        ->assertNoJavaScriptErrors();
-});
-
 test('a conversation renders safe recent history and repeatedly loads older messages without duplicates', function () {
     $member = conversationBrowserMember('Alice');
     $peer = conversationBrowserMember('Basile');
@@ -575,105 +492,6 @@ test('one upward scroll loads one history page and keeps the reading position', 
     'mobile before top' => [390, 844, 350],
     'desktop before top' => [1280, 900, 350],
 ]);
-
-test('a pushed message is announced without moving a member who is reading older messages', function () {
-    if (! filter_var(env('REALTIME_BROWSER_TESTS', false), FILTER_VALIDATE_BOOL)) {
-        $this->markTestSkipped('Set REALTIME_BROWSER_TESTS=true and start Reverb to run this integration test.');
-    }
-
-    $member = conversationBrowserMember('Alice');
-    $peer = conversationBrowserMember('Basile');
-    [$lowId, $highId] = collect([$member->id, $peer->id])->sort()->values()->all();
-    $match = MemberMatch::factory()->create([
-        'user_low_id' => $lowId,
-        'user_high_id' => $highId,
-    ]);
-    $conversation = $match->conversation()->create();
-
-    foreach (range(1, 22) as $index) {
-        Message::factory()->for($conversation)->for($peer, 'author')->create([
-            'content' => "Historique {$index} ".str_repeat('contenu ', 20),
-            'created_at' => now()->addSeconds($index),
-        ]);
-    }
-
-    $this->actingAs($member);
-    $page = visit("/conversations/{$conversation->id}")->on()->mobile()
-        ->assertScript("document.querySelectorAll('[data-message-id]').length", 20);
-
-    $page->script(<<<'JS'
-        const scroll = document.querySelector('[data-test=message-scroll]');
-        scroll.scrollTop = Math.max(1, Math.floor(scroll.scrollHeight / 3));
-        window.__scrollBeforePushedMessage = scroll.scrollTop;
-        true;
-    JS);
-
-    $pushed = $this->app->make(SendMessage::class)->handle(
-        $peer,
-        $conversation,
-        'Message reçu en direct',
-    );
-
-    $page->assertSee('Message reçu en direct')
-        ->assertScript("document.querySelector('[aria-live=polite]').textContent", 'Nouveau message reçu')
-        ->assertScript("document.querySelectorAll('[data-message-id]').length", 21)
-        ->assertScript("Math.abs(document.querySelector('[data-test=message-scroll]').scrollTop - window.__scrollBeforePushedMessage) < 2", true);
-
-    expect($pushed->fresh()?->read_at)->not->toBeNull();
-    expect($member->notifications()->where('data->target_id', $conversation->id)->sole()->read_at)
-        ->not->toBeNull();
-
-    event(new MessageSent($pushed));
-    $page->assertScript("document.querySelectorAll('[data-message-id]').length", 21)
-        ->assertNoJavaScriptErrors();
-
-    $page->script(<<<'JS'
-        const scroll = document.querySelector('[data-test=message-scroll]');
-        scroll.scrollTop = scroll.scrollHeight;
-        true;
-    JS);
-    $this->app->make(SendMessage::class)->handle(
-        $peer,
-        $conversation,
-        'Message reçu en étant en bas',
-    );
-    $page->assertSee('Message reçu en étant en bas')
-        ->assertScript("(() => { const scroll = document.querySelector('[data-test=message-scroll]'); return scroll.scrollHeight - scroll.scrollTop - scroll.clientHeight < 2; })()", true)
-        ->assertNoJavaScriptErrors();
-});
-
-test('a read receipt updates only the last outgoing message without moving the timeline', function () {
-    if (! filter_var(env('REALTIME_BROWSER_TESTS', false), FILTER_VALIDATE_BOOL)) {
-        $this->markTestSkipped('Set REALTIME_BROWSER_TESTS=true and start Reverb to run this integration test.');
-    }
-
-    $member = conversationBrowserMember('Alice');
-    $peer = conversationBrowserMember('Basile');
-    [$lowId, $highId] = collect([$member->id, $peer->id])->sort()->values()->all();
-    $match = MemberMatch::factory()->create([
-        'user_low_id' => $lowId,
-        'user_high_id' => $highId,
-    ]);
-    $conversation = $match->conversation()->create();
-    Message::factory()->for($conversation)->for($member, 'author')->count(12)->create();
-    $this->actingAs($member);
-
-    $page = visit("/conversations/{$conversation->id}")->on()->mobile()
-        ->assertNotPresent('[data-test="last-message-read"]');
-    $page->script(<<<'JS'
-        const scroll = document.querySelector('[data-test=message-scroll]');
-        scroll.scrollTop = Math.max(1, Math.floor(scroll.scrollHeight / 3));
-        window.__scrollBeforeReadReceipt = scroll.scrollTop;
-        true;
-    JS);
-
-    $this->app->make(MarkConversationRead::class)->handle($peer, $conversation);
-
-    $page->assertSee('Lu')
-        ->assertScript("document.querySelectorAll('[data-test=last-message-read]').length", 1)
-        ->assertScript("Math.abs(document.querySelector('[data-test=message-scroll]').scrollTop - window.__scrollBeforeReadReceipt) < 2", true)
-        ->assertNoJavaScriptErrors();
-});
 
 test('a member sends a message with enter and keeps composer focus', function () {
     $member = conversationBrowserMember('Alice');

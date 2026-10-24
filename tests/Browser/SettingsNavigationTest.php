@@ -37,7 +37,7 @@ test('partner only accounts return from notification settings to their partner p
 
     visit('/settings/notifications')
         ->assertAttribute('[data-test="settings-back-to-profile"]', 'href', '/partner/profile')
-        ->assertMissing('nav[aria-label="Réglages"] a[href="/settings/account"]')
+        ->assertVisible('nav[aria-label="Réglages"] a[href="/settings/account"]')
         ->click('[data-test="settings-back-to-profile"]')
         ->assertPathIs('/partner/profile')
         ->assertNoJavaScriptErrors();

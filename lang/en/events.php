@@ -1,7 +1,10 @@
 <?php
 
 return [
-    'validation' => ['starts_at_future' => 'The starts at field must be a date after now.'],
+    'validation' => [
+        'starts_at_future' => 'The starts at field must be a date after now.',
+        'local_time' => 'This local time does not exist in Paris.',
+    ],
     'navigation' => 'Events',
     'workspace_navigation' => 'Event navigation',
     'index' => [
@@ -26,7 +29,7 @@ return [
         'character_count' => ':count / 2,000', 'unread' => ':count unread', 'timeline' => 'Discussion messages',
         'load_previous' => 'Show previous messages', 'send_error' => 'The message could not be sent.',
         'connection_unavailable' => 'Live connection interrupted.', 'retry' => 'Retry',
-        'read_only' => ['cancelled' => 'This event is cancelled. The discussion remains available.', 'archived' => 'This discussion is archived and remains available.'],
+        'read_only' => ['cancelled' => 'This event is cancelled. The discussion remains available.', 'expired' => 'This discussion is archived and remains available.'],
     ],
     'fields' => ['title' => 'Title', 'description' => 'Description', 'general_location' => 'General location', 'detailed_location' => 'Exact location', 'starts_at' => 'Date and time', 'capacity' => 'Number of places', 'registration_mode' => 'Registration mode'],
     'modes' => ['automatic' => 'Automatic acceptance', 'manual' => 'Organizer approval'],

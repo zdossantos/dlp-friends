@@ -38,13 +38,13 @@ it('uses the pinned Bun toolchain in automation and Docker', function () {
 it('runs Pest in eight isolated time-balanced CI shards without Playwright on backend shards', function () {
     $ci = file_get_contents(base_path('.github/workflows/ci.yml'));
     $backendShards = str($ci)->between("  pest-tests:\n", "\n  pest-browser-tests:")->toString();
-    $browserShards = str($ci)->between("  pest-browser-tests:\n", "\n  pest-tests-result:")->toString();
+    $browserShards = str($ci)->between("  pest-browser-tests:\n", "\n  pest-realtime-tests:")->toString();
 
     expect($ci)
         ->toContain('public/service-worker.js')
         ->toContain('name: Pest backend (shard ${{ matrix.shard }}/4)')
         ->toContain('name: Pest browser (shard ${{ matrix.shard }}/4)')
-        ->toContain('needs: [pest-tests, pest-browser-tests]')
+        ->toContain('needs: [pest-tests, pest-browser-tests, pest-realtime-tests]')
         ->not->toContain('--parallel --shard=')
         ->toContain('fail-fast: false')
         ->toContain('needs: pest-prepare')
@@ -61,6 +61,23 @@ it('runs Pest in eight isolated time-balanced CI shards without Playwright on ba
         ->toContain('Install Playwright system dependencies')
         ->toContain('./node_modules/.bin/playwright install-deps chromium')
         ->not->toContain('Set up Bun');
+});
+
+it('requires real Reverb browser journeys and preserves diagnostics from failed shards', function () {
+    $ci = file_get_contents(base_path('.github/workflows/ci.yml'));
+    $realtime = str($ci)->between("  pest-realtime-tests:\n", "\n  pest-tests-result:")->toString();
+    $result = str($ci)->between("  pest-tests-result:\n", "\n  frontend-quality:")->toString();
+
+    expect($realtime)->toContain("REALTIME_BROWSER_TESTS: 'true'")
+        ->toContain('BROADCAST_CONNECTION: reverb')
+        ->toContain('VITE_REVERB_APP_KEY: ci-realtime-public-key')
+        ->toContain('bash .github/scripts/test-realtime.sh')
+        ->toContain('run: bun run build')
+        ->and($result)->toContain('PEST_REALTIME_RESULT: ${{ needs.pest-realtime-tests.result }}')
+        ->toContain('test "$PEST_REALTIME_RESULT" = success')
+        ->and(substr_count($ci, 'name: Preserve failure diagnostics'))->toBe(3)
+        ->and($ci)->toContain('tests/Browser/Screenshots')
+        ->toContain('retention-days: 7');
 });
 
 it('documents Bun without npm or Yarn residue in active project files', function () {

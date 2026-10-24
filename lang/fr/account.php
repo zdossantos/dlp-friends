@@ -220,6 +220,10 @@ return [
         'submit' => 'Supprimer mon compte',
     ],
     'passkeys' => [
+        'default_name' => ':browser sur :device',
+        'exists' => 'Cet appareil possède déjà une clé d’accès.',
+        'invalid_domain' => 'Les clés d’accès ne sont pas disponibles sur ce domaine.',
+        'failed' => 'L’opération avec la clé d’accès a échoué. Réessaie.',
         'title' => 'Clés d’accès', 'description' => 'Gère la connexion sans mot de passe.', 'empty' => 'Aucune clé d’accès',
         'empty_description' => 'Ajoute-en une pour te connecter sans mot de passe.', 'unsupported' => 'Les clés d’accès ne sont pas prises en charge par ce navigateur.',
         'add' => 'Ajouter une clé d’accès', 'name' => 'Nom de la clé d’accès', 'placeholder' => 'Ex. MacBook Pro, iPhone',
@@ -231,6 +235,9 @@ return [
         'separator' => 'Ou continuer avec l’adresse e-mail',
     ],
     'two_factor' => [
+        'qr_failed' => 'Impossible de charger le QR code. Réessaie.',
+        'key_failed' => 'Impossible de charger la clé de configuration. Réessaie.',
+        'recovery_failed' => 'Impossible de charger les codes de récupération. Réessaie.',
         'title' => 'Authentification à deux facteurs', 'description' => 'Renforce la sécurité de ton compte.',
         'disabled_description' => 'Une fois activée, un code temporaire fourni par ton application d’authentification sera demandé à la connexion.',
         'enabled_description' => 'Un code temporaire fourni par ton application d’authentification sera demandé à chaque connexion.',

@@ -1,14 +1,15 @@
 <script setup lang="ts">
 import { CalendarDays, ShieldCheck, Sparkles } from '@lucide/vue';
+import { computed } from 'vue';
 import ProfileSocialLinks from '@/components/profile/ProfileSocialLinks.vue';
 import SeasonalDecorations from '@/components/seasonal/SeasonalDecorations.vue';
 import { Badge } from '@/components/ui/badge';
 import { useTranslations } from '@/composables/useTranslations';
-import type { SocialLink } from '@/types';
+import type { SocialLink, VisitFrequency } from '@/types';
 
 const { t } = useTranslations();
 
-withDefaults(
+const props = withDefaults(
     defineProps<{
         avatar: {
             name: string;
@@ -17,18 +18,22 @@ withDefaults(
             secondary_color: string;
         };
         displayName: string;
-        ageLabel: string;
+        age: number;
         bio: string;
-        visitFrequency: string;
+        visitFrequency: VisitFrequency | null;
         interests: Array<{ id: number; name: string }>;
-        aboutLabel: string;
-        interestsLabel: string;
-        visitFrequencyLabel: string;
         socialLinks?: SocialLink[];
         isAdmin?: boolean;
         embedded?: boolean;
     }>(),
     { isAdmin: false, embedded: false, socialLinks: () => [] },
+);
+const formattedVisitFrequency = computed(() =>
+    t(
+        props.visitFrequency
+            ? `profile.details.frequency_${props.visitFrequency}`
+            : 'profile.details.frequency_unknown',
+    ),
 );
 </script>
 
@@ -105,11 +110,14 @@ withDefaults(
                             class="rounded-full px-3 py-1"
                             variant="secondary"
                         >
-                            {{ ageLabel }}
+                            {{ t('profile.details.age', { age }) }}
                         </Badge>
                     </div>
                     <div class="mt-2 flex flex-wrap gap-2">
-                        <slot name="badges" />
+                        <slot
+                            name="badges"
+                            :visit-frequency="formattedVisitFrequency"
+                        />
                     </div>
                 </div>
                 <slot name="summary-actions" />
@@ -120,7 +128,7 @@ withDefaults(
                     data-test="profile-about-title"
                     class="mb-1 text-sm font-semibold"
                 >
-                    {{ aboutLabel }}
+                    {{ t('profile.details.about') }}
                 </h2>
                 <p class="leading-6 whitespace-pre-line text-muted-foreground">
                     {{ bio }}
@@ -133,9 +141,11 @@ withDefaults(
                         class="size-4 text-primary"
                         aria-hidden="true"
                     />
-                    {{ visitFrequencyLabel }}
+                    {{ t('profile.details.visit_frequency') }}
                 </h2>
-                <p class="text-muted-foreground">{{ visitFrequency }}</p>
+                <p class="text-muted-foreground">
+                    {{ formattedVisitFrequency }}
+                </p>
             </section>
 
             <section v-if="interests.length > 0">
@@ -144,7 +154,7 @@ withDefaults(
                     class="mb-2 flex items-center gap-2 text-sm font-semibold"
                 >
                     <Sparkles class="size-4 text-primary" aria-hidden="true" />
-                    {{ interestsLabel }}
+                    {{ t('profile.details.interests') }}
                 </h2>
                 <div class="flex flex-wrap gap-2">
                     <Badge

@@ -20,7 +20,7 @@ return [
     'management' => 'Gérer le trajet',
     'group' => 'Le groupe',
     'schedule' => 'Date et heure du départ',
-    'chat' => ['open' => 'Ouvrir la discussion', 'read_only' => ['cancelled' => 'Ce trajet est annulé. La discussion est en lecture seule.', 'archived' => 'Cette discussion est archivée.']],
+    'chat' => ['open' => 'Ouvrir la discussion', 'read_only' => ['cancelled' => 'Ce trajet est annulé. La discussion est en lecture seule.', 'expired' => 'Cette discussion est archivée.']],
     'title' => 'Trajets',
     'description' => 'Propose un départ ou rejoins des membres pour aller au parc.',
     'mine' => 'Mes trajets',

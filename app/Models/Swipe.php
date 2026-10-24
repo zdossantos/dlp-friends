@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\ProfileVisibility;
+use App\Enums\RoleName;
 use App\Enums\SwipeDecision;
 use App\Enums\UserStatus;
 use Database\Factories\SwipeFactory;
@@ -37,6 +38,8 @@ class Swipe extends Model
             ->where('decision', SwipeDecision::Pass)
             ->whereHas('target', function (Builder $target) use ($viewer): void {
                 $target->where('status', UserStatus::Active)
+                    ->whereNotNull('email_verified_at')
+                    ->whereHas('roles', fn (Builder $roles) => $roles->where('name', RoleName::User))
                     ->where('birth_date', '<=', today()->subYears(18))
                     ->whereHas('profile', function (Builder $profile): void {
                         $profile->where('visibility', ProfileVisibility::Visible)

@@ -127,7 +127,7 @@ test('event discussion likes another member message by double tap without zoomin
     $page = visit("/events/{$event->id}/chat")->resize(390, 700)
         ->assertPresent('[data-test="message-like"]')
         ->assertScript("document.querySelectorAll('[data-test=message-like]').length", 1)
-        ->assertScript("getComputedStyle(document.querySelector('[data-test=message-like]')).display", 'none');
+        ->assertScript("getComputedStyle(document.querySelector('[data-test=message-like]')).clipPath", 'inset(50%)');
 
     $defaultPrevented = $page->script(<<<'JS'
         (() => {
@@ -776,3 +776,62 @@ test('group history loads while scrolling upward without leaving the chat or los
         ->assertScript("document.querySelectorAll('[data-test=message-bubble]').length", 25)
         ->assertNoJavaScriptErrors();
 })->with(['event' => 'mine', 'messaging' => 'conversations']);
+
+test('event registration mode stays locked after a request and the organizer can correct the form', function () {
+    $organizer = eventBrowserMember('Alice');
+    $event = Event::factory()->for($organizer, 'organizer')->create(['registration_mode' => 'manual']);
+    EventRegistration::factory()->for($event)->create(['status' => 'pending']);
+    $this->actingAs($organizer);
+
+    $page = visit("/events/{$event->id}/edit")->select('#registration_mode', 'automatic')
+        ->fill('#title', 'Titre conservé')->click('@event-submit')
+        ->assertSee('Le mode d’inscription ne peut plus être modifié après la première demande.')
+        ->assertValue('#title', 'Titre conservé');
+    expect($event->fresh()->registration_mode->value)->toBe('manual')
+        ->and($event->fresh()->title)->not->toBe('Titre conservé');
+    $page->select('#registration_mode', 'manual')->click('@event-submit')->assertSee('Titre conservé')->assertMissing('@event-submit')->assertNoJavaScriptErrors();
+    expect($event->fresh()->title)->toBe('Titre conservé');
+});
+
+test('event capacity cannot fall below the organizer and accepted participants', function () {
+    $organizer = eventBrowserMember('Alice');
+    $event = Event::factory()->for($organizer, 'organizer')->create(['capacity' => 4]);
+    EventRegistration::factory()->for($event)->accepted()->count(2)->create();
+    $this->actingAs($organizer);
+
+    $page = visit("/events/{$event->id}/edit")->fill('#capacity', '2')->click('@event-submit')
+        ->assertSee('La capacité ne peut pas être inférieure au nombre de places occupées.');
+    expect($event->fresh()->capacity)->toBe(4);
+    $page->fill('#capacity', '3')->click('@event-submit')->assertMissing('@event-submit')->assertNoJavaScriptErrors();
+    expect($event->fresh()->capacity)->toBe(3)->and($event->fresh()->occupiedPlaces())->toBe(3);
+});
+
+test('within twenty four hours an event keeps its location but still allows descriptive edits', function () {
+    $organizer = eventBrowserMember('Alice');
+    $event = Event::factory()->for($organizer, 'organizer')->create(['starts_at' => now()->addHours(18)]);
+    $this->actingAs($organizer);
+
+    $page = visit("/events/{$event->id}/edit")->fill('#general_location', 'Nouveau lieu')
+        ->fill('#description', 'Précisions utiles pour les participants')->click('@event-submit')
+        ->assertSee('La date, le lieu et la capacité ne sont modifiables que jusqu’à 24 heures avant le début.');
+    expect($event->fresh()->general_location)->toBe($event->general_location)
+        ->and($event->fresh()->description)->toBe($event->description);
+    $page->fill('#general_location', $event->general_location)->click('@event-submit')
+        ->assertSee('Précisions utiles pour les participants')->assertMissing('@event-submit')->assertNoJavaScriptErrors();
+    expect($event->fresh()->description)->toBe('Précisions utiles pour les participants');
+});
+
+test('event private routes deny non accepted members even through direct browser requests', function (?string $status) {
+    $member = eventBrowserMember('Basile');
+    $event = Event::factory()->create(['registration_mode' => 'manual']);
+    $event->chat()->create();
+    if ($status !== null) {
+        EventRegistration::factory()->for($event)->for($member)->create(['status' => $status]);
+    }
+    $this->actingAs($member);
+    $page = visit("/events/{$event->id}")->assertDontSee($event->detailed_location)->assertMissing('@event-chat-link');
+    foreach (['chat', 'participants', 'requests', 'edit'] as $path) {
+        $page->assertScript("async () => (await fetch('/events/{$event->id}/{$path}')).status", 403);
+    }
+    $page->assertNoJavaScriptErrors();
+})->with([null, 'pending', 'refused', 'withdrawn', 'removed']);

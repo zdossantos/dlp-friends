@@ -17,6 +17,9 @@
         <testsuite name="Browser">
             <directory>tests/Browser</directory>
         </testsuite>
+        <testsuite name="Realtime">
+            <directory>tests/Realtime</directory>
+        </testsuite>
     </testsuites>
     <source>
         <include>

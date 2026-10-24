@@ -4,6 +4,7 @@ use App\Actions\DeliverPartnerAnnouncement;
 use App\Actions\FinalizePartnerAnnouncement;
 use App\Actions\PreparePartnerAnnouncementAudience;
 use App\Actions\StartPartnerAnnouncement;
+use App\Contracts\WebPushTransport;
 use App\Enums\PartnerAnnouncementStatus;
 use App\Enums\PartnerDeliveryStatus;
 use App\Enums\RoleName;
@@ -11,6 +12,8 @@ use App\Enums\UserStatus;
 use App\Jobs\BroadcastPartnerAnnouncement as BroadcastPartnerAnnouncementJob;
 use App\Jobs\DeliverPartnerAnnouncement as DeliverPartnerAnnouncementJob;
 use App\Jobs\PreparePartnerAnnouncementAudience as PreparePartnerAnnouncementAudienceJob;
+use App\Jobs\PushPartnerAnnouncement;
+use App\Jobs\SendWebPushNotification;
 use App\Models\PartnerAnnouncement;
 use App\Models\PartnerAnnouncementDelivery;
 use App\Models\PartnerAnnouncementMetric;
@@ -19,7 +22,9 @@ use App\Models\PartnerProfile;
 use App\Models\PartnerSetting;
 use App\Models\Role;
 use App\Models\User;
+use App\Models\WebPushSubscription;
 use App\Notifications\PartnerAnnouncementNotification;
+use App\Support\WebPushResult;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Broadcasting\BroadcastEvent;
 use Illuminate\Broadcasting\PrivateChannel;
@@ -650,4 +655,95 @@ test('the dispatch endpoint is restricted to admins', function () {
         ->assertRedirect(route('admin.partner-statistics.index'));
 
     expect($announcement->fresh()?->status)->toBe(PartnerAnnouncementStatus::Sending);
+});
+
+test('a real partner delivery queues an independent push after commit and reuses its notification identity', function () {
+    Queue::fake();
+    config()->set('services.web_push', ['subject' => 'mailto:test@example.test', 'public_key' => 'public', 'private_key' => 'private']);
+    $user = dispatchEligibleUser();
+    $device = WebPushSubscription::factory()->for($user)->create();
+    $announcement = sendingAnnouncement();
+    $delivery = PartnerAnnouncementDelivery::factory()->for($announcement, 'announcement')->for($user)->create();
+
+    DB::beginTransaction();
+    app(DeliverPartnerAnnouncement::class)->handle($delivery);
+    Queue::assertNotPushed(PushPartnerAnnouncement::class);
+    DB::commit();
+    $push = Queue::pushed(PushPartnerAnnouncement::class)->sole();
+    app()->call([$push, 'handle']);
+    Queue::assertPushed(SendWebPushNotification::class, fn ($job) => $job->subscriptionId === $device->id
+        && $job->notification->id === $delivery->fresh()->notification_id);
+
+    $transport = Mockery::mock(WebPushTransport::class);
+    $transport->shouldReceive('send')->once()->withArgs(function ($subscription, array $payload) use ($delivery) {
+        expect($payload['notification_id'])->toBe($delivery->fresh()->notification_id)
+            ->and($payload['body'])->toBe(trans('notifications.push.partner_announcements.body'));
+
+        return true;
+    })->andReturn(new WebPushResult(true, false, 201));
+    $this->app->instance(WebPushTransport::class, $transport);
+    $send = Queue::pushed(SendWebPushNotification::class)->sole();
+    app()->call([$send, 'handle']);
+    app()->call([$send, 'handle']);
+    $this->assertDatabaseCount('web_push_deliveries', 1);
+    expect($user->notifications()->count())->toBe(1)
+        ->and($announcement->metric->fresh()->delivered_count)->toBe(1);
+});
+
+test('a queued partner push rechecks current eligibility and device consent', function (string $change) {
+    Queue::fake();
+    config()->set('services.web_push', ['subject' => 'mailto:test@example.test', 'public_key' => 'public', 'private_key' => 'private']);
+    $user = dispatchEligibleUser();
+    $device = WebPushSubscription::factory()->for($user)->create();
+    $announcement = sendingAnnouncement();
+    $delivery = PartnerAnnouncementDelivery::factory()->for($announcement, 'announcement')->for($user)->create();
+    app(DeliverPartnerAnnouncement::class)->handle($delivery);
+    app()->call([Queue::pushed(PushPartnerAnnouncement::class)->sole(), 'handle']);
+    $send = Queue::pushed(SendWebPushNotification::class)->sole();
+    match ($change) {
+        'role' => $user->roles()->detach(),
+        'email' => $user->forceFill(['email_verified_at' => null])->save(),
+        'inactive' => $user->forceFill(['status' => UserStatus::Banned])->save(),
+        'partner preference' => $user->partnerNotificationPreference()->update(['enabled' => false]),
+        'push preference' => $user->notificationPreferences()->create(['category' => 'partner_announcements', 'enabled' => false]),
+        'device' => $device->update(['revoked_at' => now()]),
+    };
+    $transport = Mockery::mock(WebPushTransport::class);
+    $transport->shouldNotReceive('send');
+    $this->app->instance(WebPushTransport::class, $transport);
+    app()->call([$send, 'handle']);
+    $this->assertDatabaseCount('web_push_deliveries', 0);
+})->with(['role', 'email', 'inactive', 'partner preference', 'push preference', 'device']);
+
+test('admin retry can requeue partner push after the broadcast has completed', function () {
+    Queue::fake();
+    $admin = User::factory()->admin()->create();
+    $user = dispatchEligibleUser();
+    $announcement = sendingAnnouncement(['audience_prepared_at' => now()]);
+    $delivery = PartnerAnnouncementDelivery::factory()->for($announcement, 'announcement')->for($user)->create();
+    app(DeliverPartnerAnnouncement::class)->handle($delivery);
+    $delivery->update(['broadcasted_at' => now()]);
+    app(FinalizePartnerAnnouncement::class)->handle($announcement);
+    Queue::fake();
+    $this->actingAs($admin)->post(route('admin.partner-announcements.retry', $announcement))->assertRedirect();
+    Queue::assertPushed(PushPartnerAnnouncement::class, fn ($job) => $job->deliveryId === $delivery->id);
+    Queue::assertNotPushed(BroadcastPartnerAnnouncementJob::class);
+    expect($user->notifications()->count())->toBe(1);
+});
+
+test('a failed push queue insertion does not prevent partner broadcast or duplicate durable delivery', function () {
+    $queue = Queue::fake();
+    $queue->beforePushing(static function (object $job): void {
+        if ($job instanceof PushPartnerAnnouncement) {
+            throw new RuntimeException('push queue unavailable');
+        }
+    });
+    $user = dispatchEligibleUser();
+    $announcement = sendingAnnouncement();
+    $delivery = PartnerAnnouncementDelivery::factory()->for($announcement, 'announcement')->for($user)->create();
+    expect(fn () => app(DeliverPartnerAnnouncement::class)->handle($delivery))->toThrow(RuntimeException::class, 'push queue unavailable');
+    Queue::assertPushed(BroadcastPartnerAnnouncementJob::class);
+    expect($user->notifications()->count())->toBe(1)
+        ->and($delivery->fresh()->status)->toBe(PartnerDeliveryStatus::Delivered)
+        ->and($announcement->metric->fresh()->delivered_count)->toBe(1);
 });

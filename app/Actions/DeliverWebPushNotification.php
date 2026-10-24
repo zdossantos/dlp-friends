@@ -17,11 +17,12 @@ final class DeliverWebPushNotification
 {
     public function __construct(private readonly WebPushTransport $transport) {}
 
-    public function handle(WebPushSubscription $subscription, WebPushNotification $notification): void
+    /** Return the delay before retrying an occupied delivery lease. */
+    public function handle(WebPushSubscription $subscription, WebPushNotification $notification): ?int
     {
         $subscription = $subscription->fresh();
         if ($subscription === null) {
-            return;
+            return null;
         }
         $user = $subscription->user()->first();
         $notificationId = $notification instanceof Notification ? $notification->id : null;
@@ -29,12 +30,12 @@ final class DeliverWebPushNotification
         if ($user === null || $notificationId === null || $subscription->revoked_at !== null
             || $user->status !== UserStatus::Active || $user->deletion_requested_at !== null
             || ! $notification->webPushAccessAllowed($user)) {
-            return;
+            return null;
         }
 
         $enabled = $user->notificationPreferences()->where('category', $notification->webPushPreference())->value('enabled') ?? true;
         if (! $enabled) {
-            return;
+            return null;
         }
 
         $delivery = WebPushDelivery::query()->firstOrCreate(
@@ -42,7 +43,7 @@ final class DeliverWebPushNotification
             ['category' => $notification->webPushPreference(), 'status' => 'pending'],
         );
         if (in_array($delivery->status, ['delivered', 'permanent_failure'], true)) {
-            return;
+            return null;
         }
 
         $reserved = WebPushDelivery::query()
@@ -54,7 +55,11 @@ final class DeliverWebPushNotification
                     ->where('updated_at', '<=', now()->subMinutes(10))))
             ->update(['status' => 'sending']);
         if ($reserved !== 1) {
-            return;
+            $delivery->refresh();
+
+            return $delivery->status === 'sending'
+                ? max(1, (int) now()->diffInSeconds($delivery->updated_at->addMinutes(10), false) + 1)
+                : null;
         }
 
         $delivery->refresh();
@@ -84,14 +89,14 @@ final class DeliverWebPushNotification
                 $delivery->update(['status' => 'delivered', 'last_status_code' => $status, 'last_error' => null, 'delivered_at' => now()]);
                 $subscription->update(['last_used_at' => now()]);
 
-                return;
+                return null;
             }
 
             if ($report->subscriptionExpired) {
                 $subscription->update(['revoked_at' => now()]);
                 $delivery->update(['status' => 'permanent_failure', 'last_status_code' => $status, 'last_error' => 'subscription_expired']);
 
-                return;
+                return null;
             }
 
             $temporary = $status === null || $status === 429 || $status >= 500;
@@ -111,5 +116,7 @@ final class DeliverWebPushNotification
             ]);
             throw $exception;
         }
+
+        return null;
     }
 }

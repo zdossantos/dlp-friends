@@ -1,10 +1,15 @@
 import { ref, watch } from 'vue';
 import type { Ref } from 'vue';
-import { applyReadReceipt } from '@/lib/conversationState';
-import { applyMessageReaction } from '@/lib/conversationState';
-import type { ConversationMessage } from '@/types';
-import type { MessagesReadReceipt } from '@/types';
-import type { MessageReactionUpdate } from '@/types';
+import {
+    applyReadReceipt,
+    applyMessageReaction,
+    mergeChatMessages,
+} from '@/lib/conversationState';
+import type {
+    ConversationMessage,
+    MessagesReadReceipt,
+    MessageReactionUpdate,
+} from '@/types';
 
 export function useConversationMessages(
     initialMessages: () => ConversationMessage[],
@@ -24,16 +29,9 @@ export function useConversationMessages(
     const visibleMessages = ref<ConversationMessage[]>([]);
 
     function mergeMessages(messages: ConversationMessage[]): void {
-        const messagesById = new Map(
-            visibleMessages.value.map((message) => [message.id, message]),
-        );
-
-        for (const message of messages) {
-            messagesById.set(message.id, message);
-        }
-
-        visibleMessages.value = Array.from(messagesById.values()).sort(
-            (first, second) => first.id - second.id,
+        visibleMessages.value = mergeChatMessages(
+            visibleMessages.value,
+            messages,
         );
     }
 

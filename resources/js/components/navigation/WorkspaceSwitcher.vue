@@ -1,16 +1,10 @@
 <script setup lang="ts">
-import { Link, usePage } from '@inertiajs/vue3';
-import {
-    ArrowLeftRight,
-    Building2,
-    Check,
-    ShieldCheck,
-    UserRound,
-} from '@lucide/vue';
+import { usePage } from '@inertiajs/vue3';
+import { ArrowLeftRight, Building2, ShieldCheck, UserRound } from '@lucide/vue';
 import { computed } from 'vue';
+import NavigationSheetLink from '@/components/navigation/NavigationSheetLink.vue';
 import {
     Sheet,
-    SheetClose,
     SheetContent,
     SheetDescription,
     SheetHeader,
@@ -107,37 +101,12 @@ const currentDestinationTestId = computed(
                 }}</SheetDescription>
             </SheetHeader>
             <div class="grid gap-2">
-                <SheetClose
+                <NavigationSheetLink
                     v-for="destination in destinations"
                     :key="destination.role"
-                    :as-child="true"
-                >
-                    <Link
-                        :href="destination.href"
-                        :data-test="destination.testId"
-                        :aria-label="destination.label"
-                        :aria-current="
-                            destination.role === currentRole
-                                ? 'page'
-                                : undefined
-                        "
-                        class="flex min-h-12 items-center gap-3 rounded-2xl border border-border p-4 transition-colors hover:bg-secondary focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
-                    >
-                        <component
-                            :is="destination.icon"
-                            class="size-5 shrink-0"
-                            aria-hidden="true"
-                        />
-                        <span class="flex-1 font-medium">{{
-                            destination.label
-                        }}</span>
-                        <Check
-                            v-if="destination.role === currentRole"
-                            class="size-5 text-primary"
-                            aria-hidden="true"
-                        />
-                    </Link>
-                </SheetClose>
+                    :item="destination"
+                    :active="destination.role === currentRole"
+                />
             </div>
         </SheetContent>
     </Sheet>

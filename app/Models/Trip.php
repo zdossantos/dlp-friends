@@ -71,7 +71,36 @@ class Trip extends Model
     {
         $capacity = $this->transport === TripTransport::Car ? ($this->car_seats ?? 0) : 49;
 
-        return max(0, $capacity - $this->registrations()->where('status', TripRegistrationStatus::Accepted)->count());
+        $acceptedRegistrations = array_key_exists('accepted_registrations_count', $this->attributes)
+            ? (int) $this->attributes['accepted_registrations_count']
+            : $this->registrations()->where('status', TripRegistrationStatus::Accepted)->count();
+
+        return max(0, $capacity - $acceptedRegistrations);
+    }
+
+    /** @param Builder<Trip> $query */
+    public function scopeWithAcceptedRegistrationCount(Builder $query): void
+    {
+        $query->withCount([
+            'registrations as accepted_registrations_count' => fn (Builder $registrations) => $registrations
+                ->where('status', TripRegistrationStatus::Accepted),
+        ]);
+    }
+
+    /** @param Builder<Trip> $query */
+    public function scopeRequestableBy(Builder $query, User $viewer): void
+    {
+        $query->visibleTo($viewer)->where('organizer_user_id', '!=', $viewer->id)
+            ->whereNull('cancelled_at')->where('departs_at', '>', now())
+            ->whereRaw(
+                '(select count(*) from trip_registrations where trip_registrations.trip_id = trips.id and trip_registrations.status = ?) < CASE WHEN trips.transport = ? THEN COALESCE(trips.car_seats, 0) ELSE 49 END',
+                [TripRegistrationStatus::Accepted->value, TripTransport::Car->value],
+            )
+            ->whereDoesntHave('registrations', fn (Builder $registration) => $registration
+                ->where('status', TripRegistrationStatus::Accepted)
+                ->whereHas('user', fn (Builder $participant) => $participant
+                    ->whereHas('blocksCreated', fn (Builder $blocks) => $blocks->where('blocked_user_id', $viewer->id))
+                    ->orWhereHas('blocksReceived', fn (Builder $blocks) => $blocks->where('blocker_user_id', $viewer->id))));
     }
 
     /** @param Builder<Trip> $query */

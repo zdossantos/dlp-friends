@@ -795,3 +795,25 @@ test('partner workspace navigation disappears on the first render after role rem
         ->assertPresent('a[href="/admin/partner-statistics"]')
         ->assertNoJavaScriptErrors();
 });
+
+test('profile visit frequency stays translated in the badge and details', function (?string $frequency, string $locale, string $label) {
+    $member = User::factory()->withProfile()->create(['locale' => $locale]);
+    $member->profile->update(['visit_frequency' => $frequency]);
+    $this->actingAs($member);
+
+    visit('/profile')
+        ->assertSeeIn('[data-test="profile-frequency-badge"]', $label)
+        ->assertScript('document.querySelector("[data-test=profile-information-sheet]").textContent.split('.json_encode($label).').length - 1', 2)
+        ->assertNoJavaScriptErrors();
+})->with([
+    ['rarely', 'fr', 'Rarement'],
+    ['sometimes', 'fr', 'De temps en temps'],
+    ['often', 'fr', 'Souvent'],
+    ['very_often', 'fr', 'Très souvent'],
+    [null, 'fr', 'Non renseignée'],
+    ['rarely', 'en', 'Rarely'],
+    ['sometimes', 'en', 'Sometimes'],
+    ['often', 'en', 'Often'],
+    ['very_often', 'en', 'Very often'],
+    [null, 'en', 'Not provided'],
+]);

@@ -19,20 +19,12 @@ import { NativeSelect } from '@/components/ui/native-select';
 import { Textarea } from '@/components/ui/textarea';
 import { useTranslations } from '@/composables/useTranslations';
 import { update } from '@/routes/admin/onboarding';
+import type { OnboardingMember as Member } from '@/types/admin';
 
 type Avatar = {
     id: number;
     name: string;
     image_url: string;
-};
-
-type Member = {
-    id: number;
-    display_name: string;
-    email: string;
-    status: 'not_started' | 'in_progress' | 'completed';
-    step: string | null;
-    updated_at: string;
 };
 
 type PaginationLink = {

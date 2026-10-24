@@ -19,6 +19,11 @@ class DispatchWeeklyEmailRecaps extends Command
 
     public function handle(BuildWeeklyEmailRecap $build): int
     {
+        WeeklyEmailRecapDelivery::query()->where('first_attempt_at', '<=', now()->subDay())
+            ->whereNotNull('resend_payload')->whereNull('sent_at')->whereNull('skipped_at')
+            ->where(fn ($query) => $query->whereNull('reserved_at')->orWhere('reserved_at', '<=', now()->subMinutes(10)))
+            ->update(['skipped_at' => now(), 'reserved_at' => null, 'resend_payload' => null]);
+
         $now = CarbonImmutable::now('Europe/Paris');
         $periodEnd = $now->startOfWeek(CarbonImmutable::SUNDAY)->setTime(15, 0);
         if ($periodEnd->isAfter($now)) {

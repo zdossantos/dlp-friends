@@ -37,7 +37,7 @@ const visibleConversations = ref(
 const { t } = useTranslations();
 const { activeMatch, latestMessage, latestGroupMessage, presenceChanged } =
     useMemberRealtimeContext();
-const typingIds = useConversationListTyping(
+const typingIds = useConversationListTyping(() =>
     props.conversations.filter((conversation) => !conversation.archived_at),
 );
 const filters = useRemember(

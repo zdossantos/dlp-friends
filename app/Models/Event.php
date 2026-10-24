@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\EventRegistrationMode;
 use App\Enums\EventRegistrationStatus;
+use App\Enums\UserStatus;
 use Carbon\CarbonImmutable;
 use Database\Factories\EventFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -91,6 +92,17 @@ class Event extends Model
             'events.capacity > 1 + (select count(*) from event_registrations where event_registrations.event_id = events.id and event_registrations.status = ?)',
             [EventRegistrationStatus::Accepted->value],
         );
+    }
+
+    /** @param Builder<Event> $query */
+    public function scopeVisibleTo(Builder $query, User $viewer): void
+    {
+        $query->whereHas('organizer', fn (Builder $owner) => $owner
+            ->where('status', UserStatus::Active)
+            ->where(fn (Builder $allowed) => $allowed->whereKey($viewer->id)
+                ->orWhere(fn (Builder $unblocked) => $unblocked
+                    ->whereDoesntHave('blocksCreated', fn (Builder $blocks) => $blocks->where('blocked_user_id', $viewer->id))
+                    ->whereDoesntHave('blocksReceived', fn (Builder $blocks) => $blocks->where('blocker_user_id', $viewer->id)))));
     }
 
     public function hasStarted(): bool

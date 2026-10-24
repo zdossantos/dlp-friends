@@ -32,7 +32,7 @@ final class MarkConversationRead
                 return;
             }
 
-            $query->update(['read_at' => $readAt]);
+            $query->where('id', '<=', $lastReadMessageId)->update(['read_at' => $readAt]);
 
             MessagesRead::dispatch(
                 $conversation->id,

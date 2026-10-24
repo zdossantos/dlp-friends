@@ -17,28 +17,42 @@ defineProps<{
 }>();
 const { t } = useTranslations();
 const removing = ref<string>();
+const failed = ref(false);
 
 async function remove(uuid: string): Promise<void> {
+    if (removing.value) {
+        return;
+    }
+
     if (!window.confirm(t('account.settings.notifications.devices_confirm'))) {
         return;
     }
 
     removing.value = uuid;
-    const response = await fetch(
-        `/settings/notifications/devices/${encodeURIComponent(uuid)}`,
-        {
-            method: 'DELETE',
-            credentials: 'same-origin',
-            headers: {
-                Accept: 'application/json',
-                ...xsrfHeader(document.cookie),
-            },
-        },
-    );
-    removing.value = undefined;
+    failed.value = false;
 
-    if (response.ok) {
+    try {
+        const response = await fetch(
+            `/settings/notifications/devices/${encodeURIComponent(uuid)}`,
+            {
+                method: 'DELETE',
+                credentials: 'same-origin',
+                headers: {
+                    Accept: 'application/json',
+                    ...xsrfHeader(document.cookie),
+                },
+            },
+        );
+
+        if (!response.ok && response.status !== 404) {
+            throw new Error('device_removal_failed');
+        }
+
         router.reload({ only: ['devices'] });
+    } catch {
+        failed.value = true;
+    } finally {
+        removing.value = undefined;
     }
 }
 </script>
@@ -49,6 +63,9 @@ async function remove(uuid: string): Promise<void> {
         :title="t('account.settings.notifications.devices_title')"
         :description="t('account.settings.notifications.devices_help')"
     >
+        <p v-if="failed" role="alert" class="text-sm text-destructive">
+            {{ t('account.settings.notifications.push_error') }}
+        </p>
         <p
             v-if="devices.length === 0"
             class="rounded-xl bg-muted/40 p-4 text-sm leading-6 text-muted-foreground"
@@ -91,7 +108,7 @@ async function remove(uuid: string): Promise<void> {
                     variant="ghost"
                     size="icon"
                     class="min-h-11 min-w-11"
-                    :disabled="removing === device.uuid"
+                    :disabled="removing !== undefined"
                     :aria-label="
                         t('account.settings.notifications.device_remove')
                     "

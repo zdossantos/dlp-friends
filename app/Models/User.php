@@ -55,6 +55,7 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
  * @property string|null $two_factor_recovery_codes
  * @property Carbon|null $two_factor_confirmed_at
  * @property string|null $remember_token
+ * @property int $session_version
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property-read Profile|null $profile
@@ -83,11 +84,11 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
  * @property-read Collection<int, DatabaseNotification> $unreadNotifications
  */
 #[Fillable(['email', 'locale', 'birth_date', 'password', 'show_presence'])]
-#[Hidden(['password', 'two_factor_secret', 'two_factor_recovery_codes', 'remember_token'])]
+#[Hidden(['password', 'two_factor_secret', 'two_factor_recovery_codes', 'remember_token', 'session_version'])]
 class User extends Authenticatable implements HasLocalePreference, MustVerifyEmail, PasskeyUser
 {
     /** @var array<string, mixed> */
-    protected $attributes = ['visits_visibility' => 'hidden', 'admin_new_member_alerts' => true, 'weekly_recap_messages' => false, 'weekly_recap_matches' => false];
+    protected $attributes = ['session_version' => 0, 'visits_visibility' => 'hidden', 'admin_new_member_alerts' => true, 'weekly_recap_messages' => false, 'weekly_recap_matches' => false];
 
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable, PasskeyAuthenticatable, TwoFactorAuthenticatable;
@@ -384,6 +385,7 @@ class User extends Authenticatable implements HasLocalePreference, MustVerifyEma
     protected function casts(): array
     {
         return [
+            'session_version' => 'integer',
             'email_verified_at' => 'datetime',
             'birth_date' => 'date',
             'discovery_min_age' => 'integer',

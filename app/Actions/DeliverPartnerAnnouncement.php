@@ -4,6 +4,7 @@ namespace App\Actions;
 
 use App\Enums\PartnerDeliveryStatus;
 use App\Jobs\BroadcastPartnerAnnouncement as BroadcastPartnerAnnouncementJob;
+use App\Jobs\PushPartnerAnnouncement;
 use App\Models\PartnerAnnouncementDelivery;
 use App\Models\PartnerAnnouncementMetric;
 use App\Models\User;
@@ -82,7 +83,13 @@ final class DeliverPartnerAnnouncement
                     ->increment('delivered_count');
 
                 $deliveryId = $locked->id;
-                DB::afterCommit(static fn () => BroadcastPartnerAnnouncementJob::dispatch($deliveryId));
+                DB::afterCommit(static function () use ($deliveryId): void {
+                    try {
+                        PushPartnerAnnouncement::dispatch($deliveryId);
+                    } finally {
+                        BroadcastPartnerAnnouncementJob::dispatch($deliveryId);
+                    }
+                });
             });
         } catch (Throwable $exception) {
             DB::transaction(function () use ($delivery): void {

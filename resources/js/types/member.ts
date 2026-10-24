@@ -11,3 +11,25 @@ export type PublicMember = {
     visit_frequency: VisitFrequency | null;
     interests: Array<{ id: number; name: string }>;
 };
+
+type AvailableEmbeddedMemberProfile = {
+    receivedReportsHref?: string;
+    isBlocked: false;
+    member: PublicMember;
+    canBlock: boolean;
+    canLike: boolean;
+    canUnblock: boolean;
+    conversationHref: string | null;
+};
+
+type BlockedEmbeddedMemberProfile = {
+    isBlocked: true;
+    member: { id: number };
+    canBlock: false;
+    canLike: false;
+    canUnblock: boolean;
+    conversationHref: null;
+};
+
+export type EmbeddedMemberProfile =
+    AvailableEmbeddedMemberProfile | BlockedEmbeddedMemberProfile;

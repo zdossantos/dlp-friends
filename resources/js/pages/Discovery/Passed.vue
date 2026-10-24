@@ -57,15 +57,7 @@ let profileTrigger: HTMLElement | null = null;
 const historyHref = computed(
     () => passedProfiles({ query: { page: props.profiles.current_page } }).url,
 );
-const visitFrequency = computed(() => {
-    const frequency = props.selectedProfile?.member.visit_frequency;
 
-    return t(
-        frequency
-            ? `profile.details.frequency_${frequency}`
-            : 'profile.details.frequency_unknown',
-    );
-});
 watch(
     () => props.selectedProfile,
     (profile) => {
@@ -311,23 +303,14 @@ function navigate(url: string | null): void {
                     embedded
                     :avatar="selectedProfile.member.avatar"
                     :display-name="selectedProfile.member.display_name"
-                    :age-label="
-                        t('profile.details.age', {
-                            age: selectedProfile.member.age,
-                        })
-                    "
+                    :age="selectedProfile.member.age"
                     :bio="
                         selectedProfile.member.bio ??
                         t('profile.details.empty_bio')
                     "
-                    :visit-frequency="visitFrequency"
+                    :visit-frequency="selectedProfile.member.visit_frequency"
                     :social-links="selectedProfile.member.social_links ?? []"
                     :interests="selectedProfile.member.interests"
-                    :about-label="t('profile.details.about')"
-                    :interests-label="t('profile.details.interests')"
-                    :visit-frequency-label="
-                        t('profile.details.visit_frequency')
-                    "
                     :is-admin="selectedProfile.member.is_admin"
                     class="min-h-0 flex-1 rounded-[2rem]"
                 >

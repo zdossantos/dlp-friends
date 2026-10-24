@@ -4,13 +4,18 @@ namespace App\Services;
 
 use App\Contracts\DiscoveryTieBreaker;
 
-final class RandomDiscoveryTieBreaker implements DiscoveryTieBreaker
+final readonly class RandomDiscoveryTieBreaker implements DiscoveryTieBreaker
 {
-    /** @var array<int, int> */
-    private array $ranks = [];
+    private string $seed;
+
+    public function __construct()
+    {
+        $this->seed = random_bytes(32);
+    }
 
     public function rank(int $profileId): int
     {
-        return $this->ranks[$profileId] ??= random_int(PHP_INT_MIN, PHP_INT_MAX);
+        // Stable within this instance without retaining every streamed candidate.
+        return (int) hexdec(substr(hash('sha256', $this->seed.':'.$profileId), 0, 15));
     }
 }

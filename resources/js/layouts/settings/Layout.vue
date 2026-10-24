@@ -54,14 +54,6 @@ const sidebarNavItems: NavItem[] = [
     },
 ];
 
-const visibleNavItems = computed(() =>
-    isMember.value
-        ? sidebarNavItems
-        : sidebarNavItems.filter(
-              (item) => toUrl(item.href) === toUrl(editNotifications()),
-          ),
-);
-
 const { isCurrentOrParentUrl } = useCurrentUrl();
 </script>
 
@@ -95,12 +87,11 @@ const { isCurrentOrParentUrl } = useCurrentUrl();
             </div>
         </header>
         <nav
-            :class="isMember ? 'grid-cols-4' : 'grid-cols-1'"
-            class="mb-5 grid gap-1 rounded-2xl border border-border/70 bg-card p-1.5"
+            class="mb-5 grid grid-cols-4 gap-1 rounded-2xl border border-border/70 bg-card p-1.5"
             :aria-label="t('account.settings.navigation')"
         >
             <Link
-                v-for="item in visibleNavItems"
+                v-for="item in sidebarNavItems"
                 :key="toUrl(item.href)"
                 :href="item.href"
                 :aria-current="

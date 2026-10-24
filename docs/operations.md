@@ -31,7 +31,8 @@ Internet.
 
 ## Garage indépendant
 
-Avant de retirer MinIO du Compose applicatif, préparer Garage et migrer les
+Le Compose de production utilise Garage comme ressource indépendante. Pour
+une installation existante utilisant encore MinIO, préparer Garage et migrer les
 objets selon [la procédure Garage](garage-externalization.md). Créer la ressource
 avec le service Garage natif de Coolify, puis utiliser son stockage persistant,
 un bucket privé et une clé applicative limitée. Après validation de la migration,
@@ -52,20 +53,26 @@ supprimer définitivement le conteneur et le volume MinIO de production.
    `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_BUCKET`,
    `REVERB_APP_ID`, `REVERB_APP_KEY`, `REVERB_APP_SECRET`,
    `RESEND_API_KEY`, `MAIL_FROM_ADDRESS`, `GOOGLE_CLIENT_ID`,
-   `GOOGLE_CLIENT_SECRET` et `GOOGLE_REDIRECT_URI`. En production,
+   `GOOGLE_CLIENT_SECRET`, `GOOGLE_REDIRECT_URI`, `VAPID_PUBLIC_KEY`,
+   `VAPID_PRIVATE_KEY` et `VAPID_SUBJECT`. En production,
    `GOOGLE_REDIRECT_URI` doit valoir
    `https://dlp-friends.fr/auth/google/callback`. Ajouter
    `GOOGLE_ANALYTICS_ID` pour activer GA4 et, si la validation HTML Search
    Console est utilisée, `GOOGLE_SITE_VERIFICATION`. `APP_IMAGE` est la référence GHCR
    par digest issue du fichier `container-image.json` joint à la release ; le
-   workflow la renseignera ensuite à chaque livraison.
+   script opérateur contrôlé la renseignera lors des livraisons suivantes.
 4. Définir les quatre `VITE_REVERB_*` dans les variables **GitHub**, avec le
    domaine public Reverb sans protocole, le port `443`, le schéma `https` et
    une clé publique identique à `REVERB_APP_KEY` dans Coolify.
 5. Fusionner volontairement la Release PR une fois les contrôles réussis. Le
-   workflow publie l’image, teste son démarrage et demande son déploiement.
-   Attendre que `web`, `worker`, `scheduler`, `reverb`,
-   et les ressources MySQL, Redis et Garage indépendantes soient sains.
+   workflow publie l’image, teste son démarrage et joint `container-image.json`
+   à la release, sans déclencher de livraison. Pour une installation neuve,
+   configurer ce digest dans Coolify, puis déclencher explicitement le premier
+   déploiement. Attendre que `web`, `worker`, `scheduler`, `reverb` et les
+   ressources MySQL, Redis et Garage indépendantes soient sains. Pour une
+   installation existante, suivre exclusivement la procédure
+   [prepare → deploy → verify → resume](#livraisons-contrôlées-et-répétition-bêta),
+   avec sa transition initiale ; ne pas appliquer ce démarrage à une base existante.
 6. Créer le bucket privé nommé par `AWS_BUCKET` dans Garage avant d’activer un
    parcours qui écrit des objets. Limiter la clé applicative à ce bucket.
 7. Exécuter explicitement la migration dans le conteneur `web` :
@@ -220,7 +227,7 @@ procédure. Aucun jeton de livraison production n'est fourni au workflow de publ
 5. Déployer depuis Coolify, sans reconstruction. Les quatre services récupèrent
    la même image. Vérifier leur santé, `/up`, WebSocket et les files. Toute
    migration supplémentaire reste une décision opérateur explicite.
-6. Consigner la version restaurée. La prochaine Release PR livrée remplacera
+6. Consigner la version restaurée. La prochaine livraison opérateur remplacera
    ces deux valeurs par sa propre référence.
 
 Ne pas choisir simplement un ancien commit de `main` : le couple image/Compose
@@ -248,6 +255,35 @@ release ne doit être créé manuellement pour revenir en arrière.
 - Configurer Coolify pour notifier les échecs de déploiement, conteneurs arrêtés, sauvegardes en erreur et manque d'espace disque.
 - Les journaux applicatifs sont structurés, sans mot de passe, jeton OAuth, contenu de message privé ou données personnelles inutiles.
 
+### Collecte des journaux Docker
+
+Le Compose de production utilise le canal Laravel `stderr` existant pour
+`web`, `worker`, `scheduler` et `reverb`. Les entrées sont accessibles dans les
+logs Docker/Coolify ; elles ne sont plus écrites dans `storage/logs/laravel.log`
+par le canal applicatif par défaut. Le niveau reste `warning`, réglable par
+`LOG_LEVEL`. Les transports de secours et les canaux explicitement sélectionnés
+peuvent encore écrire dans des fichiers.
+
+Le pilote Docker `json-file` conserve au plus trois fichiers de 10 Mo par
+conteneur, avec rotation. Ce plafond porte sur le volume, pas sur une durée.
+Il s'applique aux nouveaux conteneurs : recréer les quatre services pour
+appliquer la configuration, sans modifier globalement le daemon Docker.
+
+Ces fichiers Docker disparaissent avec le conteneur. Avant son remplacement,
+configurer une collecte externe des sorties Docker dans l'environnement
+d'exploitation, avec accès restreint et rétention explicite. L'affichage des
+logs dans Coolify ne constitue pas une preuve d'archivage. Pour une intervention
+ponctuelle, exporter les logs vers un emplacement protégé hors du conteneur
+avant sa suppression ; éviter de les afficher ou les joindre à une issue.
+Le dépôt ne configure aucun collecteur externe ni durée de conservation distante.
+
+Après mise en service de la collecte, émettre un identifiant technique
+synthétique sans donnée membre depuis chaque processus, vérifier sa réception,
+remplacer le conteneur puis vérifier que l'entrée antérieure reste consultable
+dans le collecteur. Vérifier aussi les limites effectives du pilote avec
+`docker inspect --format '{{json .HostConfig.LogConfig}}' <conteneur>`.
+Ne pas utiliser un mot de passe, une clé ou un message privé pour ce contrôle.
+
 ## Délivrabilité des e-mails
 
 - Mailpit est le seul service SMTP fourni par la stack locale et ne doit jamais recevoir de trafic public.
@@ -268,6 +304,14 @@ compte que la clé d’envoi, conservée uniquement côté serveur dans Coolify.
 d’envoi `RESEND_API_KEY` peut ainsi rester limitée à l’envoi. Sans clé dédiée, `RESEND_API_KEY` est utilisée : elle
 doit alors avoir accès à Usage. Une clé limitée à l’envoi produit un refus de
 consultation et suspend l’inscription e-mail. Ne jamais afficher ces clés.
+
+Le Compose transmet la clé dédiée aux quatre processus Laravel. Une variable
+absente ou vide reprend la clé d'envoi lors de l'interpolation Compose, sans
+élargir ses droits. Après modification dans Coolify, recréer les conteneurs et
+régénérer un éventuel cache de configuration dans ces nouveaux conteneurs ;
+un redémarrage seul ne change pas leur environnement. Vérifier la sélection
+sans afficher la valeur, puis tester la disponibilité de l'inscription. Un
+succès avec des clés fictives ne prouve pas les permissions du compte Resend réel.
 
 Les périodes `emails.daily` et `emails.monthly` sont vérifiées ensemble ;
 `used >= limit` pour une seule période suspend l’inscription, et une limite

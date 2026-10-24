@@ -1,16 +1,18 @@
 <script setup lang="ts">
 import { router, usePage } from '@inertiajs/vue3';
 import { echo, useConnectionStatus, useEcho } from '@laravel/echo-vue';
-import { computed, onMounted, ref, watch } from 'vue';
+import { computed, onBeforeUnmount, ref, watch } from 'vue';
 import MessageComposer from '@/components/conversations/MessageComposer.vue';
 import MessageTimeline from '@/components/conversations/MessageTimeline.vue';
 import RealtimeStatus from '@/components/conversations/RealtimeStatus.vue';
 import { useMemberRealtimeContext } from '@/composables/useMemberRealtimeNotifications';
-import { xsrfHeader } from '@/lib/csrf';
+import { useMessagingRefresh } from '@/composables/useMessagingRefresh';
 import {
-    mergeGroupChatMessages,
-    resolveGroupChatDraft,
-} from '@/lib/groupChatState';
+    applyMessageReaction,
+    mergeChatMessages,
+} from '@/lib/conversationState';
+import { xsrfHeader } from '@/lib/csrf';
+import { resolveGroupChatDraft } from '@/lib/groupChatState';
 import { index as conversationsIndex } from '@/routes/conversations';
 import type { MessageReactionUpdate } from '@/types';
 import type {
@@ -52,36 +54,45 @@ router.remember(
 );
 const visibleMessages = ref<GroupChatMessage[]>([]);
 const status = useConnectionStatus();
+const restoredCursor = page.props.messageUpdatesThrough;
+let synchronizedThrough =
+    typeof restoredCursor === 'number'
+        ? restoredCursor
+        : (props.messages.data.at(-1)?.id ?? 0);
+let refreshing = false;
+let active = true;
+onBeforeUnmount(() => {
+    active = false;
+});
 const timelineMessages = computed(() => ({ data: visibleMessages.value }));
 function merge(messages: GroupChatMessage[]): void {
-    visibleMessages.value = mergeGroupChatMessages(
-        visibleMessages.value,
-        messages,
-    );
+    visibleMessages.value = mergeChatMessages(visibleMessages.value, messages);
 }
 
 async function markRead(): Promise<void> {
-    const id = visibleMessages.value.at(-1)?.id;
+    const id = synchronizedThrough;
 
-    if (id === undefined) {
+    if (!active || document.visibilityState !== 'visible' || id === 0) {
         return;
     }
 
-    const response = await fetch(props.endpoints.read, {
-        method: 'POST',
-        credentials: 'same-origin',
-        headers: {
-            Accept: 'application/json',
-            'Content-Type': 'application/json',
-            ...xsrfHeader(document.cookie),
-        },
-        body: JSON.stringify({ last_read_message_id: id }),
-    });
-
-    if (response.ok) {
-        router.reload({
-            only: ['auth', ...(props.messagesProp ? [props.messagesProp] : [])],
+    try {
+        const response = await fetch(props.endpoints.read, {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: {
+                Accept: 'application/json',
+                'Content-Type': 'application/json',
+                ...xsrfHeader(document.cookie),
+            },
+            body: JSON.stringify({ last_read_message_id: id }),
         });
+
+        if (response.ok && active) {
+            router.reload({ only: ['auth'] });
+        }
+    } catch {
+        // The next messaging refresh retries the read acknowledgement.
     }
 }
 
@@ -107,7 +118,7 @@ async function submit(content: string): Promise<GroupChatMessage> {
 
 function sent(message: GroupChatMessage): void {
     merge([message]);
-    void markRead();
+    refreshMessages();
 }
 
 async function reactMessage(message: {
@@ -129,17 +140,11 @@ async function reactMessage(message: {
 }
 
 function updateReaction(update: MessageReactionUpdate): void {
-    const message = visibleMessages.value.find(
-        (item) => item.id === update.message_id,
+    visibleMessages.value = applyMessageReaction(
+        visibleMessages.value,
+        update,
+        currentUserId.value,
     );
-
-    if (message) {
-        message.reaction_count = update.reaction_count;
-
-        if (update.reactor_user_id === currentUserId.value) {
-            message.reacted_by_current_user = update.reacted;
-        }
-    }
 }
 
 useEcho<GroupChatMessage>(
@@ -151,7 +156,7 @@ useEcho<GroupChatMessage>(
         }
 
         merge([message]);
-        void markRead();
+        refreshMessages();
     },
 );
 
@@ -169,17 +174,7 @@ useEcho<{
             return;
         }
 
-        const message = visibleMessages.value.find(
-            (item) => item.id === update.message_id,
-        );
-
-        if (message) {
-            message.reaction_count = update.reaction_count;
-
-            if (update.reactor_user_id === currentUserId.value) {
-                message.reacted_by_current_user = update.reacted;
-            }
-        }
+        updateReaction(update);
     },
 );
 
@@ -188,31 +183,95 @@ watch(latestPersistentNotification, (notification) => {
         notification?.target_type === `${props.context.type}_chat` &&
         notification.target_id === props.context.id
     ) {
-        void markRead();
+        refreshMessages();
     }
 });
 watch(() => props.messages.data, merge, { immediate: true, deep: true });
-watch(status, (next, previous) => {
-    if (next === 'connected' && previous !== 'connected') {
-        router.reload({
-            only: props.messagesProp ? ['messages', 'chat'] : ['panel'],
-            onHttpException: (response) => {
-                if (props.messagesProp && response.status === 403) {
-                    router.visit(
-                        conversationsIndex({ query: { category: 'groups' } }),
-                    );
-
-                    return false;
-                }
-            },
-        });
+function refreshMessages(): void {
+    if (!active || refreshing || document.visibilityState !== 'visible') {
+        return;
     }
-});
-onMounted(() => {
-    void markRead();
-});
-</script>
 
+    refreshing = true;
+    let more = false;
+    const beforeRefresh = new Map(
+        visibleMessages.value.map((message) => [message.id, message]),
+    );
+
+    router.reload({
+        only: ['messages', 'messageUpdates', 'chat'],
+        data: { messages_after: synchronizedThrough },
+        preserveUrl: true,
+        onBeforeUpdate: (page) => {
+            const currentMessages = new Map(
+                visibleMessages.value.map((message) => [message.id, message]),
+            );
+            function preserveNewerReaction(
+                message: GroupChatMessage,
+            ): GroupChatMessage {
+                const current = currentMessages.get(message.id);
+
+                return current && beforeRefresh.get(message.id) !== current
+                    ? {
+                          ...message,
+                          reaction_count: current.reaction_count,
+                          reacted_by_current_user:
+                              current.reacted_by_current_user,
+                      }
+                    : message;
+            }
+            const messages = page.props.messages as PaginatedGroupChatMessages;
+            const updates = (
+                page.props.messageUpdates as GroupChatMessage[]
+            ).map(preserveNewerReaction);
+            page.props.messageUpdates = updates;
+            page.props.messageUpdatesThrough = Math.max(
+                synchronizedThrough,
+                updates.at(-1)?.id ?? 0,
+            );
+            // Keep recovered history in Inertia's snapshot for back/forward.
+            messages.data = mergeChatMessages(visibleMessages.value, [
+                ...messages.data.map(preserveNewerReaction),
+                ...updates,
+            ]);
+        },
+        onSuccess: (page) => {
+            if (!active) {
+                return;
+            }
+
+            const updates = page.props.messageUpdates as GroupChatMessage[];
+            merge(updates);
+            synchronizedThrough = Math.max(
+                synchronizedThrough,
+                updates.at(-1)?.id ?? 0,
+            );
+            more = updates.length === 100;
+
+            if (!more) {
+                void markRead();
+            }
+        },
+        onHttpException: (response) => {
+            if (response.status === 403) {
+                router.visit(
+                    conversationsIndex({ query: { category: 'groups' } }),
+                );
+
+                return false;
+            }
+        },
+        onFinish: () => {
+            refreshing = false;
+
+            if (more) {
+                refreshMessages();
+            }
+        },
+    });
+}
+useMessagingRefresh(refreshMessages);
+</script>
 <template>
     <section class="flex h-full min-h-0 flex-col" data-test="group-chat">
         <RealtimeStatus

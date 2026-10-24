@@ -11,9 +11,8 @@ import {
 } from 'vue';
 import BackLink from '@/components/common/BackLink.vue';
 import ResponsivePanel from '@/components/common/ResponsivePanel.vue';
-import EventParticipantProfile from '@/components/events/EventParticipantProfile.vue';
+import EmbeddedMemberProfile from '@/components/members/EmbeddedMemberProfile.vue';
 import OutingsNavigation from '@/components/outings/OutingsNavigation.vue';
-import UserAvatar from '@/components/profile/UserAvatar.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -29,6 +28,7 @@ import VisitAgenda from '@/components/visits/VisitAgenda.vue';
 import VisitCalendar from '@/components/visits/VisitCalendar.vue';
 import VisitDayDetail from '@/components/visits/VisitDayDetail.vue';
 import VisitForm from '@/components/visits/VisitForm.vue';
+import VisitMemberButton from '@/components/visits/VisitMemberButton.vue';
 import VisitVisibilityControl from '@/components/visits/VisitVisibilityControl.vue';
 import { useTranslations } from '@/composables/useTranslations';
 import { index } from '@/routes/visits';
@@ -440,7 +440,7 @@ function closeProfile() {
             !$event && (memberProfile ? closeProfile() : closePanel())
         "
     >
-        <EventParticipantProfile
+        <EmbeddedMemberProfile
             v-if="memberProfile"
             :profile="memberProfile"
             :block-return-href="profileCloseHref"
@@ -457,24 +457,11 @@ function closeProfile() {
             >
             <ul class="divide-y divide-border">
                 <li v-for="member in panel.members.data" :key="member.id">
-                    <button
-                        type="button"
-                        class="flex min-h-14 w-full items-center gap-3 rounded-lg py-2 text-left focus-visible:ring-2 focus-visible:ring-ring"
+                    <VisitMemberButton
+                        :member="member"
                         :data-test="`visit-attendee-${member.id}`"
-                        @click="selectMember(member.id, panel.date)"
-                    >
-                        <UserAvatar
-                            :avatar="member.avatar"
-                            :display-name="member.display_name"
-                        /><span class="min-w-0 flex-1 truncate">{{
-                            member.display_name
-                        }}</span
-                        ><span
-                            v-if="member.is_match"
-                            class="text-xs text-muted-foreground"
-                            >{{ t('visits.match') }}</span
-                        >
-                    </button>
+                        @select="selectMember($event, panel.date)"
+                    />
                 </li>
             </ul>
             <nav

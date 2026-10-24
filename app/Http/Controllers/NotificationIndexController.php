@@ -34,8 +34,9 @@ final class NotificationIndexController extends Controller
             ->when($category, fn ($query, string $value) => $query->where('data->category', $value))
             ->when($unread, fn ($query) => $query->whereNull('read_at'))
             ->paginate(20)
-            ->withQueryString()
-            ->through(fn (DatabaseNotification $notification): array => $presenter->present($notification, $user));
+            ->withQueryString();
+        $presented = array_column($presenter->presentMany($notifications->getCollection(), $user), null, 'id');
+        $notifications->through(fn (DatabaseNotification $notification): array => $presented[$notification->id]);
 
         return Inertia::render('Notifications/Index', [
             'canViewAdministrationNotifications' => $canViewAdministrationNotifications,

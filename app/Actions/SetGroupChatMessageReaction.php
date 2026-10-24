@@ -17,8 +17,10 @@ final class SetGroupChatMessageReaction
     /** @return array{message_id: int, reactor_user_id: int, reaction_count: int, reacted: bool} */
     public function handle(User $reactor, GroupChat $chat, GroupChatMessage $message, bool $reacted): array
     {
-        return DB::transaction(function () use ($reactor, $chat, $message, $reacted): array {
-            $lockedChat = GroupChat::query()->with('event')->lockForUpdate()->findOrFail($chat->id);
+        $context = $chat->trip_id !== null ? $chat->trip()->firstOrFail() : $chat->event()->firstOrFail();
+
+        return DB::transaction(function () use ($reactor, $chat, $context, $message, $reacted): array {
+            $lockedChat = app(LockGroupChatForWriting::class)->handle($reactor, $context, $chat->id);
             Gate::forUser($reactor)->authorize('react', $lockedChat);
 
             $lockedMessage = GroupChatMessage::query()

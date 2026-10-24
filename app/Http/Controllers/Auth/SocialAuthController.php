@@ -15,6 +15,8 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
+use Laravel\Fortify\Events\TwoFactorAuthenticationChallenged;
+use Laravel\Fortify\Features;
 use Laravel\Socialite\Facades\Socialite;
 use Laravel\Socialite\Two\InvalidStateException;
 use Symfony\Component\HttpFoundation\RedirectResponse as SymfonyRedirectResponse;
@@ -51,6 +53,15 @@ class SocialAuthController extends Controller
                 ->first();
 
             if ($account !== null) {
+                if (in_array($account->user->status, [UserStatus::Active, UserStatus::Banned], true)
+                    && Features::enabled(Features::twoFactorAuthentication())
+                    && $account->user->hasEnabledTwoFactorAuthentication()) {
+                    $request->session()->put(['login.id' => $account->user->id, 'login.remember' => false]);
+                    TwoFactorAuthenticationChallenged::dispatch($account->user);
+
+                    return to_route('two-factor.login');
+                }
+
                 if ($account->user->status === UserStatus::Banned) {
                     return redirect()->route('login')->withErrors(['social_auth' => BannedAuthentication::message()]);
                 }

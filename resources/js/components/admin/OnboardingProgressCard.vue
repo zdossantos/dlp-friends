@@ -2,15 +2,7 @@
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useTranslations } from '@/composables/useTranslations';
-
-type Member = {
-    id: number;
-    display_name: string;
-    email: string;
-    status: 'not_started' | 'in_progress' | 'completed';
-    step: string | null;
-    updated_at: string;
-};
+import type { OnboardingMember as Member } from '@/types/admin';
 
 defineProps<{
     member: Member;

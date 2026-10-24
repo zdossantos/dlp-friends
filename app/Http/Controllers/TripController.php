@@ -21,7 +21,11 @@ class TripController extends Controller
         $viewer = $request->user();
         $filters = $request->validated();
 
-        return Inertia::render('Trips/Index', ['filters' => $filters, 'trips' => Trip::query()->visibleTo($viewer)->searching($filters['search'] ?? null)->with('organizer.profile.avatar')->when($filters['transport'] ?? null, fn ($query, $transport) => $query->where('transport', $transport))->whereNull('cancelled_at')->where('departs_at', '>', now())->orderBy('departs_at')->orderBy('id')->paginate(20)->withQueryString()->through(fn (Trip $trip) => $data->summary($viewer, $trip))]);
+        $trips = Trip::query()->withAcceptedRegistrationCount()->visibleTo($viewer)->searching($filters['search'] ?? null)->when($filters['transport'] ?? null, fn ($query, $transport) => $query->where('transport', $transport))->whereNull('cancelled_at')->where('departs_at', '>', now())->orderBy('departs_at')->orderBy('id')->paginate(20)->withQueryString();
+        $summaries = $data->summaries($viewer, $trips->getCollection())->keyBy('id')->all();
+        $trips->through(fn (Trip $trip): array => $summaries[$trip->id]);
+
+        return Inertia::render('Trips/Index', ['filters' => $filters, 'trips' => $trips]);
     }
 
     public function store(StoreTripRequest $request, CreateTrip $create): RedirectResponse

@@ -19,8 +19,8 @@ final class TripParticipantController extends Controller
         Gate::forUser($viewer)->authorize('viewPrivate', $trip);
         $participants = $trip->registrations()->where('status', 'accepted')->with('user.profile.avatar')->get()
             ->filter(fn ($registration) => $registration->user !== null)
-            ->map(fn ($registration) => ['id' => $registration->id, 'member' => $this->member($registration->user)]);
-        $participants->prepend(['id' => null, 'member' => $this->member($trip->organizer)]);
+            ->map(fn ($registration) => ['id' => $registration->id, 'member' => $data->member($registration->user)]);
+        $participants->prepend(['id' => null, 'member' => $data->member($trip->organizer)]);
 
         return Inertia::render('Trips/Show', ['trip' => $data->detail($viewer, $trip), 'panel' => 'participants', 'participants' => $participants->values()]);
     }
@@ -36,14 +36,5 @@ final class TripParticipantController extends Controller
         abort_unless($member->profile !== null && ($viewer->is($member) || Gate::forUser($viewer)->allows('viewPublic', $member->profile)), 404);
 
         return Inertia::render('Trips/Show', ['trip' => $data->detail($viewer, $trip), 'panel' => 'profile', 'profile' => ['isBlocked' => false] + PublicMemberData::from($viewer, $member)]);
-    }
-
-    /** @return array<string, mixed> */
-    private function member(User $member): array
-    {
-        $avatar = $member->profile?->avatar;
-
-        return ['id' => $member->id, 'display_name' => $member->profile?->display_name,
-            'avatar' => $avatar === null ? null : ['id' => $avatar->id, 'name' => $avatar->name, 'image_url' => route('avatars.image', $avatar), 'primary_color' => $avatar->primary_color, 'secondary_color' => $avatar->secondary_color]];
     }
 }

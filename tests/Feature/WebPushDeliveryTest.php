@@ -15,6 +15,8 @@ use App\Notifications\NewMatchNotification;
 use App\Notifications\NewMessageNotification;
 use App\Support\WebPushResult;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Queue\WorkerOptions;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Str;
 
@@ -255,6 +257,40 @@ test('an abandoned sending lease can be recovered', function () {
         'status' => 'delivered',
         'attempts' => 2,
     ]);
+});
+
+test('a queued push waits for an abandoned lease and is consumed after expiry', function () {
+    [, $recipient, $message] = pushConversation();
+    $subscription = WebPushSubscription::factory()->for($recipient)->create();
+    $notification = new NewMessageNotification($message);
+    $notification->id = (string) Str::uuid();
+    $delivery = WebPushDelivery::query()->create([
+        'notification_id' => $notification->id,
+        'web_push_subscription_id' => $subscription->id,
+        'category' => WebPushPreference::Messages,
+        'status' => 'sending',
+        'attempts' => 1,
+    ]);
+    $transport = Mockery::mock(WebPushTransport::class);
+    $transport->shouldReceive('send')->once()->andReturn(new WebPushResult(true, false, 201));
+    app()->instance(WebPushTransport::class, $transport);
+    config()->set('queue.connections.database.after_commit', false);
+    $queue = Queue::connection('database');
+    $queue->push(new SendWebPushNotification($subscription->id, $notification));
+
+    DB::table('jobs')->update(['attempts' => 4]);
+    $this->travel(2)->minutes();
+    $job = $queue->pop();
+    expect($job)->not->toBeNull();
+    app('queue.worker')->process('database', $job, new WorkerOptions(maxTries: 3));
+    expect($job->isReleased())->toBeTrue()->and($queue->size())->toBe(1);
+    expect($delivery->fresh()->attempts)->toBe(1);
+
+    $this->travel(9)->minutes();
+    $job = $queue->pop();
+    expect($job)->not->toBeNull();
+    app('queue.worker')->process('database', $job, new WorkerOptions(maxTries: 3));
+    expect($queue->size())->toBe(0)->and($delivery->fresh()->status)->toBe('delivered');
 });
 
 /** @return array{User, User, Message} */

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Eye, LockKeyhole, MapPin, Users } from '@lucide/vue';
-import UserAvatar from '@/components/profile/UserAvatar.vue';
 import { Button } from '@/components/ui/button';
+import VisitMemberButton from '@/components/visits/VisitMemberButton.vue';
 import { useTranslations } from '@/composables/useTranslations';
 import type { OwnVisit, VisitDay, VisitsVisibility } from '@/types/visit';
 const props = defineProps<{
@@ -79,23 +79,11 @@ const { t, formatDate } = useTranslations();
             </p>
             <ul v-else class="divide-y divide-border">
                 <li v-for="member in day.preview" :key="member.id">
-                    <button
-                        type="button"
-                        class="flex min-h-14 w-full items-center gap-3 rounded-lg py-2 text-left focus-visible:ring-2 focus-visible:ring-ring"
-                        @click="emit('member', member.id, day.date)"
-                    >
-                        <UserAvatar
-                            :avatar="member.avatar"
-                            :display-name="member.display_name"
-                        /><span class="min-w-0 flex-1 truncate font-medium">{{
-                            member.display_name
-                        }}</span
-                        ><span
-                            v-if="member.is_match"
-                            class="text-xs text-muted-foreground"
-                            >{{ t('visits.match') }}</span
-                        >
-                    </button>
+                    <VisitMemberButton
+                        :member="member"
+                        emphasized
+                        @select="emit('member', $event, day.date)"
+                    />
                 </li>
             </ul>
             <Button

@@ -95,8 +95,10 @@ Les contrôles individuels sont décrits dans
 ## Production
 
 [`compose.production.yaml`](compose.production.yaml) décrit la stack déployée
-par Coolify depuis `main`. Elle exclut Mailpit, rejoint un service MySQL indépendant
-sur un réseau privé externe et conserve Redis et MinIO dans la stack. Elle utilise
+par Coolify depuis `main`, avec une image GHCR épinglée par digest. Elle contient
+`web`, `worker`, `scheduler` et `reverb`. MySQL, Redis et le stockage S3 Garage
+sont des ressources indépendantes accessibles sur les réseaux privés configurés
+dans Coolify. Mailpit et MinIO restent réservés au développement local. Elle utilise
 Resend pour les e-mails transactionnels. Les secrets
 et domaines ne sont jamais versionnés : ils sont renseignés dans Coolify.
 

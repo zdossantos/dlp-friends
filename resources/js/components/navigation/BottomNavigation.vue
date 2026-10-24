@@ -18,16 +18,8 @@ withDefaults(
     },
 );
 
-const { isCurrentOrParentUrl } = useCurrentUrl();
+const { isCurrentNavigationItem: isActive } = useCurrentUrl();
 const pendingPath = ref<string | null>(null);
-
-function isActive(item: BottomNavigationItem): boolean {
-    return (
-        isCurrentOrParentUrl(item.href) ||
-        item.activeParents?.some((parent) => isCurrentOrParentUrl(parent)) ===
-            true
-    );
-}
 
 function itemPath(item: BottomNavigationItem): string {
     return new URL(toUrl(item.href), window.location.origin).pathname;
