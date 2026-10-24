@@ -19,7 +19,19 @@ test('group resume catches every missed page and only acknowledges a visible syn
     GroupChatMessage::factory()->for($chat)->for($member, 'author')->create(['content' => 'Avant la veille']);
     $this->actingAs($member);
     $page = visit('/conversations?category=groups')->assertPresent("@group-conversation-{$chat->id}");
-    $page->script("Object.defineProperty(document, 'visibilityState', {configurable:true, get: () => 'hidden'}); true;");
+    $page->script(<<<'JS'
+        window.historyTrace = [];
+        for (const method of ['pushState', 'replaceState']) {
+            const original = history[method];
+            history[method] = function(state, title, url) {
+                window.historyTrace.push({method, from: location.pathname, url, component: state?.page?.component, stack: new Error().stack});
+                return original.call(this, state, title, url);
+            };
+        }
+        window.addEventListener('popstate', event => window.historyTrace.push({method: 'popstate', url: location.pathname, pageUrl: event.state?.page?.url, component: event.state?.page?.component}));
+        Object.defineProperty(document, 'visibilityState', {configurable:true, get: () => 'hidden'});
+        true;
+    JS);
     $page->click("@group-conversation-{$chat->id}")->assertSee('Avant la veille')->waitForEvent('networkidle');
     $this->assertDatabaseMissing('group_chat_reads', ['group_chat_id' => $chat->id, 'user_id' => $member->id]);
     $page->fill('#message-content', 'Brouillon conservé');
@@ -52,7 +64,7 @@ test('group resume catches every missed page and only acknowledges a visible syn
         ->assertScript("new Set(Array.from(document.querySelectorAll('[data-message-id]'), el => el.dataset.messageId)).size", 206)
         ->assertValue('#message-content', 'Brouillon conservé')
         ->waitForEvent('networkidle')->assertNoJavaScriptErrors();
-    $page->back()->assertPresent("@group-conversation-{$chat->id}")->assertScript('location.pathname', '/conversations')->forward()
+    $page->back()->assertPresent("@group-conversation-{$chat->id}")->assertScript("location.pathname === '/conversations' ? location.pathname : JSON.stringify(window.historyTrace)", '/conversations')->forward()
         ->assertScript("document.querySelectorAll('[data-message-id]').length", 206)
         ->assertValue('#message-content', 'Brouillon conservé');
     $this->assertDatabaseHas('group_chat_reads', ['group_chat_id' => $chat->id, 'user_id' => $member->id, 'last_read_message_id' => $lastId]);
