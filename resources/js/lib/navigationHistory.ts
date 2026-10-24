@@ -57,7 +57,12 @@ export function initializeNavigationHistory(): void {
         remember();
     });
     // Replacing a page (filters, validation or refresh) must retain its position.
-    router.on('finish', remember);
+    router.on('finish', () => {
+        // Cancelled visits finish before Inertia restores the traversed page.
+        if (!traversing) {
+            remember();
+        }
+    });
 }
 
 export function goBack(fallback: string, options: VisitOptions = {}): void {

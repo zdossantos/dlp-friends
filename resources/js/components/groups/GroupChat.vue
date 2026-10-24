@@ -89,7 +89,7 @@ async function markRead(): Promise<void> {
         });
 
         if (response.ok && active) {
-            router.reload({ only: ['auth'], preserveUrl: true });
+            router.reload({ only: ['auth'] });
         }
     } catch {
         // The next messaging refresh retries the read acknowledgement.
