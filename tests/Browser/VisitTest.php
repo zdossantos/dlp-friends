@@ -116,7 +116,7 @@ test('full visitor lists page beyond one hundred and search names literally', fu
         ->assertNoJavaScriptErrors();
 });
 
-test('closing the attendee list restores its scrolled opener and keyboard focus', function () {
+test('closing the attendee list restores its scrolled opener and keyboard focus', function (bool $denyStorage) {
     $viewer = User::factory()->withProfile()->create();
     $other = User::factory()->withProfile()->create(['visits_visibility' => 'members']);
     $day = today('Europe/Paris')->addDay();
@@ -124,6 +124,9 @@ test('closing the attendee list restores its scrolled opener and keyboard focus'
     $this->actingAs($viewer);
     $date = $day->copy()->endOfMonth()->toDateString();
     $page = visit('/visits?view=agenda&audience=members&month='.$day->format('Y-m'))->resize(390, 700);
+    if ($denyStorage) {
+        $page->script("Object.defineProperty(window, 'sessionStorage', {get() { throw new DOMException('Storage denied', 'SecurityError'); }});");
+    }
     $page->script("const button = document.querySelectorAll('[data-test=visit-all-attendees]'); button[button.length-1].scrollIntoView({block:'center'}); button[button.length-1].id='visit-scroll-target'; window.__visitScroll = window.scrollY;");
     $page->assertScript('window.__visitScroll > 0', true);
     $page->click('#visit-scroll-target');
@@ -138,7 +141,17 @@ test('closing the attendee list restores its scrolled opener and keyboard focus'
         ->assertScript("document.activeElement?.id === 'visit-opener-".$date."'", true)
         ->assertScript('Math.abs(window.scrollY-window.__visitScroll)<2', true)
         ->assertNoJavaScriptErrors();
-});
+})->with([false, true]);
+
+test('invalid visit position caches do not interrupt navigation', function (string $cache) {
+    $this->actingAs(User::factory()->withProfile()->create());
+    $page = visit('/visits?view=agenda&audience=members');
+    $page->script('sessionStorage.setItem("visit-scroll", '.json_encode($cache, JSON_THROW_ON_ERROR).')');
+    $page->click('[data-test="visit-next-month"]')
+        ->click('[data-test="visit-previous-month"]')
+        ->assertPresent('[data-test="visit-agenda"]')
+        ->assertNoJavaScriptErrors();
+})->with(['invalid JSON', 'null', '{"y": "wrong", "id": 12}']);
 
 test('explicit month navigation keeps browser history and filters', function () {
     $this->actingAs(User::factory()->withProfile()->create());

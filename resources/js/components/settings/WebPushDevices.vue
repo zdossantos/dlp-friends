@@ -15,7 +15,7 @@ defineProps<{
         lastUsedAt: string | null;
     }>;
 }>();
-const { t } = useTranslations();
+const { t, formatDate } = useTranslations();
 const removing = ref<string>();
 const failed = ref(false);
 
@@ -95,9 +95,7 @@ async function remove(uuid: string): Promise<void> {
                             t(
                                 'account.settings.notifications.device_last_used',
                                 {
-                                    date: new Date(
-                                        device.lastUsedAt,
-                                    ).toLocaleDateString(),
+                                    date: formatDate(device.lastUsedAt),
                                 },
                             )
                         }}</span

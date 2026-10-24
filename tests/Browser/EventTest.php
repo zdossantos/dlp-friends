@@ -559,7 +559,7 @@ test('stale organizer requests explain a capacity conflict', function () {
     expect($request->refresh()->status)->toBe(EventRegistrationStatus::Pending);
 });
 
-test('opening and closing an event preserves list scroll and restores opener focus', function () {
+test('opening and closing an event preserves list scroll and restores opener focus', function (bool $denyStorage) {
     $organizer = eventBrowserMember('Alice');
     $this->actingAs($organizer);
     $events = collect(range(1, 14))->map(fn (int $day) => Event::factory()
@@ -568,6 +568,9 @@ test('opening and closing an event preserves list scroll and restores opener foc
     $target = $events->last();
 
     $page = visit('/events/mine')->resize(390, 700);
+    if ($denyStorage) {
+        $page->script("Object.defineProperty(window, 'sessionStorage', {get() { throw new DOMException('Storage denied', 'SecurityError'); }});");
+    }
     $page->script('new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))');
     $page->script("const opener = document.querySelector('[data-test=event-link-{$target->id}]'); opener.scrollIntoView({ block: 'center' }); window.__eventScroll = window.scrollY;");
     $page->assertScript('window.__eventScroll > 0', true)
@@ -578,7 +581,7 @@ test('opening and closing an event preserves list scroll and restores opener foc
         ->assertScript("document.activeElement?.dataset.test === 'event-link-{$target->id}'", true)
         ->assertScript('Math.abs(window.scrollY - window.__eventScroll) < 2', true)
         ->assertNoJavaScriptErrors();
-});
+})->with([false, true]);
 
 test('manual registration protects private data and lets the organizer accept refuse and remove', function () {
     $organizer = eventBrowserMember('Alice');

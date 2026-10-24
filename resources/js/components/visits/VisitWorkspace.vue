@@ -1,3 +1,13 @@
+<script lang="ts">
+// Inertia remounts the workspace when traversing browser history.
+let rememberedPosition: {
+    y: number;
+    id: string;
+    href: string;
+    month: string;
+} | null = null;
+</script>
+
 <script setup lang="ts">
 import { Head, Link, router } from '@inertiajs/vue3';
 import { ChevronLeft, ChevronRight, Plus } from '@lucide/vue';
@@ -128,15 +138,22 @@ function create() {
 function all(date: string, event: Event) {
     const element = event.currentTarget as HTMLElement;
     element.id = `visit-opener-${date}`;
-    sessionStorage.setItem(
-        'visit-scroll',
-        JSON.stringify({
-            y: window.scrollY,
-            id: element.id,
-            href: window.location.pathname,
-            month: props.filters.month,
-        }),
-    );
+    rememberedPosition = {
+        y: window.scrollY,
+        id: element.id,
+        href: window.location.pathname,
+        month: props.filters.month,
+    };
+
+    try {
+        sessionStorage.setItem(
+            'visit-scroll',
+            JSON.stringify(rememberedPosition),
+        );
+    } catch {
+        // Keep navigation and focus restoration available when storage is denied.
+    }
+
     router.get(
         attendees.index.url(),
         { ...props.filters, day: date },
@@ -144,23 +161,30 @@ function all(date: string, event: Event) {
     );
 }
 function restore() {
-    const saved = sessionStorage.getItem('visit-scroll');
+    let position = rememberedPosition;
 
-    if (!saved) {
+    if (position === null) {
+        try {
+            position = JSON.parse(
+                sessionStorage.getItem('visit-scroll') ?? 'null',
+            );
+        } catch {
+            return;
+        }
+    }
+
+    if (
+        position === null ||
+        typeof position.y !== 'number' ||
+        !Number.isFinite(position.y) ||
+        typeof position.id !== 'string' ||
+        position.href !== window.location.pathname ||
+        position.month !== props.filters.month
+    ) {
         return;
     }
 
-    const { y, id, href, month } = JSON.parse(saved) as {
-        y: number;
-        id: string;
-        href: string;
-        month: string;
-    };
-
-    if (href !== window.location.pathname || month !== props.filters.month) {
-        return;
-    }
-
+    const { y, id } = position;
     nextTick(() =>
         requestAnimationFrame(() => {
             window.scrollTo(0, y);

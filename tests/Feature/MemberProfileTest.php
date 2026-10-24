@@ -13,6 +13,7 @@ use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Inertia\Testing\AssertableInertia as Assert;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 
 class MemberProfileTest extends TestCase
@@ -123,10 +124,20 @@ class MemberProfileTest extends TestCase
             ->and($user->fresh()->profile->isComplete())->toBeTrue();
     }
 
-    public function test_write_time_avatar_revalidation_rolls_back_new_profile_creation(): void
+    /** @return array<string, array{string, string}> */
+    public static function unavailableAvatarLocales(): array
+    {
+        return [
+            'French' => ['fr', 'Cet avatar n’est plus disponible.'],
+            'English' => ['en', 'This avatar is no longer available.'],
+        ];
+    }
+
+    #[DataProvider('unavailableAvatarLocales')]
+    public function test_write_time_avatar_revalidation_returns_a_localized_error_and_rolls_back_creation(string $locale, string $message): void
     {
         $avatar = $this->avatar();
-        $user = User::factory()->create();
+        $user = User::factory()->create(['locale' => $locale]);
         $catalogChanged = false;
 
         DB::listen(function (QueryExecuted $query) use (&$catalogChanged, $avatar): void {
@@ -150,7 +161,7 @@ class MemberProfileTest extends TestCase
             'bio' => null,
             'visit_frequency' => VisitFrequency::Often->value,
             'visibility' => ProfileVisibility::Visible->value,
-        ])->assertSessionHasErrors('avatar_id');
+        ])->assertSessionHasErrors(['avatar_id' => $message]);
 
         expect($catalogChanged)->toBeTrue();
         $this->assertDatabaseMissing('profiles', ['user_id' => $user->id]);

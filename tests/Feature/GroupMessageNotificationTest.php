@@ -10,6 +10,7 @@ use App\Models\Event;
 use App\Models\EventRegistration;
 use App\Models\GroupChat;
 use App\Models\GroupChatMessage;
+use App\Models\Trip;
 use App\Models\User;
 use App\Models\WebPushSubscription;
 use App\Notifications\NewGroupMessageNotification;
@@ -17,6 +18,7 @@ use App\Support\MemberNotificationPresenter;
 use App\Support\WebPushResult;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Notifications\ChannelManager;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 uses(RefreshDatabase::class);
@@ -138,3 +140,42 @@ test('database delivery rechecks a read occurring after the queued preflight', f
 
     expect($member->unreadNotifications()->count())->toBe(0);
 });
+
+test('group notification payload loads its event or trip only once', function (string $type) {
+    $author = User::factory()->withProfile()->create();
+    $recipient = User::factory()->withProfile()->create();
+    $parent = $type === 'trip'
+        ? Trip::factory()->for($author, 'organizer')->create(['destination' => 'Destination du trajet'])
+        : Event::factory()->for($author, 'organizer')->create(['title' => 'Titre de la sortie']);
+    $chat = GroupChat::factory()->create([
+        'event_id' => $type === 'event' ? $parent->id : null,
+        'trip_id' => $type === 'trip' ? $parent->id : null,
+    ]);
+    $message = GroupChatMessage::factory()->for($chat)->for($author, 'author')->create();
+    $notification = new NewGroupMessageNotification($message);
+
+    DB::enableQueryLog();
+    DB::flushQueryLog();
+
+    try {
+        $payload = $notification->toArray($recipient);
+        $queries = DB::getQueryLog();
+    } finally {
+        DB::disableQueryLog();
+        DB::flushQueryLog();
+    }
+
+    expect($payload)->toBe([
+        'category' => 'conversations',
+        'translation_key' => 'notifications.items.new_group_message',
+        'parameters' => [
+            'sender' => $author->profile->display_name,
+            'group' => $type === 'trip' ? 'Destination du trajet' : 'Titre de la sortie',
+        ],
+        'target_type' => $type.'_chat',
+        'target_id' => $parent->id,
+        'message_id' => $message->id,
+    ])->and(collect($queries)->filter(
+        fn (array $query): bool => preg_match('/from [`"]'.($type === 'trip' ? 'trips' : 'events').'[`"]/', $query['query']) === 1,
+    ))->toHaveCount(1);
+})->with(['event', 'trip']);

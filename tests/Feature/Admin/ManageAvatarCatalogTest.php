@@ -12,7 +12,9 @@ use Illuminate\Support\Facades\Exceptions;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Testing\AssertableInertia as Assert;
+use PHPUnit\Framework\Attributes\DataProvider;
 use RuntimeException;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 use Tests\TestCase;
 
 class ManageAvatarCatalogTest extends TestCase
@@ -277,6 +279,32 @@ class ManageAvatarCatalogTest extends TestCase
                 $avatar->image_path,
             ),
         );
+    }
+
+    /** @return array<string, array{string, string}> */
+    public static function avatarStorageFailureLocales(): array
+    {
+        return [
+            'French' => ['fr', 'L’image de l’avatar n’a pas pu être enregistrée.'],
+            'English' => ['en', 'The avatar image could not be saved.'],
+        ];
+    }
+
+    #[DataProvider('avatarStorageFailureLocales')]
+    public function test_avatar_storage_failure_returns_a_localized_error_without_creating_an_avatar(string $locale, string $message): void
+    {
+        $admin = User::factory()->admin()->create(['locale' => $locale]);
+        Storage::shouldReceive('put')->once()->andReturnFalse();
+        $this->withoutExceptionHandling();
+
+        expect(fn () => $this->actingAs($admin)->post(route('admin.avatars.store'), [
+            'name' => 'Storage failure',
+            'image' => UploadedFile::fake()->image('avatar.png', 100, 100),
+            'primary_color' => '#7C3AED',
+            'secondary_color' => '#EC4899',
+        ]))->toThrow(HttpException::class, $message);
+
+        $this->assertDatabaseCount('avatars', 0);
     }
 
     /** @param array<string, mixed> $attributes */

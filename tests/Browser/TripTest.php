@@ -17,10 +17,14 @@ beforeEach(function () {
 });
 
 it('creates a trip with consistent controls and confirms sharing and cancellation', function () {
+    $this->travelTo('2026-11-02 22:44:59 UTC');
     $this->actingAs(User::factory()->withProfile()->create());
     $page = visit('/trips')->resize(320, 800)->assertSee('Trajets');
-    $page->click('@trip-create')->fill('#general_departure', 'Gare de Lyon')->fill('#destination', 'Disneyland Paris')->fill('#meeting_point', 'Devant le guichet')
-        ->assertScript("document.querySelector('#departs_at').value.startsWith(new Intl.DateTimeFormat('sv-SE', {timeZone:'Europe/Paris'}).format(new Date()))", true)
+    $page->script("Date.now = () => Date.parse('2026-11-02T22:44:59Z')");
+    $page->click('@trip-create')->fill('#general_departure', 'Gare de Lyon')->fill('#destination', 'Disneyland Paris')->fill('#meeting_point', 'Devant le guichet');
+    // Crossing 23:45 in Paris must not change the departure chosen when the form opened.
+    $page->script("Date.now = () => Date.parse('2026-11-02T22:45:01Z')");
+    $page->assertValue('#departs_at', '2026-11-02T23:59')
         ->click('#audience')->click('[data-slot="select-item"][data-value="members"]')->click('@trip-submit')->assertPresent('@trip-share-dialog')->click('@trip-share-cancel');
     expect(Trip::query()->count())->toBe(0);
     $page->assertValue('#meeting_point', 'Devant le guichet')->click('@trip-submit')->click('@trip-share-submit')->assertSee('Gare de Lyon')->assertSee('Devant le guichet')->assertNoJavaScriptErrors();

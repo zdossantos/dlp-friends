@@ -7,6 +7,7 @@ import OutingsNavigation from '@/components/outings/OutingsNavigation.vue';
 import { Button } from '@/components/ui/button';
 import { useTranslations } from '@/composables/useTranslations';
 import {
+    eventWorkspaceOpener,
     forgetEventWorkspaceScroll,
     rememberEventWorkspaceScroll,
     restoreEventWorkspaceScroll,
@@ -26,9 +27,8 @@ const createHref = computed(
         create(props.context === 'mine' ? { query: { origin: 'mine' } } : {})
             .url,
 );
-function rememberCreateOpener(event: Event): void {
-    rememberEventWorkspaceScroll(event.currentTarget as HTMLElement | null);
-    sessionStorage.setItem('event-panel-opener', 'event-create');
+function rememberCreateOpener(): void {
+    rememberEventWorkspaceScroll('event-create');
 }
 
 function updatePanel(open: boolean): void {
@@ -36,7 +36,7 @@ function updatePanel(open: boolean): void {
         router.visit(props.closeHref, {
             preserveScroll: true,
             onFinish: () => {
-                const opener = sessionStorage.getItem('event-panel-opener');
+                const opener = eventWorkspaceOpener();
 
                 if (!opener) {
                     return;
@@ -54,7 +54,6 @@ function updatePanel(open: boolean): void {
                         requestAnimationFrame(() => {
                             restoreEventWorkspaceScroll();
                             forgetEventWorkspaceScroll();
-                            sessionStorage.removeItem('event-panel-opener');
                         });
                     });
                 });

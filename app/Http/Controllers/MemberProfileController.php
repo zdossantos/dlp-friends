@@ -208,7 +208,7 @@ class MemberProfileController extends Controller
 
         if ($avatar === null) {
             throw ValidationException::withMessages([
-                'avatar_id' => 'Cet avatar n’est plus disponible.',
+                'avatar_id' => __('profile.avatar.unavailable'),
             ]);
         }
     }

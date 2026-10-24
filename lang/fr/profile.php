@@ -70,6 +70,7 @@ return [
         'administrator' => 'Administrateur',
     ],
     'avatar' => [
+        'unavailable' => 'Cet avatar n’est plus disponible.',
         'image_alt' => 'Avatar :name',
         'carousel_role' => 'carrousel',
         'selected_avatar' => 'Avatar sélectionné : :name',

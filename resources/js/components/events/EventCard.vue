@@ -30,12 +30,8 @@ const props = defineProps<{
 const { t, formatDate } = useTranslations();
 const origin = props.context === 'mine' ? { origin: 'mine' } : {};
 
-function rememberOpener(event: Event): void {
-    rememberEventWorkspaceScroll(event.currentTarget as HTMLElement | null);
-    sessionStorage.setItem(
-        'event-panel-opener',
-        `event-link-${props.event.id}`,
-    );
+function rememberOpener(): void {
+    rememberEventWorkspaceScroll(`event-link-${props.event.id}`);
 }
 </script>
 
