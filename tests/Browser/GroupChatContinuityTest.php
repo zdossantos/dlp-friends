@@ -64,7 +64,7 @@ test('group resume catches every missed page and only acknowledges a visible syn
         ->assertScript("new Set(Array.from(document.querySelectorAll('[data-message-id]'), el => el.dataset.messageId)).size", 206)
         ->assertValue('#message-content', 'Brouillon conservé')
         ->waitForEvent('networkidle')->assertNoJavaScriptErrors();
-    $page->back()->assertPresent("@group-conversation-{$chat->id}")->assertScript("location.pathname === '/conversations' ? location.pathname : JSON.stringify(window.historyTrace)", '/conversations')->forward()
+    $page->back()->assertScript("location.pathname === '/conversations' && document.querySelector('[data-test=group-conversation-{$chat->id}]') ? '/conversations' : JSON.stringify(window.historyTrace)", '/conversations')->forward()
         ->assertScript("document.querySelectorAll('[data-message-id]').length", 206)
         ->assertValue('#message-content', 'Brouillon conservé');
     $this->assertDatabaseHas('group_chat_reads', ['group_chat_id' => $chat->id, 'user_id' => $member->id, 'last_read_message_id' => $lastId]);
