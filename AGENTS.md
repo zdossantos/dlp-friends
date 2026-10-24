@@ -1,5 +1,17 @@
 # AGENTS.md
 
+## Ponytail
+
+Appliquer Ponytail en mode **ultra** par défaut à tout le projet, dès le début
+de chaque conversation, sauf demande explicite de changer de mode ou de le
+désactiver. Utiliser le skill `ponytail:ponytail` lorsqu’il est disponible.
+
+Avant d’implémenter, remettre en question les éléments dont le besoin n’est pas
+justifié et proposer une solution plus simple. Réaliser le plus petit changement
+complet, réutiliser l’existant et vérifier les comportements concernés sans
+sacrifier la sécurité, l’accessibilité ou les règles métier. Terminer les bilans
+en précisant les vérifications non effectuées et les risques restants.
+
 ## Projet
 
 DLP Friends est une application Laravel/Inertia/Vue de rencontres strictement
