@@ -2,7 +2,9 @@ import { expect, mock, test } from 'bun:test';
 import { createRenderer, nextTick, ref } from 'vue';
 
 const channels = new Map();
+const echoVue = await import('@laravel/echo-vue');
 mock.module('@laravel/echo-vue', () => ({
+    ...echoVue,
     echo: () => ({
         private: (name) => {
             if (!channels.has(name)) {
