@@ -49,6 +49,8 @@ function handleLogout(): void {
                 :display-name="profile.display_name"
                 :age="age"
                 :bio="profile.bio || t('profile.details.empty_bio')"
+                :disneyland-pass="profile.disneyland_pass"
+                :is-cast-member="profile.is_cast_member"
                 :visit-frequency="profile.visit_frequency"
                 :social-links="profile.social_links ?? []"
                 :interests="profile.interests ?? []"

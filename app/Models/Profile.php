@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\DisneylandPass;
 use App\Enums\ProfileVisibility;
 use App\Enums\SocialLinksVisibility;
 use App\Enums\VisitFrequency;
@@ -21,6 +22,8 @@ use Illuminate\Support\Carbon;
  * @property string $display_name
  * @property list<array{network: string, url: string}>|null $social_links
  * @property SocialLinksVisibility|null $social_links_visibility
+ * @property DisneylandPass|null $disneyland_pass
+ * @property bool $is_cast_member
  * @property string|null $bio
  * @property VisitFrequency|null $visit_frequency
  * @property ProfileVisibility $visibility
@@ -32,7 +35,7 @@ use Illuminate\Support\Carbon;
  * @property-read Collection<int, Interest> $interests
  * @property-read Collection<int, Interest> $interestHistory
  */
-#[Fillable(['avatar_id', 'display_name', 'bio', 'social_links', 'social_links_visibility', 'visit_frequency', 'visibility', 'onboarding_completed_at'])]
+#[Fillable(['avatar_id', 'display_name', 'bio', 'disneyland_pass', 'is_cast_member', 'social_links', 'social_links_visibility', 'visit_frequency', 'visibility', 'onboarding_completed_at'])]
 class Profile extends Model
 {
     /** @use HasFactory<ProfileFactory> */
@@ -84,6 +87,8 @@ class Profile extends Model
     protected function casts(): array
     {
         return [
+            'disneyland_pass' => DisneylandPass::class,
+            'is_cast_member' => 'boolean',
             'social_links' => 'array',
             'social_links_visibility' => SocialLinksVisibility::class,
             'visit_frequency' => VisitFrequency::class,

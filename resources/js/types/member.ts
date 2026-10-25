@@ -1,4 +1,9 @@
-import type { AvatarOption, SocialLink, VisitFrequency } from './auth';
+import type {
+    AvatarOption,
+    DisneylandPass,
+    SocialLink,
+    VisitFrequency,
+} from './auth';
 
 export type PublicMember = {
     id: number;
@@ -7,6 +12,8 @@ export type PublicMember = {
     age: number;
     avatar: AvatarOption;
     bio: string | null;
+    disneyland_pass?: DisneylandPass | null;
+    is_cast_member?: boolean;
     social_links?: SocialLink[];
     visit_frequency: VisitFrequency | null;
     interests: Array<{ id: number; name: string }>;

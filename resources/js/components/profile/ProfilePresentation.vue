@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import { CalendarDays, ShieldCheck, Sparkles } from '@lucide/vue';
 import { computed } from 'vue';
+import ProfilePassCard from '@/components/profile/ProfilePassCard.vue';
 import ProfileSocialLinks from '@/components/profile/ProfileSocialLinks.vue';
 import SeasonalDecorations from '@/components/seasonal/SeasonalDecorations.vue';
 import { Badge } from '@/components/ui/badge';
 import { useTranslations } from '@/composables/useTranslations';
-import type { SocialLink, VisitFrequency } from '@/types';
+import type { DisneylandPass, SocialLink, VisitFrequency } from '@/types';
 
 const { t } = useTranslations();
 
@@ -22,11 +23,19 @@ const props = withDefaults(
         bio: string;
         visitFrequency: VisitFrequency | null;
         interests: Array<{ id: number; name: string }>;
+        disneylandPass?: DisneylandPass | null;
+        isCastMember?: boolean;
         socialLinks?: SocialLink[];
         isAdmin?: boolean;
         embedded?: boolean;
     }>(),
-    { isAdmin: false, embedded: false, socialLinks: () => [] },
+    {
+        disneylandPass: null,
+        isCastMember: false,
+        isAdmin: false,
+        embedded: false,
+        socialLinks: () => [],
+    },
 );
 const formattedVisitFrequency = computed(() =>
     t(
@@ -74,6 +83,11 @@ const formattedVisitFrequency = computed(() =>
                     data-test="profile-avatar"
                 />
             </div>
+            <ProfilePassCard
+                v-if="disneylandPass"
+                :pass="disneylandPass"
+                class="absolute right-3 bottom-8 z-30"
+            />
             <ProfileSocialLinks
                 :links="socialLinks"
                 class="absolute top-3 left-3 z-30"
@@ -114,6 +128,13 @@ const formattedVisitFrequency = computed(() =>
                         </Badge>
                     </div>
                     <div class="mt-2 flex flex-wrap gap-2">
+                        <Badge
+                            v-if="isCastMember"
+                            data-test="profile-cast-member"
+                            variant="secondary"
+                            :title="t('profile.pass.self_declared')"
+                            >{{ t('profile.pass.cast_member') }}</Badge
+                        >
                         <slot
                             name="badges"
                             :visit-frequency="formattedVisitFrequency"

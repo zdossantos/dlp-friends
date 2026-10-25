@@ -1,6 +1,28 @@
 <?php
 
 return [
+    'pass' => [
+        'title' => 'Disneyland Pass (facultatif)',
+        'none' => 'Non renseigné',
+        'description' => 'Ces informations facultatives sont visibles sur ton profil détaillé. Tu peux les modifier ou les retirer à tout moment.',
+        'self_declared' => 'Information déclarée par le membre, non vérifiée.',
+        'cast_label' => 'Je suis Cast Member',
+        'cast_member' => 'Cast Member',
+        'options' => [
+            'bronze_one' => 'Bronze One',
+            'bronze_max' => 'Bronze Max',
+            'silver' => 'Silver',
+            'gold' => 'Gold',
+            'bronze' => 'Bronze (ancienne gamme)',
+        ],
+        'tags' => [
+            'bronze_one' => 'Pass Bronze One',
+            'bronze_max' => 'Pass Bronze Max',
+            'silver' => 'Pass Silver',
+            'gold' => 'Pass Gold',
+            'bronze' => 'Pass Bronze (ancienne gamme)',
+        ],
+    ],
     'social_links' => [
         'title' => 'Réseaux sociaux',
         'description' => 'Ajoute jusqu’à trois liens facultatifs, un par réseau.',

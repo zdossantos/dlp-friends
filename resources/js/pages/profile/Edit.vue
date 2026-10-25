@@ -9,6 +9,7 @@ const { t } = useTranslations();
 
 defineProps<{
     profile: Profile;
+    passOptions: Array<{ value: string; label: string }>;
     visitFrequencies: Array<{ value: string; label: string }>;
     visibilities: Array<{ value: string; label: string }>;
     avatars: AvatarOption[];
@@ -30,6 +31,7 @@ defineProps<{
             :action="update.url()"
             method="patch"
             :submit-label="t('profile.edit.submit')"
+            :pass-options="passOptions"
             :visit-frequencies="visitFrequencies"
             :visibilities="visibilities"
             :avatars="avatars"

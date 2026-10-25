@@ -72,6 +72,12 @@ et son état de livraison sont définis dans le [`PRD.md`](PRD.md).
 - `profiles.social_links_visibility` vaut `hidden`, `matches` (valeur par défaut)
   ou `members`. Ces champs facultatifs ne participent pas à la complétude.
   Ils sont exportés avec le profil et supprimés en cascade à la purge du compte.
+- `profiles.disneyland_pass` est une chaîne nullable validée par l’enum
+  `DisneylandPass` : `bronze_one`, `bronze_max`, `silver`, `gold`, `bronze`.
+  `bronze` représente l’ancienne gamme, sans conversion automatique.
+  `profiles.is_cast_member` est un booléen initialisé à faux, indépendant du pass.
+  Ces champs facultatifs ne participent pas à la complétude ni aux autorisations ;
+  ils figurent dans l’export personnel et disparaissent avec le profil à la purge.
 - `profiles.visibility` vaut `visible` ou `hidden`. Seul un profil `visible` appartenant à un compte `active` est découvrable.
 - `avatars.image_path` référence un fichier du stockage privé. `primary_color` et `secondary_color` sont des couleurs hexadécimales utilisées pour générer le fond dégradé à l'affichage.
 - `interest_categories` sert uniquement à rattacher techniquement les intérêts ; aucune gestion de catégories n’est exposée dans le MVP.

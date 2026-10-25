@@ -18,6 +18,7 @@ const { t } = useTranslations();
 defineProps<{
     profile: Profile | null;
     canManageAvatars: boolean;
+    passOptions: Array<{ value: string; label: string }>;
     visitFrequencies: Array<{ value: string; label: string }>;
     visibilities: Array<{ value: string; label: string }>;
     avatars: AvatarOption[];
@@ -59,6 +60,7 @@ defineProps<{
                     :action="store.url()"
                     method="post"
                     :submit-label="t('profile.create.submit')"
+                    :pass-options="passOptions"
                     :visit-frequencies="visitFrequencies"
                     :visibilities="visibilities"
                     :avatars="avatars"
