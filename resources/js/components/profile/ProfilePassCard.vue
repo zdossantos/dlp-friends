@@ -22,24 +22,19 @@ const palette = computed(() => {
     <div
         data-test="profile-pass-card"
         :title="t('profile.pass.self_declared')"
-        class="flex h-13 w-24 items-end rounded-lg border border-white/60 p-1.5 shadow-md"
+        class="flex h-13 w-24 items-end overflow-hidden rounded-lg border border-white/60 p-1.5 shadow-md"
         :style="{ backgroundColor: palette.background, color: palette.ink }"
     >
+        <span
+            class="absolute inset-0.5 rounded-[5px] border border-current opacity-25"
+            aria-hidden="true"
+        />
         <svg
             class="absolute inset-0 size-full"
             viewBox="0 0 128 68"
             fill="none"
             aria-hidden="true"
         >
-            <rect
-                x="4"
-                y="4"
-                width="120"
-                height="60"
-                rx="5"
-                stroke="currentColor"
-                opacity=".25"
-            />
             <path
                 d="M70 0C82 12 96 24 128 26M83 0C93 10 109 16 128 17"
                 stroke="currentColor"
