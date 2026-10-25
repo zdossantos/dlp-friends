@@ -1,6 +1,7 @@
 <?php
 
 return [
+    'workspace_navigation' => 'Navigation des trajets',
     'search' => 'Départ ou arrivée',
     'search_placeholder' => 'Ville, gare ou lieu…',
     'search_submit' => 'Rechercher',

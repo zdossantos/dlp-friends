@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Link, router } from '@inertiajs/vue3';
 import { computed, nextTick } from 'vue';
+import WorkspaceNavigation from '@/components/common/WorkspaceNavigation.vue';
 import EventCard from '@/components/events/EventCard.vue';
 import EventWorkspacePanel from '@/components/events/EventWorkspacePanel.vue';
 import OutingsNavigation from '@/components/outings/OutingsNavigation.vue';
@@ -107,37 +108,23 @@ function updatePanel(open: boolean): void {
             </div>
         </header>
 
-        <nav
-            class="grid grid-cols-2 rounded-xl bg-muted p-1"
-            :aria-label="t('events.workspace_navigation')"
-        >
-            <Link
-                :href="index()"
-                data-test="events-nav-discover"
-                :aria-current="context === 'discover' ? 'page' : undefined"
-                class="rounded-lg px-4 py-2.5 text-center text-sm font-semibold transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
-                :class="
-                    context === 'discover'
-                        ? 'bg-background text-foreground shadow-sm'
-                        : 'text-muted-foreground hover:text-foreground'
-                "
-            >
-                {{ t('events.actions.discover') }}
-            </Link>
-            <Link
-                :href="mine()"
-                data-test="events-nav-mine"
-                :aria-current="context === 'mine' ? 'page' : undefined"
-                class="rounded-lg px-4 py-2.5 text-center text-sm font-semibold transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
-                :class="
-                    context === 'mine'
-                        ? 'bg-background text-foreground shadow-sm'
-                        : 'text-muted-foreground hover:text-foreground'
-                "
-            >
-                {{ t('events.actions.mine') }}
-            </Link>
-        </nav>
+        <WorkspaceNavigation
+            :label="t('events.workspace_navigation')"
+            :items="[
+                {
+                    href: index().url,
+                    label: t('events.actions.discover'),
+                    active: context === 'discover',
+                    testId: 'events-nav-discover',
+                },
+                {
+                    href: mine().url,
+                    label: t('events.actions.mine'),
+                    active: context === 'mine',
+                    testId: 'events-nav-mine',
+                },
+            ]"
+        />
 
         <template v-if="context === 'discover'">
             <section v-if="events?.length" class="grid gap-4 md:grid-cols-2">

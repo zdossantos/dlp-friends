@@ -1,6 +1,7 @@
 <?php
 
 return [
+    'workspace_navigation' => 'Trip navigation',
     'search' => 'Departure or arrival',
     'search_placeholder' => 'City, station or place…',
     'search_submit' => 'Search',

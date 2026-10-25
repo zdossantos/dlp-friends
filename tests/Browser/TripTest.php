@@ -16,6 +16,18 @@ beforeEach(function () {
     Avatar::created(fn (Avatar $avatar) => Storage::put($avatar->image_path, base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScL8WQAAAABJRU5ErkJggg==')));
 });
 
+it('navigates between trip workspaces with an announced current page', function () {
+    $this->actingAs(User::factory()->withProfile()->create());
+    $page = visit('/trips')->resize(320, 800)
+        ->assertAttribute('@trips-nav-discover', 'aria-current', 'page')
+        ->click('@trips-nav-mine')->assertPathIs('/trips/mine')
+        ->assertAttribute('@trips-nav-mine', 'aria-current', 'page')
+        ->assertScript('document.documentElement.scrollWidth <= window.innerWidth', true);
+    $page->back()->assertPathIs('/trips')
+        ->assertAttribute('@trips-nav-discover', 'aria-current', 'page')
+        ->assertNoJavaScriptErrors();
+});
+
 it('creates a trip with consistent controls and confirms sharing and cancellation', function () {
     $this->travelTo('2026-11-02 22:44:59 UTC');
     $this->actingAs(User::factory()->withProfile()->create());
