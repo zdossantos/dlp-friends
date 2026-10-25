@@ -26,7 +26,7 @@ const palette = computed(() => {
         :style="{ backgroundColor: palette.background, color: palette.ink }"
     >
         <span
-            class="absolute inset-0.5 rounded-[5px] border border-current opacity-25"
+            class="absolute inset-0.5 rounded-[calc(var(--radius)-3px)] border border-current opacity-25"
             aria-hidden="true"
         />
         <svg
