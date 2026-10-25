@@ -22,7 +22,7 @@ const palette = computed(() => {
     <div
         data-test="profile-pass-card"
         :title="t('profile.pass.self_declared')"
-        class="flex h-[4.25rem] w-32 items-end rounded-lg border border-white/60 p-2 shadow-md"
+        class="flex h-13 w-24 items-end rounded-lg border border-white/60 p-1.5 shadow-md"
         :style="{ backgroundColor: palette.background, color: palette.ink }"
     >
         <svg
@@ -48,7 +48,7 @@ const palette = computed(() => {
             <circle cx="16" cy="16" r="4" stroke="currentColor" />
             <path d="M23 16H38" stroke="currentColor" stroke-linecap="round" />
         </svg>
-        <span class="relative text-xs leading-tight font-semibold">{{
+        <span class="relative text-[0.65rem] leading-3 font-semibold">{{
             t(`profile.pass.tags.${pass}`)
         }}</span>
     </div>

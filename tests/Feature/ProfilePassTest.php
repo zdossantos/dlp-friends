@@ -84,8 +84,21 @@ test('statuses belong to the authenticated member and appear on authorized detai
     foreach ([[route('members.show', $owner), 'member'], [route('events.participants.show', [$event, $owner]), 'panel.profile.member']] as [$url, $key]) {
         $this->actingAs($viewer)->get($url)->assertOk()->assertInertia(fn (Assert $page) => $page->where($key.'.disneyland_pass', 'gold')->where($key.'.is_cast_member', true));
     }
-    $this->get(route('discovery.index'))->assertInertia(fn (Assert $page) => $page->loadDeferredProps(fn (Assert $deferred) => $deferred->missing('suggestions.0.disneyland_pass')->missing('suggestions.0.is_cast_member')));
 });
+
+test('discovery shares optional pass and Cast Member statuses with eligible members', function (?string $pass, bool $castMember) {
+    $viewer = User::factory()->withProfile()->create();
+    $owner = User::factory()->withProfile()->create();
+    $owner->profile->update(['disneyland_pass' => $pass, 'is_cast_member' => $castMember]);
+
+    $this->actingAs($viewer)->get(route('discovery.index'))->assertInertia(fn (Assert $page) => $page
+        ->loadDeferredProps(fn (Assert $deferred) => $deferred
+            ->has('suggestions', 1)
+            ->where('suggestions.0.disneylandPass', $pass)
+            ->where('suggestions.0.isCastMember', $castMember)));
+})->with([
+    ['bronze_one', true], ['bronze_max', false], ['silver', true], ['gold', false], ['bronze', true], [null, true], [null, false],
+]);
 
 test('blocked pairs cannot read statuses even when a basic profile remains accessible', function (bool $reverse) {
     $owner = User::factory()->withProfile()->create();

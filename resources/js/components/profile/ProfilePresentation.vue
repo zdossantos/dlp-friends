@@ -64,6 +64,7 @@ const formattedVisitFrequency = computed(() =>
         <div
             data-test="profile-presentation-hero"
             class="relative flex h-[clamp(11rem,24svh,14rem)] shrink-0 items-end justify-center overflow-hidden px-6 pt-4"
+            :class="{ 'min-h-48': disneylandPass && isCastMember }"
             :style="{
                 backgroundImage: `linear-gradient(145deg, ${avatar.primary_color}, ${avatar.secondary_color})`,
             }"
@@ -83,11 +84,25 @@ const formattedVisitFrequency = computed(() =>
                     data-test="profile-avatar"
                 />
             </div>
-            <ProfilePassCard
-                v-if="disneylandPass"
-                :pass="disneylandPass"
-                class="absolute right-3 bottom-8 z-30"
-            />
+            <div
+                v-if="disneylandPass || isCastMember"
+                class="absolute right-3 bottom-8 z-30 flex flex-col items-end gap-1"
+            >
+                <Badge
+                    v-if="isCastMember"
+                    data-test="profile-cast-member"
+                    variant="secondary"
+                    class="shadow-md"
+                    :title="t('profile.pass.self_declared')"
+                >
+                    {{ t('profile.pass.cast_member') }}
+                </Badge>
+                <ProfilePassCard
+                    v-if="disneylandPass"
+                    :pass="disneylandPass"
+                    class="relative"
+                />
+            </div>
             <ProfileSocialLinks
                 :links="socialLinks"
                 class="absolute top-3 left-3 z-30"
@@ -128,13 +143,6 @@ const formattedVisitFrequency = computed(() =>
                         </Badge>
                     </div>
                     <div class="mt-2 flex flex-wrap gap-2">
-                        <Badge
-                            v-if="isCastMember"
-                            data-test="profile-cast-member"
-                            variant="secondary"
-                            :title="t('profile.pass.self_declared')"
-                            >{{ t('profile.pass.cast_member') }}</Badge
-                        >
                         <slot
                             name="badges"
                             :visit-frequency="formattedVisitFrequency"

@@ -435,7 +435,8 @@ restent dans l’URL et sont conservés lors du retour depuis un profil.
 Disney. Bronze One, Bronze Max et l’ancien Bronze partagent un ton bronze ; Silver
 est argent et Gold doré. Le libellé traduit indique toujours le type exact, sans
 s’appuyer uniquement sur la couleur. La carte se place en bas à droite de la zone
-avatar de `ProfilePresentation`, au-dessus du panneau d’informations, séparée des
-liens sociaux et des actions. Le tag Cast Member reste indépendant sous le nom.
+avatar de `ProfilePresentation` et `SwipeCard`, au-dessus du panneau d’informations,
+séparée des liens sociaux et des actions. Le tag Cast Member reste indépendant,
+dans la zone avatar au-dessus du pass, y compris en l’absence de pass.
 Les deux portent l’indication d’information déclarée et non vérifiée. Les contrôles
 facultatifs réutilisent NativeSelect et Checkbox dans l’étape identité du formulaire.

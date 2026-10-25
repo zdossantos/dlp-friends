@@ -30,6 +30,7 @@ import { useTranslations } from '@/composables/useTranslations';
 import type {
     AvatarOption,
     DiscoveryProfile,
+    DisneylandPass,
     InterestOption,
     Profile,
     SocialLink,
@@ -69,7 +70,9 @@ const avatarId = ref<number | null>(
 );
 const displayName = ref(props.profile?.display_name ?? '');
 const bio = ref(props.profile?.bio ?? '');
-const disneylandPass = ref(props.profile?.disneyland_pass ?? '');
+const disneylandPass = ref<DisneylandPass | ''>(
+    props.profile?.disneyland_pass ?? '',
+);
 const isCastMember = ref(props.profile?.is_cast_member ?? false);
 const visitFrequency = ref(props.profile?.visit_frequency ?? '');
 const visibility = ref(props.profile?.visibility ?? 'visible');
@@ -111,6 +114,8 @@ const previewProfile = computed<DiscoveryProfile | null>(() => {
         profileId: 0,
         displayName: displayName.value || t('profile.form.preview_name'),
         isAdmin: false,
+        disneylandPass: disneylandPass.value || null,
+        isCastMember: isCastMember.value,
         avatar: selectedAvatar.value,
         age: props.age,
         bio: bio.value || null,

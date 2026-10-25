@@ -103,6 +103,8 @@ function toSwipeProfile(
     return {
         displayName: profile.displayName,
         isAdmin: false,
+        disneylandPass: null,
+        isCastMember: false,
         age,
         bio: profile.bio,
         visitFrequency: null,

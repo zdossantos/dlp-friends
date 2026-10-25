@@ -91,9 +91,9 @@ Paris.
   (ancienne gamme, conservé distinctement). Cast Member est une case indépendante
   cumulable avec tout pass. Ces informations autodéclarées, sans vérification ni
   droit applicatif, se modifient et se retirent dans le profil. Le pass apparaît
-  comme une petite carte SVG originale dans la zone avatar des profils détaillés,
-  y compris depuis les événements, trajets et profils passés ; Cast Member a son
-  propre tag. Aucun ajout aux cartes de découverte. Le blocage dans les deux sens
+  comme une petite carte SVG originale dans la zone avatar des profils détaillés
+  et des cartes de découverte, y compris depuis les événements, trajets et profils
+  passés ; Cast Member a son propre tag dans la même zone avatar. Le blocage dans les deux sens
   et l’indisponibilité du profil empêchent leur diffusion à l’autre membre.
 - Avatar actif obligatoire, choisi dans un catalogue administrable. Chaque
   avatar associe une image à un fond dégradé défini par deux couleurs.

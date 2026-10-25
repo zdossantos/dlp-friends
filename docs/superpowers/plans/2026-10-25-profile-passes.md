@@ -14,7 +14,7 @@
 
 - FR/EN, aucun droit applicatif, aucune dépendance nouvelle.
 - Aucun pass et Cast Member faux par défaut, ancien Bronze distinct.
-- Pas de visuel Disney copié ; cartes de découverte inchangées.
+- Pas de visuel Disney copié ; statuts dans la zone avatar des profils détaillés et cartes de découverte, conformément au retour sur le Docker local.
 
 ## Review Focus
 

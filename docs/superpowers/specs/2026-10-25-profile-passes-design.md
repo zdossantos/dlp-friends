@@ -5,7 +5,7 @@ Proposition validée le 25 octobre 2026, complétée par la demande de visuels S
 - Sélecteur facultatif : aucun, Bronze One, Bronze Max, Silver, Gold, Bronze (ancienne gamme). L'ancien Bronze reste une valeur distincte, sans conversion.
 - Case Cast Member indépendante, cumulable avec tout pass. Valeurs initiales : aucun pass et faux.
 - Informations autodéclarées, modifiables et supprimables ; aucun justificatif ni droit applicatif.
-- Petite carte SVG originale dans la zone avatar des profils détaillés, avec type exact et tag Cast Member indépendant. Réutiliser ProfilePresentation, y compris profils intégrés et passés. Rien sur les cartes de découverte.
+- Petite carte SVG originale dans la zone avatar des profils détaillés et cartes de découverte, avec type exact et tag Cast Member indépendant dans cette même zone. Réutiliser ProfilePresentation et ProfilePassCard, y compris profils intégrés et passés. Affichage sur les cartes de découverte et déplacement du tag Cast Member demandés le 25 octobre 2026 après revue du Docker local.
 - Reprendre les autorisations du profil ; masquer ces nouveaux statuts pour une paire bloquée. Export personnel et purge habituelle du profil.
 - FR/EN, contrôles accessibles et utilisables à 320 px, clair/sombre.
 

@@ -182,10 +182,10 @@ Ces informations sont facultatives et autodéclarées, sans justificatif collect
 Le membre peut les modifier ou les retirer ; elles ne donnent aucun rôle ni droit.
 Le serveur valide le type exact de pass et le booléen Cast Member, puis met à jour
 uniquement le profil du membre authentifié. Un ancien client qui omet ces champs
-préserve les choix courants. Les réponses de profils détaillés autorisés incluent
+préserve les choix courants. Les réponses de profils détaillés et de découverte autorisés incluent
 ces statuts, sauf en cas de blocage dans un sens ou l’autre. Les profils masqués
-ou indisponibles ne deviennent pas accessibles via ces informations. Les cartes
-de découverte n’en reçoivent pas. L’export et la purge suivent le profil.
+ou indisponibles ne deviennent pas accessibles via ces informations.
+L’export et la purge suivent le profil.
 
 ### Liens externes du profil
 

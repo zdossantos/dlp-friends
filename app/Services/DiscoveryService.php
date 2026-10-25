@@ -122,6 +122,8 @@ final readonly class DiscoveryService
                     profileId: $profile->id,
                     displayName: $profile->display_name,
                     isAdmin: $admins[$profile->id],
+                    disneylandPass: $profile->disneyland_pass?->value,
+                    isCastMember: $profile->is_cast_member,
                     avatar: [
                         'id' => $avatar->id,
                         'name' => $avatar->name,
