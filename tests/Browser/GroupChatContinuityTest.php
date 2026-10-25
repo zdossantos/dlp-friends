@@ -21,6 +21,10 @@ test('group resume catches every missed page and only acknowledges a visible syn
     $page = visit('/conversations?category=groups')->assertPresent("@group-conversation-{$chat->id}");
     $page->script(<<<'JS'
         window.crossPageReplacements = 0;
+        // Reproduce InfiniteScroll's delayed remember during history restoration.
+        window.addEventListener('popstate', () => {
+            document.querySelector('#app').__vue_app__.config.globalProperties.$inertia.remember({}, 'inertia:infinite-scroll-elements:messages');
+        });
         const replaceState = history.replaceState;
         history.replaceState = function(state, unused, url) {
             if (url && new URL(url, location.href).pathname !== location.pathname) {

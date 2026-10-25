@@ -1,5 +1,5 @@
 import type { VisitOptions } from '@inertiajs/core';
-import { router } from '@inertiajs/vue3';
+import { router, usePage } from '@inertiajs/vue3';
 
 const historyKey = 'app-navigation-depth';
 let depth = 0;
@@ -39,8 +39,20 @@ export function initializeNavigationHistory(): void {
 
     let initial = true;
     let traversing = false;
-    window.addEventListener('popstate', () => {
-        traversing = true;
+    const page = usePage();
+    const rememberState = router.remember.bind(router);
+    router.remember = (data, key) => {
+        // Delayed InfiniteScroll callbacks must not overwrite the entry being restored.
+        if (
+            !traversing ||
+            new URL(page.url, window.location.origin).href ===
+                window.location.href
+        ) {
+            rememberState(data, key);
+        }
+    };
+    window.addEventListener('popstate', (event) => {
+        traversing = Boolean(event.state?.page);
     });
     router.on('navigate', (event) => {
         if (initial || traversing) {
