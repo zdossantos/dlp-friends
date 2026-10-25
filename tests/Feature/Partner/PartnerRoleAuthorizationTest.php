@@ -21,7 +21,7 @@ class PartnerRoleAuthorizationTest extends TestCase
         $this->actingAs($partner)->get(route('events.index'))->assertForbidden();
         $this->actingAs($partner)->get(route('conversations.index'))->assertForbidden();
         $this->actingAs($partner)->get(route('notifications.index'))->assertForbidden();
-        $this->actingAs($partner)->get(route('account.edit'))->assertForbidden();
+        $this->actingAs($partner)->get(route('account.edit'))->assertOk();
         $this->actingAs($partner)->get(route('admin.members.index'))->assertForbidden();
     }
 
@@ -36,6 +36,6 @@ class PartnerRoleAuthorizationTest extends TestCase
         $this->actingAs($admin)->get(route('admin.avatars.index'))->assertOk();
         $this->actingAs($admin)->get(route('admin.interests.index'))->assertOk();
         $this->actingAs($admin)->get(route('admin.onboarding.index'))->assertOk();
-        $this->actingAs($admin)->get(route('account.edit'))->assertForbidden();
+        $this->actingAs($admin)->get(route('account.edit'))->assertOk();
     }
 }

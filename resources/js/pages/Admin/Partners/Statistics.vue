@@ -1,11 +1,16 @@
 <script setup lang="ts">
 import { Head } from '@inertiajs/vue3';
 import AdminPageHeader from '@/components/admin/AdminPageHeader.vue';
+import AnnouncementPagination from '@/components/partners/AnnouncementPagination.vue';
 import AnnouncementStatisticsTable from '@/components/partners/AnnouncementStatisticsTable.vue';
 import { useTranslations } from '@/composables/useTranslations';
-import type { PartnerAnnouncementStatistics } from '@/types';
+import type {
+    PartnerAnnouncementStatistics,
+    PartnerAnnouncementPagination,
+} from '@/types';
 
 defineProps<{
+    pagination: PartnerAnnouncementPagination;
     announcements: PartnerAnnouncementStatistics[];
     eligibleRecipientCount: number;
 }>();
@@ -39,5 +44,6 @@ const { formatNumber, t } = useTranslations();
             :empty-message="t('administration.partner_statistics.empty')"
             show-operations
         />
+        <AnnouncementPagination :links="pagination" />
     </main>
 </template>

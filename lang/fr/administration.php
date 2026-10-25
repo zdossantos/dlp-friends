@@ -68,6 +68,12 @@ return [
         'profile_incomplete' => 'Profil à compléter', 'empty' => 'Aucune inscription pour le moment.',
     ],
     'avatars' => [
+        'errors' => [
+            'image_read' => 'L’image de l’avatar n’a pas pu être lue.',
+            'image_invalid' => 'L’image de l’avatar est invalide.',
+            'image_encode' => 'L’image de l’avatar n’a pas pu être réencodée.',
+            'image_store' => 'L’image de l’avatar n’a pas pu être enregistrée.',
+        ],
         'title' => 'Avatars', 'description' => 'Gère les images proposées aux membres et leurs fonds colorés.',
         'add_title' => 'Ajouter un avatar', 'add_description' => 'Formats PNG ou WebP, 2 Mo et 1 200 pixels maximum.',
         'primary_color' => 'Couleur 1', 'secondary_color' => 'Couleur 2', 'image' => 'Image',

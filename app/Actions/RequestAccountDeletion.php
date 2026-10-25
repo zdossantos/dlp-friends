@@ -7,6 +7,7 @@ use App\Jobs\PurgeDeletedUser;
 use App\Models\User;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 final class RequestAccountDeletion
 {
@@ -39,6 +40,8 @@ final class RequestAccountDeletion
             $lockedUser->forceFill([
                 'status' => UserStatus::PendingDeletion,
                 'deletion_requested_at' => $requestedAt,
+                'session_version' => $lockedUser->session_version + 1,
+                'remember_token' => Str::random(60),
             ])->save();
 
             DB::table('sessions')->where('user_id', $lockedUser->id)->delete();

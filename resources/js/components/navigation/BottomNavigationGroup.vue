@@ -1,11 +1,9 @@
 <script setup lang="ts">
-import { Link } from '@inertiajs/vue3';
-import { Check } from '@lucide/vue';
 import type { LucideIcon } from '@lucide/vue';
 import { computed } from 'vue';
+import NavigationSheetLink from '@/components/navigation/NavigationSheetLink.vue';
 import {
     Sheet,
-    SheetClose,
     SheetContent,
     SheetDescription,
     SheetHeader,
@@ -23,16 +21,8 @@ const props = defineProps<{
     testId: string;
 }>();
 
-const { isCurrentOrParentUrl } = useCurrentUrl();
+const { isCurrentNavigationItem: isActive } = useCurrentUrl();
 const { t } = useTranslations();
-
-function isActive(item: BottomNavigationItem): boolean {
-    return (
-        isCurrentOrParentUrl(item.href) ||
-        item.activeParents?.some((parent) => isCurrentOrParentUrl(parent)) ===
-            true
-    );
-}
 
 const hasActiveChild = computed(() => props.items.some(isActive));
 </script>
@@ -66,31 +56,12 @@ const hasActiveChild = computed(() => props.items.some(isActive));
                 </SheetDescription>
             </SheetHeader>
             <div class="grid gap-2">
-                <SheetClose
+                <NavigationSheetLink
                     v-for="item in items"
                     :key="item.label"
-                    :as-child="true"
-                >
-                    <Link
-                        :href="item.href"
-                        :data-test="item.testId"
-                        :aria-label="item.label"
-                        :aria-current="isActive(item) ? 'page' : undefined"
-                        class="flex min-h-12 items-center gap-3 rounded-2xl border border-border p-4 transition-colors hover:bg-secondary focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
-                    >
-                        <component
-                            :is="item.icon"
-                            class="size-5 shrink-0"
-                            aria-hidden="true"
-                        />
-                        <span class="flex-1 font-medium">{{ item.label }}</span>
-                        <Check
-                            v-if="isActive(item)"
-                            class="size-5 text-primary"
-                            aria-hidden="true"
-                        />
-                    </Link>
-                </SheetClose>
+                    :item="item"
+                    :active="isActive(item)"
+                />
             </div>
         </SheetContent>
     </Sheet>

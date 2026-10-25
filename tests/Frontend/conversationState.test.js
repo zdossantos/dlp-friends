@@ -181,3 +181,17 @@ describe('read receipt state', () => {
         ]);
     });
 });
+
+test('reaction updates preserve group message context and unrelated messages', () => {
+    const groupMessage = {
+        id: 10, group_chat_id: 3, content: 'Ensemble', system_type: null,
+        reaction_count: 0, reacted_by_current_user: false,
+    };
+    const otherMessage = { ...groupMessage, id: 11 };
+    const updated = applyMessageReaction([groupMessage, otherMessage], {
+        message_id: 10, reactor_user_id: 7, reaction_count: 1, reacted: true,
+    }, 7);
+    expect(updated[0]).toEqual({ ...groupMessage, reaction_count: 1, reacted_by_current_user: true });
+    expect(updated[1]).toBe(otherMessage);
+    expect(groupMessage.reaction_count).toBe(0);
+});

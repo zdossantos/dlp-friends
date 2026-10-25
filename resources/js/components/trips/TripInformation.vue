@@ -11,13 +11,13 @@ import TripMemberLink from '@/components/trips/TripMemberLink.vue';
 import { useTranslations } from '@/composables/useTranslations';
 import type { TripDetail } from '@/types/trip';
 const props = defineProps<{ trip: TripDetail; compact?: boolean }>();
-const { t, locale } = useTranslations();
+const { t, formatDate } = useTranslations();
 function formatSchedule(value: string): string {
-    return new Intl.DateTimeFormat(locale.value, {
+    return formatDate(value, {
         dateStyle: props.compact ? 'medium' : 'long',
         timeStyle: 'short',
         timeZone: 'Europe/Paris',
-    }).format(new Date(value));
+    });
 }
 function formatDuration(minutes: number): string {
     const hours = Math.floor(minutes / 60);

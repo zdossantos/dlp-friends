@@ -15,21 +15,12 @@ class DiscoveryController extends Controller
     {
         /** @var User $user */
         $user = $request->user();
-        $queue = array_map('intval', $request->validated('queue', []));
+        $queue = array_values(array_map('intval', $request->validated('queue', [])));
 
         return Inertia::render('Discovery/Index', [
             'suggestions' => Inertia::defer(
                 function () use ($service, $user, $queue): array {
-                    $profiles = $service->for($user);
-                    $byUser = $profiles->keyBy('userId');
-
-                    return collect($queue)
-                        ->map(fn (int $id): ?DiscoveryProfileData => $byUser->get($id))
-                        ->filter()
-                        ->concat($profiles)
-                        ->unique('userId')
-                        ->sortByDesc('isAdmin')
-                        ->take(5)
+                    return $service->for($user, $queue)
                         ->map(fn (DiscoveryProfileData $profile): array => $profile->toArray())
                         ->values()
                         ->all();

@@ -48,10 +48,11 @@ aucun nouveau journal historique n’est conservé.
   supprimer le compte. Il ne révoque pas l’accès direct, l’envoi de messages ou
   les notifications d’une conversation existante ; ces échanges réapparaissent
   dans les listes lorsque le profil redevient visible. Le blocage reste le
-  mécanisme qui interdit réellement l’accès et la messagerie.
+  mécanisme qui interdit les nouveaux messages, réactions et signaux privés ;
+  l’historique reste lisible par les deux participants via son URL directe.
 - Suppression d’un compte actif : après confirmation explicite, le compte devient immédiatement inaccessible et invisible. Un compte disposant d’un mot de passe utilisable doit fournir son mot de passe actuel ; un compte créé exclusivement avec un fournisseur social doit accepter explicitement les conséquences irréversibles de la demande. Ce mode est déterminé côté serveur. Les sessions et tous les liens sociaux sont révoqués immédiatement. Un job asynchrone gardé par le statut et l’horodatage supprime le profil, les intérêts, swipes, matches, conversations, messages et autres données liées 30 jours après la demande. Une tâche horaire redispatche les purges échues manquées ; les reprises sont idempotentes. Aucun parcours de restauration n’est proposé.
 - Documenter, avant mise en production, les durées de conservation et la politique de confidentialité applicable.
-- L’export JSON des données de compte, profil, intérêts, matches et messages est généré à la demande dans une réponse authentifiée téléchargée directement. Aucun fichier d’export n’est conservé côté serveur. Les messages exportés sont uniquement ceux envoyés par le membre dans les conversations visibles dans sa liste ; les profils masqués et toute relation bloquée dans un sens ou dans l’autre en sont exclus. Il exclut mots de passe, secrets, jetons et données inutiles sur les autres membres.
+- L’export JSON des données de compte, profil, intérêts, matches et messages est généré à la demande dans une réponse authentifiée téléchargée directement. Aucun fichier d’export n’est conservé côté serveur. Les messages exportés sont tous ceux envoyés par le demandeur et encore conservés, indépendamment du masquage, du blocage ou du statut du pair. Aucun message purgé n’est rétabli et aucun message d’autrui n’est exporté. Il exclut mots de passe, secrets, jetons et données inutiles sur les autres membres.
 - L’export inclut les événements organisés, les inscriptions du membre, les messages de discussion d’événement qu’il a lui-même envoyés et ses notifications persistantes, sans exposer les inscriptions privées ni les messages d’autrui. Les annonces système concernant le membre sont incluses avec leur type ; elles suivent les mêmes règles de purge et de conservation que ses messages, sans instantané supplémentaire de son nom.
 - L'export inclut toutes les données partenaires propres au compte : consentement,
   historique de rôle ciblé, fiche et révisions possédées, annonces et agrégats,
@@ -73,7 +74,14 @@ aucun nouveau journal historique n’est conservé.
 - Les contrôleurs délèguent le contrôle d'accès aux Policies Laravel; ne jamais faire confiance à un identifiant de profil transmis par le navigateur.
 - Les contenus texte sont validés, échappés à l'affichage et protégés contre l'injection HTML.
 - Les cookies de session sont sécurisés en HTTPS et les protections CSRF natives de Laravel restent actives.
+- Le bannissement, sa levée et la demande de suppression incrémentent une version de session sur le compte dans leur transaction et renouvellent le jeton « se souvenir de moi ». Chaque connexion enregistre cette version ; les requêtes web rejettent les sessions d’une version antérieure, quel que soit le stockage utilisé. Une session antérieure à ce mécanisme appartient à la version initiale zéro : elle reste utilisable jusqu’à la première révocation du compte.
 - La validation de l'état OAuth par Socialite reste obligatoire sur le callback Google.
+- Une identité Google liée exige le challenge Fortify lorsque la 2FA locale est
+  activée, avant connexion complète ou divulgation d’un bannissement. Les
+  passkeys conservent leur parcours WebAuthn distinct sans challenge TOTP ajouté.
+- Tous les rôles actifs, majeurs, vérifiés et ayant accepté les conditions
+  accèdent à leurs réglages personnels, sans profil social ni tutoriel.
+  Suppression et changement de mot de passe conservent leurs confirmations.
 - Aucun jeton d'accès, jeton de renouvellement ou contenu brut de réponse Google n'est stocké ou journalisé. Seul l'identifiant stable nécessaire au lien de compte est conservé.
 - Les canaux Reverb de conversation sont privés et leur autorisation vérifie l'appartenance au match ainsi que l'absence de blocage.
 - Les pages événements exigent le même accès membre protégé. Le lieu précis et la liste des participants ne sont transmis qu’à l’organisateur et aux inscriptions acceptées ; une demande en attente ou refusée ne reçoit que le lieu général.
@@ -255,7 +263,6 @@ base active après 30 jours calendaires à Paris. Les comptes bannis gardent le
 gel de toutes les purges automatiques ; une suppression explicite reste
 effective. La rotation et les délais existants des sauvegardes restent
 applicables : la purge de la base active ne réécrit pas les sauvegardes.
-
 
 ## Confidentialité et conservation des trajets (issue 304)
 

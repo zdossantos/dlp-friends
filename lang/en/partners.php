@@ -1,6 +1,11 @@
 <?php
 
 return [
+    'pagination' => [
+        'label' => 'Partner announcement pages',
+        'previous' => 'Previous',
+        'next' => 'Next',
+    ],
     'navigation' => [
         'label' => 'Partner workspace',
         'profile' => 'Partner profile',

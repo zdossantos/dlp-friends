@@ -282,3 +282,16 @@ test('the landing page uses a bold decorative typeface for editorial content', f
             true,
         );
 });
+
+test('public guides and release notes retain their page when switching language', function (string $french, string $english, string $translationKey) {
+    visit($french)->resize(320, 800)->assertSee(__($translationKey, [], 'fr'))
+        ->assertScript('document.documentElement.lang', 'fr')
+        ->assertScript('document.documentElement.scrollWidth <= innerWidth', true)
+        ->click('a[hreflang="en"]')->assertPathIs($english)
+        ->assertSee(__($translationKey, [], 'en'))->assertScript('document.documentElement.lang', 'en')
+        ->click('a[hreflang="fr"]')->assertPathIs($french)->assertNoJavaScriptErrors();
+})->with([
+    ['/fr/rencontres-amicales-disneyland-paris', '/en/disneyland-paris-friendships', 'guides.friendships.title'],
+    ['/fr/aller-seul-disneyland-paris', '/en/visiting-disneyland-paris-solo', 'guides.solo_visit.title'],
+    ['/fr/nouveautes', '/en/whats-new', 'release-notes.title'],
+]);

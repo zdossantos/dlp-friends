@@ -52,3 +52,17 @@ it('requires explicit permission to check a closed deployment', function () {
         $this->artisan('up')->assertSuccessful();
     }
 });
+
+it('rejects a queue reservation that can expire before the production worker stops', function (int $retryAfter) {
+    config()->set('queue.default', 'redis');
+    config()->set('queue.connections.redis.retry_after', $retryAfter);
+
+    $this->artisan('deployment:check', ['--json' => true])
+        ->expectsOutputToContain('unsafe_queue_reservation')
+        ->assertFailed();
+})->with([60, 90]);
+
+it('keeps a thirty second margin between the worker timeout and queue reservation', function () {
+    expect(config('queue.connections.redis.retry_after'))->toBeGreaterThanOrEqual(120);
+    $this->artisan('deployment:check', ['--json' => true])->assertSuccessful();
+});

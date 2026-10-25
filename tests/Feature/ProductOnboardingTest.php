@@ -148,7 +148,7 @@ class ProductOnboardingTest extends TestCase
             ->assertStatus(503);
     }
 
-    public function test_incomplete_onboarding_blocks_member_pages_but_not_its_own_routes(): void
+    public function test_incomplete_onboarding_blocks_social_pages_but_not_personal_settings_or_its_own_routes(): void
     {
         $this->configureDemoAvatars();
         $user = User::factory()->withProfile(false)->create();
@@ -156,6 +156,9 @@ class ProductOnboardingTest extends TestCase
         $this->actingAs($user)->get(route('discovery.index'))
             ->assertRedirect(route('onboarding.show'));
         $this->actingAs($user)->get(route('account.edit'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page->where('discoveryPreferences', null));
+        $this->patch(route('discovery-preferences.update'), [])
             ->assertRedirect(route('onboarding.show'));
         $this->actingAs($user)->get(route('onboarding.show'))
             ->assertOk();

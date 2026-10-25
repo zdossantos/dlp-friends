@@ -50,3 +50,22 @@ test('pending requesters see cancellation explanation without private trip detai
         ->where('trip.cancellation_reason', 'Train supprimé')->where('trip.cancelled_at', $trip->fresh()->cancelled_at->toIso8601String())
         ->where('trip.can_request', false)->missing('trip.meeting_point')->missing('trip.organizer')->missing('participants'));
 });
+
+test('batched trip history preserves privacy and accepted chat access', function (string $status) {
+    $member = User::factory()->withProfile()->create();
+    $trip = Trip::factory()->create(['audience' => 'members']);
+    $trip->chat()->create();
+    TripRegistration::factory()->for($trip)->for($member, 'user')->create(['status' => $status, 'reason' => 'Private decision']);
+    $this->actingAs($member)->get('/trips/mine')->assertOk()->assertInertia(function ($page) use ($trip, $status) {
+        $page->has('trips.data', 1)->where('trips.data.0.registration.status', $status)
+            ->missing('trips.data.0.meeting_point')->where('trips.data.0.can_manage', false);
+        if ($status === 'accepted') {
+            $page->where('trips.data.0.chat_href', "/trips/{$trip->id}/chat")->has('trips.data.0.organizer');
+        } else {
+            $page->missing('trips.data.0.chat_href');
+            if ($status !== 'pending') {
+                $page->missing('trips.data.0.organizer');
+            }
+        }
+    });
+})->with(['pending', 'accepted', 'withdrawn', 'refused', 'removed']);

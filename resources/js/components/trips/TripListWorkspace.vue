@@ -3,6 +3,7 @@ import { Link, router } from '@inertiajs/vue3';
 import { Search, ChevronLeft, ChevronRight } from '@lucide/vue';
 import { ref, watch } from 'vue';
 import ResponsivePanel from '@/components/common/ResponsivePanel.vue';
+import WorkspaceNavigation from '@/components/common/WorkspaceNavigation.vue';
 import OutingsNavigation from '@/components/outings/OutingsNavigation.vue';
 import TripCard from '@/components/trips/TripCard.vue';
 import TripForm from '@/components/trips/TripForm.vue';
@@ -61,13 +62,23 @@ function clearSearch() {
                 t('trips.create')
             }}</Button>
         </header>
-        <nav class="flex gap-3">
-            <Button as-child :variant="mine ? 'outline' : 'secondary'"
-                ><Link href="/trips">{{ t('trips.discover') }}</Link></Button
-            ><Button as-child :variant="mine ? 'secondary' : 'outline'"
-                ><Link href="/trips/mine">{{ t('trips.mine') }}</Link></Button
-            >
-        </nav>
+        <WorkspaceNavigation
+            :label="t('trips.workspace_navigation')"
+            :items="[
+                {
+                    href: '/trips',
+                    label: t('trips.discover'),
+                    active: !mine,
+                    testId: 'trips-nav-discover',
+                },
+                {
+                    href: '/trips/mine',
+                    label: t('trips.mine'),
+                    active: !!mine,
+                    testId: 'trips-nav-mine',
+                },
+            ]"
+        />
         <form v-if="!mine" class="space-y-3" @submit.prevent="filter()">
             <Label for="trip-search">{{ t('trips.search') }}</Label>
             <div class="flex gap-2">

@@ -141,7 +141,7 @@ test('single-role administrator can open the account menu and log out with the k
         0,
     )
         ->keys('[data-test="admin-account-menu-trigger"]', 'Enter')
-        ->assertDontSee('Réglages')
+        ->assertVisible('a[href="/settings/account"]')
         ->assertPresent('[data-test="logout-button"]')
         ->keys('[data-test="logout-button"]', 'Enter')
         ->assertPathIs('/en')
@@ -448,12 +448,12 @@ test('an admin confirms partner roles assignment and removal from the member cat
         ->assertScript('document.activeElement?.matches("[data-test=manage-member-roles-trigger]")', true);
 })->with([[320, 700], [1440, 900]]);
 
-test('an admin starts a classic private conversation and sees the match dialog', function () {
+test('an admin starts a classic private conversation and sees the match dialog', function (int $width, int $height) {
     $member = User::factory()->withProfile()->create(['email' => 'conversation@example.test']);
     $admin = User::factory()->withProfile()->admin()->create();
     $this->actingAs($admin);
 
-    visit('/admin/members')
+    visit('/admin/members')->resize($width, $height)
         ->click('[data-test="start-member-conversation"]')
         ->assertPresent('[data-test="match-celebration-layer"]')
         ->assertPresent('[data-test="open-match-conversation"]')
@@ -465,7 +465,7 @@ test('an admin starts a classic private conversation and sees the match dialog',
     ]);
     $this->assertDatabaseCount('conversations', 1);
     $this->assertDatabaseCount('swipes', 0);
-});
+})->with([[320, 700], [1440, 900]]);
 
 test('the catalog shows state history limit ordering and deletion boundaries', function () {
     InterestSetting::current()->update(['max_selections' => 5]);

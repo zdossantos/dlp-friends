@@ -1,4 +1,10 @@
-import { PasskeyError, UserCancelledError } from '@laravel/passkeys';
+import {
+    InvalidDomainError,
+    NotSupportedError,
+    PasskeyExistsError,
+    PasskeyError,
+    UserCancelledError,
+} from '@laravel/passkeys';
 import { describe, expect, test } from 'bun:test';
 
 import { localizePasskeyError } from '../../resources/js/lib/passkeyError';
@@ -14,13 +20,29 @@ describe('passkey errors', () => {
         ).toBe('L’opération avec la clé d’accès a été annulée.');
     });
 
-    test('preserves every other passkey error', () => {
+    test('replaces unclassified technical errors with a translated message', () => {
         expect(
             localizePasskeyError(
                 new PasskeyError('Service unavailable.'),
                 'Service unavailable.',
-                () => 'Traduction inutilisée',
+                (key) => key,
             ),
-        ).toBe('Service unavailable.');
+        ).toBe('account.passkeys.failed');
     });
 });
+
+test('successful passkey state has no error', () => {
+    expect(localizePasskeyError(null, null, (key) => key)).toBeNull();
+});
+
+for (const [error, key] of [
+    [new NotSupportedError(), 'account.passkeys.unsupported'],
+    [new PasskeyExistsError(), 'account.passkeys.exists'],
+    [new InvalidDomainError('private-host'), 'account.passkeys.invalid_domain'],
+]) {
+    test(`classifies ${error.name} without exposing technical details`, () => {
+        expect(localizePasskeyError(error, error.message, (key) => key)).toBe(
+            key,
+        );
+    });
+}

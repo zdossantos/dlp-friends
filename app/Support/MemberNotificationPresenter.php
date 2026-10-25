@@ -11,24 +11,96 @@ use App\Models\PartnerAnnouncementDelivery;
 use App\Models\Trip;
 use App\Models\User;
 use App\Policies\TripPolicy;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Notifications\DatabaseNotification;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Route;
 use LogicException;
 
 final class MemberNotificationPresenter
 {
+    /**
+     * @param  Collection<int, DatabaseNotification>  $notifications
+     * @return array<int, array<string, mixed>>
+     */
+    public function presentMany(Collection $notifications, User $viewer): array
+    {
+        $ids = fn (string $type): array => $notifications
+            ->filter(fn (DatabaseNotification $notification): bool => ($notification->data['target_type'] ?? null) === $type)
+            ->map(fn (DatabaseNotification $notification) => filter_var($notification->data['target_id'] ?? null, FILTER_VALIDATE_INT))
+            ->reject(fn ($id): bool => $id === false)->unique()->values()->all();
+        $urls = [];
+        foreach (Conversation::query()->forMember($viewer)->whereKey($ids('conversation'))->pluck('id') as $id) {
+            $urls['conversation'][$id] = route('conversations.show', $id, absolute: false);
+        }
+        foreach (Event::query()->visibleTo($viewer)->whereKey($ids('event'))->pluck('id') as $id) {
+            $urls['event'][$id] = route('events.show', $id, absolute: false);
+        }
+        if (app(TripPolicy::class)->create($viewer)) {
+            $trips = Trip::query()->whereKey($ids('trip'))
+                ->where(fn (Builder $query) => $query->whereIn('id', Trip::query()->visibleTo($viewer)->select('id'))
+                    ->orWhereHas('registrations', fn (Builder $registration) => $registration->where('user_id', $viewer->id)));
+            foreach ($trips->pluck('id') as $id) {
+                $urls['trip'][$id] = route('trips.show', $id, absolute: false);
+            }
+        }
+        $chatViewer = $viewer->fresh(['roles', 'profile']);
+        if ($chatViewer !== null) {
+            $chats = GroupChat::query()->visibleTo($chatViewer)
+                ->where(fn (Builder $query) => $query->whereIn('event_id', $ids('event_chat'))->orWhereIn('trip_id', $ids('trip_chat')))->get();
+            foreach ($chats as $chat) {
+                if ($chat->trip_id !== null) {
+                    $urls['trip_chat'][$chat->trip_id] = route('trips.chat.show', $chat->trip_id, absolute: false);
+                } else {
+                    $urls['event_chat'][$chat->event_id] = route('events.chat.show', $chat->event_id, absolute: false);
+                }
+            }
+        }
+        if ($viewer->hasRole(RoleName::Admin)) {
+            $members = User::query()->whereKey($ids('admin_member'))->where('status', UserStatus::Active)
+                ->whereNull('deletion_requested_at')->whereHas('roles', fn (Builder $query) => $query->where('name', RoleName::User));
+            foreach ($members->pluck('id') as $id) {
+                $urls['admin_member'][$id] = route('admin.members.index', ['member' => $id], absolute: false);
+            }
+        }
+        $deliveries = PartnerAnnouncementDelivery::query()->where('user_id', $viewer->id)
+            ->whereIn('notification_id', $notifications->pluck('id'))
+            ->with('announcement.partnerProfile.publishedRevision')->get()->keyBy('notification_id');
+        $fallback = route('notifications.index', absolute: false);
+
+        return $notifications->map(function (DatabaseNotification $notification) use ($viewer, $urls, $deliveries, $fallback): array {
+            $data = $notification->data;
+            $type = $data['target_type'] ?? '';
+            $id = filter_var($data['target_id'] ?? null, FILTER_VALIDATE_INT);
+            $delivery = $deliveries->get($notification->id);
+            $target = match ($type) {
+                'conversation', 'event', 'trip', 'event_chat', 'trip_chat', 'admin_member' => $urls[$type][$id] ?? $fallback,
+                'partner_announcement' => $delivery === null ? $fallback : route('partner-announcements.click', $delivery->click_token, absolute: false),
+                default => $this->targetUrl($data, $viewer),
+            };
+
+            return $this->presentation($notification, $delivery, $target);
+        })->all();
+    }
+
     /** @return array{id: string, category: string, translation_key: string, parameters: array<string, string|int|null>, target_url: string, read_url: string, delete_url: string, read_at: string|null, created_at: string|null, dismiss_url?: string, action_label?: string, content?: string, image_url?: string} */
     public function present(DatabaseNotification $notification, User $viewer): array
     {
-        $data = $notification->data;
-        $partnerDelivery = $this->partnerDelivery($notification, $viewer);
+        $delivery = $this->partnerDelivery($notification, $viewer);
 
+        return $this->presentation($notification, $delivery, $this->targetUrl($notification->data, $viewer, $notification, $delivery));
+    }
+
+    /** @return array{id: string, category: string, translation_key: string, parameters: array<string, string|int|null>, target_url: string, read_url: string, delete_url: string, read_at: string|null, created_at: string|null, dismiss_url?: string, action_label?: string, content?: string, image_url?: string} */
+    private function presentation(DatabaseNotification $notification, ?PartnerAnnouncementDelivery $partnerDelivery, string $targetUrl): array
+    {
+        $data = $notification->data;
         $presented = [
             'id' => $notification->id,
             'category' => (string) ($data['category'] ?? ''),
             'translation_key' => (string) ($data['translation_key'] ?? ''),
             'parameters' => is_array($data['parameters'] ?? null) ? $data['parameters'] : [],
-            'target_url' => $this->targetUrl($data, $viewer, $notification, $partnerDelivery),
+            'target_url' => $targetUrl,
             'read_url' => route('notifications.mark-read', $notification, absolute: false),
             'delete_url' => route('notifications.destroy', $notification, absolute: false),
             'read_at' => $notification->read_at?->toISOString(),

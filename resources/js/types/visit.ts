@@ -1,5 +1,5 @@
 import type { AvatarOption } from '@/types';
-import type { EmbeddedMemberProfile } from '@/types/event';
+import type { EmbeddedMemberProfile } from '@/types/member';
 export type VisitsVisibility = 'hidden' | 'matches' | 'members';
 export type OwnVisit = { id: number; starts_on: string; ends_on: string };
 export type VisitMember = {

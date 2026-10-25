@@ -1,41 +1,11 @@
 <script setup lang="ts">
-import { Link } from '@inertiajs/vue3';
-import { MessageCircle } from '@lucide/vue';
-import DeleteMemberDialog from '@/components/admin/DeleteMemberDialog.vue';
-import ManageMemberRolesDialog from '@/components/admin/ManageMemberRolesDialog.vue';
-import SetMemberBanDialog from '@/components/admin/SetMemberBanDialog.vue';
+import AdminMemberActions from '@/components/admin/AdminMemberActions.vue';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useTranslations } from '@/composables/useTranslations';
-import { index as reports } from '@/routes/admin/conversation-reports';
-import type { RoleName } from '@/types';
+import type { AdminMember as Member } from '@/types/admin';
 
-type Member = {
-    id: number;
-    display_name: string | null;
-    email: string;
-    status: string;
-    visibility: string | null;
-    created_at: string | null;
-    email_verified_at: string | null;
-    is_admin: boolean;
-    roles: Array<{ name: RoleName }>;
-    likes_sent_count: number;
-    likes_received_count: number;
-    passes_sent_count: number;
-    passes_received_count: number;
-    matches_count: number;
-    messages_sent_count: number;
-    blocked_count: number;
-    blocked_by_count: number;
-    can_ban: boolean;
-    can_delete: boolean;
-    can_start_conversation: boolean;
-    can_manage_roles: boolean;
-};
-
-const props = defineProps<{ member: Member }>();
+defineProps<{ member: Member }>();
 const emit = defineEmits<{ startConversation: [member: Member] }>();
 const { formatDate, t } = useTranslations();
 
@@ -161,38 +131,9 @@ function date(value: string | null): string {
             <div
                 class="flex flex-col gap-2 sm:flex-row sm:flex-wrap [&>*]:min-h-11"
             >
-                <Button as-child variant="outline"
-                    ><Link
-                        :href="reports({ query: { target: member.id } }).url"
-                        data-test="received-reports"
-                        >{{ t('moderation.received_reports') }}</Link
-                    ></Button
-                >
-                <ManageMemberRolesDialog
-                    v-if="member.can_manage_roles"
-                    :member-id="member.id"
-                    :display-name="member.display_name ?? member.email"
-                    :roles="member.roles"
-                />
-                <Button
-                    v-if="member.can_start_conversation"
-                    type="button"
-                    variant="outline"
-                    data-test="start-member-conversation"
-                    @click="emit('startConversation', props.member)"
-                >
-                    <MessageCircle class="size-4" aria-hidden="true" />
-                    {{ t('administration.members.conversation') }}
-                </Button>
-                <SetMemberBanDialog
-                    v-if="member.can_ban"
-                    :member-id="member.id"
-                    :banned="member.status === 'banned'"
-                />
-                <DeleteMemberDialog
-                    v-if="member.can_delete"
-                    :member-id="member.id"
-                    :display-name="member.display_name ?? member.email"
+                <AdminMemberActions
+                    :member="member"
+                    @start-conversation="emit('startConversation', $event)"
                 />
             </div>
         </CardContent>

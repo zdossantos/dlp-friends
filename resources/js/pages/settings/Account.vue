@@ -23,7 +23,7 @@ const page = usePage<{
         min_age: number;
         max_age: number;
         min_common_interests: number;
-    };
+    } | null;
 }>();
 const user = computed(() => page.props.auth.user);
 const { t } = useTranslations();
@@ -69,7 +69,10 @@ setLayoutProps({
                         {{ t('account.settings.resend_verification') }}
                     </Link>
                 </div>
-                <div class="border-t border-border/70 pt-5">
+                <div
+                    v-if="user.roles.some((role) => role.name === 'user')"
+                    class="border-t border-border/70 pt-5"
+                >
                     <p class="font-medium">
                         {{ t('account.settings.presence_title') }}
                     </p>
@@ -101,6 +104,7 @@ setLayoutProps({
             <LocaleSwitcher />
         </SettingsSection>
         <DiscoveryPreferencesForm
+            v-if="page.props.discoveryPreferences"
             :preferences="page.props.discoveryPreferences"
         />
         <UserDataExport />

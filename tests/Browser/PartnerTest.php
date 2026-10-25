@@ -5,6 +5,8 @@ use App\Actions\FinalizePartnerAnnouncement;
 use App\Actions\PreparePartnerAnnouncementAudience;
 use App\Enums\PartnerAnnouncementStatus;
 use App\Enums\PartnerRevisionStatus;
+use App\Jobs\DeliverPartnerAnnouncement as DeliverPartnerAnnouncementJob;
+use App\Jobs\PreparePartnerAnnouncementAudience as PreparePartnerAnnouncementAudienceJob;
 use App\Models\PartnerAnnouncement;
 use App\Models\PartnerProfile;
 use App\Models\PartnerSetting;
@@ -18,6 +20,31 @@ beforeEach(function () {
     config()->set('filesystems.default', 's3');
     Storage::fake('s3');
 });
+
+test('partner announcement histories remain reachable across pages', function (string $path, bool $administrator) {
+    $partner = User::factory()->partnerOnly()->create();
+    $profile = PartnerProfile::factory()->for($partner)->published()->create();
+    $first = PartnerAnnouncement::factory()->for($profile)->create(['title' => 'Oldest history item']);
+    PartnerAnnouncement::factory()->count(19)->for($profile)->create();
+    PartnerAnnouncement::factory()->for($profile)->create(['title' => 'Newest history item']);
+    $this->actingAs($administrator ? User::factory()->admin()->create() : $partner);
+
+    $page = visit($path)->resize(320, 700)
+        ->assertSee('Newest history item')->assertDontSee($first->title)
+        ->click('[data-test="announcements-next"]')
+        ->assertSee($first->title)->assertDontSee('Newest history item')
+        ->assertMissing('[data-test="announcements-next"]')
+        ->assertScript('document.documentElement.scrollWidth <= window.innerWidth', true)
+        ->click('[data-test="announcements-previous"]')
+        ->assertSee('Newest history item')->assertDontSee($first->title)
+        ->assertNoJavaScriptErrors();
+    $page->script('async () => { await Promise.all(document.getAnimations().map(animation => animation.finished)); }');
+    $page->assertNoAccessibilityIssues();
+})->with([
+    ['/partner/announcements', false],
+    ['/partner/statistics', false],
+    ['/admin/partner-statistics', true],
+]);
 
 test('a partner saves a bilingual image profile and an admin publishes it', function (int $width, int $height, string $theme) {
     $partner = User::factory()->partnerOnly()->create();
@@ -341,4 +368,30 @@ test('a member receives partner announcements by default reads dismisses and can
         ->keys('[data-test="partner-announcements-switch"]', 'Space')
         ->press('[data-test="save-notification-preferences"]')
         ->assertAttribute('[data-test="partner-announcements-switch"]', 'aria-checked', 'false');
+});
+
+test('a rejected partner announcement can be corrected and resubmitted without sending it', function () {
+    Queue::fake();
+    $partner = User::factory()->partnerOnly()->create();
+    $profile = PartnerProfile::factory()->for($partner)->published()->create();
+    $announcement = PartnerAnnouncement::factory()->for($profile)->pendingApproval()->create(['destination_url' => 'https://example.org/friends']);
+    $this->actingAs(User::factory()->admin()->create());
+    visit('/admin/partner-announcements')->fill('#announcement-reason-'.$announcement->id, 'Préciser le programme proposé')
+        ->click('@reject-partner-announcement')->assertSee('L’annonce partenaire a été refusée.');
+    expect($announcement->fresh()->status)->toBe(PartnerAnnouncementStatus::Rejected);
+    $this->actingAs($partner);
+    visit('/partner/announcements')->assertSee('Préciser le programme proposé')
+        ->press('Créer un nouveau brouillon')->assertSee('Un nouveau brouillon prérempli a été créé.')
+        ->fill('#content', 'Un programme amical précisé pour la prochaine visite.')
+        ->press('Enregistrer le brouillon')->assertSee('Le brouillon de l’annonce a été enregistré.')
+        ->press('Soumettre')->assertSee('L’annonce a été soumise à la modération.')->assertNoJavaScriptErrors();
+    $draft = $profile->announcements()->whereKeyNot($announcement->id)->sole();
+    expect($announcement->fresh()->status)->toBe(PartnerAnnouncementStatus::Rejected)
+        ->and($announcement->fresh()->rejection_reason)->toBe('Préciser le programme proposé')
+        ->and($draft->status)->toBe(PartnerAnnouncementStatus::PendingApproval)
+        ->and($draft->content)->toBe('Un programme amical précisé pour la prochaine visite.')
+        ->and($draft->deliveries()->count())->toBe(0);
+
+    Queue::assertNotPushed(PreparePartnerAnnouncementAudienceJob::class);
+    Queue::assertNotPushed(DeliverPartnerAnnouncementJob::class);
 });

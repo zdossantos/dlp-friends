@@ -1,7 +1,7 @@
 export type GroupChatInfo = {
     id: number;
     isReadOnly: boolean;
-    readOnlyReason: 'cancelled' | 'archived' | null;
+    readOnlyReason: 'cancelled' | 'expired' | null;
 };
 
 export type GroupChatMessage = {

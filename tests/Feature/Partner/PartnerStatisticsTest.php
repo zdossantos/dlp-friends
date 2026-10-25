@@ -11,9 +11,63 @@ use App\Models\PartnerProfile;
 use App\Models\PartnerSetting;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Inertia\Testing\AssertableInertia as Assert;
 
 uses(RefreshDatabase::class);
+
+test('admin statistics query count does not grow with announcements of one partner', function () {
+    $admin = User::factory()->admin()->create();
+    $profile = PartnerProfile::factory()->published()->create();
+    $counts = [];
+    $this->actingAs($admin);
+    foreach ([1, 9] as $added) {
+        PartnerAnnouncement::factory()->count($added)->for($profile)->approved()->create();
+        DB::enableQueryLog();
+        DB::flushQueryLog();
+        $this->get(route('admin.partner-statistics.index'))->assertOk();
+        $counts[] = count(DB::getQueryLog());
+        DB::disableQueryLog();
+    }
+    expect($counts[1] - $counts[0])->toBeLessThanOrEqual(2);
+});
+
+test('announcement histories paginate without leaking another partners records', function (string $route, bool $administrator) {
+    $partner = User::factory()->partner()->create();
+    $profile = PartnerProfile::factory()->for($partner)->published()->create();
+    $announcements = PartnerAnnouncement::factory()->count(21)->for($profile)->create();
+    if (! $administrator) {
+        PartnerAnnouncement::factory()->create(['title' => 'Other partner private announcement']);
+    }
+    $this->actingAs($administrator ? User::factory()->admin()->create() : $partner);
+    $this->get(route($route))->assertInertia(fn (Assert $page) => $page
+        ->has('announcements', 20)->where('announcements.0.id', $announcements[20]->id)
+        ->where('pagination.previous', null)->where('pagination.next', route($route).'?page=2'));
+    $this->get(route($route, ['page' => 2]))->assertInertia(fn (Assert $page) => $page
+        ->has('announcements', 1)->where('announcements.0.id', $announcements[0]->id)
+        ->where('pagination.next', null));
+})->with([
+    ['partner.statistics.index', false],
+    ['partner.announcements.index', false],
+    ['admin.partner-statistics.index', true],
+]);
+
+test('admin cooldown excludes each current announcement and respects the exact boundary', function () {
+    $this->travelTo('2026-09-20 12:00:00');
+    $admin = User::factory()->admin()->create();
+    $profile = PartnerProfile::factory()->published()->create();
+    PartnerSetting::current()->update(['cooldown_days' => 30]);
+    $older = PartnerAnnouncement::factory()->for($profile)->sent()->create(['sending_started_at' => now()->subDays(30)]);
+    $latest = PartnerAnnouncement::factory()->for($profile)->sent()->create(['sending_started_at' => now()->subDays(10)]);
+    $draft = PartnerAnnouncement::factory()->for($profile)->create();
+    $solo = PartnerAnnouncement::factory()->sent()->create(['sending_started_at' => now()]);
+
+    $this->actingAs($admin)->get(route('admin.partner-statistics.index'))->assertInertia(fn (Assert $page) => $page
+        ->where('announcements.0.id', $solo->id)->where('announcements.0.next_dispatch_at', null)
+        ->where('announcements.1.id', $draft->id)->where('announcements.1.next_dispatch_at', '2026-10-10T12:00:00+00:00')
+        ->where('announcements.2.id', $latest->id)->where('announcements.2.next_dispatch_at', null)
+        ->where('announcements.3.id', $older->id)->where('announcements.3.next_dispatch_at', '2026-10-10T12:00:00+00:00'));
+});
 
 test('statistics data returns aggregate rates and no operational counts to partners', function () {
     $announcement = PartnerAnnouncement::factory()->sent()->create();

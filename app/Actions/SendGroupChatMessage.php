@@ -14,11 +14,10 @@ final class SendGroupChatMessage
 {
     public function handle(User $author, GroupChat $chat, string $content): GroupChatMessage
     {
-        return DB::transaction(function () use ($author, $chat, $content): GroupChatMessage {
-            $lockedChat = GroupChat::query()
-                ->with('event')
-                ->lockForUpdate()
-                ->findOrFail($chat->id);
+        $context = $chat->trip_id !== null ? $chat->trip()->firstOrFail() : $chat->event()->firstOrFail();
+
+        return DB::transaction(function () use ($author, $chat, $context, $content): GroupChatMessage {
+            $lockedChat = app(LockGroupChatForWriting::class)->handle($author, $context, $chat->id);
 
             Gate::forUser($author)->authorize('send', $lockedChat);
 

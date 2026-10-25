@@ -5,35 +5,35 @@ et son état de livraison sont définis dans le [`PRD.md`](PRD.md).
 
 ## Entités principales
 
-| Entité | Rôle |
-| --- | --- |
-| `users` | Identité, authentification, date de naissance et statut de compte |
-| `social_accounts` | Lien unique entre un utilisateur et Google |
-| `profiles` | Données publiques : nom d'affichage, bio, fréquence de visite, image et visibilité |
-| `interest_categories` | Regroupement technique interne des intérêts ; non administrable dans le MVP |
-| `interests` | Entrées administrables du catalogue, actives ou archivées |
-| `interest_profile` | Association multiple entre profil et intérêt, avec l’état de sélection courant ou suspendu |
-| `interest_settings` | Réglage unique de la limite de sélections, à 5 par défaut et configurable de 1 à 100 |
-| `swipes` | Décision d'un membre sur un autre : like ou refus |
-| `matches` | Paire unique créée après deux likes |
-| `conversations` | Conversation liée à un match |
-| `messages` | Messages d'une conversation |
-| `message_reactions` | J’aime uniques ajoutés par les membres aux messages |
-| `conversation_starters` | Catalogue bilingue actif des amorces de premier message |
-| `seasonal_themes` | Plages administrables et activation manuelle des ambiances Halloween et Noël |
-| `events` | Événement amical organisé par un membre, avec horaire, lieux, capacité, mode et annulation |
-| `event_registrations` | Demande et état d’inscription d’un membre à un événement |
-| `weekly_email_recap_deliveries` | Réservation et état de livraison du rappel hebdomadaire, sans contenu privé |
-| `notifications` | Notification persistante catégorisée, localisée et reliée à une cible applicative |
-| `blocks` | Blocage unidirectionnel entre deux membres |
-| `avatars` | Catalogue administrable : nom, image privée, deux couleurs de dégradé, activation et ordre |
-| `roles` / `user_roles` | Rôles cumulables `user`, `partner`, `admin`, distincts des profils |
-| `partner_profiles` / `partner_profile_revisions` | Fiche partenaire, version publique et historique modéré bilingue |
-| `partner_announcements` / `partner_announcement_metrics` | Contenu d'annonce et statistiques agrégées sans identité de destinataire |
-| `partner_announcement_deliveries` | Historique individuel du destinataire avec instantané immuable du contenu reçu |
-| `partner_notification_preferences` | Consentement explicite et révocable aux annonces partenaires |
-| `partner_settings` | Délai global entre deux envois d’un même partenaire, 30 jours par défaut |
-| `role_audits` | Trace minimale et temporaire des changements de rôle |
+| Entité                                                   | Rôle                                                                                       |
+| -------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| `users`                                                  | Identité, authentification, date de naissance et statut de compte                          |
+| `social_accounts`                                        | Lien unique entre un utilisateur et Google                                                 |
+| `profiles`                                               | Données publiques : nom d'affichage, bio, fréquence de visite, image et visibilité         |
+| `interest_categories`                                    | Regroupement technique interne des intérêts ; non administrable dans le MVP                |
+| `interests`                                              | Entrées administrables du catalogue, actives ou archivées                                  |
+| `interest_profile`                                       | Association multiple entre profil et intérêt, avec l’état de sélection courant ou suspendu |
+| `interest_settings`                                      | Réglage unique de la limite de sélections, à 5 par défaut et configurable de 1 à 100       |
+| `swipes`                                                 | Décision d'un membre sur un autre : like ou refus                                          |
+| `matches`                                                | Paire unique créée après deux likes                                                        |
+| `conversations`                                          | Conversation liée à un match                                                               |
+| `messages`                                               | Messages d'une conversation                                                                |
+| `message_reactions`                                      | J’aime uniques ajoutés par les membres aux messages                                        |
+| `conversation_starters`                                  | Catalogue bilingue actif des amorces de premier message                                    |
+| `seasonal_themes`                                        | Plages administrables et activation manuelle des ambiances Halloween et Noël               |
+| `events`                                                 | Événement amical organisé par un membre, avec horaire, lieux, capacité, mode et annulation |
+| `event_registrations`                                    | Demande et état d’inscription d’un membre à un événement                                   |
+| `weekly_email_recap_deliveries`                          | Réservation et état de livraison du rappel hebdomadaire, sans contenu privé                |
+| `notifications`                                          | Notification persistante catégorisée, localisée et reliée à une cible applicative          |
+| `blocks`                                                 | Blocage unidirectionnel entre deux membres                                                 |
+| `avatars`                                                | Catalogue administrable : nom, image privée, deux couleurs de dégradé, activation et ordre |
+| `roles` / `user_roles`                                   | Rôles cumulables `user`, `partner`, `admin`, distincts des profils                         |
+| `partner_profiles` / `partner_profile_revisions`         | Fiche partenaire, version publique et historique modéré bilingue                           |
+| `partner_announcements` / `partner_announcement_metrics` | Contenu d'annonce et statistiques agrégées sans identité de destinataire                   |
+| `partner_announcement_deliveries`                        | Historique individuel du destinataire avec instantané immuable du contenu reçu             |
+| `partner_notification_preferences`                       | Consentement explicite et révocable aux annonces partenaires                               |
+| `partner_settings`                                       | Délai global entre deux envois d’un même partenaire, 30 jours par défaut                   |
+| `role_audits`                                            | Trace minimale et temporaire des changements de rôle                                       |
 
 ## États et contraintes de stockage
 
@@ -53,7 +53,14 @@ et son état de livraison sont définis dans le [`PRD.md`](PRD.md).
   `skipped_at` et les horodatages. La paire `(user_id, period_ends_at)` est unique.
   L’échéance est stockée en UTC et correspond au dimanche à 15 h Europe/Paris.
   Préférences effectives et traces sont exportées ; les traces sont supprimées
-  en cascade à la purge du compte. Aucun nom, adresse ou message n’y est copié.
+  en cascade à la purge du compte. Une réservation `reserved_at` borne le traitement
+  concurrent à dix minutes. Pour Resend, `first_attempt_at` et `idempotency_key`
+  accompagnent temporairement `resend_payload`, chiffré avec la clé applicative :
+  destinataire, expéditeur, sujet et HTML générique figés pour une reprise identique.
+  Aucun message privé ni identité de correspondant n’y figure. Le payload est
+  effacé au succès, à l’annulation ou à l’échec définitif ; il n’est pas exporté.
+  `skipped_at` signifie aussi l’arrêt des reprises après acceptation incertaine,
+  sans affirmer que le fournisseur n’a jamais accepté le mail.
 - `social_accounts` contient `user_id`, `provider` et `provider_user_id`. La paire `(provider, provider_user_id)` est unique, le lien est supprimé en cascade avec l'utilisateur et aucun jeton OAuth n'est conservé.
 - `profiles.display_name` est obligatoire une fois l'onboarding terminé et n'est volontairement pas unique.
 - `profiles.onboarding_completed_at` indique qu'un membre a terminé le profil minimal requis.
@@ -203,7 +210,9 @@ même changement.
   en `like` suffit à retirer la ligne de cet historique.
 - La messagerie accepte uniquement du texte brut, limité à 2 000 caractères. Un J’aime est unique par paire `(message_id, user_id)` et son retrait ne modifie ni le message ni son état de lecture. Les pièces jointes, GIF, autres réactions, édition et suppression de message sont hors V1.
 - Les amorces de conversation sont localisées en français et en anglais dans la base, activables individuellement et sélectionnées par trois sans répétition pour un échange encore vide.
-- Un membre ne peut lire ou envoyer un message que dans une conversation liée à son match et non affectée par un blocage.
+- Seuls les participants du match lisent la conversation. Un blocage conserve
+  cet historique en lecture seule pour les deux participants, mais interdit
+  nouveaux messages, réactions et signaux privés.
 - L’inscription donne initialement `user`. L’administration peut ensuite modifier
   `user` et `partner` avec confirmation ; `admin` reste géré par console. Le rôle
   partenaire ne confère aucun droit social ni administrateur implicite.
@@ -246,7 +255,6 @@ sont bornés à trois profils par jour, la liste complète à 30 par page.
 Les séjours terminés depuis au moins 30 jours calendaires sont purgés en lots
 de 500 après recontrôle de leur fin et de l’état du propriétaire verrouillé.
 La purge automatique est suspendue pour un propriétaire banni.
-
 
 ## Trajets et groupes communs (issue 304)
 

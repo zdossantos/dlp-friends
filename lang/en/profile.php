@@ -49,6 +49,7 @@ return [
         'administrator' => 'Administrator',
     ],
     'avatar' => [
+        'unavailable' => 'This avatar is no longer available.',
         'image_alt' => ':name avatar', 'carousel_role' => 'carousel', 'selected_avatar' => 'Selected avatar: :name',
         'selected' => ':name, selected', 'choose' => 'Choose :name', 'selected_badge' => 'Selected',
         'previous' => 'Previous avatar', 'next' => 'Next avatar', 'instructions' => 'Swipe or use the arrow keys',

@@ -181,10 +181,10 @@ class AvatarController extends Controller
     {
         abort_unless($image instanceof UploadedFile, 422);
         $source = file_get_contents($image->getPathname());
-        abort_if($source === false, 500, 'L’image de l’avatar n’a pas pu être lue.');
+        abort_if($source === false, 500, __('administration.avatars.errors.image_read'));
 
         $decoded = @imagecreatefromstring($source);
-        abort_if($decoded === false, 422, 'L’image de l’avatar est invalide.');
+        abort_if($decoded === false, 422, __('administration.avatars.errors.image_invalid'));
 
         imagealphablending($decoded, false);
         imagesavealpha($decoded, true);
@@ -206,13 +206,13 @@ class AvatarController extends Controller
             }
         }
 
-        abort_if($encoded === false || ! is_string($contents), 500, 'L’image de l’avatar n’a pas pu être réencodée.');
+        abort_if($encoded === false || ! is_string($contents), 500, __('administration.avatars.errors.image_encode'));
 
         $extension = $mimeType === 'image/webp' ? 'webp' : 'png';
         $path = 'avatars/'.Str::uuid().'.'.$extension;
         $stored = Storage::put($path, $contents);
 
-        abort_if($stored === false, 500, 'L’image de l’avatar n’a pas pu être enregistrée.');
+        abort_if($stored === false, 500, __('administration.avatars.errors.image_store'));
 
         return $path;
     }

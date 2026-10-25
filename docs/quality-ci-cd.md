@@ -49,7 +49,7 @@ Les six checks indépendants sont :
 1. `Conventional PR title` valide le futur message du commit squash ;
 2. `PHP quality` exécute Laravel Pint et PHPStan/Larastan ;
 3. `Backend tests` agrège quatre shards fonctionnels/unitaires et quatre shards
-   navigateur Pest indépendants, exécutés chacun avec sa propre instance MySQL ;
+   navigateur Pest indépendants, ainsi qu’un job Reverb réel, chacun avec sa propre instance MySQL ;
 4. `Frontend quality` génère Wayfinder puis exécute ESLint, Prettier et
    TypeScript ;
 5. `Vite build` compile les assets de production ;
@@ -69,8 +69,8 @@ construit les assets Vite et télécharge Chromium une seule fois par commit. So
 espace de travail, y compris le service worker produit hors de `public/build`,
 est ensuite restauré par les huit shards. Quatre shards exécutent uniquement
 `tests/Feature` et `tests/Unit` sans Bun ni dépendances système Playwright. Les
-quatre autres exécutent `tests/Browser` et sont les seuls à installer ces
-dépendances système, qui ne peuvent pas être transportées par le cache entre
+quatre autres exécutent `tests/Browser` et installent ces dépendances système,
+qui ne peuvent pas être transportées par le cache entre
 runners éphémères. Le fichier versionné `tests/.pest/shards.json`, régénéré avec
 `./vendor/bin/pest --update-shards`, répartit chaque groupe selon sa durée
 observée. Les shards restent séquentiels en interne : chaque runner dispose déjà
@@ -78,6 +78,20 @@ de sa propre base, sans élargir les droits du compte MySQL pour autoriser la
 création de bases suffixées. `fail-fast` est désactivé afin que tous les échecs
 soient visibles, puis le check stable `Backend tests` agrège leur résultat pour
 la protection de `main`.
+
+Le job `Pest realtime (Reverb)` restaure les mêmes dépendances, recompile les
+assets avec sa clé publique de test puis démarre un serveur Reverb local.
+`tests/Realtime` utilise `DatabaseMigrations` : contrairement aux transactions
+non validées des autres tests navigateur, ses fixtures sont visibles du
+processus Reverb. Le script `.github/scripts/test-realtime.sh` attend le serveur
+et l’arrête à la sortie, y compris si un test échoue. Le check `Backend tests`
+exige également le succès de ce job ; un échec, une annulation ou un job ignoré
+ne valide pas ce check.
+
+Chaque shard et le job Reverb conservent leurs captures d’échec et journaux
+pendant sept jours, dans un artefact distinct. Les scénarios utilisent des
+comptes et secrets fictifs. Les preuves et limites des parcours navigateur sont
+répertoriées dans [`e2e-coverage.md`](e2e-coverage.md).
 
 ## Dependabot
 

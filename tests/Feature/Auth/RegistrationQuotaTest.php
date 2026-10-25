@@ -113,6 +113,23 @@ test('missing usage credentials suspend email registration without contacting Re
     Mail::assertNothingOutgoing();
 });
 
+test('a dedicated Usage key reopens registration without reusing the rejected sending key cache', function () {
+    config()->set('services.resend.key', 'test-sending-key');
+    config()->set('services.resend.usage_key', 'test-sending-key');
+    Http::fake(['api.resend.com/usage' => Http::sequence()
+        ->pushStatus(403)->push(registrationUsage())]);
+
+    $this->get('/register')->assertInertia(fn (Assert $page) => $page->where('emailRegistrationAvailable', false));
+    config()->set('services.resend.usage_key', 'test-dedicated-usage-key');
+    $this->get('/register')->assertInertia(fn (Assert $page) => $page->where('emailRegistrationAvailable', true));
+
+    Http::assertSentCount(2);
+    Http::assertSent(fn ($request) => $request->hasHeader('Authorization', 'Bearer test-sending-key'));
+    Http::assertSent(fn ($request) => $request->hasHeader('Authorization', 'Bearer test-dedicated-usage-key'));
+    expect(config('services.resend.key'))->toBe('test-sending-key');
+    Mail::assertNothingOutgoing();
+});
+
 test('local mail transport does not require Resend', function () {
     config()->set('mail.default', 'array');
     $this->post('/register', quotaRegistrationInput())->assertRedirect('/app');

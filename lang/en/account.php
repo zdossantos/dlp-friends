@@ -178,6 +178,10 @@ return [
         'social_acknowledgement' => 'I understand that my access will end immediately and my account will be permanently deleted.',
     ],
     'passkeys' => [
+        'default_name' => ':browser on :device',
+        'exists' => 'This device already has a passkey.',
+        'invalid_domain' => 'Passkeys are not available on this domain.',
+        'failed' => 'The passkey operation failed. Please try again.',
         'title' => 'Passkeys', 'description' => 'Manage passwordless login.', 'empty' => 'No passkeys', 'empty_description' => 'Add one to log in without a password.',
         'unsupported' => 'Passkeys are not supported by this browser.', 'add' => 'Add a passkey', 'name' => 'Passkey name', 'placeholder' => 'E.g. MacBook Pro, iPhone',
         'name_help' => 'This name will help you recognise this key later.', 'saving' => 'Saving…', 'save' => 'Save passkey', 'added' => 'Added :date',
@@ -186,6 +190,9 @@ return [
         'cancelled' => 'The passkey operation was cancelled.', 'separator' => 'Or continue with your email address',
     ],
     'two_factor' => [
+        'qr_failed' => 'Unable to load the QR code. Please try again.',
+        'key_failed' => 'Unable to load the setup key. Please try again.',
+        'recovery_failed' => 'Unable to load the recovery codes. Please try again.',
         'title' => 'Two-factor authentication', 'description' => 'Strengthen your account security.',
         'disabled_description' => 'Once enabled, a temporary code from your authentication app will be required when you log in.',
         'enabled_description' => 'A temporary code from your authentication app will be required each time you log in.',

@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Settings;
 
 use App\Actions\RequestAccountDeletion;
+use App\Enums\ProductOnboardingStatus;
+use App\Enums\RoleName;
 use App\Events\PresenceChanged;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Settings\AccountUpdateRequest;
@@ -19,10 +21,15 @@ class AccountController extends Controller
 {
     public function edit(Request $request): Response
     {
+        $user = $request->user()->loadMissing('profile.avatar', 'productOnboarding');
+        $canManageDiscovery = $user->hasRole(RoleName::User)
+            && $user->profile?->isComplete()
+            && $user->productOnboarding?->status === ProductOnboardingStatus::Completed;
+
         return Inertia::render('settings/Account', [
             'mustVerifyEmail' => $request->user() instanceof MustVerifyEmail,
             'status' => $request->session()->get('status'),
-            'discoveryPreferences' => $request->user()->discoveryPreferences(),
+            'discoveryPreferences' => $canManageDiscovery ? $user->discoveryPreferences() : null,
         ]);
     }
 

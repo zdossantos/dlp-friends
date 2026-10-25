@@ -3,7 +3,7 @@ import type {
     GroupChatInfo as EventChatInfo,
     PaginatedGroupChatMessages,
 } from './groupChat';
-import type { PublicMember } from './member';
+import type { EmbeddedMemberProfile } from './member';
 
 export type EventRegistrationStatus =
     'pending' | 'accepted' | 'refused' | 'withdrawn' | 'removed' | 'blocked';
@@ -52,28 +52,6 @@ export type EventDetail = EventSummary & {
 };
 
 export type EventWorkspaceContext = 'discover' | 'mine' | 'conversations';
-
-type AvailableEmbeddedMemberProfile = {
-    receivedReportsHref?: string;
-    isBlocked: false;
-    member: PublicMember;
-    canBlock: boolean;
-    canLike: boolean;
-    canUnblock: boolean;
-    conversationHref: string | null;
-};
-
-type BlockedEmbeddedMemberProfile = {
-    isBlocked: true;
-    member: { id: number };
-    canBlock: false;
-    canLike: false;
-    canUnblock: boolean;
-    conversationHref: null;
-};
-
-export type EmbeddedMemberProfile =
-    AvailableEmbeddedMemberProfile | BlockedEmbeddedMemberProfile;
 
 export type EventPanel =
     | { kind: 'detail'; event: EventDetail }

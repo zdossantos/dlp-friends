@@ -15,8 +15,7 @@ x-app: &app
     REDIS_PREFIX: dlp_friends_production_
     REDIS_DB: 0
     REDIS_CACHE_DB: 1
-    LOG_CHANNEL: stack
-    LOG_STACK: single
+    LOG_CHANNEL: stderr
     LOG_LEVEL: ${LOG_LEVEL:-warning}
     DB_CONNECTION: mysql
     DB_HOST: ${DB_HOST:?DB_HOST is required}
@@ -51,6 +50,7 @@ x-app: &app
     AWS_USE_PATH_STYLE_ENDPOINT: "true"
     MAIL_MAILER: resend
     RESEND_API_KEY: ${RESEND_API_KEY:?RESEND_API_KEY is required}
+    RESEND_USAGE_API_KEY: ${RESEND_USAGE_API_KEY:-${RESEND_API_KEY}}
     MAIL_FROM_ADDRESS: ${MAIL_FROM_ADDRESS:?MAIL_FROM_ADDRESS is required}
     MAIL_FROM_NAME: ${MAIL_FROM_NAME:-DLP Friends}
     GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:?GOOGLE_CLIENT_ID is required}
@@ -60,6 +60,11 @@ x-app: &app
     VAPID_PUBLIC_KEY: ${VAPID_PUBLIC_KEY:?VAPID_PUBLIC_KEY is required}
     VAPID_PRIVATE_KEY: ${VAPID_PRIVATE_KEY:?VAPID_PRIVATE_KEY is required}
   restart: unless-stopped
+  logging:
+    driver: json-file
+    options:
+      max-size: "10m"
+      max-file: "3"
 
 services:
   web:

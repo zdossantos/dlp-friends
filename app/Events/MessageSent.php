@@ -2,7 +2,6 @@
 
 namespace App\Events;
 
-use App\Enums\UserStatus;
 use App\Models\Message;
 use App\Models\User;
 use Illuminate\Broadcasting\InteractsWithSockets;
@@ -11,6 +10,7 @@ use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Contracts\Events\ShouldDispatchAfterCommit;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Gate;
 use LogicException;
 
 final class MessageSent implements ShouldBroadcast, ShouldDispatchAfterCommit
@@ -39,7 +39,11 @@ final class MessageSent implements ShouldBroadcast, ShouldDispatchAfterCommit
 
     public function broadcastWhen(): bool
     {
-        return User::query()->whereKey([$this->message->conversation->memberMatch->user_low_id, $this->message->conversation->memberMatch->user_high_id])->where('status', UserStatus::Active)->count() === 2;
+        $conversation = $this->message->conversation()->with(['memberMatch.lowUser', 'memberMatch.highUser'])->first();
+        $author = User::query()->find($this->message->author_user_id);
+
+        return $conversation !== null && $author !== null
+            && Gate::forUser($author)->allows('send', $conversation);
     }
 
     public function broadcastAs(): string

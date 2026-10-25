@@ -38,26 +38,16 @@ class Conversation extends Model
     /** @param Builder<Conversation> $query */
     public function scopeWithVisibleParticipant(Builder $query, User $user): void
     {
-        $query->whereHas('memberMatch', fn (Builder $match) => $match
-            ->whereHas('lowUser', fn (Builder $user) => $user->where('status', UserStatus::Active))
-            ->whereHas('highUser', fn (Builder $user) => $user->where('status', UserStatus::Active))
-            ->where(fn (Builder $participants) => $participants
+        $query->withUnblockedParticipant($user)
+            ->whereHas('memberMatch', fn (Builder $match) => $match
                 ->where(fn (Builder $memberIsLow) => $memberIsLow
                     ->where('user_low_id', $user->id)
                     ->whereHas('highUser.profile', fn (Builder $profile) => $profile
-                        ->where('visibility', ProfileVisibility::Visible))
-                    ->whereDoesntHave('highUser.blocksCreated', fn (Builder $blocks) => $blocks
-                        ->where('blocked_user_id', $user->id))
-                    ->whereDoesntHave('highUser.blocksReceived', fn (Builder $blocks) => $blocks
-                        ->where('blocker_user_id', $user->id)))
+                        ->where('visibility', ProfileVisibility::Visible)))
                 ->orWhere(fn (Builder $memberIsHigh) => $memberIsHigh
                     ->where('user_high_id', $user->id)
                     ->whereHas('lowUser.profile', fn (Builder $profile) => $profile
-                        ->where('visibility', ProfileVisibility::Visible))
-                    ->whereDoesntHave('lowUser.blocksCreated', fn (Builder $blocks) => $blocks
-                        ->where('blocked_user_id', $user->id))
-                    ->whereDoesntHave('lowUser.blocksReceived', fn (Builder $blocks) => $blocks
-                        ->where('blocker_user_id', $user->id)))));
+                        ->where('visibility', ProfileVisibility::Visible))));
     }
 
     /** @param Builder<Conversation> $query */

@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Contracts\WebPushTransport;
 use App\Models\WebPushSubscription;
 use App\Support\WebPushResult;
+use GuzzleHttp\Client;
 use Minishlink\WebPush\Subscription;
 use Minishlink\WebPush\WebPush;
 use RuntimeException;
@@ -27,7 +28,7 @@ final class MinishlinkWebPushTransport implements WebPushTransport
             'subject' => $subject,
             'publicKey' => $publicKey,
             'privateKey' => $privateKey,
-        ]]));
+        ]], client: new Client(['connect_timeout' => 5, 'timeout' => 30])));
     }
 
     public function send(WebPushSubscription $subscription, array $payload, string $topic): WebPushResult

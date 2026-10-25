@@ -20,13 +20,15 @@ final class StatisticsController extends Controller
         /** @var User $partner */
         $partner = $request->user();
 
+        $announcements = PartnerAnnouncement::query()
+            ->ownedBy($partner)
+            ->with('metric')
+            ->latest('id')
+            ->simplePaginate(20)->withQueryString();
+
         return Inertia::render('Partner/Statistics/Index', [
-            'announcements' => PartnerAnnouncement::query()
-                ->ownedBy($partner)
-                ->with('metric')
-                ->latest('id')
-                ->get()
-                ->map(fn (PartnerAnnouncement $announcement): array => PartnerAnnouncementStatisticsData::from($announcement)),
+            'announcements' => $announcements->getCollection()->map(fn (PartnerAnnouncement $announcement): array => PartnerAnnouncementStatisticsData::from($announcement)),
+            'pagination' => ['previous' => $announcements->previousPageUrl(), 'next' => $announcements->nextPageUrl()],
         ]);
     }
 }

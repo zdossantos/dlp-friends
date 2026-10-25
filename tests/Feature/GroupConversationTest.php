@@ -6,6 +6,7 @@ use App\Models\Event;
 use App\Models\EventRegistration;
 use App\Models\GroupChat;
 use App\Models\GroupChatMessage;
+use App\Models\Trip;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
@@ -94,3 +95,57 @@ test('withdrawing from group details returns to the event without forbidden chat
     $this->get(route('events.show', ['event' => $event, 'origin' => 'mine']))->assertOk();
     $this->get(route('events.chat.show', $event))->assertForbidden();
 });
+
+test('group catch up is ordered bounded isolated and still authorized', function (string $context) {
+    $member = User::factory()->withProfile()->create();
+    $group = $context === 'events'
+        ? Event::factory()->for($member, 'organizer')->create()
+        : Trip::factory()->for($member, 'organizer')->create();
+    $chat = $group->chat()->create();
+    $messages = GroupChatMessage::factory()->count(104)->for($chat)->for($member, 'author')->create();
+    GroupChatMessage::factory()->create();
+    $headers = [
+        'X-Inertia' => 'true',
+        'X-Inertia-Version' => app(HandleInertiaRequests::class)->version(request()),
+        'X-Inertia-Partial-Component' => 'Conversations/Group',
+        'X-Inertia-Partial-Data' => 'messageUpdates,chat',
+    ];
+    $url = "/{$context}/{$group->id}/chat";
+    $this->actingAs($member)->get($url.'?messages_after='.$messages[0]->id, $headers)
+        ->assertOk()->assertJsonStructure(['props' => ['messageUpdates']])->assertJsonCount(100, 'props.messageUpdates')
+        ->assertJsonPath('props.messageUpdates.0.id', $messages[1]->id)
+        ->assertJsonPath('props.messageUpdates.99.id', $messages[100]->id);
+    $this->get($url.'?messages_after='.$messages[100]->id, $headers)
+        ->assertOk()->assertJsonCount(3, 'props.messageUpdates')
+        ->assertJsonPath('props.messageUpdates.2.id', $messages[103]->id);
+    $this->actingAs(User::factory()->withProfile()->create())
+        ->get($url.'?messages_after=0', $headers)->assertForbidden();
+})->with(['events', 'trips']);
+
+test('group history preserves pagination and the viewers reactions in both workspaces', function (string $context) {
+    $member = User::factory()->withProfile()->create();
+    $group = $context === 'events'
+        ? Event::factory()->for($member, 'organizer')->create()
+        : Trip::factory()->for($member, 'organizer')->create();
+    $chat = $group->chat()->create();
+    $messages = GroupChatMessage::factory()->count(12)->for($chat)->for($member, 'author')->create();
+    $messages[2]->reactions()->create(['user_id' => $member->id]);
+    $messages[11]->reactions()->create(['user_id' => User::factory()->withProfile()->create()->id]);
+    GroupChatMessage::factory()->create();
+    $url = "/{$context}/{$group->id}/chat";
+
+    $this->actingAs($member)->get($url)->assertInertia(fn (Assert $page) => $page
+        ->has('messages.data', 10)
+        ->where('messages.data.0.id', $messages[2]->id)
+        ->where('messages.data.0.reaction_count', 1)
+        ->where('messages.data.0.reacted_by_current_user', true)
+        ->where('messages.data.9.id', $messages[11]->id)
+        ->where('messages.data.9.reaction_count', 1)
+        ->where('messages.data.9.reacted_by_current_user', false)
+        ->missing('messageUpdates'));
+    $this->get($url.'?messages=2')->assertInertia(fn (Assert $page) => $page
+        ->has('messages.data', 2)
+        ->where('messages.data.0.id', $messages[0]->id)
+        ->where('messages.data.1.id', $messages[1]->id));
+    $this->get($url.'?messages=3')->assertInertia(fn (Assert $page) => $page->has('messages.data', 0));
+})->with(['events', 'trips']);

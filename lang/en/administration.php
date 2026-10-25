@@ -66,6 +66,12 @@ return [
         'profile_completed' => 'Profile completed', 'profile_incomplete' => 'Profile to complete', 'empty' => 'No registrations yet.',
     ],
     'avatars' => [
+        'errors' => [
+            'image_read' => 'The avatar image could not be read.',
+            'image_invalid' => 'The avatar image is invalid.',
+            'image_encode' => 'The avatar image could not be re-encoded.',
+            'image_store' => 'The avatar image could not be saved.',
+        ],
         'title' => 'Avatars', 'description' => 'Manage the images offered to members and their colored backgrounds.',
         'add_title' => 'Add an avatar', 'add_description' => 'PNG or WebP, up to 2 MB and 1,200 pixels.',
         'primary_color' => 'Color 1', 'secondary_color' => 'Color 2', 'image' => 'Image', 'choose_image' => 'Choose an image',

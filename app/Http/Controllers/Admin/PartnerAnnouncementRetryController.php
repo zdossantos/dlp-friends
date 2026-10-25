@@ -7,6 +7,7 @@ use App\Enums\PartnerDeliveryStatus;
 use App\Http\Controllers\Controller;
 use App\Jobs\BroadcastPartnerAnnouncement;
 use App\Jobs\PreparePartnerAnnouncementAudience;
+use App\Jobs\PushPartnerAnnouncement;
 use App\Models\PartnerAnnouncement;
 use App\Models\PartnerAnnouncementDelivery;
 use App\Models\PartnerProfile;
@@ -57,12 +58,19 @@ final class PartnerAnnouncementRetryController extends Controller
                 ->where('partner_announcement_id', $locked->id)
                 ->where('status', PartnerDeliveryStatus::Delivered)
                 ->whereNotNull('notification_id')
-                ->whereNull('broadcasted_at')
                 ->orderBy('id')
                 ->lockForUpdate()
-                ->pluck('id')
-                ->each(static function (int $deliveryId): void {
-                    DB::afterCommit(static fn () => BroadcastPartnerAnnouncement::dispatch($deliveryId));
+                ->get()
+                ->each(static function (PartnerAnnouncementDelivery $delivery): void {
+                    DB::afterCommit(static function () use ($delivery): void {
+                        try {
+                            PushPartnerAnnouncement::dispatch($delivery->id);
+                        } finally {
+                            if ($delivery->broadcasted_at === null) {
+                                BroadcastPartnerAnnouncement::dispatch($delivery->id);
+                            }
+                        }
+                    });
                 });
 
             if ($locked->status === PartnerAnnouncementStatus::Sending) {

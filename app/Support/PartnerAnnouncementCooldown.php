@@ -5,6 +5,8 @@ namespace App\Support;
 use App\Models\PartnerAnnouncement;
 use App\Models\PartnerSetting;
 use Carbon\CarbonImmutable;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 
 final class PartnerAnnouncementCooldown
 {
@@ -47,11 +49,43 @@ final class PartnerAnnouncementCooldown
             ->latest('sending_started_at')
             ->value('sending_started_at');
 
+        return $this->availableAfter($latestStart, $cooldownDays);
+    }
+
+    /**
+     * Read-only projection; mutations still use nextAvailableAt under their locks.
+     *
+     * @param  Collection<int, PartnerAnnouncement>  $announcements
+     * @return array<int, CarbonImmutable|null>
+     */
+    public function forAnnouncements(Collection $announcements): array
+    {
+        if ($announcements->isEmpty()) {
+            return [];
+        }
+        $days = PartnerSetting::current()->cooldown_days;
+        $ranked = DB::table('partner_announcements')
+            ->whereIn('partner_profile_id', $announcements->pluck('partner_profile_id')->unique())
+            ->whereNotNull('sending_started_at')
+            ->select('id', 'partner_profile_id', 'sending_started_at')
+            ->selectRaw('ROW_NUMBER() OVER (PARTITION BY partner_profile_id ORDER BY sending_started_at DESC, id DESC) as sending_rank');
+        // Two starts suffice: only the current announcement must be excluded.
+        $starts = DB::query()->fromSub($ranked, 'ranked')->where('sending_rank', '<=', 2)->orderBy('sending_rank')->get()->groupBy('partner_profile_id');
+        $result = [];
+        foreach ($announcements as $announcement) {
+            $latest = $starts->get($announcement->partner_profile_id)?->first(fn ($start): bool => (int) $start->id !== $announcement->id);
+            $result[$announcement->id] = $this->availableAfter($latest?->sending_started_at, $days);
+        }
+
+        return $result;
+    }
+
+    private function availableAfter(CarbonImmutable|string|null $latestStart, int $days): ?CarbonImmutable
+    {
         if ($latestStart === null) {
             return null;
         }
-
-        $availableAt = CarbonImmutable::parse($latestStart)->addDays($cooldownDays);
+        $availableAt = CarbonImmutable::parse($latestStart)->addDays($days);
 
         return $availableAt->isAfter(now()) ? $availableAt : null;
     }

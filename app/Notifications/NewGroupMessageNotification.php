@@ -50,7 +50,7 @@ final class NewGroupMessageNotification extends Notification implements Personal
     /** @return array{category: string, translation_key: string, parameters: array{sender: string|null, group: string}, target_type: string, target_id: int, message_id: int} */
     public function toArray(User $notifiable): array
     {
-        $message = GroupChatMessage::query()->with(['author.profile', 'groupChat.event', 'groupChat.trip'])->findOrFail($this->messageId);
+        $message = GroupChatMessage::query()->with(['author.profile', 'groupChat'])->findOrFail($this->messageId);
 
         return [
             'category' => NotificationCategory::Conversations->value,

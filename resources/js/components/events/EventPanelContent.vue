@@ -3,8 +3,8 @@ import GroupChat from '@/components/events/EventChat.vue';
 import EventDetail from '@/components/events/EventDetail.vue';
 import EventForm from '@/components/events/EventForm.vue';
 import EventParticipantList from '@/components/events/EventParticipantList.vue';
-import EventParticipantProfile from '@/components/events/EventParticipantProfile.vue';
 import OrganizerRegistrations from '@/components/events/OrganizerRegistrations.vue';
+import EmbeddedMemberProfile from '@/components/members/EmbeddedMemberProfile.vue';
 import { useTranslations } from '@/composables/useTranslations';
 import { store, update } from '@/routes/events';
 import type { EventPanel, EventWorkspaceContext } from '@/types/event';
@@ -55,7 +55,7 @@ const origin = props.context === 'discover' ? {} : { origin: props.context };
         v-else-if="panel.kind === 'participant-profile'"
         class="h-full bg-card"
     >
-        <EventParticipantProfile
+        <EmbeddedMemberProfile
             :profile="panel.profile"
             :block-return-href="closeHref"
         />

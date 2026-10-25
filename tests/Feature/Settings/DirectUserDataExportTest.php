@@ -129,7 +129,7 @@ class DirectUserDataExportTest extends TestCase
         $this->assertStringNotContainsString($organizedEvent->registrations->first()->user->profile->display_name, $json);
     }
 
-    public function test_download_excludes_conversations_hidden_from_the_conversation_list(): void
+    public function test_download_includes_own_retained_messages_even_when_the_peer_is_unavailable(): void
     {
         $member = User::factory()->withProfile()->create();
         $visiblePeer = User::factory()->withProfile()->create();
@@ -149,10 +149,21 @@ class DirectUserDataExportTest extends TestCase
             'blocked_user_id' => $member->id,
         ]);
 
+        foreach (['pending_deletion', 'banned'] as $status) {
+            $peer = User::factory()->withProfile()->create(['status' => $status]);
+            $conversation = $this->conversationBetween($member, $peer);
+            Message::factory()->for($conversation)->for($member, 'author')->create(['content' => $status]);
+            Message::factory()->for($conversation)->for($peer, 'author')->create(['content' => 'Received private message']);
+        }
+        $outgoingPeer = User::factory()->withProfile()->create();
+        $conversation = $this->conversationBetween($member, $outgoingPeer);
+        Message::factory()->for($conversation)->for($member, 'author')->create(['content' => 'Outgoing block']);
+        Block::factory()->create(['blocker_user_id' => $member->id, 'blocked_user_id' => $outgoingPeer->id]);
+
         $response = $this->actingAs($member)->post(route('data-export.store'));
         $payload = json_decode($response->streamedContent(), true, flags: JSON_THROW_ON_ERROR);
 
-        $this->assertSame(['Visible'], array_column($payload['messages'], 'content'));
+        $this->assertSame(['Visible', 'Masqué', 'Bloqué', 'pending_deletion', 'banned', 'Outgoing block'], array_column($payload['messages'], 'content'));
     }
 
     public function test_export_contains_every_owned_partner_record_in_primary_key_order_without_other_members_or_operational_secrets(): void

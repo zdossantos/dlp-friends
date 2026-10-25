@@ -1,5 +1,5 @@
 import type { ComputedRef, Ref } from 'vue';
-import { computed, onMounted, ref } from 'vue';
+import { computed, ref } from 'vue';
 import type { Appearance, ResolvedAppearance } from '@/types';
 
 export type { Appearance, ResolvedAppearance };
@@ -48,12 +48,20 @@ const mediaQuery = () => {
     return window.matchMedia('(prefers-color-scheme: dark)');
 };
 
-const getStoredAppearance = () => {
+const getStoredAppearance = (): Appearance | null => {
     if (typeof window === 'undefined') {
         return null;
     }
 
-    return localStorage.getItem('appearance') as Appearance | null;
+    try {
+        const value = localStorage.getItem('appearance');
+
+        return value === 'light' || value === 'dark' || value === 'system'
+            ? value
+            : null;
+    } catch {
+        return null;
+    }
 };
 
 const prefersDark = (): boolean => {
@@ -64,10 +72,12 @@ const prefersDark = (): boolean => {
     return window.matchMedia('(prefers-color-scheme: dark)').matches;
 };
 
-const handleSystemThemeChange = () => {
-    const currentAppearance = getStoredAppearance();
+const appearance = ref<Appearance>('system');
+const systemPrefersDark = ref(false);
 
-    updateTheme(currentAppearance || 'system');
+const handleSystemThemeChange = () => {
+    systemPrefersDark.value = prefersDark();
+    updateTheme(appearance.value);
 };
 
 let registeredMediaQuery: MediaQueryList | null = null;
@@ -78,8 +88,9 @@ export function initializeTheme(): void {
     }
 
     // Initialize theme from saved preference or default to system...
-    const savedAppearance = getStoredAppearance();
-    updateTheme(savedAppearance || 'system');
+    appearance.value = getStoredAppearance() ?? 'system';
+    systemPrefersDark.value = prefersDark();
+    updateTheme(appearance.value);
 
     const currentMediaQuery = mediaQuery();
 
@@ -93,22 +104,10 @@ export function initializeTheme(): void {
     }
 }
 
-const appearance = ref<Appearance>('system');
-
 export function useAppearance(): UseAppearanceReturn {
-    onMounted(() => {
-        const savedAppearance = localStorage.getItem(
-            'appearance',
-        ) as Appearance | null;
-
-        if (savedAppearance) {
-            appearance.value = savedAppearance;
-        }
-    });
-
     const resolvedAppearance = computed<ResolvedAppearance>(() => {
         if (appearance.value === 'system') {
-            return prefersDark() ? 'dark' : 'light';
+            return systemPrefersDark.value ? 'dark' : 'light';
         }
 
         return appearance.value;
@@ -118,7 +117,11 @@ export function useAppearance(): UseAppearanceReturn {
         appearance.value = value;
 
         // Store in localStorage for client-side persistence...
-        localStorage.setItem('appearance', value);
+        try {
+            localStorage.setItem('appearance', value);
+        } catch {
+            // Browser storage is optional; the current theme still applies.
+        }
 
         // Store in cookie for SSR...
         setCookie('appearance', value);

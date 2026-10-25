@@ -6,6 +6,7 @@ use App\Enums\EventChatSystemType;
 use Carbon\CarbonImmutable;
 use Database\Factories\GroupChatMessageFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -51,5 +52,11 @@ class GroupChatMessage extends Model
     public function reactions(): HasMany
     {
         return $this->hasMany(GroupChatMessageReaction::class);
+    }
+
+    /** @param Builder<GroupChatMessage> $query */
+    public function scopeWithViewerReaction(Builder $query, User $viewer): void
+    {
+        $query->withExists(['reactions as reacted_by_viewer' => fn (Builder $reactions) => $reactions->where('user_id', $viewer->id)]);
     }
 }

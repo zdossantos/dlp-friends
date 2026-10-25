@@ -11,8 +11,8 @@ import { useConversationRealtime } from '@/composables/useConversationRealtime';
 import { useMemberRealtimeContext } from '@/composables/useMemberRealtimeNotifications';
 import { useMessagingRefresh } from '@/composables/useMessagingRefresh';
 import { useConversationTyping } from '@/composables/useTypingSignals';
+import { mergeChatMessages } from '@/lib/conversationState';
 import { xsrfHeader } from '@/lib/csrf';
-import { mergeGroupChatMessages } from '@/lib/groupChatState';
 import { shouldAcknowledgePersistentNotification } from '@/lib/memberNotifications';
 import { index as conversationsIndex } from '@/routes/conversations';
 import { store as storeConversationRead } from '@/routes/conversations/read';
@@ -80,37 +80,39 @@ function refreshMessages(): void {
     );
     // A slow snapshot must not undo reactions or receipts received while it
     // was in flight. The next refresh can reconcile their server state again.
-    function preserveNewerState(
-        message: ConversationMessage,
-    ): ConversationMessage {
-        const before = beforeRefresh.get(message.id);
-        const current = visibleMessages.value.find(
-            (item) => item.id === message.id,
-        );
-
-        if (!current) {
-            return message;
-        }
-
-        return {
-            ...message,
-            // Each live update replaces the message object, even when a like
-            // followed by an unlike ends with the same values as before.
-            ...(before !== current
-                ? {
-                      reaction_count: current.reaction_count,
-                      reacted_by_current_user: current.reacted_by_current_user,
-                  }
-                : {}),
-            read_at: current.read_at ?? message.read_at,
-        };
-    }
 
     router.reload({
         only: ['messages', 'messageUpdates', 'auth'],
         preserveUrl: true,
         data: { messages_after: synchronizedThrough },
         onBeforeUpdate: (page) => {
+            const currentMessages = new Map(
+                visibleMessages.value.map((message) => [message.id, message]),
+            );
+            function preserveNewerState(
+                message: ConversationMessage,
+            ): ConversationMessage {
+                const before = beforeRefresh.get(message.id);
+                const current = currentMessages.get(message.id);
+
+                if (!current) {
+                    return message;
+                }
+
+                return {
+                    ...message,
+                    // Each live update replaces the message object, even when a like
+                    // followed by an unlike ends with the same values as before.
+                    ...(before !== current
+                        ? {
+                              reaction_count: current.reaction_count,
+                              reacted_by_current_user:
+                                  current.reacted_by_current_user,
+                          }
+                        : {}),
+                    read_at: current.read_at ?? message.read_at,
+                };
+            }
             const messages = page.props.messages as PaginatedMessages;
             page.props.messageUpdates = (
                 (page.props.messageUpdates as
@@ -118,7 +120,7 @@ function refreshMessages(): void {
             ).map(preserveNewerState);
             // Keep the complete loaded timeline in Inertia's existing snapshot
             // so back/forward restores messages recovered while this page was open.
-            messages.data = mergeGroupChatMessages(visibleMessages.value, [
+            messages.data = mergeChatMessages(visibleMessages.value, [
                 ...messages.data.map(preserveNewerState),
                 ...(page.props.messageUpdates as ConversationMessage[]),
             ]);

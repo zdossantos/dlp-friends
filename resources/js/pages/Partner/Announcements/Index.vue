@@ -11,6 +11,7 @@ import {
     Trash2,
 } from '@lucide/vue';
 import InputError from '@/components/InputError.vue';
+import AnnouncementPagination from '@/components/partners/AnnouncementPagination.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -31,9 +32,14 @@ import {
     revise,
     submit,
 } from '@/routes/partner/announcements';
-import type { PartnerAnnouncement, PartnerAnnouncementStatus } from '@/types';
+import type {
+    PartnerAnnouncement,
+    PartnerAnnouncementStatus,
+    PartnerAnnouncementPagination,
+} from '@/types';
 
 defineProps<{
+    pagination: PartnerAnnouncementPagination;
     canCreate: boolean;
     announcements: PartnerAnnouncement[];
 }>();
@@ -295,5 +301,6 @@ const statusKeys: Record<PartnerAnnouncementStatus, TranslationKey> = {
                 </CardContent>
             </Card>
         </section>
+        <AnnouncementPagination :links="pagination" />
     </main>
 </template>

@@ -3,6 +3,7 @@
 namespace App\Actions;
 
 use App\Enums\ProfileVisibility;
+use App\Enums\RoleName;
 use App\Enums\SwipeDecision;
 use App\Enums\UserStatus;
 use App\Events\MatchCreated;
@@ -139,6 +140,8 @@ class CreateSwipe
         if (
             $actor->is($target)
             || $target->status !== UserStatus::Active
+            || ! $target->hasVerifiedEmail()
+            || ! $target->hasRole(RoleName::User)
             || $target->birth_date === null
             || $target->birth_date->isAfter($adultCutoff)
             || $profile === null

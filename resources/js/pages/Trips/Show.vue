@@ -11,7 +11,7 @@ import {
 import { ref } from 'vue';
 import BackLink from '@/components/common/BackLink.vue';
 import ResponsivePanel from '@/components/common/ResponsivePanel.vue';
-import EventParticipantProfile from '@/components/events/EventParticipantProfile.vue';
+import EmbeddedMemberProfile from '@/components/members/EmbeddedMemberProfile.vue';
 import OutingsNavigation from '@/components/outings/OutingsNavigation.vue';
 import TripDepartureReportForm from '@/components/trips/TripDepartureReportForm.vue';
 import TripForm from '@/components/trips/TripForm.vue';
@@ -22,7 +22,7 @@ import TripRegistrationActions from '@/components/trips/TripRegistrationActions.
 import { Button } from '@/components/ui/button';
 import { useTranslations } from '@/composables/useTranslations';
 import { goBack } from '@/lib/navigationHistory';
-import type { EmbeddedMemberProfile } from '@/types/event';
+import type { EmbeddedMemberProfile as MemberProfile } from '@/types/member';
 import type {
     TripDetail,
     TripMember,
@@ -32,7 +32,7 @@ import type {
 const props = defineProps<{
     trip: TripDetail;
     panel?: string;
-    profile?: EmbeddedMemberProfile;
+    profile?: MemberProfile;
     participants?: { id: number | null; member: TripMember }[];
     registrations?: TripRegistration[];
     departures?: TripDeparture[];
@@ -202,7 +202,7 @@ function close(open: boolean) {
                     ></Button
                 >
             </nav>
-            <EventParticipantProfile
+            <EmbeddedMemberProfile
                 v-if="profile"
                 :profile="profile"
                 :block-return-href="`/trips/${trip.id}`"

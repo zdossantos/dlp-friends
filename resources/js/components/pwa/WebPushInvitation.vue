@@ -25,16 +25,27 @@ const push = useWebPush(
 );
 const open = ref(false);
 const storageKey = invitationStorageKey(page.props.auth.user.id);
-const dismissed = ref(
-    localStorage.getItem(storageKey) === 'true' ||
-        localStorage.getItem('web-push-opted-out') === 'true',
-);
+const dismissed = ref(false);
+
+try {
+    dismissed.value =
+        localStorage.getItem(storageKey) === 'true' ||
+        localStorage.getItem('web-push-opted-out') === 'true';
+} catch {
+    // Dismissal remains local to this page when storage is unavailable.
+}
+
 const showingInstructions = computed(() => push.permission.value === 'denied');
 const isIos = isIosDevice(navigator);
 
 const rememberDismissal = (): void => {
     dismissed.value = true;
-    localStorage.setItem(storageKey, 'true');
+
+    try {
+        localStorage.setItem(storageKey, 'true');
+    } catch {
+        // Dismissal still applies to this mounted invitation.
+    }
 };
 
 const updateOpen = (value: boolean): void => {
@@ -49,6 +60,10 @@ const activate = async (): Promise<void> => {
     const enabled = await push.enable();
 
     if (!enabled) {
+        if (push.error.value) {
+            return;
+        }
+
         rememberDismissal();
     }
 
@@ -145,6 +160,13 @@ onBeforeUnmount(() =>
                     </span>
                 </component>
             </component>
+            <p
+                v-if="push.error.value"
+                role="alert"
+                class="text-sm text-destructive"
+            >
+                {{ t('account.settings.notifications.push_error') }}
+            </p>
             <component :is="Modal.Footer" class="gap-2">
                 <Button
                     v-if="!showingInstructions"

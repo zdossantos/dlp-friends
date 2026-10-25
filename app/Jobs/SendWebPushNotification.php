@@ -15,7 +15,9 @@ final class SendWebPushNotification implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    public int $tries = 4;
+    public int $tries = 0;
+
+    public int $maxExceptions = 4;
 
     /** @var list<int> */
     public array $backoff = [60, 300, 900];
@@ -27,7 +29,10 @@ final class SendWebPushNotification implements ShouldQueue
         $subscription = WebPushSubscription::query()->find($this->subscriptionId);
 
         if ($subscription !== null) {
-            $deliver->handle($subscription, $this->notification);
+            $delay = $deliver->handle($subscription, $this->notification);
+            if ($delay !== null) {
+                $this->release($delay);
+            }
         }
     }
 }
