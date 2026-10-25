@@ -62,7 +62,9 @@ test('group resume catches every missed page and only acknowledges a visible syn
         ->assertScript("document.querySelectorAll('[data-message-id]').length", 206)
         ->assertScript("new Set(Array.from(document.querySelectorAll('[data-message-id]'), el => el.dataset.messageId)).size", 206)
         ->assertValue('#message-content', 'Brouillon conservé')
-        ->waitForEvent('networkidle')->assertNoJavaScriptErrors();
+        // The DOM updates before the read acknowledgement persists Inertia's snapshot.
+        ->assertScript('history.state.page.props.messages.data.length', 206)
+        ->assertNoJavaScriptErrors();
     $page->back()->assertPresent("@group-conversation-{$chat->id}")->assertScript('location.pathname', '/conversations')->forward()
         ->assertScript("document.querySelectorAll('[data-message-id]').length", 206)
         ->assertValue('#message-content', 'Brouillon conservé');
