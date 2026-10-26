@@ -384,6 +384,8 @@ Route::middleware(['auth', 'verified', 'social', 'terms.current'])->group(functi
         Route::patch('conversation-reports/{report}', [App\Http\Controllers\Admin\ConversationReportController::class, 'close'])->name('conversation-reports.close');
         Route::get('members', [AdminMemberController::class, 'index'])
             ->name('members.index');
+        Route::get('members/{member}/profile', [AdminMemberController::class, 'show'])
+            ->name('members.profile');
         Route::patch('members/{member}/ban', MemberBanController::class)->name('members.ban.update');
         Route::patch('members/{member}/roles', MemberRoleController::class)
             ->name('members.roles.update');

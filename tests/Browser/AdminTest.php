@@ -410,15 +410,23 @@ test('the member catalog exposes statistics and confirms immediate deletion', fu
 
 test('an admin opens a public profile from the member catalog', function (int $width, int $height) {
     $member = User::factory()->withProfile()->create();
-    $admin = User::factory()->withProfile()->admin()->create();
+    $admin = User::factory()->admin()->create();
+    $admin->roles()->sync([Role::query()->where('name', RoleName::Admin)->firstOrFail()->id]);
     $this->actingAs($admin);
 
     visit('/admin/members?member='.$member->id)->resize($width, $height)
         ->assertSeeLink('Voir le profil public')
-        ->assertAttribute('[data-test="view-public-profile"]', 'href', '/members/'.$member->id)
+        ->assertAttribute('[data-test="view-public-profile"]', 'href', '/admin/members/'.$member->id.'/profile')
         ->click('[data-test="view-public-profile"]')
-        ->assertPathIs('/members/'.$member->id)
+        ->assertPathIs('/admin/members/'.$member->id.'/profile')
         ->assertSee($member->profile->display_name)
+        ->assertMissing('[data-test="like-member"]')
+        ->assertPresent('[data-test="admin-account-header"]')
+        ->assertMissing('[data-test="block-member-trigger"]')
+        ->assertMissing('[data-test="unblock-member-trigger"]')
+        ->click('[data-test="profile-back-action"]')
+        ->assertPathIs('/admin/members')
+        ->assertSeeLink('Voir le profil public')
         ->assertNoJavaScriptErrors();
 })->with([[320, 700], [1440, 900]]);
 
