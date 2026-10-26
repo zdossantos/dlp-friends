@@ -5,6 +5,7 @@ import {
     Check,
     Handshake,
     MessageCircle,
+    Megaphone,
     ShieldCheck,
     Trash2,
 } from '@lucide/vue';
@@ -92,9 +93,12 @@ function markRead(): void {
 }
 
 function deleteNotification(): void {
-    const confirmationKey = props.notification.dismiss_url
-        ? 'notifications.actions.confirm_dismiss_partner_announcement'
-        : 'notifications.actions.confirm_delete';
+    const confirmationKey =
+        props.notification.category === 'application'
+            ? 'notifications.actions.confirm_delete'
+            : props.notification.dismiss_url
+              ? 'notifications.actions.confirm_dismiss_partner_announcement'
+              : 'notifications.actions.confirm_delete';
 
     if (!window.confirm(t(confirmationKey))) {
         return;
@@ -261,6 +265,11 @@ function handleKeydown(event: KeyboardEvent): void {
                     />
                     <Handshake
                         v-else-if="notification.category === 'partners'"
+                        class="size-5"
+                        aria-hidden="true"
+                    />
+                    <Megaphone
+                        v-else-if="notification.category === 'application'"
                         class="size-5"
                         aria-hidden="true"
                     />

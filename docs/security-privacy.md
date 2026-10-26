@@ -303,3 +303,25 @@ L’export en mémoire comprend les trajets organisés, inscriptions, sorties,
 messages propres et rapports soumis autorisés. Il exclut les messages et
 participations privés d’autrui, l’auteur d’un signalement reçu et les décideurs.
 Aucun nouveau fichier d’export persistant n’est ajouté.
+
+
+## Annonces de l’application
+
+La rédaction, l’aperçu, les destinataires et les reprises sont réservés aux
+administrateurs actifs et vérifiés. L’audience globale comprend tous les rôles,
+mais exclut les comptes non vérifiés, inactifs, en suppression et ceux ayant
+désactivé `application_announcements`. Ces conditions sont revérifiées avant
+livraison et avant le Push optionnel. Les préférences sont activées par défaut.
+
+Le contenu FR/EN est du texte brut échappé dans Vue. Le lien facultatif utilise
+la validation HTTPS existante (sans identifiants, hôtes locaux ni IP privées).
+Une nouvelle version utilise uniquement le changelog localisé. Le Push reste
+générique et ouvre le centre de notifications adapté au rôle du destinataire.
+
+Les notifications et leur export individuel ne révèlent pas les autres
+utilisateurs ciblés. L’export inclut l’historique de livraison propre au compte,
+y compris après suppression individuelle d’une notification.
+Les livraisons sont purgées avec le destinataire, l’auteur
+est anonymisé par la clé étrangère et la suppression d’une notification reçue
+ne permet pas de la recréer lors d’une reprise. Aucun message privé ni donnée
+de destinataire n’est écrit dans les erreurs des jobs.

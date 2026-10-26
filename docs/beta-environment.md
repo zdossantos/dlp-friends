@@ -1,9 +1,9 @@
 # Environnement bêta privé
 
-État : application bêta déployée avec MySQL, Redis et Mailpit dédiés ;
+État historique au 17 octobre 2026 : application bêta déployée avec MySQL, Redis et Mailpit dédiés ;
 contrôles HTTP et WebSocket sur comptes synthétiques réalisés, y compris la
-révocation du rôle admin sur une session et un socket existants. L'automatisation
-reste à terminer. Aucune donnée de production copiée
+révocation du rôle admin sur une session et un socket existants. L'automatisation restait à terminer lors de ce relevé.
+Le cycle manuel implémenté depuis est décrit plus bas ; son installation sur le serveur reste à vérifier. Aucune donnée de production copiée
 et aucune répétition sur cette copie encore réalisée.
 La cible approuvée est décrite dans la [spécification](superpowers/specs/2026-10-17-isolated-release-beta-design.md).
 
@@ -177,45 +177,108 @@ applicatif bêta n'a été tué par manque de mémoire pendant ces contrôles.
 L'hôte dispose alors de 1 824 Mio disponibles ; les quatre processus
 production sont sains depuis cinq jours et `/up` répond HTTP 200.
 
-## Déploiement automatique limité à la bêta
+## Cycle de vie manuel de la bêta
 
-Le workflow peut utiliser un compte SSH `dlp-beta-deploy` au lieu d'un jeton
-Coolify d'équipe. Configurer `BETA_SSH_HOST` et `BETA_SSH_KNOWN_HOSTS` dans les
-variables GitHub, et la clé privée dédiée dans `BETA_SSH_PRIVATE_KEY`. La clé
-d'hôte doit être relevée sur le serveur par un canal déjà authentifié ; le
-client refuse une clé inconnue ou modifiée. Ne jamais utiliser la clé SSH
-personnelle de l'opérateur. Le chemin API existant reste disponible si aucun
-hôte SSH n'est configuré, avec un jeton limité à une équipe bêta isolée.
+Les workflows `Beta lifecycle` et `Stop beta` se lancent uniquement
+avec `workflow_dispatch` sur `main`. La CI ne démarre plus la bêta. Ils partagent
+le groupe `beta-lifecycle`, sans annulation d'une opération en cours.
 
-Sur le serveur, installer une copie relue de `beta-ssh-deploy.py`, appartenant
-à root et non modifiable par le compte de déploiement. Le fichier de
-configuration privé `0600`, dans un répertoire root `0700`, contient :
+| Action | Données | Résultat |
+| --- | --- | --- |
+| `initialize-production` | Remplace les essais par une copie complète assainie de production. | Migrations explicites, contrôles, déploiement et réouverture. |
+| `initialize-references` | Remplace les essais par le schéma et les référentiels autorisés. | Crée un administrateur bêta dédié, puis migre, contrôle et ouvre. |
+| `update` | Conserve la base, les fichiers et les comptes bêta. | Redémarre les dépendances arrêtées, migre et déploie le candidat. |
+| Workflow `Stop beta` | Conserve les volumes et les essais. | Arrête uniquement application, MySQL, Redis et Mailpit dédiés. |
+
+Une initialisation exige `replace_beta_tests=true` : **la base et les fichiers
+bêta existants sont remplacés**. `update` exige `false` et une initialisation
+terminée, enregistrée côté serveur. Aucune confirmation ne permet de sélectionner
+une ressource production : les UUID et conteneurs sont fixés en configuration.
+Le candidat est toujours la dernière Release PR admissible, resélectionnée avant
+mutation ; son image est épinglée par digest. Sans candidat admissible, aucune
+initialisation ni mise à jour ne démarre. L'arrêt n'exige aucun candidat.
+
+Les référentiels copiés sont `roles`, `avatars`, `interest_categories`, `interests`,
+`interest_settings`, `conversation_starters`, `partner_settings`,
+`product_onboarding_settings`, `seasonal_themes`, avec le registre `migrations`.
+Toutes les autres tables sont créées vides. Une nouvelle dépendance de ces tables
+vers une table exclue bloque l'import et exige une revue. Seuls les objets
+`avatars/` référencés par les lignes restaurées sont copiés ; aucun fichier membre.
+Le bootstrap n'utilise aucun compte production ni seeder de démonstration.
+L'adresse vient de `beta.admin_email` et le mot de passe aléatoire est conservé
+dans `report_dir/beta-admin.json` (`0600`, répertoire `0700`) sur le serveur.
+Sa récupération relève de l'opérateur par un accès serveur privé ; GitHub ne
+reçoit ni identifiants, ni dump, ni fichier membre.
+
+Le relais vérifie les propriétaires Coolify, l'environnement `beta`, les labels
+des conteneurs et l'absence de ressource partagée. Avant toute migration ou copie,
+il vérifie également les identités SQL/Redis, volumes, droits SQL et stockage.
+L'application est arrêtée avant mutation ; un conteneur Artisan temporaire de
+la même image ferme la maintenance Redis persistante sans serveur HTTP.
+La réouverture attend migrations, contrôles et état sain des quatre processus
+de l'image attendue. L'entrypoint n'exécute aucune migration automatique.
+Un échec conserve la bêta fermée et arrête son application. Une initialisation
+interrompue exige une nouvelle initialisation explicite ; une mise à jour échouée
+peut être relancée en conservant les essais. Consulter l'état privé
+`beta-lifecycle.json` et les journaux serveur avant toute reprise.
+
+L'arrêt utilise `docker_cleanup=false`, n'élague aucun volume/réseau, sauvegarde
+Redis avant son arrêt et exclut les services partagés (proxy, Garage, Coolify,
+PostgreSQL Coolify, etc.). Le verrou serveur `operation.lock` est commun aux
+copies et aux opérations de livraison. Une mise à jour invalide les attestations
+de répétition précédentes. Une bêta conservant les essais, ou initialisée avec
+les seuls référentiels, **ne prouve pas** une répétition de migration production :
+la procédure [de répétition](operations.md#livraisons-contrôlées-et-répétition-bêta)
+exige toujours une copie complète fraîche.
+
+### Installation du relais privé
+
+Configurer `BETA_SSH_HOST` et `BETA_SSH_KNOWN_HOSTS` dans les variables GitHub,
+et la clé privée dédiée dans `BETA_SSH_PRIVATE_KEY`. La clé d'hôte doit être
+relevée par un canal déjà authentifié ; le client refuse une clé inconnue ou
+modifiée. Le chemin API direct depuis GitHub est supprimé : installer le relais
+mis à jour avant d'utiliser ces workflows.
+
+Installer ensemble les versions relues de `beta-ssh-deploy.py`,
+`beta_lifecycle.py`, `operations.py` et `release.py` dans le même répertoire,
+appartenant à root et non modifiable par le compte de déploiement. La
+configuration privée du relais, `0600` dans un répertoire root `0700`, contient :
 
 ```json
 {
     "application_uuid": "UUID_APPLICATION_BETA",
     "production_application_uuid": "UUID_APPLICATION_PRODUCTION",
-    "lock_file": "/srv/dlp-operations/private/beta-deploy.lock"
+    "operations_config": "/srv/dlp-operations/private/config.json"
 }
 ```
 
-La clé publique GitHub doit être limitée dans `authorized_keys` par
-`restrict,command="sudo -n /usr/local/sbin/dlp-beta-deploy"`. Le compte a un
-mot de passe verrouillé, aucun autre accès et ne peut modifier ni son dossier
-SSH, ni sa clé autorisée, ni le script. Le wrapper root refuse tout argument,
-fixe `PATH` à `/usr/sbin:/usr/bin:/sbin:/bin`, applique `umask 077`, puis lance
-Python avec le chemin absolu du script et de sa configuration. La règle
-sudoers n'autorise que ce wrapper **sans argument** (syntaxe `""`), sans
-`SETENV` ; la vérifier avec `visudo -cf` avant installation.
+Compléter la configuration d'opérations depuis
+[`config.example.json`](../scripts/operations/config.example.json), notamment
+les UUID MySQL/Redis/Mailpit, conteneurs, réseau, fichiers d'environnement,
+`admin_email` et le fichier curl privé pour l'API Coolify. Les UUID production
+et bêta doivent être distincts ; MySQL, Redis et Mailpit appartiennent au même
+environnement et à la même destination que l'application. Mailpit reste privé,
+sans domaine ni port publié. Les accès source restent en lecture seule.
 
-Le relais accepte uniquement un petit JSON avec l'UUID bêta fixé, un SHA Git
-complet et un digest de l'image GHCR du projet. Il vérifie aussi que
-l'application Coolify appartient à l'environnement `beta`, utilise le bon
-dépôt et n'a aucune livraison active. Seuls `APP_IMAGE`, le commit, la branche du candidat et la
-file de déploiement de cette application sont modifiés. Aucune migration,
-copie de données ou reprise de maintenance ne peut être demandée par la clé.
-Le contrôle du candidat Release Please reste exécuté juste avant l'appel SSH.
-Ce mécanisme ne lance aucun service permanent supplémentaire.
+La clé publique GitHub est limitée dans `authorized_keys` par
+`restrict,command="sudo -n /usr/local/sbin/dlp-beta-deploy"`. Le compte a un
+mot de passe verrouillé et ne peut modifier ni son dossier SSH, ni sa clé
+ni les scripts. Le wrapper root refuse tout argument, fixe `PATH` à
+`/usr/sbin:/usr/bin:/sbin:/bin`, applique `umask 077`, puis lance Python avec
+les chemins absolus du script et de sa configuration. La règle sudoers
+n'autorise que ce wrapper **sans argument** (syntaxe `""`), sans `SETENV` ;
+la vérifier avec `visudo -cf` avant installation.
+
+Le relais accepte uniquement les quatre actions fixes et un petit JSON strict.
+Il vérifie le digest GHCR et le SHA pour les actions de déploiement ; aucun
+chemin, commande libre ou UUID de dépendance n'est fourni par GitHub. Un ancien
+message demandant seulement la mise en file est refusé dès que
+`operations_config` est installé. Aucun service permanent n'est ajouté.
+
+Cette implémentation n'atteste pas son installation serveur : aucun import,
+arrêt ni cycle réel n'a été exécuté pour l'issue #306. L'accès SSH essayé le
+26 octobre 2026 a été refusé. Les observations d'infrastructure précédentes
+restent des constats historiques, à recontrôler avant activation.
 
 Coolify 4.3.23 recharge le Compose depuis le HEAD de la branche configurée,
 même si un SHA est indiqué. Le workflow crée donc une branche
@@ -232,5 +295,16 @@ jour, suppressions et force pushes sur `refs/heads/chore/beta-candidates/**`,
 sans acteur exempté ; la création reste autorisée. Cette protection ferme
 l'intervalle entre la vérification du SHA et la lecture du Compose par Coolify.
 Le ruleset `Immutable beta candidate branches` a été activé le 17 octobre 2026.
-Son retrait nécessite de suspendre le déploiement automatique. Le nettoyage
+Son retrait nécessite de suspendre les workflows bêta. Le nettoyage
 des anciennes références exige une intervention explicite sur cette protection.
+
+Le précontrôle compare aussi les stockages MySQL/Redis prévus dans Coolify,
+y compris quand les conteneurs ont été supprimés par un arrêt. Les volumes nommés
+doivent déjà exister sur le serveur ; une absence bloque l'opération avant reprise.
+Les montages effectifs doivent correspondre à ces stockages et rester séparés de la production.
+Le conteneur temporaire et le déploiement doivent utiliser `REDIS_PREFIX=dlp_friends_beta_`
+et `REDIS_CACHE_CONNECTION=cache`. Après `up`, le contrôle de disponibilité du
+conteneur web doit confirmer la sortie de maintenance avant l'état `ready`.
+L'arrêt place d'abord la bêta en maintenance, puis persiste Redis. Un arrêt déjà
+complet est idempotent. Un arrêt partiel dont la maintenance ne peut être établie
+est refusé : rétablir les dépendances dédiées pour fermer la bêta avant de réessayer.

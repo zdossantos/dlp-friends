@@ -18,7 +18,7 @@ function featureTranslationKeys(string $locale): array
         'outings',
         'blocking',
         'administration',
-        'partners',
+        'partners', 'application_announcements',
     ];
     $flatten = function (array $items, string $prefix = '') use (&$flatten): array {
         $keys = [];
@@ -94,6 +94,6 @@ test('only business feature catalogues are shared with the frontend', function (
     expect(array_keys(FrontendTranslations::messages()))->toBe([
         'brand', 'common', 'account', 'profile', 'onboarding', 'discovery',
         'conversations', 'notifications', 'events', 'visits', 'trips', 'outings', 'blocking', 'moderation', 'administration',
-        'partners',
+        'partners', 'application_announcements',
     ]);
 });

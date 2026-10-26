@@ -20,6 +20,7 @@ test('notification categories expose partner announcements', () => {
         'events',
         'trips',
         'partners',
+        'application',
         'administration',
     ]);
     expect(applyNotificationFilters('partners', true).toString()).toBe(

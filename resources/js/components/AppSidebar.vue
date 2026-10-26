@@ -28,6 +28,7 @@ import {
 } from '@/components/ui/sidebar';
 import { useTranslations } from '@/composables/useTranslations';
 import { dashboard } from '@/routes';
+import { index as applicationAnnouncements } from '@/routes/admin/application-announcements';
 import { index as avatarIndex } from '@/routes/admin/avatars';
 import { index as interestIndex } from '@/routes/admin/interests';
 import { index as memberIndex } from '@/routes/admin/members';
@@ -59,6 +60,11 @@ const mainNavItems: NavItem[] = [
         title: t('administration.navigation.notifications'),
         href: adminNotifications({ query: { category: 'administration' } }),
         icon: Bell,
+    },
+    {
+        title: t('application_announcements.title'),
+        href: applicationAnnouncements(),
+        icon: Megaphone,
     },
     {
         title: t('administration.navigation.members'),

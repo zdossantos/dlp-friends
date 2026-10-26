@@ -123,6 +123,7 @@ return [
             'device_last_used' => 'Last used: :date',
             'device_remove' => 'Remove this device',
             'categories' => [
+                'application_announcements' => 'Application announcements',
                 'trips' => 'Trips',
                 'group_messages' => 'Group messages',
                 'messages' => 'New messages', 'matches' => 'New friendly connections',
@@ -130,6 +131,7 @@ return [
                 'administration' => 'Administration',
             ],
             'categories_help' => [
+                'application_announcements' => 'DLP Friends announcements in the application and their optional Push notifications. Enabled by default.',
                 'trips' => 'Requests, decisions, changes and cancellations for your trips.',
                 'group_messages' => 'Receive in-app notifications and Push alerts for group messages.',
                 'messages' => 'A generic alert when a new message arrives.',

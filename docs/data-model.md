@@ -3,6 +3,18 @@
 Ce document décrit le modèle réellement implémenté. Le périmètre fonctionnel
 et son état de livraison sont définis dans le [`PRD.md`](PRD.md).
 
+## Annonces de l’application
+
+`application_announcements` conserve le contenu bilingue, le lien, le type
+nouvelle version, l’audience et le choix Push. L’auteur est nullable après
+suppression de son compte. La confirmation `sent_at` déclenche les jobs.
+`application_announcement_deliveries` réserve une seule livraison par annonce
+et utilisateur, avec statut et horodatages. L’identifiant de notification reste
+conservé après suppression individuelle pour empêcher toute recréation.
+L’export personnel inclut cet historique de livraison propre au destinataire.
+Les livraisons sont supprimées en cascade avec le compte destinataire ; la
+notification contient seulement son contenu localisé et son lien, jamais l’audience.
+
 ## Entités principales
 
 | Entité                                                   | Rôle                                                                                       |

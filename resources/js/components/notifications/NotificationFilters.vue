@@ -26,6 +26,10 @@ const filters = computed(() => [
         value: 'partners' as const,
         label: t('notifications.filters.partners'),
     },
+    {
+        value: 'application' as const,
+        label: t('application_announcements.title'),
+    },
     ...(props.canViewAdministrationNotifications
         ? [
               {

@@ -7,6 +7,7 @@ export type MemberNotification = {
         | 'notifications.items.new_match'
         | 'notifications.items.new_message'
         | 'notifications.items.message_liked'
+        | 'notifications.items.application_announcement'
         | 'notifications.items.partner_announcement'
         | 'notifications.items.partner_profile_review_requested'
         | 'notifications.items.partner_announcement_review_requested'
@@ -19,6 +20,7 @@ export type MemberNotification = {
     action_label?: string;
     content?: string;
     image_url?: string;
+    link_url?: string;
     read_at: string | null;
     created_at: string | null;
 };

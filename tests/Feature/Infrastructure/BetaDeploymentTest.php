@@ -69,7 +69,7 @@ PHP]);
         ->and($result->output())->toBe(EsmtpTransport::class);
 });
 
-it('blocks background processes until readiness succeeds without migrating', function (string $process, bool $ready) {
+it('blocks background processes until readiness succeeds without migrating', function (string $process, bool $ready, string $environment) {
     $directory = sys_get_temp_dir().'/dlp-entrypoint-'.bin2hex(random_bytes(6));
     mkdir($directory, 0700);
     $entrypoint = str_replace('cd /var/www/html', 'cd '.escapeshellarg($directory), file_get_contents(base_path('docker/php/entrypoint.sh')));
@@ -84,10 +84,11 @@ SH);
     try {
         $result = Process::env([
             'PATH' => $directory.':'.getenv('PATH'), 'ENTRYPOINT_LOG' => $directory.'/calls',
-            'READINESS_CODE' => $ready ? '0' : '1', 'DEPLOYMENT_READINESS_ATTEMPTS' => '1',
+            'APP_ENV' => $environment, 'READINESS_CODE' => $ready ? '0' : '1', 'DEPLOYMENT_READINESS_ATTEMPTS' => '1',
         ])->run(['sh', $directory.'/entrypoint.sh', $process]);
         $calls = file_get_contents($directory.'/calls');
         expect($calls)->toContain('deployment:check')->not->toContain('migrate');
+        expect(str_contains($calls, '--allow-maintenance'))->toBe($environment === 'beta');
         expect($result->successful())->toBe($ready);
         $command = ['worker' => 'queue:work', 'scheduler' => 'schedule:work', 'reverb' => 'reverb:start'][$process];
         expect(str_contains($calls, $command))->toBe($ready);
@@ -97,4 +98,4 @@ SH);
         }
         rmdir($directory);
     }
-})->with(['worker', 'scheduler', 'reverb'])->with([false, true]);
+})->with(['worker', 'scheduler', 'reverb'])->with([false, true])->with(['beta', 'production']);

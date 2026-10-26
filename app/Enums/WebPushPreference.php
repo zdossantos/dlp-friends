@@ -10,5 +10,6 @@ enum WebPushPreference: string
     case Events = 'events';
     case Trips = 'trips';
     case PartnerAnnouncements = 'partner_announcements';
+    case ApplicationAnnouncements = 'application_announcements';
     case Administration = 'administration';
 }
