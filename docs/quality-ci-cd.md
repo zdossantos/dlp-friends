@@ -217,11 +217,16 @@ MinIO ou Resend. Le réseau sortant vers les registres de dépendances est requi
 La publication utilise `RELEASE_PLEASE_TOKEN` et le `GITHUB_TOKEN` du job.
 Le secret production `COOLIFY_TOKEN` ne doit plus être fourni aux workflows ;
 révoquer l'ancien jeton après activation de la procédure serveur. Le workflow
-bêta utilise `COOLIFY_BETA_TOKEN`, restreint aux ressources bêta, et les variables
-`COOLIFY_BETA_APPLICATION_UUID`, `COOLIFY_APPLICATION_UUID` (garde anti-alias),
-`COOLIFY_API_URL` et `VITE_BETA_REVERB_APP_KEY`. La sélection et la mutation
-s'exécutent depuis les scripts de confiance de `main` ; un ancien build est
-resélectionné avant toute mutation et abandonné s'il est dépassé.
+bêta passe uniquement par le relais SSH privé (`BETA_SSH_PRIVATE_KEY`,
+`BETA_SSH_HOST`, `BETA_SSH_KNOWN_HOSTS`) ; aucun jeton API Coolify n'est transmis
+au runner. Il utilise `COOLIFY_BETA_APPLICATION_UUID`,
+`COOLIFY_APPLICATION_UUID` (garde anti-alias) et `VITE_BETA_REVERB_APP_KEY`.
+Les deux workflows bêta sont manuels, limités à `main` et sérialisés ensemble.
+La sélection et la mutation s'exécutent depuis les scripts de confiance de
+`main` ; un ancien build est resélectionné avant toute mutation et abandonné
+s'il est dépassé. Voir le [cycle bêta](beta-environment.md#cycle-de-vie-manuel-de-la-bêta)
+pour les initialisations destructives, la mise à jour conservant les essais et
+l'arrêt dédié. Installer le nouveau relais avant d'utiliser ces workflows.
 
 Le package GHCR reste **privé**. Le job de publication reçoit seulement
 `contents: read` et `packages: write` via `GITHUB_TOKEN` ; le job de déploiement

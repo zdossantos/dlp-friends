@@ -84,6 +84,7 @@ class Release(ops.Operations):
 
     def rehearse(self, image, commit):
         snapshot = self.read("snapshot.json")
+        ops.require(snapshot.get("data_mode", "production") == "production", "full_production_snapshot_required")
         self.fresh(snapshot["created_at"])
         ops.require(all(snapshot.get(key) is True for key in ("tables_verified", "objects_verified", "sanitized")), "snapshot_unverified")
         self.validate_targets()

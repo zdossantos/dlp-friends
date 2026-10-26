@@ -46,6 +46,9 @@
         "rclone_remote": "beta",
         "redis_password_file": "/srv/dlp-operations/private/beta-redis.password",
         "env_file": "/srv/dlp-operations/private/beta.env",
-        "network": "REQUIRED_BETA_DOCKER_NETWORK"
+        "network": "REQUIRED_BETA_DOCKER_NETWORK",
+        "mailpit_uuid": "REQUIRED_BETA_MAILPIT_SERVICE_UUID",
+        "mailpit_container": "REQUIRED_BETA_MAILPIT_CONTAINER",
+        "admin_email": "REQUIRED_DEDICATED_BETA_ADMIN_EMAIL"
     }
 }
