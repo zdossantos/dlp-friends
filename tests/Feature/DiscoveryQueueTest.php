@@ -10,6 +10,8 @@ use Inertia\Testing\AssertableInertia as Assert;
 uses(RefreshDatabase::class);
 
 beforeEach(function () {
+    $this->withSession([]);
+    $this->withCookie(config('session.cookie'), app('session.store')->getId());
     $this->app->bind(DiscoveryTieBreaker::class, fn () => new class implements DiscoveryTieBreaker
     {
         public function rank(int $profileId): int
@@ -50,14 +52,22 @@ test('queue hints never restore an ineligible profile', function (string $reason
             ->where('suggestions.0.userId', $replacement->id)));
 })->with(['hidden', 'blocked', 'deleted', 'inactive-avatar']);
 
-test('a swipe carries the remaining queue to the refreshed suggestions', function () {
+test('a swipe keeps its remaining queue with a clean redirect', function () {
+    $this->withHeaders([
+        'X-Inertia-Partial-Component' => 'Discovery/Index',
+        'X-Inertia-Partial-Data' => 'suggestions',
+    ]);
     $actor = User::factory()->withProfile()->create();
     $target = User::factory()->withProfile()->create();
     $queued = User::factory()->withProfile()->create();
 
     $this->actingAs($actor)->post(route('discovery.swipe', $target), [
         'decision' => 'pass', 'queue' => [$queued->id],
-    ])->assertRedirect(route('discovery.index', ['queue' => [$queued->id]]));
+    ])->assertRedirect(route('discovery.index'));
+
+    $this->get(route('discovery.index'))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('suggestions.0.userId', $queued->id));
 });
 
 test('queue hints are bounded and validated before recording a decision', function (array $queue) {
@@ -109,3 +119,46 @@ test('administrator priority never bypasses eligibility or an earlier decision',
             ->has('suggestions', 1)
             ->where('suggestions.0.userId', $member->id)));
 })->with(['hidden', 'incomplete', 'banned', 'blocked', 'inactive-avatar', 'already-swiped']);
+
+test('a clean discovery visit retains the last displayed order and rechecks eligibility', function () {
+    $this->withHeaders([
+        'X-Inertia-Partial-Component' => 'Discovery/Index',
+        'X-Inertia-Partial-Data' => 'suggestions',
+    ]);
+    $actor = User::factory()->withProfile()->create();
+    $first = User::factory()->withProfile()->create();
+    $second = User::factory()->withProfile()->create();
+    User::factory()->withProfile()->count(6)->create();
+    $actor->profile->update(['visit_frequency' => null]);
+
+    $this->actingAs($actor)->get(route('discovery.index', ['queue' => [$first->id, $second->id]]))
+        ->assertInertia(fn (Assert $page) => $page->where('suggestions.0.userId', $first->id));
+
+    $first->profile->update(['visibility' => 'hidden']);
+    $this->get(route('discovery.index'))
+        ->assertInertia(fn (Assert $page) => $page->where('suggestions.0.userId', $second->id));
+});
+
+test('an overlapping background session save cannot overwrite the displayed queue', function () {
+    $this->withHeaders([
+        'X-Inertia-Partial-Component' => 'Discovery/Index',
+        'X-Inertia-Partial-Data' => 'suggestions',
+    ]);
+    $actor = User::factory()->withProfile()->create();
+    $target = User::factory()->withProfile()->create();
+    $first = User::factory()->withProfile()->create();
+    $second = User::factory()->withProfile()->create();
+    $this->actingAs($actor)->get(route('discovery.index', ['queue' => [$target->id, $first->id, $second->id]]))
+        ->assertInertia(fn (Assert $page) => $page->where('suggestions.0.userId', $target->id));
+
+    // A heartbeat reads this snapshot before the swipe and finishes after it.
+    $backgroundSession = clone app('session.store');
+    $backgroundSession->start();
+    $this->post(route('discovery.swipe', $target), [
+        'decision' => 'pass', 'queue' => [$second->id, $first->id],
+    ])->assertRedirect(route('discovery.index'));
+    $backgroundSession->save();
+
+    $this->withSession($backgroundSession->all())->get(route('discovery.index'))
+        ->assertInertia(fn (Assert $page) => $page->where('suggestions.0.userId', $second->id));
+});

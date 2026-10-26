@@ -1,7 +1,8 @@
 <script setup lang="ts">
+import type { PendingVisit } from '@inertiajs/core';
 import { Head, Link, router, setLayoutProps } from '@inertiajs/vue3';
 import { History } from '@lucide/vue';
-import { computed, onBeforeUnmount, ref, watch } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import SwipeCard from '@/components/discovery/SwipeCard.vue';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
@@ -32,6 +33,9 @@ setLayoutProps({
         { title: t('discovery.navigation'), href: { url: '/discover' } },
     ],
 });
+
+// Fresh visits defer suggestions; a mounted page with cards is a history snapshot.
+const restoringHistory = ref(props.suggestions !== undefined);
 
 const optimisticSuggestions = ref<DiscoveryProfile[]>([
     ...(props.suggestions ?? []),
@@ -64,6 +68,21 @@ const exitingCards = ref<
         decision: SwipeDecision;
     }>
 >([]);
+let pendingNavigation: PendingVisit | null = null;
+const stopNavigationGuard = router.on('before', (event) => {
+    if (sendingDecision.value && !event.detail.visit.async) {
+        pendingNavigation = event.detail.visit;
+
+        return false;
+    }
+});
+
+onMounted(() => {
+    if (restoringHistory.value) {
+        refreshSuggestions();
+    }
+});
+
 let exitingCardSequence = 0;
 const exitingCardTimers = new Set<number>();
 
@@ -204,6 +223,7 @@ function failDecision(
     decision: SwipeDecision,
     message: string,
 ): void {
+    pendingNavigation = null;
     restorePendingProfile(targetUserId);
 
     for (const queued of decisionQueue.splice(0)) {
@@ -286,17 +306,43 @@ function sendNextDecision(): void {
             onFinish: () => {
                 sendingDecision.value = false;
                 sendNextDecision();
+
+                if (!sendingDecision.value && pendingNavigation !== null) {
+                    const visit = pendingNavigation;
+                    pendingNavigation = null;
+                    router.visit(visit.url, visit);
+                }
             },
         },
     );
 }
 
 onBeforeUnmount(() => {
+    stopNavigationGuard();
     exitingCardTimers.forEach((timer) => window.clearTimeout(timer));
 });
 
+function refreshSuggestions(): void {
+    errorMessage.value = null;
+    const failRefresh = (): false => {
+        errorMessage.value = t('discovery.passed.network_error');
+
+        return false;
+    };
+    router.reload({
+        only: ['suggestions'],
+        onSuccess: () => (restoringHistory.value = false),
+        onError: failRefresh,
+        onHttpException: failRefresh,
+        onNetworkError: failRefresh,
+        onCancel: failRefresh,
+    });
+}
+
 function retry(): void {
-    if (retryAttempt.value) {
+    if (restoringHistory.value) {
+        refreshSuggestions();
+    } else if (retryAttempt.value) {
         submit(retryAttempt.value.decision, retryAttempt.value.targetUserId);
     }
 }
@@ -340,7 +386,13 @@ function retry(): void {
             aria-live="assertive"
             class="w-full"
         >
-            <AlertTitle>{{ t('discovery.page.error_title') }}</AlertTitle>
+            <AlertTitle>{{
+                t(
+                    restoringHistory
+                        ? 'discovery.page.load_error_title'
+                        : 'discovery.page.error_title',
+                )
+            }}</AlertTitle>
             <AlertDescription class="space-y-3">
                 <p>{{ errorMessage }}</p>
                 <Button
@@ -356,9 +408,11 @@ function retry(): void {
 
         <section
             v-if="
+                restoringHistory ||
                 suggestions === undefined ||
                 (displayedSuggestions.length === 0 && sendingDecision)
             "
+            v-show="!errorMessage"
             class="grid w-full max-w-md gap-4"
             aria-busy="true"
         >
