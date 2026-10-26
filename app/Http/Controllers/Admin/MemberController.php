@@ -67,6 +67,9 @@ final class MemberController extends Controller
                 return [
                     'id' => $member->id,
                     'display_name' => $member->profile?->display_name,
+                    'public_profile_url' => $member->profile !== null && Gate::forUser($request->user())->allows('viewPublic', $member->profile)
+                        ? route('members.show', $member, absolute: false)
+                        : null,
                     'email' => $member->email,
                     'status' => $member->status->value,
                     'visibility' => $member->profile?->visibility->value,

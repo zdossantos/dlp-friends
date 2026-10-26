@@ -408,6 +408,20 @@ test('the member catalog exposes statistics and confirms immediate deletion', fu
     Mail::assertQueued(MemberDeletedByAdminMail::class);
 });
 
+test('an admin opens a public profile from the member catalog', function (int $width, int $height) {
+    $member = User::factory()->withProfile()->create();
+    $admin = User::factory()->withProfile()->admin()->create();
+    $this->actingAs($admin);
+
+    visit('/admin/members?member='.$member->id)->resize($width, $height)
+        ->assertSeeLink('Voir le profil public')
+        ->assertAttribute('[data-test="view-public-profile"]', 'href', '/members/'.$member->id)
+        ->click('[data-test="view-public-profile"]')
+        ->assertPathIs('/members/'.$member->id)
+        ->assertSee($member->profile->display_name)
+        ->assertNoJavaScriptErrors();
+})->with([[320, 700], [1440, 900]]);
+
 test('an admin confirms partner roles assignment and removal from the member catalog', function (int $width, int $height) {
     $member = User::factory()->withProfile()->create(['email' => 'roles@example.test']);
     $admin = User::factory()->withProfile()->admin()->create();
