@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import PublicProfile from '@/pages/Members/Show.vue';
+import PublicProfile from '@/components/members/PublicMemberProfile.vue';
 import type { PublicMember } from '@/types';
 
 defineProps<{
