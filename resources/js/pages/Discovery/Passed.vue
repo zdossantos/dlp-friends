@@ -308,6 +308,8 @@ function navigate(url: string | null): void {
                         selectedProfile.member.bio ??
                         t('profile.details.empty_bio')
                     "
+                    :disneyland-pass="selectedProfile.member.disneyland_pass"
+                    :is-cast-member="selectedProfile.member.is_cast_member"
                     :visit-frequency="selectedProfile.member.visit_frequency"
                     :social-links="selectedProfile.member.social_links ?? []"
                     :interests="selectedProfile.member.interests"

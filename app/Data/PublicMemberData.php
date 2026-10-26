@@ -73,6 +73,10 @@ final readonly class PublicMemberData
                     'secondary_color' => $avatar->secondary_color,
                 ],
                 'bio' => $profile->bio,
+                ...(! $isBlockedPair ? [
+                    'disneyland_pass' => $profile->disneyland_pass?->value,
+                    'is_cast_member' => $profile->is_cast_member,
+                ] : []),
                 ...(Gate::forUser($viewer)->allows('viewSocialLinks', $profile)
                     ? ['social_links' => $profile->social_links ?? []]
                     : []),

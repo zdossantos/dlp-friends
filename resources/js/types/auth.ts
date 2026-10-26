@@ -20,6 +20,9 @@ export type SocialNetwork =
 export type SocialLink = { network: SocialNetwork; url: string };
 export type SocialLinksVisibility = 'hidden' | 'matches' | 'members';
 
+export type DisneylandPass =
+    'bronze_one' | 'bronze_max' | 'silver' | 'gold' | 'bronze';
+
 export type ProfileVisibility = 'visible' | 'hidden';
 
 export type AvatarOption = {
@@ -39,6 +42,8 @@ export type Profile = {
     visibility: ProfileVisibility;
     onboarding_completed_at: string | null;
     interests?: InterestOption[];
+    disneyland_pass?: DisneylandPass | null;
+    is_cast_member?: boolean;
     social_links?: SocialLink[];
     social_links_visibility?: SocialLinksVisibility;
 };

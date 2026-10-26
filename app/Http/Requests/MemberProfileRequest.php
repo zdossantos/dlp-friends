@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Enums\DisneylandPass;
 use App\Enums\ProfileVisibility;
 use App\Enums\SocialLinksVisibility;
 use App\Enums\SocialNetwork;
@@ -44,6 +45,8 @@ class MemberProfileRequest extends FormRequest
             ],
             'display_name' => ['required', 'string', 'min:1', 'max:80'],
             'bio' => ['nullable', 'string', 'max:500'],
+            'disneyland_pass' => ['sometimes', 'nullable', 'string', Rule::enum(DisneylandPass::class)],
+            'is_cast_member' => ['sometimes', 'required', 'boolean'],
             'visit_frequency' => ['required', Rule::enum(VisitFrequency::class)],
             'visibility' => ['required', Rule::enum(ProfileVisibility::class)],
             'social_links_visibility' => ['sometimes', 'required', Rule::enum(SocialLinksVisibility::class)],

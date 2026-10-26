@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import { CalendarDays, ShieldCheck, Sparkles } from '@lucide/vue';
 import { computed } from 'vue';
+import ProfilePassCard from '@/components/profile/ProfilePassCard.vue';
 import ProfileSocialLinks from '@/components/profile/ProfileSocialLinks.vue';
 import SeasonalDecorations from '@/components/seasonal/SeasonalDecorations.vue';
 import { Badge } from '@/components/ui/badge';
 import { useTranslations } from '@/composables/useTranslations';
-import type { SocialLink, VisitFrequency } from '@/types';
+import type { DisneylandPass, SocialLink, VisitFrequency } from '@/types';
 
 const { t } = useTranslations();
 
@@ -22,11 +23,19 @@ const props = withDefaults(
         bio: string;
         visitFrequency: VisitFrequency | null;
         interests: Array<{ id: number; name: string }>;
+        disneylandPass?: DisneylandPass | null;
+        isCastMember?: boolean;
         socialLinks?: SocialLink[];
         isAdmin?: boolean;
         embedded?: boolean;
     }>(),
-    { isAdmin: false, embedded: false, socialLinks: () => [] },
+    {
+        disneylandPass: null,
+        isCastMember: false,
+        isAdmin: false,
+        embedded: false,
+        socialLinks: () => [],
+    },
 );
 const formattedVisitFrequency = computed(() =>
     t(
@@ -55,6 +64,7 @@ const formattedVisitFrequency = computed(() =>
         <div
             data-test="profile-presentation-hero"
             class="relative flex h-[clamp(11rem,24svh,14rem)] shrink-0 items-end justify-center overflow-hidden px-6 pt-4"
+            :class="{ 'min-h-48': disneylandPass && isCastMember }"
             :style="{
                 backgroundImage: `linear-gradient(145deg, ${avatar.primary_color}, ${avatar.secondary_color})`,
             }"
@@ -72,6 +82,25 @@ const formattedVisitFrequency = computed(() =>
                     :alt="t('profile.avatar.image_alt', { name: avatar.name })"
                     class="relative z-20 h-[calc(100%-0.75rem)] w-full object-contain drop-shadow-2xl"
                     data-test="profile-avatar"
+                />
+            </div>
+            <div
+                v-if="disneylandPass || isCastMember"
+                class="absolute right-3 bottom-8 z-30 flex flex-col items-end gap-1"
+            >
+                <Badge
+                    v-if="isCastMember"
+                    data-test="profile-cast-member"
+                    variant="secondary"
+                    class="shadow-md"
+                    :title="t('profile.pass.self_declared')"
+                >
+                    {{ t('profile.pass.cast_member') }}
+                </Badge>
+                <ProfilePassCard
+                    v-if="disneylandPass"
+                    :pass="disneylandPass"
+                    class="relative"
                 />
             </div>
             <ProfileSocialLinks

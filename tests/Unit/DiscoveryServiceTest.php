@@ -164,6 +164,8 @@ class DiscoveryServiceTest extends TestCase
             'profileId' => $target->profile->id,
             'displayName' => 'Target',
             'isAdmin' => false,
+            'disneylandPass' => null,
+            'isCastMember' => false,
             'avatar' => [
                 'id' => $target->profile->avatar->id,
                 'name' => $target->profile->avatar->name,

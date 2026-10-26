@@ -1,6 +1,28 @@
 <?php
 
 return [
+    'pass' => [
+        'title' => 'Disneyland Pass (optional)',
+        'none' => 'Not specified',
+        'description' => 'These optional details appear on your full profile. You can change or remove them at any time.',
+        'self_declared' => 'Self-declared information, not verified.',
+        'cast_label' => 'I am a Cast Member',
+        'cast_member' => 'Cast Member',
+        'options' => [
+            'bronze_one' => 'Bronze One',
+            'bronze_max' => 'Bronze Max',
+            'silver' => 'Silver',
+            'gold' => 'Gold',
+            'bronze' => 'Bronze (previous range)',
+        ],
+        'tags' => [
+            'bronze_one' => 'Bronze One Pass',
+            'bronze_max' => 'Bronze Max Pass',
+            'silver' => 'Silver Pass',
+            'gold' => 'Gold Pass',
+            'bronze' => 'Bronze Pass (previous range)',
+        ],
+    ],
     'social_links' => [
         'title' => 'Social links',
         'description' => 'Add up to three optional links, one per network.',

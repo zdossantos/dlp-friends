@@ -89,6 +89,8 @@ final class BuildUserDataExport
             'profile' => $user->profile === null ? null : [
                 'display_name' => $user->profile->display_name,
                 'bio' => $user->profile->bio,
+                'disneyland_pass' => $user->profile->disneyland_pass?->value,
+                'is_cast_member' => $user->profile->is_cast_member,
                 'social_links' => $user->profile->social_links ?? [],
                 'social_links_visibility' => ($user->profile->social_links_visibility ?? SocialLinksVisibility::Matches)->value,
                 'visit_frequency' => $user->profile->visit_frequency?->value,

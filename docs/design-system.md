@@ -427,3 +427,16 @@ destination, combinable au transport. Le rendez-vous privé reste exclu de la
 recherche. La pagination indique la page courante et propose Précédent/Suivant ;
 elle disparaît lorsque tous les résultats tiennent sur une page. Les filtres
 restent dans l’URL et sont conservés lors du retour depuis un profil.
+
+
+## Disneyland Pass sur le profil
+
+`ProfilePassCard` dessine une petite carte SVG originale, sans logo ni illustration
+Disney. Bronze One, Bronze Max et l’ancien Bronze partagent un ton bronze ; Silver
+est argent et Gold doré. Le libellé traduit indique toujours le type exact, sans
+s’appuyer uniquement sur la couleur. La carte se place en bas à droite de la zone
+avatar de `ProfilePresentation` et `SwipeCard`, au-dessus du panneau d’informations,
+séparée des liens sociaux et des actions. Le tag Cast Member reste indépendant,
+dans la zone avatar au-dessus du pass, y compris en l’absence de pass.
+Les deux portent l’indication d’information déclarée et non vérifiée. Les contrôles
+facultatifs réutilisent NativeSelect et Checkbox dans l’étape identité du formulaire.

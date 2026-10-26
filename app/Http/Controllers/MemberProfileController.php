@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Actions\NotifyAdminsOfNewMember;
 use App\Actions\SyncProfileInterests;
+use App\Enums\DisneylandPass;
 use App\Enums\ProfileVisibility;
 use App\Enums\SocialLinksVisibility;
 use App\Enums\VisitFrequency;
@@ -95,6 +96,8 @@ class MemberProfileController extends Controller
                     'secondary_color' => $profile->avatar->secondary_color,
                 ],
                 'bio' => $profile->bio,
+                'disneyland_pass' => $profile->disneyland_pass?->value,
+                'is_cast_member' => $profile->is_cast_member,
                 'social_links' => $profile->social_links ?? [],
                 'social_links_visibility' => ($profile->social_links_visibility ?? SocialLinksVisibility::Matches)->value,
                 'visit_frequency' => $profile->visit_frequency,
@@ -143,6 +146,7 @@ class MemberProfileController extends Controller
 
     /**
      * @return array{
+     *     passOptions: array<int, array{value: string, label: string}>,
      *     visitFrequencies: array<int, array{value: string, label: string}>,
      *     visibilities: array<int, array{value: string, label: string}>,
      *     interests: array<int, array{id: int, name: string}>,
@@ -154,6 +158,10 @@ class MemberProfileController extends Controller
     private function formOptions(?Profile $profile): array
     {
         return [
+            'passOptions' => array_map(
+                fn (DisneylandPass $pass): array => ['value' => $pass->value, 'label' => $pass->label()],
+                DisneylandPass::cases(),
+            ),
             'visitFrequencies' => array_map(
                 fn (VisitFrequency $frequency): array => [
                     'value' => $frequency->value,

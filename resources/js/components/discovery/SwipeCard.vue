@@ -11,6 +11,7 @@ import {
     X,
 } from '@lucide/vue';
 import { computed, ref, watch } from 'vue';
+import ProfilePassCard from '@/components/profile/ProfilePassCard.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -448,6 +449,25 @@ watch(
                         compact ? 'max-h-40' : 'max-h-[11rem] sm:max-h-[15rem]',
                     ]"
                 />
+                <div
+                    v-if="profile.disneylandPass || profile.isCastMember"
+                    class="absolute right-3 bottom-8 z-30 flex flex-col items-end gap-1"
+                >
+                    <Badge
+                        v-if="profile.isCastMember"
+                        data-test="profile-cast-member"
+                        variant="secondary"
+                        class="shadow-md"
+                        :title="t('profile.pass.self_declared')"
+                    >
+                        {{ t('profile.pass.cast_member') }}
+                    </Badge>
+                    <ProfilePassCard
+                        v-if="profile.disneylandPass"
+                        :pass="profile.disneylandPass"
+                        class="relative"
+                    />
+                </div>
             </div>
 
             <div

@@ -10,8 +10,13 @@ import InterestTagSelector from '@/components/profile/InterestTagSelector.vue';
 import ProfileFormStepper from '@/components/profile/ProfileFormStepper.vue';
 import SocialLinksFields from '@/components/profile/SocialLinksFields.vue';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+    NativeSelect,
+    NativeSelectOption,
+} from '@/components/ui/native-select';
 import {
     Select,
     SelectContent,
@@ -25,6 +30,7 @@ import { useTranslations } from '@/composables/useTranslations';
 import type {
     AvatarOption,
     DiscoveryProfile,
+    DisneylandPass,
     InterestOption,
     Profile,
     SocialLink,
@@ -47,6 +53,7 @@ const props = defineProps<{
     action: string;
     method: 'post' | 'patch';
     submitLabel: string;
+    passOptions: Option[];
     visitFrequencies: Option[];
     visibilities: Option[];
     avatars: AvatarOption[];
@@ -63,6 +70,10 @@ const avatarId = ref<number | null>(
 );
 const displayName = ref(props.profile?.display_name ?? '');
 const bio = ref(props.profile?.bio ?? '');
+const disneylandPass = ref<DisneylandPass | ''>(
+    props.profile?.disneyland_pass ?? '',
+);
+const isCastMember = ref(props.profile?.is_cast_member ?? false);
 const visitFrequency = ref(props.profile?.visit_frequency ?? '');
 const visibility = ref(props.profile?.visibility ?? 'visible');
 const socialLinks = ref<SocialLink[]>(
@@ -103,6 +114,8 @@ const previewProfile = computed<DiscoveryProfile | null>(() => {
         profileId: 0,
         displayName: displayName.value || t('profile.form.preview_name'),
         isAdmin: false,
+        disneylandPass: disneylandPass.value || null,
+        isCastMember: isCastMember.value,
         avatar: selectedAvatar.value,
         age: props.age,
         bio: bio.value || null,
@@ -159,6 +172,8 @@ function showInvalidStep(errors: Record<string, string>): void {
     } else if (
         errors.display_name ||
         errors.bio ||
+        errors.disneyland_pass ||
+        errors.is_cast_member ||
         Object.keys(errors).some((key) => key.startsWith('social_links'))
     ) {
         goTo(2);
@@ -178,6 +193,8 @@ function showInvalidStep(errors: Record<string, string>): void {
         :transform="
             (data) => ({
                 ...data,
+                disneyland_pass: disneylandPass || null,
+                is_cast_member: isCastMember,
                 social_links: socialLinks,
                 social_links_visibility: socialLinksVisibility,
             })
@@ -296,6 +313,60 @@ function showInvalidStep(errors: Record<string, string>): void {
                 />
                 <InputError :message="errors.bio" />
             </div>
+            <fieldset
+                class="space-y-3 rounded-2xl border p-4"
+                aria-describedby="profile-pass-description"
+            >
+                <legend class="px-1 text-sm font-semibold">
+                    {{ t('profile.pass.title') }}
+                </legend>
+                <p
+                    id="profile-pass-description"
+                    class="text-sm text-muted-foreground"
+                >
+                    {{ t('profile.pass.description') }}
+                    {{ t('profile.pass.self_declared') }}
+                </p>
+                <NativeSelect
+                    id="disneyland_pass"
+                    v-model="disneylandPass"
+                    class="min-h-11"
+                    :aria-label="t('profile.pass.title')"
+                    :aria-invalid="!!errors.disneyland_pass"
+                    aria-describedby="profile-pass-error"
+                >
+                    <NativeSelectOption value="">{{
+                        t('profile.pass.none')
+                    }}</NativeSelectOption>
+                    <NativeSelectOption
+                        v-for="option in passOptions"
+                        :key="option.value"
+                        :value="option.value"
+                        >{{ option.label }}</NativeSelectOption
+                    >
+                </NativeSelect>
+                <InputError
+                    id="profile-pass-error"
+                    :message="errors.disneyland_pass"
+                />
+                <div class="flex min-h-11 items-center gap-3">
+                    <Checkbox
+                        id="is_cast_member"
+                        v-model="isCastMember"
+                        :aria-invalid="!!errors.is_cast_member"
+                        aria-describedby="profile-cast-error"
+                    />
+                    <Label
+                        for="is_cast_member"
+                        class="min-h-11 flex-1 cursor-pointer py-3"
+                        >{{ t('profile.pass.cast_label') }}</Label
+                    >
+                </div>
+                <InputError
+                    id="profile-cast-error"
+                    :message="errors.is_cast_member"
+                />
+            </fieldset>
             <SocialLinksFields
                 v-model:links="socialLinks"
                 v-model:visibility="socialLinksVisibility"

@@ -1,10 +1,12 @@
-import type { AvatarOption, VisitFrequency } from './auth';
+import type { AvatarOption, DisneylandPass, VisitFrequency } from './auth';
 
 export type DiscoveryProfile = {
     userId: number;
     profileId: number;
     displayName: string;
     isAdmin: boolean;
+    disneylandPass: DisneylandPass | null;
+    isCastMember: boolean;
     avatar: AvatarOption;
     age: number;
     bio: string | null;
