@@ -55,6 +55,7 @@ test('an administrator without member access can preview a profile', function ()
         ->assertInertia(fn (Assert $page) => $page
             ->component('Admin/Members/Show')
             ->where('member.id', $member->id)
+            ->where('receivedReportsHref', '/admin/conversation-reports?target='.$member->id)
             ->where('backHref', '/admin/members?member='.$member->id));
 });
 

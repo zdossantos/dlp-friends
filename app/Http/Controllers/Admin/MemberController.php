@@ -128,7 +128,7 @@ final class MemberController extends Controller
         return Inertia::render('Admin/Members/Show', [
             'member' => $data['member'],
             'backHref' => route('admin.members.index', ['member' => $member->id], absolute: false),
-            'receivedReportsHref' => $data['receivedReportsHref'],
+            'receivedReportsHref' => route('admin.conversation-reports.index', ['target' => $member->id], absolute: false),
         ]);
     }
 
