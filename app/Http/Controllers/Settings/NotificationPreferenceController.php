@@ -61,9 +61,12 @@ class NotificationPreferenceController extends Controller
         foreach ($this->availablePreferences($request->user()) as $preference) {
             if ($request->has($preference->value)) {
                 $enabled = $request->boolean($preference->value);
-                $request->user()->notificationPreferences()->updateOrCreate(
-                    ['category' => $preference], ['enabled' => $enabled],
-                );
+                DB::transaction(function () use ($request, $preference, $enabled): void {
+                    $user = User::query()->lockForUpdate()->findOrFail($request->user()->id);
+                    $user->notificationPreferences()->updateOrCreate(
+                        ['category' => $preference], ['enabled' => $enabled],
+                    );
+                });
                 if ($preference === WebPushPreference::PartnerAnnouncements) {
                     $updatePartner->handle($request->user(), $enabled);
                 }

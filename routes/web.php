@@ -1,6 +1,7 @@
 <?php
 
 use App\Enums\SocialProvider;
+use App\Http\Controllers\Admin\ApplicationAnnouncementController;
 use App\Http\Controllers\Admin\AvatarController;
 use App\Http\Controllers\Admin\AvatarOrderController;
 use App\Http\Controllers\Admin\AvatarStatusController;
@@ -344,6 +345,12 @@ Route::middleware(['auth', 'verified', 'social', 'terms.current'])->group(functi
         ->name('dashboard');
 
     Route::prefix('admin')->name('admin.')->middleware('role:admin')->group(function (): void {
+        Route::get('application-announcements', [ApplicationAnnouncementController::class, 'index'])->name('application-announcements.index');
+        Route::post('application-announcements', [ApplicationAnnouncementController::class, 'store'])->name('application-announcements.store');
+        Route::get('application-announcements/{announcement}', [ApplicationAnnouncementController::class, 'show'])->name('application-announcements.show');
+        Route::post('application-announcements/{announcement}/send', [ApplicationAnnouncementController::class, 'send'])->name('application-announcements.send');
+        Route::post('application-announcements/{announcement}/retry', [ApplicationAnnouncementController::class, 'retry'])->name('application-announcements.retry');
+
         Route::get('notifications', NotificationIndexController::class)
             ->name('notifications.index');
         Route::get('partner-announcements', [AdminPartnerAnnouncementController::class, 'index'])

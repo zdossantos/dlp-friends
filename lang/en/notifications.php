@@ -35,6 +35,7 @@ return [
         'confirm_dismiss_partner_announcement' => 'Remove this partner announcement from your notifications?',
     ],
     'items' => [
+        'application_announcement' => ':announcement',
         'trip_requested' => 'Someone requested to join your trip.',
         'trip_accepted' => 'Your request to join a trip was accepted.',
         'trip_refused' => 'Your request to join a trip was declined.',
@@ -62,6 +63,10 @@ return [
     ],
     'accessibility' => ['unread_count' => ':count unread notifications'],
     'push' => [
+        'application_announcements' => [
+            'title' => 'Application update',
+            'body' => 'A new DLP Friends announcement is waiting for you.',
+        ],
         'trips' => ['title' => 'Trips', 'body' => 'An update about a trip is waiting for you.'],
         'new_member' => [
             'title' => 'New member',

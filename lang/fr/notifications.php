@@ -35,6 +35,7 @@ return [
         'confirm_dismiss_partner_announcement' => 'Supprimer cette annonce partenaire de tes notifications ?',
     ],
     'items' => [
+        'application_announcement' => ':announcement',
         'trip_requested' => 'Une personne demande à rejoindre ton trajet.',
         'trip_accepted' => 'Ta demande de participation à un trajet est acceptée.',
         'trip_refused' => 'Ta demande de participation à un trajet a été refusée.',
@@ -62,6 +63,10 @@ return [
     ],
     'accessibility' => ['unread_count' => ':count notifications non lues'],
     'push' => [
+        'application_announcements' => [
+            'title' => 'Actualité de l’application',
+            'body' => 'Une nouvelle annonce de DLP Friends t’attend.',
+        ],
         'trips' => ['title' => 'Trajets', 'body' => 'Une information concernant un trajet t’attend.'],
         'new_member' => [
             'title' => 'Nouveau membre',

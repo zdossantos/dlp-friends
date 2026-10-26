@@ -4,6 +4,7 @@ namespace App\Actions;
 
 use App\Enums\SocialLinksVisibility;
 use App\Enums\WebPushPreference;
+use App\Models\ApplicationAnnouncementDelivery;
 use App\Models\Conversation;
 use App\Models\ConversationReport;
 use App\Models\Event;
@@ -189,11 +190,22 @@ final class BuildUserDataExport
                         'translation_key' => $data['translation_key'] ?? null,
                         'parameters' => $data['parameters'] ?? [],
                         'target_type' => $data['target_type'] ?? null,
+                        ...(($data['target_type'] ?? null) === 'application_announcement' ? ['content' => $data['content'] ?? null, 'link_url' => $data['link_url'] ?? null] : []),
                         'target_id' => $data['target_id'] ?? null,
                         'read_at' => $notification->read_at?->toIso8601String(),
                         'created_at' => $notification->created_at?->toIso8601String(),
                     ];
                 })->all(),
+            'application_announcement_deliveries' => ApplicationAnnouncementDelivery::query()->where('user_id', $user->id)
+                ->orderBy('id')->get()->map(fn (ApplicationAnnouncementDelivery $delivery): array => [
+                    'announcement_id' => $delivery->application_announcement_id,
+                    'status' => $delivery->status,
+                    'attempts' => $delivery->attempts,
+                    'delivered_at' => $delivery->delivered_at?->toIso8601String(),
+                    'broadcasted_at' => $delivery->broadcasted_at?->toIso8601String(),
+                    'created_at' => $delivery->created_at?->toIso8601String(),
+                    'updated_at' => $delivery->updated_at?->toIso8601String(),
+                ])->all(),
             'weekly_email_recap_deliveries' => WeeklyEmailRecapDelivery::query()->where('user_id', $user->id)
                 ->orderBy('id')->get()->map(fn (WeeklyEmailRecapDelivery $delivery): array => [
                     'period_ends_at' => $delivery->period_ends_at->toIso8601String(),
