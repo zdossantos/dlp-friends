@@ -50,14 +50,19 @@ test('queue hints never restore an ineligible profile', function (string $reason
             ->where('suggestions.0.userId', $replacement->id)));
 })->with(['hidden', 'blocked', 'deleted', 'inactive-avatar']);
 
-test('a swipe carries the remaining queue to the refreshed suggestions', function () {
+test('a swipe keeps its remaining queue in session with a clean redirect', function () {
     $actor = User::factory()->withProfile()->create();
     $target = User::factory()->withProfile()->create();
     $queued = User::factory()->withProfile()->create();
 
     $this->actingAs($actor)->post(route('discovery.swipe', $target), [
         'decision' => 'pass', 'queue' => [$queued->id],
-    ])->assertRedirect(route('discovery.index', ['queue' => [$queued->id]]));
+    ])->assertRedirect(route('discovery.index'));
+
+    $this->get(route('discovery.index'))
+        ->assertInertia(fn (Assert $page) => $page
+            ->loadDeferredProps(fn (Assert $deferred) => $deferred
+                ->where('suggestions.0.userId', $queued->id)));
 });
 
 test('queue hints are bounded and validated before recording a decision', function (array $queue) {
@@ -109,3 +114,20 @@ test('administrator priority never bypasses eligibility or an earlier decision',
             ->has('suggestions', 1)
             ->where('suggestions.0.userId', $member->id)));
 })->with(['hidden', 'incomplete', 'banned', 'blocked', 'inactive-avatar', 'already-swiped']);
+
+test('a clean discovery visit retains the last displayed order and rechecks eligibility', function () {
+    $actor = User::factory()->withProfile()->create();
+    $first = User::factory()->withProfile()->create();
+    $second = User::factory()->withProfile()->create();
+    User::factory()->withProfile()->count(6)->create();
+    $actor->profile->update(['visit_frequency' => null]);
+
+    $this->actingAs($actor)->get(route('discovery.index', ['queue' => [$first->id, $second->id]]))
+        ->assertInertia(fn (Assert $page) => $page->loadDeferredProps(fn (Assert $deferred) => $deferred
+            ->where('suggestions.0.userId', $first->id)));
+
+    $first->profile->update(['visibility' => 'hidden']);
+    $this->get(route('discovery.index'))
+        ->assertInertia(fn (Assert $page) => $page->loadDeferredProps(fn (Assert $deferred) => $deferred
+            ->where('suggestions.0.userId', $second->id)));
+});

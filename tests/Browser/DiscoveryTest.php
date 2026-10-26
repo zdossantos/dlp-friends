@@ -1103,3 +1103,70 @@ test('non shared interest tags keep readable contrast in dark mode', function ()
         ->assertScript(renderedContrastIsAtLeastScript($selector, $selector), true)
         ->assertNoJavaScriptErrors();
 });
+
+test('returning from a liked profile refreshes the stack without restoring the liked card', function () {
+    $actor = discoveryMember('Alice');
+    foreach (['Basile', 'Chloé', 'David', 'Emma', 'Farid', 'Gabriel', 'Hugo', 'Isa', 'Jules', 'Kim'] as $name) {
+        discoveryMember($name);
+    }
+    $this->actingAs($actor);
+    $page = visit('/discover')->assertCount('[data-test="discovery-card-stack-item"]', 5);
+    for ($i = 0; $i < 6; $i++) {
+        $page->click('[aria-label="Passer ce profil"]')
+            ->assertCount('[data-test="discovery-card-stack-item"]', min(5, 9 - $i));
+    }
+    $page->script("window.__currentDiscoveryMember = document.querySelector('[data-test=discovery-card-stack-item]').dataset.profileUserId; true;");
+    $page->click('[data-test="discovery-card-stack-item"]:first-child [data-test="discovery-avatar-hero"]')
+        ->assertPresent('[data-test="like-member"]')
+        ->click('[data-test="profile-back-action"]')
+        ->assertCount('[data-test="discovery-card-stack-item"]', 4)
+        ->assertScript("document.querySelector('[data-test=discovery-card-stack-item]').dataset.profileUserId === window.__currentDiscoveryMember", true);
+    $page->click('[data-test="discovery-card-stack-item"]:first-child [data-test="discovery-avatar-hero"]')
+        ->assertPresent('[data-test="like-member"]');
+    $page->click('[data-test="like-member"]')->assertNotPresent('[data-test="like-member"]');
+    $page->script('window.history.back(); true;');
+    $page->assertPathIs('/discover')
+        ->assertCount('[data-test="discovery-card-stack-item"]', 3)
+        ->assertScript('window.location.search', '')
+        ->assertNoJavaScriptErrors();
+    $this->assertDatabaseCount('swipes', 7);
+});
+
+test('opening a profile waits for rapid decisions to finish without losing the queued like', function () {
+    $actor = discoveryMember('Alice');
+    foreach (['Basile', 'Chloé', 'David', 'Emma', 'Farid', 'Gabriel'] as $name) {
+        discoveryMember($name);
+    }
+    $this->actingAs($actor);
+    $page = visit('/discover')->assertCount('[data-test="discovery-card-stack-item"]', 5);
+    $page->script(<<<'JS'
+        window.__discoverySend = XMLHttpRequest.prototype.send;
+        window.__discoveryOpen = XMLHttpRequest.prototype.open;
+        XMLHttpRequest.prototype.open = function (method, url, ...rest) {
+            this.__discoveryUrl = String(url);
+            return window.__discoveryOpen.call(this, method, url, ...rest);
+        };
+        XMLHttpRequest.prototype.send = function (body) {
+            if (this.__discoveryUrl.includes('/swipe') && !window.__heldDecision) {
+                window.__heldDecision = this;
+                window.__heldBody = body;
+                return;
+            }
+            return window.__discoverySend.call(this, body);
+        };
+        document.querySelector('[aria-label="Passer ce profil"]:not([disabled])').click();
+        true;
+    JS);
+    $page->assertCount('[data-test="discovery-card-stack-item"]', 4);
+    $page->script("document.querySelector('[aria-label=\"Découvrir ce profil\"]:not([disabled])').click(); true;");
+    $page->assertCount('[data-test="discovery-card-stack-item"]', 3);
+    $page->click('[data-test="discovery-card-stack-item"]:first-child [data-test="discovery-avatar-hero"]');
+    $page->assertPathIs('/discover');
+    $page->script('window.__discoverySend.call(window.__heldDecision, window.__heldBody); true;');
+    $page->assertPresent('[data-test="public-member-profile"]');
+    $this->assertDatabaseCount('swipes', 2);
+    $page->click('[data-test="profile-back-action"]')
+        ->assertCount('[data-test="discovery-card-stack-item"]', 4)
+        ->assertScript('window.location.search', '')
+        ->assertNoJavaScriptErrors();
+});

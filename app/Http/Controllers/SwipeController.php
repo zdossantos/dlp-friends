@@ -37,8 +37,8 @@ class SwipeController extends Controller
             $matchFlash->put($request->session(), $match, $targetUser);
         }
 
-        $queue = $request->validated('queue', []);
+        $request->session()->put('discovery.queue', $request->validated('queue', []));
 
-        return to_route('discovery.index', $queue === [] ? [] : ['queue' => $queue]);
+        return to_route('discovery.index');
     }
 }
