@@ -218,6 +218,25 @@ Paris.
   avec filtres par catégorie et état non lu ; une notification de conversation
   ouvre la conversation correspondante.
 
+### Annonces de l’application (issue 317)
+
+- Un administrateur prépare manuellement un titre et un texte brut FR/EN,
+  avec lien HTTPS facultatif, pour tous les comptes éligibles ou une sélection
+  nominative (500 comptes maximum). Tous les rôles sont éligibles si le compte
+  est actif, vérifié et sans demande de suppression.
+- L’aperçu fige le contenu et l’audience avant confirmation. La catégorie
+  « Annonces de l’application », activée par défaut, se désactive dans les
+  réglages pour les notifications persistantes et leurs éventuels Push.
+- La case « Envoyer aussi une notification Push » est décochée par défaut.
+  Le Push respecte également l’abonnement de l’appareil. Aucun e-mail n’est envoyé.
+- Les exclusions et préférences sont revérifiées à la livraison. L’administration
+  consulte les compteurs de notifications persistantes en attente, livrées,
+  exclues et en échec, puis peut reprendre la diffusion sans doublon, même après
+  suppression individuelle d’une notification. Le contenu envoyé est immuable.
+- Le panneau existant permet lecture et suppression. Pour une annonce de version,
+  le lien ouvre `/fr/nouveautes` ou `/en/whats-new` selon la langue du destinataire.
+  Cet envoi n’active pas un service worker et ne force aucun rechargement PWA.
+
 ### Récapitulatif hebdomadaire par e-mail
 
 - Désactivé par défaut pour les comptes existants et les nouvelles inscriptions,

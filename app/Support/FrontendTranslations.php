@@ -28,6 +28,7 @@ final class FrontendTranslations
             'moderation' => trans('moderation'),
             'administration' => trans('administration'),
             'partners' => trans('partners'),
+            'application_announcements' => trans('application_announcements'),
         ];
     }
 }

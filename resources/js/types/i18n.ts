@@ -21,6 +21,7 @@ export type TranslationMessages = {
     moderation: TranslationTree;
     administration: TranslationTree;
     partners: TranslationTree;
+    application_announcements: TranslationTree;
 };
 
 export type I18n = {

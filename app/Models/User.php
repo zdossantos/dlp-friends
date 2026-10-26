@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Enums\RoleName;
 use App\Enums\UserStatus;
 use App\Enums\VisitsVisibility;
+use App\Enums\WebPushPreference;
 use App\Mail\ResetPasswordMail;
 use App\Mail\VerifyEmailMail;
 use Carbon\CarbonImmutable;
@@ -278,6 +279,14 @@ class User extends Authenticatable implements HasLocalePreference, MustVerifyEma
                         fn (Builder $preference) => $preference->where('enabled', true),
                     );
             });
+    }
+
+    /** @param Builder<User> $query */
+    public function scopeEligibleForApplicationAnnouncements(Builder $query): void
+    {
+        $query->where('status', UserStatus::Active)->whereNotNull('email_verified_at')
+            ->whereNull('deletion_requested_at')->whereDoesntHave('notificationPreferences', fn (Builder $preference) => $preference
+            ->where('category', WebPushPreference::ApplicationAnnouncements)->where('enabled', false));
     }
 
     /** @return HasMany<RoleAudit, $this> */
