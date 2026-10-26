@@ -173,6 +173,18 @@ assertions d’affichage ; aucun endpoint de test ni faux contrôle d’accès n
 ajouté. Les fixtures de statuts servent à couvrir chaque état indépendamment ;
 les parcours de transition et les tests serveur couvrent leur création.
 
+### Annonces de l’application — issue 317
+
+`ApplicationAnnouncementTest.php` couvre dans Chromium la rédaction FR/EN,
+le Push facultatif décoché par défaut, l’aperçu sans envoi, la confirmation,
+la lecture mobile et l’ouverture explicite du changelog localisé. Un second
+parcours mobile anglais couvre la sélection nominative et le texte brut échappé.
+Les tests serveur couvrent les droits, préférences, exclusions tardives,
+reprises sans doublon, export et suppression. Deux connexions MySQL distinctes
+vérifient aussi un désabonnement ou une demande de suppression validés pendant
+la livraison. Le transport Push est doublé : la réception sur appareil réel
+reste à vérifier.
+
 ### Ce que cette couverture ne prouve pas
 
 Toutes les familles fonctionnelles de l’inventaire ci-dessus possèdent des

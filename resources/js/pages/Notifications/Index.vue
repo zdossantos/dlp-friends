@@ -233,13 +233,34 @@ function markAllRead(): void {
                             >{{ t('common.actions.close') }}</Button
                         >
                     </component>
-                    <Button as-child class="min-h-11">
+                    <Button
+                        v-if="
+                            selectedAnnouncement.category !== 'application' ||
+                            selectedAnnouncement.link_url
+                        "
+                        as-child
+                        class="min-h-11"
+                    >
                         <a
-                            :href="selectedAnnouncement.target_url"
-                            data-test="partner-announcement-link"
+                            :href="
+                                selectedAnnouncement.link_url ??
+                                selectedAnnouncement.target_url
+                            "
+                            :data-test="
+                                selectedAnnouncement.category === 'application'
+                                    ? 'application-announcement-link'
+                                    : 'partner-announcement-link'
+                            "
                         >
                             <ExternalLink class="size-4" aria-hidden="true" />
-                            {{ t('notifications.actions.open_partner_link') }}
+                            {{
+                                t(
+                                    selectedAnnouncement.category ===
+                                        'application'
+                                        ? 'application_announcements.link'
+                                        : 'notifications.actions.open_partner_link',
+                                )
+                            }}
                         </a>
                     </Button>
                 </component>

@@ -83,7 +83,7 @@ final class MemberNotificationPresenter
         })->all();
     }
 
-    /** @return array{id: string, category: string, translation_key: string, parameters: array<string, string|int|null>, target_url: string, read_url: string, delete_url: string, read_at: string|null, created_at: string|null, dismiss_url?: string, action_label?: string, content?: string, image_url?: string} */
+    /** @return array{id: string, category: string, translation_key: string, parameters: array<string, string|int|null>, target_url: string, read_url: string, delete_url: string, read_at: string|null, created_at: string|null, dismiss_url?: string, action_label?: string, content?: string, image_url?: string, link_url?: string} */
     public function present(DatabaseNotification $notification, User $viewer): array
     {
         $delivery = $this->partnerDelivery($notification, $viewer);
@@ -91,7 +91,7 @@ final class MemberNotificationPresenter
         return $this->presentation($notification, $delivery, $this->targetUrl($notification->data, $viewer, $notification, $delivery));
     }
 
-    /** @return array{id: string, category: string, translation_key: string, parameters: array<string, string|int|null>, target_url: string, read_url: string, delete_url: string, read_at: string|null, created_at: string|null, dismiss_url?: string, action_label?: string, content?: string, image_url?: string} */
+    /** @return array{id: string, category: string, translation_key: string, parameters: array<string, string|int|null>, target_url: string, read_url: string, delete_url: string, read_at: string|null, created_at: string|null, dismiss_url?: string, action_label?: string, content?: string, image_url?: string, link_url?: string} */
     private function presentation(DatabaseNotification $notification, ?PartnerAnnouncementDelivery $partnerDelivery, string $targetUrl): array
     {
         $data = $notification->data;
@@ -106,6 +106,15 @@ final class MemberNotificationPresenter
             'read_at' => $notification->read_at?->toISOString(),
             'created_at' => $notification->created_at?->toISOString(),
         ];
+
+        if (($data['target_type'] ?? null) === 'application_announcement') {
+            $presented['content'] = (string) ($data['content'] ?? '');
+            $presented['dismiss_url'] = $presented['delete_url'];
+            $presented['action_label'] = (string) __('application_announcements.open');
+            if (is_string($data['link_url'] ?? null) && $data['link_url'] !== '') {
+                $presented['link_url'] = $data['link_url'];
+            }
+        }
 
         if ($partnerDelivery !== null) {
             $actionLabel = __('notifications.actions.open_partner_announcement');

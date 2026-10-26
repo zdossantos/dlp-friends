@@ -21,7 +21,7 @@ test('web push secrets are encrypted and hidden', function () {
         ->and($raw->p256dh)->not->toBe('public-client-key')
         ->and($raw->auth)->not->toBe('private-client-key')
         ->and($subscription->toArray())->not->toHaveKeys(['endpoint', 'p256dh', 'auth'])
-        ->and(WebPushPreference::cases())->toHaveCount(7);
+        ->and(WebPushPreference::cases())->toHaveCount(8);
 });
 
 test('subscriptions and preferences cascade with their owner', function () {
