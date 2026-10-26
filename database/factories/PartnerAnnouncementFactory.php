@@ -17,7 +17,7 @@ class PartnerAnnouncementFactory extends Factory
     {
         return [
             'partner_profile_id' => PartnerProfile::factory(),
-            'title' => fake()->sentence(5),
+            'title' => fake()->text(80),
             'content' => fake()->text(400),
             'destination_url' => fake()->url(),
             'status' => PartnerAnnouncementStatus::Draft,

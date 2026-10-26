@@ -1,16 +1,32 @@
-name: Beta Release PR
+name: Beta lifecycle
 
 on:
-  workflow_run:
-    workflows: [CI]
-    types: [completed]
   workflow_dispatch:
+    inputs:
+      action:
+        description: 'Action bêta (update conserve les essais)'
+        type: choice
+        required: true
+        default: update
+        options:
+          - update
+          - initialize-production
+          - initialize-references
+      replace_beta_tests:
+        description: 'Je confirme la suppression des essais bêta pour une initialisation'
+        type: boolean
+        default: false
+
+concurrency:
+  group: beta-lifecycle
+  cancel-in-progress: false
 
 permissions:
   contents: read
 
 jobs:
   candidate:
+    if: ${{ github.ref == 'refs/heads/main' }}
     name: Select validated Release PR
     runs-on: ubuntu-latest
     permissions:
@@ -28,6 +44,15 @@ jobs:
           ref: refs/heads/main
           path: trusted
           persist-credentials: false
+      - name: Validate explicit initialization confirmation
+        env:
+          BETA_ACTION: ${{ inputs.action }}
+          BETA_REPLACE_TESTS: ${{ inputs.replace_beta_tests }}
+        run: |
+          case "$BETA_ACTION:$BETA_REPLACE_TESTS" in
+            update:false|initialize-production:true|initialize-references:true) ;;
+            *) echo 'Initialization requires explicit replacement; update must preserve trials.' >&2; exit 1 ;;
+          esac
       - name: Select current candidate
         id: select
         env:
@@ -123,11 +148,9 @@ jobs:
 
   deploy:
     name: Deploy current beta candidate
+    timeout-minutes: 60
     needs: [candidate, build]
     runs-on: ubuntu-latest
-    concurrency:
-      group: beta-deploy
-      cancel-in-progress: false
     permissions:
       contents: write
       pull-requests: read
@@ -142,12 +165,12 @@ jobs:
       - name: Revalidate candidate and request only its beta deployment
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BETA_ACTION: ${{ inputs.action }}
+          BETA_REPLACE_TESTS: ${{ inputs.replace_beta_tests }}
           BETA_CANDIDATE_JSON: ${{ needs.candidate.outputs.json }}
           APP_IMAGE: ${{ needs.build.outputs.image }}
-          COOLIFY_API_URL: ${{ vars.COOLIFY_API_URL }}
           COOLIFY_BETA_APPLICATION_UUID: ${{ vars.COOLIFY_BETA_APPLICATION_UUID }}
           COOLIFY_PRODUCTION_APPLICATION_UUID: ${{ vars.COOLIFY_APPLICATION_UUID }}
-          COOLIFY_TOKEN: ${{ secrets.COOLIFY_BETA_TOKEN }}
           BETA_SSH_HOST: ${{ vars.BETA_SSH_HOST }}
           BETA_SSH_KNOWN_HOSTS: ${{ vars.BETA_SSH_KNOWN_HOSTS }}
           BETA_SSH_PRIVATE_KEY: ${{ secrets.BETA_SSH_PRIVATE_KEY }}
@@ -155,4 +178,4 @@ jobs:
           printf '%s' "$BETA_CANDIDATE_JSON" > candidate.json
           export BETA_CANDIDATE_FILE="$PWD/candidate.json"
           bash trusted/.github/scripts/deploy-beta.sh
-          echo 'Deployment requested; verify schema readiness separately. No migration or maintenance reopening was performed.' >> "$GITHUB_STEP_SUMMARY"
+          echo 'Beta lifecycle request finished; consult the step output for completion or candidate withdrawal.' >> "$GITHUB_STEP_SUMMARY"
