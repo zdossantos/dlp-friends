@@ -1,9 +1,9 @@
 # Environnement bêta privé
 
-État : application bêta déployée avec MySQL, Redis et Mailpit dédiés ;
+État historique au 17 octobre 2026 : application bêta déployée avec MySQL, Redis et Mailpit dédiés ;
 contrôles HTTP et WebSocket sur comptes synthétiques réalisés, y compris la
-révocation du rôle admin sur une session et un socket existants. L'automatisation
-reste à terminer. Aucune donnée de production copiée
+révocation du rôle admin sur une session et un socket existants. L'automatisation restait à terminer lors de ce relevé.
+Le cycle manuel implémenté depuis est décrit plus bas ; son installation sur le serveur reste à vérifier. Aucune donnée de production copiée
 et aucune répétition sur cette copie encore réalisée.
 La cible approuvée est décrite dans la [spécification](superpowers/specs/2026-10-17-isolated-release-beta-design.md).
 
@@ -297,3 +297,14 @@ l'intervalle entre la vérification du SHA et la lecture du Compose par Coolify.
 Le ruleset `Immutable beta candidate branches` a été activé le 17 octobre 2026.
 Son retrait nécessite de suspendre les workflows bêta. Le nettoyage
 des anciennes références exige une intervention explicite sur cette protection.
+
+Le précontrôle compare aussi les stockages MySQL/Redis prévus dans Coolify,
+y compris quand les conteneurs ont été supprimés par un arrêt. Les volumes nommés
+doivent déjà exister sur le serveur ; une absence bloque l'opération avant reprise.
+Les montages effectifs doivent correspondre à ces stockages et rester séparés de la production.
+Le conteneur temporaire et le déploiement doivent utiliser `REDIS_PREFIX=dlp_friends_beta_`
+et `REDIS_CACHE_CONNECTION=cache`. Après `up`, le contrôle de disponibilité du
+conteneur web doit confirmer la sortie de maintenance avant l'état `ready`.
+L'arrêt place d'abord la bêta en maintenance, puis persiste Redis. Un arrêt déjà
+complet est idempotent. Un arrêt partiel dont la maintenance ne peut être établie
+est refusé : rétablir les dépendances dédiées pour fermer la bêta avant de réessayer.

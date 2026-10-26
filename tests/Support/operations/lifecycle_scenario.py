@@ -14,7 +14,7 @@ scenario = sys.argv[1]
 with tempfile.TemporaryDirectory() as directory:
     operation = object.__new__(beta.BetaLifecycle)
     operation.directory = Path(directory)
-    operation.config = {'beta': {'web_container': 'beta-web', 'process_containers': ['worker', 'scheduler', 'reverb'], 'application_uuid': 'beta'}, 'source': {'application_uuid': 'production'}}
+    operation.config = {'beta': {'web_container': 'beta-web', 'mysql_container': 'beta-mysql', 'redis_container': 'beta-redis', 'process_containers': ['worker', 'scheduler', 'reverb'], 'application_uuid': 'beta'}, 'source': {'application_uuid': 'production'}}
     events = []
     operation.lock = contextlib.nullcontext
     operation.resources = lambda: events.append('validate-resources')
@@ -29,6 +29,8 @@ with tempfile.TemporaryDirectory() as directory:
         finally:
             events.append('temporary-remove')
     operation.temporary = temporary
+    operation.exists = lambda name: scenario != 'cold-stop'
+    operation.inspect = lambda name: {'State': {'Running': True}, 'Image': 'previous'}
     operation.close = lambda: events.append('maintenance-down')
     operation.validate_targets = lambda: events.append('validate-targets')
     operation._refresh = lambda mode: events.append('copy-' + mode)
@@ -46,7 +48,11 @@ with tempfile.TemporaryDirectory() as directory:
     operation.wait_deployment = wait
     operation.api = lambda *args: events.append('cancel-deployment') or {'status': 'in_progress'}
     operation.verify_deployed = lambda image: events.append('verify-deployed')
-    operation.open = lambda: events.append('maintenance-up')
+    def reopen():
+        events.append('maintenance-up')
+        if scenario == 'reopening-failure':
+            raise ops.OperationError('still_closed')
+    operation.open = reopen
     request = {'action': 'update', 'image': 'immutable', 'sha': 'commit', 'application_uuid': 'beta', 'replace_beta_tests': False}
     if scenario in ('production-copy', 'references-copy', 'no-confirmation', 'failed-initialization'):
         request['action'] = 'initialize-references' if scenario == 'references-copy' else 'initialize-production'
@@ -55,16 +61,22 @@ with tempfile.TemporaryDirectory() as directory:
     if scenario == 'failed-initialization':
         state['initialized'] = False
         request['action'] = 'update'
-    if scenario == 'stop':
+    if scenario in ('stop', 'cold-stop', 'stop-without-web', 'partial-stop'):
         request = {'action': 'stop', 'application_uuid': 'beta'}
+    if scenario == 'stop-without-web':
+        operation.exists = lambda name: name != 'beta-web'
+    if scenario == 'partial-stop':
+        state['status'] = 'ready'
+        operation.inspect = lambda name: {'State': {'Running': name != 'beta-mysql'}}
     ops.write_json(operation.directory / 'beta-lifecycle.json', state)
     try:
         result = operation.execute(request)
-        assert scenario not in ('no-confirmation', 'failed-initialization', 'migration-failure', 'deploy-failure')
+        assert scenario not in ('no-confirmation', 'failed-initialization', 'migration-failure', 'deploy-failure', 'partial-stop', 'reopening-failure')
         state = json.loads((operation.directory / 'beta-lifecycle.json').read_text())
-        if scenario == 'stop':
+        if scenario in ('stop', 'cold-stop', 'stop-without-web'):
             assert state['status'] == 'stopped' and state['initialized']
-            assert events == ['validate-resources', 'stop-application', 'dependencies-stop']
+            closure = [] if scenario == 'cold-stop' else ['temporary-start', 'maintenance-down', 'temporary-remove'] if scenario == 'stop-without-web' else ['maintenance-down']
+            assert events == ['validate-resources', *closure, 'stop-application', 'dependencies-stop'], events
         else:
             assert state['status'] == 'ready' and state['initialized']
             assert events.index('maintenance-down') < events.index('migrate') < events.index('queue')
@@ -78,9 +90,10 @@ with tempfile.TemporaryDirectory() as directory:
             else:
                 assert not any(event.startswith('copy-') for event in events)
     except ops.OperationError:
-        assert scenario in ('no-confirmation', 'failed-initialization', 'migration-failure', 'deploy-failure'), events
-        assert 'maintenance-up' not in events
-        if scenario in ('migration-failure', 'deploy-failure'):
+        assert scenario in ('no-confirmation', 'failed-initialization', 'migration-failure', 'deploy-failure', 'partial-stop', 'reopening-failure'), events
+        if scenario != 'reopening-failure':
+            assert 'maintenance-up' not in events
+        if scenario in ('migration-failure', 'deploy-failure', 'partial-stop', 'reopening-failure'):
             assert events[-1] == 'stop-application', events
             assert json.loads((operation.directory / 'beta-lifecycle.json').read_text())['status'] == 'failed'
         else:

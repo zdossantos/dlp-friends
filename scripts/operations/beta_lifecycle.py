@@ -30,10 +30,11 @@ class BetaLifecycle(Release):
         ids = [target[key] for key in names]
         ops.require(len(set(ids)) == 4 and all(re.fullmatch(r'[A-Za-z0-9-]+', value) for value in ids), 'invalid_beta_resources')
         ops.require(set(ids).isdisjoint(source[key] for key in names if key in source), 'resource_alias')
-        payload = base64.b64encode(json.dumps({key: target[key] for key in names}).encode()).decode()
+        payload = base64.b64encode(json.dumps({'beta': {key: target[key] for key in names}, 'source': {key: source[key] for key in ('mysql_uuid','redis_uuid')}}).encode()).decode()
         # Validate the actual Coolify ownership, not names supplied by the SSH caller.
         php = r'''
-$r=json_decode(base64_decode('PAYLOAD'),true,512,JSON_THROW_ON_ERROR);
+$payload=json_decode(base64_decode('PAYLOAD'),true,512,JSON_THROW_ON_ERROR);
+$r=$payload['beta'];
 $a=App\Models\Application::where('uuid',$r['application_uuid'])->firstOrFail();
 if($a->environment->name!=='beta'||$a->git_repository!=='zdossantos/dlp-friends')throw new RuntimeException('Invalid beta');
 if(App\Models\ApplicationDeploymentQueue::where('application_id',$a->id)->whereIn('status',['queued','in_progress'])->exists())throw new RuntimeException('Busy');
@@ -45,10 +46,40 @@ if($m->is_public||$d->is_public)throw new RuntimeException('Public database');
 if($s->applications()->count()!==1||$s->databases()->exists())throw new RuntimeException('Shared service');
 $mail=$s->applications()->firstOrFail();
 if(!str_starts_with($mail->image,'axllent/mailpit:')||$mail->fqdn||$mail->ports)throw new RuntimeException('Public or invalid Mailpit');
-echo json_encode(['owners'=>[$r['application_uuid']=>['kind'=>'application','id'=>(string)$a->id],$r['mysql_uuid']=>['kind'=>'database','id'=>(string)$m->id],$r['redis_uuid']=>['kind'=>'database','id'=>(string)$d->id],$r['mailpit_uuid']=>['kind'=>'service','id'=>(string)$s->id]]],JSON_THROW_ON_ERROR);
+$storages=[];
+foreach(['source','beta']as$side)foreach(['mysql'=>App\Models\StandaloneMysql::class,'redis'=>App\Models\StandaloneRedis::class]as$kind=>$class){
+$db=$class::where('uuid',$payload[$side][$kind.'_uuid'])->firstOrFail();
+$mount=$kind==='mysql'?'/var/lib/mysql':'/data';
+$volumes=$db->persistentStorages()->where('mount_path',$mount)->get();
+if($volumes->count()!==1)throw new RuntimeException('Missing persistent volume');
+$volume=$volumes->first();$storages[$side][$kind]=['name'=>$volume->name,'host_path'=>$volume->host_path];
+}
+echo json_encode(['storages'=>$storages,'owners'=>[$r['application_uuid']=>['kind'=>'application','id'=>(string)$a->id],$r['mysql_uuid']=>['kind'=>'database','id'=>(string)$m->id],$r['redis_uuid']=>['kind'=>'database','id'=>(string)$d->id],$r['mailpit_uuid']=>['kind'=>'service','id'=>(string)$s->id]]],JSON_THROW_ON_ERROR);
 '''.replace('PAYLOAD', payload)
         result = json.loads(ops.run(['docker', 'exec', '-u', '0', 'coolify', 'php', 'artisan', 'tinker', '--execute=' + php]))
         ops.require(set(result.get('owners', {})) == set(ids), 'beta_resource_identity_required')
+        # Coolify removes stopped containers; inspect its planned storage before any start or SAVE.
+        volumes = {}
+        for side in ('source', 'beta'):
+            volumes[side] = []
+            for key, destination in (('mysql', '/var/lib/mysql'), ('redis', '/data')):
+                storage = result['storages'][side][key]
+                path = storage['host_path']
+                if not path:
+                    ops.require(re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9_.-]*', storage['name']), 'invalid_volume_name')
+                    volume = json.loads(ops.run(['docker', 'volume', 'inspect', storage['name']]))[0]
+                    path = volume['Mountpoint']
+                ops.require(isinstance(path, str) and path.startswith('/'), 'persistent_volume_required')
+                path = os.path.realpath(path)
+                volumes[side].append(path)
+                container = self.config[side][key + '_container']
+                if self.exists(container):
+                    mounted = [os.path.realpath(mount['Source']) for mount in self.inspect(container)['Mounts']
+                               if mount['Destination'] == destination]
+                    ops.require(mounted == [path], 'planned_volume_mismatch')
+        ops.require(len(set(volumes['beta'])) == 2 and not any(
+            a == b or a.startswith(b.rstrip('/') + '/') or b.startswith(a.rstrip('/') + '/')
+            for a in volumes['source'] for b in volumes['beta']), 'volume_alias')
         # Every named container must also carry the matching Coolify resource label.
         expected = [(target['web_container'], target['application_uuid']),
                     *((name, target['application_uuid']) for name in target['process_containers']),
@@ -134,6 +165,8 @@ echo json_encode(['owners'=>[$r['application_uuid']=>['kind'=>'application','id'
                'if (!app()->environment("beta") || '
                'config("app.maintenance.driver")!=="cache" || config("app.maintenance.store")!=="redis" || '
                'config("cache.prefix")!=="dlp_friends_beta_cache_" || '
+               'config("database.redis.options.prefix")!=="dlp_friends_beta_" || '
+               'config("cache.stores.redis.connection")!=="cache" || '
                '(string)config("database.redis.default.database")!=="0" || (string)config("database.redis.cache.database")!=="1" || '
                'config("filesystems.disks.s3.bucket")!==' + json.dumps(target['bucket']) + ' || '
                'config("filesystems.disks.s3.key")!==' + json.dumps(target['storage_key_id']) + ' || '
@@ -141,8 +174,25 @@ echo json_encode(['owners'=>[$r['application_uuid']=>['kind'=>'application','id'
                'Illuminate\\Support\\Facades\\DB::selectOne("SELECT @@server_uuid AS uuid")->uuid!==' + json.dumps(beta_sql) + ' || '
                'Illuminate\\Support\\Facades\\Redis::connection("cache")->info("server")["run_id"]!==' + json.dumps(beta_id) + ' || '
                'Illuminate\\Support\\Facades\\Redis::connection("default")->info("server")["run_id"]!==' + json.dumps(beta_id) + ') exit(78); '
-               'exit($kernel->call("down",["--retry"=>60]));')
+               'if($kernel->call("down",["--retry"=>60])!==0 || !app()->isDownForMaintenance())exit(78);')
         ops.run(['docker', 'exec', target['web_container'], 'php', '-r', php])
+
+    def close_for_stop(self, previous):
+        target = self.config['beta']
+        running = lambda name: self.exists(name) and self.inspect(name)['State']['Running']
+        if running(target['mysql_container']) and running(target['redis_container']):
+            if running(target['web_container']):
+                self.close()
+            else:
+                image = self.inspect(target['web_container'])['Image'] if self.exists(target['web_container']) else previous.get('image')
+                ops.require(image, 'maintenance_image_required')
+                with self.temporary(image):
+                    self.close()
+        else:
+            # An already stopped lifecycle needs no restart; unknown partial stops fail closed.
+            ops.require(previous.get('status') == 'stopped' and not running(target['web_container'])
+                        and not running(target['mysql_container']) and not running(target['redis_container']),
+                        'maintenance_before_stop_required')
 
     def bootstrap(self, image):
         target = self.config['beta']
@@ -184,6 +234,12 @@ echo json_encode(['owners'=>[$r['application_uuid']=>['kind'=>'application','id'
 
     def open(self):
         self.artisan('beta', 'up', '--no-interaction')
+        temporary = self.config['beta']['web_container']
+        self.config['beta']['web_container'] = self.live_web
+        try:
+            self.artisan('beta', 'deployment:check', '--json')
+        finally:
+            self.config['beta']['web_container'] = temporary
 
     def execute(self, request):
         action = request['action']
@@ -202,6 +258,7 @@ echo json_encode(['owners'=>[$r['application_uuid']=>['kind'=>'application','id'
             deployment = None
             try:
                 if action == 'stop':
+                    self.close_for_stop(previous)
                     self.application_stop()
                     self.dependencies('stop')
                     state.update(status='stopped', completed_at=int(time.time()))
