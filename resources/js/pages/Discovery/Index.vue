@@ -79,10 +79,7 @@ const stopNavigationGuard = router.on('before', (event) => {
 
 onMounted(() => {
     if (restoringHistory.value) {
-        router.reload({
-            only: ['suggestions'],
-            onFinish: () => (restoringHistory.value = false),
-        });
+        refreshSuggestions();
     }
 });
 
@@ -325,8 +322,27 @@ onBeforeUnmount(() => {
     exitingCardTimers.forEach((timer) => window.clearTimeout(timer));
 });
 
+function refreshSuggestions(): void {
+    errorMessage.value = null;
+    const failRefresh = (): false => {
+        errorMessage.value = t('discovery.passed.network_error');
+
+        return false;
+    };
+    router.reload({
+        only: ['suggestions'],
+        onSuccess: () => (restoringHistory.value = false),
+        onError: failRefresh,
+        onHttpException: failRefresh,
+        onNetworkError: failRefresh,
+        onCancel: failRefresh,
+    });
+}
+
 function retry(): void {
-    if (retryAttempt.value) {
+    if (restoringHistory.value) {
+        refreshSuggestions();
+    } else if (retryAttempt.value) {
         submit(retryAttempt.value.decision, retryAttempt.value.targetUserId);
     }
 }
@@ -370,7 +386,13 @@ function retry(): void {
             aria-live="assertive"
             class="w-full"
         >
-            <AlertTitle>{{ t('discovery.page.error_title') }}</AlertTitle>
+            <AlertTitle>{{
+                t(
+                    restoringHistory
+                        ? 'discovery.page.load_error_title'
+                        : 'discovery.page.error_title',
+                )
+            }}</AlertTitle>
             <AlertDescription class="space-y-3">
                 <p>{{ errorMessage }}</p>
                 <Button
@@ -390,6 +412,7 @@ function retry(): void {
                 suggestions === undefined ||
                 (displayedSuggestions.length === 0 && sendingDecision)
             "
+            v-show="!errorMessage"
             class="grid w-full max-w-md gap-4"
             aria-busy="true"
         >

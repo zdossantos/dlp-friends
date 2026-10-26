@@ -1170,3 +1170,46 @@ test('opening a profile waits for rapid decisions to finish without losing the q
         ->assertScript('window.location.search', '')
         ->assertNoJavaScriptErrors();
 });
+
+test('a failed history refresh hides stale liked cards until a successful retry', function (string $failure) {
+    $actor = discoveryMember('Alice');
+    discoveryMember('Basile');
+    discoveryMember('Chloé');
+    $this->actingAs($actor);
+    $page = visit('/discover')->assertCount('[data-test="discovery-card-stack-item"]', 2);
+    $page->click('[data-test="discovery-card-stack-item"]:first-child [data-test="discovery-avatar-hero"]')
+        ->assertPresent('[data-test="like-member"]')
+        ->click('[data-test="like-member"]')
+        ->assertNotPresent('[data-test="like-member"]');
+    $page->script('window.__refreshFailure = '.json_encode($failure).'; true;');
+    $page->script(<<<'JS'
+        window.__refreshOpen = XMLHttpRequest.prototype.open;
+        window.__refreshSend = XMLHttpRequest.prototype.send;
+        XMLHttpRequest.prototype.open = function (method, url, ...rest) {
+            this.__refreshUrl = new URL(url, location.origin);
+            return window.__refreshOpen.call(this, method, url, ...rest);
+        };
+        XMLHttpRequest.prototype.send = function (body) {
+            if (this.__refreshUrl.pathname === '/discover' && !window.__failedRefresh) {
+                window.__failedRefresh = true;
+                if (window.__refreshFailure === 'network') {
+                    queueMicrotask(() => this.dispatchEvent(new ProgressEvent('error')));
+                    return;
+                }
+                Object.defineProperty(this, 'status', { get: () => 503 });
+            }
+            return window.__refreshSend.call(this, body);
+        };
+        window.history.back();
+        true;
+    JS);
+    $page->assertPathIs('/discover')
+        ->assertPresent('[role="alert"]')
+        ->assertCount('[data-test="discovery-card-stack-item"]', 0)
+        ->assertSee('Impossible de charger les profils. Vérifie ta connexion puis réessaie.')
+        ->click('Réessayer')
+        ->assertCount('[data-test="discovery-card-stack-item"]', 1)
+        ->assertNotPresent('[role="alert"]')
+        ->assertNoJavaScriptErrors();
+    $this->assertDatabaseCount('swipes', 1);
+})->with(['network', 'server']);

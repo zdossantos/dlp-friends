@@ -34,6 +34,7 @@ return [
     'page' => [
         'title' => 'Explorer',
         'description' => 'Des membres qui partagent tes univers favoris.',
+        'load_error_title' => 'Profils indisponibles',
         'error_title' => 'Décision non enregistrée',
         'generic_error' => 'Une erreur est survenue.',
         'server_error' => 'Le serveur n’a pas pu enregistrer cette décision.',
