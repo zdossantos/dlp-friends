@@ -18,7 +18,7 @@ function blockingBrowserMember(string $displayName): User
 
 beforeEach(fn () => Storage::fake('local'));
 
-test('blocking from a profile returns to the previous page with the member name', function () {
+test('blocking from a conversation profile drawer keeps the conversation with the member name', function () {
     $viewer = blockingBrowserMember('Alice');
     $member = blockingBrowserMember('Basile');
     $conversation = MemberMatch::factory()->create([
@@ -28,8 +28,8 @@ test('blocking from a profile returns to the previous page with the member name'
     $this->actingAs($viewer);
 
     visit(route('conversations.show', $conversation))->on()->mobile()
-        ->click("a[aria-label='Voir le profil de Basile']")
-        ->assertPresent('[data-test="public-member-profile"]')
+        ->click('@conversation-profile-name')
+        ->assertPresent('[data-test="member-profile-drawer"]')
         ->click('@block-member-trigger')
         ->assertPresent('[data-slot="drawer-content"]')
         ->assertSee('Bloquer ce membre ?')
@@ -62,8 +62,7 @@ test('a member can view and unblock a member they blocked', function () {
     ]);
     $this->actingAs($viewer);
 
-    visit(route('conversations.show', $conversation))->on()->mobile()
-        ->click("a[aria-label='Voir le profil de Basile']")
+    visit(route('members.show', ['member' => $member, 'conversation' => $conversation->id]))->on()->mobile()
         ->assertPresent('[data-test="public-member-profile"]')
         ->assertPresent('[data-test="unblock-member-trigger"]')
         ->click('@unblock-member-trigger')
@@ -77,7 +76,7 @@ test('a member can view and unblock a member they blocked', function () {
     ]);
 });
 
-test('a conversation links to the public profile without duplicating its block action', function () {
+test('a conversation offers its profile drawer without duplicating its block action', function () {
     $member = blockingBrowserMember('Alice');
     $peer = blockingBrowserMember('Basile');
     $conversation = MemberMatch::factory()->create([
@@ -87,7 +86,7 @@ test('a conversation links to the public profile without duplicating its block a
     $this->actingAs($member);
 
     visit(route('conversations.show', $conversation))->on()->mobile()
-        ->assertPresent("a[href='/members/{$peer->id}?conversation={$conversation->id}']")
+        ->assertPresent('[data-test="conversation-profile-name"]')
         ->assertNotPresent('[data-test="block-member-trigger"]')
         ->assertNoJavaScriptErrors();
 });

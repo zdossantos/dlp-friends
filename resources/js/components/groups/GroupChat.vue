@@ -5,6 +5,7 @@ import { computed, onBeforeUnmount, ref, watch } from 'vue';
 import MessageComposer from '@/components/conversations/MessageComposer.vue';
 import MessageTimeline from '@/components/conversations/MessageTimeline.vue';
 import RealtimeStatus from '@/components/conversations/RealtimeStatus.vue';
+import MemberProfileDrawer from '@/components/members/MemberProfileDrawer.vue';
 import { useMemberRealtimeContext } from '@/composables/useMemberRealtimeNotifications';
 import { useMessagingRefresh } from '@/composables/useMessagingRefresh';
 import {
@@ -20,6 +21,10 @@ import type {
     GroupChatMessage,
     PaginatedGroupChatMessages,
 } from '@/types/groupChat';
+
+const profileDrawer = ref<InstanceType<typeof MemberProfileDrawer> | null>(
+    null,
+);
 
 const props = defineProps<{
     chat: GroupChatInfo;
@@ -280,6 +285,9 @@ useMessagingRefresh(refreshMessages);
             :on-retry="() => echo().connect()"
         />
         <MessageTimeline
+            @open-profile="
+                (memberId, event) => profileDrawer?.openProfile(memberId, event)
+            "
             :messages="timelineMessages"
             :current-user-id="currentUserId"
             timezone="Europe/Paris"
@@ -289,6 +297,7 @@ useMessagingRefresh(refreshMessages);
             :react-message="reactMessage"
             :on-reaction-updated="updateReaction"
         />
+        <MemberProfileDrawer ref="profileDrawer" />
         <MessageComposer
             :remember-key="draftKey"
             :persist-draft-key="storageKey"
