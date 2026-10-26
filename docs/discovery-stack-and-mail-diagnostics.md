@@ -20,6 +20,23 @@ Les tests couvrent le renouvellement de deux lots avec un classement inversé,
 les clics rapides sur réseau retardé, la restauration après erreur, les indices
 invalides et les profils masqués, bloqués, supprimés ou à avatar désactivé.
 
+### Correction du retour de profil (26 octobre 2026)
+
+La file ne figure plus dans l’URL après une décision : la redirection revient à
+`/discover`. Le cache existant conserve uniquement les cinq identifiants du dernier lot,
+sous une clé propre au membre et à sa session, avec la durée de vie configurée
+pour la session. Une réponse de présence parallèle ne peut donc pas écraser
+la file. Les filtres du service de découverte revérifient les profils à chaque lecture.
+Les anciens liens contenant `queue[]` restent acceptés et validés.
+
+Au retour dans l’historique navigateur, les suggestions sont rechargées avant
+l’affichage des cartes : une décision prise depuis le détail du profil ne peut
+plus réafficher sa carte depuis une ancienne réponse Inertia. Si ce rechargement
+échoue, les anciennes cartes restent masquées et une alerte permet de réessayer.
+Une navigation
+interne demandée pendant des décisions rapides attend leur enregistrement ;
+en cas d’échec, elle est abandonnée et les cartes restent disponibles pour réessayer.
+
 ### Comparaison documentaire de deux interfaces
 
 Sources consultées le 3 octobre 2026 ; il s’agit de comportements décrits dans

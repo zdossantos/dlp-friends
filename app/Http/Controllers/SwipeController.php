@@ -8,6 +8,7 @@ use App\Http\Requests\StoreSwipeRequest;
 use App\Models\User;
 use App\Support\DiscoveryMatchFlash;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Validation\ValidationException;
 
 class SwipeController extends Controller
@@ -37,8 +38,12 @@ class SwipeController extends Controller
             $matchFlash->put($request->session(), $match, $targetUser);
         }
 
-        $queue = $request->validated('queue', []);
+        Cache::put(
+            'discovery:queue:'.$actor->id.':'.$request->session()->getId(),
+            $request->validated('queue', []),
+            now()->addMinutes((int) config('session.lifetime')),
+        );
 
-        return to_route('discovery.index', $queue === [] ? [] : ['queue' => $queue]);
+        return to_route('discovery.index');
     }
 }

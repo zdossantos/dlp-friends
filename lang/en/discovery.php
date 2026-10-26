@@ -32,7 +32,8 @@ return [
         'adding_friend' => 'Adding…',
     ],
     'page' => [
-        'title' => 'Explore', 'description' => 'Members who share your favourite worlds.', 'error_title' => 'Decision not saved',
+        'title' => 'Explore', 'description' => 'Members who share your favourite worlds.', 'load_error_title' => 'Profiles unavailable',
+        'error_title' => 'Decision not saved',
         'generic_error' => 'Something went wrong.', 'server_error' => 'The server could not save this decision.',
         'network_error' => 'The connection failed before this decision was saved.', 'retry' => 'Try again', 'loading' => 'Looking for profiles…',
         'empty_title' => 'You have explored every available profile', 'empty_description' => 'No available profile currently matches your filters. Come back later or adjust your filters in account settings.',

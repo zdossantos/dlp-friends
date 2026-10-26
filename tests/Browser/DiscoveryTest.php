@@ -1103,3 +1103,113 @@ test('non shared interest tags keep readable contrast in dark mode', function ()
         ->assertScript(renderedContrastIsAtLeastScript($selector, $selector), true)
         ->assertNoJavaScriptErrors();
 });
+
+test('returning from a liked profile refreshes the stack without restoring the liked card', function () {
+    $actor = discoveryMember('Alice');
+    foreach (['Basile', 'Chloé', 'David', 'Emma', 'Farid', 'Gabriel', 'Hugo', 'Isa', 'Jules', 'Kim'] as $name) {
+        discoveryMember($name);
+    }
+    $this->actingAs($actor);
+    $page = visit('/discover')->assertCount('[data-test="discovery-card-stack-item"]', 5);
+    for ($i = 0; $i < 6; $i++) {
+        $page->click('[aria-label="Passer ce profil"]')
+            ->assertCount('[data-test="discovery-card-stack-item"]', min(5, 9 - $i));
+    }
+    $page->script("window.__currentDiscoveryMember = document.querySelector('[data-test=discovery-card-stack-item]').dataset.profileUserId; true;");
+    $page->click('[data-test="discovery-card-stack-item"]:first-child [data-test="discovery-avatar-hero"]')
+        ->assertPresent('[data-test="like-member"]')
+        ->click('[data-test="profile-back-action"]')
+        ->assertCount('[data-test="discovery-card-stack-item"]', 4)
+        ->assertScript("document.querySelector('[data-test=discovery-card-stack-item]').dataset.profileUserId === window.__currentDiscoveryMember", true);
+    $page->click('[data-test="discovery-card-stack-item"]:first-child [data-test="discovery-avatar-hero"]')
+        ->assertPresent('[data-test="like-member"]');
+    $page->click('[data-test="like-member"]')->assertNotPresent('[data-test="like-member"]');
+    $page->script('window.history.back(); true;');
+    $page->assertPathIs('/discover')
+        ->assertCount('[data-test="discovery-card-stack-item"]', 3)
+        ->assertScript('window.location.search', '')
+        ->assertNoJavaScriptErrors();
+    $this->assertDatabaseCount('swipes', 7);
+});
+
+test('opening a profile waits for rapid decisions to finish without losing the queued like', function () {
+    $actor = discoveryMember('Alice');
+    foreach (['Basile', 'Chloé', 'David', 'Emma', 'Farid', 'Gabriel'] as $name) {
+        discoveryMember($name);
+    }
+    $this->actingAs($actor);
+    $page = visit('/discover')->assertCount('[data-test="discovery-card-stack-item"]', 5);
+    $page->script(<<<'JS'
+        window.__discoverySend = XMLHttpRequest.prototype.send;
+        window.__discoveryOpen = XMLHttpRequest.prototype.open;
+        XMLHttpRequest.prototype.open = function (method, url, ...rest) {
+            this.__discoveryUrl = String(url);
+            return window.__discoveryOpen.call(this, method, url, ...rest);
+        };
+        XMLHttpRequest.prototype.send = function (body) {
+            if (this.__discoveryUrl.includes('/swipe') && !window.__heldDecision) {
+                window.__heldDecision = this;
+                window.__heldBody = body;
+                return;
+            }
+            return window.__discoverySend.call(this, body);
+        };
+        document.querySelector('[aria-label="Passer ce profil"]:not([disabled])').click();
+        true;
+    JS);
+    $page->assertCount('[data-test="discovery-card-stack-item"]', 4);
+    $page->script("document.querySelector('[aria-label=\"Découvrir ce profil\"]:not([disabled])').click(); true;");
+    $page->assertCount('[data-test="discovery-card-stack-item"]', 3);
+    $page->click('[data-test="discovery-card-stack-item"]:first-child [data-test="discovery-avatar-hero"]');
+    $page->assertPathIs('/discover');
+    $page->script('window.__discoverySend.call(window.__heldDecision, window.__heldBody); true;');
+    $page->assertPresent('[data-test="public-member-profile"]');
+    $this->assertDatabaseCount('swipes', 2);
+    $page->click('[data-test="profile-back-action"]')
+        ->assertCount('[data-test="discovery-card-stack-item"]', 4)
+        ->assertScript('window.location.search', '')
+        ->assertNoJavaScriptErrors();
+});
+
+test('a failed history refresh hides stale liked cards until a successful retry', function (string $failure) {
+    $actor = discoveryMember('Alice');
+    discoveryMember('Basile');
+    discoveryMember('Chloé');
+    $this->actingAs($actor);
+    $page = visit('/discover')->assertCount('[data-test="discovery-card-stack-item"]', 2);
+    $page->click('[data-test="discovery-card-stack-item"]:first-child [data-test="discovery-avatar-hero"]')
+        ->assertPresent('[data-test="like-member"]')
+        ->click('[data-test="like-member"]')
+        ->assertNotPresent('[data-test="like-member"]');
+    $page->script('window.__refreshFailure = '.json_encode($failure).'; true;');
+    $page->script(<<<'JS'
+        window.__refreshOpen = XMLHttpRequest.prototype.open;
+        window.__refreshSend = XMLHttpRequest.prototype.send;
+        XMLHttpRequest.prototype.open = function (method, url, ...rest) {
+            this.__refreshUrl = new URL(url, location.origin);
+            return window.__refreshOpen.call(this, method, url, ...rest);
+        };
+        XMLHttpRequest.prototype.send = function (body) {
+            if (this.__refreshUrl.pathname === '/discover' && !window.__failedRefresh) {
+                window.__failedRefresh = true;
+                if (window.__refreshFailure === 'network') {
+                    queueMicrotask(() => this.dispatchEvent(new ProgressEvent('error')));
+                    return;
+                }
+                Object.defineProperty(this, 'status', { get: () => 503 });
+            }
+            return window.__refreshSend.call(this, body);
+        };
+        window.history.back();
+        true;
+    JS);
+    $page->assertPathIs('/discover')
+        ->assertPresent('[role="alert"]')
+        ->assertCount('[data-test="discovery-card-stack-item"]', 0)
+        ->assertSee('Impossible de charger les profils. Vérifie ta connexion puis réessaie.')
+        ->click('Réessayer')
+        ->assertCount('[data-test="discovery-card-stack-item"]', 1)
+        ->assertNotPresent('[role="alert"]')
+        ->assertNoJavaScriptErrors();
+    $this->assertDatabaseCount('swipes', 1);
+})->with(['network', 'server']);
