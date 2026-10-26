@@ -25,6 +25,7 @@ beforeEach(function () {
         'GITHUB_API_URL' => 'http://'.$address, 'GITHUB_REPOSITORY' => 'zdossantos/dlp-friends', 'GH_TOKEN' => 'fixture-token',
         'COOLIFY_API_URL' => 'http://'.$address.'/api/v1', 'COOLIFY_BETA_APPLICATION_UUID' => 'application-test',
         'COOLIFY_PRODUCTION_APPLICATION_UUID' => 'production-test', 'COOLIFY_TOKEN' => 'fixture-token',
+        'BETA_ACTION' => 'update', 'BETA_REPLACE_TESTS' => 'false',
         'APP_IMAGE' => 'ghcr.io/zdossantos/dlp-friends@sha256:'.str_repeat('a', 64),
         'BETA_CANDIDATE_FILE' => $this->candidateDirectory.'/candidate.json',
     ];
@@ -70,34 +71,33 @@ it('ignores an obsolete build before any Coolify mutation', function () {
     $candidate['sha'] = str_repeat('a', 40);
     file_put_contents($this->candidateEnvironment['BETA_CANDIDATE_FILE'], json_encode($candidate));
     $result = Process::env($this->candidateEnvironment)->run(['bash', base_path('.github/scripts/deploy-beta.sh')]);
-    expect($result->failed())->toBeTrue()
+    expect($result->failed())->toBeTrue($result->output().$result->errorOutput())
         ->and(file_exists($this->candidateDirectory.'/requests.jsonl'))->toBeFalse();
 });
 
 it('never targets the production application', function () {
     $result = Process::env(array_merge($this->candidateEnvironment, ['COOLIFY_BETA_APPLICATION_UUID' => 'production-test']))
         ->run(['bash', base_path('.github/scripts/deploy-beta.sh')]);
-    expect($result->failed())->toBeTrue()
+    expect($result->failed())->toBeTrue($result->output().$result->errorOutput())
         ->and(file_exists($this->candidateDirectory.'/requests.jsonl'))->toBeFalse();
 });
 
-it('pins the current beta image and commit before requesting its deployment', function () {
+it('refuses to bypass the lifecycle through a Coolify API fallback', function () {
     $result = Process::env($this->candidateEnvironment)->run(['bash', base_path('.github/scripts/deploy-beta.sh')]);
-    expect($result->successful())->toBeTrue($result->errorOutput());
-    $requests = array_map(fn ($line) => json_decode($line, true), file($this->candidateDirectory.'/requests.jsonl'));
-    expect(array_column($requests, 'method'))->toBe(['PATCH', 'PATCH', 'POST'])
-        ->and($requests[0]['path'])->toBe('/api/v1/applications/application-test/envs/bulk')
-        ->and($requests[1]['body'])->toBe(['git_commit_sha' => str_repeat('b', 40)])
-        ->and($requests[2]['body']['uuid'])->toBe('application-test');
+    expect($result->failed())->toBeTrue($result->output().$result->errorOutput())
+        ->and(file_exists($this->candidateDirectory.'/requests.jsonl'))->toBeFalse();
 });
 
-it('separates candidate builds from trusted deployment scripts and never migrates automatically', function () {
+it('keeps lifecycle manual and serializes updates and stop with trusted scripts', function () {
     $workflow = file_get_contents(base_path('.github/workflows/beta.yml'));
-    expect($workflow)->toContain('workflow_run:', 'workflow_dispatch:', 'workflows: [CI]', 'platforms: linux/amd64',
-        'group: beta-deploy', 'cancel-in-progress: false', 'path: candidate', 'path: trusted', 'refs/heads/main')
-        ->not->toContain('pull_request_target:', 'artisan migrate', 'artisan up', 'secrets.COOLIFY_TOKEN');
+    expect($workflow)->toContain('workflow_dispatch:', 'replace_beta_tests:', 'platforms: linux/amd64',
+        'group: beta-lifecycle', 'cancel-in-progress: false', 'path: candidate', 'path: trusted', 'refs/heads/main')
+        ->not->toContain('workflow_run:', 'pull_request_target:', 'artisan migrate', 'artisan up', 'secrets.COOLIFY_TOKEN');
+    $stop = file_get_contents(base_path('.github/workflows/beta-stop.yml'));
+    expect($stop)->toContain('workflow_dispatch:', 'group: beta-lifecycle', 'cancel-in-progress: false', 'refs/heads/main', '.status == "stopped"')
+        ->not->toContain('workflow_run:', 'select-beta-candidate');
     $deploy = substr($workflow, strpos($workflow, "\n  deploy:"));
-    expect($deploy)->toContain('secrets.COOLIFY_BETA_TOKEN', 'trusted/.github/scripts/deploy-beta.sh')
+    expect($deploy)->toContain('secrets.BETA_SSH_PRIVATE_KEY', 'trusted/.github/scripts/deploy-beta.sh')
         ->not->toContain('path: candidate', 'packages: write');
 });
 
@@ -115,7 +115,7 @@ while (($#)); do
     fi
     shift
 done
-printf '{"deployment_uuid":"beta-deployment-test"}\n'
+printf '{"status":"ready","deployment_uuid":"beta-deployment-test"}\n'
 SH);
     chmod($ssh, 0700);
     $result = Process::env(array_merge($this->candidateEnvironment, [
@@ -133,6 +133,7 @@ SH);
             'application_uuid' => 'application-test',
             'sha' => str_repeat('b', 40),
             'image' => 'ghcr.io/zdossantos/dlp-friends@sha256:'.str_repeat('a', 64),
+            'action' => 'update', 'replace_beta_tests' => false,
         ]);
     $references = array_map(fn ($line) => json_decode($line, true), file($this->candidateDirectory.'/scenario.json.refs'));
     expect($references[0]['body'])->toBe(['ref' => 'refs/heads/chore/beta-candidates/'.str_repeat('b', 40), 'sha' => str_repeat('b', 40)])
@@ -145,7 +146,7 @@ SH);
 
 it('reuses only an existing candidate branch that still points to the validated SHA', function (string $referenceSha, bool $allowed) {
     file_put_contents($this->candidateDirectory.'/scenario.json', json_encode(['existing_ref' => true, 'ref_sha' => $referenceSha]));
-    file_put_contents($this->candidateDirectory.'/ssh', "#!/bin/sh\ntouch \"\$SSH_LOG\"\ncat >/dev/null\nprintf '{\"deployment_uuid\":\"beta-test\"}\\n'\n");
+    file_put_contents($this->candidateDirectory.'/ssh', "#!/bin/sh\ntouch \"\$SSH_LOG\"\ncat >/dev/null\nprintf '{\"status\":\"ready\",\"deployment_uuid\":\"beta-test\"}\\n'\n");
     chmod($this->candidateDirectory.'/ssh', 0700);
     $result = Process::env(array_merge($this->candidateEnvironment, [
         'PATH' => $this->candidateDirectory.':'.getenv('PATH'),

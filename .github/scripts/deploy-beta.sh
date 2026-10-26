@@ -16,7 +16,12 @@ fi
 jq -e --slurpfile expected "$BETA_CANDIDATE_FILE" '. == $expected[0]' "$directory/current.json" >/dev/null
 export RELEASE_CREATED=true RELEASE_SHA="$(jq -r .sha "$directory/current.json")"
 export COOLIFY_APPLICATION_UUID="$COOLIFY_BETA_APPLICATION_UUID"
-if [[ -n "${BETA_SSH_HOST:-}" ]]; then
+case "${BETA_ACTION:-}:${BETA_REPLACE_TESTS:-}" in
+    update:false|initialize-production:true|initialize-references:true) ;;
+    *) echo 'Invalid beta action or replacement confirmation.' >&2; exit 1 ;;
+esac
+[[ -n "${BETA_SSH_HOST:-}" ]] || { echo "Lifecycle requires the private SSH relay." >&2; exit 1; }
+if [[ -n "$BETA_SSH_HOST" ]]; then
     : "${BETA_SSH_PRIVATE_KEY:?BETA_SSH_PRIVATE_KEY is required}"
     : "${BETA_SSH_KNOWN_HOSTS:?BETA_SSH_KNOWN_HOSTS is required}"
     [[ "$BETA_SSH_HOST" =~ ^[a-zA-Z0-9][a-zA-Z0-9.-]*$ ]] || exit 1
@@ -37,16 +42,10 @@ if [[ -n "${BETA_SSH_HOST:-}" ]]; then
         curl --config - --fail --silent --show-error --connect-timeout 10 --max-time 60 \
             "$api_url/repos/$GITHUB_REPOSITORY/git/ref/heads/$branch" > "$directory/ref-response.json"
     jq -e --arg sha "$RELEASE_SHA" '.object.sha == $sha' "$directory/ref-response.json" >/dev/null
-    printf '%s\n' "$BETA_SSH_PRIVATE_KEY" > "$directory/key"
-    printf '%s\n' "$BETA_SSH_KNOWN_HOSTS" > "$directory/known_hosts"
     jq -nc --arg uuid "$COOLIFY_BETA_APPLICATION_UUID" --arg sha "$RELEASE_SHA" --arg image "$APP_IMAGE" \
-        '{application_uuid: $uuid, sha: $sha, image: $image}' > "$directory/request.json"
-    ssh -i "$directory/key" -o BatchMode=yes -o IdentitiesOnly=yes \
-        -o StrictHostKeyChecking=yes -o "UserKnownHostsFile=$directory/known_hosts" \
-        -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=3 \
-        "dlp-beta-deploy@$BETA_SSH_HOST" < "$directory/request.json" > "$directory/response.json"
-    jq -e '.deployment_uuid | type == "string" and length > 0' "$directory/response.json" >/dev/null
-else
-    bash "$(dirname "$0")/deploy-coolify-image.sh"
+        --arg action "$BETA_ACTION" --argjson replace "$BETA_REPLACE_TESTS" \
+        '{application_uuid: $uuid, sha: $sha, image: $image, action: $action, replace_beta_tests: $replace}' > "$directory/request.json"
+    bash "$(dirname "$0")/beta-ssh-request.sh" < "$directory/request.json" > "$directory/response.json"
+    jq -e '.status == "ready" and (.deployment_uuid | type == "string" and length > 0)' "$directory/response.json" >/dev/null
 fi
-echo 'Beta deployment requested. Check deployment:check separately; migrations and maintenance remain manual.'
+echo 'Beta lifecycle completed.'

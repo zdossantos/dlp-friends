@@ -1,0 +1,39 @@
+name: Stop beta
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: beta-lifecycle
+  cancel-in-progress: false
+
+jobs:
+  stop:
+    if: ${{ github.ref == 'refs/heads/main' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout trusted operation scripts
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: refs/heads/main
+          persist-credentials: false
+      - name: Stop only the configured beta resources and preserve their volumes
+        env:
+          COOLIFY_BETA_APPLICATION_UUID: ${{ vars.COOLIFY_BETA_APPLICATION_UUID }}
+          COOLIFY_PRODUCTION_APPLICATION_UUID: ${{ vars.COOLIFY_APPLICATION_UUID }}
+          BETA_SSH_HOST: ${{ vars.BETA_SSH_HOST }}
+          BETA_SSH_KNOWN_HOSTS: ${{ vars.BETA_SSH_KNOWN_HOSTS }}
+          BETA_SSH_PRIVATE_KEY: ${{ secrets.BETA_SSH_PRIVATE_KEY }}
+        run: |
+          set -euo pipefail
+          : "${COOLIFY_BETA_APPLICATION_UUID:?}"
+          : "${COOLIFY_PRODUCTION_APPLICATION_UUID:?}"
+          test "$COOLIFY_BETA_APPLICATION_UUID" != "$COOLIFY_PRODUCTION_APPLICATION_UUID"
+          jq -nc --arg uuid "$COOLIFY_BETA_APPLICATION_UUID" '{action: "stop", application_uuid: $uuid}' |
+            bash .github/scripts/beta-ssh-request.sh > response.json
+          jq -e '.status == "stopped"' response.json >/dev/null
+          echo 'Beta application, MySQL, Redis and private Mailpit stopped; volumes retained.' >> "$GITHUB_STEP_SUMMARY"

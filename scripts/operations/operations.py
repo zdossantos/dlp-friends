@@ -68,6 +68,11 @@ def write_json(path, value):
     temporary.replace(path)
 
 
+# Only application-managed catalogs/settings; new tables are excluded by default.
+REFERENCE_TABLES = ("roles", "avatars", "interest_categories", "interests", "interest_settings",
+                    "conversation_starters", "partner_settings", "product_onboarding_settings", "seasonal_themes")
+
+
 class Operations:
     def __init__(self, config_path):
         self.config_path = private_file(config_path)
@@ -199,6 +204,8 @@ class Operations:
                             "mysql_server_uuid": identities[1].split("\t")[0]}, "beta_closed_identity_required")
         require(len(beta["process_containers"]) == 3, "all_processes_required")
         for container in beta["process_containers"]:
+            if hasattr(self, "exists") and not self.exists(container):
+                continue
             state = self.inspect(container)["State"]
             require(state["Running"] is False and state["ExitCode"] == 0, "beta_processes_not_drained")
         side_effects = self.mysql("source", "SELECT (SELECT COUNT(*) FROM information_schema.TRIGGERS WHERE TRIGGER_SCHEMA=DATABASE()) + (SELECT COUNT(*) FROM information_schema.EVENTS WHERE EVENT_SCHEMA=DATABASE()) + (SELECT COUNT(*) FROM information_schema.ROUTINES WHERE ROUTINE_SCHEMA=DATABASE());")
@@ -231,58 +238,116 @@ class Operations:
             fcntl.flock(file, fcntl.LOCK_EX | fcntl.LOCK_NB)
             yield
 
-    def refresh(self, replace):
-        require(replace, "explicit_beta_replacement_required")
-        with self.lock():
-            snapshot_file = self.directory / "snapshot.json"
-            snapshot_file.unlink(missing_ok=True)
-            self.validate_targets()
-            created_at = int(time.time())
-            source_schema = self.schema_fingerprint("source")
-            applied = self.mysql("source", "SELECT migration, batch FROM migrations ORDER BY migration;")
-            before = self.inventory("source")
-            snapshot_id = uuid.uuid4().hex
-            dump = self.directory / (snapshot_id + ".sql")
-            target = self.config["source"]
-            with dump.open("wb") as output:
-                run(["mysqldump", "--defaults-extra-file=" + target["mysql_client"], "--single-transaction", "--quick",
+    def dump(self, path, mode):
+        require(mode in ("production", "references"), "invalid_data_mode")
+        source = self.config["source"]
+        arguments = ["mysqldump", "--defaults-extra-file=" + source["mysql_client"], "--single-transaction", "--quick",
                      "--hex-blob", "--no-tablespaces", "--set-gtid-purged=OFF", "--default-character-set=utf8mb4",
-                     "--skip-triggers", "--skip-extended-insert", "--complete-insert", "--skip-comments", target["database"]], output=output)
-            require(self.schema_fingerprint("source") == source_schema, "source_schema_changed")
-            # Each physical INSERT line is exactly one row from the same dump transaction.
-            counts = {}
-            with dump.open() as file:
-                for line in file:
-                    created = re.match(r"CREATE TABLE `([A-Za-z0-9_]+)`", line)
-                    inserted = re.match(r"INSERT INTO `([A-Za-z0-9_]+)`", line)
-                    if created:
-                        counts[created[1]] = 0
-                    if inserted:
-                        require(inserted[1] in counts, "invalid_dump")
-                        counts[inserted[1]] += 1
-            require(bool(counts) and "migrations" in counts, "incomplete_dump")
-            # Recheck every identity immediately before the first destructive operation.
-            self.validate_targets()
-            tables = self.tables("beta")
-            if tables:
-                self.mysql("beta", "SET FOREIGN_KEY_CHECKS=0; " + "; ".join("DROP TABLE `" + table + "`" for table in tables) + "; SET FOREIGN_KEY_CHECKS=1;")
-            with dump.open("rb") as file:
-                self.mysql("beta", "", input=file.read())
-            require(self.schema_fingerprint("beta") == source_schema and self.tables("beta") == sorted(counts), "restored_schema_mismatch")
-            for table, count in counts.items():
-                require(self.mysql("beta", "SELECT COUNT(*) FROM `" + table + "`;").strip() == str(count), "restored_count_mismatch")
-            require(self.mysql("beta", "SELECT migration, batch FROM migrations ORDER BY migration;") == applied, "restored_migrations_mismatch")
-            source, beta = self.config["source"], self.config["beta"]
+                     "--skip-triggers", "--skip-extended-insert", "--complete-insert", "--skip-comments"]
+        with path.open("wb") as output:
+            if mode == "production":
+                run(arguments + [source["database"]], output=output)
+            else:
+                require(set(REFERENCE_TABLES).issubset(self.tables("source")), "reference_schema_missing")
+                run(arguments + ["--no-data", source["database"]], output=output)
+                run(arguments + ["--no-create-info", source["database"], "migrations", *REFERENCE_TABLES], output=output)
+
+    def reference_foreign_keys(self, side, verify=False):
+        rows = self.mysql(side, "SELECT TABLE_NAME, COLUMN_NAME, REFERENCED_TABLE_NAME, REFERENCED_COLUMN_NAME FROM information_schema.KEY_COLUMN_USAGE WHERE TABLE_SCHEMA=DATABASE() AND REFERENCED_TABLE_NAME IS NOT NULL;")
+        for row in rows.splitlines():
+            table, column, parent, parent_column = row.split("\t")
+            if table not in REFERENCE_TABLES:
+                continue
+            require(parent in REFERENCE_TABLES and all(re.fullmatch(r"[A-Za-z0-9_]+", value)
+                    for value in (table, column, parent, parent_column)), "reference_dependency_requires_review")
+            if verify:
+                sql = (f"SELECT COUNT(*) FROM `{table}` AS child LEFT JOIN `{parent}` AS parent "
+                       f"ON child.`{column}`=parent.`{parent_column}` WHERE child.`{column}` IS NOT NULL AND parent.`{parent_column}` IS NULL;")
+                require(self.mysql(side, sql).strip() == "0", "reference_foreign_key_missing")
+
+    def reference_objects(self):
+        paths = self.mysql("beta", "SELECT image_path FROM `avatars` ORDER BY image_path;").splitlines()
+        require(all(path.startswith("avatars/") and not any(part in ("", ".", "..") for part in path.split("/"))
+                    and not any(character in path for character in "\r\n\\") for path in paths), "invalid_reference_object")
+        return sorted(set(paths))
+
+    def refresh(self, replace, mode="production"):
+        require(replace, "explicit_beta_replacement_required")
+        require(mode in ("production", "references"), "invalid_data_mode")
+        with self.lock():
+            lifecycle = self.directory / "beta-lifecycle.json"
+            if lifecycle.exists():
+                state = json.loads(private_file(lifecycle).read_text())
+                write_json(lifecycle, {**state, "initialized": False, "status": "requires_initialization"})
+            self._refresh(mode)
+
+    def _refresh(self, mode):
+        snapshot_file = self.directory / "snapshot.json"
+        snapshot_file.unlink(missing_ok=True)
+        self.validate_targets()
+        created_at = int(time.time())
+        source_schema = self.schema_fingerprint("source")
+        applied = self.mysql("source", "SELECT migration, batch FROM migrations ORDER BY migration;")
+        before = self.inventory("source")
+        snapshot_id = uuid.uuid4().hex
+        dump = self.directory / (snapshot_id + ".sql")
+        if mode == "references":
+            self.reference_foreign_keys("source")
+        self.dump(dump, mode)
+        require(self.schema_fingerprint("source") == source_schema, "source_schema_changed")
+        # Each physical INSERT line is exactly one row from the same dump transaction.
+        counts = {}
+        with dump.open() as file:
+            for line in file:
+                created = re.match(r"CREATE TABLE `([A-Za-z0-9_]+)`", line)
+                inserted = re.match(r"INSERT INTO `([A-Za-z0-9_]+)`", line)
+                if created:
+                    counts[created[1]] = 0
+                if inserted:
+                    require(inserted[1] in counts, "invalid_dump")
+                    counts[inserted[1]] += 1
+        require(bool(counts) and "migrations" in counts, "incomplete_dump")
+        # Recheck every identity immediately before the first destructive operation.
+        self.validate_targets()
+        tables = self.tables("beta")
+        if tables:
+            self.mysql("beta", "SET FOREIGN_KEY_CHECKS=0; " + "; ".join("DROP TABLE `" + table + "`" for table in tables) + "; SET FOREIGN_KEY_CHECKS=1;")
+        with dump.open("rb") as file:
+            self.mysql("beta", "", input=file.read())
+        require(self.schema_fingerprint("beta") == source_schema and self.tables("beta") == sorted(counts), "restored_schema_mismatch")
+        for table, count in counts.items():
+            require(self.mysql("beta", "SELECT COUNT(*) FROM `" + table + "`;").strip() == str(count), "restored_count_mismatch")
+        require(self.mysql("beta", "SELECT migration, batch FROM migrations ORDER BY migration;") == applied, "restored_migrations_mismatch")
+        if mode == "references":
+            self.reference_foreign_keys("beta", verify=True)
+        source, beta = self.config["source"], self.config["beta"]
+        if mode == "production":
             run(["rclone", "--config", self.config["rclone_config"], "sync", source["rclone_remote"] + ":" + source["bucket"],
                  beta["rclone_remote"] + ":" + beta["bucket"]])
             run(["rclone", "--config", self.config["rclone_config"], "check", "--download", source["rclone_remote"] + ":" + source["bucket"],
                  beta["rclone_remote"] + ":" + beta["bucket"]])
             require(self.inventory("source") == before and self.inventory("beta") == before, "objects_changed_during_copy")
-            self.reset_beta_runtime()
-            self.artisan("beta", "beta:sanitize-copy", "--force", "--no-interaction")
-            write_json(snapshot_file, {"snapshot_id": snapshot_id, "created_at": created_at,
-                                      "source_schema_sha256": source_schema, "source_migrations_sha256": digest(applied),
-                                      "tables_verified": True, "objects_verified": True, "sanitized": True})
+        else:
+            # Read paths from the restored transaction, never from a mutable source query.
+            paths = self.reference_objects()
+            selected = [item for item in before if item["path"] in paths]
+            require(len(selected) == len(paths), "reference_object_missing")
+            selection = self.directory / "reference-objects.txt"
+            selection.write_text("".join(path + "\n" for path in paths))
+            run(["rclone", "--config", self.config["rclone_config"], "delete", beta["rclone_remote"] + ":" + beta["bucket"]])
+            if paths:
+                run(["rclone", "--config", self.config["rclone_config"], "copy", "--files-from-raw", str(selection),
+                     source["rclone_remote"] + ":" + source["bucket"], beta["rclone_remote"] + ":" + beta["bucket"]])
+                run(["rclone", "--config", self.config["rclone_config"], "check", "--download", "--files-from-raw", str(selection),
+                     source["rclone_remote"] + ":" + source["bucket"], beta["rclone_remote"] + ":" + beta["bucket"]])
+            require(self.inventory("beta") == selected
+                    and [item for item in self.inventory("source") if item["path"] in paths] == selected,
+                    "objects_changed_during_copy")
+        self.reset_beta_runtime()
+        self.artisan("beta", "beta:sanitize-copy", "--force", "--no-interaction")
+        write_json(snapshot_file, {"snapshot_id": snapshot_id, "data_mode": mode, "created_at": created_at,
+                                  "source_schema_sha256": source_schema, "source_migrations_sha256": digest(applied),
+                                  "tables_verified": True, "objects_verified": True, "sanitized": True})
 
 
 def main():
@@ -291,11 +356,12 @@ def main():
     parser.add_argument("operation", choices=["refresh", "validate-targets", "schema-fingerprint"])
     parser.add_argument("--config", required=True)
     parser.add_argument("--replace-beta-tests", action="store_true")
+    parser.add_argument("--data-mode", choices=["production", "references"], default="production")
     parser.add_argument("--side", choices=["source", "beta"], default="source")
     args = parser.parse_args()
     operations = Operations(args.config)
     if args.operation == "refresh":
-        operations.refresh(args.replace_beta_tests)
+        operations.refresh(args.replace_beta_tests, args.data_mode)
         print("snapshot_verified_beta_remains_closed")
     elif args.operation == "validate-targets":
         operations.validate_targets()

@@ -573,7 +573,8 @@ les migrations si l'image, le snapshot et le schéma bêta correspondent.
 La clôture refuse un snapshot âgé de 24 h ou plus, une date future, un rapport
 incomplet et une évolution du schéma production depuis la copie. Après une
 nouvelle copie ou un autre candidat, refaire les parcours et l'attestation.
-Un nouveau candidat ou une migration interrompue exige de repartir d'une copie
+Pour cette répétition production, un nouveau candidat ou une migration interrompue
+exige de repartir d'une copie
 fraîche : avant toute nouvelle exécution, schéma et registre de migrations bêta
 doivent encore correspondre au snapshot initial. Seule la reprise des parcours
 du même candidat en état `awaiting_journeys` réutilise la copie migrée.

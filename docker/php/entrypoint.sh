@@ -8,7 +8,15 @@ case "${1:-web}" in
         attempts="${DEPLOYMENT_READINESS_ATTEMPTS:-30}"
         case "$attempts" in ''|*[!0-9]*) exit 64 ;; esac
         [ "$attempts" -ge 1 ] && [ "$attempts" -le 60 ] || exit 64
-        until php artisan deployment:check --json >/dev/null 2>&1; do
+        # Beta lifecycle verifies every process before reopening HTTP access.
+        readiness() {
+            if [ "${APP_ENV:-}" = beta ]; then
+                php artisan deployment:check --json --allow-maintenance
+            else
+                php artisan deployment:check --json
+            fi
+        }
+        until readiness >/dev/null 2>&1; do
             attempts=$((attempts - 1))
             if [ "$attempts" -eq 0 ]; then
                 echo 'Deployment not ready; background process remains stopped.' >&2
