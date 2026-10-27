@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Actions\DeleteMember;
+use App\Data\PublicMemberData;
 use App\Enums\SwipeDecision;
 use App\Enums\UserStatus;
 use App\Http\Controllers\Controller;
@@ -62,11 +63,15 @@ final class MemberController extends Controller
             ->paginate(20)
             ->withQueryString()
             ->through(function (User $member) use ($request): array {
+                $member->profile?->setRelation('user', $member);
                 $isAdmin = $member->hasRole('admin');
 
                 return [
                     'id' => $member->id,
                     'display_name' => $member->profile?->display_name,
+                    'public_profile_url' => $member->profile !== null && Gate::forUser($request->user())->allows('viewPublic', $member->profile)
+                        ? route('admin.members.profile', $member, absolute: false)
+                        : null,
                     'email' => $member->email,
                     'status' => $member->status->value,
                     'visibility' => $member->profile?->visibility->value,
@@ -108,6 +113,22 @@ final class MemberController extends Controller
                 ],
                 'conversationHref' => route('conversations.show', $createdConversation, absolute: false),
             ],
+        ]);
+    }
+
+    public function show(Request $request, User $member): Response
+    {
+        Gate::authorize('viewAny', User::class);
+        $member->load(['profile.avatar', 'profile.interests', 'roles']);
+        $member->profile?->setRelation('user', $member);
+        abort_unless($member->profile !== null && Gate::allows('viewPublic', $member->profile), 404);
+
+        $data = PublicMemberData::from($request->user(), $member);
+
+        return Inertia::render('Admin/Members/Show', [
+            'member' => $data['member'],
+            'backHref' => route('admin.members.index', ['member' => $member->id], absolute: false),
+            'receivedReportsHref' => route('admin.conversation-reports.index', ['target' => $member->id], absolute: false),
         ]);
     }
 

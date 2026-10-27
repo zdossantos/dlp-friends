@@ -3,6 +3,7 @@ import type { RoleName } from './auth';
 export type AdminMember = {
     id: number;
     display_name: string | null;
+    public_profile_url: string | null;
     email: string;
     status: string;
     visibility: string | null;

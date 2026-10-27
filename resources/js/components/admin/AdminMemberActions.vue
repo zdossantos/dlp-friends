@@ -15,6 +15,13 @@ const { t } = useTranslations();
 </script>
 
 <template>
+    <Button v-if="member.public_profile_url" as-child variant="outline">
+        <Link
+            :href="member.public_profile_url"
+            data-test="view-public-profile"
+            >{{ t('moderation.view_public_profile') }}</Link
+        >
+    </Button>
     <Button as-child variant="outline"
         ><Link
             :href="reports({ query: { target: member.id } }).url"
