@@ -3,6 +3,8 @@ import { Head, useForm } from '@inertiajs/vue3';
 import { watch } from 'vue';
 import AdminPageHeader from '@/components/admin/AdminPageHeader.vue';
 import UsageChart from '@/components/admin/UsageChart.vue';
+import UsageDateRange from '@/components/admin/UsageDateRange.vue';
+import UsageDonut from '@/components/admin/UsageDonut.vue';
 import InputError from '@/components/InputError.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -19,6 +21,7 @@ import type { TranslationKey } from '@/composables/useTranslations';
 import { useTranslations } from '@/composables/useTranslations';
 import { dashboard } from '@/routes';
 import type { UsageMetric, UsageStatistics } from '@/types/usage-statistics';
+import { usageMetricColors } from '@/types/usage-statistics';
 
 const { t, formatDate: localizeDate, formatNumber } = useTranslations();
 
@@ -97,9 +100,11 @@ const charts: {
     title: TranslationKey;
     description: TranslationKey;
     series: UsageMetric[];
+    kind?: 'bar' | 'line';
 }[] = [
     {
         id: 'growth',
+        kind: 'bar',
         title: 'usage.growth',
         description: 'usage.growth_description',
         series: ['registrations'],
@@ -124,6 +129,7 @@ const charts: {
     },
     {
         id: 'activities',
+        kind: 'bar',
         title: 'usage.activities',
         description: 'usage.activities_description',
         series: ['events', 'visits', 'trips'],
@@ -159,6 +165,21 @@ const formatDate = (value: string | null): string =>
                 class="flex flex-wrap items-end gap-3 rounded-xl border bg-card p-4"
                 @submit.prevent="apply"
             >
+                <div class="w-full">
+                    <UsageDateRange
+                        :from="usage.period.from"
+                        :to="usage.period.to"
+                        :max="today"
+                        :disabled="form.processing"
+                        @select="
+                            (from, to) => {
+                                form.from = from;
+                                form.to = to;
+                                apply();
+                            }
+                        "
+                    />
+                </div>
                 <div class="min-w-0 flex-1 basis-40 space-y-2">
                     <Label for="usage-from">{{ t('usage.from') }}</Label
                     ><Input
@@ -252,7 +273,30 @@ const formatDate = (value: string | null): string =>
             >
         </section>
 
+        <UsageChart
+            id="overview"
+            title="usage.overview"
+            description="usage.overview_description"
+            :daily="usage.daily"
+            :series="Object.keys(usage.metrics) as UsageMetric[]"
+        />
         <section class="grid min-w-0 gap-6 xl:grid-cols-2">
+            <UsageDonut
+                id="discovery"
+                :colors="[usageMetricColors.likes, usageMetricColors.passes]"
+                title="usage.decisions_title"
+                description="usage.decisions_description"
+                :values="[
+                    {
+                        label: 'usage.metrics.likes',
+                        value: usage.metrics.likes.current,
+                    },
+                    {
+                        label: 'usage.metrics.passes',
+                        value: usage.metrics.passes.current,
+                    },
+                ]"
+            />
             <UsageChart
                 v-for="chart in charts"
                 :key="chart.id"
@@ -294,46 +338,24 @@ const formatDate = (value: string | null): string =>
                             />
                         </div></div></CardContent
             ></Card>
-            <Card
-                ><CardHeader
-                    ><CardTitle>{{ t('usage.conversation_title') }}</CardTitle
-                    ><CardDescription>{{
-                        t('usage.conversation_description')
-                    }}</CardDescription></CardHeader
-                ><CardContent
-                    ><p class="mb-4 text-4xl font-semibold tabular-nums">
-                        {{
-                            percent(
-                                usage.conversations.withMessages,
-                                usage.conversations.total,
-                            )
-                        }}
-                    </p>
-                    <dl class="space-y-3 text-sm">
-                        <div class="flex justify-between gap-3">
-                            <dt>{{ t('usage.with_messages') }}</dt>
-                            <dd class="font-semibold tabular-nums">
-                                {{
-                                    formatNumber(
-                                        usage.conversations.withMessages,
-                                    )
-                                }}
-                            </dd>
-                        </div>
-                        <div class="flex justify-between gap-3">
-                            <dt>{{ t('usage.without_messages') }}</dt>
-                            <dd class="font-semibold tabular-nums">
-                                {{
-                                    formatNumber(
-                                        usage.conversations.total -
-                                            usage.conversations.withMessages,
-                                    )
-                                }}
-                            </dd>
-                        </div>
-                    </dl></CardContent
-                ></Card
-            >
+            <UsageDonut
+                id="conversations"
+                :colors="['#2563eb', '#d97706']"
+                title="usage.conversation_title"
+                description="usage.conversation_description"
+                :values="[
+                    {
+                        label: 'usage.with_messages',
+                        value: usage.conversations.withMessages,
+                    },
+                    {
+                        label: 'usage.without_messages',
+                        value:
+                            usage.conversations.total -
+                            usage.conversations.withMessages,
+                    },
+                ]"
+            />
             <Card
                 ><CardHeader
                     ><CardTitle>{{ t('usage.community_title') }}</CardTitle

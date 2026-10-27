@@ -12,8 +12,14 @@ personnalisée couvre de 1 à 366 jours, sans date future. La comparaison porte 
 les jours immédiatement précédents, pour une durée identique. Une base précédente
 nulle est indiquée sans pourcentage d’évolution.
 
-Les courbes quotidiennes proposent un sélecteur de journée utilisable au clavier,
-des séries masquables et leur tableau de données. Les thèmes et traductions FR/EN
+Un calendrier de plage de dates permet de sélectionner le début puis la fin.
+La vue d’ensemble compare les 14 séries quotidiennes sur une échelle commune, sans
+empilement ; la légende permet de les masquer et les tableaux restent accessibles
+au clavier. ECharts fournit les infobulles au survol ou au toucher.
+Les inscriptions et créations de sorties sont des barres groupées ; les anneaux
+présentent uniquement des parts exclusives d’un même total (likes/refus et matchs
+avec/sans message). Les étapes imbriquées d’activation et les intérêts à choix
+multiples restent des barres, car un camembert serait trompeur. Les thèmes et traductions FR/EN
 suivent les préférences de l’administration.
 
 ## Population et définitions
@@ -59,6 +65,8 @@ durées et rétention ne sont pas mesurés. Une période vide affiche des zéros
 
 Les agrégations s’exécutent côté MySQL sur une fenêtre bornée ; seuls les points
 quotidiens, les totaux et huit intérêts au maximum sont transmis. Aucune migration,
-dépendance graphique, donnée de suivi ni intervention de production n’est requise.
+donnée de suivi ni intervention de production n’est requise. ECharts est chargé
+avec les modules ligne, barre et anneau et un rendu SVG ; le calendrier réutilise
+Reka UI et @internationalized/date.
 Les performances sur une volumétrie de production restent à mesurer avant toute
 optimisation ou ajout de cache.

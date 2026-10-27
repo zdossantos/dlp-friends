@@ -1,6 +1,14 @@
 <?php
 
 return [
+    'choose_range' => 'Choose a date range',
+    'range_help' => 'Select the start date, then the end date.',
+    'previous_month' => 'Previous month',
+    'next_month' => 'Next month',
+    'overview' => 'All activity day by day',
+    'overview_description' => 'Compare all 14 indicators on the same dates. Hover or tap to inspect a day; use the legend to isolate series. Volumes share one scale and are not additive. Coincidence does not establish causation.',
+    'decisions_title' => 'Likes or passes: how do they compare?',
+    'decisions_description' => 'Share of retained likes and passes in decisions created during the period. Matches are not a third decision.',
     'title' => 'App usage',
     'description' => 'Understand how members discover profiles, chat and plan outings.',
     'from' => 'From', 'to' => 'To', 'apply' => 'Apply dates',
@@ -13,7 +21,6 @@ return [
     'change' => 'Change', 'new_activity' => 'No comparison baseline', 'unchanged' => 'Unchanged',
     'empty' => 'No activity recorded in this period.',
     'date' => 'Date', 'data' => 'View chart data',
-    'inspect' => 'Choose a day to inspect',
     'growth' => 'New members',
     'growth_description' => 'Daily registrations of member accounts still retained.',
     'engagement' => 'Who contributes to the app?',

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue';
+import { computed, ref } from 'vue';
 import {
     Card,
     CardContent,
@@ -10,6 +10,8 @@ import {
 import { useTranslations } from '@/composables/useTranslations';
 import type { TranslationKey } from '@/composables/useTranslations';
 import type { UsageDay, UsageMetric } from '@/types/usage-statistics';
+import { usageMetricColors } from '@/types/usage-statistics';
+import UsagePlot from './UsagePlot.vue';
 
 const props = defineProps<{
     id: string;
@@ -17,36 +19,51 @@ const props = defineProps<{
     description: TranslationKey;
     daily: UsageDay[];
     series: UsageMetric[];
+    kind?: 'line' | 'bar';
 }>();
 const { t, formatDate, formatNumber } = useTranslations();
-const selected = ref(props.daily.length - 1);
 const hidden = ref<UsageMetric[]>([]);
-watch(
-    () => props.daily,
-    () => {
-        selected.value = props.daily.length - 1;
-    },
-);
 const visible = computed(() =>
     props.series.filter((key) => !hidden.value.includes(key)),
 );
-const maximum = computed(() =>
-    Math.max(
-        1,
-        ...props.daily.flatMap((day) => visible.value.map((key) => day[key])),
-    ),
-);
-const current = computed(() => props.daily[selected.value] ?? props.daily[0]);
 const empty = computed(() =>
     props.daily.every((day) => props.series.every((key) => day[key] === 0)),
 );
-const x = (index: number) =>
-    48 + (index / Math.max(1, props.daily.length - 1)) * 570;
-const y = (value: number) => 182 - (value / maximum.value) * 156;
-const points = (key: UsageMetric) =>
-    props.daily.map((day, index) => `${x(index)},${y(day[key])}`).join(' ');
-const color = (index: number) => `var(--chart-${index + 1})`;
+const color = (index: number) => usageMetricColors[props.series[index]];
 const dash = (index: number) => ['', '8 4', '2 4'][index % 3];
+const option = computed(() => ({
+    tooltip: { trigger: 'axis', axisPointer: { type: 'line' } },
+    grid: { left: 45, right: 12, top: 20, bottom: 35 },
+    xAxis: {
+        type: 'category',
+        data: props.daily.map((day) => day.date),
+        axisLabel: {
+            formatter: (value: string) => date(value),
+            hideOverlap: true,
+        },
+    },
+    yAxis: {
+        type: 'value',
+        minInterval: 1,
+        splitLine: { lineStyle: { color: '#94a3b833' } },
+    },
+    series: props.series
+        .filter((key) => visible.value.includes(key))
+        .map((key) => ({
+            name: t(`usage.metrics.${key}`),
+            type: props.kind ?? 'line',
+            data: props.daily.map((day) => day[key]),
+            showSymbol: props.daily.length === 1,
+            itemStyle: { color: color(props.series.indexOf(key)) },
+            lineStyle: {
+                width: 2,
+                type: ['solid', 'dashed', 'dotted'][
+                    props.series.indexOf(key) % 3
+                ],
+            },
+            emphasis: { focus: 'series' },
+        })),
+}));
 const date = (value: string) =>
     formatDate(`${value}T00:00:00Z`, {
         day: 'numeric',
@@ -59,20 +76,6 @@ function toggle(key: UsageMetric) {
         ? hidden.value.filter((item) => item !== key)
         : [...hidden.value, key];
 }
-function inspect(event: PointerEvent) {
-    const bounds = (
-        event.currentTarget as SVGSVGElement
-    ).getBoundingClientRect();
-    const position =
-        (((event.clientX - bounds.left) / bounds.width) * 640 - 48) / 570;
-    selected.value = Math.max(
-        0,
-        Math.min(
-            props.daily.length - 1,
-            Math.round(position * (props.daily.length - 1)),
-        ),
-    );
-}
 </script>
 
 <template>
@@ -82,6 +85,7 @@ function inspect(event: PointerEvent) {
             <CardDescription>{{ t(description) }}</CardDescription>
         </CardHeader>
         <CardContent class="space-y-4">
+            <UsagePlot :option="option" />
             <div class="flex flex-wrap gap-2">
                 <button
                     v-for="(key, index) in series"
@@ -114,109 +118,6 @@ function inspect(event: PointerEvent) {
             <p v-if="empty" class="text-sm text-muted-foreground">
                 {{ t('usage.empty') }}
             </p>
-            <svg
-                viewBox="0 0 640 220"
-                class="w-full text-muted-foreground"
-                aria-hidden="true"
-                @pointermove="inspect"
-            >
-                <g v-for="fraction in [0, 0.5, 1]" :key="fraction">
-                    <line
-                        x1="48"
-                        x2="618"
-                        :y1="y(maximum * fraction)"
-                        :y2="y(maximum * fraction)"
-                        stroke="currentColor"
-                        stroke-opacity="0.18"
-                    />
-                    <text
-                        x="40"
-                        :y="y(maximum * fraction) + 4"
-                        text-anchor="end"
-                        fill="currentColor"
-                        font-size="12"
-                    >
-                        {{
-                            formatNumber(maximum * fraction, {
-                                maximumFractionDigits: 1,
-                            })
-                        }}
-                    </text>
-                </g>
-                <g v-for="(key, index) in series" :key="key">
-                    <polyline
-                        v-if="visible.includes(key)"
-                        :points="points(key)"
-                        fill="none"
-                        :stroke="color(index)"
-                        stroke-width="2.5"
-                        :stroke-dasharray="dash(index)"
-                        stroke-linejoin="round"
-                    />
-                    <circle
-                        v-if="visible.includes(key) && current"
-                        :cx="x(selected)"
-                        :cy="y(current[key])"
-                        r="4"
-                        :fill="color(index)"
-                    />
-                </g>
-                <line
-                    :x1="x(selected)"
-                    :x2="x(selected)"
-                    y1="26"
-                    y2="182"
-                    stroke="currentColor"
-                    stroke-dasharray="3 4"
-                />
-                <text
-                    v-if="daily[0]"
-                    x="48"
-                    y="210"
-                    fill="currentColor"
-                    font-size="12"
-                >
-                    {{ date(daily[0].date) }}
-                </text>
-                <text
-                    v-if="daily.length > 1 && daily.at(-1)"
-                    x="618"
-                    y="210"
-                    text-anchor="end"
-                    fill="currentColor"
-                    font-size="12"
-                >
-                    {{ date(daily.at(-1)!.date) }}
-                </text>
-            </svg>
-            <div
-                v-if="current"
-                class="space-y-2 rounded-md bg-muted/50 p-3 text-sm"
-            >
-                <label :for="`usage-day-${id}`" class="block font-medium"
-                    >{{ t('usage.inspect') }} · {{ date(current.date) }}</label
-                >
-                <input
-                    :id="`usage-day-${id}`"
-                    v-model.number="selected"
-                    type="range"
-                    min="0"
-                    :max="daily.length - 1"
-                    step="1"
-                    :aria-valuetext="date(current.date)"
-                    class="h-8 w-full accent-primary"
-                />
-                <dl class="flex flex-wrap gap-x-5 gap-y-2">
-                    <div v-for="key in visible" :key="key">
-                        <dt class="inline text-muted-foreground">
-                            {{ t(`usage.metrics.${key}`) }}:
-                        </dt>
-                        <dd class="inline font-semibold tabular-nums">
-                            {{ formatNumber(current[key]) }}
-                        </dd>
-                    </div>
-                </dl>
-            </div>
             <details class="text-sm">
                 <summary
                     class="cursor-pointer rounded py-2 font-medium focus-visible:outline-2 focus-visible:outline-ring"

@@ -1,6 +1,14 @@
 <?php
 
 return [
+    'choose_range' => 'Choisir une plage de dates',
+    'range_help' => 'Clique sur la date de début, puis sur la date de fin.',
+    'previous_month' => 'Mois précédent',
+    'next_month' => 'Mois suivant',
+    'overview' => 'Toutes les activités au fil des jours',
+    'overview_description' => 'Compare les 14 indicateurs sur les mêmes dates. Survole ou touche le graphique pour lire une journée ; utilise la légende pour isoler des séries. Les volumes partagent la même échelle et ne s’additionnent pas. Une coïncidence ne démontre pas une causalité.',
+    'decisions_title' => 'Likes ou refus : quelle répartition ?',
+    'decisions_description' => 'Part des likes et refus conservés dans les décisions créées pendant la période. Les matchs ne sont pas une troisième décision.',
     'title' => 'Utilisation de l’application',
     'description' => 'Comprends comment les membres découvrent, échangent et organisent leurs sorties.',
     'from' => 'Du', 'to' => 'Au', 'apply' => 'Appliquer les dates',
@@ -13,7 +21,6 @@ return [
     'change' => 'Évolution', 'new_activity' => 'Sans base de comparaison', 'unchanged' => 'Stable',
     'empty' => 'Aucune activité enregistrée sur cette période.',
     'date' => 'Date', 'data' => 'Voir les données du graphique',
-    'inspect' => 'Choisir une journée à examiner',
     'growth' => 'Les nouveaux membres',
     'growth_description' => 'Inscriptions quotidiennes des comptes membres encore conservés.',
     'engagement' => 'Qui participe à la vie de l’application ?',
