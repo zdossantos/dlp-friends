@@ -4,21 +4,16 @@ namespace App\Http\Controllers\Admin;
 
 use App\Enums\UserStatus;
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Admin\DashboardRequest;
 use App\Models\Profile;
 use App\Models\User;
-use App\Support\AdminUsageStatistics;
-use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Builder;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class DashboardController extends Controller
 {
-    public function __invoke(DashboardRequest $request, AdminUsageStatistics $statistics): Response
+    public function __invoke(): Response
     {
-        $to = CarbonImmutable::parse($request->validated('to', CarbonImmutable::today('UTC')->toDateString()), 'UTC');
-        $from = CarbonImmutable::parse($request->validated('from', $to->subDays(29)->toDateString()), 'UTC');
         $recentRegistrations = User::query()
             ->with('profile.avatar')
             ->latest()
@@ -32,7 +27,6 @@ class DashboardController extends Controller
             ]);
 
         return Inertia::render('Dashboard', [
-            'usage' => $statistics->forPeriod($from, $to),
             'stats' => [
                 'totalAccounts' => User::query()->count(),
                 'activeAccounts' => User::query()->where('status', UserStatus::Active)->count(),

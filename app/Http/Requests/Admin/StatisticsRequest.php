@@ -7,7 +7,7 @@ use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Validator;
 
-class DashboardRequest extends FormRequest
+class StatisticsRequest extends FormRequest
 {
     public function authorize(): bool
     {

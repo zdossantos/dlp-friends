@@ -368,7 +368,7 @@ test('the admin dashboard renders account statistics and recent registrations', 
     visit('/dashboard')->on()->mobile()
         ->assertSee('Administration')
         ->assertSee('Comptes créés')
-        ->assertSee('Comptes au statut actif')
+        ->assertSee('Comptes actifs')
         ->assertSee('E-mails vérifiés')
         ->assertSee('Profils complétés')
         ->assertSee('recent@example.test')

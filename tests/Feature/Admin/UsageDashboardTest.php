@@ -37,7 +37,7 @@ test('usage report compares equal periods and fills empty days without exposing 
     Message::factory()->for($conversation)->create(['author_user_id' => $member->id, 'created_at' => '2026-10-26 12:00:00']);
     Message::factory()->for($conversation)->create(['author_user_id' => $member->id, 'created_at' => '2026-10-28 00:00:00']);
 
-    $this->actingAs($admin)->get('/dashboard?from=2026-10-25&to=2026-10-27')
+    $this->actingAs($admin)->get('/admin/statistics?from=2026-10-25&to=2026-10-27')
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->where('usage.period.previousFrom', '2026-10-22')
@@ -79,7 +79,7 @@ test('usage report excludes admin support partner-only accounts and system messa
     $message = GroupChatMessage::factory()->create(['group_chat_id' => $group->id, 'author_user_id' => $member->id]);
     GroupChatMessage::factory()->create(['group_chat_id' => $message->group_chat_id, 'author_user_id' => $member->id, 'system_type' => 'joined']);
 
-    $this->actingAs($admin)->get('/dashboard')
+    $this->actingAs($admin)->get('/admin/statistics')
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->where('usage.metrics.likes.current', 0)
@@ -98,7 +98,7 @@ test('activation describes the current state of the registration cohort', functi
     $complete = User::factory()->withProfile()->create();
     $complete->profile->update(['visibility' => ProfileVisibility::Hidden]);
 
-    $this->actingAs($admin)->get('/dashboard?from=2026-10-27&to=2026-10-27')
+    $this->actingAs($admin)->get('/admin/statistics?from=2026-10-27&to=2026-10-27')
         ->assertInertia(fn (Assert $page) => $page
             ->where('usage.activation.registered', 4)
             ->where('usage.activation.verified', 3)
@@ -108,14 +108,14 @@ test('activation describes the current state of the registration cohort', functi
             ->where('usage.community.members', 5));
 
     $incompleteTutorial->productOnboarding()->create(['status' => ProductOnboardingStatus::Completed]);
-    $this->get('/dashboard?from=2026-10-27&to=2026-10-27')
+    $this->get('/admin/statistics?from=2026-10-27&to=2026-10-27')
         ->assertInertia(fn (Assert $page) => $page->where('usage.activation.tutorialCompleted', 2));
 });
 
 test('usage filters reject invalid unsafe or unbounded date ranges', function (array $query) {
     $admin = User::factory()->admin()->create();
 
-    $this->actingAs($admin)->getJson(route('dashboard', $query))->assertUnprocessable();
+    $this->actingAs($admin)->getJson(route('admin.statistics.index', $query))->assertUnprocessable();
 })->with([
     [['from' => 'not-a-date', 'to' => '2026-10-27']],
     [['from' => ['2026-10-20'], 'to' => '2026-10-27']],
@@ -130,7 +130,7 @@ test('usage filters reject invalid unsafe or unbounded date ranges', function (a
 test('empty member activity is represented by zeros and admin access remains enforced', function () {
     $admin = User::factory()->admin()->create();
 
-    $this->actingAs($admin)->get('/dashboard')
+    $this->actingAs($admin)->get('/admin/statistics')
         ->assertInertia(fn (Assert $page) => $page
             ->has('usage.daily', 30)
             ->where('usage.metrics.contributors.current', 0)
@@ -138,8 +138,8 @@ test('empty member activity is represented by zeros and admin access remains enf
             ->where('usage.activation.registered', 0)
             ->where('usage.interests', []));
 
-    $this->actingAs(User::factory()->create())->get('/dashboard')->assertForbidden();
-    $this->actingAs(User::factory()->partnerOnly()->create())->get('/dashboard')->assertForbidden();
+    $this->actingAs(User::factory()->create())->get('/admin/statistics')->assertForbidden();
+    $this->actingAs(User::factory()->partnerOnly()->create())->get('/admin/statistics')->assertForbidden();
 });
 
 test('activities and safety totals count member records and deduplicate the same contributor across features', function () {
@@ -161,7 +161,7 @@ test('activities and safety totals count member records and deduplicate the same
     EventRegistration::factory()->create(['event_id' => $event->id, 'user_id' => $admin->id]);
     TripRegistration::factory()->create(['trip_id' => $trip->id, 'user_id' => $admin->id]);
 
-    $this->actingAs($admin)->get('/dashboard?from=2026-10-27&to=2026-10-27')
+    $this->actingAs($admin)->get('/admin/statistics?from=2026-10-27&to=2026-10-27')
         ->assertInertia(function (Assert $page) {
             foreach (['events', 'visits', 'trips', 'eventRegistrations', 'tripRegistrations', 'blocks', 'reports', 'contributors'] as $metric) {
                 $page->where("usage.metrics.{$metric}.current", 1)
@@ -184,7 +184,7 @@ test('interest snapshot uses selected active interests and current member roles 
     $admin->profile->interestHistory()->attach($selected, ['is_selected' => true]);
     $admin->profile->interestHistory()->attach($adminOnly, ['is_selected' => true]);
 
-    $this->actingAs($admin)->get('/dashboard?from=2026-10-27&to=2026-10-27')
+    $this->actingAs($admin)->get('/admin/statistics?from=2026-10-27&to=2026-10-27')
         ->assertInertia(fn (Assert $page) => $page
             ->where('usage.metrics.registrations.current', 0)
             ->where('usage.interests', [['name' => 'Shows', 'count' => 1]]));
@@ -192,6 +192,17 @@ test('interest snapshot uses selected active interests and current member roles 
 
 test('the inclusive maximum period of 366 days is accepted', function () {
     $this->actingAs(User::factory()->admin()->create())
-        ->get('/dashboard?from=2025-10-27&to=2026-10-27')
+        ->get('/admin/statistics?from=2025-10-27&to=2026-10-27')
         ->assertInertia(fn (Assert $page) => $page->has('usage.daily', 366)->where('usage.period.days', 366));
+});
+
+test('the clean dashboard stays separate from detailed admin statistics', function () {
+    $this->actingAs(User::factory()->admin()->create())
+        ->get('/dashboard')
+        ->assertInertia(fn (Assert $page) => $page->component('Dashboard')
+            ->has('stats.totalAccounts')->has('recentRegistrations')->missing('usage'));
+
+    $this->get('/admin/statistics')
+        ->assertInertia(fn (Assert $page) => $page->component('Admin/Statistics')
+            ->has('usage')->missing('stats')->missing('recentRegistrations'));
 });

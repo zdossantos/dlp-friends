@@ -1,7 +1,8 @@
 # Statistiques d’utilisation
 
-Le tableau de bord `/dashboard` est réservé au rôle `admin`. Il lit les données
-métier existantes ; il ne collecte aucun événement supplémentaire et ne restitue
+La page `/admin/statistics`, accessible depuis l’entrée « Statistiques » de
+l’administration, est réservée au rôle `admin`. Elle lit les données métier
+existantes ; elle ne collecte aucun événement supplémentaire et ne restitue
 aucun contenu de message dans son rapport d’usage.
 
 ## Période et comparaison
@@ -26,9 +27,11 @@ suivent les préférences de l’administration.
 
 Les indicateurs d’usage portent sur les comptes ayant actuellement le rôle `user`,
 hors comptes administrateurs. Les partenaires ayant aussi le rôle membre restent
-inclus. Les partenaires sans rôle membre sont exclus. Les cartes historiques
-« Comptes de toute la plateforme » et les inscriptions récentes couvrent tous
-les rôles et ne dépendent pas du filtre.
+inclus. Les partenaires sans rôle membre sont exclus. Le dashboard `/dashboard`
+conserve ses quatre cartes de comptes et les inscriptions récentes, tous rôles
+confondus. Les graphiques et le filtre sont réservés à la page Statistiques.
+Le filtre utilise le modèle Date Picker de shadcn-vue (Popover et RangeCalendar
+basés sur Reka UI), avec son style fourni et sans champs de dates en double.
 
 | Indicateur | Définition |
 | --- | --- |

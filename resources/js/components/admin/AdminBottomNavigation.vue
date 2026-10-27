@@ -2,6 +2,7 @@
 import {
     BookOpen,
     CircleGauge,
+    ChartBar,
     Images,
     Megaphone,
     Palette,
@@ -25,6 +26,7 @@ import { index as partnerAnnouncements } from '@/routes/admin/partner-announceme
 import { index as partnerProfiles } from '@/routes/admin/partner-profiles';
 import { index as partnerStatistics } from '@/routes/admin/partner-statistics';
 import { index as seasonalThemes } from '@/routes/admin/seasonal-themes';
+import { index as statistics } from '@/routes/admin/statistics';
 import type { BottomNavigationItem } from '@/types';
 
 const { t } = useTranslations();
@@ -35,6 +37,12 @@ const directItems = computed<BottomNavigationItem[]>(() => [
         href: dashboard(),
         icon: CircleGauge,
         testId: 'admin-dashboard-link',
+    },
+    {
+        label: t('administration.navigation.statistics'),
+        href: statistics(),
+        icon: ChartBar,
+        testId: 'admin-statistics-link',
     },
     {
         label: t('administration.navigation.members'),

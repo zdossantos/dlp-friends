@@ -34,6 +34,7 @@ return [
         'deactivated' => 'The manual theme override has been disabled.',
     ],
     'navigation' => [
+        'statistics' => 'Statistics',
         'label' => 'Administration',
         'dashboard' => 'Dashboard',
         'notifications' => 'Notifications',

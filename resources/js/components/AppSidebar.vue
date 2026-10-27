@@ -38,6 +38,7 @@ import { index as adminPartnerAnnouncements } from '@/routes/admin/partner-annou
 import { index as partnerProfileIndex } from '@/routes/admin/partner-profiles';
 import { index as adminPartnerStatistics } from '@/routes/admin/partner-statistics';
 import { index as seasonalThemeIndex } from '@/routes/admin/seasonal-themes';
+import { index as statistics } from '@/routes/admin/statistics';
 import { show as showProfile } from '@/routes/member-profile';
 import { index as partnerAnnouncements } from '@/routes/partner/announcements';
 import { edit as editPartnerProfile } from '@/routes/partner/profile';
@@ -55,6 +56,11 @@ const mainNavItems: NavItem[] = [
         title: t('administration.navigation.dashboard'),
         href: dashboard(),
         icon: LayoutDashboard,
+    },
+    {
+        title: t('administration.navigation.statistics'),
+        href: statistics(),
+        icon: ChartBar,
     },
     {
         title: t('administration.navigation.notifications'),
