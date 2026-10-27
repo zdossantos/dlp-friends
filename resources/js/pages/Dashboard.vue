@@ -275,7 +275,7 @@ const formatDate = (value: string | null): string =>
 
         <UsageChart
             id="overview"
-            title="usage.overview"
+            :title="'usage.overview'"
             description="usage.overview_description"
             :daily="usage.daily"
             :series="Object.keys(usage.metrics) as UsageMetric[]"
@@ -284,7 +284,7 @@ const formatDate = (value: string | null): string =>
             <UsageDonut
                 id="discovery"
                 :colors="[usageMetricColors.likes, usageMetricColors.passes]"
-                title="usage.decisions_title"
+                :title="'usage.decisions_title'"
                 description="usage.decisions_description"
                 :values="[
                     {
@@ -341,7 +341,7 @@ const formatDate = (value: string | null): string =>
             <UsageDonut
                 id="conversations"
                 :colors="['#2563eb', '#d97706']"
-                title="usage.conversation_title"
+                :title="'usage.conversation_title'"
                 description="usage.conversation_description"
                 :values="[
                     {
