@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\ProfileVisibility;
 use App\Models\ConversationStarter;
 use App\Models\Event;
 use App\Models\EventRegistration;
@@ -12,9 +13,10 @@ use App\Models\User;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
 
-function conversationBrowserMember(string $displayName): User
+function conversationBrowserMember(string $displayName, bool $admin = false): User
 {
-    $user = User::factory()->withProfile()->create();
+    $factory = User::factory()->withProfile();
+    $user = ($admin ? $factory->admin() : $factory)->create();
     $user->profile?->update(['display_name' => $displayName]);
     Storage::disk('local')->put($user->profile->avatar->image_path, base64_decode(
         'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScL8WQAAAABJRU5ErkJggg==',
@@ -836,3 +838,77 @@ test('a slow failed send preserves textarea focus and the draft for retry', func
         'content' => 'Mon brouillon',
     ]);
 });
+
+test('conversation profiles open in a drawer and preserve the private draft and timeline', function (int $width, bool $assistance) {
+    $member = conversationBrowserMember('Alice');
+    $peer = conversationBrowserMember('Basile', $assistance);
+    $conversation = MemberMatch::factory()->create([
+        'user_low_id' => min($member->id, $peer->id),
+        'user_high_id' => max($member->id, $peer->id),
+    ])->conversation()->create();
+    Message::factory()->count(35)->for($conversation)->for($peer, 'author')->create([
+        'content' => str_repeat('Un souvenir du parc. ', 20),
+    ]);
+    $this->actingAs($member);
+    $page = visit("/conversations/{$conversation->id}")->resize($width, 800)
+        ->fill('content', 'Mon brouillon conservé');
+    $page->script("document.querySelector('[data-test=message-scroll]').scrollTop = 0; true;");
+    $page->assertScript("document.querySelectorAll('[data-message-id]').length", 35);
+    $page->script("window.chatScroller = document.querySelector('[data-test=message-scroll]'); window.chatScroller.scrollTop = 150; true;");
+    $page->click('[data-test=conversation-profile-name]')
+        ->assertPresent('@member-profile-drawer')->assertSeeIn('@member-profile-drawer', 'Basile')
+        ->assertPathIs("/conversations/{$conversation->id}")
+        ->keys('@member-profile-drawer', 'Escape')
+        ->assertMissing('@member-profile-drawer')
+        ->assertValue('content', 'Mon brouillon conservé')
+        ->assertScript("document.querySelector('[data-test=message-scroll]') === window.chatScroller", true)
+        ->assertScript('Math.abs(window.chatScroller.scrollTop - 150) < 3', true)
+        ->assertScript('document.activeElement.dataset.test', 'conversation-profile-name')
+        ->keys('[data-test=message-sender] button', 'Enter')
+        ->assertSeeIn('@member-profile-drawer', 'Basile')
+        ->click('@member-profile-close')->assertMissing('@member-profile-drawer')
+        ->assertValue('content', 'Mon brouillon conservé')->assertNoJavaScriptErrors();
+})->with(['mobile' => [390, false], 'desktop' => [1280, false], 'assistance' => [390, true]]);
+
+test('group author profiles open the correct member without losing the discussion', function (int $width) {
+    $member = conversationBrowserMember('Alice');
+    $peer = conversationBrowserMember('Basile');
+    $other = conversationBrowserMember('Camille');
+    $event = Event::factory()->for($member, 'organizer')->create();
+    $chat = GroupChat::factory()->for($event)->create();
+    foreach ([$peer, $other] as $author) {
+        EventRegistration::factory()->for($event)->for($author, 'user')->accepted()->create();
+        GroupChatMessage::factory()->for($chat)->for($author, 'author')->create();
+    }
+    $this->actingAs($member);
+    $page = visit("/events/{$event->id}/chat")->resize($width, 800)->fill('content', 'Brouillon de groupe')
+        ->click("[data-profile-id='{$other->id}']")
+        ->assertSeeIn('@member-profile-drawer', 'Camille')
+        ->click('[data-test=member-profile-drawer] [data-test=block-member-trigger]')
+        ->assertSee('Bloquer ce membre ?')->click('Annuler')
+        ->assertSeeIn('@member-profile-drawer', 'Camille')
+        ->click('@member-profile-close')
+        ->assertMissing('@member-profile-drawer')->assertValue('content', 'Brouillon de groupe')
+        ->click("[data-profile-id='{$peer->id}']")
+        ->assertSeeIn('@member-profile-drawer', 'Basile')->keys('@member-profile-drawer', 'Escape')
+        ->assertMissing('@member-profile-drawer')
+        ->assertScript('document.activeElement.dataset.profileId', (string) $peer->id)
+        ->assertValue('content', 'Brouillon de groupe')->assertNoJavaScriptErrors();
+
+    $peer->profile->update(['visibility' => ProfileVisibility::Hidden]);
+    $page->click("[data-profile-id='{$peer->id}']")
+        ->assertSeeIn('@member-profile-drawer', 'Ce profil est indisponible.')
+        ->click('@member-profile-close')->assertMissing('@member-profile-drawer')
+        ->assertValue('content', 'Brouillon de groupe')->assertNoJavaScriptErrors();
+
+    $page->click("[data-profile-id='{$other->id}']")
+        ->assertSeeIn('@member-profile-drawer', 'Camille')->click('@like-member')
+        ->assertMissing('@member-profile-drawer')
+        ->assertValue('content', 'Brouillon de groupe')
+        ->click("[data-profile-id='{$other->id}']")
+        ->assertSeeIn('@member-profile-drawer', 'Camille')
+        ->assertNotPresent('@like-member')
+        ->click('[data-test=member-profile-drawer] [data-test=block-member-trigger]')
+        ->click('@confirm-block-member')->assertMissing('@member-profile-drawer')
+        ->assertValue('content', 'Brouillon de groupe')->assertNoJavaScriptErrors();
+})->with(['mobile' => 390, 'desktop' => 1280]);

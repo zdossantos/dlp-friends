@@ -8,6 +8,7 @@ import { useTranslations } from '@/composables/useTranslations';
 import { block as blockMember } from '@/routes/members';
 
 const props = defineProps<{ memberId: number; returnHref: string }>();
+const emit = defineEmits<{ updated: [] }>();
 const { t } = useTranslations();
 const { isDesktop, Modal } = useResponsiveModal();
 const open = ref(false);
@@ -30,6 +31,10 @@ function submit(): void {
         {
             preserveScroll: true,
             onStart: () => (submitting.value = true),
+            onSuccess: () => {
+                open.value = false;
+                emit('updated');
+            },
             onError: (errors) => {
                 if (errors.confirm_trip_departures) {
                     confirmTripDepartures.value = true;

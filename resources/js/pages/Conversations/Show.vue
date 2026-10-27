@@ -5,6 +5,7 @@ import ConversationHeader from '@/components/conversations/ConversationHeader.vu
 import MessageComposer from '@/components/conversations/MessageComposer.vue';
 import MessageTimeline from '@/components/conversations/MessageTimeline.vue';
 import RealtimeStatus from '@/components/conversations/RealtimeStatus.vue';
+import MemberProfileDrawer from '@/components/members/MemberProfileDrawer.vue';
 import ReportConversationDialog from '@/components/members/ReportConversationDialog.vue';
 import { useConversationMessages } from '@/composables/useConversationMessages';
 import { useConversationRealtime } from '@/composables/useConversationRealtime';
@@ -16,7 +17,6 @@ import { xsrfHeader } from '@/lib/csrf';
 import { shouldAcknowledgePersistentNotification } from '@/lib/memberNotifications';
 import { index as conversationsIndex } from '@/routes/conversations';
 import { store as storeConversationRead } from '@/routes/conversations/read';
-import { show as showMember } from '@/routes/members';
 import type {
     ConversationDetails,
     ConversationMessage,
@@ -25,6 +25,10 @@ import type {
     ConversationParticipant,
     PaginatedMessages,
 } from '@/types';
+
+const profileDrawer = ref<InstanceType<typeof MemberProfileDrawer> | null>(
+    null,
+);
 
 const props = defineProps<{
     conversation: ConversationDetails;
@@ -208,10 +212,9 @@ const timelineMessages = computed<PaginatedMessages>(() => ({
         <ConversationHeader
             :participant="displayedParticipant"
             :back-href="conversationsIndex().url"
-            :profile-href="
-                showMember(participant.id, {
-                    query: { conversation: conversation.id },
-                }).url
+            can-open-profile
+            @open-profile="
+                (event) => profileDrawer?.openProfile(participant.id, event)
             "
             :typing="peerTyping"
             ><ReportConversationDialog
@@ -226,6 +229,9 @@ const timelineMessages = computed<PaginatedMessages>(() => ({
         />
 
         <MessageTimeline
+            @open-profile="
+                (memberId, event) => profileDrawer?.openProfile(memberId, event)
+            "
             :messages="timelineMessages"
             :current-user-id="currentUserId"
             :participant-name="participant.display_name"
@@ -236,6 +242,7 @@ const timelineMessages = computed<PaginatedMessages>(() => ({
                     updateReaction(update, currentUserId)
             "
         />
+        <MemberProfileDrawer ref="profileDrawer" />
         <MessageComposer
             :conversation-id="conversation.id"
             :archived="conversation.archived_at !== null"

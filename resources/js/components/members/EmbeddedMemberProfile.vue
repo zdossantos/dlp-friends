@@ -13,6 +13,7 @@ defineProps<{
     profile: EmbeddedMemberProfile;
     blockReturnHref: string;
 }>();
+const emit = defineEmits<{ updated: [] }>();
 const { t } = useTranslations();
 </script>
 
@@ -76,6 +77,7 @@ const { t } = useTranslations();
                     v-if="profile.canLike"
                     :member-id="profile.member.id"
                     :return-href="$page.url"
+                    @updated="emit('updated')"
                 />
                 <Button
                     v-else-if="profile.conversationHref"
@@ -96,6 +98,7 @@ const { t } = useTranslations();
                     v-else-if="profile.canBlock"
                     :member-id="profile.member.id"
                     :return-href="blockReturnHref"
+                    @updated="emit('updated')"
                 />
             </template>
         </ProfilePresentation>

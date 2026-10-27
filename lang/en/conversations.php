@@ -1,6 +1,12 @@
 <?php
 
 return [
+    'profile' => [
+        'title' => 'Member profile',
+        'description' => 'View this profile without leaving the conversation.',
+        'loading' => 'Loading profile…',
+        'unavailable' => 'This profile is unavailable.',
+    ],
     'navigation' => 'Chats',
     'bottom_navigation' => 'Conversations',
     'groups' => [

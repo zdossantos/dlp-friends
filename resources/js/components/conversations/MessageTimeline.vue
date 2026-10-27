@@ -30,6 +30,10 @@ const props = defineProps<{
     onReactionUpdated: (update: MessageReactionUpdate) => void;
 }>();
 
+const emit = defineEmits<{
+    'open-profile': [memberId: number, event: MouseEvent];
+}>();
+
 const loadingSlot = computed(() => (props.reverse ? 'next' : 'previous'));
 const scrollContainer = ref<HTMLElement | null>(null);
 const awayFromBottom = ref(false);
@@ -423,13 +427,42 @@ watch(
                                 data-test="message-sender"
                                 class="mb-1 px-2 text-xs font-semibold text-muted-foreground"
                             >
-                                {{
-                                    message.author_user_id === currentUserId
-                                        ? t('conversations.message.you')
-                                        : 'author' in message
-                                          ? message.author.display_name
-                                          : participantName
-                                }}
+                                <template
+                                    v-if="
+                                        message.author_user_id === currentUserId
+                                    "
+                                    >{{
+                                        t('conversations.message.you')
+                                    }}</template
+                                >
+                                <button
+                                    v-else
+                                    type="button"
+                                    :data-profile-id="message.author_user_id"
+                                    :aria-label="
+                                        t('conversations.header.profile_link', {
+                                            name:
+                                                'author' in message
+                                                    ? message.author
+                                                          .display_name
+                                                    : (participantName ?? ''),
+                                        })
+                                    "
+                                    class="inline-flex min-h-11 items-center rounded-sm text-left hover:underline focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+                                    @click="
+                                        emit(
+                                            'open-profile',
+                                            message.author_user_id,
+                                            $event,
+                                        )
+                                    "
+                                >
+                                    {{
+                                        'author' in message
+                                            ? message.author.display_name
+                                            : participantName
+                                    }}
+                                </button>
                             </p>
                             <article
                                 data-test="message-bubble"
