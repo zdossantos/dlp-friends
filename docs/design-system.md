@@ -306,6 +306,15 @@ doivent respecter les exigences de [`security-privacy.md`](security-privacy.md).
 - Ne pas utiliser le design system pour redéfinir un parcours ou une règle
   métier : ces décisions appartiennent au [`PRD.md`](PRD.md).
 
+### Profils depuis une conversation
+
+`MemberProfileDrawer` réutilise `EmbeddedMemberProfile` dans les primitives
+Drawer, sur mobile comme sur bureau. Son en-tête sépare la fermeture des
+réseaux sociaux et des actions du profil. Les états chargement et indisponible
+sont annoncés aux technologies d’assistance ; Échap ferme le drawer et le
+focus revient au déclencheur sans déplacer le fil. Le chargement est annulé à
+la fermeture et ne remplace pas la page Inertia de conversation.
+
 ### Boutons des réseaux sociaux
 
 Les profils détaillés réutilisent `ProfileSocialLinks` : boutons circulaires

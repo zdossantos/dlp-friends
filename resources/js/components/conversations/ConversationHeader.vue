@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { Link } from '@inertiajs/vue3';
 import { ArrowLeft, Users } from '@lucide/vue';
 import BackLink from '@/components/common/BackLink.vue';
 import ActivityStatus from '@/components/conversations/ActivityStatus.vue';
@@ -12,9 +11,11 @@ defineProps<{
     title?: string;
     backDataTest?: string;
     backHref?: string;
-    profileHref?: string;
+    canOpenProfile?: boolean;
     typing?: boolean;
 }>();
+
+const emit = defineEmits<{ 'open-profile': [event: MouseEvent] }>();
 
 const { t } = useTranslations();
 </script>
@@ -32,9 +33,10 @@ const { t } = useTranslations();
         >
             <ArrowLeft class="size-5" aria-hidden="true" />
         </BackLink>
-        <Link
-            v-if="profileHref && participant"
-            :href="profileHref"
+        <button
+            v-if="canOpenProfile && participant"
+            type="button"
+            @click="emit('open-profile', $event)"
             :aria-label="
                 t('conversations.header.profile_link', {
                     name: participant.display_name,
@@ -48,7 +50,7 @@ const { t } = useTranslations();
                     class="size-11 rounded-2xl"
                 />
             </span>
-        </Link>
+        </button>
         <AvatarPortrait
             v-else-if="participant"
             :avatar="participant.avatar"
@@ -61,13 +63,20 @@ const { t } = useTranslations();
         /></span>
         <div class="min-w-0 flex-1">
             <h1 class="truncate font-semibold">
-                <Link
-                    v-if="profileHref && participant"
-                    :href="profileHref"
-                    class="hover:underline"
+                <button
+                    v-if="canOpenProfile && participant"
+                    type="button"
+                    @click="emit('open-profile', $event)"
+                    data-test="conversation-profile-name"
+                    :aria-label="
+                        t('conversations.header.profile_link', {
+                            name: participant.display_name,
+                        })
+                    "
+                    class="rounded-sm text-left hover:underline focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
                 >
                     {{ participant.display_name }}
-                </Link>
+                </button>
                 <template v-else>{{
                     participant?.display_name ?? title
                 }}</template>

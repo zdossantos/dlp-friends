@@ -14,6 +14,7 @@ const props = defineProps<{
     returnHref?: string;
     dataTest?: string;
 }>();
+const emit = defineEmits<{ updated: [] }>();
 const { t } = useTranslations();
 const submitting = ref(false);
 const error = ref<string | null>(null);
@@ -28,6 +29,7 @@ function submit(): void {
                 submitting.value = true;
                 error.value = null;
             },
+            onSuccess: () => emit('updated'),
             onError: (errors) => {
                 error.value = String(
                     errors.target ??

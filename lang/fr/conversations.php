@@ -1,6 +1,12 @@
 <?php
 
 return [
+    'profile' => [
+        'title' => 'Profil du membre',
+        'description' => 'Consulte le profil sans quitter la discussion.',
+        'loading' => 'Chargement du profil…',
+        'unavailable' => 'Ce profil est indisponible.',
+    ],
     'navigation' => 'Échanges',
     'bottom_navigation' => 'Conversations',
     'groups' => [

@@ -151,6 +151,12 @@ Paris.
   reste modifiable avant un envoi explicite.
 - Le fil identifie visiblement l’expéditeur, sépare les jours dans le fuseau de
   l’application et utilise un fond décoratif Lucide adapté au thème saisonnier.
+- L’avatar et le nom de l’en-tête privé, ainsi que les noms d’auteurs des
+  conversations privées, d’assistance et de groupe (événements et trajets),
+  ouvrent le profil dans un drawer sans quitter le fil. La fermeture conserve
+  brouillon, historique chargé et position de lecture, puis rend le focus au
+  déclencheur. Un profil masqué, incomplet, inactif ou bloqué dans un sens ou
+  l’autre est indisponible ; les réseaux sociaux suivent leurs règles de visibilité.
 - Seuls les deux membres du match peuvent lire et envoyer des messages.
 - Les compteurs associés à une liste de conversations ignorent les échanges
   dont l’autre profil est masqué. Le masquage ne désactive ni l’accès direct,
