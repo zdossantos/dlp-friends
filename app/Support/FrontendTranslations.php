@@ -27,6 +27,7 @@ final class FrontendTranslations
             'blocking' => trans('blocking'),
             'moderation' => trans('moderation'),
             'administration' => trans('administration'),
+            'usage' => trans('usage'),
             'partners' => trans('partners'),
             'application_announcements' => trans('application_announcements'),
         ];

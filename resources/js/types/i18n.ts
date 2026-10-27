@@ -20,6 +20,7 @@ export type TranslationMessages = {
     blocking: TranslationTree;
     moderation: TranslationTree;
     administration: TranslationTree;
+    usage: TranslationTree;
     partners: TranslationTree;
     application_announcements: TranslationTree;
 };

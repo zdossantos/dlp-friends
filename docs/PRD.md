@@ -264,6 +264,10 @@ Paris.
 
 - Le rôle `admin` donne accès à un tableau de bord et aux catalogues d’intérêts
   et d’avatars, ainsi qu’à la lecture des échanges explicitement signalés.
+- Le tableau de bord présente des courbes quotidiennes et comparaisons de périodes,
+  l’activation actuelle des nouveaux inscrits, les premiers messages des matchs,
+  la communauté et les intérêts sélectionnés. Il utilise les données conservées
+  sans collecte supplémentaire ; [définitions et limites](admin-usage-statistics.md).
 - À la première complétion d’un profil après vérification de l’e-mail, une
   inscription autonome par e-mail ou Google produit une alerte persistante
   « Administration » pour chaque administrateur actif ayant activé ce réglage.
