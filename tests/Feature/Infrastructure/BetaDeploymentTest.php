@@ -22,6 +22,24 @@ function betaComposeEnvironment(array $overrides = []): array
     ], $overrides);
 }
 
+it('separates beta support while preserving isolated dependencies and mail', function () {
+    $baseline = Process::env(betaComposeEnvironment())->run('docker compose -f compose.beta.yaml config --format json');
+    $result = Process::env(betaComposeEnvironment())->run('docker compose -f compose.beta-support.yaml config --format json');
+    expect($baseline->successful())->toBeTrue($baseline->errorOutput())
+        ->and($result->successful())->toBeTrue($result->errorOutput());
+    $original = json_decode($baseline->output(), true, flags: JSON_THROW_ON_ERROR);
+    $support = json_decode($result->output(), true, flags: JSON_THROW_ON_ERROR);
+    expect(array_keys($support['services']))->toEqualCanonicalizing(['worker', 'scheduler', 'reverb']);
+    foreach ($support['services'] as $name => $service) {
+        expect($service['stop_grace_period'])->toBe('2m0s');
+        unset($service['stop_grace_period'], $service['networks'], $original['services'][$name]['networks']);
+        expect($service)->toBe($original['services'][$name]);
+    }
+    expect($support['services']['reverb']['networks']['coolify']['aliases'])
+        ->toBe(['dlp-friends-beta-reverb'])
+        ->and($support['networks']['coolify']['external'])->toBeTrue();
+});
+
 it('renders four isolated beta processes with private mail and stable maintenance', function () {
     $result = Process::env(betaComposeEnvironment())->run('docker compose -f compose.beta.yaml config --format json');
     expect($result->successful())->toBeTrue($result->errorOutput());
