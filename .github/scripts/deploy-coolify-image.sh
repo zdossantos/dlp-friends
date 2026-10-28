@@ -52,9 +52,10 @@ request PATCH "applications/$COOLIFY_APPLICATION_UUID/envs/bulk" \
 compose_command=""
 if [[ -n "${COOLIFY_WEB_APPLICATION_UUID:-}" ]]; then
     # Run the candidate image's migrations, never the old web container's files.
-    compose="docker compose -p $COOLIFY_APPLICATION_UUID -f compose.production-support.yaml --env-file .env"
-    compose_command="c='$compose'; \$c run --rm --no-deps worker php artisan migrate --force --no-interaction && \$c up -d --wait --wait-timeout 180"
-    # Coolify stores this field in varchar(255).
+    compose="docker compose -p $COOLIFY_APPLICATION_UUID -f compose.production-support.yaml"
+    compose_command="$compose run --rm --no-deps worker php artisan migrate --force && $compose up -d --wait --wait-timeout 180"
+    # Coolify injects --env-file into the first command; the second reads .env from the same directory.
+    # Its command field is varchar(255) and forbids shell variables.
     [[ ${#compose_command} -le 255 ]]
 fi
 request PATCH "applications/$COOLIFY_APPLICATION_UUID" \

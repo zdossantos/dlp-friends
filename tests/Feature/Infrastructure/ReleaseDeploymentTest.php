@@ -125,7 +125,8 @@ it('deploys support with migrations before the native rolling web', function () 
         '/api/v1/deploy',
         '/api/v1/deployments/web-deployment',
     ])->and($requests[3]['body']['docker_compose_custom_start_command'])
-        ->toContain('run --rm --no-deps worker php artisan migrate --force --no-interaction &&', 'up -d --wait')
+        ->toContain('run --rm --no-deps worker php artisan migrate --force &&', 'up -d --wait')
+        ->and($requests[3]['body']['docker_compose_custom_start_command'])->not->toContain('$', ';')
         ->and(strlen($requests[3]['body']['docker_compose_custom_start_command']))->toBeLessThanOrEqual(255)
         ->and($requests[3]['body']['git_branch'])->toBe('v1.16.2')
         ->and($requests[6]['body'])->toBe([
@@ -165,3 +166,24 @@ it('requires both production resources before contacting Coolify', function () {
     expect($result->failed())->toBeTrue()
         ->and(recordedCoolifyRequests($this->directory))->toBe([]);
 });
+
+it('only starts Compose services after a successful migration command', function (int $migrationResult) {
+    $result = Process::env(array_merge($this->deploymentEnvironment, [
+        'COOLIFY_WEB_APPLICATION_UUID' => 'web-test',
+    ]))->run(['bash', base_path('.github/scripts/deploy-release.sh')]);
+    expect($result->successful())->toBeTrue($result->errorOutput());
+
+    $command = recordedCoolifyRequests($this->directory)[3]['body']['docker_compose_custom_start_command'];
+    $result = Process::env([
+        'COMPOSE_LOG' => $this->directory.'/compose.log',
+        'MIGRATION_RESULT' => (string) $migrationResult,
+    ])->run(['bash', '-c', 'docker() { echo "$*" >> "$COMPOSE_LOG"; if [[ "$*" == *"artisan migrate"* ]]; then return "$MIGRATION_RESULT"; fi; }; '.$command]);
+
+    $calls = file($this->directory.'/compose.log', FILE_IGNORE_NEW_LINES);
+    expect($result->exitCode())->toBe($migrationResult)
+        ->and($calls)->toHaveCount($migrationResult === 0 ? 2 : 1)
+        ->and($calls[0])->toContain('run --rm --no-deps worker php artisan migrate');
+    if ($migrationResult === 0) {
+        expect($calls[1])->toContain('up -d --wait --wait-timeout 180');
+    }
+})->with([0, 1]);
