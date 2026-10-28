@@ -503,3 +503,7 @@ jobs:
         run: bash .github/scripts/smoke-image.sh dlp-friends:ci
       - name: Test real maintenance and HTTP drainage
         run: python3 tests/Support/operations/runtime_integration.py dlp-friends:ci
+      - name: Test rolling shutdown and shared assets
+        run: |
+          python3 tests/Support/operations/rolling_runtime.py dlp-friends:ci
+          python3 tests/Support/operations/rolling_assets.py dlp-friends:ci
