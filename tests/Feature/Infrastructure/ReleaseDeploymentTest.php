@@ -126,6 +126,7 @@ it('deploys support with migrations before the native rolling web', function () 
         '/api/v1/deployments/web-deployment',
     ])->and($requests[3]['body']['docker_compose_custom_start_command'])
         ->toContain('run --rm --no-deps worker php artisan migrate --force --no-interaction &&', 'up -d --wait')
+        ->and(strlen($requests[3]['body']['docker_compose_custom_start_command']))->toBeLessThanOrEqual(255)
         ->and($requests[3]['body']['git_branch'])->toBe('v1.16.2')
         ->and($requests[6]['body'])->toBe([
             'docker_registry_image_name' => 'ghcr.io/zdossantos/dlp-friends',
