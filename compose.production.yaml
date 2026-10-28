@@ -76,8 +76,8 @@ services:
     deploy:
       resources:
         limits:
-          cpus: "1.00"
-          memory: 512M
+          cpus: "2.00"
+          memory: 1G
 
   worker:
     <<: *app
