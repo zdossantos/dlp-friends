@@ -151,3 +151,31 @@ jobs:
             '{version: $version, commit: $commit, image: $image, tree: $tree, migrations_sha256: $migrations, platform: "linux/amd64"}' > container-image.json
           gh release upload "$RELEASE_TAG" container-image.json --clobber
           cat container-image.json >> "$GITHUB_STEP_SUMMARY"
+
+  deploy-production:
+    name: Deliver verified release with rolling web
+    needs: [release-please, publish-image, record-release-image]
+    if: ${{ needs.release-please.outputs.release_created == 'true' && needs.record-release-image.result == 'success' && github.ref_name == vars.PRODUCTION_RELEASE_BRANCH }}
+    runs-on: ubuntu-latest
+    environment: production
+    timeout-minutes: 45
+    concurrency:
+      group: production-delivery
+      cancel-in-progress: false
+    env:
+      RELEASE_TAG: ${{ needs.release-please.outputs.tag_name }}
+      RELEASE_SHA: ${{ needs.release-please.outputs.sha }}
+      APP_IMAGE: ${{ needs.publish-image.outputs.image }}
+      RELEASE_CREATED: ${{ needs.release-please.outputs.release_created }}
+      COOLIFY_API_URL: ${{ vars.COOLIFY_API_URL }}
+      COOLIFY_APPLICATION_UUID: ${{ vars.COOLIFY_APPLICATION_UUID }}
+      COOLIFY_WEB_APPLICATION_UUID: ${{ vars.COOLIFY_WEB_APPLICATION_UUID }}
+      COOLIFY_TOKEN: ${{ secrets.COOLIFY_TOKEN }}
+    steps:
+      - name: Checkout exact release commit
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ needs.release-please.outputs.sha }}
+          persist-credentials: false
+      - name: Migrate and deploy through Coolify
+        run: bash .github/scripts/deploy-release.sh

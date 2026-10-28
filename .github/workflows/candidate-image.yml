@@ -1,0 +1,100 @@
+name: Candidate image
+
+on:
+  workflow_dispatch:
+    inputs:
+      commit:
+        description: Exact 40-character commit SHA to build (no deployment)
+        required: true
+      target:
+        description: Public frontend configuration
+        type: choice
+        options: [beta, production]
+        default: beta
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    env:
+      CANDIDATE_SHA: ${{ inputs.commit }}
+      TARGET: ${{ inputs.target }}
+      PROD_REVERB_APP_KEY: ${{ vars.VITE_REVERB_APP_KEY }}
+      PROD_REVERB_HOST: ${{ vars.VITE_REVERB_HOST }}
+      BETA_REVERB_APP_KEY: ${{ vars.VITE_BETA_REVERB_APP_KEY }}
+      VITE_REVERB_PORT: '443'
+      VITE_REVERB_SCHEME: https
+    steps:
+      - name: Validate exact source reference
+        run: '[[ "$CANDIDATE_SHA" =~ ^[a-f0-9]{40}$ ]]'
+      - name: Checkout candidate
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.commit }}
+          persist-credentials: false
+      - name: Verify source and public build configuration
+        id: metadata
+        run: |
+          test "$(git rev-parse HEAD)" = "$CANDIDATE_SHA"
+          if [ "$TARGET" = production ]; then
+            VITE_REVERB_APP_KEY="$PROD_REVERB_APP_KEY"
+            VITE_REVERB_HOST="$PROD_REVERB_HOST"
+          else
+            test "$TARGET" = beta
+            VITE_REVERB_APP_KEY="$BETA_REVERB_APP_KEY"
+            VITE_REVERB_HOST=ws-beta.dlp-friends.fr
+          fi
+          : "${VITE_REVERB_APP_KEY:?Missing public Reverb app key}"
+          : "${VITE_REVERB_HOST:?Missing public Reverb host}"
+          printf 'VITE_REVERB_APP_KEY=%s\nVITE_REVERB_HOST=%s\n' "$VITE_REVERB_APP_KEY" "$VITE_REVERB_HOST" >> "$GITHUB_ENV"
+          echo "image=ghcr.io/${GITHUB_REPOSITORY,,}:candidate-$TARGET-$CANDIDATE_SHA" >> "$GITHUB_OUTPUT"
+          echo "tree=$(git rev-parse 'HEAD^{tree}')" >> "$GITHUB_OUTPUT"
+          echo "migrations=$(find database/migrations -type f -print0 | sort -z | xargs -0 sha256sum | sha256sum | cut -d ' ' -f 1)" >> "$GITHUB_OUTPUT"
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@594f3bf4285d9ea8dc53c9a0c9c4092420091003 # v4.4.0
+      - name: Build candidate
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: .
+          target: runtime
+          platforms: linux/amd64
+          load: true
+          tags: ${{ steps.metadata.outputs.image }}
+          labels: |
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+            org.opencontainers.image.revision=${{ inputs.commit }}
+            io.dlp-friends.source-tree=${{ steps.metadata.outputs.tree }}
+            io.dlp-friends.migrations-sha256=${{ steps.metadata.outputs.migrations }}
+          build-args: |
+            VITE_REVERB_APP_KEY=${{ env.VITE_REVERB_APP_KEY }}
+            VITE_REVERB_HOST=${{ env.VITE_REVERB_HOST }}
+            VITE_REVERB_PORT=${{ env.VITE_REVERB_PORT }}
+            VITE_REVERB_SCHEME=${{ env.VITE_REVERB_SCHEME }}
+          cache-from: type=gha,scope=runtime-image
+          cache-to: type=gha,mode=max,scope=runtime-image
+      - name: Verify runtime before publication
+        env:
+          IMAGE: ${{ steps.metadata.outputs.image }}
+        run: |
+          bash .github/scripts/smoke-image.sh "$IMAGE"
+          python3 tests/Support/operations/rolling_runtime.py "$IMAGE"
+          python3 tests/Support/operations/rolling_assets.py "$IMAGE"
+          python3 tests/Support/operations/runtime_integration.py "$IMAGE"
+      - name: Publish tested image and record immutable reference
+        env:
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          IMAGE: ${{ steps.metadata.outputs.image }}
+        run: |
+          printf '%s' "$GHCR_TOKEN" | docker login ghcr.io --username "$GITHUB_ACTOR" --password-stdin
+          docker push "$IMAGE"
+          reference="$(docker inspect --format '{{index .RepoDigests 0}}' "$IMAGE")"
+          [[ "$reference" =~ @sha256:[a-f0-9]{64}$ ]]
+          printf 'Source: `%s`\n\nTarget: `%s`\n\nImage: `%s`\n\nNo deployment was requested.\n' "$CANDIDATE_SHA" "$TARGET" "$reference" >> "$GITHUB_STEP_SUMMARY"
+      - name: Log out of GHCR
+        if: always()
+        run: docker logout ghcr.io

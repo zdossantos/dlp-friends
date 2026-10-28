@@ -1,3 +1,7 @@
+> Production séparée : utiliser [le parcours rolling](automatic-rolling-releases.md).
+> Ne pas exécuter `release.py prepare/deploy/resume` sur la topologie web natif +
+> support : cette ancienne procédure est réservée au stack Compose fermé.
+
 # Exploitation et fiabilité
 
 Ce document porte les exigences et procédures opérateur. Les objectifs produit
@@ -70,16 +74,16 @@ supprimer définitivement le conteneur et le volume MinIO de production.
    parcours qui écrit des objets. Limiter la clé applicative à ce bucket.
 7. Exécuter explicitement la migration dans le conteneur `web` :
 
-   ```sh
-   php artisan migrate --force
-   ```
+    ```sh
+    php artisan migrate --force
+    ```
 
 8. Redémarrer proprement les workers, puis contrôler la santé publique :
 
-   ```sh
-   php artisan queue:restart
-   curl --fail --silent https://<domaine-application>/up
-   ```
+    ```sh
+    php artisan queue:restart
+    curl --fail --silent https://<domaine-application>/up
+    ```
 
 Les migrations ne font partie ni de l’entrypoint ni de la commande de démarrage
 d’un service. Une modification de `VITE_REVERB_*` exige une nouvelle
@@ -133,12 +137,12 @@ construction de l’image, car ces valeurs sont intégrées aux assets frontend.
    légaux sont détectés, tandis que les routes d’authentification et membres
    restent exclues.
 10. Avec l’inspection d’URL, lancer un test en direct de `/` et vérifier que
-   Google peut suivre la redirection vers la landing localisée. Tester aussi
-   une URL canonique française et anglaise et contrôler leurs annotations
-   `hreflang` réciproques.
+    Google peut suivre la redirection vers la landing localisée. Tester aussi
+    une URL canonique française et anglaise et contrôler leurs annotations
+    `hreflang` réciproques.
 11. Demander l’indexation des pages principales avec l’inspection d’URL. Une
-   soumission ne garantit ni l’indexation immédiate ni une position dans les
-   résultats ; surveiller les rapports Pages et Sitemaps après exploration.
+    soumission ne garantit ni l’indexation immédiate ni une position dans les
+    résultats ; surveiller les rapports Pages et Sitemaps après exploration.
 
 L’absence de `GOOGLE_ANALYTICS_ID` désactive entièrement le script GA4.
 L’absence de `GOOGLE_SITE_VERIFICATION` retire uniquement la balise de
@@ -177,13 +181,12 @@ Après chaque déploiement qui touche le contenu public, contrôler ces six page
 
 ## Déploiements suivants
 
-Un merge ordinaire dans `main` ne déploie rien. Le merge volontaire de la
-Release PR publie l’image et sa référence ; il ne livre plus la production.
-Suivre exclusivement la procédure
-[prepare → deploy → verify → resume](#livraisons-contrôlées-et-répétition-bêta),
-après sa transition initiale. Un déploiement « Success » ou un `/up` à 200 ne
-prouve pas que le schéma attendu est installé. Les migrations et la reprise
-restent des actions opérateur explicites après répétition et sauvegarde vérifiées.
+Un merge ordinaire dans `main` ne déploie rien. Après activation du
+[parcours automatique](automatic-rolling-releases.md), le merge volontaire de la
+Release PR construit l’image, exécute ses migrations puis déploie le support et
+le web natif Coolify. Une migration échouée arrête la livraison.
+La procédure historique `prepare → deploy → verify → resume` reste réservée aux
+stacks complètes, dont la bêta. Ne pas l’exécuter sur la production séparée.
 
 ### Incident de profil après la 1.15.0
 

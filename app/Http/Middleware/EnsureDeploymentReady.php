@@ -15,7 +15,7 @@ class EnsureDeploymentReady
     /** @param Closure(Request): Response $next */
     public function handle(Request $request, Closure $next): Response
     {
-        if (app()->environment('production', 'beta') && ! $request->is('up')) {
+        if (app()->environment('production', 'beta') && ! $request->is('up', 'ready')) {
             try {
                 // Laravel's maintenance middleware controls the explicit operator bypass.
                 $this->readiness->assertReady(allowMaintenance: true);

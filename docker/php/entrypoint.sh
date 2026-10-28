@@ -21,8 +21,46 @@ esac
 
 case "${1:-web}" in
     web)
-        php-fpm -D
-        exec nginx -g 'daemon off;'
+        rm -f storage/framework/web-draining
+        # Only hashed assets are shared; each image keeps its own manifest.
+        assets_tmp=$(mktemp -d public/build/assets/.publish.XXXXXX)
+        trap 'rm -rf "$assets_tmp"' EXIT HUP INT TERM
+        for asset in /opt/dlp-build-assets/*; do
+            name=${asset##*/}
+            if ! cmp -s "$asset" "public/build/assets/$name"; then
+                cp -p "$asset" "$assets_tmp/$name"
+                mv -f "$assets_tmp/$name" "public/build/assets/$name"
+            fi
+        done
+        rm -rf "$assets_tmp"
+        trap - EXIT HUP INT TERM
+        fpm_pid=''
+        nginx_pid=''
+        stop_web() {
+            trap '' TERM INT QUIT
+            touch storage/framework/web-draining
+            # Allow a 5s poll, a 5s probe timeout and Traefik's 2s throttle before closing HTTP.
+            sleep 15
+            if [ -n "$nginx_pid" ]; then
+                kill -QUIT "$nginx_pid" 2>/dev/null || true
+                wait "$nginx_pid" || true
+            fi
+            if [ -n "$fpm_pid" ]; then
+                kill -QUIT "$fpm_pid" 2>/dev/null || true
+                wait "$fpm_pid" || true
+            fi
+            exit 0
+        }
+        trap stop_web TERM INT QUIT
+        php-fpm --nodaemonize &
+        fpm_pid=$!
+        nginx -g 'daemon off;' &
+        nginx_pid=$!
+        status=0
+        wait "$nginx_pid" || status=$?
+        kill -QUIT "$fpm_pid" 2>/dev/null || true
+        wait "$fpm_pid" || true
+        exit "$status"
         ;;
     worker)
         exec php artisan queue:work --sleep=3 --tries=3 --timeout=90 --memory="${QUEUE_WORKER_MEMORY:-256}"

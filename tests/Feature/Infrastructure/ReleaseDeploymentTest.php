@@ -23,6 +23,7 @@ beforeEach(function () {
 
     $this->deploymentEnvironment = [
         'RELEASE_CREATED' => 'true',
+        'RELEASE_TAG' => 'v1.16.2',
         'RELEASE_SHA' => str_repeat('b', 40),
         'APP_IMAGE' => 'ghcr.io/zdossantos/dlp-friends@sha256:'.str_repeat('a', 64),
         'COOLIFY_API_URL' => 'http://'.$address.'/api/v1',
@@ -106,7 +107,83 @@ it('stops on a Coolify error without leaking its response', function (string $pa
     'deployment rejected' => ['/api/v1/deploy', 3],
 ]);
 
-it('refuses the legacy production deployment path without server authorization', function () {
-    $result = Process::env($this->deploymentEnvironment)->run(['bash', base_path('.github/scripts/deploy-release.sh')]);
-    expect($result->failed())->toBeTrue()->and(recordedCoolifyRequests($this->directory))->toBe([]);
+it('deploys support with migrations before the native rolling web', function () {
+    $result = Process::env(array_merge($this->deploymentEnvironment, [
+        'COOLIFY_WEB_APPLICATION_UUID' => 'web-test',
+    ]))->run(['bash', base_path('.github/scripts/deploy-release.sh')]);
+
+    expect($result->successful())->toBeTrue($result->errorOutput());
+    $requests = recordedCoolifyRequests($this->directory);
+    expect(array_column($requests, 'path'))->toBe([
+        '/api/v1/applications/application-test',
+        '/api/v1/applications/web-test',
+        '/api/v1/applications/application-test/envs/bulk',
+        '/api/v1/applications/application-test',
+        '/api/v1/deploy',
+        '/api/v1/deployments/support-deployment',
+        '/api/v1/applications/web-test',
+        '/api/v1/deploy',
+        '/api/v1/deployments/web-deployment',
+    ])->and($requests[3]['body']['docker_compose_custom_start_command'])
+        ->toContain('run --rm --no-deps worker php artisan migrate --force &&', 'up -d --wait')
+        ->and($requests[3]['body']['docker_compose_custom_start_command'])->not->toContain('$', ';')
+        ->and(strlen($requests[3]['body']['docker_compose_custom_start_command']))->toBeLessThanOrEqual(255)
+        ->and($requests[3]['body']['git_branch'])->toBe('v1.16.2')
+        ->and($requests[6]['body'])->toBe([
+            'docker_registry_image_name' => 'ghcr.io/zdossantos/dlp-friends',
+            'docker_registry_image_tag' => 'sha256-'.str_repeat('a', 64),
+        ]);
 });
+
+it('stops before touching web when the migration deployment fails', function (string $status) {
+    file_put_contents($this->directory.'/deployment-status', $status);
+    $result = Process::env(array_merge($this->deploymentEnvironment, [
+        'COOLIFY_WEB_APPLICATION_UUID' => 'web-test',
+    ]))->run(['bash', base_path('.github/scripts/deploy-release.sh')]);
+
+    expect($result->failed())->toBeTrue();
+    $requests = recordedCoolifyRequests($this->directory);
+    expect($requests)->toHaveCount(6)
+        ->and(array_column(array_filter($requests, fn (array $request): bool => $request['method'] === 'POST'), 'body'))
+        ->toBe([['uuid' => 'application-test', 'force' => false]]);
+})->with(['failed', 'cancelled', 'unknown']);
+
+it('refuses a mismatched topology before any deployment change', function (string $topology) {
+    file_put_contents($this->directory.'/topology', $topology);
+    $result = Process::env(array_merge($this->deploymentEnvironment, [
+        'COOLIFY_WEB_APPLICATION_UUID' => 'web-test',
+    ]))->run(['bash', base_path('.github/scripts/deploy-release.sh')]);
+
+    expect($result->failed())->toBeTrue();
+    foreach (recordedCoolifyRequests($this->directory) as $request) {
+        expect($request['method'])->toBe('GET');
+    }
+})->with(['full-compose', 'wrong-environment', 'unhealthy-web-config']);
+
+it('requires both production resources before contacting Coolify', function () {
+    $result = Process::env($this->deploymentEnvironment)->run(['bash', base_path('.github/scripts/deploy-release.sh')]);
+
+    expect($result->failed())->toBeTrue()
+        ->and(recordedCoolifyRequests($this->directory))->toBe([]);
+});
+
+it('only starts Compose services after a successful migration command', function (int $migrationResult) {
+    $result = Process::env(array_merge($this->deploymentEnvironment, [
+        'COOLIFY_WEB_APPLICATION_UUID' => 'web-test',
+    ]))->run(['bash', base_path('.github/scripts/deploy-release.sh')]);
+    expect($result->successful())->toBeTrue($result->errorOutput());
+
+    $command = recordedCoolifyRequests($this->directory)[3]['body']['docker_compose_custom_start_command'];
+    $result = Process::env([
+        'COMPOSE_LOG' => $this->directory.'/compose.log',
+        'MIGRATION_RESULT' => (string) $migrationResult,
+    ])->run(['bash', '-c', 'docker() { echo "$*" >> "$COMPOSE_LOG"; if [[ "$*" == *"artisan migrate"* ]]; then return "$MIGRATION_RESULT"; fi; }; '.$command]);
+
+    $calls = file($this->directory.'/compose.log', FILE_IGNORE_NEW_LINES);
+    expect($result->exitCode())->toBe($migrationResult)
+        ->and($calls)->toHaveCount($migrationResult === 0 ? 2 : 1)
+        ->and($calls[0])->toContain('run --rm --no-deps worker php artisan migrate');
+    if ($migrationResult === 0) {
+        expect($calls[1])->toContain('up -d --wait --wait-timeout 180');
+    }
+})->with([0, 1]);

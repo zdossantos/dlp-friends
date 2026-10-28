@@ -76,13 +76,16 @@ COPY docker/php/entrypoint.sh /usr/local/bin/dlp-entrypoint
 COPY --from=build --chown=www-data:www-data /app /var/www/html
 
 RUN chmod +x /usr/local/bin/dlp-entrypoint \
+    && cp -a public/build/assets /opt/dlp-build-assets \
     && chown -R www-data:www-data storage bootstrap/cache \
     && mkdir -p /run/nginx
 
 EXPOSE 80 8080
 
+STOPSIGNAL SIGQUIT
+
 ENTRYPOINT ["/usr/local/bin/dlp-entrypoint"]
 CMD ["web"]
 
-HEALTHCHECK --interval=10s --timeout=5s --start-period=20s --retries=5 \
-    CMD curl --fail --silent http://127.0.0.1/up >/dev/null || exit 1
+HEALTHCHECK --interval=5s --timeout=5s --start-period=20s --retries=1 \
+    CMD curl --fail --silent --max-time 4 http://127.0.0.1/ready >/dev/null || exit 1
