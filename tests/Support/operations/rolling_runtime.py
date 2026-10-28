@@ -48,7 +48,24 @@ fastcgi_finish_request();
             time.sleep(.1)
         else:
             raise AssertionError('request was not accepted')
-        run('docker', 'stop', '--time', '15', name, timeout=20)
+        stopping = subprocess.Popen(['docker', 'stop', '--time', '30', name], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        try:
+            for attempt in range(50):
+                if subprocess.run(['docker', 'exec', name, 'test', '-f', '/var/www/html/storage/framework/web-draining'], capture_output=True).returncode == 0:
+                    break
+                time.sleep(.1)
+            else:
+                raise AssertionError('shutdown did not withdraw readiness before closing HTTP')
+            assert run('docker', 'exec', name, 'curl', '--silent', '--output', '/dev/null', '--write-out', '%{http_code}',
+                       'http://127.0.0.1/ready').strip() == '503', 'draining instance remained ready'
+            assert run('docker', 'exec', name, 'curl', '--silent', '--output', '/dev/null', '--write-out', '%{http_code}',
+                       'http://127.0.0.1/up').strip() == '200', 'HTTP stopped before proxy withdrawal'
+            stopping.communicate(timeout=35)
+            assert stopping.returncode == 0, 'container stop failed'
+        finally:
+            if stopping.poll() is None:
+                stopping.kill()
+                stopping.communicate()
         output, error = request.communicate(timeout=5)
         assert request.returncode == 0 and output == b'write-completed', (output, error)
         assert Path(directory, 'completed').read_text() == 'yes', 'PHP shutdown callback was killed'

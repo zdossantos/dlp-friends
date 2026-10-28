@@ -46,6 +46,28 @@ function resolveProductionCompose(array $overrides = []): ProcessResult
         ->run('docker compose -f compose.production.yaml config --format json');
 }
 
+it('separates production support without changing credentials or starting a second web', function () {
+    $baseline = resolveProductionCompose();
+    $result = Process::env(productionComposeEnvironment())
+        ->run('docker compose -f compose.production-support.yaml config --format json');
+    expect($baseline->successful())->toBeTrue($baseline->errorOutput())
+        ->and($result->successful())->toBeTrue($result->errorOutput());
+    $original = json_decode($baseline->output(), true, flags: JSON_THROW_ON_ERROR);
+    $support = json_decode($result->output(), true, flags: JSON_THROW_ON_ERROR);
+    expect(array_keys($support['services']))->toEqualCanonicalizing(['worker', 'scheduler', 'reverb']);
+    foreach ($support['services'] as $name => $service) {
+        expect($service['stop_grace_period'])->toBe('2m0s')
+            ->and($service['environment']['REVERB_HOST'])->toBe('dlp-friends-production-reverb');
+        unset($service['stop_grace_period'], $service['networks']);
+        $service['environment']['REVERB_HOST'] = 'reverb';
+        unset($original['services'][$name]['networks']);
+        expect($service)->toBe($original['services'][$name]);
+    }
+    expect($support['services']['reverb']['networks']['coolify']['aliases'])
+        ->toBe(['dlp-friends-production-reverb'])
+        ->and($support['networks']['coolify']['external'])->toBeTrue();
+});
+
 it('resolves the production service topology without local-only services', function () {
     $result = resolveProductionCompose();
 

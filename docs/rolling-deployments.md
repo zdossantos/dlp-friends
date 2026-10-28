@@ -1,6 +1,6 @@
 # Déploiements web avec recouvrement
 
-État du chantier au 28 octobre 2026 : préparation et tests locaux en cours ; **aucune bascule de production effectuée**. La preuve Docker locale ne vaut pas validation du rolling Coolify.
+État du chantier au 28 octobre 2026 : contrôles locaux et CI réussis, répétition Coolify en bêta en cours ; **aucune bascule de production effectuée**. Une erreur HTTP a été observée pendant un remplacement bêta : zéro interruption n'est pas encore validé.
 
 ## Base de la transition
 
@@ -18,7 +18,7 @@ Les changements non publiés de `main` ne doivent pas entrer dans l’image de t
 
 Le `HEALTHCHECK` de l’image interroge `/ready` (HTTP 200/503, JSON générique, sans cookie ni cache HTTP). Il réutilise le contrôle de base/migrations/maintenance, lit le cache et vérifie le Redis de session. `/up` reste une preuve de vie distincte. Les checks Compose historiques restent sur `/up` pour préserver la procédure de maintenance existante.
 
-Le processus principal transmet l’arrêt gracieux à Nginx, attend ses requêtes, puis termine PHP-FPM et ses traitements après réponse. Fixer le **Stop Grace Period** Coolify selon les essais réels, au moins 120 secondes pour commencer la répétition. Une requête dépassant cette limite peut être tuée ; le rolling ne rend pas une écriture rejouable.
+Le processus principal retire d'abord sa readiness avec un marqueur local au conteneur, garde HTTP ouvert pendant 15 secondes pour la propagation au proxy, puis transmet l’arrêt gracieux à Nginx, attend ses requêtes et termine PHP-FPM avec ses traitements après réponse. Configurer la sonde Coolify sur `/ready`, port 80, intervalle 5 secondes, timeout 5 secondes et **une seule tentative échouée** avant état unhealthy. Un nombre supérieur retarderait le retrait au-delà du délai prévu. Fixer le **Stop Grace Period** Coolify selon les essais réels, au moins 120 secondes pour commencer la répétition. Une requête dépassant cette limite peut être tuée ; le rolling ne rend pas une écriture rejouable. La fenêtre de 15 secondes reste à valider sous charge et ne garantit pas la propagation d'un proxy bloqué.
 
 ## Construire une image précise
 
@@ -49,6 +49,26 @@ Créer une ressource web Docker Image beta avec les dépendances beta isolées, 
 Aucun message ou mail de test vers des membres réels. Les essais locaux utilisent seulement des ressources synthétiques.
 
 ## Première bascule de production
+
+### Séparer les processus de support
+
+`compose.production-support.yaml` et `compose.beta-support.yaml` contiennent seulement worker, scheduler et Reverb. Ils sont autonomes car le parseur Coolify ne résout pas l'héritage Compose avant son traitement. Les tests d'infrastructure comparent leur configuration à celle des stacks complètes. Ils ajoutent un arrêt gracieux de 120 secondes et un alias Reverb propre à chaque environnement sur le réseau externe `coolify`.
+
+Conserver le digest actuel des processus de support lors de la séparation. Vérifier la résolution de `dlp-friends-production-reverb` depuis le nouveau web avant de lui attribuer le domaine. Ne jamais démarrer une seconde stack de support tant que l'ancien scheduler tourne.
+
+La procédure `scripts/operations/release.py` et l'automatisation bêta attendent encore une stack complète à quatre services. **Ne pas les utiliser sur une topologie séparée** : `prepare` peut activer la maintenance avant de rencontrer une incompatibilité. Leur adaptation ou le maintien de la bêta classique après la répétition est nécessaire avant clôture. Ces fichiers seuls n'activent aucun déploiement.
+
+Pour une livraison web compatible après séparation : construire et vérifier un digest précis, contrôler migrations et compatibilité avec les processus de support, relever l'ancien digest et la santé, lancer un seul redéploiement natif, mesurer les réponses et les sessions pendant le recouvrement, puis vérifier les parcours et les journaux. En cas d'échec de santé, conserver l'ancienne instance ; en cas de régression après bascule, réaffecter le digest précédent et redéployer, sans migration inverse automatique. Une livraison qui nécessite de nouveaux jobs, schémas ou processus ne relève pas de cette procédure web seule.
+
+### Mesures acquises pendant la répétition
+
+- Première image de transition : commit `6f8f2b52a61f7bd0b6e416d72b93b1b5eb6094a9`, issu directement de la release `v1.16.1`. Une correction du retrait au proxy est en cours de validation ; ces premiers digests ne sont pas approuvés pour la production.
+- Variante bêta : `sha256:75bb6b89016e239273c81b611752e99fc70d1303811cc6a077151c0439af3e4c` ; variante production : `sha256:fd97886494626a25f36ea533ef638e79879f018d52401789e4c855f0c4be8e3d`. Les deux builds GitHub ont réussi leurs contrôles runtime avant publication.
+- Restauration du dump MySQL du 28 octobre dans un conteneur isolé sans réseau ni port : import en 44,234 secondes, 51 tables, 45 migrations, contrôle rapide de `users` et `migrations` réussi ; conteneur supprimé ensuite. Cela ne prouve pas la restauration complète des objets S3 ni les parcours métier.
+- Ressource native bêta `c4xzgs0ydhcx2lzpr1sz8ef1`, arrêt effectif de 120 secondes, volume partagé limité aux assets, domaine HTTPS bêta. Un remplacement sain prend environ 27 secondes, avec nouvelle instance saine avant retrait de l'ancienne selon Coolify.
+- Première mesure HTTP : 326 réponses 200 et une erreur HTTP dont le code n'avait pas été enregistré sur 150 secondes ; aucun changement de jeton CSRF. Cette mesure ne prouve ni une session authentifiée conservée ni zéro erreur.
+- Une URL inexistante répondant par une redirection est acceptée par la sonde HTTP générée (`curl -f`). Employer exactement `/ready` et vérifier séparément son statut 200 sans redirection. Le test de refus utilise un port fermé pour éviter ce faux positif.
+- Candidat sur port 81 fermé : refusé par Coolify, ancienne instance conservée ; 394 réponses 200, aucune erreur ni changement CSRF sur 180 secondes. Le journal du proxy attribue en revanche les incidents des remplacements sains au retrait de l'ancien backend : 502 à 12:09:46 UTC, puis requête abandonnée après cinq secondes à 12:12:18 UTC. La correction doit être répétée sur serveur avant bascule.
 
 Précharger l’image, vérifier sa parité et ses accès sans trafic public. Peupler le volume avec les assets de l’image actuellement servie ; vérifier que l’ancien HTML continue à trouver ses chunks après changement de route. Conserver l’ancien digest et une procédure inverse déjà répétée.
 
