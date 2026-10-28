@@ -73,6 +73,17 @@ it('exposes readiness without a session or cached success', function () {
         ->assertHeader('Cache-Control', 'no-store, private')->assertCookieMissing(config('session.cookie'));
 });
 
+it('withdraws readiness while a draining web still serves HTTP', function () {
+    touch(storage_path('framework/web-draining'));
+    try {
+        $this->getJson('/ready')->assertServiceUnavailable()->assertExactJson(['ready' => false]);
+        $this->get('/up')->assertOk();
+    } finally {
+        unlink(storage_path('framework/web-draining'));
+    }
+    $this->getJson('/ready')->assertOk();
+});
+
 it('keeps liveness healthy but refuses readiness with a pending migration', function () {
     DB::table('migrations')->where('id', DB::table('migrations')->max('id'))->delete();
     app()->instance('env', 'production');

@@ -87,5 +87,5 @@ STOPSIGNAL SIGQUIT
 ENTRYPOINT ["/usr/local/bin/dlp-entrypoint"]
 CMD ["web"]
 
-HEALTHCHECK --interval=10s --timeout=5s --start-period=20s --retries=5 \
+HEALTHCHECK --interval=5s --timeout=5s --start-period=20s --retries=1 \
     CMD curl --fail --silent --max-time 4 http://127.0.0.1/ready >/dev/null || exit 1
