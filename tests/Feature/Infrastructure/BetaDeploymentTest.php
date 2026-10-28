@@ -29,13 +29,14 @@ it('separates beta support while preserving isolated dependencies and mail', fun
         ->and($result->successful())->toBeTrue($result->errorOutput());
     $original = json_decode($baseline->output(), true, flags: JSON_THROW_ON_ERROR);
     $support = json_decode($result->output(), true, flags: JSON_THROW_ON_ERROR);
-    expect(array_keys($support['services']))->toEqualCanonicalizing(['worker', 'scheduler', 'reverb']);
-    foreach ($support['services'] as $name => $service) {
+    expect(array_keys($support['services']))->toEqualCanonicalizing(['worker', 'scheduler', 'dlp-friends-beta-reverb']);
+    foreach ($support['services'] as $service) {
+        $name = $service['command'][0];
         expect($service['stop_grace_period'])->toBe('2m0s');
         unset($service['stop_grace_period'], $service['networks'], $original['services'][$name]['networks']);
         expect($service)->toBe($original['services'][$name]);
     }
-    expect($support['services']['reverb']['networks']['coolify']['aliases'])
+    expect($support['services']['dlp-friends-beta-reverb']['networks']['coolify']['aliases'])
         ->toBe(['dlp-friends-beta-reverb'])
         ->and($support['networks']['coolify']['external'])->toBeTrue();
 });

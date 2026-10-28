@@ -52,7 +52,7 @@ Aucun message ou mail de test vers des membres réels. Les essais locaux utilise
 
 ### Séparer les processus de support
 
-`compose.production-support.yaml` et `compose.beta-support.yaml` contiennent seulement worker, scheduler et Reverb. Ils sont autonomes car le parseur Coolify ne résout pas l'héritage Compose avant son traitement. Les tests d'infrastructure comparent leur configuration à celle des stacks complètes. Ils ajoutent un arrêt gracieux de 120 secondes et un alias Reverb propre à chaque environnement sur le réseau externe `coolify`.
+`compose.production-support.yaml` et `compose.beta-support.yaml` contiennent seulement worker, scheduler et Reverb. Ils sont autonomes car le parseur Coolify ne résout pas l'héritage Compose avant son traitement. Les tests d'infrastructure comparent leur configuration à celle des stacks complètes. Ils ajoutent un arrêt gracieux de 120 secondes. Le service Reverb porte le nom `dlp-friends-production-reverb` ou `dlp-friends-beta-reverb` : Coolify remplace les aliases du réseau partagé par le nom de service, donc un alias personnalisé seul ne suffit pas. Réaffecter le domaine WebSocket au service renommé avant son déploiement.
 
 Conserver le digest actuel des processus de support lors de la séparation. Vérifier la résolution de `dlp-friends-production-reverb` depuis le nouveau web avant de lui attribuer le domaine. Ne jamais démarrer une seconde stack de support tant que l'ancien scheduler tourne.
 

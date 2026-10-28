@@ -54,8 +54,9 @@ it('separates production support without changing credentials or starting a seco
         ->and($result->successful())->toBeTrue($result->errorOutput());
     $original = json_decode($baseline->output(), true, flags: JSON_THROW_ON_ERROR);
     $support = json_decode($result->output(), true, flags: JSON_THROW_ON_ERROR);
-    expect(array_keys($support['services']))->toEqualCanonicalizing(['worker', 'scheduler', 'reverb']);
-    foreach ($support['services'] as $name => $service) {
+    expect(array_keys($support['services']))->toEqualCanonicalizing(['worker', 'scheduler', 'dlp-friends-production-reverb']);
+    foreach ($support['services'] as $service) {
+        $name = $service['command'][0];
         expect($service['stop_grace_period'])->toBe('2m0s')
             ->and($service['environment']['REVERB_HOST'])->toBe('dlp-friends-production-reverb');
         unset($service['stop_grace_period'], $service['networks']);
@@ -63,7 +64,7 @@ it('separates production support without changing credentials or starting a seco
         unset($original['services'][$name]['networks']);
         expect($service)->toBe($original['services'][$name]);
     }
-    expect($support['services']['reverb']['networks']['coolify']['aliases'])
+    expect($support['services']['dlp-friends-production-reverb']['networks']['coolify']['aliases'])
         ->toBe(['dlp-friends-production-reverb'])
         ->and($support['networks']['coolify']['external'])->toBeTrue();
 });

@@ -105,7 +105,8 @@ services:
           cpus: "0.10"
           memory: 80M
 
-  reverb:
+  # Coolify replaces aliases on its shared network with the service name.
+  dlp-friends-beta-reverb:
     <<: *app
     command: reverb
     networks:
