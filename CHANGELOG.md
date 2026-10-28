@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.16.2](https://github.com/zdossantos/dlp-friends/compare/v1.16.1...v1.16.2) (2026-10-28)
+
+
+### Fixes
+
+* **deploy:** automate releases with native Coolify rolling ([#335](https://github.com/zdossantos/dlp-friends/issues/335)) ([de50345](https://github.com/zdossantos/dlp-friends/commit/de50345c6bbad7e0382984c339ae89386011c2c6))
+
 ## [1.16.1](https://github.com/zdossantos/dlp-friends/compare/v1.16.0...v1.16.1) (2026-10-21)
 
 
