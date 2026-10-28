@@ -39,6 +39,32 @@ fastcgi_finish_request();
                 time.sleep(.1)
         else:
             raise AssertionError('web did not start')
+        capacity = Path(directory) / 'capacity.php'
+        capacity.write_text('''<?php
+file_put_contents('/proof/accepted-' . (int) $_GET['slot'], 'yes');
+for ($i = 0; $i < 200 && !file_exists('/proof/release'); $i++) { usleep(100000); }
+echo 'completed';
+''')
+        run('docker', 'cp', str(capacity), name + ':/var/www/html/public/capacity-probe.php')
+        requests = []
+        try:
+            for slot in range(5):
+                requests.append(subprocess.Popen(['docker', 'exec', name, 'curl', '--fail', '--silent',
+                    f'http://127.0.0.1/capacity-probe.php?slot={slot}'], stdout=subprocess.PIPE, stderr=subprocess.PIPE))
+            for attempt in range(100):
+                if len(list(Path(directory).glob('accepted-*'))) == 5:
+                    break
+                time.sleep(.1)
+            else:
+                raise AssertionError('five concurrent PHP requests were not accepted')
+            run('docker', 'exec', name, 'curl', '--fail', '--silent', '--max-time', '3',
+                'http://127.0.0.1/up', timeout=5)
+            print('PHP still serves HTTP within 3 seconds with five requests in progress.')
+        finally:
+            Path(directory, 'release').touch()
+            for pending in requests:
+                output, error = pending.communicate(timeout=25)
+                assert pending.returncode == 0 and output == b'completed', (output, error)
         run('docker', 'exec', name, 'rm', '-f', '/tmp/accepted', '/proof/completed')
         request = subprocess.Popen(['docker', 'exec', name, 'curl', '--fail', '--silent',
                                     'http://127.0.0.1/drain-probe.php'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)

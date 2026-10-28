@@ -75,6 +75,9 @@ x-app: &app
 services:
   web:
     <<: *app
+    environment:
+      <<: *app-environment
+      PHP_FPM_MAX_CHILDREN: 5
     command: web
     expose:
       - "80"
