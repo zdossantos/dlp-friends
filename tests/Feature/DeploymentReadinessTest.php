@@ -39,6 +39,7 @@ it('rejects an unavailable database but keeps the process health endpoint usable
 
     $this->artisan('deployment:check', ['--json' => true])->assertFailed();
     $this->get('/fr')->assertServiceUnavailable()->assertDontSee('private-test-password');
+    $this->getJson('/ready')->assertServiceUnavailable()->assertExactJson(['ready' => false]);
     $this->get('/up')->assertOk();
     DB::setDefaultConnection('mysql');
 });
@@ -51,4 +52,44 @@ it('requires explicit permission to check a closed deployment', function () {
     } finally {
         $this->artisan('up')->assertSuccessful();
     }
+});
+
+it('exposes readiness without a session or cached success', function () {
+    $this->getJson('/ready')->assertOk()->assertExactJson(['ready' => true])
+        ->assertHeader('Cache-Control', 'no-store, private')->assertCookieMissing(config('session.cookie'));
+});
+
+it('keeps liveness healthy but refuses readiness with a pending migration', function () {
+    DB::table('migrations')->where('id', DB::table('migrations')->max('id'))->delete();
+    app()->instance('env', 'production');
+    $this->getJson('/ready')->assertServiceUnavailable()->assertExactJson(['ready' => false]);
+    $this->get('/up')->assertOk();
+});
+
+it('refuses readiness during maintenance without disclosing the bypass', function () {
+    $this->artisan('down', ['--secret' => 'operator-only'])->assertSuccessful();
+    try {
+        $this->getJson('/ready')->assertServiceUnavailable()->assertExactJson(['ready' => false])
+            ->assertDontSee('operator-only');
+    } finally {
+        $this->artisan('up')->assertSuccessful();
+    }
+});
+
+it('refuses readiness when the configured cache cannot be read', function () {
+    config()->set('cache.default', 'redis');
+    config()->set('database.redis.cache.port', 9);
+    config()->set('database.redis.cache.read_timeout', 1);
+    config()->set('database.redis.cache.timeout', 1);
+    $this->getJson('/ready')->assertServiceUnavailable()->assertExactJson(['ready' => false]);
+    $this->get('/up')->assertOk();
+});
+
+it('checks the session Redis even when cache uses a different backend', function () {
+    config()->set('session.driver', 'redis');
+    config()->set('session.connection', 'unreachable_sessions');
+    config()->set('database.redis.unreachable_sessions', [
+        'host' => '127.0.0.1', 'port' => 9, 'timeout' => 1, 'read_timeout' => 1,
+    ]);
+    $this->getJson('/ready')->assertServiceUnavailable()->assertExactJson(['ready' => false]);
 });
