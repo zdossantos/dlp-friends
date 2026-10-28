@@ -1,0 +1,18 @@
+{
+    "state_dir": "/srv/dlp-operations/rolling-private",
+    "coolify_api_url": "https://coolify.example.invalid/api/v1",
+    "coolify_curl_config": "/srv/dlp-operations/rolling-private/coolify.curl",
+    "initial_version": "v1.16.1",
+    "release_line": "1.16",
+    "environment": "production",
+    "environment_id": 0,
+    "web_uuid": "requirednativewebuuid",
+    "support_uuid": "requiredsupportuuid",
+    "support_compose": "/compose.production-support.yaml",
+    "support_commit": "REQUIRED_REVIEWED_40_CHARACTER_COMMIT",
+    "network": "coolify",
+    "env_file": "/data/coolify/applications/requirednativewebuuid/runtime/.env",
+    "database": "dlp_friends",
+    "mysql_server_uuid": "REQUIRED_EXISTING_PRODUCTION_MYSQL_SERVER_UUID",
+    "mysql_client": "/srv/dlp-operations/private/source.cnf"
+}

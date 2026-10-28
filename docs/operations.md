@@ -1,3 +1,7 @@
+> Production séparée : utiliser [le parcours rolling](automatic-rolling-releases.md).
+> Ne pas exécuter `release.py prepare/deploy/resume` sur la topologie web natif +
+> support : cette ancienne procédure est réservée au stack Compose fermé.
+
 # Exploitation et fiabilité
 
 Ce document porte les exigences et procédures opérateur. Les objectifs produit
