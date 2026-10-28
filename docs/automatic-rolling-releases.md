@@ -8,7 +8,7 @@ Une fois l'activation vérifiée, fusionner la Release PR Release Please suffit 
 2. Le script API Coolify existant configure le support avec ce digest et le tag
    Git de la release, pour que le Compose corresponde aussi à cette version.
 3. La commande de démarrage Compose lance explicitement un conteneur temporaire
-   de la **nouvelle image** : `run --rm --no-deps worker php artisan migrate --force --no-interaction`.
+   de la **nouvelle image** : `run --rm --no-deps worker php artisan migrate --force`.
 4. Si la migration réussit, `up -d --wait --wait-timeout 180` remplace les workers,
    le scheduler et Reverb. GitHub attend le résultat final du déploiement Coolify.
 5. GitHub configure ensuite le web avec le même digest et demande son déploiement
