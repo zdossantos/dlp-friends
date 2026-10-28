@@ -57,3 +57,13 @@ Une migration incompatible peut casser l'ancien web entre la migration et la
 bascule. Le rolling ne supprime pas cette interruption. Prévoir une intervention
 et une sauvegarde restaurable pour ces releases ; aucune durée n'est garantie.
 Une migration bloquée ou échouée nécessite un diagnostic avant de reprendre.
+
+## Vérification de la simplification
+
+Le 28 octobre 2026, la commande directe a été exécutée par Coolify 4.5.0 sur la
+stack bêta classique : `Nothing to migrate`, puis quatre services sains et
+déploiement terminé (`fzt0tfipqaspbqlgbu51ay2d`). La commande temporaire a été
+retirée après l’essai. Cela valide l’exécution Compose avec la version bêta
+existante, pas une nouvelle migration ni toute la chaîne GitHub en production.
+Les tests API locaux couvrent l’ordre support/web et l’arrêt sur échec ; les
+tests shell confirment que `up` ne suit pas une migration échouée.

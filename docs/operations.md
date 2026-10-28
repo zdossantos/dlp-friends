@@ -188,13 +188,12 @@ Après chaque déploiement qui touche le contenu public, contrôler ces six page
 
 ## Déploiements suivants
 
-Un merge ordinaire dans `main` ne déploie rien. Le merge volontaire de la
-Release PR publie l’image et sa référence ; il ne livre plus la production.
-Suivre exclusivement la procédure
-[prepare → deploy → verify → resume](#livraisons-contrôlées-et-répétition-bêta),
-après sa transition initiale. Un déploiement « Success » ou un `/up` à 200 ne
-prouve pas que le schéma attendu est installé. Les migrations et la reprise
-restent des actions opérateur explicites après répétition et sauvegarde vérifiées.
+Un merge ordinaire dans `main` ne déploie rien. Après activation du
+[parcours automatique](automatic-rolling-releases.md), le merge volontaire de la
+Release PR construit l’image, exécute ses migrations puis déploie le support et
+le web natif Coolify. Une migration échouée arrête la livraison.
+La procédure historique `prepare → deploy → verify → resume` reste réservée aux
+stacks complètes, dont la bêta. Ne pas l’exécuter sur la production séparée.
 
 ### Incident de profil après la 1.15.0
 
