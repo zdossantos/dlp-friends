@@ -1,3 +1,8 @@
+> L'automatisation du web natif et des traitements séparés est décrite dans
+> [automatic-rolling-releases.md](automatic-rolling-releases.md). Elle reste
+> conditionnée à la validation bêta et à l'activation GitHub ; les commandes
+> historiques de maintenance ci-dessous ne s'appliquent pas au web rolling actif.
+
 # Qualité, CI et livraison continue
 
 Ce document est la source détaillée du processus de qualité et de livraison.
