@@ -122,4 +122,25 @@ class RollingReleaseTest(unittest.TestCase):
             with self.assertRaises(ops.OperationError): relay.deliver(dict(REQUEST, image=IMAGE[:-1] + 'c'))
 
 
+    def test_backup_client_must_target_the_validated_database(self):
+        for server in ['expected-server', 'other-server']:
+            with self.subTest(server=server), tempfile.TemporaryDirectory() as directory:
+                relay = FakeRelease(directory)
+                relay.config.update(mysql_client='/private/client.cnf', database='app')
+                relay.old = {'identity': {'server': 'expected-server', 'database': 'app'}}
+                def command(args, **kwargs):
+                    if args[0] == 'mysql': return server + '\tapp\n'
+                    kwargs['output'].write(b'-- database backup\n')
+                relay.command = Mock(side_effect=command)
+                with patch.object(ops, 'private_file', return_value=Path('/private/client.cnf')):
+                    if server == 'expected-server':
+                        rolling.RollingRelease.backup(relay)
+                        self.assertEqual(relay.command.call_count, 2)
+                    else:
+                        with self.assertRaisesRegex(ops.OperationError, 'backup_database_identity_mismatch'):
+                            rolling.RollingRelease.backup(relay)
+                        self.assertEqual(relay.command.call_count, 1)
+                        self.assertEqual(list(Path(directory).glob('*.sql')), [])
+
+
 if __name__ == '__main__': unittest.main()

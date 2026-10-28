@@ -181,6 +181,10 @@ class RollingRelease:
     def backup(self):
         client = ops.private_file(self.config['mysql_client'])
         ops.require(re.fullmatch(r'[A-Za-z0-9_]+', self.config['database']), 'invalid_database')
+        identity = self.command(['mysql', '--defaults-extra-file=' + str(client), '--batch', '--skip-column-names',
+                                 '--database=' + self.config['database'], '--execute=SELECT @@server_uuid, DATABASE()']).strip().split('\t')
+        ops.require(identity == [self.old['identity']['server'], self.old['identity']['database']],
+                    'backup_database_identity_mismatch')
         path = self.directory / ('before-' + str(time.time_ns()) + '.sql')
         with path.open('xb') as output:
             os.chmod(path, 0o600)
