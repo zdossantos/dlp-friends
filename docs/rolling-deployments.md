@@ -20,6 +20,12 @@ Le `HEALTHCHECK` de l’image interroge `/ready` (HTTP 200/503, JSON générique
 
 Le processus principal retire d'abord sa readiness avec un marqueur local au conteneur, garde HTTP ouvert pendant 15 secondes pour la propagation au proxy, puis transmet l’arrêt gracieux à Nginx, attend ses requêtes et termine PHP-FPM avec ses traitements après réponse. Configurer la sonde Coolify sur `/ready`, port 80, intervalle 5 secondes, timeout 5 secondes et **une seule tentative échouée** avant état unhealthy. Un nombre supérieur retarderait le retrait au-delà du délai prévu. Fixer le **Stop Grace Period** Coolify selon les essais réels, au moins 120 secondes pour commencer la répétition. Une requête dépassant cette limite peut être tuée ; le rolling ne rend pas une écriture rejouable. La fenêtre de 15 secondes reste à valider sous charge et ne garantit pas la propagation d'un proxy bloqué.
 
+## Capacité PHP du web
+
+L'image accepte dix traitements PHP simultanés (`PHP_FPM_MAX_CHILDREN=10`). La bêta Compose conserve cinq traitements avec son budget mémoire actuel. La production web dispose de 2 CPU et 1 Gio de RAM dans Coolify ; le plafond reste à vérifier sous charge réelle, en gardant la mémoire nécessaire aux deux web pendant un rolling et aux autres services.
+
+Le 29 octobre, les traces de production `v1.16.2` montrent une saturation du plafond PHP par défaut (cinq), puis des 503 du proxy au même moment que des sondes `/ready` retardées. Le test runtime reproduit le blocage HTTP avec cinq requêtes occupées et vérifie qu'une autre requête PHP passe en moins de trois secondes avec le nouveau plafond. Il ne reproduit pas la charge métier ni le proxy de production. Une saturation des dix traitements peut encore retarder `/ready` ; augmenter ce plafond n'est pas une garantie d'absence de 503.
+
 ## Construire une image précise
 
 Le workflow manuel **Candidate image** construit un SHA complet, pour `beta` ou `production`, et ne déploie rien. Il doit d’abord être disponible sur la branche par défaut pour être déclenché. Il vérifie le SHA, sélectionne les variables publiques Reverb de la cible, construit pour `linux/amd64`, exécute les tests Docker, publie puis affiche le digest.

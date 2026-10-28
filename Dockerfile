@@ -46,6 +46,8 @@ FROM php:8.4.27-fpm-alpine3.24 AS runtime
 
 WORKDIR /var/www/html
 
+ENV PHP_FPM_MAX_CHILDREN=10
+
 RUN apk add --no-cache \
         curl \
         icu-libs \
@@ -72,6 +74,7 @@ RUN apk add --no-cache \
 COPY docker/nginx/default.conf /etc/nginx/http.d/default.conf
 COPY docker/php/uploads.ini /usr/local/etc/php/conf.d/uploads.ini
 COPY docker/php/drain.conf /usr/local/etc/php-fpm.d/zz-dlp-drain.conf
+COPY docker/php/capacity.conf /usr/local/etc/php-fpm.d/zz-dlp-capacity.conf
 COPY docker/php/entrypoint.sh /usr/local/bin/dlp-entrypoint
 COPY --from=build --chown=www-data:www-data /app /var/www/html
 
