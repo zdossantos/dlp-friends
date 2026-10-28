@@ -34,6 +34,7 @@ return [
         'deactivated' => 'Le forçage manuel du thème a été désactivé.',
     ],
     'navigation' => [
+        'statistics' => 'Statistiques',
         'label' => 'Administration',
         'dashboard' => 'Tableau de bord',
         'notifications' => 'Notifications',

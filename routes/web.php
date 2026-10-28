@@ -26,6 +26,7 @@ use App\Http\Controllers\Admin\PartnerStatisticsController as AdminPartnerStatis
 use App\Http\Controllers\Admin\ProductOnboardingController as AdminProductOnboardingController;
 use App\Http\Controllers\Admin\SeasonalThemeActivationController;
 use App\Http\Controllers\Admin\SeasonalThemeController;
+use App\Http\Controllers\Admin\StatisticsController;
 use App\Http\Controllers\Auth\SocialAuthController;
 use App\Http\Controllers\Auth\SocialRegistrationController;
 use App\Http\Controllers\AvatarImageController;
@@ -345,6 +346,7 @@ Route::middleware(['auth', 'verified', 'social', 'terms.current'])->group(functi
         ->name('dashboard');
 
     Route::prefix('admin')->name('admin.')->middleware('role:admin')->group(function (): void {
+        Route::get('statistics', StatisticsController::class)->name('statistics.index');
         Route::get('application-announcements', [ApplicationAnnouncementController::class, 'index'])->name('application-announcements.index');
         Route::post('application-announcements', [ApplicationAnnouncementController::class, 'store'])->name('application-announcements.store');
         Route::get('application-announcements/{announcement}', [ApplicationAnnouncementController::class, 'show'])->name('application-announcements.show');
