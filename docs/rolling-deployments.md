@@ -1,10 +1,10 @@
 # Déploiements web avec recouvrement
 
-État du chantier au 28 octobre 2026 : contrôles locaux et CI réussis, répétition Coolify en bêta en cours ; **aucune bascule de production effectuée**. Une erreur HTTP a été observée pendant un remplacement bêta : zéro interruption n'est pas encore validé.
+État au 28 octobre 2026 : **production basculée sur le rolling web natif Coolify**, support séparé et bêta classique rétablie. La transition initiale a produit des erreurs sur une fenêtre d'environ 100 secondes. Le remplacement natif suivant a réussi sans 5xx dans le proxy ; une requête de la sonde a néanmoins expiré lors d'un pic de latence ultérieur. Ces résultats ne garantissent pas zéro interruption sous toute charge.
 
 ## Base de la transition
 
-Partir du tag publié `v1.16.1`, commit `e418a4379fd758820d58d795f88a40517c5ff1f3`. L’image en production porte exactement cette révision : `ghcr.io/zdossantos/dlp-friends@sha256:dd44c29d39410e687d1a6d8b1457ae058f1351a26e088d8e4e7aedc4bed659e8`.
+Partir du tag publié `v1.16.1`, commit `e418a4379fd758820d58d795f88a40517c5ff1f3`. L’image des processus de support conserve cette révision : `ghcr.io/zdossantos/dlp-friends@sha256:dd44c29d39410e687d1a6d8b1457ae058f1351a26e088d8e4e7aedc4bed659e8`.
 
 Les changements non publiés de `main` ne doivent pas entrer dans l’image de transition. Une fusion de la PR d’infrastructure vers `main` ne change pas cette règle : construire le **SHA de la branche issue de la release**, conservé sur GitHub, et vérifier son étiquette OCI. Ne créer ni tag Git ni release manuellement.
 
@@ -30,11 +30,11 @@ gh workflow run candidate-image.yml -f commit=<SHA_COMPLET_DE_LA_BRANCHE_RELEASE
 
 Construire ensuite la variante `production` du **même SHA**, avec les variables publiques de production. Les deux digests diffèrent car la configuration du frontend est intégrée au build. Vérifier révision, arbre source et empreinte des migrations. Tester le digest téléchargé sur le serveur avant toute affectation de domaine.
 
-Les variables `VITE_REVERB_*` sont publiques. Ne pas y ajouter de secret. Aucun jeton Coolify de production n’est nécessaire pour publier une image. Le pipeline Release Please et la procédure avec maintenance restent disponibles pour les autres livraisons.
+Les variables `VITE_REVERB_*` sont publiques. Ne pas y ajouter de secret. Aucun jeton Coolify de production n’est nécessaire pour publier une image. Release Please publie les images ; il ne déploie pas automatiquement cette ressource de production. La procédure historique avec maintenance reste réservée aux stacks complètes compatibles avec ses scripts.
 
 ## Répétition serveur obligatoire
 
-La ressource beta configurée `hhz9n4q2qzxppne4q0rf8phx` est **Exited**, sans conteneur applicatif observé lors de l’inventaire. Le Mailpit beta tourne. Ne pas confondre les autres applications du serveur avec cette beta ; ses dépendances, données et transports doivent être vérifiés avant de la démarrer.
+La répétition a utilisé une ressource native isolée. Après les essais, `hhz9n4q2qzxppne4q0rf8phx` a retrouvé `/compose.beta.yaml`, sa source `ebc53ac955f8f07c9517e22ad6c420405a33582a` et ses quatre services. La ressource native `c4xzgs0ydhcx2lzpr1sz8ef1` est arrêtée, sans domaine, avec ses images et son volume conservés. L'automatisation bêta existante reste ainsi compatible. Aucun import de production vers la bêta.
 
 Créer une ressource web Docker Image beta avec les dépendances beta isolées, sans worker ni scheduler supplémentaires. Préparer et mesurer :
 
@@ -60,35 +60,79 @@ La procédure `scripts/operations/release.py` et l'automatisation bêta attenden
 
 Pour une livraison web compatible après séparation : construire et vérifier un digest précis, contrôler migrations et compatibilité avec les processus de support, relever l'ancien digest et la santé, lancer un seul redéploiement natif, mesurer les réponses et les sessions pendant le recouvrement, puis vérifier les parcours et les journaux. En cas d'échec de santé, conserver l'ancienne instance ; en cas de régression après bascule, réaffecter le digest précédent et redéployer, sans migration inverse automatique. Une livraison qui nécessite de nouveaux jobs, schémas ou processus ne relève pas de cette procédure web seule.
 
-### Mesures acquises pendant la répétition
+### État opérationnel retenu
 
-- Première image de transition : commit `6f8f2b52a61f7bd0b6e416d72b93b1b5eb6094a9`, issu directement de la release `v1.16.1`. Une correction du retrait au proxy est en cours de validation ; ces premiers digests ne sont pas approuvés pour la production.
-- Variante bêta : `sha256:75bb6b89016e239273c81b611752e99fc70d1303811cc6a077151c0439af3e4c` ; variante production : `sha256:fd97886494626a25f36ea533ef638e79879f018d52401789e4c855f0c4be8e3d`. Les deux builds GitHub ont réussi leurs contrôles runtime avant publication.
-- Restauration du dump MySQL du 28 octobre dans un conteneur isolé sans réseau ni port : import en 44,234 secondes, 51 tables, 45 migrations, contrôle rapide de `users` et `migrations` réussi ; conteneur supprimé ensuite. Cela ne prouve pas la restauration complète des objets S3 ni les parcours métier.
-- Ressource native bêta `c4xzgs0ydhcx2lzpr1sz8ef1`, arrêt effectif de 120 secondes, volume partagé limité aux assets, domaine HTTPS bêta. Un remplacement sain prend environ 27 secondes, avec nouvelle instance saine avant retrait de l'ancienne selon Coolify.
-- Première mesure HTTP : 326 réponses 200 et une erreur HTTP dont le code n'avait pas été enregistré sur 150 secondes ; aucun changement de jeton CSRF. Cette mesure ne prouve ni une session authentifiée conservée ni zéro erreur.
-- Une URL inexistante répondant par une redirection est acceptée par la sonde HTTP générée (`curl -f`). Employer exactement `/ready` et vérifier séparément son statut 200 sans redirection. Le test de refus utilise un port fermé pour éviter ce faux positif.
-- Candidat sur port 81 fermé : refusé par Coolify, ancienne instance conservée ; 394 réponses 200, aucune erreur ni changement CSRF sur 180 secondes. Le journal du proxy attribue en revanche les incidents des remplacements sains au retrait de l'ancien backend : 502 à 12:09:46 UTC, puis requête abandonnée après cinq secondes à 12:12:18 UTC. La correction doit être répétée sur serveur avant bascule.
+Le web est construit depuis `504bcb38e2da65ae97ee80b3b897f5af99b9c0e7`, branche conservée `feature/rolling-release-1-16-1`, issue de `v1.16.1`. Les modifications applicatives non publiées de `main` sont exclues. Les premiers digests du commit `6f8f2b5` ont été rejetés après les essais du retrait au proxy ; ne pas les employer.
 
-Précharger l’image, vérifier sa parité et ses accès sans trafic public. Peupler le volume avec les assets de l’image actuellement servie ; vérifier que l’ancien HTML continue à trouver ses chunks après changement de route. Conserver l’ancien digest et une procédure inverse déjà répétée.
+| Cible                                                            | Digest `ghcr.io/zdossantos/dlp-friends`                                   |
+| ---------------------------------------------------------------- | ------------------------------------------------------------------------- |
+| Production web, révision OCI `504bcb3` vérifiée sur serveur      | `sha256:6d812ede8f1be54ed6ae823276bf9edfafc2b3030c6bd9eea8cb2344db54785e` |
+| Bêta de répétition, même source ; ressource arrêtée après essais | `sha256:b8188989f0e7fae25b90921f30ace927b093c438ecc26a4b0a850391f82dfadb` |
+| Production support inchangé, release `v1.16.1`                   | `sha256:dd44c29d39410e687d1a6d8b1457ae058f1351a26e088d8e4e7aedc4bed659e8` |
 
-Le transfert du domaine entre la ressource Compose et la nouvelle ressource doit être répété sur cette version de Coolify/Traefik : ne pas attribuer le même domaine aux deux ressources en supposant une sélection automatique. Ne pas utiliser le DNS comme rollback rapide. Mesurer le retrait et l’installation des routes et le comportement pendant cette phase.
+Builds candidats : GitHub `40687480178` (bêta) et `40687485517` (production).
 
-Après transfert, l’ancien web doit rester identifiable pour le retour arrière sans pouvoir reprendre accidentellement le domaine lors d’un redéploiement Compose. La séparation de la définition de support et l’adaptation de la procédure d’exploitation sont une condition de clôture du chantier ; ne pas présenter la seule création du nouveau web comme une livraison complète.
+- Web natif `dntfcsbhnoxkwelfon1bzn5i` : domaines `dlp-friends.fr` et `www.dlp-friends.fr`, port 80, `/ready`, santé 5/5/1/20, arrêt 120 secondes, mémoire 512 Mio, CPU 1. Aucun hook de migration : l'exemple affiché est un placeholder, la valeur réelle est vide.
+- Configuration serveur `/data/coolify/applications/dntfcsbhnoxkwelfon1bzn5i/runtime/.env`, montée sur `/var/www/html/.env`, parent réservé à root. Ne jamais publier son contenu. Une modification de configuration doit atteindre ce fichier avant redéploiement ; modifier seulement les variables de l'ancienne stack ne met pas le web à jour.
+- Volume `dntfcsbhnoxkwelfon1bzn5i-dlp-friends-production-rolling-assets` limité aux assets. Les 193 fichiers de l'ancien web ont été préchargés et comparés octet pour octet. Fichiers de migration identiques entre ancien et nouveau web.
+- Support `kma0dju8bamipey0sd1up9gs` : branche `main`, commit fixé `2f36fdf569c9f18a7eb50874813f73909990e183`, chemin `/compose.production-support.yaml`. Ce commit d'infrastructure ne sert pas de source à l'image web. `realtime.dlp-friends.fr` pointe vers `dlp-friends-production-reverb:8080`. Un seul worker, scheduler et Reverb ; ancien web Compose retiré.
+- Parité sensible comparée sur serveur sans exporter les valeurs : clés applicatives, MySQL, Redis/sessions/cache, S3, mail et clés Reverb. Le nom privé Reverb change volontairement. MySQL, Redis et Garage sont conservés. Aucune migration, restauration ou écriture sur un compte membre de production pendant la transition.
 
-Effectuer ensuite un redéploiement contrôlé du même digest sain sous trafic pour prouver le rolling natif. Conserver le résultat réel et la durée observée avant d’annoncer zéro interruption.
+### Mesures du 28 octobre 2026
 
-## Risques, durée et limites
+Heures UTC (Paris : UTC+1).
 
-La première séparation est une opération d’infrastructure : réserver **au moins 30 minutes**, avec une estimation initiale de **5 à 15 minutes de maintenance** si image/configuration/routage sont prêts. Si sauvegarde et restauration doivent se dérouler pendant la fermeture, prévoir **10 à 30 minutes ou davantage**, selon mesure. Ces durées sont des estimations d’ingénierie, pas des mesures ni un engagement Coolify. Les remplacer après répétition.
+| Essai                                      | Résultat mesuré                                                                                           | Limite                                                                                                      |
+| ------------------------------------------ | --------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| Bêta, candidat sur port fermé              | Refusé, ancien web conservé ; 394 HTTP 200, zéro erreur sur 180 s                                         | Une route inexistante qui redirige peut tromper curl ; vérifier `/ready` sans redirection                   |
+| Bêta, corrigé vers corrigé                 | 392 HTTP 200, zéro erreur, CSRF stable sur 180,22 s                                                       | Charge synthétique limitée                                                                                  |
+| Bêta, session authentifiée pendant rolling | 312 réponses authentifiées 200 sur 150,03 s, zéro erreur, une écriture synthétique réussie une seule fois | Compte masqué ; admin temporaire autorisé puis révoqué, identifiants temporaires supprimés                  |
+| Bêta, proxy 12:36–12:51                    | 800 HTTP 200, 10 redirections, 3 réponses Inertia 409, aucun 5xx                                          | Les 409 correspondent à la négociation de version des assets                                                |
+| Production, séparation du support          | Déploiement 13:12:06–13:12:55 ; support interrompu environ 35 s                                           | Reconnexion des clients non vérifiée de bout en bout                                                        |
+| Production, transfert initial des domaines | Sonde 126,22 s : 126 HTTP 200 et 123 erreurs ; première erreur 13:12:19, dernière 13:13:59                | Fenêtre d'incidents d'environ 100 s, pas une preuve de 100 s continuellement indisponibles                  |
+| Production, répétition native              | Déploiement 13:14:23–13:15:03 ; nouveau sain 13:14:47, ancien retiré ensuite, environ 16 s de drainage    | Sonde 180,16 s : 377 HTTP 200, CSRF stable, **un timeout** à 13:17:00                                       |
+| Production, proxy 13:14:20–13:17:30        | 617 HTTP 200, 5 redirections, 1 HTTP 403, 2 HTTP 204, 1 HTTP 499, **aucun 5xx**                           | 52 réponses au-delà de 4 s, jusqu'à 5,71 s, initiées vers 13:16:55 après le déploiement ; cause non établie |
 
-Les futures releases compatibles visent **0 seconde d’interruption HTTP**, sous réserve de la preuve serveur. Les migrations destructrices, changements de payload de jobs ou formats de cache incompatibles suivent une livraison avec maintenance ou un découpage expansion/contraction. Aucun `migrate` automatique au démarrage. Un rollback d’image ne restaure pas les données.
+Journaux Coolify : [rolling web](https://coolify.zdossantos.fr/project/v07iwpqm3wftr6zfnxissd5z/environment/qxua5l07049obkwetgfslwbb/application/dntfcsbhnoxkwelfon1bzn5i/deployment/xytrrdlchjqxfrgszzw9bxrs), [séparation support](https://coolify.zdossantos.fr/project/v07iwpqm3wftr6zfnxissd5z/environment/qxua5l07049obkwetgfslwbb/application/kma0dju8bamipey0sd1up9gs/deployment/ehktq6luzkdn46cfbeaueibb).
 
-Risques principaux : faux positif de santé, requête excédant le délai d’arrêt, session/clé différente, chunk absent, double scheduler, incompatibilité des versions et manque de ressources. Un serveur, un proxy et une base uniques restent des points de panne. La sonde ne prouve ni S3, ni Resend, ni chaque parcours ; ces vérifications restent séparées. Tester aussi les dépendances lentes : le délai du curl ne borne pas à lui seul la durée du travail PHP.
+Après bascule : HTTP 200 sur les deux domaines web, S3 en lecture seule, résolution privée Reverb et véritables négociations WebSocket HTTP 101 privées et publiques avec TLS vérifié. Aucun message, événement ou mail envoyé à un membre pour ces tests. La bêta conserve ses MySQL/Redis/bucket et Mailpit propres ; sa stack classique rétablie répond HTTP 200.
 
-Mesure ponctuelle du serveur : environ 2,9 Go de RAM disponibles et 122 Go disque libres ; aucune swap. Elle ne constitue pas un essai de charge.
+Sauvegarde MySQL cohérente avant bascule : `/root/dlp-rolling-backups/production-before-rolling-20261028T130210Z.sql`, 673 866 845 octets, permissions 0600, dossier 0700. Lecture `--single-transaction --quick --skip-lock-tables`, sans verrouillage des tables. Une sauvegarde du même jour a été restaurée auparavant dans un conteneur isolé sans réseau ni port : 44,234 s, 51 tables, 45 migrations, contrôle rapide `users`/`migrations` réussi ; ressources temporaires retirées. Le nouveau dump n'a pas été restauré et la restauration S3 n'a pas été répétée.
 
-Pour le quota Codex, aucun taux fiable « tokens → pourcentage des cinq heures » n’est publié. Mesurer avant/après les phases, sans autres tâches simultanées, et garder une marge avant toute bascule.
+Validation : readiness 11 tests / 39 assertions ; contrôles runtime, arrêt gracieux, traitements après réponse, assets anciens/nouveaux et réparation atomique réussis ; `composer ci:check` : 1 484 tests réussis, 8 ignorés, 35 675 assertions. CI finale `40689779904` verte, dont PHP, frontend, métier/navigateur/realtime et Docker. Les contrôles de code complètent les mesures serveur.
+
+## Prochain déploiement web compatible
+
+1. Relever le digest actif, vérifier sauvegardes, santé et marge RAM/disque. Aucune livraison simultanée. Confirmer compatibilité schéma, jobs, cache et support restant sur `v1.16.1`.
+2. Construire le SHA explicitement choisi avec **Candidate image**, cible production. Vérifier digest, révision OCI, frontend, migrations et tests. Ne jamais employer implicitement `main` pour prolonger cette transition.
+3. Dans la **ressource web native**, renseigner le digest immuable. Si le formulaire sépare image/tag, employer `ghcr.io/zdossantos/dlp-friends` et `sha256-<empreinte>`, puis vérifier la résolution `@sha256:<empreinte>` dans les logs.
+4. Garder `/ready:80`, santé 5/5/1/20, arrêt 120 s, configuration et volume des assets. Aucun hook `migrate`, aucun redémarrage du support pour une livraison web seule.
+5. Un seul Redeploy sous mesure trafic/session. Un candidat non prêt doit laisser l'ancien servi. En cas d'erreurs nouvelles, analyser avant tout nouveau déploiement.
+6. Confirmer santé avant retrait, parcours, dépendances, erreurs/latences et absence de second scheduler. Conserver digest précédent et anciens assets.
+
+Procédure **manuelle, réservée aux changements compatibles**. `scripts/operations/release.py` suppose quatre services et peut enclencher la maintenance : **ne pas l'utiliser sur la production séparée**. Une release avec migration ou nouveau worker/Reverb demande une procédure coordonnée distincte (expansion/contraction ou maintenance explicite). Le rolling web ne couvre pas ces opérations.
+
+## Retour arrière
+
+Pour une future livraison web compatible, remettre le précédent digest compatible `/ready` et drainage, puis redéployer nativement sous observation. Ne pas effacer les assets ni restaurer la base automatiquement. Le digest initial `dd44…` ne fournit pas ce contrat ; ne pas le sélectionner directement avec les mêmes paramètres comme s'il était équivalent.
+
+Retour à la topologie antérieure : procédure de secours **non répétée en production**.
+
+1. Prévoir une interruption ; arrêter le web natif et lui retirer les deux domaines, sans suppression DNS. Ne pas attribuer simultanément ces domaines aux deux ressources.
+2. Sur `kma0dju8bamipey0sd1up9gs`, remettre `release/1.16`, commit `e418a4379fd758820d58d795f88a40517c5ff1f3`, `/compose.production.yaml`, et garder `APP_IMAGE` au digest initial `dd44c29d39410e687d1a6d8b1457ae058f1351a26e088d8e4e7aedc4bed659e8`.
+3. Recharger Compose ; affecter les deux domaines web au service `web:80` et `realtime.dlp-friends.fr` au service `reverb:8080`. Retirer seulement les variantes générées en trop, sans suppression DNS.
+4. Redéployer cette même ressource pour remplacer son support et démarrer le web. Ne pas lancer une seconde stack avec scheduler. Vérifier HTTP, sessions, S3, WebSocket et unicité des processus.
+5. Garder le web natif arrêté, sa configuration, ses images et son volume pour diagnostic. Aucune migration inverse ni restauration nécessaire pour cette seule transition : schémas identiques.
+
+## Risques et limites
+
+Le recouvrement natif et le refus d'un candidat non sain sont vérifiés. L'objectif de zéro interruption HTTP pour les prochaines livraisons compatibles reste dépendant de la santé, de la charge et du proxy. Le timeout après le rolling interdit de présenter la fenêtre complète comme parfaite.
+
+Non vérifiés en production : session membre authentifiée, écriture métier, upload long, reconnexion complète d'un canal privé, saturation et requêtes dépassant les 120 s d'arrêt. Session authentifiée et écriture unique sont vérifiées seulement en bêta. Le pic de latence reste à caractériser avant d'affirmer une capacité sous charge.
+
+Serveur, proxy et base uniques restent des points de panne. Une requête trop longue peut être interrompue ; une écriture n'est pas automatiquement rejouable. Les migrations destructrices/payloads incompatibles demandent une stratégie séparée. Les assets grandissent sans nettoyage contrôlé. Mesure ponctuelle : environ 2,7 Go RAM disponibles, 122 Go disque libre, sans swap ; ce n'est pas un test de charge.
+
+Aucun taux fiable « tokens → quota Codex cinq heures » n'est publié. Ce quota est partagé entre tâches et modèles : lire l'état réel et garder une marge ; ne pas convertir une estimation de tokens en engagement de pourcentage.
 
 ## Vérification locale reproductible
 
