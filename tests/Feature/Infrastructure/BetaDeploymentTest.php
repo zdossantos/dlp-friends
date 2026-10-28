@@ -60,6 +60,7 @@ it('renders four isolated beta processes with private mail and stable maintenanc
     }
     expect($compose['services']['reverb']['networks']['default']['aliases'])
         ->toContain('dlp-friends-beta-reverb');
+    expect($compose['services']['web']['environment']['PHP_FPM_MAX_CHILDREN'])->toBe('5');
     // Coolify adds explicit networks, removing Compose's implicit default membership.
     $raw = Process::env(betaComposeEnvironment())->run('docker compose -f compose.beta.yaml config --no-normalize --no-consistency --format json');
     expect($raw->successful())->toBeTrue($raw->errorOutput());
