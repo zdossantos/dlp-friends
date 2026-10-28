@@ -20,6 +20,10 @@ it('enforces the production release gate at external boundaries', function (stri
 it('publishes release metadata before the separate production delivery job', function () {
     $workflow = file_get_contents(base_path('.github/workflows/release-please.yml'));
 
-    expect($workflow)->not->toContain('secrets.COOLIFY_TOKEN', 'deploy-release.sh', 'Deploy release to Coolify')
+    expect($workflow)->toContain('secrets.COOLIFY_TOKEN', 'deploy-release.sh',
+        'github.ref_name == vars.PRODUCTION_RELEASE_BRANCH', 'environment: production',
+        'group: production-delivery', 'cancel-in-progress: false',
+        'record-release-image.result == \'success\'')
+        ->not->toContain('PRODUCTION_SSH', 'production-ssh-request.sh')
         ->toContain('container-image.json', 'io.dlp-friends.source-tree', 'io.dlp-friends.migrations-sha256');
 });
