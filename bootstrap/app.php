@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\DeploymentReadinessController;
 use App\Http\Middleware\EnsureBetaAccess;
 use App\Http\Middleware\EnsureCurrentTermsAccepted;
 use App\Http\Middleware\EnsureDeploymentReady;
@@ -19,6 +20,7 @@ use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
@@ -28,11 +30,13 @@ return Application::configure(basePath: dirname(__DIR__))
         web: __DIR__.'/../routes/web.php',
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
+        then: fn () => Route::get('/ready', DeploymentReadinessController::class)->name('deployment.ready'),
     )
     ->withBroadcasting(__DIR__.'/../routes/channels.php', ['middleware' => ['web', 'social', 'terms.current']])
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->trustProxies(at: '*');
         $middleware->prepend(EnsureDeploymentReady::class);
+        $middleware->preventRequestsDuringMaintenance(except: ['ready']);
 
         $middleware->alias([
             'profile.complete' => EnsureProfileIsComplete::class,
