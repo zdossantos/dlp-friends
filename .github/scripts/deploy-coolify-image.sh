@@ -29,15 +29,35 @@ request() {
         --data "$3" --output "$response_file"
 }
 
+if [[ -n "${COOLIFY_WEB_APPLICATION_UUID:-}" ]]; then
+    [[ "${RELEASE_TAG:-}" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]
+    [[ "$COOLIFY_APPLICATION_UUID" =~ ^[a-zA-Z0-9-]+$ && "$COOLIFY_WEB_APPLICATION_UUID" =~ ^[a-zA-Z0-9-]+$ ]]
+    [[ "$COOLIFY_APPLICATION_UUID" != "$COOLIFY_WEB_APPLICATION_UUID" ]]
+    request GET "applications/$COOLIFY_APPLICATION_UUID" '{}'
+    jq -e '.build_pack == "dockercompose" and .docker_compose_location == "/compose.production-support.yaml"' "$response_file" >/dev/null
+    environment_id="$(jq -er '.environment_id' "$response_file")"
+    request GET "applications/$COOLIFY_WEB_APPLICATION_UUID" '{}'
+    jq -e --arg environment "$environment_id" '.build_pack == "dockerimage" and
+        (.environment_id | tostring) == $environment and .health_check_enabled == true and
+        .health_check_path == "/ready"' "$response_file" >/dev/null
+fi
+
 # Coolify also interpolates Compose during its preparation/build phase.
 # This public reference must be available there even without build services.
 request PATCH "applications/$COOLIFY_APPLICATION_UUID/envs/bulk" \
     "$(jq -nc --arg image "$APP_IMAGE" '{data: [{key: "APP_IMAGE", value: $image,
         is_preview: false, is_literal: true, is_buildtime: true, is_runtime: true}]}')"
 
-# Pin the Compose file too, even if main has advanced since this release.
+# Pin the Compose file too; Coolify reads it from the release tag, not main.
+compose_command=""
+if [[ -n "${COOLIFY_WEB_APPLICATION_UUID:-}" ]]; then
+    # Run the candidate image's migrations, never the old web container's files.
+    compose="docker compose --project-name $COOLIFY_APPLICATION_UUID -f compose.production-support.yaml --env-file .env"
+    compose_command="$compose run --rm --no-deps worker php artisan migrate --force --no-interaction && $compose up -d --wait --wait-timeout 180"
+fi
 request PATCH "applications/$COOLIFY_APPLICATION_UUID" \
-    "$(jq -nc --arg sha "$RELEASE_SHA" '{git_commit_sha: $sha}')"
+    "$(jq -nc --arg sha "$RELEASE_SHA" --arg command "$compose_command" --arg tag "${RELEASE_TAG:-}" '
+        {git_commit_sha: $sha} + if $command == "" then {} else {git_branch: $tag, docker_compose_custom_start_command: $command} end')"
 
 request POST deploy \
     "$(jq -nc --arg uuid "$COOLIFY_APPLICATION_UUID" '{uuid: $uuid, force: false}')"
@@ -46,3 +66,30 @@ jq -e --arg uuid "$COOLIFY_APPLICATION_UUID" \
     '.deployments | any(.resource_uuid == $uuid and (.deployment_uuid | type == "string" and length > 0))' \
     "$response_file" >/dev/null
 echo 'Coolify accepted the deployment. Check deployment health in Coolify.'
+
+if [[ -n "${COOLIFY_WEB_APPLICATION_UUID:-}" ]]; then
+    wait_for_deployment() {
+        local uuid="$1" deployment status attempt
+        deployment="$(jq -er --arg uuid "$uuid" '.deployments | select(length == 1) | .[0] |
+            select(.resource_uuid == $uuid) | .deployment_uuid | select(test("^[a-zA-Z0-9-]+$"))' "$response_file")"
+        for attempt in {1..120}; do
+            request GET "deployments/$deployment" '{}'
+            status="$(jq -er '.status' "$response_file")"
+            case "$status" in
+                finished) return 0 ;;
+                queued|in_progress) sleep 5 ;;
+                *) echo "Coolify deployment did not succeed: $status" >&2; return 1 ;;
+            esac
+        done
+        echo 'Timed out waiting for Coolify deployment.' >&2
+        return 1
+    }
+
+    wait_for_deployment "$COOLIFY_APPLICATION_UUID"
+    request PATCH "applications/$COOLIFY_WEB_APPLICATION_UUID" \
+        "$(jq -nc --arg image "${APP_IMAGE%@*}" --arg tag "${APP_IMAGE##*@}" '
+            {docker_registry_image_name: $image, docker_registry_image_tag: ($tag | sub(":"; "-"))}')"
+    request POST deploy "$(jq -nc --arg uuid "$COOLIFY_WEB_APPLICATION_UUID" '{uuid: $uuid, force: false}')"
+    wait_for_deployment "$COOLIFY_WEB_APPLICATION_UUID"
+    echo 'Coolify finished migrations, support deployment and native rolling web deployment.'
+fi

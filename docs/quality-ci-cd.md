@@ -1,6 +1,6 @@
 > L'automatisation du web natif et des traitements séparés est décrite dans
 > [automatic-rolling-releases.md](automatic-rolling-releases.md). Elle reste
-> conditionnée à l'installation et à l'activation du relais ; les commandes
+> conditionnée à la validation bêta et à l'activation GitHub ; les commandes
 > historiques de maintenance ci-dessous ne s'appliquent pas au web rolling actif.
 
 # Qualité, CI et livraison continue

@@ -166,19 +166,16 @@ jobs:
       RELEASE_TAG: ${{ needs.release-please.outputs.tag_name }}
       RELEASE_SHA: ${{ needs.release-please.outputs.sha }}
       APP_IMAGE: ${{ needs.publish-image.outputs.image }}
-      PRODUCTION_SSH_HOST: ${{ vars.PRODUCTION_SSH_HOST }}
-      PRODUCTION_SSH_KNOWN_HOSTS: ${{ vars.PRODUCTION_SSH_KNOWN_HOSTS }}
-      PRODUCTION_SSH_PRIVATE_KEY: ${{ secrets.PRODUCTION_SSH_PRIVATE_KEY }}
+      RELEASE_CREATED: ${{ needs.release-please.outputs.release_created }}
+      COOLIFY_API_URL: ${{ vars.COOLIFY_API_URL }}
+      COOLIFY_APPLICATION_UUID: ${{ vars.COOLIFY_APPLICATION_UUID }}
+      COOLIFY_WEB_APPLICATION_UUID: ${{ vars.COOLIFY_WEB_APPLICATION_UUID }}
+      COOLIFY_TOKEN: ${{ secrets.COOLIFY_TOKEN }}
     steps:
       - name: Checkout exact release commit
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ needs.release-please.outputs.sha }}
           persist-credentials: false
-      - name: Deliver immutable release
-        run: |
-          jq -n --arg version "$RELEASE_TAG" --arg commit "$RELEASE_SHA" --arg image "$APP_IMAGE" \
-            '{action: "deploy", version: $version, commit: $commit, image: $image}' > release-request.json
-          bash .github/scripts/production-ssh-request.sh < release-request.json | tee delivery-result.json
-          jq -e '.status == "deployed" or .status == "already_deployed"' delivery-result.json
-          cat delivery-result.json >> "$GITHUB_STEP_SUMMARY"
+      - name: Migrate and deploy through Coolify
+        run: bash .github/scripts/deploy-release.sh

@@ -6,10 +6,6 @@ on:
       commit:
         description: Exact 40-character commit SHA to build (no deployment)
         required: true
-      version:
-        description: Stable version being rehearsed (image label only, no release)
-        required: true
-        default: v1.16.2
       target:
         description: Public frontend configuration
         type: choice
@@ -28,7 +24,6 @@ jobs:
     env:
       CANDIDATE_SHA: ${{ inputs.commit }}
       TARGET: ${{ inputs.target }}
-      CANDIDATE_VERSION: ${{ inputs.version }}
       PROD_REVERB_APP_KEY: ${{ vars.VITE_REVERB_APP_KEY }}
       PROD_REVERB_HOST: ${{ vars.VITE_REVERB_HOST }}
       BETA_REVERB_APP_KEY: ${{ vars.VITE_BETA_REVERB_APP_KEY }}
@@ -36,9 +31,7 @@ jobs:
       VITE_REVERB_SCHEME: https
     steps:
       - name: Validate exact source reference
-        run: |
-          [[ "$CANDIDATE_SHA" =~ ^[a-f0-9]{40}$ ]]
-          [[ "$CANDIDATE_VERSION" =~ ^v[1-9][0-9]*\.[0-9]+\.[0-9]+$ ]]
+        run: '[[ "$CANDIDATE_SHA" =~ ^[a-f0-9]{40}$ ]]'
       - name: Checkout candidate
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -75,7 +68,6 @@ jobs:
           labels: |
             org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
             org.opencontainers.image.revision=${{ inputs.commit }}
-            org.opencontainers.image.version=${{ inputs.version }}
             io.dlp-friends.source-tree=${{ steps.metadata.outputs.tree }}
             io.dlp-friends.migrations-sha256=${{ steps.metadata.outputs.migrations }}
           build-args: |
@@ -97,16 +89,11 @@ jobs:
         env:
           GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           IMAGE: ${{ steps.metadata.outputs.image }}
-          SOURCE_TREE: ${{ steps.metadata.outputs.tree }}
-          MIGRATIONS_SHA256: ${{ steps.metadata.outputs.migrations }}
         run: |
           printf '%s' "$GHCR_TOKEN" | docker login ghcr.io --username "$GITHUB_ACTOR" --password-stdin
           docker push "$IMAGE"
           reference="$(docker inspect --format '{{index .RepoDigests 0}}' "$IMAGE")"
           [[ "$reference" =~ @sha256:[a-f0-9]{64}$ ]]
-          jq -n --arg version "$CANDIDATE_VERSION" --arg commit "$CANDIDATE_SHA" --arg image "$reference" \
-            --arg tree "$SOURCE_TREE" --arg migrations "$MIGRATIONS_SHA256" \
-            '{version: $version, commit: $commit, image: $image, tree: $tree, migrations_sha256: $migrations, platform: "linux/amd64"}' >> "$GITHUB_STEP_SUMMARY"
           printf 'Source: `%s`\n\nTarget: `%s`\n\nImage: `%s`\n\nNo deployment was requested.\n' "$CANDIDATE_SHA" "$TARGET" "$reference" >> "$GITHUB_STEP_SUMMARY"
       - name: Log out of GHCR
         if: always()
