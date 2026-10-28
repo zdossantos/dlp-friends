@@ -1,5 +1,37 @@
 # Changelog
 
+## [1.17.0](https://github.com/zdossantos/dlp-friends/compare/v1.16.0...v1.17.0) (2026-10-28)
+
+
+### Features
+
+* **admin:** accéder au profil public depuis la fiche membre ([#324](https://github.com/zdossantos/dlp-friends/issues/324)) ([8f4822d](https://github.com/zdossantos/dlp-friends/commit/8f4822d6f79aede4abb55d0520f4e7c5f1e3370a))
+* **admin:** ajouter les statistiques d’utilisation ([#327](https://github.com/zdossantos/dlp-friends/issues/327)) ([a7911f1](https://github.com/zdossantos/dlp-friends/commit/a7911f1ec1b83781872aaec80b2ef3e46e49f159))
+* **admin:** clarifier les signalements et leur historique par profil ([#301](https://github.com/zdossantos/dlp-friends/issues/301)) ([637aace](https://github.com/zdossantos/dlp-friends/commit/637aacebc8f83475732374859c9661cfb598a625))
+* **brand:** intégrer Horizon et toutes ses déclinaisons d’icônes ([#300](https://github.com/zdossantos/dlp-friends/issues/300)) ([dc44d04](https://github.com/zdossantos/dlp-friends/commit/dc44d047365045dd8f2026a4e94c9dc74e38bc42))
+* **chat:** annoncer les arrivées et départs des groupes ([#309](https://github.com/zdossantos/dlp-friends/issues/309)) ([f8bf57d](https://github.com/zdossantos/dlp-friends/commit/f8bf57dcba3c67d6c2d8c6a96c9b5ae8295c3988))
+* **deploy:** prepare rolling web runtime from v1.16.1 ([#331](https://github.com/zdossantos/dlp-friends/issues/331)) ([faa41e1](https://github.com/zdossantos/dlp-friends/commit/faa41e17510870e97a310c4eaa6eb58aad2ba865))
+* **experience:** faciliter l’ouverture externe depuis Instagram ([#308](https://github.com/zdossantos/dlp-friends/issues/308)) ([a94931c](https://github.com/zdossantos/dlp-friends/commit/a94931c8992fa193d31ee2522f3bfc0bf986fcdb))
+* **messaging:** ajouter les notifications de messages de groupe ([#298](https://github.com/zdossantos/dlp-friends/issues/298)) ([9004f72](https://github.com/zdossantos/dlp-friends/commit/9004f726da08520b4a854c98ea33984730ce5ddb))
+* **messaging:** ouvrir les profils dans un drawer ([#326](https://github.com/zdossantos/dlp-friends/issues/326)) ([994eba0](https://github.com/zdossantos/dlp-friends/commit/994eba0b03632953fc00d90013610b3cf1b2c41d))
+* **notifications:** envoyer des annonces bilingues avec Push facultatif ([#322](https://github.com/zdossantos/dlp-friends/issues/322)) ([50ff86c](https://github.com/zdossantos/dlp-friends/commit/50ff86c3dd3a6a2fbd802e10b9d5b3a82bac1c8c))
+* **operations:** piloter manuellement le cycle de la bêta ([#323](https://github.com/zdossantos/dlp-friends/issues/323)) ([c835063](https://github.com/zdossantos/dlp-friends/commit/c8350637d0fa90f59281d2615273cae80188a8ee))
+* **profile:** afficher les Disneyland Pass et Cast Member ([#321](https://github.com/zdossantos/dlp-friends/issues/321)) ([6ba68c5](https://github.com/zdossantos/dlp-friends/commit/6ba68c520603b8cf1bfaada3aad3d7c7f7462e50))
+* **settings:** configure discovery filters and align settings pages ([#302](https://github.com/zdossantos/dlp-friends/issues/302)) ([a6f8da4](https://github.com/zdossantos/dlp-friends/commit/a6f8da423876e7d3fb5a461f11af31d3e14df563))
+* **sorties:** add private visit agenda and calendar ([#310](https://github.com/zdossantos/dlp-friends/issues/310)) ([baaf948](https://github.com/zdossantos/dlp-friends/commit/baaf9489744ed18f98822854a220d73336950ad7)), closes [#305](https://github.com/zdossantos/dlp-friends/issues/305)
+* **sorties:** organiser des trajets entre membres ([#312](https://github.com/zdossantos/dlp-friends/issues/312)) ([af9a5dc](https://github.com/zdossantos/dlp-friends/commit/af9a5dc4e2e1365619202e9947acd73fdcb18077))
+
+
+### Fixes
+
+* **deploy:** keep native Coolify release automation on main ([#336](https://github.com/zdossantos/dlp-friends/issues/336)) ([a9c44cc](https://github.com/zdossantos/dlp-friends/commit/a9c44cc883223b7530aed54e526a6293c1a9a2e8))
+* **discovery:** préserver la file au retour des profils ([#325](https://github.com/zdossantos/dlp-friends/issues/325)) ([69717ea](https://github.com/zdossantos/dlp-friends/commit/69717ea14a0b99efa6ee6b2c6132a03c5da968d5))
+* **messaging:** fiabiliser la reprise des échanges et la saisie mobile ([#303](https://github.com/zdossantos/dlp-friends/issues/303)) ([c8e622a](https://github.com/zdossantos/dlp-friends/commit/c8e622a1971ee8b85e9bc3924a727ff4f4717784))
+* preserve Reverb hostname through Coolify parsing ([#333](https://github.com/zdossantos/dlp-friends/issues/333)) ([2f36fdf](https://github.com/zdossantos/dlp-friends/commit/2f36fdf569c9f18a7eb50874813f73909990e183))
+* **release-notes:** documenter les nouveautés bilingues de la 1.17 ([#338](https://github.com/zdossantos/dlp-friends/issues/338)) ([096d5d3](https://github.com/zdossantos/dlp-friends/commit/096d5d34861d2e0dafbe59163ec5e2576c007c6f))
+* **security:** patch PHP runtime to 8.4.27 ([#315](https://github.com/zdossantos/dlp-friends/issues/315)) ([00742f9](https://github.com/zdossantos/dlp-friends/commit/00742f9a40c2d6983bb61233a3e7c558650d3244))
+* withdraw rolling web before shutdown and isolate support services ([#332](https://github.com/zdossantos/dlp-friends/issues/332)) ([a83f4a7](https://github.com/zdossantos/dlp-friends/commit/a83f4a7d0ae6e8109249f6c529979e3f86b74f6f))
+
 ## [1.16.0](https://github.com/zdossantos/dlp-friends/compare/v1.15.0...v1.16.0) (2026-10-19)
 
 
