@@ -6,6 +6,7 @@ use App\Support\DeploymentReadiness;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Redis;
+use RuntimeException;
 use Throwable;
 
 final class DeploymentReadinessController
@@ -13,6 +14,9 @@ final class DeploymentReadinessController
     public function __invoke(DeploymentReadiness $readiness): JsonResponse
     {
         try {
+            if (is_file(storage_path('framework/web-draining'))) {
+                throw new RuntimeException('Web is draining.');
+            }
             $readiness->assertReady();
             Cache::get('deployment:readiness');
 

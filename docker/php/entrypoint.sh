@@ -21,6 +21,7 @@ esac
 
 case "${1:-web}" in
     web)
+        rm -f storage/framework/web-draining
         # Only hashed assets are shared; each image keeps its own manifest.
         assets_tmp=$(mktemp -d public/build/assets/.publish.XXXXXX)
         trap 'rm -rf "$assets_tmp"' EXIT HUP INT TERM
@@ -37,6 +38,9 @@ case "${1:-web}" in
         nginx_pid=''
         stop_web() {
             trap '' TERM INT QUIT
+            touch storage/framework/web-draining
+            # Allow a 5s poll, a 5s probe timeout and Traefik's 2s throttle before closing HTTP.
+            sleep 15
             if [ -n "$nginx_pid" ]; then
                 kill -QUIT "$nginx_pid" 2>/dev/null || true
                 wait "$nginx_pid" || true
