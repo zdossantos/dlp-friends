@@ -109,9 +109,10 @@ class DirectUserDataExportTest extends TestCase
         );
 
         $this->assertSame(
-            ['format_version', 'moderation', 'generated_at', 'account', 'profile', 'interests', 'matches', 'messages', 'group_chat_messages', 'organized_trips', 'trip_registrations', 'trip_departures', 'organized_events', 'event_registrations', 'notifications', 'application_announcement_deliveries', 'weekly_email_recap_deliveries', 'visits_visibility', 'visits', 'discovery_preferences', 'email_preferences', 'notification_preferences', 'admin_new_member_alerts_enabled', 'push_devices', 'role_history', 'partner_profile', 'partner_profile_revisions', 'partner_announcements', 'received_partner_announcements'],
+            ['format_version', 'feedback', 'moderation', 'generated_at', 'account', 'profile', 'interests', 'matches', 'messages', 'group_chat_messages', 'organized_trips', 'trip_registrations', 'trip_departures', 'organized_events', 'event_registrations', 'notifications', 'application_announcement_deliveries', 'weekly_email_recap_deliveries', 'visits_visibility', 'visits', 'discovery_preferences', 'email_preferences', 'notification_preferences', 'admin_new_member_alerts_enabled', 'push_devices', 'role_history', 'partner_profile', 'partner_profile_revisions', 'partner_announcements', 'received_partner_announcements'],
             array_keys($payload),
         );
+        $this->assertSame([], $payload['feedback']);
         $this->assertSame('self@example.com', $payload['account']['email']);
         $this->assertSame(['Attractions', 'Archives'], array_column($payload['interests'], 'name_fr'));
         $this->assertSame($other->profile->display_name, $payload['matches'][0]['other_member']['display_name']);

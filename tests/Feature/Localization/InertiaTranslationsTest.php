@@ -9,6 +9,7 @@ function featureTranslationKeys(string $locale): array
         'common',
         'account',
         'profile',
+        'feedback',
         'onboarding',
         'discovery',
         'conversations',
@@ -54,6 +55,7 @@ test('Inertia shares the English frontend catalogue selected by the request', fu
         ->assertInertia(fn (Assert $page) => $page
             ->where('i18n.locale', 'en')
             ->where('i18n.messages.common.locale.label', 'Language')
+            ->where('i18n.messages.feedback.trigger', 'Suggest an idea')
             ->where('i18n.messages.account.email_delivery.rate_limited', 'Too many requests have been made. Please wait one minute before trying again.')
             ->where('i18n.messages.onboarding.page_title', 'Getting started')
             ->where('i18n.messages.onboarding.instructions.reject', 'Pass on this profile to continue.')
@@ -93,7 +95,7 @@ test('Inertia shares the French frontend catalogue by default', function () {
 
 test('only business feature catalogues are shared with the frontend', function () {
     expect(array_keys(FrontendTranslations::messages()))->toBe([
-        'brand', 'common', 'account', 'profile', 'onboarding', 'discovery',
+        'brand', 'common', 'account', 'profile', 'feedback', 'onboarding', 'discovery',
         'conversations', 'notifications', 'events', 'visits', 'trips', 'outings', 'blocking', 'moderation', 'administration',
         'usage', 'partners', 'application_announcements',
     ]);
