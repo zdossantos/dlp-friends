@@ -91,24 +91,20 @@ defineExpose({ openProfile });
             <DrawerDescription class="sr-only">{{
                 t('conversations.profile.description')
             }}</DrawerDescription>
-            <div
-                class="flex shrink-0 items-center justify-between gap-3 border-b px-5 py-3"
-            >
-                <DrawerTitle>{{
-                    t('conversations.profile.title')
-                }}</DrawerTitle>
-                <DrawerClose as-child>
-                    <Button
-                        data-test="member-profile-close"
-                        variant="outline"
-                        size="icon"
-                        class="size-11 rounded-full"
-                        :aria-label="t('common.actions.close')"
-                    >
-                        <X class="size-5" aria-hidden="true" />
-                    </Button>
-                </DrawerClose>
-            </div>
+            <DrawerTitle class="sr-only">{{
+                t('conversations.profile.title')
+            }}</DrawerTitle>
+            <DrawerClose as-child>
+                <Button
+                    data-test="member-profile-close"
+                    variant="outline"
+                    size="icon"
+                    class="absolute top-3 right-3 z-30 size-11 rounded-full bg-card"
+                    :aria-label="t('common.actions.close')"
+                >
+                    <X class="size-5" aria-hidden="true" />
+                </Button>
+            </DrawerClose>
             <p v-if="loading" role="status" class="p-6">
                 {{ t('conversations.profile.loading') }}
             </p>

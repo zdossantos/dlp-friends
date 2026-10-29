@@ -857,6 +857,7 @@ test('conversation profiles open in a drawer and preserve the private draft and 
     $page->script("window.chatScroller = document.querySelector('[data-test=message-scroll]'); window.chatScroller.scrollTop = 150; true;");
     $page->click('[data-test=conversation-profile-name]')
         ->assertPresent('@member-profile-drawer')->assertSeeIn('@member-profile-drawer', 'Basile')
+        ->assertScript("Math.abs(document.querySelector('[data-test=event-participant-profile]').getBoundingClientRect().top - document.querySelector('[data-test=member-profile-drawer]').getBoundingClientRect().top) < 2", true)
         ->assertPathIs("/conversations/{$conversation->id}")
         ->keys('@member-profile-drawer', 'Escape')
         ->assertMissing('@member-profile-drawer')
@@ -884,6 +885,7 @@ test('group author profiles open the correct member without losing the discussio
     $page = visit("/events/{$event->id}/chat")->resize($width, 800)->fill('content', 'Brouillon de groupe')
         ->click("[data-profile-id='{$other->id}']")
         ->assertSeeIn('@member-profile-drawer', 'Camille')
+        ->assertScript("Math.abs(document.querySelector('[data-test=event-participant-profile]').getBoundingClientRect().top - document.querySelector('[data-test=member-profile-drawer]').getBoundingClientRect().top) < 2", true)
         ->click('[data-test=member-profile-drawer] [data-test=block-member-trigger]')
         ->assertSee('Bloquer ce membre ?')->click('Annuler')
         ->assertSeeIn('@member-profile-drawer', 'Camille')
