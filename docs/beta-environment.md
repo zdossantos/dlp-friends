@@ -345,7 +345,8 @@ configuration privée existante avec :
 Conserver `application_uuid`, `production_application_uuid` et `lock_file`.
 Le compte SSH ne peut ni modifier cette liste ni fournir des dépendances.
 Le relais vérifie dans Coolify le projet, l'environnement bêta, la destination,
-le dépôt des applications, le caractère privé des bases et l'absence de
+le dépôt des applications (ou l’image exacte `ghcr.io/zdossantos/dlp-friends`
+pour un web rolling Docker Image), le caractère privé des bases et l'absence de
 livraison active avant toute mutation. Il identifie les conteneurs applicatifs
 par leurs labels Coolify, y compris worker, scheduler et Reverb ; les bases
 sont identifiées par leur UUID et leur propriétaire, pas par leur seul ID

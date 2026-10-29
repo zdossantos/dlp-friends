@@ -32,7 +32,7 @@ if($a->environment->name!=='beta'||$a->environment_id===$p->environment_id||$a->
 $owners=['applications'=>[],'databases'=>[]];
 foreach($r['application_uuids']as$uuid){
 $x=App\Models\Application::where('uuid',$uuid)->firstOrFail();
-if($x->environment_id!==$a->environment_id||$x->destination_id!==$a->destination_id||$x->git_repository!=='zdossantos/dlp-friends')throw new RuntimeException('Shared application');
+if($x->environment_id!==$a->environment_id||$x->destination_id!==$a->destination_id||!($x->git_repository==='zdossantos/dlp-friends'||($x->build_pack==='dockerimage'&&$x->docker_registry_image_name==='ghcr.io/zdossantos/dlp-friends')))throw new RuntimeException('Shared application');
 if(App\Models\ApplicationDeploymentQueue::where('application_id',$x->id)->whereIn('status',['queued','in_progress'])->exists())throw new RuntimeException('Busy');
 $owners['applications'][$uuid]=(string)$x->id;
 }
