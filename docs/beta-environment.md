@@ -8,8 +8,8 @@
 > `artisan down` n’est exécuté. Les essais existants sont conservés, sous réserve
 > des migrations du candidat. Le Compose bêta peut subir une brève interruption ;
 > le web rolling bêta inactif n’est pas activé par cette correction.
-> Les actions d’initialisation et d’arrêt ci-dessous restent liées au relais SSH :
-> sa configuration complète doit être installée et vérifiée avant de les utiliser.
+> Les actions d’initialisation restent liées à la configuration complète du relais SSH.
+> L’arrêt dispose désormais du chemin autonome décrit en fin de document.
 > Le relais observé le 29 octobre ne possède pas cette configuration ; ne pas
 > sélectionner une initialisation pour contourner un échec de mise à jour.
 
@@ -323,3 +323,39 @@ conteneur web doit confirmer la sortie de maintenance avant l'état `ready`.
 L'arrêt place d'abord la bêta en maintenance, puis persiste Redis. Un arrêt déjà
 complet est idempotent. Un arrêt partiel dont la maintenance ne peut être établie
 est refusé : rétablir les dépendances dédiées pour fermer la bêta avant de réessayer.
+
+### Arrêt autonome du relais (29 octobre 2026)
+
+`Stop beta` peut utiliser le même relais SSH sans installer les identifiants
+nécessaires aux copies de production. Installer ensemble `beta-ssh-deploy.py`
+et `beta_stop.py` dans le répertoire root du wrapper, puis compléter sa
+configuration privée existante avec :
+
+```json
+{
+    "stop_resources": {
+        "application_uuids": ["UUID_COMPOSE_BETA", "UUID_WEB_ROLLING_BETA_INACTIF"],
+        "mysql_uuid": "UUID_MYSQL_BETA",
+        "redis_uuid": "UUID_REDIS_BETA",
+        "mailpit_container": "dlp-friends-beta-mailpit"
+    }
+}
+```
+
+Conserver `application_uuid`, `production_application_uuid` et `lock_file`.
+Le compte SSH ne peut ni modifier cette liste ni fournir des dépendances.
+Le relais vérifie dans Coolify le projet, l'environnement bêta, la destination,
+le dépôt des applications, le caractère privé des bases et l'absence de
+livraison active avant toute mutation. Il identifie les conteneurs applicatifs
+par leurs labels Coolify, y compris worker, scheduler et Reverb ; les bases
+sont identifiées par leur UUID et leur propriétaire, pas par leur seul ID
+numérique (qui peut être identique entre types de bases).
+
+L'ordre d'arrêt est : applications, Mailpit privé, MySQL, Redis. Mailpit est
+ici un conteneur Docker autonome autorisé explicitement côté serveur, avec
+image `axllent/mailpit:*` et sans port publié. Le signal d'arrêt laisse 60 secondes
+aux services pour terminer, notamment vider l'AOF Redis. Aucun conteneur,
+volume ou réseau n'est supprimé. Le succès n'est renvoyé qu'après vérification
+de l'arrêt de chaque groupe. Relancer l'action sur une bêta arrêtée ne démarre
+aucun service. Ce chemin ne rend pas les initialisations disponibles : elles
+restent soumises à la configuration complète des opérations.
