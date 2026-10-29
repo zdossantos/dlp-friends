@@ -30,7 +30,7 @@ jobs:
         with:
           persist-credentials: false
       - name: Set up PHP
-        uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # v2
+        uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # v2
         with:
           php-version: '8.4'
           tools: composer:v2
@@ -62,7 +62,7 @@ jobs:
         with:
           persist-credentials: false
       - name: Set up PHP
-        uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # v2
+        uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # v2
         with:
           php-version: '8.4'
           tools: composer:v2
@@ -155,7 +155,7 @@ jobs:
         with:
           persist-credentials: false
       - name: Set up PHP
-        uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # v2
+        uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # v2
         with:
           php-version: '8.4'
           coverage: none
@@ -181,7 +181,7 @@ jobs:
         run: ./vendor/bin/pest tests/Feature tests/Unit --shard=${{ matrix.shard }}/4 --display-warnings
       - name: Preserve failure diagnostics
         if: failure()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: pest-backend-${{ matrix.shard }}
           path: |
@@ -233,7 +233,7 @@ jobs:
         with:
           persist-credentials: false
       - name: Set up PHP
-        uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # v2
+        uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # v2
         with:
           php-version: '8.4'
           coverage: none
@@ -261,7 +261,7 @@ jobs:
         run: ./vendor/bin/pest tests/Browser --shard=${{ matrix.shard }}/4 --display-warnings
       - name: Preserve failure diagnostics
         if: failure()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: pest-browser-${{ matrix.shard }}
           path: |
@@ -322,7 +322,7 @@ jobs:
         with:
           persist-credentials: false
       - name: Set up PHP
-        uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # v2
+        uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # v2
         with:
           php-version: '8.4'
           coverage: none
@@ -356,7 +356,7 @@ jobs:
         run: bash .github/scripts/test-realtime.sh
       - name: Preserve failure diagnostics
         if: failure()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: pest-realtime
           path: |
@@ -389,7 +389,7 @@ jobs:
         with:
           persist-credentials: false
       - name: Set up PHP
-        uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # v2
+        uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # v2
         with:
           php-version: '8.4'
           tools: composer:v2
@@ -439,7 +439,7 @@ jobs:
         with:
           persist-credentials: false
       - name: Set up PHP
-        uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # v2
+        uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # v2
         with:
           php-version: '8.4'
           tools: composer:v2
