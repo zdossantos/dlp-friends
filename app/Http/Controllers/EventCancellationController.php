@@ -4,15 +4,15 @@ namespace App\Http\Controllers;
 
 use App\Actions\CancelEvent;
 use App\Data\EventWorkspaceData;
+use App\Http\Requests\EventFilterRequest;
 use App\Models\Event;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
 
 final class EventCancellationController extends Controller
 {
     public function __invoke(
-        Request $request,
+        EventFilterRequest $request,
         Event $event,
         CancelEvent $cancel,
         EventWorkspaceData $workspace,
@@ -21,6 +21,6 @@ final class EventCancellationController extends Controller
         $user = $request->user();
         $cancel->handle($user, $event);
 
-        return redirect()->to($workspace->detailUrl($event, $workspace->context($request)));
+        return redirect()->to($workspace->detailUrl($event, $workspace->context($request), $request->filters()));
     }
 }

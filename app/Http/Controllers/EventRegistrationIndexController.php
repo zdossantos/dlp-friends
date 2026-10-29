@@ -4,9 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Data\EventDetailData;
 use App\Data\EventWorkspaceData;
+use App\Http\Requests\EventFilterRequest;
 use App\Models\Event;
 use App\Models\User;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Response;
 
@@ -14,7 +14,7 @@ final class EventRegistrationIndexController extends Controller
 {
     public function __construct(private readonly EventWorkspaceData $workspace) {}
 
-    public function __invoke(Request $request, Event $event): Response
+    public function __invoke(EventFilterRequest $request, Event $event): Response
     {
         /** @var User $viewer */
         $viewer = $request->user();
@@ -26,6 +26,6 @@ final class EventRegistrationIndexController extends Controller
                 $event->load('organizer.profile.avatar'),
                 $viewer,
             ),
-        ]);
+        ], $request->filters());
     }
 }

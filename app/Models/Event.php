@@ -105,6 +105,26 @@ class Event extends Model
                     ->whereDoesntHave('blocksReceived', fn (Builder $blocks) => $blocks->where('blocker_user_id', $viewer->id)))));
     }
 
+    /**
+     * @param  Builder<Event>  $query
+     * @param  array<string, string>  $filters
+     */
+    public function scopeFiltered(Builder $query, array $filters): void
+    {
+        if (isset($filters['from'])) {
+            $query->where('starts_at', '>=', CarbonImmutable::parse($filters['from'], 'Europe/Paris')->startOfDay()->utc());
+        }
+        if (isset($filters['to'])) {
+            $query->where('starts_at', '<', CarbonImmutable::parse($filters['to'], 'Europe/Paris')->addDay()->startOfDay()->utc());
+        }
+        if (isset($filters['search'])) {
+            $literal = str_replace(['!', '%', '_'], ['!!', '!%', '!_'], $filters['search']);
+            $query->where(fn (Builder $text) => $text
+                ->whereRaw("title LIKE ? ESCAPE '!'", ["%{$literal}%"])
+                ->orWhereRaw("description LIKE ? ESCAPE '!'", ["%{$literal}%"]));
+        }
+    }
+
     public function hasStarted(): bool
     {
         return now()->greaterThanOrEqualTo($this->starts_at);

@@ -590,3 +590,18 @@ l’historique minimal propre jusqu’à la purge à trente jours. Notifications
 l’application et Push selon les préférences Trajets ou Messages de groupe,
 sans nouvel e-mail. Les règles de rétention et de gel des comptes bannis
 s’appliquent aux nouvelles relations.
+
+## Filtres des événements (issue 319)
+
+Découvrir et Mes événements proposent une recherche textuelle sur le titre et
+la description, combinée à deux bornes de date de début facultatives et
+inclusives (« Du » / « Au »), en heure de Paris. La recherche est littérale,
+insensible à la casse et aux accents ; elle ne porte sur aucune donnée privée.
+Le formulaire applique les filtres explicitement et permet de les effacer.
+
+Les filtres sont conservés dans l’URL au rechargement, au retour navigateur,
+au changement d’onglet et lors de l’ouverture ou de la fermeture des panneaux.
+Ils ne sont pas enregistrés comme préférence de compte. Mes événements filtre
+les organisations et les inscriptions, y compris passées ; Découvrir garde
+uniquement les événements futurs, disponibles et autorisés. Les exclusions
+de visibilité, de blocage et de capacité restent prioritaires.

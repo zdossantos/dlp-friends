@@ -3,6 +3,7 @@ import { Link } from '@inertiajs/vue3';
 import { ChevronRight, Crown, UserRoundX } from '@lucide/vue';
 import UserAvatar from '@/components/profile/UserAvatar.vue';
 import { Badge } from '@/components/ui/badge';
+import { useEventWorkspaceQuery } from '@/composables/useEventWorkspaceQuery';
 import { useTranslations } from '@/composables/useTranslations';
 import { show } from '@/routes/events/participants';
 import type { EventParticipant, EventWorkspaceContext } from '@/types/event';
@@ -12,7 +13,7 @@ const props = defineProps<{
     context: EventWorkspaceContext;
     participants: EventParticipant[];
 }>();
-const origin = props.context === 'discover' ? {} : { origin: props.context };
+const origin = useEventWorkspaceQuery(() => props.context);
 const { t } = useTranslations();
 </script>
 

@@ -17,6 +17,7 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
+import { useEventWorkspaceQuery } from '@/composables/useEventWorkspaceQuery';
 import { useTranslations } from '@/composables/useTranslations';
 import { rememberEventWorkspaceScroll } from '@/lib/eventWorkspaceScroll';
 import { show } from '@/routes/events';
@@ -28,7 +29,7 @@ const props = defineProps<{
     role?: 'organizer' | 'participant';
 }>();
 const { t, formatDate } = useTranslations();
-const origin = props.context === 'mine' ? { origin: 'mine' } : {};
+const origin = useEventWorkspaceQuery(() => props.context);
 
 function rememberOpener(): void {
     rememberEventWorkspaceScroll(`event-link-${props.event.id}`);

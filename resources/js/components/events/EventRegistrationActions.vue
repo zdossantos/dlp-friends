@@ -5,6 +5,7 @@ import EventConfirmationDialog from '@/components/events/EventConfirmationDialog
 import InputError from '@/components/InputError.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { useEventWorkspaceQuery } from '@/composables/useEventWorkspaceQuery';
 import { useTranslations } from '@/composables/useTranslations';
 import { availableEventActions } from '@/lib/eventState';
 import { destroy, store } from '@/routes/events/registrations';
@@ -22,7 +23,7 @@ const registrationError = computed(() => {
 
     return errors?.registration;
 });
-const origin = props.context === 'discover' ? {} : { origin: props.context };
+const origin = useEventWorkspaceQuery(() => props.context);
 const actions = computed(() =>
     availableEventActions({
         role: props.event.isOrganizer ? 'organizer' : 'member',
@@ -35,14 +36,14 @@ const actions = computed(() =>
 function register(): void {
     busy.value = true;
     router.post(
-        store(props.event.id, { query: origin }).url,
+        store(props.event.id, { query: origin.value }).url,
         {},
         { preserveScroll: true, onFinish: () => (busy.value = false) },
     );
 }
 function withdraw(): void {
     busy.value = true;
-    router.delete(destroy(props.event.id, { query: origin }).url, {
+    router.delete(destroy(props.event.id, { query: origin.value }).url, {
         preserveScroll: true,
         onFinish: () => (busy.value = false),
     });

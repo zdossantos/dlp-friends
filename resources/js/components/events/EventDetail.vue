@@ -8,6 +8,7 @@ import EventParticipantStack from '@/components/events/EventParticipantStack.vue
 import EventRegistrationActions from '@/components/events/EventRegistrationActions.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { useEventWorkspaceQuery } from '@/composables/useEventWorkspaceQuery';
 import { useTranslations } from '@/composables/useTranslations';
 import { cancel, edit } from '@/routes/events';
 import { show as chatShow } from '@/routes/events/chat';
@@ -20,7 +21,7 @@ const props = defineProps<{
     context: EventWorkspaceContext;
 }>();
 const { t } = useTranslations();
-const origin = props.context === 'discover' ? {} : { origin: props.context };
+const origin = useEventWorkspaceQuery(() => props.context);
 const cancelling = ref(false);
 const pendingCount = computed(
     () =>
@@ -32,7 +33,7 @@ const pendingCount = computed(
 function cancelEvent(): void {
     cancelling.value = true;
     router.patch(
-        cancel(props.event.id, { query: origin }).url,
+        cancel(props.event.id, { query: origin.value }).url,
         {},
         {
             onFinish: () => (cancelling.value = false),

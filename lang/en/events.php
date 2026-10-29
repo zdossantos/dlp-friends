@@ -1,6 +1,14 @@
 <?php
 
 return [
+    'filters' => [
+        'search' => 'Search', 'search_placeholder' => 'Title or description',
+        'from' => 'From', 'to' => 'To',
+        'date_help' => 'Inclusive event start dates, in Paris time. Each bound is optional.',
+        'apply' => 'Filter', 'clear' => 'Clear filters', 'active' => 'Filters active',
+        'empty_title' => 'No matching events',
+        'empty' => 'No events match these filters. Change or clear them to widen your search.',
+    ],
     'validation' => [
         'starts_at_future' => 'The starts at field must be a date after now.',
         'local_time' => 'This local time does not exist in Paris.',

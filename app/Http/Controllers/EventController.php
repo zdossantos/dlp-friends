@@ -6,6 +6,7 @@ use App\Actions\CreateEvent;
 use App\Actions\UpdateEvent;
 use App\Data\EventDetailData;
 use App\Data\EventWorkspaceData;
+use App\Http\Requests\EventFilterRequest;
 use App\Http\Requests\StoreEventRequest;
 use App\Http\Requests\UpdateEventRequest;
 use App\Models\Event;
@@ -20,33 +21,35 @@ class EventController extends Controller
 {
     public function __construct(private readonly EventWorkspaceData $workspace) {}
 
-    public function index(Request $request): Response
+    public function index(EventFilterRequest $request): Response
     {
         $user = $this->user($request);
 
-        return $this->workspace->render($user, 'discover', null);
+        return $this->workspace->render($user, 'discover', null, $request->filters());
     }
 
-    public function create(Request $request): Response
+    public function create(EventFilterRequest $request): Response
     {
         return $this->workspace->render(
             $this->user($request),
             $this->workspace->context($request),
             ['kind' => 'create'],
+            $request->filters(),
         );
     }
 
-    public function store(StoreEventRequest $request, CreateEvent $createEvent): RedirectResponse
+    public function store(StoreEventRequest $request, CreateEvent $createEvent, EventFilterRequest $filters): RedirectResponse
     {
         $event = $createEvent->handle($this->user($request), $request->validated());
 
         return redirect()->to($this->workspace->detailUrl(
             $event,
             $this->workspace->context($request),
+            $filters->filters(),
         ));
     }
 
-    public function show(Request $request, Event $event): Response|RedirectResponse
+    public function show(EventFilterRequest $request, Event $event): Response|RedirectResponse
     {
         $user = $this->user($request);
         if (Gate::forUser($user)->denies('view', $event)) {
@@ -56,8 +59,8 @@ class EventController extends Controller
             ]);
 
             return redirect()->to($this->workspace->context($request) === 'mine'
-                ? route('events.mine', absolute: false)
-                : route('events.index', absolute: false));
+                ? route('events.mine', $request->filters(), absolute: false)
+                : route('events.index', $request->filters(), absolute: false));
         }
 
         $event->load('organizer.profile');
@@ -65,10 +68,10 @@ class EventController extends Controller
         return $this->workspace->render($user, $this->workspace->context($request), [
             'kind' => 'detail',
             'event' => EventDetailData::from($event, $user),
-        ]);
+        ], $request->filters());
     }
 
-    public function edit(Request $request, Event $event): Response
+    public function edit(EventFilterRequest $request, Event $event): Response
     {
         Gate::authorize('update', $event);
 
@@ -77,16 +80,17 @@ class EventController extends Controller
         return $this->workspace->render($user, $this->workspace->context($request), [
             'kind' => 'edit',
             'event' => EventDetailData::from($event->load('organizer.profile'), $user),
-        ]);
+        ], $request->filters());
     }
 
-    public function update(UpdateEventRequest $request, Event $event, UpdateEvent $updateEvent): RedirectResponse
+    public function update(UpdateEventRequest $request, Event $event, UpdateEvent $updateEvent, EventFilterRequest $filters): RedirectResponse
     {
         $updateEvent->handle($this->user($request), $event, $request->validated());
 
         return redirect()->to($this->workspace->detailUrl(
             $event,
             $this->workspace->context($request),
+            $filters->filters(),
         ));
     }
 
