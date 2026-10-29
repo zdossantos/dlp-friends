@@ -32,3 +32,9 @@ Schedule::command('trips:purge-expired')
     ->timezone('Europe/Paris')
     ->withoutOverlapping()
     ->onOneServer();
+
+Schedule::command('feedback:purge-expired')
+    ->dailyAt('04:15')
+    ->timezone('Europe/Paris')
+    ->withoutOverlapping()
+    ->onOneServer();

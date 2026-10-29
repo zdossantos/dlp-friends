@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import {
     BookOpen,
+    Lightbulb,
     CircleGauge,
     ChartBar,
     Images,
@@ -19,6 +20,7 @@ import { useTranslations } from '@/composables/useTranslations';
 import { dashboard } from '@/routes';
 import { index as avatars } from '@/routes/admin/avatars';
 import { index as reports } from '@/routes/admin/conversation-reports';
+import { index as feedback } from '@/routes/admin/feedback';
 import { index as interests } from '@/routes/admin/interests';
 import { index as members } from '@/routes/admin/members';
 import { index as onboarding } from '@/routes/admin/onboarding';
@@ -53,6 +55,12 @@ const directItems = computed<BottomNavigationItem[]>(() => [
     },
 ]);
 const catalogueItems = computed<BottomNavigationItem[]>(() => [
+    {
+        label: t('feedback.title'),
+        href: feedback(),
+        icon: Lightbulb,
+        testId: 'admin-feedback-link',
+    },
     {
         label: t('moderation.reports_title'),
         href: reports(),

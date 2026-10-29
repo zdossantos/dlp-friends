@@ -325,3 +325,25 @@ Les livraisons sont purgées avec le destinataire, l’auteur
 est anonymisé par la clé étrangère et la suppression d’une notification reçue
 ne permet pas de la recréer lors d’une reprise. Aucun message privé ni donnée
 de destinataire n’est écrit dans les erreurs des jobs.
+
+
+## Retours privés des membres (issue 328)
+
+`member_feedback` conserve l’auteur, la nature, la zone, le contenu (5 000
+caractères maximum), les dates, le statut administratif et une note interne
+facultative (5 000 caractères). L’auteur et le statut initial À traiter sont
+imposés côté serveur. Les catalogues sont validés et cinq tentatives par heure
+et par compte sont autorisées. Aucun fichier joint ni communication automatique
+(mail, notification, push) n’est créé.
+
+Seuls les administrateurs actifs peuvent lister, consulter et traiter les retours.
+Un membre ne dispose d’aucune route de lecture, même pour ses propres retours.
+L’export authentifié comprend uniquement ses envois (nature, zone, contenu,
+date), sans statut ni note interne ni données d’un autre membre.
+
+La commande quotidienne `feedback:purge-expired` supprime le retour et sa note
+à deux ans de sa création. La suppression du compte les supprime aussi par
+cascade. Comme pour les autres données du projet, les comptes bannis restent
+exclus de la purge automatique ; une suppression administrative explicite
+supprime leurs retours. Le verrou utilisateur protège cette règle pendant la
+purge. Aucun contenu n’est ajouté aux journaux.

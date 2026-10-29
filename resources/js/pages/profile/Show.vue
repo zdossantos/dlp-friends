@@ -11,6 +11,7 @@ import {
     Sparkles,
 } from '@lucide/vue';
 import { computed } from 'vue';
+import FeedbackDrawer from '@/components/profile/FeedbackDrawer.vue';
 import ProfilePresentation from '@/components/profile/ProfilePresentation.vue';
 import { Button } from '@/components/ui/button';
 import { useTranslations } from '@/composables/useTranslations';
@@ -18,8 +19,13 @@ import { dashboard, logout } from '@/routes';
 import { edit as editAccount } from '@/routes/account';
 import { edit as editProfile } from '@/routes/member-profile';
 import type { Profile } from '@/types';
+import type { FeedbackOptions } from '@/types/feedback';
 
-defineProps<{ profile: Profile; age: number }>();
+defineProps<{
+    profile: Profile;
+    age: number;
+    feedbackOptions: FeedbackOptions;
+}>();
 const page = usePage();
 const { t } = useTranslations();
 
@@ -172,6 +178,7 @@ function handleLogout(): void {
                             {{ t('profile.actions.cookies') }}
                         </Button>
                     </div>
+                    <FeedbackDrawer :options="feedbackOptions" />
                 </template>
             </ProfilePresentation>
         </section>

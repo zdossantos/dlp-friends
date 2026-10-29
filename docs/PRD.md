@@ -374,6 +374,20 @@ Paris.
 - Le langage visuel et les règles de composants sont définis dans
   [`design-system.md`](design-system.md).
 
+## Retours privés des membres (issue 328)
+
+Depuis Mon profil, « Proposer une idée » ouvre un drawer avec nature, zone et
+explication (5 000 caractères maximum). Les problèmes techniques passent par ce
+formulaire ; les signalements de comportements et conversations gardent leur
+parcours dédié. L’envoi est limité à cinq tentatives par heure et par compte.
+Une confirmation locale suit l’envoi, sans mail, notification ni push.
+
+L’administration dispose d’une liste paginée filtrable (nature, zone, statut),
+d’un détail avec auteur et lien vers sa fiche existante, et d’une note interne.
+Les statuts sont À traiter, En cours d’étude, Retenu, Non retenu, Réalisé.
+« Retenu » ne promet ni réalisation ni délai. Aucun suivi membre, vote,
+catalogue public ou réponse intégrée n’est proposé.
+
 ## État d’implémentation
 
 | Capacité                                                                         | Statut                                 | État observé                                                                                                                                                                                                                                                                                                                 |
@@ -407,6 +421,7 @@ Paris.
 | Page introuvable personnalisée                                                   | **Implémenté**                         | La réponse conserve le statut 404 et propose un retour localisé vers l’accueil public ou l’espace autorisé de la session, sans indexation.                                                                                                                                                                                   |
 | Explication publique du classement et du matching                                | **Implémenté**                         | Pages françaises et anglaises indexables, liées depuis l’accueil, décrivant l’éligibilité, les priorités, le bonus de fréquence, le départage et la réciprocité.                                                                                                                                                             |
 | Mesure d’audience et suivi d’indexation                                          | **Implémenté**                         | GA4 ne charge qu’après consentement explicite, avec refus et retrait accessibles, choix conservé six mois, Consent Mode basic et chemins normalisés ; Search Console s’appuie sur une validation configurable, le sitemap et robots.txt.                                                                                     |
+| Retours privés des membres | **Implémenté** | Drawer de profil, traitement administratif privé, export et purge à deux ans (issue 328). |
 | Retours d’interaction et mouvement accessible                                    | **Implémenté**                         | Décisions de carte optimistes avec rollback, célébration de match, états occupés, feedback de messagerie, navigation et réduction des animations sont couverts.                                                                                                                                                              |
 | Connexion Google                                                                 | **Implémenté**                         | Socialite fournit le parcours Google, avec liens uniques sans stockage de jetons, contrôle de majorité et tests automatisés.                                                                                                                                                                                                 |
 | Photo personnelle facultative                                                    | **Planifié**                           | Aucun flux de téléversement membre n’existe.                                                                                                                                                                                                                                                                                 |

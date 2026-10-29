@@ -9,6 +9,7 @@ export type TranslationMessages = {
     common: TranslationTree;
     account: TranslationTree;
     profile: TranslationTree;
+    feedback: TranslationTree;
     onboarding: TranslationTree;
     discovery: TranslationTree;
     conversations: TranslationTree;

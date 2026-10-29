@@ -449,3 +449,20 @@ séparée des liens sociaux et des actions. Le tag Cast Member reste indépendan
 dans la zone avatar au-dessus du pass, y compris en l’absence de pass.
 Les deux portent l’indication d’information déclarée et non vérifiée. Les contrôles
 facultatifs réutilisent NativeSelect et Checkbox dans l’étape identité du formulaire.
+
+
+## Retours des membres (issue 328)
+
+La ligne compacte « Proposer une idée », ampoule et chevron, réutilise la couleur
+primaire violette sur fond léger. Elle se place sous les boutons du profil,
+avant À propos, sans nouvelle entrée de navigation membre. Le drawer Reka
+réutilise NativeSelect, Label, Textarea, InputError et Button, avec titre réservé
+aux lecteurs d’écran, description, erreurs liées aux champs et confirmation
+annoncée. Le contenu défile sur mobile et les cibles font au moins 44 px ; le
+clavier peut fermer le drawer et le focus revient au déclencheur. Les champs
+restent remplis après erreur ou fermeture, jusqu’à un envoi réussi.
+
+Dans le menu administratif existant, « Retours des membres » mène à une liste
+paginée de cartes, filtrable par nature, zone et statut. Le détail réutilise les
+contrôles de formulaire pour le statut et la note interne ; les textes envoyés
+sont affichés comme du texte, jamais comme du HTML.
