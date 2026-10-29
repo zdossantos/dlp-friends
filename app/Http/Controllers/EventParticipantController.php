@@ -6,6 +6,7 @@ use App\Data\EventDetailData;
 use App\Data\EventWorkspaceData;
 use App\Data\PublicMemberData;
 use App\Enums\EventRegistrationStatus;
+use App\Http\Requests\EventFilterRequest;
 use App\Models\Block;
 use App\Models\Event;
 use App\Models\User;
@@ -19,7 +20,7 @@ final class EventParticipantController extends Controller
 {
     public function __construct(private readonly EventWorkspaceData $workspace) {}
 
-    public function index(Request $request, Event $event): Response
+    public function index(EventFilterRequest $request, Event $event): Response
     {
         $viewer = $this->viewer($request);
         Gate::forUser($viewer)->authorize('view', $event);
@@ -28,10 +29,10 @@ final class EventParticipantController extends Controller
         return $this->workspace->render($viewer, $this->workspace->context($request), [
             'kind' => 'participants',
             'event' => $this->eventData($event, $viewer),
-        ]);
+        ], $request->filters());
     }
 
-    public function show(Request $request, Event $event, User $member): Response|RedirectResponse
+    public function show(EventFilterRequest $request, Event $event, User $member): Response|RedirectResponse
     {
         $viewer = $this->viewer($request);
         Gate::forUser($viewer)->authorize('view', $event);
@@ -65,7 +66,7 @@ final class EventParticipantController extends Controller
                     'conversationHref' => null,
                     'member' => ['id' => $member->id],
                 ],
-            ]);
+            ], $request->filters());
         }
 
         $member->load(['profile.avatar', 'profile.interests', 'roles']);
@@ -76,7 +77,7 @@ final class EventParticipantController extends Controller
                     'message' => __('events.errors.participant_profile_unavailable'),
                 ]);
 
-                $parameters = ['event' => $event];
+                $parameters = ['event' => $event, ...$request->filters()];
                 if ($this->workspace->context($request) !== 'discover') {
                     $parameters['origin'] = $this->workspace->context($request);
                 }
@@ -89,7 +90,7 @@ final class EventParticipantController extends Controller
             'kind' => 'participant-profile',
             'event' => $this->eventData($event, $viewer),
             'profile' => ['isBlocked' => false] + PublicMemberData::from($viewer, $member),
-        ]);
+        ], $request->filters());
     }
 
     /** @return array<string, mixed> */

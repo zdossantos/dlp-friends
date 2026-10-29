@@ -71,7 +71,10 @@ export type EventPanel =
           messages: PaginatedGroupChatMessages;
       };
 
+export type EventFilters = { from?: string; to?: string; search?: string };
+
 export type EventWorkspaceProps = {
+    filters?: EventFilters;
     context: EventWorkspaceContext;
     events?: EventSummary[];
     organized?: EventSummary[];

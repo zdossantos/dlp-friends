@@ -1,6 +1,14 @@
 <?php
 
 return [
+    'filters' => [
+        'search' => 'Recherche', 'search_placeholder' => 'Titre ou description',
+        'from' => 'Du', 'to' => 'Au',
+        'date_help' => 'Dates de début incluses, en heure de Paris. Chaque borne est facultative.',
+        'apply' => 'Filtrer', 'clear' => 'Effacer les filtres', 'active' => 'Filtres actifs',
+        'empty_title' => 'Aucun événement correspondant',
+        'empty' => 'Aucun événement ne correspond à ces filtres. Modifie-les ou efface-les pour élargir la recherche.',
+    ],
     'validation' => [
         'starts_at_future' => 'Le champ starts at doit être une date postérieure à maintenant.',
         'local_time' => 'Cet horaire local n’existe pas à Paris.',

@@ -2,6 +2,7 @@
 import { computed } from 'vue';
 import ResponsivePanel from '@/components/common/ResponsivePanel.vue';
 import EventPanelContent from '@/components/events/EventPanelContent.vue';
+import { useEventWorkspaceQuery } from '@/composables/useEventWorkspaceQuery';
 import { useTranslations } from '@/composables/useTranslations';
 import { restoreEventWorkspaceScroll } from '@/lib/eventWorkspaceScroll';
 import { show } from '@/routes/events';
@@ -15,6 +16,7 @@ const props = defineProps<{
 }>();
 const emit = defineEmits<{ 'update:open': [open: boolean] }>();
 const { t } = useTranslations();
+const origin = useEventWorkspaceQuery(() => props.context);
 const panelTitle = computed(() => {
     if (!props.panel || props.panel.kind === 'participant-profile') {
         return '';
@@ -32,15 +34,13 @@ const panelDescription = computed(() => {
 const panelBackHref = computed(() => {
     if (props.panel?.kind === 'participant-profile') {
         return participantsIndex(props.panel.event.id, {
-            query:
-                props.context === 'discover' ? {} : { origin: props.context },
+            query: origin.value,
         }).url;
     }
 
     if (props.panel?.kind === 'registrations' || props.panel?.kind === 'chat') {
         return show(props.panel.event.id, {
-            query:
-                props.context === 'discover' ? {} : { origin: props.context },
+            query: origin.value,
         }).url;
     }
 

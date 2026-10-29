@@ -11,6 +11,7 @@ use App\Models\GroupChat;
 use App\Models\GroupChatMessage;
 use App\Models\Swipe;
 use App\Models\User;
+use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Storage;
 
 beforeEach(fn () => Storage::fake('local'));
@@ -838,3 +839,59 @@ test('event private routes deny non accepted members even through direct browser
     }
     $page->assertNoJavaScriptErrors();
 })->with([null, 'pending', 'refused', 'withdrawn', 'removed']);
+
+test('event date and text filters survive panels reload history and workspace changes on mobile', function () {
+    $organizer = eventBrowserMember('Alice');
+    $day = now('Europe/Paris')->addDays(3)->toDateString();
+    $event = Event::factory()->for($organizer, 'organizer')->create([
+        'title' => 'Rencontre filtrée',
+        'starts_at' => CarbonImmutable::parse($day, 'Europe/Paris')->addHours(12)->utc(),
+    ]);
+    $other = Event::factory()->for($organizer, 'organizer')->create([
+        'title' => 'Autre rencontre',
+        'starts_at' => now()->addWeek(),
+    ]);
+    $this->actingAs($organizer);
+
+    $page = visit('/events')->on()->mobile()
+        ->fill('#event-search', 'Rencontre filtrée')
+        ->fill('#event-from', $day)
+        ->fill('#event-to', $day)
+        ->click('[data-test="event-filter-apply"]')
+        ->assertPresent("[data-test=\"event-link-{$event->id}\"]")
+        ->assertMissing("[data-test=\"event-link-{$other->id}\"]")
+        ->assertQueryStringHas('search', 'Rencontre filtrée')
+        ->click("[data-test=\"event-link-{$event->id}\"]")
+        ->assertPresent('[data-test="event-detail"]')
+        ->assertQueryStringHas('from', $day)
+        ->click('[data-slot="drawer-overlay"]')
+        ->assertMissing('[data-test="event-panel"]')
+        ->assertValue('#event-search', 'Rencontre filtrée')
+        ->refresh()
+        ->assertValue('#event-from', $day)
+        ->assertValue('#event-to', $day)
+        ->click('[data-test="events-nav-mine"]')
+        ->assertPathIs('/events/mine')
+        ->assertQueryStringHas('search', 'Rencontre filtrée')
+        ->assertPresent("[data-test=\"event-link-{$event->id}\"]")
+        ->assertMissing("[data-test=\"event-link-{$other->id}\"]")
+        ->click("[data-test=\"event-link-{$event->id}\"]")
+        ->assertQueryStringHas('origin', 'mine')
+        ->back()
+        ->assertPathIs('/events/mine')
+        ->assertValue('#event-search', 'Rencontre filtrée')
+        ->click('[data-test="event-filter-clear"]')
+        ->assertValue('#event-search', '')
+        ->assertValue('#event-from', '')
+        ->assertPresent("[data-test=\"event-link-{$other->id}\"]")
+        ->back()
+        ->assertValue('#event-search', 'Rencontre filtrée')
+        ->assertMissing("[data-test=\"event-link-{$other->id}\"]")
+        ->assertNoJavaScriptErrors();
+
+    $page->fill('#event-search', 'Aucun résultat possible')
+        ->click('[data-test="event-filter-apply"]')
+        ->assertSee('Aucun événement ne correspond à ces filtres.')
+        ->click('[data-test="event-filter-clear"]')
+        ->assertPresent("[data-test=\"event-link-{$other->id}\"]");
+});

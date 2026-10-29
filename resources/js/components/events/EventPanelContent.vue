@@ -5,6 +5,7 @@ import EventForm from '@/components/events/EventForm.vue';
 import EventParticipantList from '@/components/events/EventParticipantList.vue';
 import OrganizerRegistrations from '@/components/events/OrganizerRegistrations.vue';
 import EmbeddedMemberProfile from '@/components/members/EmbeddedMemberProfile.vue';
+import { useEventWorkspaceQuery } from '@/composables/useEventWorkspaceQuery';
 import { useTranslations } from '@/composables/useTranslations';
 import { store, update } from '@/routes/events';
 import type { EventPanel, EventWorkspaceContext } from '@/types/event';
@@ -15,7 +16,7 @@ const props = defineProps<{
     closeHref: string;
 }>();
 const { t } = useTranslations();
-const origin = props.context === 'discover' ? {} : { origin: props.context };
+const origin = useEventWorkspaceQuery(() => props.context);
 </script>
 
 <template>

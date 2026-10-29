@@ -5,6 +5,7 @@ import EventConfirmationDialog from '@/components/events/EventConfirmationDialog
 import InputError from '@/components/InputError.vue';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
+import { useEventWorkspaceQuery } from '@/composables/useEventWorkspaceQuery';
 import { useTranslations } from '@/composables/useTranslations';
 import { decision, remove } from '@/routes/events/registrations';
 import type {
@@ -24,12 +25,12 @@ const registrationError = computed(() => {
 
     return errors?.registration;
 });
-const origin = props.context === 'discover' ? {} : { origin: props.context };
+const origin = useEventWorkspaceQuery(() => props.context);
 
 function decide(id: number, accept: boolean): void {
     busyRegistrationId.value = id;
     router.patch(
-        decision(id, { query: origin }).url,
+        decision(id, { query: origin.value }).url,
         { accept },
         {
             preserveScroll: true,
@@ -39,7 +40,7 @@ function decide(id: number, accept: boolean): void {
 }
 function removeMember(id: number): void {
     busyRegistrationId.value = id;
-    router.delete(remove(id, { query: origin }).url, {
+    router.delete(remove(id, { query: origin.value }).url, {
         preserveScroll: true,
         onFinish: () => (busyRegistrationId.value = null),
     });

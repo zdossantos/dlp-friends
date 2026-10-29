@@ -26,8 +26,11 @@ final readonly class EventWorkspaceData
         };
     }
 
-    /** @param array<string, mixed>|null $panel */
-    public function render(User $viewer, string $context, ?array $panel): Response
+    /**
+     * @param  array<string, mixed>|null  $panel
+     * @param  array<string, string>  $filters
+     */
+    public function render(User $viewer, string $context, ?array $panel, array $filters = []): Response
     {
         if ($context === 'conversations' && isset($panel['event']['id'])) {
             return $this->conversation($viewer, Event::query()->whereKey($panel['event']['id'])->firstOrFail(), $panel);
@@ -35,18 +38,20 @@ final readonly class EventWorkspaceData
 
         if ($context === 'mine') {
             return Inertia::render('Events/Mine', [
-                ...$this->mine($viewer),
+                ...$this->mine($viewer, $filters),
+                'filters' => $filters,
                 'context' => 'mine',
                 'panel' => $panel,
-                'closeHref' => route('events.mine', absolute: false),
+                'closeHref' => route('events.mine', $filters, absolute: false),
             ]);
         }
 
         return Inertia::render('Events/Index', [
-            'events' => $this->discovery($viewer),
+            'events' => $this->discovery($viewer, $filters),
+            'filters' => $filters,
             'context' => 'discover',
             'panel' => $panel,
-            'closeHref' => route('events.index', absolute: false),
+            'closeHref' => route('events.index', $filters, absolute: false),
         ]);
     }
 
@@ -63,9 +68,10 @@ final readonly class EventWorkspaceData
         ]);
     }
 
-    public function detailUrl(Event $event, string $context): string
+    /** @param array<string, string> $filters */
+    public function detailUrl(Event $event, string $context, array $filters = []): string
     {
-        $parameters = ['event' => $event];
+        $parameters = ['event' => $event, ...$filters];
 
         if ($context !== 'discover') {
             $parameters['origin'] = $context;
@@ -74,8 +80,11 @@ final readonly class EventWorkspaceData
         return route('events.show', $parameters, absolute: false);
     }
 
-    /** @return array<int, array<string, mixed>> */
-    public function discovery(User $viewer): array
+    /**
+     * @param  array<string, string>  $filters
+     * @return array<int, array<string, mixed>>
+     */
+    public function discovery(User $viewer, array $filters = []): array
     {
         $blockedUserIds = $this->blockedUserIds($viewer);
 
@@ -84,6 +93,7 @@ final readonly class EventWorkspaceData
             ->where('starts_at', '>', now())
             ->whereNotIn('organizer_user_id', $blockedUserIds)
             ->withAvailableCapacity()
+            ->filtered($filters)
             ->withAcceptedRegistrationCount()
             ->with([
                 'organizer.profile',
@@ -97,12 +107,16 @@ final readonly class EventWorkspaceData
             ->all();
     }
 
-    /** @return array{organized: array<int, array<string, mixed>>, participating: array<int, array<string, mixed>>} */
-    public function mine(User $viewer): array
+    /**
+     * @param  array<string, string>  $filters
+     * @return array{organized: array<int, array<string, mixed>>, participating: array<int, array<string, mixed>>}
+     */
+    public function mine(User $viewer, array $filters = []): array
     {
         $blockedUserIds = $this->blockedUserIds($viewer);
         $organized = Event::query()
             ->where('organizer_user_id', $viewer->id)
+            ->filtered($filters)
             ->withAcceptedRegistrationCount()
             ->with([
                 'organizer.profile',
@@ -121,6 +135,7 @@ final readonly class EventWorkspaceData
                     EventRegistrationStatus::Pending,
                     EventRegistrationStatus::Accepted,
                 ]))
+            ->filtered($filters)
             ->withAcceptedRegistrationCount()
             ->with([
                 'organizer.profile',
