@@ -1,3 +1,18 @@
+> **Mise à jour du parcours `update` (29 octobre 2026)** : lancer **Beta lifecycle**
+> depuis `main`, choisir `update` et laisser la confirmation de suppression décochée.
+> Le candidat doit avoir tous ses checks requis verts. La CI réutilise l’API Coolify
+> et le secret `COOLIFY_TOKEN` pour mettre à jour uniquement le Compose bêta
+> `/compose.beta.yaml`, dans un environnement distinct de la production.
+> La nouvelle image exécute `migrate --force`, puis Coolify remplace les services
+> et la CI attend le résultat du déploiement. Aucun import, reset, seeding ni
+> `artisan down` n’est exécuté. Les essais existants sont conservés, sous réserve
+> des migrations du candidat. Le Compose bêta peut subir une brève interruption ;
+> le web rolling bêta inactif n’est pas activé par cette correction.
+> Les actions d’initialisation et d’arrêt ci-dessous restent liées au relais SSH :
+> sa configuration complète doit être installée et vérifiée avant de les utiliser.
+> Le relais observé le 29 octobre ne possède pas cette configuration ; ne pas
+> sélectionner une initialisation pour contourner un échec de mise à jour.
+
 # Environnement bêta privé
 
 État historique au 17 octobre 2026 : application bêta déployée avec MySQL, Redis et Mailpit dédiés ;

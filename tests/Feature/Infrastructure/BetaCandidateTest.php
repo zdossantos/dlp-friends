@@ -40,6 +40,13 @@ afterEach(function () {
     File::deleteDirectory($this->candidateDirectory);
 });
 
+function betaCoolifyRequests(string $directory): array
+{
+    return file_exists($directory.'/requests.jsonl')
+        ? array_map(fn ($line) => json_decode($line, true), file($directory.'/requests.jsonl'))
+        : [];
+}
+
 it('retains beta without an eligible release PR or exact successful checks', function (array $scenario) {
     file_put_contents($this->candidateDirectory.'/scenario.json', json_encode($scenario));
     $result = Process::env($this->candidateEnvironment)->run(['bash', base_path('.github/scripts/select-beta-candidate.sh')]);
@@ -82,17 +89,17 @@ it('never targets the production application', function () {
         ->and(file_exists($this->candidateDirectory.'/requests.jsonl'))->toBeFalse();
 });
 
-it('refuses to bypass the lifecycle through a Coolify API fallback', function () {
+it('rejects a non-beta Compose before any Coolify mutation', function () {
     $result = Process::env($this->candidateEnvironment)->run(['bash', base_path('.github/scripts/deploy-beta.sh')]);
     expect($result->failed())->toBeTrue($result->output().$result->errorOutput())
-        ->and(file_exists($this->candidateDirectory.'/requests.jsonl'))->toBeFalse();
+        ->and(collect(betaCoolifyRequests($this->candidateDirectory))->where('method', 'PATCH'))->toHaveCount(0);
 });
 
 it('keeps lifecycle manual and serializes updates and stop with trusted scripts', function () {
     $workflow = file_get_contents(base_path('.github/workflows/beta.yml'));
     expect($workflow)->toContain('workflow_dispatch:', 'replace_beta_tests:', 'platforms: linux/amd64',
         'group: beta-lifecycle', 'cancel-in-progress: false', 'path: candidate', 'path: trusted', 'refs/heads/main')
-        ->not->toContain('workflow_run:', 'pull_request_target:', 'artisan migrate', 'artisan up', 'secrets.COOLIFY_TOKEN');
+        ->not->toContain('workflow_run:', 'pull_request_target:', 'artisan migrate', 'artisan up');
     $stop = file_get_contents(base_path('.github/workflows/beta-stop.yml'));
     expect($stop)->toContain('workflow_dispatch:', 'group: beta-lifecycle', 'cancel-in-progress: false', 'refs/heads/main', '.status == "stopped"')
         ->not->toContain('workflow_run:', 'select-beta-candidate');
@@ -120,6 +127,7 @@ SH);
     chmod($ssh, 0700);
     $result = Process::env(array_merge($this->candidateEnvironment, [
         'PATH' => $this->candidateDirectory.':'.getenv('PATH'),
+        'BETA_ACTION' => 'initialize-references', 'BETA_REPLACE_TESTS' => 'true',
         'COOLIFY_TOKEN' => '', 'BETA_SSH_HOST' => '192.0.2.1',
         'BETA_SSH_PRIVATE_KEY' => 'fixture-private-key',
         'BETA_SSH_KNOWN_HOSTS' => '192.0.2.1 ssh-ed25519 fixture-public-host-key',
@@ -133,7 +141,7 @@ SH);
             'application_uuid' => 'application-test',
             'sha' => str_repeat('b', 40),
             'image' => 'ghcr.io/zdossantos/dlp-friends@sha256:'.str_repeat('a', 64),
-            'action' => 'update', 'replace_beta_tests' => false,
+            'action' => 'initialize-references', 'replace_beta_tests' => true,
         ]);
     $references = array_map(fn ($line) => json_decode($line, true), file($this->candidateDirectory.'/scenario.json.refs'));
     expect($references[0]['body'])->toBe(['ref' => 'refs/heads/chore/beta-candidates/'.str_repeat('b', 40), 'sha' => str_repeat('b', 40)])
@@ -150,6 +158,7 @@ it('reuses only an existing candidate branch that still points to the validated 
     chmod($this->candidateDirectory.'/ssh', 0700);
     $result = Process::env(array_merge($this->candidateEnvironment, [
         'PATH' => $this->candidateDirectory.':'.getenv('PATH'),
+        'BETA_ACTION' => 'initialize-references', 'BETA_REPLACE_TESTS' => 'true',
         'COOLIFY_TOKEN' => '', 'BETA_SSH_HOST' => '192.0.2.1',
         'BETA_SSH_PRIVATE_KEY' => 'fixture-private-key', 'BETA_SSH_KNOWN_HOSTS' => 'fixture-host-key',
         'SSH_LOG' => $this->candidateDirectory.'/ssh.log',
@@ -161,3 +170,36 @@ it('reuses only an existing candidate branch that still points to the validated 
     'same SHA' => [str_repeat('b', 40), true],
     'moved reference' => [str_repeat('a', 40), false],
 ]);
+
+it('updates only the isolated beta through Coolify without the SSH lifecycle', function () {
+    file_put_contents($this->candidateDirectory.'/topology', 'beta');
+    $result = Process::env($this->candidateEnvironment)->run(['bash', base_path('.github/scripts/deploy-beta.sh')]);
+    expect($result->successful())->toBeTrue($result->errorOutput());
+    $requests = betaCoolifyRequests($this->candidateDirectory);
+    $mutations = collect($requests)->where('method', 'PATCH')->values();
+    expect($mutations)->toHaveCount(2)
+        ->and($mutations[0]['path'])->toBe('/api/v1/applications/application-test/envs/bulk')
+        ->and($mutations[1]['path'])->toBe('/api/v1/applications/application-test')
+        ->and($mutations[1]['body']['git_branch'])->toBe('chore/beta-candidates/'.str_repeat('b', 40))
+        ->and($mutations[1]['body']['docker_compose_custom_start_command'])
+        ->toContain('compose.beta.yaml run --rm --no-deps worker php artisan migrate --force &&', 'up -d --wait')
+        ->and(strlen($mutations[1]['body']['docker_compose_custom_start_command']))->toBeLessThanOrEqual(255)
+        ->and(collect($requests)->where('method', 'POST')->pluck('body')->all())
+        ->toBe([['uuid' => 'application-test', 'force' => false]])
+        ->and(end($requests)['path'])->toBe('/api/v1/deployments/support-deployment');
+});
+
+it('does not report a failed beta deployment as successful', function () {
+    file_put_contents($this->candidateDirectory.'/topology', 'beta');
+    file_put_contents($this->candidateDirectory.'/deployment-status', 'failed');
+    $result = Process::env($this->candidateEnvironment)->run(['bash', base_path('.github/scripts/deploy-beta.sh')]);
+    expect($result->failed())->toBeTrue()
+        ->and($result->errorOutput())->toContain('Coolify deployment did not succeed: failed');
+});
+
+it('refuses a beta Compose attached to the production environment before mutations', function () {
+    file_put_contents($this->candidateDirectory.'/topology', 'beta-production-environment');
+    $result = Process::env($this->candidateEnvironment)->run(['bash', base_path('.github/scripts/deploy-beta.sh')]);
+    expect($result->failed())->toBeTrue()
+        ->and(array_column(betaCoolifyRequests($this->candidateDirectory), 'method'))->toBe(['GET', 'GET']);
+});

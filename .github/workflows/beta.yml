@@ -169,6 +169,8 @@ jobs:
           BETA_REPLACE_TESTS: ${{ inputs.replace_beta_tests }}
           BETA_CANDIDATE_JSON: ${{ needs.candidate.outputs.json }}
           APP_IMAGE: ${{ needs.build.outputs.image }}
+          COOLIFY_API_URL: ${{ vars.COOLIFY_API_URL }}
+          COOLIFY_TOKEN: ${{ secrets.COOLIFY_TOKEN }}
           COOLIFY_BETA_APPLICATION_UUID: ${{ vars.COOLIFY_BETA_APPLICATION_UUID }}
           COOLIFY_PRODUCTION_APPLICATION_UUID: ${{ vars.COOLIFY_APPLICATION_UUID }}
           BETA_SSH_HOST: ${{ vars.BETA_SSH_HOST }}

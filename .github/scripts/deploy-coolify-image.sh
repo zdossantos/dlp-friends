@@ -29,6 +29,23 @@ request() {
         --data "$3" --output "$response_file"
 }
 
+wait_for_deployment() {
+    local uuid="$1" deployment status attempt
+    deployment="$(jq -er --arg uuid "$uuid" '.deployments | select(length == 1) | .[0] |
+        select(.resource_uuid == $uuid) | .deployment_uuid | select(test("^[a-zA-Z0-9-]+$"))' "$response_file")"
+    for attempt in {1..120}; do
+        request GET "deployments/$deployment" '{}'
+        status="$(jq -er '.status' "$response_file")"
+        case "$status" in
+            finished) return 0 ;;
+            queued|in_progress) sleep 5 ;;
+            *) echo "Coolify deployment did not succeed: $status" >&2; return 1 ;;
+        esac
+    done
+    echo 'Timed out waiting for Coolify deployment.' >&2
+    return 1
+}
+
 if [[ -n "${COOLIFY_WEB_APPLICATION_UUID:-}" ]]; then
     [[ "${RELEASE_TAG:-}" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]
     [[ "$COOLIFY_APPLICATION_UUID" =~ ^[a-zA-Z0-9-]+$ && "$COOLIFY_WEB_APPLICATION_UUID" =~ ^[a-zA-Z0-9-]+$ ]]
@@ -40,6 +57,17 @@ if [[ -n "${COOLIFY_WEB_APPLICATION_UUID:-}" ]]; then
     jq -e --arg environment "$environment_id" '.build_pack == "dockerimage" and
         (.environment_id | tostring) == $environment and .health_check_enabled == true and
         .health_check_path == "/ready"' "$response_file" >/dev/null
+fi
+
+if [[ "${BETA_ACTION:-}" == update ]]; then
+    [[ "$COOLIFY_APPLICATION_UUID" =~ ^[a-zA-Z0-9-]+$ && "${COOLIFY_PRODUCTION_APPLICATION_UUID:-}" =~ ^[a-zA-Z0-9-]+$ ]]
+    [[ "$COOLIFY_APPLICATION_UUID" != "$COOLIFY_PRODUCTION_APPLICATION_UUID" && -z "${COOLIFY_WEB_APPLICATION_UUID:-}" ]]
+    request GET "applications/$COOLIFY_PRODUCTION_APPLICATION_UUID" '{}'
+    production_environment="$(jq -er '.environment_id' "$response_file")"
+    request GET "applications/$COOLIFY_APPLICATION_UUID" '{}'
+    jq -e --arg production "$production_environment" '.build_pack == "dockercompose" and
+        .docker_compose_location == "/compose.beta.yaml" and .environment_id != null and
+        (.environment_id | tostring) != $production' "$response_file" >/dev/null
 fi
 
 # Coolify also interpolates Compose during its preparation/build phase.
@@ -58,6 +86,12 @@ if [[ -n "${COOLIFY_WEB_APPLICATION_UUID:-}" ]]; then
     # Its command field is varchar(255) and forbids shell variables.
     [[ ${#compose_command} -le 255 ]]
 fi
+if [[ "${BETA_ACTION:-}" == update ]]; then
+    compose="docker compose -p $COOLIFY_APPLICATION_UUID -f compose.beta.yaml"
+    compose_command="$compose run --rm --no-deps worker php artisan migrate --force && $compose up -d --wait --wait-timeout 180"
+    [[ ${#compose_command} -le 255 ]]
+    RELEASE_TAG="chore/beta-candidates/$RELEASE_SHA"
+fi
 request PATCH "applications/$COOLIFY_APPLICATION_UUID" \
     "$(jq -nc --arg sha "$RELEASE_SHA" --arg command "$compose_command" --arg tag "${RELEASE_TAG:-}" '
         {git_commit_sha: $sha} + if $command == "" then {} else {git_branch: $tag, docker_compose_custom_start_command: $command} end')"
@@ -70,25 +104,11 @@ jq -e --arg uuid "$COOLIFY_APPLICATION_UUID" \
     "$response_file" >/dev/null
 echo 'Coolify accepted the deployment. Check deployment health in Coolify.'
 
-if [[ -n "${COOLIFY_WEB_APPLICATION_UUID:-}" ]]; then
-    wait_for_deployment() {
-        local uuid="$1" deployment status attempt
-        deployment="$(jq -er --arg uuid "$uuid" '.deployments | select(length == 1) | .[0] |
-            select(.resource_uuid == $uuid) | .deployment_uuid | select(test("^[a-zA-Z0-9-]+$"))' "$response_file")"
-        for attempt in {1..120}; do
-            request GET "deployments/$deployment" '{}'
-            status="$(jq -er '.status' "$response_file")"
-            case "$status" in
-                finished) return 0 ;;
-                queued|in_progress) sleep 5 ;;
-                *) echo "Coolify deployment did not succeed: $status" >&2; return 1 ;;
-            esac
-        done
-        echo 'Timed out waiting for Coolify deployment.' >&2
-        return 1
-    }
-
+if [[ -n "${COOLIFY_WEB_APPLICATION_UUID:-}" || "${BETA_ACTION:-}" == update ]]; then
     wait_for_deployment "$COOLIFY_APPLICATION_UUID"
+fi
+
+if [[ -n "${COOLIFY_WEB_APPLICATION_UUID:-}" ]]; then
     request PATCH "applications/$COOLIFY_WEB_APPLICATION_UUID" \
         "$(jq -nc --arg image "${APP_IMAGE%@*}" --arg tag "${APP_IMAGE##*@}" '
             {docker_registry_image_name: $image, docker_registry_image_tag: ($tag | sub(":"; "-"))}')"
