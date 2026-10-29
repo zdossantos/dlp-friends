@@ -36,6 +36,14 @@ def main():
     request = json.loads(raw)
     if not isinstance(request, dict) or request.get('application_uuid') != target:
         raise ValueError('Wrong target')
+    if request.get('action') == 'stop' and 'stop_resources' in config:
+        if set(request) != {'application_uuid', 'action'}:
+            raise ValueError('Invalid stop request')
+        from beta_stop import stop_beta
+        with open(config['lock_file'], 'a') as lock:
+            fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            print(json.dumps(stop_beta(config)))
+        return
     if "operations_config" in config:
         action = request.get('action')
         expected = {'application_uuid', 'action'} if action == 'stop' else {'application_uuid', 'action', 'sha', 'image', 'replace_beta_tests'}
