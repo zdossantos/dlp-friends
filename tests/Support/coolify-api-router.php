@@ -21,11 +21,13 @@ if (file_exists($failurePath) && file_get_contents($failurePath) === $path) {
 } elseif ($_SERVER['REQUEST_METHOD'] === 'GET') {
     $topologyFile = dirname($log).'/topology';
     $topology = file_exists($topologyFile) ? file_get_contents($topologyFile) : '';
+    $beta = in_array($topology, ['beta', 'beta-production-environment'], true);
+    $production = str_ends_with($path, '/production-test');
     $web = str_ends_with($path, '/web-test');
     echo json_encode([
         'build_pack' => $web ? 'dockerimage' : 'dockercompose',
-        'environment_id' => $web && $topology === 'wrong-environment' ? 4 : 3,
-        'docker_compose_location' => $topology === 'full-compose' ? '/compose.production.yaml' : '/compose.production-support.yaml',
+        'environment_id' => ($production || $topology === 'beta-production-environment') ? 1 : ($web && $topology === 'wrong-environment' ? 4 : 3),
+        'docker_compose_location' => $beta && ! $production ? '/compose.beta.yaml' : ($topology === 'full-compose' ? '/compose.production.yaml' : '/compose.production-support.yaml'),
         'health_check_enabled' => $topology !== 'unhealthy-web-config',
         'health_check_path' => '/ready',
     ]);
