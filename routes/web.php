@@ -52,6 +52,7 @@ use App\Http\Controllers\LandingController;
 use App\Http\Controllers\LegalDocumentController;
 use App\Http\Controllers\LikeMemberController;
 use App\Http\Controllers\LocaleController;
+use App\Http\Controllers\MemberFeedbackController;
 use App\Http\Controllers\MemberProfileController;
 use App\Http\Controllers\MessageController;
 use App\Http\Controllers\MessageReactionController;
@@ -238,6 +239,8 @@ Route::middleware(['auth', 'verified', 'social', 'terms.current'])->group(functi
                 ->name('onboarding.complete');
 
             Route::middleware('onboarding.complete')->group(function (): void {
+                Route::post('feedback', [MemberFeedbackController::class, 'store'])->middleware('throttle:5,60,member-feedback')->name('feedback.store');
+
                 Route::get('profile', [MemberProfileController::class, 'show'])
                     ->name('member-profile.show');
                 Route::get('profile/edit', [MemberProfileController::class, 'edit'])
@@ -388,6 +391,10 @@ Route::middleware(['auth', 'verified', 'social', 'terms.current'])->group(functi
         Route::get('trip-departure-reports', [App\Http\Controllers\Admin\TripDepartureReportController::class, 'index'])->name('trip-departure-reports.index');
         Route::get('trip-departure-reports/{report}', [App\Http\Controllers\Admin\TripDepartureReportController::class, 'show'])->name('trip-departure-reports.show');
         Route::patch('trip-departure-reports/{report}', [App\Http\Controllers\Admin\TripDepartureReportController::class, 'close'])->name('trip-departure-reports.close');
+        Route::get('feedback', [App\Http\Controllers\Admin\MemberFeedbackController::class, 'index'])->name('feedback.index');
+        Route::get('feedback/{feedback}', [App\Http\Controllers\Admin\MemberFeedbackController::class, 'show'])->name('feedback.show');
+        Route::patch('feedback/{feedback}', [App\Http\Controllers\Admin\MemberFeedbackController::class, 'update'])->name('feedback.update');
+
         Route::get('conversation-reports', [App\Http\Controllers\Admin\ConversationReportController::class, 'index'])->name('conversation-reports.index');
         Route::get('conversation-reports/{report}', [App\Http\Controllers\Admin\ConversationReportController::class, 'show'])->name('conversation-reports.show');
         Route::patch('conversation-reports/{report}', [App\Http\Controllers\Admin\ConversationReportController::class, 'close'])->name('conversation-reports.close');

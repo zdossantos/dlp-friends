@@ -11,6 +11,7 @@ use App\Models\Event;
 use App\Models\EventRegistration;
 use App\Models\GroupChatMessage;
 use App\Models\Interest;
+use App\Models\MemberFeedback;
 use App\Models\MemberMatch;
 use App\Models\ModerationAudit;
 use App\Models\PartnerAnnouncement;
@@ -73,6 +74,10 @@ final class BuildUserDataExport
 
         return [
             'format_version' => 1,
+            'feedback' => MemberFeedback::query()->where('user_id', $user->id)->orderBy('id')->get(['kind', 'area', 'content', 'created_at'])->map(fn (MemberFeedback $feedback): array => [
+                'kind' => $feedback->kind->value, 'area' => $feedback->area->value,
+                'content' => $feedback->content, 'created_at' => $feedback->created_at?->toISOString(),
+            ])->all(),
             'moderation' => [
                 'reports_submitted' => ConversationReport::query()->where('reporter_user_id', $user->id)->orderBy('id')->get()->map(fn ($report): array => ['reason' => $report->reason->value, 'details' => $report->details, 'created_at' => $report->created_at?->toISOString(), 'closed_at' => $report->closed_at?->toISOString(), 'decision' => $report->decision])->all(),
                 'trip_reports_submitted' => TripDepartureReport::query()->where('reporter_user_id', $user->id)->orderBy('id')->get()->map(fn ($report): array => ['scheduled_departure_at' => $report->scheduled_departure_at->toISOString(), 'left_at' => $report->left_at->toISOString(), 'details' => $report->details, 'created_at' => $report->created_at?->toISOString(), 'closed_at' => $report->closed_at?->toISOString(), 'decision' => $report->decision])->all(),

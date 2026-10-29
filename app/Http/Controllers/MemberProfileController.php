@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Actions\NotifyAdminsOfNewMember;
 use App\Actions\SyncProfileInterests;
 use App\Enums\DisneylandPass;
+use App\Enums\MemberFeedbackArea;
+use App\Enums\MemberFeedbackKind;
 use App\Enums\ProfileVisibility;
 use App\Enums\SocialLinksVisibility;
 use App\Enums\VisitFrequency;
@@ -112,6 +114,10 @@ class MemberProfileController extends Controller
                         'name' => $interest->display_name,
                     ])
                     ->all(),
+            ],
+            'feedbackOptions' => [
+                'kinds' => array_column(MemberFeedbackKind::cases(), 'value'),
+                'areas' => array_column(MemberFeedbackArea::cases(), 'value'),
             ],
             'age' => $request->user()->age,
         ]);

@@ -16,6 +16,7 @@ final class FrontendTranslations
             'common' => trans('common'),
             'account' => trans('account'),
             'profile' => trans('profile'),
+            'feedback' => trans('feedback'),
             'onboarding' => $onboarding,
             'discovery' => trans('discovery'),
             'conversations' => trans('conversations'),
