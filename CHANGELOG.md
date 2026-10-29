@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.17.1](https://github.com/zdossantos/dlp-friends/compare/v1.17.0...v1.17.1) (2026-10-29)
+
+
+### Fixes
+
+* **chat:** retirer le bandeau du profil membre ([#343](https://github.com/zdossantos/dlp-friends/issues/343)) ([66ec332](https://github.com/zdossantos/dlp-friends/commit/66ec332f32d238434b42cb3c931d05ce3e479f29))
+
 ## [1.17.0](https://github.com/zdossantos/dlp-friends/compare/v1.16.0...v1.17.0) (2026-10-29)
 
 
