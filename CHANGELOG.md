@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.16.3](https://github.com/zdossantos/dlp-friends/compare/v1.16.2...v1.16.3) (2026-10-28)
+
+
+### Fixes
+
+* **deploy:** augmenter la capacité PHP de la production 1.16 ([#339](https://github.com/zdossantos/dlp-friends/issues/339)) ([07092e0](https://github.com/zdossantos/dlp-friends/commit/07092e0c248224f01ab5afffe8d46dc01ac401f9))
+
 ## [1.16.2](https://github.com/zdossantos/dlp-friends/compare/v1.16.1...v1.16.2) (2026-10-28)
 
 
