@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.18.0](https://github.com/zdossantos/dlp-friends/compare/v1.17.1...v1.18.0) (2026-10-29)
+
+
+### Features
+
+* **events:** filtrer les événements par date et texte ([#347](https://github.com/zdossantos/dlp-friends/issues/347)) ([867a0d0](https://github.com/zdossantos/dlp-friends/commit/867a0d0f6b79d004a38350dd3d0740d0a4924b7f))
+* **feedback:** recueillir et traiter les retours privés des membres ([#348](https://github.com/zdossantos/dlp-friends/issues/348)) ([9a62a18](https://github.com/zdossantos/dlp-friends/commit/9a62a18a41e7d01ccc6eb3b2b5ea24d82dca6061))
+
+
+### Fixes
+
+* arrêter tous les services dédiés à la bêta ([#345](https://github.com/zdossantos/dlp-friends/issues/345)) ([57e12e1](https://github.com/zdossantos/dlp-friends/commit/57e12e1480ae120b44181f90dd3c20b9b4df4e37))
+
 ## [1.17.1](https://github.com/zdossantos/dlp-friends/compare/v1.17.0...v1.17.1) (2026-10-29)
 
 
