@@ -360,3 +360,13 @@ volume ou réseau n'est supprimé. Le succès n'est renvoyé qu'après vérifica
 de l'arrêt de chaque groupe. Relancer l'action sur une bêta arrêtée ne démarre
 aucun service. Ce chemin ne rend pas les initialisations disponibles : elles
 restent soumises à la configuration complète des opérations.
+
+Le relais a été installé le 29 octobre 2026 depuis le commit
+`da6866974ee5ae48b889119db43fcf30c7112846`, après vérification SHA-256 des
+deux scripts. Le wrapper pointe vers ce répertoire de confiance ; sa version
+précédente et la configuration privée ont été sauvegardées avant remplacement.
+Le run GitHub `40863993778` de `Stop beta` sur `main` a réussi avec la bêta
+déjà arrêtée. Aucun conteneur bêta actif n'a été observé ensuite, les volumes
+MySQL/Redis sont conservés et les quatre services applicatifs de production
+restent sains. L'arrêt de services actifs n'a pas été rejoué : les scénarios
+automatisés couvrent ce cas, sans redémarrer l'environnement pour le test.
