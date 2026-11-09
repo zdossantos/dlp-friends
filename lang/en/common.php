@@ -12,6 +12,7 @@ return [
     ],
     'legal' => ['terms' => 'Terms of Use', 'privacy' => 'Privacy Policy'],
     'release_notes' => 'What’s new',
+    'contributing' => 'Contribute',
     'welcome' => [
         'eyebrow' => 'Fans, together',
         'title' => 'Meet friends who love Disneyland Paris',

@@ -76,6 +76,7 @@ use App\Http\Controllers\PartnerAnnouncementDismissController;
 use App\Http\Controllers\PassedProfileController;
 use App\Http\Controllers\PresenceHeartbeatController;
 use App\Http\Controllers\ProductOnboardingController;
+use App\Http\Controllers\PublicContributingController;
 use App\Http\Controllers\PublicFaqController;
 use App\Http\Controllers\PublicGuideController;
 use App\Http\Controllers\PublicLandingController;
@@ -119,6 +120,8 @@ Route::get('fr/matching', [PublicMatchingController::class, 'show'])->defaults('
 Route::get('en/matching', [PublicMatchingController::class, 'show'])->defaults('locale', 'en')->name('matching.show.en');
 Route::get('fr/faq', [PublicFaqController::class, 'show'])->defaults('locale', 'fr')->name('faq.show.fr');
 Route::get('en/faq', [PublicFaqController::class, 'show'])->defaults('locale', 'en')->name('faq.show.en');
+Route::get('fr/contribuer', [PublicContributingController::class, 'show'])->defaults('locale', 'fr')->name('contributing.show.fr');
+Route::get('en/contribute', [PublicContributingController::class, 'show'])->defaults('locale', 'en')->name('contributing.show.en');
 Route::get('fr/nouveautes', [PublicReleaseNotesController::class, 'show'])->defaults('locale', 'fr')->name('release-notes.show.fr');
 Route::get('en/whats-new', [PublicReleaseNotesController::class, 'show'])->defaults('locale', 'en')->name('release-notes.show.en');
 Route::get('fr/rencontres-amicales-disneyland-paris', [PublicGuideController::class, 'show'])->defaults('locale', 'fr')->defaults('guide', 'friendships')->name('guides.friendships.fr');
@@ -138,6 +141,7 @@ Route::get('sitemap.xml', function () {
             ['fr' => PublicUrls::landing('fr'), 'en' => PublicUrls::landing('en')],
             ['fr' => PublicUrls::matching('fr'), 'en' => PublicUrls::matching('en')],
             ['fr' => PublicUrls::faq('fr'), 'en' => PublicUrls::faq('en')],
+            ['fr' => PublicUrls::contributing('fr'), 'en' => PublicUrls::contributing('en')],
             ['fr' => PublicUrls::releaseNotes('fr'), 'en' => PublicUrls::releaseNotes('en')],
             ['fr' => PublicUrls::friendships('fr'), 'en' => PublicUrls::friendships('en')],
             ['fr' => PublicUrls::soloVisit('fr'), 'en' => PublicUrls::soloVisit('en')],

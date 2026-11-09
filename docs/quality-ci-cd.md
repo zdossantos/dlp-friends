@@ -20,9 +20,17 @@ compris aux administrateurs. Une pull request doit être à jour, résoudre ses
 conversations et réussir les six checks obligatoires. Le dépôt utilise
 uniquement **Squash & Merge** et conserve ainsi un historique linéaire.
 
-Tant qu'un seul contributeur peut relire le dépôt, aucune approbation n'est
-requise : l'auteur ne peut pas approuver sa propre pull request. Cette valeur
-doit passer à une approbation dès qu'un second reviewer est disponible.
+Le dépôt public accepte les contributions par fork sans donner de droits
+d'écriture. `CODEOWNERS` désigne uniquement `@zdossantos` pour tous les fichiers.
+Le ruleset « Owner-only contribution merges » réserve les mises à jour de
+`main` à ce compte précis, uniquement par pull request, et demande une
+approbation du propriétaire du code avec invalidation après nouveau commit.
+Seul `@zdossantos` peut déroger à cette revue via une PR, notamment pour ses
+propres contributions que GitHub ne lui permet pas d'approuver. La protection
+classique reste indépendante : les six checks, la mise à jour de la branche,
+la résolution des conversations et l'interdiction des pushs directs restent
+obligatoires, même pour ce compte. Les workflows de tous les contributeurs
+externes nécessitent son accord avant exécution.
 
 ## Conventional Commits
 

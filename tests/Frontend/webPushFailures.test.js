@@ -1,5 +1,27 @@
-import { expect, mock, test } from 'bun:test';
+import { afterEach, expect, mock, test } from 'bun:test';
 import { createRenderer, ref } from 'vue';
+
+const originalGlobals = new Map(
+    [
+        'window',
+        'Notification',
+        'document',
+        'navigator',
+        'localStorage',
+        'fetch',
+    ].map((key) => [key, Object.getOwnPropertyDescriptor(globalThis, key)]),
+);
+
+afterEach(() => {
+    for (const [key, descriptor] of originalGlobals) {
+        if (descriptor) {
+            Object.defineProperty(globalThis, key, descriptor);
+        } else {
+            delete globalThis[key];
+        }
+    }
+});
+
 mock.module('../../resources/js/composables/usePwa', () => ({
     usePwa: () => ({ isStandalone: ref(true) }),
 }));
@@ -122,4 +144,11 @@ test('a failed server revocation remains retryable and is surfaced', async () =>
     expect(removed).not.toContain('web-push-device-uuid');
     expect(push.busy.value).toBe(false);
     app.unmount();
+});
+
+test('translations can load after web push lifecycle tests', async () => {
+    const { translationFor } =
+        await import('../../resources/js/composables/useTranslations');
+
+    expect(translationFor({ title: 'Friends' }, 'title')).toBe('Friends');
 });
