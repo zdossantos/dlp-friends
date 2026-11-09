@@ -13,7 +13,7 @@ class PreventSearchIndexing
     {
         $response = $next($request);
 
-        if (app()->environment('beta') || ! $request->routeIs('home', 'landing.show', 'matching.show.*', 'faq.*', 'release-notes.*', 'guides.*', 'legal.*', 'sitemap', 'robots')) {
+        if (app()->environment('beta') || ! $request->routeIs('home', 'landing.show', 'matching.show.*', 'faq.*', 'contributing.*', 'release-notes.*', 'guides.*', 'legal.*', 'sitemap', 'robots')) {
             $response->headers->set('X-Robots-Tag', 'noindex, nofollow');
         }
 

@@ -1,5 +1,33 @@
 # Contribuer à DLP Friends
 
+Tout le monde peut proposer une contribution via une pull request depuis un
+fork public. Aucun accès en écriture au dépôt n'est nécessaire. Consulter les
+[issues existantes](https://github.com/zdossantos/dlp-friends/issues) et discuter
+des changements importants avant de commencer.
+
+## Contribuer depuis un fork
+
+1. Créer un [fork](https://github.com/zdossantos/dlp-friends/fork) avec son compte GitHub.
+2. Cloner son fork, puis ajouter le dépôt source :
+
+   ```sh
+   git clone https://github.com/VOTRE-COMPTE/dlp-friends.git
+   cd dlp-friends
+   git remote add upstream https://github.com/zdossantos/dlp-friends.git
+   git fetch upstream
+   git switch -c fix/nom-court upstream/main
+   ```
+
+3. Préparer le projet, effectuer le changement et lancer les contrôles ci-dessous.
+4. Pousser sa branche avec `git push -u origin fix/nom-court`, puis ouvrir une
+   pull request depuis son fork vers `zdossantos/dlp-friends:main`.
+
+Seul **@zdossantos** valide et fusionne les contributions. Les autres personnes
+peuvent commenter et relire, sans autorité pour intégrer un changement. Les
+workflows des PR externes nécessitent son accord avant leur lancement.
+Ne jamais publier de secrets, de données personnelles ou de messages privés
+dans les issues, les PR ou les fixtures.
+
 ## Préparer le projet
 
 Installer PHP 8.4, Composer 2, Bun 1.3.14 et Docker Desktop. Le
@@ -66,7 +94,7 @@ Conventional Commits, car il devient le message du commit final lors du squash :
 - `chore:`, `docs:`, `refactor:`, `test:`, `build:`, `ci:` ou `revert:` lorsque
   ces types décrivent mieux le changement.
 
-Attendre la réussite de `Conventional PR title`, `PHP quality`, `Pest tests`,
+Attendre la réussite de `Conventional PR title`, `PHP quality`, `Backend tests`,
 `Frontend quality`, `Vite build` et `Docker build`, puis résoudre toutes les
 conversations. Utiliser uniquement **Squash & Merge**.
 

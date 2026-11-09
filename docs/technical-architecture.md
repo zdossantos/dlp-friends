@@ -241,6 +241,13 @@ active.
 
 ## Accueil public et indexation
 
+Les pages `/fr/contribuer` et `/en/contribute` expliquent le parcours GitHub
+fork → branche → pull request et la validation réservée à `zdossantos`.
+Accessibles aussi aux membres connectés, elles réutilisent le rendu Blade et
+les métadonnées des pages publiques, figurent dans le sitemap et sont liées
+depuis le pied de page de chaque accueil localisé. Aucun appel à GitHub ni
+chargement de données de contributeurs n'est nécessaire à leur affichage.
+
 La racine `/` sélectionne la langue du visiteur à partir de sa préférence puis
 de l’en-tête `Accept-Language`, et redirige vers une URL publique stable :
 `/fr` ou `/en`. Les pages publiques indexables regroupent ces landing pages,
